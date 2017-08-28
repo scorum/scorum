@@ -909,6 +909,8 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
 
    if( o.vesting_shares.amount == 0 )
    {
+    //SCORUM: Whole this block seems to be redandent considering that we start with no hardforks
+        
       if( _db.has_hardfork( STEEMIT_HARDFORK_0_5__57 ) )
          FC_ASSERT( account.vesting_withdraw_rate.amount  != 0, "This operation would not change the vesting withdraw rate." );
 
@@ -920,7 +922,10 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
       });
    }
    else
-   {
+   {    
+
+        //SCORUM: We have to decide wether we use 13 weeks vesting period or low it down
+        
       int vesting_withdraw_intervals = STEEMIT_VESTING_WITHDRAW_INTERVALS_PRE_HF_16;
       if( _db.has_hardfork( STEEMIT_HARDFORK_0_16__551 ) )
          vesting_withdraw_intervals = STEEMIT_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
