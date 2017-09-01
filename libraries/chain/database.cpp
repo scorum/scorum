@@ -401,17 +401,11 @@ const escrow_object* database::find_escrow( const account_name_type& name, uint3
 
 const limit_order_object& database::get_limit_order( const account_name_type& name, uint32_t orderid )const
 { try {
-   if( !has_hardfork( STEEMIT_HARDFORK_0_6__127 ) )
-      orderid = orderid & 0x0000FFFF;
-
    return get< limit_order_object, by_account >( boost::make_tuple( name, orderid ) );
 } FC_CAPTURE_AND_RETHROW( (name)(orderid) ) }
 
 const limit_order_object* database::find_limit_order( const account_name_type& name, uint32_t orderid )const
 {
-   if( !has_hardfork( STEEMIT_HARDFORK_0_6__127 ) )
-      orderid = orderid & 0x0000FFFF;
-
    return find< limit_order_object, by_account >( boost::make_tuple( name, orderid ) );
 }
 
@@ -452,10 +446,7 @@ const hardfork_property_object& database::get_hardfork_property_object()const
 
 const time_point_sec database::calculate_discussion_payout_time( const comment_object& comment )const
 {
-   if( has_hardfork( STEEMIT_HARDFORK_0_17__769 ) || comment.parent_author == STEEMIT_ROOT_POST_PARENT )
       return comment.cashout_time;
-   else
-      return get< comment_object >( comment.root_comment ).cashout_time;
 }
 
 const reward_fund_object& database::get_reward_fund( const comment_object& c ) const
@@ -796,8 +787,7 @@ signed_block database::_generate_block(
    pending_block.timestamp = when;
    pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();
    pending_block.witness = witness_owner;
-   if( has_hardfork( STEEMIT_HARDFORK_0_5__54 ) )
-   {
+
       const auto& witness = get_witness( witness_owner );
 
       if( witness.running_version != STEEMIT_BLOCKCHAIN_VERSION )
@@ -817,7 +807,7 @@ signed_block database::_generate_block(
          // Make vote match binary configuration. This is vote to not apply the new hardfork.
          pending_block.extensions.insert( block_header_extensions( hardfork_version_vote( _hardfork_versions[ hfp.last_hardfork ], _hardfork_times[ hfp.last_hardfork ] ) ) );
       }
-   }
+   
 
    if( !(skip & skip_witness_signature) )
       pending_block.sign( block_signing_private_key );
@@ -1084,11 +1074,7 @@ uint32_t database::get_pow_summary_target()const
    const dynamic_global_property_object& dgp = get_dynamic_global_properties();
    if( dgp.num_pow_witnesses >= 1004 )
       return 0;
-
-   if( has_hardfork( STEEMIT_HARDFORK_0_16__551 ) )
-      return (0xFE00 - 0x0040 * dgp.num_pow_witnesses ) << 0x10;
-   else
-      return (0xFC00 - 0x0040 * dgp.num_pow_witnesses) << 0x10;
+   return (0xFE00 - 0x0040 * dgp.num_pow_witnesses ) << 0x10;
 }
 
 void database::adjust_proxied_witness_votes( const account_object& a,
@@ -1168,18 +1154,12 @@ void database::adjust_witness_vote( const witness_object& witness, share_type de
       w.votes += delta;
       FC_ASSERT( w.votes <= get_dynamic_global_properties().total_vesting_shares.amount, "", ("w.votes", w.votes)("props",get_dynamic_global_properties().total_vesting_shares) );
 
-      if( has_hardfork( STEEMIT_HARDFORK_0_2 ) )
-         w.virtual_scheduled_time = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH2 - w.virtual_position)/(w.votes.value+1);
-      else
-         w.virtual_scheduled_time = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH - w.virtual_position)/(w.votes.value+1);
-
+      w.virtual_scheduled_time = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH2 - w.virtual_position)/(w.votes.value+1);
+ 
       /** witnesses with a low number of votes could overflow the time field and end up with a scheduled time in the past */
-      if( has_hardfork( STEEMIT_HARDFORK_0_4 ) )
-      {
-         if( w.virtual_scheduled_time < wso.current_virtual_time )
+      if( w.virtual_scheduled_time < wso.current_virtual_time )
             w.virtual_scheduled_time = fc::uint128::max_value();
-      }
-   } );
+    });
 }
 
 void database::clear_witness_votes( const account_object& a )
@@ -1193,7 +1173,6 @@ void database::clear_witness_votes( const account_object& a )
       remove(current);
    }
 
-   if( has_hardfork( STEEMIT_HARDFORK_0_6__104 ) )
       modify( a, [&](account_object& acc )
       {
          acc.witnesses_voted_for = 0;
@@ -1202,7 +1181,6 @@ void database::clear_witness_votes( const account_object& a )
 
 void database::clear_null_account_balance()
 {
-   if( !has_hardfork( STEEMIT_HARDFORK_0_14__327 ) ) return;
 
    const auto& null_account = get_account( STEEMIT_NULL_ACCOUNT );
    asset total_steem( 0, STEEM_SYMBOL );
@@ -1488,7 +1466,7 @@ share_type database::pay_curators( const comment_object& c, share_type& max_rewa
             {
                unclaimed_rewards -= claim;
                const auto& voter = get(itr->voter);
-               auto reward = create_vesting( voter, asset( claim, STEEM_SYMBOL ), has_hardfork( STEEMIT_HARDFORK_0_17__659 ) );
+               auto reward = create_vesting( voter, asset( claim, STEEM_SYMBOL ), true);
 
                push_virtual_operation( curation_reward_operation( voter.name, reward, c.author, to_string( c.permlink ) ) );
 
@@ -1525,12 +1503,9 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
       {
          fill_comment_reward_context_local_state( ctx, comment );
 
-         if( has_hardfork( STEEMIT_HARDFORK_0_17__774 ) )
-         {
             const auto rf = get_reward_fund( comment );
             ctx.reward_curve = rf.author_reward_curve;
             ctx.content_constant = rf.content_constant;
-         }
 
          const share_type reward = util::get_rshare_reward( ctx );
          uint128_t reward_tokens = uint128_t( reward.value );
@@ -1547,7 +1522,7 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
             for( auto& b : comment.beneficiaries )
             {
                auto benefactor_tokens = ( author_tokens * b.weight ) / STEEMIT_100_PERCENT;
-               auto vest_created = create_vesting( get_account( b.account ), benefactor_tokens, has_hardfork( STEEMIT_HARDFORK_0_17__659 ) );
+               auto vest_created = create_vesting( get_account( b.account ), benefactor_tokens, true );
                push_virtual_operation( comment_benefactor_reward_operation( b.account, comment.author, to_string( comment.permlink ), vest_created ) );
                total_beneficiary += benefactor_tokens;
             }
@@ -1558,8 +1533,8 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
             auto vesting_steem = author_tokens - sbd_steem;
 
             const auto& author = get_account( comment.author );
-            auto vest_created = create_vesting( author, vesting_steem, has_hardfork( STEEMIT_HARDFORK_0_17__659 ) );
-            auto sbd_payout = create_sbd( author, sbd_steem, has_hardfork( STEEMIT_HARDFORK_0_17__659 ) );
+            auto vest_created = create_vesting( author, vesting_steem, true );
+            auto sbd_payout = create_sbd( author, sbd_steem, true );
 
             adjust_total_payout( comment, sbd_payout.first + to_sbd( sbd_payout.second + asset( vesting_steem, STEEM_SYMBOL ) ), to_sbd( asset( curation_tokens, STEEM_SYMBOL ) ), to_sbd( asset( total_beneficiary, STEEM_SYMBOL ) ) );
 
@@ -1579,9 +1554,6 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
             #endif
 
          }
-
-         if( !has_hardfork( STEEMIT_HARDFORK_0_17__774 ) )
-            adjust_rshares2( comment, util::evaluate_reward_curve( comment.net_rshares.value ), 0 );
       }
 
       modify( comment, [&]( comment_object& c )
@@ -1597,19 +1569,7 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
          c.vote_rshares = 0;
          c.total_vote_weight = 0;
          c.max_cashout_time = fc::time_point_sec::maximum();
-
-         if( has_hardfork( STEEMIT_HARDFORK_0_17__769 ) )
-         {
-            c.cashout_time = fc::time_point_sec::maximum();
-         }
-         else if( c.parent_author == STEEMIT_ROOT_POST_PARENT )
-         {
-            if( has_hardfork( STEEMIT_HARDFORK_0_12__177 ) && c.last_payout == fc::time_point_sec::min() )
-               c.cashout_time = head_block_time() + STEEMIT_SECOND_CASHOUT_WINDOW;
-            else
-               c.cashout_time = fc::time_point_sec::maximum();
-         }
-
+         c.cashout_time = fc::time_point_sec::maximum();
          c.last_payout = head_block_time();
       } );
 
@@ -1621,7 +1581,7 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
       {
          const auto& cur_vote = *vote_itr;
          ++vote_itr;
-         if( !has_hardfork( STEEMIT_HARDFORK_0_12__177 ) || calculate_discussion_payout_time( comment ) != fc::time_point_sec::maximum() )
+         if( calculate_discussion_payout_time( comment ) != fc::time_point_sec::maximum() )
          {
             modify( cur_vote, [&]( comment_vote_object& cvo )
             {
@@ -1641,7 +1601,8 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
 }
 
 void database::process_comment_cashout()
-{
+{ 
+   //SCORUM: check next comment , we need to change first cashout time
    /// don't allow any content to get paid out until the website is ready to launch
    /// and people have had a week to start posting.  The first cashout will be the biggest because it
    /// will represent 2+ months of rewards.
@@ -1663,12 +1624,7 @@ void database::process_comment_cashout()
       modify( *itr, [&]( reward_fund_object& rfo )
       {
          fc::microseconds decay_rate;
-
-         if( has_hardfork( STEEMIT_HARDFORK_0_19__1051 ) )
-            decay_rate = STEEMIT_RECENT_RSHARES_DECAY_RATE_HF19;
-         else
-            decay_rate = STEEMIT_RECENT_RSHARES_DECAY_RATE_HF17;
-
+         decay_rate = STEEMIT_RECENT_RSHARES_DECAY_RATE_HF19;
          rfo.recent_claims -= ( rfo.recent_claims * ( head_block_time() - rfo.last_update ).to_seconds() ) / decay_rate.to_seconds();
          rfo.last_update = head_block_time();
       });
@@ -1688,8 +1644,7 @@ void database::process_comment_cashout()
 
    auto current = cidx.begin();
    //  add all rshares about to be cashed out to the reward funds. This ensures equal satoshi per rshare payment
-   if( has_hardfork( STEEMIT_HARDFORK_0_17__771 ) )
-   {
+ 
       while( current != cidx.end() && current->cashout_time <= head_block_time() )
       {
          if( current->net_rshares > 0 )
@@ -1702,7 +1657,7 @@ void database::process_comment_cashout()
       }
 
       current = cidx.begin();
-   }
+   
 
    /*
     * Payout all comments
@@ -1719,35 +1674,11 @@ void database::process_comment_cashout()
     */
    while( current != cidx.end() && current->cashout_time <= head_block_time() )
    {
-      if( has_hardfork( STEEMIT_HARDFORK_0_17__771 ) )
-      {
          auto fund_id = get_reward_fund( *current ).id._id;
          ctx.total_reward_shares2 = funds[ fund_id ].recent_claims;
          ctx.total_reward_fund_steem = funds[ fund_id ].reward_balance;
          funds[ fund_id ].steem_awarded += cashout_comment_helper( ctx, *current );
-      }
-      else
-      {
-         auto itr = com_by_root.lower_bound( current->root_comment );
-         while( itr != com_by_root.end() && itr->root_comment == current->root_comment )
-         {
-            const auto& comment = *itr; ++itr;
-            ctx.total_reward_shares2 = gpo.total_reward_shares2;
-            ctx.total_reward_fund_steem = gpo.total_reward_fund_steem;
-
-            auto reward = cashout_comment_helper( ctx, comment );
-
-            if( reward > 0 )
-            {
-               modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& p )
-               {
-                  p.total_reward_fund_steem.amount -= reward;
-               });
-            }
-         }
-      }
-
-      current = cidx.begin();
+         current = cidx.begin();
    }
 
    // Write the cached fund state back to the database
@@ -1778,6 +1709,8 @@ void database::process_funds()
 {
    const auto& props = get_dynamic_global_properties();
    const auto& wso = get_witness_schedule_object();
+
+   //SCORUM: compare to our inflation rate strategy
 
    if( has_hardfork( STEEMIT_HARDFORK_0_16__551) )
    {
@@ -2192,15 +2125,11 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< custom_evaluator                         >();
    _my->_evaluator_registry.register_evaluator< custom_binary_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< custom_json_evaluator                    >();
-   _my->_evaluator_registry.register_evaluator< pow_evaluator                            >();
-   _my->_evaluator_registry.register_evaluator< pow2_evaluator                           >();
-   _my->_evaluator_registry.register_evaluator< report_over_production_evaluator         >();
    _my->_evaluator_registry.register_evaluator< feed_publish_evaluator                   >();
    _my->_evaluator_registry.register_evaluator< convert_evaluator                        >();
    _my->_evaluator_registry.register_evaluator< limit_order_create_evaluator             >();
    _my->_evaluator_registry.register_evaluator< limit_order_create2_evaluator            >();
    _my->_evaluator_registry.register_evaluator< limit_order_cancel_evaluator             >();
-   _my->_evaluator_registry.register_evaluator< challenge_authority_evaluator            >();
    _my->_evaluator_registry.register_evaluator< prove_authority_evaluator                >();
    _my->_evaluator_registry.register_evaluator< request_account_recovery_evaluator       >();
    _my->_evaluator_registry.register_evaluator< recover_account_evaluator                >();
@@ -2213,8 +2142,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< transfer_from_savings_evaluator          >();
    _my->_evaluator_registry.register_evaluator< cancel_transfer_from_savings_evaluator   >();
    _my->_evaluator_registry.register_evaluator< decline_voting_rights_evaluator          >();
-   _my->_evaluator_registry.register_evaluator< reset_account_evaluator                  >();
-   _my->_evaluator_registry.register_evaluator< set_reset_account_evaluator              >();
    _my->_evaluator_registry.register_evaluator< claim_reward_balance_evaluator           >();
    _my->_evaluator_registry.register_evaluator< account_create_with_delegation_evaluator >();
    _my->_evaluator_registry.register_evaluator< delegate_vesting_shares_evaluator        >();
@@ -2859,9 +2786,8 @@ void database::_apply_transaction(const signed_transaction& trx)
 
       STEEMIT_ASSERT( trx.expiration <= now + fc::seconds(STEEMIT_MAX_TIME_UNTIL_EXPIRATION), transaction_expiration_exception,
                   "", ("trx.expiration",trx.expiration)("now",now)("max_til_exp",STEEMIT_MAX_TIME_UNTIL_EXPIRATION));
-      if( has_hardfork( STEEMIT_HARDFORK_0_9 ) ) // Simple solution to pending trx bug when now == trx.expiration
-         STEEMIT_ASSERT( now < trx.expiration, transaction_expiration_exception, "", ("now",now)("trx.exp",trx.expiration) );
-      STEEMIT_ASSERT( now <= trx.expiration, transaction_expiration_exception, "", ("now",now)("trx.exp",trx.expiration) );
+      // Simple solution to pending trx bug when now == trx.expiration
+      STEEMIT_ASSERT( now < trx.expiration, transaction_expiration_exception, "", ("now",now)("trx.exp",trx.expiration) );
    }
 
    //Insert transaction into unique transactions database.
