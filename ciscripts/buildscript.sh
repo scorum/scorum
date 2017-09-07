@@ -1,5 +1,9 @@
 #!/bin/bash
 set -e
+
+#BRANCH_NAME=${BRANCH_NAME:-master}
+BRANCH_NAME="master"
+
 export IMAGE_NAME="scorum/blockchain:$BRANCH_NAME"
 if [[ $IMAGE_NAME == "scorum/blockchain:stable" ]] ; then
 	IMAGE_NAME="scorum/blockchain:latest"
