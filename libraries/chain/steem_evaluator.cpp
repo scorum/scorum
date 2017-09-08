@@ -552,12 +552,12 @@ void comment_evaluator::do_apply( const comment_operation& o )
 
          if( !parent )
          {
-            FC_ASSERT( com.parent_author == account_name_type(), "The parent of a comment cannot change." );
+            FC_ASSERT( com.parent_author == account_name_type(), "The parent of a comment cannot be changed." );
             FC_ASSERT( equal( com.parent_permlink, o.parent_permlink ), "The permlink of a comment cannot change." );
          }
          else
          {
-            FC_ASSERT( com.parent_author == o.parent_author, "The parent of a comment cannot change." );
+            FC_ASSERT( com.parent_author == o.parent_author, "The parent of a comment cannot be changed." );
             FC_ASSERT( equal( com.parent_permlink, o.parent_permlink ), "The permlink of a comment cannot change." );
          }
 
@@ -1156,24 +1156,14 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
          if( curation_reward_eligible )
          {
-            if( comment.created < fc::time_point_sec(STEEMIT_HARDFORK_0_6_REVERSE_AUCTION_TIME) ) {
-               u512 rshares3(rshares);
-               u256 total2( comment.abs_rshares.value );
-
-               rshares3 = rshares3 * rshares3 * rshares3;
-
-               total2 *= total2;
-               cv.weight = static_cast<uint64_t>( rshares3 / total2 );
-            } else {// cv.weight = W(R_1) - W(R_0)
-               const uint128_t two_s = 2 * util::get_content_constant_s();
+            //SCORUM: this two_s is not used
+            const uint128_t two_s = 2 * util::get_content_constant_s();
                
-                  const auto& reward_fund = _db.get_reward_fund( comment );
-                  auto curve = reward_fund.curation_reward_curve;
-                  uint64_t old_weight = util::evaluate_reward_curve( old_vote_rshares.value, curve, reward_fund.content_constant ).to_uint64();
-                  uint64_t new_weight = util::evaluate_reward_curve( comment.vote_rshares.value, curve, reward_fund.content_constant ).to_uint64();
-                  cv.weight = new_weight - old_weight;
-               
-            }
+            const auto& reward_fund = _db.get_reward_fund( comment );
+            auto curve = reward_fund.curation_reward_curve;
+            uint64_t old_weight = util::evaluate_reward_curve( old_vote_rshares.value, curve, reward_fund.content_constant ).to_uint64();
+            uint64_t new_weight = util::evaluate_reward_curve( comment.vote_rshares.value, curve, reward_fund.content_constant ).to_uint64();
+            cv.weight = new_weight - old_weight;
 
             max_vote_weight = cv.weight;
 

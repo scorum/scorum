@@ -1751,8 +1751,6 @@ void database::process_funds()
       modify( props, [&]( dynamic_global_property_object& p )
       {
          p.total_vesting_fund_steem += asset( vesting_reward, STEEM_SYMBOL );
-         if( !has_hardfork( STEEMIT_HARDFORK_0_17__774 ) )
-            p.total_reward_fund_steem  += asset( content_reward, STEEM_SYMBOL );
          p.current_supply           += asset( new_steem, STEEM_SYMBOL );
          p.virtual_supply           += asset( new_steem, STEEM_SYMBOL );
       });
@@ -2538,10 +2536,7 @@ void database::_apply_block( const signed_block& next_block )
 
    const auto& gprops = get_dynamic_global_properties();
    auto block_size = fc::raw::pack_size( next_block );
-   if( has_hardfork( STEEMIT_HARDFORK_0_12 ) )
-   {
-      FC_ASSERT( block_size <= gprops.maximum_block_size, "Block Size is too Big", ("next_block_num",next_block_num)("block_size", block_size)("max",gprops.maximum_block_size) );
-   }
+   FC_ASSERT( block_size <= gprops.maximum_block_size, "Block Size is too Big", ("next_block_num",next_block_num)("block_size", block_size)("max",gprops.maximum_block_size) );
 
    /// modify current witness so transaction evaluators can know who included the transaction,
    /// this is mostly for POW operations which must pay the current_witness
@@ -2552,15 +2547,13 @@ void database::_apply_block( const signed_block& next_block )
    /// parse witness version reporting
    process_header_extensions( next_block );
 
-   if( has_hardfork( STEEMIT_HARDFORK_0_5__54 ) ) // Cannot remove after hardfork
-   {
+   
       const auto& witness = get_witness( next_block.witness );
       const auto& hardfork_state = get_hardfork_property_object();
       FC_ASSERT( witness.running_version >= hardfork_state.current_hardfork_version,
          "Block produced by witness that is not running current hardfork",
          ("witness",witness)("next_block.witness",next_block.witness)("hardfork_state", hardfork_state)
       );
-   }
 
    for( const auto& trx : next_block.transactions )
    {
@@ -2672,19 +2665,11 @@ try {
    for( int i = 0; i < wso.num_scheduled_witnesses; i++ )
    {
       const auto& wit = get_witness( wso.current_shuffled_witnesses[i] );
-      if( has_hardfork( STEEMIT_HARDFORK_0_19__822 ) )
-      {
          if( now < wit.last_sbd_exchange_update + STEEMIT_MAX_FEED_AGE_SECONDS
             && !wit.sbd_exchange_rate.is_null() )
          {
             feeds.push_back( wit.sbd_exchange_rate );
          }
-      }
-      else if( wit.last_sbd_exchange_update < now + STEEMIT_MAX_FEED_AGE_SECONDS &&
-          !wit.sbd_exchange_rate.is_null() )
-      {
-         feeds.push_back( wit.sbd_exchange_rate );
-      }
    }
 
    if( feeds.size() >= STEEMIT_MIN_FEEDS )
@@ -2696,8 +2681,7 @@ try {
       {
          fho.price_history.push_back( median_feed );
          size_t steemit_feed_history_window = STEEMIT_FEED_HISTORY_WINDOW_PRE_HF_16;
-         if( has_hardfork( STEEMIT_HARDFORK_0_16__551) )
-            steemit_feed_history_window = STEEMIT_FEED_HISTORY_WINDOW;
+         steemit_feed_history_window = STEEMIT_FEED_HISTORY_WINDOW;
 
          if( fho.price_history.size() > steemit_feed_history_window )
             fho.price_history.pop_front();
@@ -2717,14 +2701,11 @@ try {
             if( skip_price_feed_limit_check )
                return;
 #endif
-            if( has_hardfork( STEEMIT_HARDFORK_0_14__230 ) )
-            {
                const auto& gpo = get_dynamic_global_properties();
                price min_price( asset( 9 * gpo.current_sbd_supply.amount, SBD_SYMBOL ), gpo.current_supply ); // This price limits SBD to 10% market cap
 
                if( min_price > fho.current_median_history )
                   fho.current_median_history = min_price;
-            }
          }
       });
    }
@@ -2872,14 +2853,13 @@ void database::update_global_dynamic_data( const signed_block& b )
             modify( witness_missed, [&]( witness_object& w )
             {
                w.total_missed++;
-               if( has_hardfork( STEEMIT_HARDFORK_0_14__278 ) )
-               {
+              
                   if( head_block_num() - w.last_confirmed_block_num  > STEEMIT_BLOCKS_PER_DAY )
                   {
                      w.signing_key = public_key_type();
                      push_virtual_operation( shutdown_witness_operation( w.owner ) );
                   }
-               }
+               
             } );
          }
       }
@@ -2921,7 +2901,7 @@ void database::update_virtual_supply()
 
       auto median_price = get_feed_history().current_median_history;
 
-      if( !median_price.is_null() && has_hardfork( STEEMIT_HARDFORK_0_14__230 ) )
+      if( !median_price.is_null() )
       {
          auto percent_sbd = uint16_t( ( ( fc::uint128_t( ( dgp.current_sbd_supply * get_feed_history().current_median_history ).amount.value ) * STEEMIT_100_PERCENT )
             / dgp.virtual_supply.amount.value ).to_uint64() );
@@ -3084,21 +3064,6 @@ int database::match( const limit_order_object& new_order, const limit_order_obje
            old_order_pays == old_order.amount_for_sale() );
 
    auto age = head_block_time() - old_order.created;
-   if( !has_hardfork( STEEMIT_HARDFORK_0_12__178 ) &&
-       ( (age >= STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC && !has_hardfork( STEEMIT_HARDFORK_0_10__149)) ||
-       (age >= STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10 && has_hardfork( STEEMIT_HARDFORK_0_10__149) ) ) )
-   {
-      if( old_order_receives.symbol == STEEM_SYMBOL )
-      {
-         adjust_liquidity_reward( get_account( old_order.seller ), old_order_receives, false );
-         adjust_liquidity_reward( get_account( new_order.seller ), -old_order_receives, false );
-      }
-      else
-      {
-         adjust_liquidity_reward( get_account( old_order.seller ), new_order_receives, true );
-         adjust_liquidity_reward( get_account( new_order.seller ), -new_order_receives, true );
-      }
-   }
 
    push_virtual_operation( fill_order_operation( new_order.seller, new_order.orderid, new_order_pays, old_order.seller, old_order.orderid, old_order_pays ) );
 
@@ -3130,7 +3095,7 @@ void database::adjust_liquidity_reward( const account_object& owner, const asset
          else
             r.steem_volume += volume.amount.value;
 
-         r.update_weight( has_hardfork( STEEMIT_HARDFORK_0_10__141 ) );
+         r.update_weight();
          r.last_update = head_block_time();
       } );
    }
@@ -3144,7 +3109,7 @@ void database::adjust_liquidity_reward( const account_object& owner, const asset
          else
             r.steem_volume = volume.amount.value;
 
-         r.update_weight( has_hardfork( STEEMIT_HARDFORK_0_9__141 ) );
+         r.update_weight();
          r.last_update = head_block_time();
       } );
    }
@@ -3517,16 +3482,11 @@ void database::set_hardfork( uint32_t hardfork, bool apply_now )
 
    for( uint32_t i = hardforks.last_hardfork + 1; i <= hardfork && i <= STEEMIT_NUM_HARDFORKS; i++ )
    {
-      if( i <= STEEMIT_HARDFORK_0_5__54 )
-         _hardfork_times[i] = head_block_time();
-      else
-      {
          modify( hardforks, [&]( hardfork_property_object& hpo )
          {
             hpo.next_hardfork = _hardfork_versions[i];
             hpo.next_hardfork_time = head_block_time();
          } );
-      }
 
       if( apply_now )
          apply_hardfork( i );
@@ -3810,7 +3770,7 @@ void database::retally_liquidity_weight() {
    const auto& ridx = get_index< liquidity_reward_balance_index >().indices().get< by_owner >();
    for( const auto& i : ridx ) {
       modify( i, []( liquidity_reward_balance_object& o ){
-         o.update_weight(true/*HAS HARDFORK10 if this method is called*/);
+         o.update_weight();
       });
    }
 }
