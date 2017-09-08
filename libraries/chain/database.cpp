@@ -1727,8 +1727,7 @@ void database::process_funds()
 
       auto new_steem = ( props.virtual_supply.amount * current_inflation_rate ) / ( int64_t( STEEMIT_100_PERCENT ) * int64_t( STEEMIT_BLOCKS_PER_YEAR ) );
       auto content_reward = ( new_steem * STEEMIT_CONTENT_REWARD_PERCENT ) / STEEMIT_100_PERCENT;
-      if( has_hardfork( STEEMIT_HARDFORK_0_17__774 ) )
-         content_reward = pay_reward_funds( content_reward ); /// 75% to content creator
+      content_reward = pay_reward_funds( content_reward ); /// 75% to content creator
       auto vesting_reward = ( new_steem * STEEMIT_VESTING_FUND_PERCENT ) / STEEMIT_100_PERCENT; /// 15% to vesting fund
       auto witness_reward = new_steem - content_reward - vesting_reward; /// Remaining 10% to witness pay
 
