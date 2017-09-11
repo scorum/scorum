@@ -135,9 +135,9 @@ namespace steemit { namespace chain {
             return std::min(steem_volume,sbd_volume) * is_positive();
          }
 
-         void update_weight( bool hf9 )
+         void update_weight()
          {
-             weight = hf9 ? min_volume_weight() : volume_weight();
+             weight = min_volume_weight();
          }
 
          inline int is_positive()const

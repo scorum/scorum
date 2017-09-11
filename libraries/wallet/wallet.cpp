@@ -2291,6 +2291,9 @@ void wallet_api::set_transaction_expiration(uint32_t seconds)
 
 annotated_signed_transaction wallet_api::challenge( string challenger, string challenged, bool broadcast )
 {
+   //SCORUM: TODO: remove whole method
+   FC_ASSERT( false, "Challenge is disabled");
+   /*
    FC_ASSERT( !is_locked() );
 
    challenge_authority_operation op;
@@ -2303,6 +2306,7 @@ annotated_signed_transaction wallet_api::challenge( string challenger, string ch
    tx.validate();
 
    return my->sign_transaction( tx, broadcast );
+   */
 }
 
 annotated_signed_transaction wallet_api::prove( string challenged, bool broadcast )
