@@ -134,13 +134,6 @@ namespace steemit { namespace protocol {
       validate_account_name( author );
    }
 
-   void challenge_authority_operation::validate()const
-    {
-      validate_account_name( challenger );
-      validate_account_name( challenged );
-      FC_ASSERT( challenged != challenger, "cannot challenge yourself" );
-   }
-
    void prove_authority_operation::validate()const
    {
       validate_account_name( challenged );
@@ -226,129 +219,6 @@ namespace steemit { namespace protocol {
       for( const auto& a : required_auths ) a.validate();
    }
 
-
-   fc::sha256 pow_operation::work_input()const
-   {
-      auto hash = fc::sha256::hash( block_id );
-      hash._hash[0] = nonce;
-      return fc::sha256::hash( hash );
-   }
-
-   void pow_operation::validate()const
-   {
-      props.validate();
-      validate_account_name( worker_account );
-      FC_ASSERT( work_input() == work.input, "Determninistic input does not match recorded input" );
-      work.validate();
-   }
-
-   struct pow2_operation_validate_visitor
-   {
-      typedef void result_type;
-
-      template< typename PowType >
-      void operator()( const PowType& pow )const
-      {
-         pow.validate();
-      }
-   };
-
-   void pow2_operation::validate()const
-   {
-      props.validate();
-      work.visit( pow2_operation_validate_visitor() );
-   }
-
-   struct pow2_operation_get_required_active_visitor
-   {
-      typedef void result_type;
-
-      pow2_operation_get_required_active_visitor( flat_set< account_name_type >& required_active )
-         : _required_active( required_active ) {}
-
-      template< typename PowType >
-      void operator()( const PowType& work )const
-      {
-         _required_active.insert( work.input.worker_account );
-      }
-
-      flat_set<account_name_type>& _required_active;
-   };
-
-   void pow2_operation::get_required_active_authorities( flat_set<account_name_type>& a )const
-   {
-      if( !new_owner_key )
-      {
-         pow2_operation_get_required_active_visitor vtor( a );
-         work.visit( vtor );
-      }
-   }
-
-   void pow::create( const fc::ecc::private_key& w, const digest_type& i )
-   {
-      input  = i;
-      signature = w.sign_compact(input,false);
-
-      auto sig_hash            = fc::sha256::hash( signature );
-      public_key_type recover  = fc::ecc::public_key( signature, sig_hash, false );
-
-      work = fc::sha256::hash(recover);
-   }
-   void pow2::create( const block_id_type& prev, const account_name_type& account_name, uint64_t n )
-   {
-      input.worker_account = account_name;
-      input.prev_block     = prev;
-      input.nonce          = n;
-
-      auto prv_key = fc::sha256::hash( input );
-      auto input = fc::sha256::hash( prv_key );
-      auto signature = fc::ecc::private_key::regenerate( prv_key ).sign_compact(input);
-
-      auto sig_hash            = fc::sha256::hash( signature );
-      public_key_type recover  = fc::ecc::public_key( signature, sig_hash );
-
-      fc::sha256 work = fc::sha256::hash(std::make_pair(input,recover));
-      pow_summary = work.approx_log_32();
-   }
-
-   void equihash_pow::create( const block_id_type& recent_block, const account_name_type& account_name, uint32_t nonce )
-   {
-      input.worker_account = account_name;
-      input.prev_block = recent_block;
-      input.nonce = nonce;
-
-      auto seed = fc::sha256::hash( input );
-      proof = fc::equihash::proof::hash( STEEMIT_EQUIHASH_N, STEEMIT_EQUIHASH_K, seed );
-      pow_summary = fc::sha256::hash( proof.inputs ).approx_log_32();
-   }
-
-   void pow::validate()const
-   {
-      FC_ASSERT( work != fc::sha256() );
-      FC_ASSERT( public_key_type(fc::ecc::public_key( signature, input, false )) == worker );
-      auto sig_hash = fc::sha256::hash( signature );
-      public_key_type recover  = fc::ecc::public_key( signature, sig_hash, false );
-      FC_ASSERT( work == fc::sha256::hash(recover) );
-   }
-
-   void pow2::validate()const
-   {
-      validate_account_name( input.worker_account );
-      pow2 tmp; tmp.create( input.prev_block, input.worker_account, input.nonce );
-      FC_ASSERT( pow_summary == tmp.pow_summary, "reported work does not match calculated work" );
-   }
-
-   void equihash_pow::validate() const
-   {
-      validate_account_name( input.worker_account );
-      auto seed = fc::sha256::hash( input );
-      FC_ASSERT( proof.n == STEEMIT_EQUIHASH_N, "proof of work 'n' value is incorrect" );
-      FC_ASSERT( proof.k == STEEMIT_EQUIHASH_K, "proof of work 'k' value is incorrect" );
-      FC_ASSERT( proof.seed == seed, "proof of work seed does not match expected seed" );
-      FC_ASSERT( proof.is_valid(), "proof of work is not a solution", ("block_id", input.prev_block)("worker_account", input.worker_account)("nonce", input.nonce) );
-      FC_ASSERT( pow_summary == fc::sha256::hash( proof.inputs ).approx_log_32() );
-   }
-
    void feed_publish_operation::validate()const
    {
       validate_account_name( publisher );
@@ -391,16 +261,6 @@ namespace steemit { namespace protocol {
       /// market fluxuations through converting large quantities without moving the price.
       FC_ASSERT( is_asset_type( amount, SBD_SYMBOL ), "Can only convert SBD to STEEM" );
       FC_ASSERT( amount.amount > 0, "Must convert some SBD" );
-   }
-
-   void report_over_production_operation::validate()const
-   {
-      validate_account_name( reporter );
-      validate_account_name( first_block.witness );
-      FC_ASSERT( first_block.witness   == second_block.witness );
-      FC_ASSERT( first_block.timestamp == second_block.timestamp );
-      FC_ASSERT( first_block.signee()  == second_block.signee() );
-      FC_ASSERT( first_block.id() != second_block.id() );
    }
 
    void escrow_transfer_operation::validate()const
@@ -505,24 +365,6 @@ namespace steemit { namespace protocol {
    void decline_voting_rights_operation::validate()const
    {
       validate_account_name( account );
-   }
-
-   void reset_account_operation::validate()const
-   {
-      validate_account_name( reset_account );
-      validate_account_name( account_to_reset );
-      FC_ASSERT( !new_owner_authority.is_impossible(), "new owner authority cannot be impossible" );
-      FC_ASSERT( new_owner_authority.weight_threshold, "new owner authority cannot be trivial" );
-      new_owner_authority.validate();
-   }
-
-   void set_reset_account_operation::validate()const
-   {
-      validate_account_name( account );
-      if( current_reset_account.size() )
-         validate_account_name( current_reset_account );
-      validate_account_name( reset_account );
-      FC_ASSERT( current_reset_account != reset_account, "new reset account cannot be current reset account" );
    }
 
    void claim_reward_balance_operation::validate()const

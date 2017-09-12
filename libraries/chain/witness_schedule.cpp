@@ -88,7 +88,7 @@ void update_witness_schedule4( database& db )
         itr != widx.end() && selected_voted.size() < wso.max_voted_witnesses;
         ++itr )
    {
-      if( db.has_hardfork( STEEMIT_HARDFORK_0_14__278 ) && (itr->signing_key == public_key_type()) )
+      if(itr->signing_key == public_key_type())
          continue;
       selected_voted.insert( itr->id );
       active_witnesses.push_back( itr->owner) ;

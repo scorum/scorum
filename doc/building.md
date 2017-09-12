@@ -199,10 +199,11 @@ steem. Until then, this will allow you to install boost 1.60.0.
 
 ### Compile
 
-    export OPENSSL_ROOT_DIR=$(brew --prefix)/Cellar/openssl/1.0.2h_1/
+    export OPENSSL_ROOT_DIR=$(brew --prefix)/Cellar/openssl/1.0.2l/
     export BOOST_ROOT=$(brew --prefix)/Cellar/boost@1.60/1.60.0/
     git submodule update --init --recursive
-    mkdir build && cd build
+    mkdir build 
+    cd build
     cmake -DBOOST_ROOT="$BOOST_ROOT" -DCMAKE_BUILD_TYPE=Release ..
     make -j$(sysctl -n hw.logicalcpu)
 

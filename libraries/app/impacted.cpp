@@ -68,12 +68,6 @@ struct get_impacted_account_visitor
          _impacted.insert( op.parent_author );
    }
 
-   void operator()( const challenge_authority_operation& op )
-   {
-      _impacted.insert( op.challenger );
-      _impacted.insert( op.challenged );
-   }
-
    void operator()( const vote_operation& op )
    {
       _impacted.insert( op.voter );
@@ -145,29 +139,6 @@ struct get_impacted_account_visitor
    void operator()( const feed_publish_operation& op )
    {
       _impacted.insert( op.publisher );
-   }
-
-   void operator()( const pow_operation& op )
-   {
-      _impacted.insert( op.worker_account );
-   }
-
-   struct pow2_impacted_visitor
-   {
-      pow2_impacted_visitor(){}
-
-      typedef const account_name_type& result_type;
-
-      template< typename WorkType >
-      result_type operator()( const WorkType& work )const
-      {
-         return work.input.worker_account;
-      }
-   };
-
-   void operator()( const pow2_operation& op )
-   {
-      _impacted.insert( op.work.visit( pow2_impacted_visitor() ) );
    }
 
    void operator()( const request_account_recovery_operation& op )

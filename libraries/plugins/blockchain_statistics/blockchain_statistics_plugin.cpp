@@ -76,30 +76,6 @@ struct operation_process
       });
    }
 
-   void operator()( const pow_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         auto& worker = _db.get_account( op.worker_account );
-
-         if( worker.created == _db.head_block_time() )
-            b.mined_accounts_created++;
-
-         b.total_pow++;
-
-         uint64_t bits = ( _db.get_dynamic_global_properties().num_pow_witnesses / 4 ) + 4;
-         uint128_t estimated_hashes = ( 1 << bits );
-         uint32_t delta_t;
-
-         if( b.seconds == 0 )
-            delta_t = _db.head_block_time().sec_since_epoch() - b.open.sec_since_epoch();
-         else
-         	delta_t = b.seconds;
-
-         b.estimated_hashpower = ( b.estimated_hashpower * delta_t + estimated_hashes ) / delta_t;
-      });
-   }
-
    void operator()( const comment_operation& op )const
    {
       _db.modify( _bucket, [&]( bucket_object& b )
