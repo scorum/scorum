@@ -4,7 +4,6 @@ FROM phusion/baseimage:0.9.19
 
 ENV LANG=en_US.UTF-8
 
-
 RUN \
     apt-get update && \
     apt-get install -y \
