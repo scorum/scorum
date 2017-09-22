@@ -4,9 +4,9 @@ ciscripts/triggerbuild.sh
 
 if [ $? -eq 0  ]; then
 	ciscripts/buildsuccess.sh
-	return 0
+	exit 0
 else
 	ciscripts/buildfailure.sh
-	return 1
+	exit 1
 fi
 
