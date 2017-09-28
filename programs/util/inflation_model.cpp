@@ -71,6 +71,7 @@ int main( int argc, char** argv, char** envp )
 #define STEEMIT_FIRST_CASHOUT_TIME              (fc::time_point_sec(1467590400))  /// July 4th
 */
 
+
    uint32_t liquidity_begin_block = (1467590400 - 1458835200) / 3;
    uint32_t pow_deficit = 100;
 

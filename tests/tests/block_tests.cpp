@@ -700,6 +700,8 @@ BOOST_FIXTURE_TEST_CASE( skip_block, clean_database_fixture )
    FC_LOG_AND_RETHROW();
 }
 
+/*
+
 BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
 {
    try
@@ -783,6 +785,7 @@ BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
    }
    FC_LOG_AND_RETHROW()
 }
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
 #endif
