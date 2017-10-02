@@ -2977,7 +2977,19 @@ int database::match( const limit_order_object& new_order, const limit_order_obje
            old_order_pays == old_order.amount_for_sale() );
 
    auto age = head_block_time() - old_order.created;
-
+if( age >= STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC )
+   {
+      if( old_order_receives.symbol == STEEM_SYMBOL )
+      {
+         adjust_liquidity_reward( get_account( old_order.seller ), old_order_receives, false );
+         adjust_liquidity_reward( get_account( new_order.seller ), -old_order_receives, false );
+      }
+      else
+      {
+         adjust_liquidity_reward( get_account( old_order.seller ), new_order_receives, true );
+         adjust_liquidity_reward( get_account( new_order.seller ), -new_order_receives, true );
+      }
+   }
    push_virtual_operation( fill_order_operation( new_order.seller, new_order.orderid, new_order_pays, old_order.seller, old_order.orderid, old_order_pays ) );
 
    int result = 0;

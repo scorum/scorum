@@ -1898,7 +1898,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
 
       BOOST_TEST_MESSAGE( "Waiting 10 minutes" );
 
-      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10, true );
+      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC, true );
 
       BOOST_TEST_MESSAGE( "Creating Limit Order for SBD that will be filled immediately." );
 
@@ -1965,7 +1965,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
 
       BOOST_TEST_MESSAGE( "Waiting 10 minutes" );
 
-      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10, true );
+      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC, true );
 
       BOOST_TEST_MESSAGE( "Creating Limit Order for SBD that will stay on the books for 30 minutes." );
 
@@ -1983,7 +1983,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
 
       BOOST_TEST_MESSAGE( "Waiting 30 minutes" );
 
-      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10, true );
+      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC, true );
 
       BOOST_TEST_MESSAGE( "Filling both limit orders." );
 
@@ -2057,7 +2057,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
       tx.sign( alice_private_key, db.get_chain_id() );
       db.push_transaction( tx, 0 );
 
-      generate_blocks( db.head_block_time() + fc::seconds( STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10.to_seconds() / 2 ), true );
+      generate_blocks( db.head_block_time() + fc::seconds( STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC.to_seconds() / 2 ), true );
 
       op.owner = "bob";
       op.orderid = 7;
@@ -2071,7 +2071,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
       tx.sign( bob_private_key, db.get_chain_id() );
       db.push_transaction( tx, 0 );
 
-      generate_blocks( db.head_block_time() + fc::seconds( STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10.to_seconds() / 2 ), true );
+      generate_blocks( db.head_block_time() + fc::seconds( STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC.to_seconds() / 2 ), true );
 
       ops = get_last_operations( 3 );
       fill_order_op = ops[2].get< fill_order_operation >();
@@ -2104,7 +2104,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
       BOOST_REQUIRE( reward->steem_volume == sam_steem_volume );
       BOOST_CHECK( reward->last_update == sam_reward_last_update );*/
 
-      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10, true );
+      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC, true );
 
       op.owner = "sam";
       op.orderid = 8;
@@ -2176,7 +2176,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
       tx.sign( alice_private_key, db.get_chain_id() );
       db.push_transaction( tx, 0 );
 
-      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10, true );
+      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC, true );
 
       op.owner = "dave";
       op.amount_to_sell = asset( 7 * ( alice_sbd.amount.value / 20 ), SBD_SYMBOL );;
@@ -2305,7 +2305,7 @@ BOOST_AUTO_TEST_CASE( liquidity_rewards )
       tx.sign( bob_private_key, db.get_chain_id() );
       db.push_transaction( tx, 0 );
 
-      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC_HF10, true );
+      generate_blocks( db.head_block_time() + STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC, true );
 
       op.owner = "dave";
       op.orderid = 13;

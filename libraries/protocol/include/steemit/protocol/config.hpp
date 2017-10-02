@@ -147,7 +147,7 @@
 #define STEEMIT_EQUIHASH_K                      6
 
 #define STEEMIT_LIQUIDITY_TIMEOUT_SEC           (fc::seconds(60*60*24*7)) // After one week volume is set to 0
-#define STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC (fc::seconds(60)) // 1 minute required on books to receive volume
+#define STEEMIT_MIN_LIQUIDITY_REWARD_PERIOD_SEC fc::seconds(60*30) /// 30 min required on books to receive volume
 #define STEEMIT_LIQUIDITY_REWARD_PERIOD_SEC     (60*60)
 #define STEEMIT_LIQUIDITY_REWARD_BLOCKS         (STEEMIT_LIQUIDITY_REWARD_PERIOD_SEC/STEEMIT_BLOCK_INTERVAL)
 #define STEEMIT_MIN_LIQUIDITY_REWARD            (asset( 1000*STEEMIT_LIQUIDITY_REWARD_BLOCKS, STEEM_SYMBOL )) // Minumum reward to be paid out to liquidity providers
