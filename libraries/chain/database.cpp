@@ -630,7 +630,8 @@ void database::push_transaction( const signed_transaction& trx, uint32_t skip )
    {
       try
       {
-         FC_ASSERT( fc::raw::pack_size(trx) <= (get_dynamic_global_properties().maximum_block_size - 256) );
+         size_t trx_size = fc::raw::pack_size(trx);
+         FC_ASSERT( trx_size <= (get_dynamic_global_properties().maximum_block_size - 256) );
          set_producing( true );
          detail::with_skip_flags( *this, skip,
             [&]()
@@ -2258,6 +2259,10 @@ void database::init_genesis( uint64_t init_supply )
          p.current_supply = asset( init_supply, STEEM_SYMBOL );
          p.virtual_supply = p.current_supply;
          p.maximum_block_size = STEEMIT_MAX_BLOCK_SIZE;
+
+         p.total_reward_fund_steem = asset( 0, STEEM_SYMBOL );
+         p.total_reward_shares2 = 0;
+
       } );
 
       // Nothing to do
@@ -2273,7 +2278,32 @@ void database::init_genesis( uint64_t init_supply )
       create< witness_schedule_object >( [&]( witness_schedule_object& wso )
       {
          wso.current_shuffled_witnesses[0] = STEEMIT_INIT_MINER_NAME;
+         wso.max_voted_witnesses = STEEMIT_MAX_VOTED_WITNESSES_HF17;
+         wso.max_miner_witnesses = STEEMIT_MAX_MINER_WITNESSES_HF17;
+         wso.max_runner_witnesses = STEEMIT_MAX_RUNNER_WITNESSES_HF17;
       } );
+
+      const auto& gpo = get_dynamic_global_properties();
+
+      auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo )
+      {
+         rfo.name = STEEMIT_POST_REWARD_FUND_NAME;
+         rfo.last_update = head_block_time();
+         rfo.content_constant = STEEMIT_CONTENT_CONSTANT_HF0;
+         rfo.percent_curation_rewards = STEEMIT_1_PERCENT * 25;
+         rfo.percent_content_rewards = STEEMIT_100_PERCENT;
+         rfo.reward_balance = gpo.total_reward_fund_steem;
+#ifndef IS_TEST_NET
+         rfo.recent_claims = STEEMIT_HF_19_RECENT_CLAIMS;
+#endif
+         rfo.author_reward_curve = curve_id::linear;
+         rfo.curation_reward_curve = curve_id::square_root;
+
+      });
+
+      // As a shortcut in payout processing, we use the id as an array index.
+      // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
+      FC_ASSERT( post_rf.id._id == 0 );
    }
    FC_CAPTURE_AND_RETHROW()
 }
