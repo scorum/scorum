@@ -1,2 +1,2 @@
 #pragma once
-#include <steemit/protocol/block.hpp>
+#include <scorum/protocol/block.hpp>

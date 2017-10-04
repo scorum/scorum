@@ -1,12 +1,12 @@
 #pragma once
 
-#include <steemit/protocol/steem_operations.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
-#include <steemit/chain/evaluator.hpp>
+#include <scorum/chain/evaluator.hpp>
 
-namespace steemit{ namespace chain {
+namespace scorum{ namespace chain {
 
-using namespace steemit::protocol;
+using namespace scorum::protocol;
 
 DEFINE_EVALUATOR( account_create )
 DEFINE_EVALUATOR( account_create_with_delegation )
@@ -45,4 +45,4 @@ DEFINE_EVALUATOR( decline_voting_rights )
 DEFINE_EVALUATOR( claim_reward_balance )
 DEFINE_EVALUATOR( delegate_vesting_shares )
 
-} } // steemit::chain
+} } // scorum::chain

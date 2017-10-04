@@ -1,10 +1,10 @@
-#include <steemit/app/api_context.hpp>
-#include <steemit/app/application.hpp>
-#include <steemit/app/database_api.hpp>
+#include <scorum/app/api_context.hpp>
+#include <scorum/app/application.hpp>
+#include <scorum/app/database_api.hpp>
 
-#include <steemit/protocol/get_config.hpp>
+#include <scorum/protocol/get_config.hpp>
 
-#include <steemit/chain/util/reward.hpp>
+#include <scorum/chain/util/reward.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -21,7 +21,7 @@
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
 
 class database_api_impl;
 
@@ -29,7 +29,7 @@ class database_api_impl;
 class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 {
    public:
-      database_api_impl( const steemit::app::api_context& ctx  );
+      database_api_impl( const scorum::app::api_context& ctx  );
       ~database_api_impl();
 
       // Subscriptions
@@ -76,8 +76,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       std::function<void(const fc::variant&)> _block_applied_callback;
 
-      steemit::chain::database&                _db;
-      std::shared_ptr< steemit::follow::follow_api > _follow_api;
+      scorum::chain::database&                _db;
+      std::shared_ptr< scorum::follow::follow_api > _follow_api;
 
       boost::signals2::scoped_connection       _block_applied_connection;
 
@@ -140,12 +140,12 @@ void database_api_impl::set_block_applied_callback( std::function<void(const var
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-database_api::database_api( const steemit::app::api_context& ctx )
+database_api::database_api( const scorum::app::api_context& ctx )
    : my( new database_api_impl( ctx ) ) {}
 
 database_api::~database_api() {}
 
-database_api_impl::database_api_impl( const steemit::app::api_context& ctx )
+database_api_impl::database_api_impl( const scorum::app::api_context& ctx )
    : _db( *ctx.app.chain_database() )
 {
    wlog("creating database api ${x}", ("x",int64_t(this)) );
@@ -155,7 +155,7 @@ database_api_impl::database_api_impl( const steemit::app::api_context& ctx )
    try
    {
       ctx.app.get_plugin< follow::follow_plugin >( FOLLOW_PLUGIN_NAME );
-      _follow_api = std::make_shared< steemit::follow::follow_api >( ctx );
+      _follow_api = std::make_shared< scorum::follow::follow_api >( ctx );
    }
    catch( fc::assert_exception ) { ilog("Follow Plugin not loaded"); }
 }
@@ -247,7 +247,7 @@ fc::variant_object database_api::get_config()const
 
 fc::variant_object database_api_impl::get_config()const
 {
-   return steemit::protocol::get_config();
+   return scorum::protocol::get_config();
 }
 
 dynamic_global_property_api_obj database_api::get_dynamic_global_properties()const
@@ -405,7 +405,7 @@ vector<account_id_type> database_api_impl::get_account_references( account_id_ty
 {
    /*const auto& idx = _db.get_index<account_index>();
    const auto& aidx = dynamic_cast<const primary_index<account_index>&>(idx);
-   const auto& refs = aidx.get_secondary_index<steemit::chain::account_member_index>();
+   const auto& refs = aidx.get_secondary_index<scorum::chain::account_member_index>();
    auto itr = refs.account_to_account_memberships.find(account_id);
    vector<account_id_type> result;
 
@@ -415,7 +415,7 @@ vector<account_id_type> database_api_impl::get_account_references( account_id_ty
       for( auto item : itr->second ) result.push_back(item);
    }
    return result;*/
-   FC_ASSERT( false, "database_api::get_account_references --- Needs to be refactored for steem." );
+   FC_ASSERT( false, "database_api::get_account_references --- Needs to be refactored for scorum." );
 }
 
 vector<optional<account_api_obj>> database_api::lookup_account_names(const vector<string>& account_names)const
@@ -739,7 +739,7 @@ vector<extended_limit_order> database_api::get_open_orders( string owner )const
       while( itr != idx.end() && itr->seller == owner ) {
          result.push_back( *itr );
 
-         if( itr->sell_price.base.symbol == STEEM_SYMBOL )
+         if( itr->sell_price.base.symbol == SCORUM_SYMBOL )
             result.back().real_price = (~result.back().sell_price).to_real();
          else
             result.back().real_price = (result.back().sell_price).to_real();
@@ -754,8 +754,8 @@ order_book database_api_impl::get_order_book( uint32_t limit )const
    FC_ASSERT( limit <= 1000 );
    order_book result;
 
-   auto max_sell = price::max( SBD_SYMBOL, STEEM_SYMBOL );
-   auto max_buy = price::max( STEEM_SYMBOL, SBD_SYMBOL );
+   auto max_sell = price::max( SBD_SYMBOL, SCORUM_SYMBOL );
+   auto max_buy = price::max( SCORUM_SYMBOL, SBD_SYMBOL );
 
    const auto& limit_price_idx = _db.get_index<limit_order_index>().indices().get<by_price>();
    auto sell_itr = limit_price_idx.lower_bound(max_sell);
@@ -772,19 +772,19 @@ order_book database_api_impl::get_order_book( uint32_t limit )const
       cur.order_price = itr->sell_price;
       cur.real_price  = (cur.order_price).to_real();
       cur.sbd = itr->for_sale;
-      cur.steem = ( asset( itr->for_sale, SBD_SYMBOL ) * cur.order_price ).amount;
+      cur.scorum = ( asset( itr->for_sale, SBD_SYMBOL ) * cur.order_price ).amount;
       cur.created = itr->created;
       result.bids.push_back( cur );
       ++sell_itr;
    }
-   while(  buy_itr != end && buy_itr->sell_price.base.symbol == STEEM_SYMBOL && result.asks.size() < limit )
+   while(  buy_itr != end && buy_itr->sell_price.base.symbol == SCORUM_SYMBOL && result.asks.size() < limit )
    {
       auto itr = buy_itr;
       order cur;
       cur.order_price = itr->sell_price;
       cur.real_price  = (~cur.order_price).to_real();
-      cur.steem   = itr->for_sale;
-      cur.sbd     = ( asset( itr->for_sale, STEEM_SYMBOL ) * cur.order_price ).amount;
+      cur.scorum   = itr->for_sale;
+      cur.sbd     = ( asset( itr->for_sale, SCORUM_SYMBOL ) * cur.order_price ).amount;
       cur.created = itr->created;
       result.asks.push_back( cur );
       ++buy_itr;
@@ -870,12 +870,12 @@ set<public_key_type> database_api::get_required_signatures( const signed_transac
 set<public_key_type> database_api_impl::get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const
 {
 //   wdump((trx)(available_keys));
-   auto result = trx.get_required_signatures( STEEMIT_CHAIN_ID,
+   auto result = trx.get_required_signatures( SCORUM_CHAIN_ID,
                                               available_keys,
                                               [&]( string account_name ){ return authority( _db.get< account_authority_object, by_account >( account_name ).active  ); },
                                               [&]( string account_name ){ return authority( _db.get< account_authority_object, by_account >( account_name ).owner   ); },
                                               [&]( string account_name ){ return authority( _db.get< account_authority_object, by_account >( account_name ).posting ); },
-                                              STEEMIT_MAX_SIG_CHECK_DEPTH );
+                                              SCORUM_MAX_SIG_CHECK_DEPTH );
 //   wdump((result));
    return result;
 }
@@ -893,7 +893,7 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
 //   wdump((trx));
    set<public_key_type> result;
    trx.get_required_signatures(
-      STEEMIT_CHAIN_ID,
+      SCORUM_CHAIN_ID,
       flat_set<public_key_type>(),
       [&]( account_name_type account_name )
       {
@@ -916,7 +916,7 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
             result.insert(k);
          return authority( auth );
       },
-      STEEMIT_MAX_SIG_CHECK_DEPTH
+      SCORUM_MAX_SIG_CHECK_DEPTH
    );
 
 //   wdump((result));
@@ -933,11 +933,11 @@ bool database_api::verify_authority( const signed_transaction& trx ) const
 
 bool database_api_impl::verify_authority( const signed_transaction& trx )const
 {
-   trx.verify_authority( STEEMIT_CHAIN_ID,
+   trx.verify_authority( SCORUM_CHAIN_ID,
                          [&]( string account_name ){ return authority( _db.get< account_authority_object, by_account >( account_name ).active  ); },
                          [&]( string account_name ){ return authority( _db.get< account_authority_object, by_account >( account_name ).owner   ); },
                          [&]( string account_name ){ return authority( _db.get< account_authority_object, by_account >( account_name ).posting ); },
-                         STEEMIT_MAX_SIG_CHECK_DEPTH );
+                         SCORUM_MAX_SIG_CHECK_DEPTH );
    return true;
 }
 
@@ -1088,7 +1088,7 @@ void database_api::set_pending_payout( discussion& d )const
    {
       uint128_t vshares;
       const auto& rf = my->_db.get_reward_fund( my->_db.get_comment( d.author, d.permlink ) );
-      vshares = d.net_rshares.value > 0 ? steemit::chain::util::evaluate_reward_curve( d.net_rshares.value, rf.author_reward_curve, rf.content_constant ) : 0;
+      vshares = d.net_rshares.value > 0 ? scorum::chain::util::evaluate_reward_curve( d.net_rshares.value, rf.author_reward_curve, rf.content_constant ) : 0;
    
       u256 r2 = to256(vshares); //to256(abs_net_rshares);
       r2 *= pot.amount.value;
@@ -1102,7 +1102,7 @@ void database_api::set_pending_payout( discussion& d )const
       }
    }
 
-   if( d.parent_author != STEEMIT_ROOT_POST_PARENT )
+   if( d.parent_author != SCORUM_ROOT_POST_PARENT )
       d.cashout_time = my->_db.calculate_discussion_payout_time( my->_db.get< comment_object >( d.id ) );
 
    if( d.body.size() > 1024*128 )
@@ -1411,7 +1411,7 @@ vector<discussion> database_api::get_discussions_by_promoted( const discussion_q
       auto parent = get_parent( query );
 
       const auto& tidx = my->_db.get_index<tags::tag_index>().indices().get<tags::by_parent_promoted>();
-      auto tidx_itr = tidx.lower_bound( boost::make_tuple( tag, parent, share_type(STEEMIT_MAX_SHARE_SUPPLY) )  );
+      auto tidx_itr = tidx.lower_bound( boost::make_tuple( tag, parent, share_type(SCORUM_MAX_SHARE_SUPPLY) )  );
 
       return get_discussions( query, tag, parent, tidx, tidx_itr, query.truncate_body, filter_default, exit_default, []( const tags::tag_object& t ){ return t.promoted_balance == 0; }  );
    });
@@ -2312,4 +2312,4 @@ annotated_signed_transaction database_api::get_transaction( transaction_id_type 
 }
 
 
-} } // steemit::app
+} } // scorum::app

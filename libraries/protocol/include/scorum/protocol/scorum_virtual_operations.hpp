@@ -1,21 +1,21 @@
 #pragma once
-#include <steemit/protocol/base.hpp>
-#include <steemit/protocol/block_header.hpp>
-#include <steemit/protocol/asset.hpp>
+#include <scorum/protocol/base.hpp>
+#include <scorum/protocol/block_header.hpp>
+#include <scorum/protocol/asset.hpp>
 
 #include <fc/utf8.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    struct author_reward_operation : public virtual_operation {
       author_reward_operation(){}
       author_reward_operation( const account_name_type& a, const string& p, const asset& s, const asset& st, const asset& v )
-         :author(a), permlink(p), sbd_payout(s), steem_payout(st), vesting_payout(v){}
+         :author(a), permlink(p), sbd_payout(s), scorum_payout(st), vesting_payout(v){}
 
       account_name_type author;
       string            permlink;
       asset             sbd_payout;
-      asset             steem_payout;
+      asset             scorum_payout;
       asset             vesting_payout;
    };
 
@@ -176,20 +176,20 @@ namespace steemit { namespace protocol {
 
    };
 
-} } //steemit::protocol
+} } //scorum::protocol
 
-FC_REFLECT( steemit::protocol::author_reward_operation, (author)(permlink)(sbd_payout)(steem_payout)(vesting_payout) )
-FC_REFLECT( steemit::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink) )
-FC_REFLECT( steemit::protocol::comment_reward_operation, (author)(permlink)(payout) )
-FC_REFLECT( steemit::protocol::fill_convert_request_operation, (owner)(requestid)(amount_in)(amount_out) )
-FC_REFLECT( steemit::protocol::liquidity_reward_operation, (owner)(payout) )
-FC_REFLECT( steemit::protocol::interest_operation, (owner)(interest) )
-FC_REFLECT( steemit::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
-FC_REFLECT( steemit::protocol::shutdown_witness_operation, (owner) )
-FC_REFLECT( steemit::protocol::fill_order_operation, (current_owner)(current_orderid)(current_pays)(open_owner)(open_orderid)(open_pays) )
-FC_REFLECT( steemit::protocol::fill_transfer_from_savings_operation, (from)(to)(amount)(request_id)(memo) )
-FC_REFLECT( steemit::protocol::hardfork_operation, (hardfork_id) )
-FC_REFLECT( steemit::protocol::comment_payout_update_operation, (author)(permlink) )
-FC_REFLECT( steemit::protocol::return_vesting_delegation_operation, (account)(vesting_shares) )
-FC_REFLECT( steemit::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward) )
-FC_REFLECT( steemit::protocol::producer_reward_operation, (producer)(vesting_shares) )
+FC_REFLECT( scorum::protocol::author_reward_operation, (author)(permlink)(sbd_payout)(scorum_payout)(vesting_payout) )
+FC_REFLECT( scorum::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink) )
+FC_REFLECT( scorum::protocol::comment_reward_operation, (author)(permlink)(payout) )
+FC_REFLECT( scorum::protocol::fill_convert_request_operation, (owner)(requestid)(amount_in)(amount_out) )
+FC_REFLECT( scorum::protocol::liquidity_reward_operation, (owner)(payout) )
+FC_REFLECT( scorum::protocol::interest_operation, (owner)(interest) )
+FC_REFLECT( scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
+FC_REFLECT( scorum::protocol::shutdown_witness_operation, (owner) )
+FC_REFLECT( scorum::protocol::fill_order_operation, (current_owner)(current_orderid)(current_pays)(open_owner)(open_orderid)(open_pays) )
+FC_REFLECT( scorum::protocol::fill_transfer_from_savings_operation, (from)(to)(amount)(request_id)(memo) )
+FC_REFLECT( scorum::protocol::hardfork_operation, (hardfork_id) )
+FC_REFLECT( scorum::protocol::comment_payout_update_operation, (author)(permlink) )
+FC_REFLECT( scorum::protocol::return_vesting_delegation_operation, (account)(vesting_shares) )
+FC_REFLECT( scorum::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward) )
+FC_REFLECT( scorum::protocol::producer_reward_operation, (producer)(vesting_shares) )

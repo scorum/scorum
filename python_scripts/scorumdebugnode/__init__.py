@@ -1,3 +1,3 @@
-from steemdebugnode.debugnode import DebugNode
+from scorumdebugnode.debugnode import DebugNode
 
 __all__ = [ 'debugnode' ]

@@ -1,15 +1,15 @@
-#include <steemit/tags/tags_plugin.hpp>
+#include <scorum/tags/tags_plugin.hpp>
 
-#include <steemit/app/impacted.hpp>
+#include <scorum/app/impacted.hpp>
 
-#include <steemit/protocol/config.hpp>
+#include <scorum/protocol/config.hpp>
 
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/hardfork.hpp>
-#include <steemit/chain/index.hpp>
-#include <steemit/chain/operation_notification.hpp>
-#include <steemit/chain/account_object.hpp>
-#include <steemit/chain/comment_object.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/hardfork.hpp>
+#include <scorum/chain/index.hpp>
+#include <scorum/chain/operation_notification.hpp>
+#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/comment_object.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -19,11 +19,11 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string.hpp>
 
-namespace steemit { namespace tags {
+namespace scorum { namespace tags {
 
 namespace detail {
 
-using namespace steemit::protocol;
+using namespace scorum::protocol;
 
 class tags_plugin_impl
 {
@@ -33,7 +33,7 @@ class tags_plugin_impl
       { }
       virtual ~tags_plugin_impl();
 
-      steemit::chain::database& database()
+      scorum::chain::database& database()
       {
          return _self.database();
       }
@@ -391,7 +391,7 @@ struct operation_visitor
 
    void operator()( const transfer_operation& op )const
    {
-      if( op.to == STEEMIT_NULL_ACCOUNT && op.amount.symbol == SBD_SYMBOL )
+      if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol == SBD_SYMBOL )
       {
          vector<string> part; part.reserve(4);
          auto path = op.memo;
@@ -533,6 +533,6 @@ void tags_plugin::plugin_startup()
 {
 }
 
-} } /// steemit::tags
+} } /// scorum::tags
 
-STEEMIT_DEFINE_PLUGIN( tags, steemit::tags::tags_plugin )
+SCORUM_DEFINE_PLUGIN( tags, scorum::tags::tags_plugin )

@@ -1,18 +1,18 @@
 
 #pragma once
 
-#include <steemit/protocol/types.hpp>
+#include <scorum/protocol/types.hpp>
 
 #include <fc/api.hpp>
 #include <fc/crypto/sha256.hpp>
 
 #include <string>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
    struct api_context;
 } }
 
-namespace steemit { namespace plugin { namespace auth_util {
+namespace scorum { namespace plugin { namespace auth_util {
 
 namespace detail {
 class auth_util_api_impl;
@@ -34,7 +34,7 @@ struct check_authority_signature_result
 class auth_util_api
 {
    public:
-      auth_util_api( const steemit::app::api_context& ctx );
+      auth_util_api( const scorum::app::api_context& ctx );
 
       void on_api_startup();
 
@@ -46,16 +46,16 @@ class auth_util_api
 
 } } }
 
-FC_REFLECT( steemit::plugin::auth_util::check_authority_signature_params,
+FC_REFLECT( scorum::plugin::auth_util::check_authority_signature_params,
    (account_name)
    (level)
    (dig)
    (sigs)
    )
-FC_REFLECT( steemit::plugin::auth_util::check_authority_signature_result,
+FC_REFLECT( scorum::plugin::auth_util::check_authority_signature_result,
    (keys)
    )
 
-FC_API( steemit::plugin::auth_util::auth_util_api,
+FC_API( scorum::plugin::auth_util::auth_util_api,
    (check_authority_signature)
    )

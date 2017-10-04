@@ -1,14 +1,14 @@
-file(GLOB HEADERS "include/steemit/tags/*.hpp")
+file(GLOB HEADERS "include/scorum/tags/*.hpp")
 
-add_library( steemit_tags
+add_library( scorum_tags
              tags_plugin.cpp )
 
-target_link_libraries( steemit_tags steemit_chain steemit_protocol steemit_app )
-target_include_directories( steemit_tags
+target_link_libraries( scorum_tags scorum_chain scorum_protocol scorum_app )
+target_include_directories( scorum_tags
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 install( TARGETS
-   steemit_tags
+   scorum_tags
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib

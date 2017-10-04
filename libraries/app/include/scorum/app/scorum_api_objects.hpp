@@ -1,20 +1,20 @@
 #pragma once
-#include <steemit/chain/account_object.hpp>
-#include <steemit/chain/block_summary_object.hpp>
-#include <steemit/chain/comment_object.hpp>
-#include <steemit/chain/global_property_object.hpp>
-#include <steemit/chain/history_object.hpp>
-#include <steemit/chain/steem_objects.hpp>
-#include <steemit/chain/transaction_object.hpp>
-#include <steemit/chain/witness_objects.hpp>
+#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/block_summary_object.hpp>
+#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/transaction_object.hpp>
+#include <scorum/chain/witness_objects.hpp>
 
-#include <steemit/tags/tags_plugin.hpp>
+#include <scorum/tags/tags_plugin.hpp>
 
-#include <steemit/witness/witness_objects.hpp>
+#include <scorum/witness/witness_objects.hpp>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
 
-using namespace steemit::chain;
+using namespace scorum::chain;
 
 /*struct limit_order
 {
@@ -87,7 +87,7 @@ struct comment_api_obj
       net_votes( o.net_votes ),
       root_comment( o.root_comment ),
       max_accepted_payout( o.max_accepted_payout ),
-      percent_steem_dollars( o.percent_steem_dollars ),
+      percent_scorum_dollars( o.percent_scorum_dollars ),
       allow_replies( o.allow_replies ),
       allow_votes( o.allow_votes ),
       allow_curation_rewards( o.allow_curation_rewards )
@@ -139,7 +139,7 @@ struct comment_api_obj
    comment_id_type   root_comment;
 
    asset             max_accepted_payout;
-   uint16_t          percent_steem_dollars = 0;
+   uint16_t          percent_scorum_dollars = 0;
    bool              allow_replies = false;
    bool              allow_votes = false;
    bool              allow_curation_rewards = false;
@@ -202,9 +202,9 @@ struct account_api_obj
       savings_sbd_last_interest_payment( a.savings_sbd_last_interest_payment ),
       savings_withdraw_requests( a.savings_withdraw_requests ),
       reward_sbd_balance( a.reward_sbd_balance ),
-      reward_steem_balance( a.reward_steem_balance ),
+      reward_scorum_balance( a.reward_scorum_balance ),
       reward_vesting_balance( a.reward_vesting_balance ),
-      reward_vesting_steem( a.reward_vesting_steem ),
+      reward_vesting_scorum( a.reward_vesting_scorum ),
       curation_rewards( a.curation_rewards ),
       posting_rewards( a.posting_rewards ),
       vesting_shares( a.vesting_shares ),
@@ -301,9 +301,9 @@ struct account_api_obj
    uint8_t           savings_withdraw_requests = 0;
 
    asset             reward_sbd_balance;
-   asset             reward_steem_balance;
+   asset             reward_scorum_balance;
    asset             reward_vesting_balance;
-   asset             reward_vesting_steem;
+   asset             reward_vesting_scorum;
 
    share_type        curation_rewards;
    share_type        posting_rewards;
@@ -505,9 +505,9 @@ struct dynamic_global_property_api_obj : public dynamic_global_property_object
    uint128_t   max_virtual_bandwidth = 0;
 };
 
-} } // steemit::app
+} } // scorum::app
 
-FC_REFLECT( steemit::app::comment_api_obj,
+FC_REFLECT( scorum::app::comment_api_obj,
              (id)(author)(permlink)
              (category)(parent_author)(parent_permlink)
              (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
@@ -515,11 +515,11 @@ FC_REFLECT( steemit::app::comment_api_obj,
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
              (total_vote_weight)(reward_weight)(total_payout_value)(curator_payout_value)(author_rewards)(net_votes)(root_comment)
-             (max_accepted_payout)(percent_steem_dollars)(allow_replies)(allow_votes)(allow_curation_rewards)
+             (max_accepted_payout)(percent_scorum_dollars)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
 
-FC_REFLECT( steemit::app::account_api_obj,
+FC_REFLECT( scorum::app::account_api_obj,
              (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)
              (created)(mined)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)(reset_account)
@@ -528,7 +528,7 @@ FC_REFLECT( steemit::app::account_api_obj,
              (savings_balance)
              (sbd_balance)(sbd_seconds)(sbd_seconds_last_update)(sbd_last_interest_payment)
              (savings_sbd_balance)(savings_sbd_seconds)(savings_sbd_seconds_last_update)(savings_sbd_last_interest_payment)(savings_withdraw_requests)
-             (reward_sbd_balance)(reward_steem_balance)(reward_vesting_balance)(reward_vesting_steem)
+             (reward_sbd_balance)(reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
              (posting_rewards)
@@ -538,21 +538,21 @@ FC_REFLECT( steemit::app::account_api_obj,
              (last_post)(last_root_post)
           )
 
-FC_REFLECT( steemit::app::owner_authority_history_api_obj,
+FC_REFLECT( scorum::app::owner_authority_history_api_obj,
              (id)
              (account)
              (previous_owner_authority)
              (last_valid_time)
           )
 
-FC_REFLECT( steemit::app::account_recovery_request_api_obj,
+FC_REFLECT( scorum::app::account_recovery_request_api_obj,
              (id)
              (account_to_recover)
              (new_owner_authority)
              (expires)
           )
 
-FC_REFLECT( steemit::app::savings_withdraw_api_obj,
+FC_REFLECT( scorum::app::savings_withdraw_api_obj,
              (id)
              (from)
              (to)
@@ -562,13 +562,13 @@ FC_REFLECT( steemit::app::savings_withdraw_api_obj,
              (complete)
           )
 
-FC_REFLECT( steemit::app::feed_history_api_obj,
+FC_REFLECT( scorum::app::feed_history_api_obj,
              (id)
              (current_median_history)
              (price_history)
           )
 
-FC_REFLECT( steemit::app::tag_api_obj,
+FC_REFLECT( scorum::app::tag_api_obj,
             (name)
             (total_payouts)
             (net_votes)
@@ -577,7 +577,7 @@ FC_REFLECT( steemit::app::tag_api_obj,
             (trending)
           )
 
-FC_REFLECT( steemit::app::witness_api_obj,
+FC_REFLECT( scorum::app::witness_api_obj,
              (id)
              (owner)
              (created)
@@ -590,13 +590,13 @@ FC_REFLECT( steemit::app::witness_api_obj,
              (hardfork_version_vote)(hardfork_time_vote)
           )
 
-FC_REFLECT_DERIVED( steemit::app::signed_block_api_obj, (steemit::protocol::signed_block),
+FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),
                      (block_id)
                      (signing_key)
                      (transaction_ids)
                   )
 
-FC_REFLECT_DERIVED( steemit::app::dynamic_global_property_api_obj, (steemit::chain::dynamic_global_property_object),
+FC_REFLECT_DERIVED( scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object),
                      (current_reserve_ratio)
                      (average_block_size)
                      (max_virtual_bandwidth)

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <steemit/protocol/authority.hpp>
-#include <steemit/protocol/types.hpp>
+#include <scorum/protocol/authority.hpp>
+#include <scorum/protocol/types.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
 typedef std::function<authority(const string&)> authority_getter;
 
@@ -32,7 +32,7 @@ struct sign_state
 
       flat_map<public_key_type,bool>   provided_signatures;
       flat_set<string>                 approved_by;
-      uint32_t                         max_recursion = STEEMIT_MAX_SIG_CHECK_DEPTH;
+      uint32_t                         max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH;
 };
 
-} } // steemit::protocol
+} } // scorum::protocol

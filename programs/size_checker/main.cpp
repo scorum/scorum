@@ -27,7 +27,7 @@
 #include <fc/variant.hpp>
 #include <fc/variant_object.hpp>
 
-#include <steemit/protocol/protocol.hpp>
+#include <scorum/protocol/protocol.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -35,7 +35,7 @@
 #include <string>
 #include <vector>
 
-using namespace steemit::protocol;
+using namespace scorum::protocol;
 
 std::vector< fc::variant_object > g_op_types;
 
@@ -68,7 +68,7 @@ int main( int argc, char** argv )
 {
    try
    {
-      steemit::protocol::operation op;
+      scorum::protocol::operation op;
 
 
       std::vector<uint64_t> witnesses; witnesses.resize(50);

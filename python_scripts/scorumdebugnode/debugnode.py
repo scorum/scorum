@@ -11,48 +11,48 @@ from tempfile import TemporaryDirectory
 from threading import Lock
 from time import sleep
 
-from steemapi.steemnoderpc import SteemNodeRPC
+from scorumapi.scorumnoderpc import SteemNodeRPC
 
 class DebugNode( object ):
-   """ Wraps the steemd debug node plugin for easier automated testing of the Steem Network"""
+   """ Wraps the scorumd debug node plugin for easier automated testing of the Steem Network"""
 
-   def __init__( self, steemd, data_dir, args='', plugins=[], apis=[], steemd_out=None, steemd_err=None ):
-      """ Creates a steemd debug node.
+   def __init__( self, scorumd, data_dir, args='', plugins=[], apis=[], scorumd_out=None, scorumd_err=None ):
+      """ Creates a scorumd debug node.
 
       It can be ran by using 'with debug_node:'
       While in the context of 'with' the debug node will continue to run.
       Upon exit of 'with' the debug will exit and clean up temporary files.
       This class also contains methods to allow basic manipulation of the blockchain.
-      For all other requests, the python-steem library should be used.
+      For all other requests, the python-scorum library should be used.
 
       args:
-         steemd -- The string path to the location of the steemd binary
-         data_dir -- The string path to an existing steemd data directory which will be used to pull blocks from.
-         args -- Other string args to pass to steemd.
+         scorumd -- The string path to the location of the scorumd binary
+         data_dir -- The string path to an existing scorumd data directory which will be used to pull blocks from.
+         args -- Other string args to pass to scorumd.
          plugins -- Any additional plugins to start with the debug node. Modify plugins DebugNode.plugins
          apis -- Any additional APIs to have available. APIs will retain this order for accesibility starting at id 3.
             database_api is 0, login_api is 1, and debug_node_api is 2. Modify apis with DebugNode.api
-         steemd_stdout -- A stream for steemd's stdout. Default is to pipe to /dev/null
-         steemd_stderr -- A stream for steemd's stderr. Default is to pipe to /dev/null
+         scorumd_stdout -- A stream for scorumd's stdout. Default is to pipe to /dev/null
+         scorumd_stderr -- A stream for scorumd's stderr. Default is to pipe to /dev/null
       """
       self._data_dir = None
       self._debug_key = None
       self._FNULL = None
       self._rpc = None
-      self._steemd_bin = None
-      self._steemd_lock = None
-      self._steemd_process = None
+      self._scorumd_bin = None
+      self._scorumd_lock = None
+      self._scorumd_process = None
       self._temp_data_dir = None
 
-      self._steemd_bin = Path( steemd )
-      if( not self._steemd_bin.exists() ):
-         raise ValueError( 'steemd does not exist' )
-      if( not self._steemd_bin.is_file() ):
-         raise ValueError( 'steemd is not a file' )
+      self._scorumd_bin = Path( scorumd )
+      if( not self._scorumd_bin.exists() ):
+         raise ValueError( 'scorumd does not exist' )
+      if( not self._scorumd_bin.is_file() ):
+         raise ValueError( 'scorumd is not a file' )
 
       self._data_dir = Path( data_dir )
       if( not self._data_dir.exists() ):
-         raise ValueError( 'data_dir either does not exist or is not a properly constructed steem data directory' )
+         raise ValueError( 'data_dir either does not exist or is not a properly constructed scorum data directory' )
       if( not self._data_dir.is_dir() ):
          raise ValueError( 'data_dir is not a directory' )
 
@@ -65,22 +65,22 @@ class DebugNode( object ):
          self._args = list()
 
       self._FNULL = open( devnull, 'w' )
-      if( steemd_out != None ):
-         self.steemd_out = steemd_out
+      if( scorumd_out != None ):
+         self.scorumd_out = scorumd_out
       else:
-         self.steemd_out = self._FNULL
+         self.scorumd_out = self._FNULL
 
-      if( steemd_err != None ):
-         self.steemd_err = steemd_err
+      if( scorumd_err != None ):
+         self.scorumd_err = scorumd_err
       else:
-         self.steemd_err = self._FNULL
+         self.scorumd_err = self._FNULL
 
       self._debug_key = '5JHNbFNDg834SFj8CMArV6YW7td4zrPzXveqTfaShmYVuYNeK69'
-      self._steemd_lock = Lock()
+      self._scorumd_lock = Lock()
 
 
    def __enter__( self ):
-      self._steemd_lock.acquire()
+      self._scorumd_lock.acquire()
 
       # Setup temp directory to use as the data directory for this
       self._temp_data_dir = TemporaryDirectory()
@@ -97,42 +97,42 @@ class DebugNode( object ):
       config.touch()
       config.write_text( self._get_config() )
 
-      steemd = [ str( self._steemd_bin ), '--data-dir=' + str( self._temp_data_dir.name ) ]
-      steemd.extend( self._args )
+      scorumd = [ str( self._scorumd_bin ), '--data-dir=' + str( self._temp_data_dir.name ) ]
+      scorumd.extend( self._args )
 
-      self._steemd_process = Popen( steemd, stdout=self.steemd_out, stderr=self.steemd_err )
-      self._steemd_process.poll()
+      self._scorumd_process = Popen( scorumd, stdout=self.scorumd_out, stderr=self.scorumd_err )
+      self._scorumd_process.poll()
       sleep( 5 )
-      if( not self._steemd_process.returncode ):
+      if( not self._scorumd_process.returncode ):
          self._rpc = SteemNodeRPC( 'ws://127.0.0.1:8095', '', '' )
       else:
-         raise Exception( "steemd did not start properly..." )
+         raise Exception( "scorumd did not start properly..." )
 
    def __exit__( self, exc, value, tb ):
       self._rpc = None
 
-      if( self._steemd_process != None ):
-         self._steemd_process.poll()
+      if( self._scorumd_process != None ):
+         self._scorumd_process.poll()
 
-         if( not self._steemd_process.returncode ):
-            self._steemd_process.send_signal( SIGINT )
+         if( not self._scorumd_process.returncode ):
+            self._scorumd_process.send_signal( SIGINT )
 
             sleep( 7 )
-            self._steemd_process.poll()
+            self._scorumd_process.poll()
 
-            if( not self._steemd_process.returncode ):
-               self._steemd_process.send_signal( SIGTERM )
+            if( not self._scorumd_process.returncode ):
+               self._scorumd_process.send_signal( SIGTERM )
 
                sleep( 5 )
-               self._steemd_process.poll()
+               self._scorumd_process.poll()
 
-               if( self._steemd_process.returncode ):
-                  loggin.error( 'steemd did not properly shut down after SIGINT and SIGTERM. User intervention may be required.' )
+               if( self._scorumd_process.returncode ):
+                  loggin.error( 'scorumd did not properly shut down after SIGINT and SIGTERM. User intervention may be required.' )
 
-      self._steemd_process = None
+      self._scorumd_process = None
       self._temp_data_dir.cleanup()
       self._temp_data_dir = None
-      self._steemd_lock.release()
+      self._scorumd_lock.release()
 
 
    def _get_config( self ):
@@ -150,7 +150,7 @@ class DebugNode( object ):
 
       The debug node plugin requires a WIF key to sign blocks with. This class uses the key
       5JHNbFNDg834SFj8CMArV6YW7td4zrPzXveqTfaShmYVuYNeK69 which was generated from
-      `get_dev_key steem debug`. Do not use this key on the live chain for any reason.
+      `get_dev_key scorum debug`. Do not use this key on the live chain for any reason.
 
       args:
          count -- The number of new blocks to generate.
@@ -170,7 +170,7 @@ class DebugNode( object ):
 
       The debug node plugin requires a WIF key to sign blocks with. This class uses the key
       5JHNbFNDg834SFj8CMArV6YW7td4zrPzXveqTfaShmYVuYNeK69 which was generated from
-      `get_dev_key steem debug`. Do not use this key on the live chain for any reason.
+      `get_dev_key scorum debug`. Do not use this key on the live chain for any reason.
 
       args:
          time -- The desired new head block time. This is a POSIX Timestmap.
@@ -207,7 +207,7 @@ class DebugNode( object ):
 
       args:
          hardfork_id: The id of the hardfork to set. Hardfork IDs start at 1 (0 is genesis) and increment
-            by one for each hardfork. The maximum value is STEEMIT_NUM_HARDFORKS in chain/hardfork.d/0-preamble.hf
+            by one for each hardfork. The maximum value is SCORUM_NUM_HARDFORKS in chain/hardfork.d/0-preamble.hf
       """
       if( hardfork_id < 0 ):
          raise ValueError( "hardfork_id cannot be negative" )
@@ -233,7 +233,7 @@ if __name__=="__main__":
    def main():
       global WAITING
       """
-      This example contains a simple parser to obtain the locations of both steemd and the data directory,
+      This example contains a simple parser to obtain the locations of both scorumd and the data directory,
       creates and runs a new debug node, replays all of the blocks in the data directory, and finally waits
       for the user to interface with it outside of the script. Sending SIGINT succesfully and cleanly terminates
       the program.
@@ -248,26 +248,26 @@ if __name__=="__main__":
       parser = ArgumentParser( description='Run a Debug Node on an existing chain. This simply replays all blocks ' + \
                                  'and then waits indefinitely to allow user interaction through RPC calls and ' + \
                                  'the CLI wallet' )
-      parser.add_argument( '--steemd', '-s', type=str, required=True, help='The location of a steemd binary to run the debug node' )
+      parser.add_argument( '--scorumd', '-s', type=str, required=True, help='The location of a scorumd binary to run the debug node' )
       parser.add_argument( '--data-dir', '-d', type=str, required=True, help='The location of an existing data directory. ' + \
                            'The debug node will pull blocks from this directory when replaying the chain. The directory ' + \
                            'will not be changed.' )
 
       args = parser.parse_args()
 
-      steemd = Path( args.steemd )
-      if( not steemd.exists() ):
-         print( 'Error: steemd does not exist.' )
+      scorumd = Path( args.scorumd )
+      if( not scorumd.exists() ):
+         print( 'Error: scorumd does not exist.' )
          return
 
-      steemd = steemd.resolve()
-      if( not steemd.is_file() ):
-         print( 'Error: steemd is not a file.' )
+      scorumd = scorumd.resolve()
+      if( not scorumd.is_file() ):
+         print( 'Error: scorumd is not a file.' )
          return
 
       data_dir = Path( args.data_dir )
       if( not data_dir.exists() ):
-         print( 'Error: data_dir does not exist or is not a properly constructed steemd data directory' )
+         print( 'Error: data_dir does not exist or is not a properly constructed scorumd data directory' )
 
       data_dir = data_dir.resolve()
       if( not data_dir.is_dir() ):
@@ -276,7 +276,7 @@ if __name__=="__main__":
       signal.signal( signal.SIGINT, sigint_handler )
 
       print( 'Creating and starting debug node' )
-      debug_node = DebugNode( str( steemd ), str( data_dir ), steemd_err=sys.stderr )
+      debug_node = DebugNode( str( scorumd ), str( data_dir ), scorumd_err=sys.stderr )
 
       with debug_node:
          print( 'Done!' )

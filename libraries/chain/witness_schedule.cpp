@@ -1,11 +1,11 @@
 
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/witness_objects.hpp>
-#include <steemit/chain/witness_schedule.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/witness_schedule.hpp>
 
-#include <steemit/protocol/config.hpp>
+#include <scorum/protocol/config.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 void reset_virtual_schedule_time( database& db )
 {
@@ -80,11 +80,11 @@ void update_median_witness_props( database& db )
  */
 void update_witness_schedule(database& db)
 {
-   if( (db.head_block_num() % STEEMIT_MAX_WITNESSES) == 0 ) //wso.next_shuffle_block_num )
+   if( (db.head_block_num() % SCORUM_MAX_WITNESSES) == 0 ) //wso.next_shuffle_block_num )
    {
         const witness_schedule_object& wso = db.get_witness_schedule_object();
         vector< account_name_type > active_witnesses;
-        active_witnesses.reserve( STEEMIT_MAX_WITNESSES );
+        active_witnesses.reserve( SCORUM_MAX_WITNESSES );
 
         /// Add the highest voted witnesses
         flat_set< witness_id_type > selected_voted;
@@ -144,7 +144,7 @@ void update_witness_schedule(database& db)
         auto sitr = schedule_idx.begin();
         vector<decltype(sitr)> processed_witnesses;
         for( auto witness_count = selected_voted.size() + selected_miners.size();
-                sitr != schedule_idx.end() && witness_count < STEEMIT_MAX_WITNESSES;
+                sitr != schedule_idx.end() && witness_count < SCORUM_MAX_WITNESSES;
                 ++sitr )
         {
             new_virtual_time = sitr->virtual_scheduled_time; /// everyone advances to at least this time
@@ -187,9 +187,9 @@ void update_witness_schedule(database& db)
             reset_virtual_schedule_time(db);
         }
 
-        size_t expected_active_witnesses = std::min( size_t(STEEMIT_MAX_WITNESSES), widx.size() );
+        size_t expected_active_witnesses = std::min( size_t(SCORUM_MAX_WITNESSES), widx.size() );
         FC_ASSERT( active_witnesses.size() == expected_active_witnesses, "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
-                                            ("active_witnesses.size()",active_witnesses.size()) ("STEEMIT_MAX_WITNESSES",STEEMIT_MAX_WITNESSES) ("expected_active_witnesses", expected_active_witnesses) );
+                                            ("active_witnesses.size()",active_witnesses.size()) ("SCORUM_MAX_WITNESSES",SCORUM_MAX_WITNESSES) ("expected_active_witnesses", expected_active_witnesses) );
 
         auto majority_version = wso.majority_version;
 
@@ -270,7 +270,7 @@ void update_witness_schedule(database& db)
                 _wso.current_shuffled_witnesses[i] = active_witnesses[i];
             }
 
-            for( size_t i = active_witnesses.size(); i < STEEMIT_MAX_WITNESSES; i++ )
+            for( size_t i = active_witnesses.size(); i < SCORUM_MAX_WITNESSES; i++ )
             {
                 _wso.current_shuffled_witnesses[i] = account_name_type();
             }

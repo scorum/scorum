@@ -12,7 +12,7 @@ class websocket_api_connection;
 
 } }
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
 
 class application;
 

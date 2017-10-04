@@ -9,8 +9,8 @@ from pathlib import Path
 from time import sleep
 
 # local imports
-from steemdebugnode import DebugNode
-from steemapi.steemnoderpc import SteemNodeRPC
+from scorumdebugnode import DebugNode
+from scorumapi.scorumnoderpc import SteemNodeRPC
 
 WAITING = True
 
@@ -20,9 +20,9 @@ def main( ):
       print( "This script only works on POSIX systems" )
       return
 
-   parser = ArgumentParser( description='Run a steemd debug node on an existing chain, trigger a hardfork' \
+   parser = ArgumentParser( description='Run a scorumd debug node on an existing chain, trigger a hardfork' \
                               ' and verify hardfork does not break invariants or block production' )
-   parser.add_argument( '--steemd', '-s', type=str, required=True, help='The location of a steemd binary to run the debug node' )
+   parser.add_argument( '--scorumd', '-s', type=str, required=True, help='The location of a scorumd binary to run the debug node' )
    parser.add_argument( '--data-dir', '-d', type=str, required=True, help='The location of an existing data directory. ' + \
                         'The debug node will pull blocks from this directory when replaying the chain. The directory ' + \
                         'will not be changed.' )
@@ -31,19 +31,19 @@ def main( ):
 
    args = parser.parse_args()
 
-   steemd = Path( args.steemd )
-   if( not steemd.exists() ):
-      print( 'Error: steemd does not exist.' )
+   scorumd = Path( args.scorumd )
+   if( not scorumd.exists() ):
+      print( 'Error: scorumd does not exist.' )
       return
 
-   steemd = steemd.resolve()
-   if( not steemd.is_file() ):
-      print( 'Error: steemd is not a file.' )
+   scorumd = scorumd.resolve()
+   if( not scorumd.is_file() ):
+      print( 'Error: scorumd is not a file.' )
       return
 
    data_dir = Path( args.data_dir )
    if( not data_dir.exists() ):
-      print( 'Error: data_dir does not exist or is not a properly constructed steemd data directory' )
+      print( 'Error: data_dir does not exist or is not a properly constructed scorumd data directory' )
 
    data_dir = data_dir.resolve()
    if( not data_dir.is_dir() ):
@@ -51,11 +51,11 @@ def main( ):
 
    signal.signal( signal.SIGINT, sigint_handler )
 
-   debug_node = DebugNode( str( steemd ), str( data_dir ) )
+   debug_node = DebugNode( str( scorumd ), str( data_dir ) )
 
    with debug_node :
 
-      run_steemd_tests( debug_node )
+      run_scorumd_tests( debug_node )
 
       if( args.pause_node ):
          print( "Letting the node hang for manual inspection..." )
@@ -66,8 +66,8 @@ def main( ):
          sleep( 1 )
 
 
-def run_steemd_tests( debug_node ):
-   from steemapi.steemnoderpc import SteemNodeRPC
+def run_scorumd_tests( debug_node ):
+   from scorumapi.scorumnoderpc import SteemNodeRPC
 
    try:
       print( 'Replaying blocks...', )

@@ -23,15 +23,15 @@
  */
 #pragma once
 
-#include <steemit/app/plugin.hpp>
-#include <steemit/chain/database.hpp>
+#include <scorum/app/plugin.hpp>
+#include <scorum/chain/database.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 
 #include <fc/thread/future.hpp>
 #include <fc/api.hpp>
 
-namespace steemit { namespace private_message {
+namespace scorum { namespace private_message {
 using namespace chain;
 using app::application;
 
@@ -49,7 +49,7 @@ using app::application;
 #define PRIVATE_MESSAGE_SPACE_ID 6
 #endif
 
-#define STEEMIT_PRIVATE_MESSAGE_COP_ID 777
+#define SCORUM_PRIVATE_MESSAGE_COP_ID 777
 
 enum private_message_object_type
 {
@@ -167,7 +167,7 @@ typedef multi_index_container<
  *   by the posting key.
  *
  */
-class private_message_plugin : public steemit::app::plugin
+class private_message_plugin : public scorum::app::plugin
 {
    public:
       private_message_plugin( application* app );
@@ -206,15 +206,15 @@ class private_message_api : public std::enable_shared_from_this<private_message_
       app::application* _app = nullptr;
 };
 
-} } //steemit::private_message
+} } //scorum::private_message
 
-FC_API( steemit::private_message::private_message_api, (get_inbox)(get_outbox) );
+FC_API( scorum::private_message::private_message_api, (get_inbox)(get_outbox) );
 
-FC_REFLECT( steemit::private_message::message_body, (thread_start)(subject)(body)(json_meta)(cc) );
+FC_REFLECT( scorum::private_message::message_body, (thread_start)(subject)(body)(json_meta)(cc) );
 
-FC_REFLECT( steemit::private_message::message_object, (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message) );
-CHAINBASE_SET_INDEX_TYPE( steemit::private_message::message_object, steemit::private_message::message_index );
+FC_REFLECT( scorum::private_message::message_object, (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message) );
+CHAINBASE_SET_INDEX_TYPE( scorum::private_message::message_object, scorum::private_message::message_index );
 
-FC_REFLECT( steemit::private_message::message_api_obj, (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message) );
+FC_REFLECT( scorum::private_message::message_api_obj, (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message) );
 
-FC_REFLECT_DERIVED( steemit::private_message::extended_message_object, (steemit::private_message::message_api_obj), (message) );
+FC_REFLECT_DERIVED( scorum::private_message::extended_message_object, (scorum::private_message::message_api_obj), (message) );

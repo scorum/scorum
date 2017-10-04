@@ -1,6 +1,6 @@
-#include <steemit/protocol/types.hpp>
+#include <scorum/protocol/types.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 inline static const map< uint32_t, checksum_type >& get_shared_db_merkle()
 {
@@ -19,4 +19,4 @@ inline static const map< uint32_t, checksum_type >& get_shared_db_merkle()
    return shared_db_merkle;
 }
 
-} } //steemit::chain
+} } //scorum::chain

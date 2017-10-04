@@ -14362,7 +14362,7 @@ const const_char_ptr word_list[] = {
 "estado",
 "estamp",
 "estate",
-"esteem",
+"escorum",
 "ester",
 "estevin",
 "estival",

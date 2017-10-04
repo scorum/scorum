@@ -1,5 +1,5 @@
 #pragma once
-#include <steemit/protocol/block.hpp>
+#include <scorum/protocol/block.hpp>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
@@ -8,12 +8,12 @@
 #include <boost/multi_index/mem_fun.hpp>
 
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
    using boost::multi_index_container;
    using namespace boost::multi_index;
 
-   using steemit::protocol::signed_block;
-   using steemit::protocol::block_id_type;
+   using scorum::protocol::signed_block;
+   using scorum::protocol::block_id_type;
 
    struct fork_item
    {
@@ -104,4 +104,4 @@ namespace steemit { namespace chain {
          shared_ptr<fork_item>    _head;
    };
 
-} } // steemit::chain
+} } // scorum::chain

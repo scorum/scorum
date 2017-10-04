@@ -1,12 +1,12 @@
 #pragma once
-#include <steemit/app/applied_operation.hpp>
-#include <steemit/app/steem_api_objects.hpp>
+#include <scorum/app/applied_operation.hpp>
+#include <scorum/app/scorum_api_objects.hpp>
 
-#include <steemit/chain/global_property_object.hpp>
-#include <steemit/chain/account_object.hpp>
-#include <steemit/chain/steem_objects.hpp>
+#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/scorum_objects.hpp>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
    using std::string;
    using std::vector;
 
@@ -88,7 +88,7 @@ namespace steemit { namespace app {
       extended_account(){}
       extended_account( const account_object& a, const database& db ):account_api_obj( a, db ){}
 
-      asset                                   vesting_balance; /// convert vesting_shares to vesting steem
+      asset                                   vesting_balance; /// convert vesting_shares to vesting scorum
       share_type                              reputation = 0;
       map<uint64_t,applied_operation>         transfer_history; /// transfer to/from vesting
       map<uint64_t,applied_operation>         market_history; /// limit order / cancel / fill
@@ -116,7 +116,7 @@ namespace steemit { namespace app {
       double          low = 0;
       double          open = 0;
       double          close = 0;
-      double          steem_volume = 0;
+      double          scorum_volume = 0;
       double          dollar_volume = 0;
    };
 
@@ -124,7 +124,7 @@ namespace steemit { namespace app {
       time_point_sec time;
       string         type; // buy or sell
       asset          sbd_quantity;
-      asset          steem_quantity;
+      asset          scorum_quantity;
       double         real_price = 0;
    };
 
@@ -175,22 +175,22 @@ namespace steemit { namespace app {
 
 } }
 
-FC_REFLECT_DERIVED( steemit::app::extended_account,
-                   (steemit::app::account_api_obj),
+FC_REFLECT_DERIVED( scorum::app::extended_account,
+                   (scorum::app::account_api_obj),
                    (vesting_balance)(reputation)
                    (transfer_history)(market_history)(post_history)(vote_history)(other_history)(witness_votes)(tags_usage)(guest_bloggers)(open_orders)(comments)(feed)(blog)(recent_replies)(recommended) )
 
 
-FC_REFLECT( steemit::app::vote_state, (voter)(weight)(rshares)(percent)(reputation)(time) );
-FC_REFLECT( steemit::app::account_vote, (authorperm)(weight)(rshares)(percent)(time) );
+FC_REFLECT( scorum::app::vote_state, (voter)(weight)(rshares)(percent)(reputation)(time) );
+FC_REFLECT( scorum::app::account_vote, (authorperm)(weight)(rshares)(percent)(time) );
 
-FC_REFLECT( steemit::app::discussion_index, (category)(trending)(payout)(payout_comments)(trending30)(updated)(created)(responses)(active)(votes)(maturing)(best)(hot)(promoted)(cashout) )
-FC_REFLECT( steemit::app::tag_index, (trending) )
-FC_REFLECT_DERIVED( steemit::app::discussion, (steemit::app::comment_api_obj), (url)(root_title)(pending_payout_value)(total_pending_payout_value)(active_votes)(replies)(author_reputation)(promoted)(body_length)(reblogged_by)(first_reblogged_by)(first_reblogged_on) )
+FC_REFLECT( scorum::app::discussion_index, (category)(trending)(payout)(payout_comments)(trending30)(updated)(created)(responses)(active)(votes)(maturing)(best)(hot)(promoted)(cashout) )
+FC_REFLECT( scorum::app::tag_index, (trending) )
+FC_REFLECT_DERIVED( scorum::app::discussion, (scorum::app::comment_api_obj), (url)(root_title)(pending_payout_value)(total_pending_payout_value)(active_votes)(replies)(author_reputation)(promoted)(body_length)(reblogged_by)(first_reblogged_by)(first_reblogged_on) )
 
-FC_REFLECT( steemit::app::state, (current_route)(props)(tag_idx)(tags)(content)(accounts)(pow_queue)(witnesses)(discussion_idx)(witness_schedule)(feed_price)(error)(market_data) )
+FC_REFLECT( scorum::app::state, (current_route)(props)(tag_idx)(tags)(content)(accounts)(pow_queue)(witnesses)(discussion_idx)(witness_schedule)(feed_price)(error)(market_data) )
 
-FC_REFLECT_DERIVED( steemit::app::extended_limit_order, (steemit::app::limit_order_api_obj), (real_price)(rewarded) )
-FC_REFLECT( steemit::app::order_history_item, (time)(type)(sbd_quantity)(steem_quantity)(real_price) );
-FC_REFLECT( steemit::app::market, (bids)(asks)(history)(price_history)(available_candlesticks)(available_zoom)(current_candlestick)(current_zoom) )
-FC_REFLECT( steemit::app::candle_stick, (open_time)(period)(high)(low)(open)(close)(steem_volume)(dollar_volume) );
+FC_REFLECT_DERIVED( scorum::app::extended_limit_order, (scorum::app::limit_order_api_obj), (real_price)(rewarded) )
+FC_REFLECT( scorum::app::order_history_item, (time)(type)(sbd_quantity)(scorum_quantity)(real_price) );
+FC_REFLECT( scorum::app::market, (bids)(asks)(history)(price_history)(available_candlesticks)(available_zoom)(current_candlestick)(current_zoom) )
+FC_REFLECT( scorum::app::candle_stick, (open_time)(period)(high)(low)(open)(close)(scorum_volume)(dollar_volume) );

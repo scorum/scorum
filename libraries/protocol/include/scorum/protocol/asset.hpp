@@ -1,14 +1,14 @@
 #pragma once
-#include <steemit/protocol/types.hpp>
-#include <steemit/protocol/config.hpp>
+#include <scorum/protocol/types.hpp>
+#include <scorum/protocol/config.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    typedef uint64_t asset_symbol_type;
 
    struct asset
    {
-      asset( share_type a = 0, asset_symbol_type id = STEEM_SYMBOL )
+      asset( share_type a = 0, asset_symbol_type id = SCORUM_SYMBOL )
       :amount(a),symbol(id){}
 
       share_type        amount;
@@ -115,13 +115,13 @@ namespace steemit { namespace protocol {
    asset operator *  ( const asset& a, const price& b );
 
 
-} } // steemit::protocol
+} } // scorum::protocol
 
 namespace fc {
-    inline void to_variant( const steemit::protocol::asset& var,  fc::variant& vo ) { vo = var.to_string(); }
-    inline void from_variant( const fc::variant& var,  steemit::protocol::asset& vo ) { vo = steemit::protocol::asset::from_string( var.as_string() ); }
+    inline void to_variant( const scorum::protocol::asset& var,  fc::variant& vo ) { vo = var.to_string(); }
+    inline void from_variant( const fc::variant& var,  scorum::protocol::asset& vo ) { vo = scorum::protocol::asset::from_string( var.as_string() ); }
 }
 
-FC_REFLECT( steemit::protocol::asset, (amount)(symbol) )
-FC_REFLECT( steemit::protocol::price, (base)(quote) )
+FC_REFLECT( scorum::protocol::asset, (amount)(symbol) )
+FC_REFLECT( scorum::protocol::price, (base)(quote) )
 

@@ -1,15 +1,15 @@
 #pragma once
 
-#include <steemit/protocol/base.hpp>
-#include <steemit/protocol/operation_util.hpp>
+#include <scorum/protocol/base.hpp>
+#include <scorum/protocol/operation_util.hpp>
 
-#include <steemit/app/plugin.hpp>
+#include <scorum/app/plugin.hpp>
 
-namespace steemit { namespace witness {
+namespace scorum { namespace witness {
 
 using namespace std;
-using steemit::protocol::base_operation;
-using steemit::chain::database;
+using scorum::protocol::base_operation;
+using scorum::chain::database;
 
 class witness_plugin;
 
@@ -29,10 +29,10 @@ typedef fc::static_variant<
 
 DEFINE_PLUGIN_EVALUATOR( witness_plugin, witness_plugin_operation, enable_content_editing );
 
-} } // steemit::witness
+} } // scorum::witness
 
-FC_REFLECT( steemit::witness::enable_content_editing_operation, (account)(relock_time) )
+FC_REFLECT( scorum::witness::enable_content_editing_operation, (account)(relock_time) )
 
-FC_REFLECT_TYPENAME( steemit::witness::witness_plugin_operation )
+FC_REFLECT_TYPENAME( scorum::witness::witness_plugin_operation )
 
-DECLARE_OPERATION_TYPE( steemit::witness::witness_plugin_operation )
+DECLARE_OPERATION_TYPE( scorum::witness::witness_plugin_operation )

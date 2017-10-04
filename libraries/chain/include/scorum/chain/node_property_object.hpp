@@ -1,6 +1,6 @@
 #pragma once
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
    /**
     * @brief Contains per-node database configuration.
@@ -20,4 +20,4 @@ namespace steemit { namespace chain {
 
          uint32_t skip_flags = 0;
    };
-} } // steemit::chain
+} } // scorum::chain

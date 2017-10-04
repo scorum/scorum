@@ -1,8 +1,8 @@
 #pragma once
-#include <steemit/protocol/types.hpp>
+#include <scorum/protocol/types.hpp>
 #include <fc/interprocess/container.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    struct authority
    {
@@ -92,16 +92,16 @@ void add_authority_accounts(
  * In addition we require the following:
  *
  * - All letters are lowercase
- * - Length is between (inclusive) STEEMIT_MIN_ACCOUNT_NAME_LENGTH and STEEMIT_MAX_ACCOUNT_NAME_LENGTH
+ * - Length is between (inclusive) SCORUM_MIN_ACCOUNT_NAME_LENGTH and SCORUM_MAX_ACCOUNT_NAME_LENGTH
  */
 bool is_valid_account_name( const string& name );
 
 bool operator == ( const authority& a, const authority& b );
 
-} } // namespace steemit::protocol
+} } // namespace scorum::protocol
 
 
-FC_REFLECT_TYPENAME( steemit::protocol::authority::account_authority_map)
-FC_REFLECT_TYPENAME( steemit::protocol::authority::key_authority_map)
-FC_REFLECT( steemit::protocol::authority, (weight_threshold)(account_auths)(key_auths) )
-FC_REFLECT_ENUM( steemit::protocol::authority::classification, (owner)(active)(key)(posting) )
+FC_REFLECT_TYPENAME( scorum::protocol::authority::account_authority_map)
+FC_REFLECT_TYPENAME( scorum::protocol::authority::key_authority_map)
+FC_REFLECT( scorum::protocol::authority, (weight_threshold)(account_auths)(key_auths) )
+FC_REFLECT_ENUM( scorum::protocol::authority::classification, (owner)(active)(key)(posting) )

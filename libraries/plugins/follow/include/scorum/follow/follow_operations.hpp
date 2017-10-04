@@ -1,13 +1,13 @@
 #pragma once
 
-#include <steemit/protocol/base.hpp>
+#include <scorum/protocol/base.hpp>
 
-#include <steemit/follow/follow_plugin.hpp>
+#include <scorum/follow/follow_plugin.hpp>
 
-namespace steemit { namespace follow {
+namespace scorum { namespace follow {
 
 using namespace std;
-using steemit::protocol::base_operation;
+using scorum::protocol::base_operation;
 
 struct follow_operation : base_operation
 {
@@ -39,11 +39,11 @@ typedef fc::static_variant<
 DEFINE_PLUGIN_EVALUATOR( follow_plugin, follow_plugin_operation, follow );
 DEFINE_PLUGIN_EVALUATOR( follow_plugin, follow_plugin_operation, reblog );
 
-} } // steemit::follow
+} } // scorum::follow
 
-FC_REFLECT( steemit::follow::follow_operation, (follower)(following)(what) )
-FC_REFLECT( steemit::follow::reblog_operation, (account)(author)(permlink) )
+FC_REFLECT( scorum::follow::follow_operation, (follower)(following)(what) )
+FC_REFLECT( scorum::follow::reblog_operation, (account)(author)(permlink) )
 
-DECLARE_OPERATION_TYPE( steemit::follow::follow_plugin_operation )
+DECLARE_OPERATION_TYPE( scorum::follow::follow_plugin_operation )
 
-FC_REFLECT_TYPENAME( steemit::follow::follow_plugin_operation )
+FC_REFLECT_TYPENAME( scorum::follow::follow_plugin_operation )

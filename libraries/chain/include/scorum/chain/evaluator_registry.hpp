@@ -1,8 +1,8 @@
 #pragma once
 
-#include <steemit/chain/evaluator.hpp>
+#include <scorum/chain/evaluator.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 template< typename OperationType >
 class evaluator_registry

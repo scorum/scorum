@@ -1,11 +1,11 @@
 #pragma once
-#include <steemit/protocol/operations.hpp>
-#include <steemit/protocol/sign_state.hpp>
-#include <steemit/protocol/types.hpp>
+#include <scorum/protocol/operations.hpp>
+#include <scorum/protocol/sign_state.hpp>
+#include <scorum/protocol/types.hpp>
 
 #include <numeric>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    struct transaction
    {
@@ -63,7 +63,7 @@ namespace steemit { namespace protocol {
          const authority_getter& get_active,
          const authority_getter& get_owner,
          const authority_getter& get_posting,
-         uint32_t max_recursion = STEEMIT_MAX_SIG_CHECK_DEPTH
+         uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH
          )const;
 
       void verify_authority(
@@ -71,7 +71,7 @@ namespace steemit { namespace protocol {
          const authority_getter& get_active,
          const authority_getter& get_owner,
          const authority_getter& get_posting,
-         uint32_t max_recursion = STEEMIT_MAX_SIG_CHECK_DEPTH )const;
+         uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH )const;
 
       set<public_key_type> minimize_required_signatures(
          const chain_id_type& chain_id,
@@ -79,7 +79,7 @@ namespace steemit { namespace protocol {
          const authority_getter& get_active,
          const authority_getter& get_owner,
          const authority_getter& get_posting,
-         uint32_t max_recursion = STEEMIT_MAX_SIG_CHECK_DEPTH
+         uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH
          ) const;
 
       flat_set<public_key_type> get_signature_keys( const chain_id_type& chain_id )const;
@@ -95,7 +95,7 @@ namespace steemit { namespace protocol {
                           const authority_getter& get_active,
                           const authority_getter& get_owner,
                           const authority_getter& get_posting,
-                          uint32_t max_recursion = STEEMIT_MAX_SIG_CHECK_DEPTH,
+                          uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH,
                           bool allow_committe = false,
                           const flat_set< account_name_type >& active_aprovals = flat_set< account_name_type >(),
                           const flat_set< account_name_type >& owner_aprovals = flat_set< account_name_type >(),
@@ -115,8 +115,8 @@ namespace steemit { namespace protocol {
 
    /// @} transactions group
 
-} } // steemit::protocol
+} } // scorum::protocol
 
-FC_REFLECT( steemit::protocol::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions) )
-FC_REFLECT_DERIVED( steemit::protocol::signed_transaction, (steemit::protocol::transaction), (signatures) )
-FC_REFLECT_DERIVED( steemit::protocol::annotated_signed_transaction, (steemit::protocol::signed_transaction), (transaction_id)(block_num)(transaction_num) );
+FC_REFLECT( scorum::protocol::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions) )
+FC_REFLECT_DERIVED( scorum::protocol::signed_transaction, (scorum::protocol::transaction), (signatures) )
+FC_REFLECT_DERIVED( scorum::protocol::annotated_signed_transaction, (scorum::protocol::signed_transaction), (transaction_id)(block_num)(transaction_num) );

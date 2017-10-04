@@ -1,7 +1,7 @@
 #pragma once
-#include <steemit/protocol/base.hpp>
+#include <scorum/protocol/base.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    struct block_header
    {
@@ -27,7 +27,7 @@ namespace steemit { namespace protocol {
    };
 
 
-} } // steemit::protocol
+} } // scorum::protocol
 
-FC_REFLECT( steemit::protocol::block_header, (previous)(timestamp)(witness)(transaction_merkle_root)(extensions) )
-FC_REFLECT_DERIVED( steemit::protocol::signed_block_header, (steemit::protocol::block_header), (witness_signature) )
+FC_REFLECT( scorum::protocol::block_header, (previous)(timestamp)(witness)(transaction_merkle_root)(extensions) )
+FC_REFLECT_DERIVED( scorum::protocol::signed_block_header, (scorum::protocol::block_header), (witness_signature) )

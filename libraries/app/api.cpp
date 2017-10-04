@@ -23,16 +23,16 @@
  */
 #include <cctype>
 
-#include <steemit/app/api.hpp>
-#include <steemit/app/api_access.hpp>
-#include <steemit/app/application.hpp>
-#include <steemit/app/impacted.hpp>
+#include <scorum/app/api.hpp>
+#include <scorum/app/api_access.hpp>
+#include <scorum/app/application.hpp>
+#include <scorum/app/impacted.hpp>
 
-#include <steemit/protocol/get_config.hpp>
+#include <scorum/protocol/get_config.hpp>
 
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/steem_objects.hpp>
-#include <steemit/chain/transaction_object.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/transaction_object.hpp>
 #include <fc/time.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
@@ -43,7 +43,7 @@
 #include <graphene/utilities/git_revision.hpp>
 #include <fc/git_revision.hpp>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
 
     login_api::login_api(const api_context& ctx)
     :_ctx(ctx)
@@ -115,10 +115,10 @@ namespace steemit { namespace app {
        return it->second;
     }
 
-    steem_version_info login_api::get_version()
+    scorum_version_info login_api::get_version()
     {
-       return steem_version_info(
-         fc::string( STEEMIT_BLOCKCHAIN_VERSION ),
+       return scorum_version_info(
+         fc::string( SCORUM_BLOCKCHAIN_VERSION ),
          fc::string( graphene::utilities::git_revision_sha ),
          fc::string( fc::git_revision_sha ) );
     }
@@ -333,4 +333,4 @@ namespace steemit { namespace app {
        return _app.p2p_node()->set_advanced_node_parameters(params);
     }
 
-} } // steemit::app
+} } // scorum::app

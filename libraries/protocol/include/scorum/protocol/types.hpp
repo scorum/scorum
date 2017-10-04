@@ -1,6 +1,6 @@
 #pragma once
-#include <steemit/protocol/config.hpp>
-#include <steemit/protocol/fixed_string.hpp>
+#include <scorum/protocol/config.hpp>
+#include <scorum/protocol/fixed_string.hpp>
 
 #include <fc/container/flat_fwd.hpp>
 #include <fc/io/varint.hpp>
@@ -26,7 +26,7 @@
 #include <deque>
 #include <cstdint>
 
-namespace steemit {
+namespace scorum {
 
    using                                    fc::uint128_t;
    typedef boost::multiprecision::uint256_t u256;
@@ -100,7 +100,7 @@ namespace steemit {
             friend bool operator != ( const public_key_type& p1, const public_key_type& p2);
       };
 
-      #define STEEMIT_INIT_PUBLIC_KEY (steemit::protocol::public_key_type(STEEMIT_INIT_PUBLIC_KEY_STR))
+      #define SCORUM_INIT_PUBLIC_KEY (scorum::protocol::public_key_type(SCORUM_INIT_PUBLIC_KEY_STR))
 
       struct extended_public_key_type
       {
@@ -145,25 +145,25 @@ namespace steemit {
          friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
          friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       };
-} }  // steemit::protocol
+} }  // scorum::protocol
 
 namespace fc
 {
-    void to_variant( const steemit::protocol::public_key_type& var,  fc::variant& vo );
-    void from_variant( const fc::variant& var,  steemit::protocol::public_key_type& vo );
-    void to_variant( const steemit::protocol::extended_public_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, steemit::protocol::extended_public_key_type& vo );
-    void to_variant( const steemit::protocol::extended_private_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, steemit::protocol::extended_private_key_type& vo );
+    void to_variant( const scorum::protocol::public_key_type& var,  fc::variant& vo );
+    void from_variant( const fc::variant& var,  scorum::protocol::public_key_type& vo );
+    void to_variant( const scorum::protocol::extended_public_key_type& var, fc::variant& vo );
+    void from_variant( const fc::variant& var, scorum::protocol::extended_public_key_type& vo );
+    void to_variant( const scorum::protocol::extended_private_key_type& var, fc::variant& vo );
+    void from_variant( const fc::variant& var, scorum::protocol::extended_private_key_type& vo );
 }
 
-FC_REFLECT( steemit::protocol::public_key_type, (key_data) )
-FC_REFLECT( steemit::protocol::public_key_type::binary_key, (data)(check) )
-FC_REFLECT( steemit::protocol::extended_public_key_type, (key_data) )
-FC_REFLECT( steemit::protocol::extended_public_key_type::binary_key, (check)(data) )
-FC_REFLECT( steemit::protocol::extended_private_key_type, (key_data) )
-FC_REFLECT( steemit::protocol::extended_private_key_type::binary_key, (check)(data) )
+FC_REFLECT( scorum::protocol::public_key_type, (key_data) )
+FC_REFLECT( scorum::protocol::public_key_type::binary_key, (data)(check) )
+FC_REFLECT( scorum::protocol::extended_public_key_type, (key_data) )
+FC_REFLECT( scorum::protocol::extended_public_key_type::binary_key, (check)(data) )
+FC_REFLECT( scorum::protocol::extended_private_key_type, (key_data) )
+FC_REFLECT( scorum::protocol::extended_private_key_type::binary_key, (check)(data) )
 
-FC_REFLECT_TYPENAME( steemit::protocol::share_type )
+FC_REFLECT_TYPENAME( scorum::protocol::share_type )
 
-FC_REFLECT( steemit::void_t, )
+FC_REFLECT( scorum::void_t, )

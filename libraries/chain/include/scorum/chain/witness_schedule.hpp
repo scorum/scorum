@@ -1,6 +1,6 @@
 #pragma once
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 class database;
 

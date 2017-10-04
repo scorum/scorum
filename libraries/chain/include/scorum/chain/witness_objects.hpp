@@ -1,22 +1,22 @@
 #pragma once
 
-#include <steemit/protocol/authority.hpp>
-#include <steemit/protocol/steem_operations.hpp>
+#include <scorum/protocol/authority.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
-#include <steemit/chain/steem_object_types.hpp>
+#include <scorum/chain/scorum_object_types.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
-   using steemit::protocol::chain_properties;
-   using steemit::protocol::digest_type;
-   using steemit::protocol::public_key_type;
-   using steemit::protocol::version;
-   using steemit::protocol::hardfork_version;
-   using steemit::protocol::price;
-   using steemit::protocol::asset;
-   using steemit::protocol::asset_symbol_type;
+   using scorum::protocol::chain_properties;
+   using scorum::protocol::digest_type;
+   using scorum::protocol::public_key_type;
+   using scorum::protocol::version;
+   using scorum::protocol::hardfork_version;
+   using scorum::protocol::price;
+   using scorum::protocol::asset;
+   using scorum::protocol::asset_symbol_type;
 
    /**
     *  All witnesses with at least 1% net positive approval and
@@ -115,7 +115,7 @@ namespace steemit { namespace chain {
          version           running_version;
 
          hardfork_version  hardfork_version_vote;
-         time_point_sec    hardfork_time_vote = STEEMIT_GENESIS_TIME;
+         time_point_sec    hardfork_time_vote = SCORUM_GENESIS_TIME;
    };
 
 
@@ -151,7 +151,7 @@ namespace steemit { namespace chain {
 
          fc::uint128                                                       current_virtual_time;
          uint32_t                                                          next_shuffle_block_num = 1;
-         fc::array< account_name_type, STEEMIT_MAX_WITNESSES >             current_shuffled_witnesses;
+         fc::array< account_name_type, SCORUM_MAX_WITNESSES >             current_shuffled_witnesses;
          uint8_t                                                           num_scheduled_witnesses = 1;
          uint8_t                                                           top19_weight = 1;
          uint8_t                                                           timeshare_weight = 5;
@@ -160,10 +160,10 @@ namespace steemit { namespace chain {
          chain_properties                                                  median_props;
          version                                                           majority_version;
 
-         uint8_t max_voted_witnesses            = STEEMIT_MAX_VOTED_WITNESSES_HF0;
-         uint8_t max_miner_witnesses            = STEEMIT_MAX_MINER_WITNESSES_HF0;
-         uint8_t max_runner_witnesses           = STEEMIT_MAX_RUNNER_WITNESSES_HF0;
-         uint8_t hardfork_required_witnesses    = STEEMIT_HARDFORK_REQUIRED_WITNESSES;
+         uint8_t max_voted_witnesses            = SCORUM_MAX_VOTED_WITNESSES_HF0;
+         uint8_t max_miner_witnesses            = SCORUM_MAX_MINER_WITNESSES_HF0;
+         uint8_t max_runner_witnesses           = SCORUM_MAX_RUNNER_WITNESSES_HF0;
+         uint8_t hardfork_required_witnesses    = SCORUM_HARDFORK_REQUIRED_WITNESSES;
    };
 
 
@@ -234,9 +234,9 @@ namespace steemit { namespace chain {
 
 } }
 
-FC_REFLECT_ENUM( steemit::chain::witness_object::witness_schedule_type, (top19)(timeshare)(miner)(none) )
+FC_REFLECT_ENUM( scorum::chain::witness_object::witness_schedule_type, (top19)(timeshare)(miner)(none) )
 
-FC_REFLECT( steemit::chain::witness_object,
+FC_REFLECT( scorum::chain::witness_object,
              (id)
              (owner)
              (created)
@@ -248,12 +248,12 @@ FC_REFLECT( steemit::chain::witness_object,
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )
-CHAINBASE_SET_INDEX_TYPE( steemit::chain::witness_object, steemit::chain::witness_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_object, scorum::chain::witness_index )
 
-FC_REFLECT( steemit::chain::witness_vote_object, (id)(witness)(account) )
-CHAINBASE_SET_INDEX_TYPE( steemit::chain::witness_vote_object, steemit::chain::witness_vote_index )
+FC_REFLECT( scorum::chain::witness_vote_object, (id)(witness)(account) )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_vote_object, scorum::chain::witness_vote_index )
 
-FC_REFLECT( steemit::chain::witness_schedule_object,
+FC_REFLECT( scorum::chain::witness_schedule_object,
              (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_witnesses)(num_scheduled_witnesses)
              (top19_weight)(timeshare_weight)(miner_weight)(witness_pay_normalization_factor)
              (median_props)(majority_version)
@@ -262,4 +262,4 @@ FC_REFLECT( steemit::chain::witness_schedule_object,
              (max_runner_witnesses)
              (hardfork_required_witnesses)
           )
-CHAINBASE_SET_INDEX_TYPE( steemit::chain::witness_schedule_object, steemit::chain::witness_schedule_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_schedule_object, scorum::chain::witness_schedule_index )

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <steemit/app/application.hpp>
+#include <scorum/app/application.hpp>
 
-#include <steemit/account_by_key/account_by_key_objects.hpp>
+#include <scorum/account_by_key/account_by_key_objects.hpp>
 
 #include <fc/api.hpp>
 
-namespace steemit { namespace account_by_key {
+namespace scorum { namespace account_by_key {
 
 namespace detail
 {
@@ -26,6 +26,6 @@ class account_by_key_api
       std::shared_ptr< detail::account_by_key_api_impl > my;
 };
 
-} } // steemit::account_by_key
+} } // scorum::account_by_key
 
-FC_API( steemit::account_by_key::account_by_key_api, (get_key_references) )
+FC_API( scorum::account_by_key::account_by_key_api, (get_key_references) )

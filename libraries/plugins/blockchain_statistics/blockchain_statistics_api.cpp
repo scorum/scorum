@@ -1,20 +1,20 @@
-#include <steemit/blockchain_statistics/blockchain_statistics_api.hpp>
+#include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
 
-namespace steemit { namespace blockchain_statistics {
+namespace scorum { namespace blockchain_statistics {
 
 namespace detail
 {
    class blockchain_statistics_api_impl
    {
       public:
-         blockchain_statistics_api_impl( steemit::app::application& app )
+         blockchain_statistics_api_impl( scorum::app::application& app )
             :_app( app ) {}
 
          statistics get_stats_for_time( fc::time_point_sec open, uint32_t interval )const;
          statistics get_stats_for_interval( fc::time_point_sec start, fc::time_point_sec end )const;
          statistics get_lifetime_stats()const;
 
-         steemit::app::application& _app;
+         scorum::app::application& _app;
    };
 
    statistics blockchain_statistics_api_impl::get_stats_for_time( fc::time_point_sec open, uint32_t interval )const
@@ -66,7 +66,7 @@ namespace detail
    }
 } // detail
 
-blockchain_statistics_api::blockchain_statistics_api( const steemit::app::api_context& ctx )
+blockchain_statistics_api::blockchain_statistics_api( const scorum::app::api_context& ctx )
 {
    my = std::make_shared< detail::blockchain_statistics_api_impl >( ctx.app );
 }
@@ -104,7 +104,7 @@ statistics& statistics::operator +=( const bucket_object& b )
    this->operations                             += b.operations;
    this->transactions                           += b.transactions;
    this->transfers                              += b.transfers;
-   this->steem_transferred                      += b.steem_transferred;
+   this->scorum_transferred                     += b.scorum_transferred;
    this->sbd_transferred                        += b.sbd_transferred;
    this->sbd_paid_as_interest                   += b.sbd_paid_as_interest;
    this->accounts_created                       += b.paid_accounts_created + b.mined_accounts_created;
@@ -134,7 +134,7 @@ statistics& statistics::operator +=( const bucket_object& b )
    this->vests_paid_to_curators                 += b.vests_paid_to_curators;
    this->liquidity_rewards_paid                 += b.liquidity_rewards_paid;
    this->transfers_to_vesting                   += b.transfers_to_vesting;
-   this->steem_vested                           += b.steem_vested;
+   this->scorum_vested                          += b.scorum_vested;
    this->new_vesting_withdrawal_requests        += b.new_vesting_withdrawal_requests;
    this->vesting_withdraw_rate_delta            += b.vesting_withdraw_rate_delta;
    this->modified_vesting_withdrawal_requests   += b.modified_vesting_withdrawal_requests;
@@ -145,7 +145,7 @@ statistics& statistics::operator +=( const bucket_object& b )
    this->sbd_conversion_requests_created        += b.sbd_conversion_requests_created;
    this->sbd_to_be_converted                    += b.sbd_to_be_converted;
    this->sbd_conversion_requests_filled         += b.sbd_conversion_requests_filled;
-   this->steem_converted                        += b.steem_converted;
+   this->scorum_converted                       += b.scorum_converted;
    this->limit_orders_created                   += b.limit_orders_created;
    this->limit_orders_filled                    += b.limit_orders_filled;
    this->limit_orders_cancelled                 += b.limit_orders_cancelled;
@@ -155,4 +155,4 @@ statistics& statistics::operator +=( const bucket_object& b )
    return ( *this );
 }
 
-} } // steemit::blockchain_statistics
+} } // scorum::blockchain_statistics

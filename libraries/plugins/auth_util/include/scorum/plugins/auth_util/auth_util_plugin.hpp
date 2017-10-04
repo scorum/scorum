@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include <steemit/app/plugin.hpp>
+#include <scorum/app/plugin.hpp>
 
-namespace steemit { namespace plugin { namespace auth_util {
+namespace scorum { namespace plugin { namespace auth_util {
 
-using steemit::app::application;
+using scorum::app::application;
 
-class auth_util_plugin : public steemit::app::plugin
+class auth_util_plugin : public scorum::app::plugin
 {
    public:
       auth_util_plugin( application* app ) ;

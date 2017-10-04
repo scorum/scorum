@@ -3,13 +3,13 @@
 
 #include <fc/api.hpp>
 
-#include <steemit/plugins/block_info/block_info.hpp>
+#include <scorum/plugins/block_info/block_info.hpp>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
    struct api_context;
 } }
 
-namespace steemit { namespace plugin { namespace block_info {
+namespace scorum { namespace plugin { namespace block_info {
 
 namespace detail {
 class block_info_api_impl;
@@ -24,7 +24,7 @@ struct get_block_info_args
 class block_info_api
 {
    public:
-      block_info_api( const steemit::app::api_context& ctx );
+      block_info_api( const scorum::app::api_context& ctx );
 
       void on_api_startup();
 
@@ -37,12 +37,12 @@ class block_info_api
 
 } } }
 
-FC_REFLECT( steemit::plugin::block_info::get_block_info_args,
+FC_REFLECT( scorum::plugin::block_info::get_block_info_args,
    (start_block_num)
    (count)
    )
 
-FC_API( steemit::plugin::block_info::block_info_api,
+FC_API( scorum::plugin::block_info::block_info_api,
    (get_block_info)
    (get_blocks_with_info)
    )

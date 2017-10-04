@@ -1,13 +1,13 @@
 #pragma once
 
-#include <steemit/follow/follow_plugin.hpp>
+#include <scorum/follow/follow_plugin.hpp>
 
-#include <steemit/chain/steem_object_types.hpp>
+#include <scorum/chain/scorum_object_types.hpp>
 
-namespace steemit { namespace follow {
+namespace scorum { namespace follow {
 
 using namespace std;
-using namespace steemit::chain;
+using namespace scorum::chain;
 using chainbase::shared_vector;
 
 #ifndef FOLLOW_SPACE_ID
@@ -99,12 +99,12 @@ class blog_object : public object< blog_object_type, blog_object >
 typedef oid< blog_object > blog_id_type;
 
 /**
- *  This index is maintained to get an idea of which authors are resteemed by a particular blogger and
+ *  This index is maintained to get an idea of which authors are rescorumed by a particular blogger and
  *  how frequnetly. It is designed to give an overview of the type of people a blogger sponsors as well
  *  as to enable generation of filter set for a blog list. 
  *
  *  Give me the top authors promoted by this blog
- *  Give me all blog posts by [authors] that were resteemed by this blog
+ *  Give me all blog posts by [authors] that were rescorumed by this blog
  */
 class blog_author_stats_object : public object< blog_author_stats_object_type, blog_author_stats_object >
 {
@@ -327,24 +327,24 @@ typedef multi_index_container<
    allocator< follow_count_object >
 > follow_count_index;
 
-} } // steemit::follow
+} } // scorum::follow
 
-FC_REFLECT_ENUM( steemit::follow::follow_type, (undefined)(blog)(ignore) )
+FC_REFLECT_ENUM( scorum::follow::follow_type, (undefined)(blog)(ignore) )
 
-FC_REFLECT( steemit::follow::follow_object, (id)(follower)(following)(what) )
-CHAINBASE_SET_INDEX_TYPE( steemit::follow::follow_object, steemit::follow::follow_index )
+FC_REFLECT( scorum::follow::follow_object, (id)(follower)(following)(what) )
+CHAINBASE_SET_INDEX_TYPE( scorum::follow::follow_object, scorum::follow::follow_index )
 
-FC_REFLECT( steemit::follow::feed_object, (id)(account)(first_reblogged_by)(first_reblogged_on)(reblogged_by)(comment)(reblogs)(account_feed_id) )
-CHAINBASE_SET_INDEX_TYPE( steemit::follow::feed_object, steemit::follow::feed_index )
+FC_REFLECT( scorum::follow::feed_object, (id)(account)(first_reblogged_by)(first_reblogged_on)(reblogged_by)(comment)(reblogs)(account_feed_id) )
+CHAINBASE_SET_INDEX_TYPE( scorum::follow::feed_object, scorum::follow::feed_index )
 
-FC_REFLECT( steemit::follow::blog_object, (id)(account)(comment)(reblogged_on)(blog_feed_id) )
-CHAINBASE_SET_INDEX_TYPE( steemit::follow::blog_object, steemit::follow::blog_index )
+FC_REFLECT( scorum::follow::blog_object, (id)(account)(comment)(reblogged_on)(blog_feed_id) )
+CHAINBASE_SET_INDEX_TYPE( scorum::follow::blog_object, scorum::follow::blog_index )
 
-FC_REFLECT( steemit::follow::reputation_object, (id)(account)(reputation) )
-CHAINBASE_SET_INDEX_TYPE( steemit::follow::reputation_object, steemit::follow::reputation_index )
+FC_REFLECT( scorum::follow::reputation_object, (id)(account)(reputation) )
+CHAINBASE_SET_INDEX_TYPE( scorum::follow::reputation_object, scorum::follow::reputation_index )
 
-FC_REFLECT( steemit::follow::follow_count_object, (id)(account)(follower_count)(following_count) )
-CHAINBASE_SET_INDEX_TYPE( steemit::follow::follow_count_object, steemit::follow::follow_count_index )
+FC_REFLECT( scorum::follow::follow_count_object, (id)(account)(follower_count)(following_count) )
+CHAINBASE_SET_INDEX_TYPE( scorum::follow::follow_count_object, scorum::follow::follow_count_index )
 
-FC_REFLECT( steemit::follow::blog_author_stats_object, (id)(blogger)(guest)(count) )
-CHAINBASE_SET_INDEX_TYPE( steemit::follow::blog_author_stats_object, steemit::follow::blog_author_stats_index );
+FC_REFLECT( scorum::follow::blog_author_stats_object, (id)(blogger)(guest)(count) )
+CHAINBASE_SET_INDEX_TYPE( scorum::follow::blog_author_stats_object, scorum::follow::blog_author_stats_index );

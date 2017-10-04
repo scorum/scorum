@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <steemit/chain/steem_object_types.hpp>
+#include <scorum/chain/scorum_object_types.hpp>
 
-namespace steemit { namespace plugin { namespace block_info {
+namespace scorum { namespace plugin { namespace block_info {
 
 struct block_info
 {
@@ -22,7 +22,7 @@ struct block_with_info
 
 } } }
 
-FC_REFLECT( steemit::plugin::block_info::block_info,
+FC_REFLECT( scorum::plugin::block_info::block_info,
    (block_id)
    (block_size)
    (aslot)
@@ -30,7 +30,7 @@ FC_REFLECT( steemit::plugin::block_info::block_info,
    (num_pow_witnesses)
    )
 
-FC_REFLECT( steemit::plugin::block_info::block_with_info,
+FC_REFLECT( scorum::plugin::block_info::block_with_info,
    (block)
    (info)
    )

@@ -1,19 +1,19 @@
 #pragma once
-#include <steemit/app/plugin.hpp>
-#include <steemit/chain/database.hpp>
+#include <scorum/app/plugin.hpp>
+#include <scorum/chain/database.hpp>
 
 #include <fc/thread/future.hpp>
 
-#include <steemit/follow/follow_api.hpp>
+#include <scorum/follow/follow_api.hpp>
 
-namespace steemit { namespace follow {
-using steemit::app::application;
+namespace scorum { namespace follow {
+using scorum::app::application;
 
 #define FOLLOW_PLUGIN_NAME "follow"
 
 namespace detail { class follow_plugin_impl; }
 
-class follow_plugin : public steemit::app::plugin
+class follow_plugin : public scorum::app::plugin
 {
    public:
       follow_plugin( application* app );
@@ -31,4 +31,4 @@ class follow_plugin : public steemit::app::plugin
       fc::time_point_sec start_feeds;
 };
 
-} } //steemit::follow
+} } //scorum::follow

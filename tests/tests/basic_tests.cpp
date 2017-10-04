@@ -24,10 +24,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <steemit/chain/database.hpp>
-#include <steemit/protocol/protocol.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/protocol/protocol.hpp>
 
-#include <steemit/protocol/steem_operations.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/crypto/hex.hpp>
@@ -36,9 +36,9 @@
 #include <algorithm>
 #include <random>
 
-using namespace steemit;
-using namespace steemit::chain;
-using namespace steemit::protocol;
+using namespace scorum;
+using namespace scorum::chain;
+using namespace scorum::protocol;
 
 BOOST_FIXTURE_TEST_SUITE( basic_tests, clean_database_fixture )
 

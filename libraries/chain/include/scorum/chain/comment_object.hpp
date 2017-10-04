@@ -1,15 +1,15 @@
 #pragma once
 
-#include <steemit/protocol/authority.hpp>
-#include <steemit/protocol/steem_operations.hpp>
+#include <scorum/protocol/authority.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
-#include <steemit/chain/steem_object_types.hpp>
-#include <steemit/chain/witness_objects.hpp>
+#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/witness_objects.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
    using protocol::beneficiary_route_type;
 
@@ -93,7 +93,7 @@ namespace steemit { namespace chain {
          id_type           root_comment;
 
          asset             max_accepted_payout = asset( 1000000000, SBD_SYMBOL );       /// SBD value of the maximum payout this post will receive
-         uint16_t          percent_steem_dollars = STEEMIT_100_PERCENT; /// the percent of Steem Dollars to key, unkept amounts will be received as Steem Power
+         uint16_t          percent_scorum_dollars = SCORUM_100_PERCENT; /// the percent of Steem Dollars to key, unkept amounts will be received as Steem Power
          bool              allow_replies = true;      /// allows a post to disable replies.
          bool              allow_votes   = true;      /// allows a post to receive votes;
          bool              allow_curation_rewards = true;
@@ -241,9 +241,9 @@ namespace steemit { namespace chain {
       allocator< comment_object >
    > comment_index;
 
-} } // steemit::chain
+} } // scorum::chain
 
-FC_REFLECT( steemit::chain::comment_object,
+FC_REFLECT( scorum::chain::comment_object,
              (id)(author)(permlink)
              (category)(parent_author)(parent_permlink)
              (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
@@ -251,12 +251,12 @@ FC_REFLECT( steemit::chain::comment_object,
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
              (total_vote_weight)(reward_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(author_rewards)(net_votes)(root_comment)
-             (max_accepted_payout)(percent_steem_dollars)(allow_replies)(allow_votes)(allow_curation_rewards)
+             (max_accepted_payout)(percent_scorum_dollars)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
-CHAINBASE_SET_INDEX_TYPE( steemit::chain::comment_object, steemit::chain::comment_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_object, scorum::chain::comment_index )
 
-FC_REFLECT( steemit::chain::comment_vote_object,
+FC_REFLECT( scorum::chain::comment_vote_object,
              (id)(voter)(comment)(weight)(rshares)(vote_percent)(last_update)(num_changes)
           )
-CHAINBASE_SET_INDEX_TYPE( steemit::chain::comment_vote_object, steemit::chain::comment_vote_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_vote_object, scorum::chain::comment_vote_index )

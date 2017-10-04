@@ -1,8 +1,8 @@
 #pragma once
-#include <steemit/protocol/block_header.hpp>
-#include <steemit/protocol/transaction.hpp>
+#include <scorum/protocol/block_header.hpp>
+#include <scorum/protocol/transaction.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    struct signed_block : public signed_block_header
    {
@@ -10,6 +10,6 @@ namespace steemit { namespace protocol {
       vector<signed_transaction> transactions;
    };
 
-} } // steemit::protocol
+} } // scorum::protocol
 
-FC_REFLECT_DERIVED( steemit::protocol::signed_block, (steemit::protocol::signed_block_header), (transactions) )
+FC_REFLECT_DERIVED( scorum::protocol::signed_block, (scorum::protocol::signed_block_header), (transactions) )

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <steemit/protocol/types.hpp>
-#include <steemit/protocol/authority.hpp>
-#include <steemit/protocol/version.hpp>
+#include <scorum/protocol/types.hpp>
+#include <scorum/protocol/authority.hpp>
+#include <scorum/protocol/version.hpp>
 
 #include <fc/time.hpp>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 
    struct base_operation
    {
@@ -39,7 +39,7 @@ namespace steemit { namespace protocol {
    typedef flat_set<future_extensions> extensions_type;
 
 
-} } // steemit::protocol
+} } // scorum::protocol
 
-FC_REFLECT_TYPENAME( steemit::protocol::block_header_extensions )
-FC_REFLECT_TYPENAME( steemit::protocol::future_extensions )
+FC_REFLECT_TYPENAME( scorum::protocol::block_header_extensions )
+FC_REFLECT_TYPENAME( scorum::protocol::future_extensions )

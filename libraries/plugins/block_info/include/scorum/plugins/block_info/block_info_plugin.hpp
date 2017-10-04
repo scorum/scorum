@@ -1,21 +1,21 @@
 
 #pragma once
 
-#include <steemit/app/plugin.hpp>
-#include <steemit/plugins/block_info/block_info.hpp>
+#include <scorum/app/plugin.hpp>
+#include <scorum/plugins/block_info/block_info.hpp>
 
 #include <string>
 #include <vector>
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
 struct signed_block;
 } }
 
-namespace steemit { namespace plugin { namespace block_info {
+namespace scorum { namespace plugin { namespace block_info {
 
-using steemit::app::application;
+using scorum::app::application;
 
-class block_info_plugin : public steemit::app::plugin
+class block_info_plugin : public scorum::app::plugin
 {
    public:
       block_info_plugin( application* app );

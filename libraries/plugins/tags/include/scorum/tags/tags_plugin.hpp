@@ -1,19 +1,19 @@
 #pragma once
 
-#include <steemit/app/plugin.hpp>
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/comment_object.hpp>
+#include <scorum/app/plugin.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/comment_object.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 
 #include <fc/thread/future.hpp>
 #include <fc/api.hpp>
 
-namespace steemit { namespace tags {
-using namespace steemit::chain;
+namespace scorum { namespace tags {
+using namespace scorum::chain;
 using namespace boost::multi_index;
 
-using steemit::app::application;
+using scorum::app::application;
 
 using chainbase::object;
 using chainbase::oid;
@@ -463,7 +463,7 @@ struct comment_metadata { set<string> tags; };
  *  This plugin will scan all changes to posts and/or their meta data and
  *
  */
-class tags_plugin : public steemit::app::plugin
+class tags_plugin : public scorum::app::plugin
 {
    public:
       tags_plugin( application* app );
@@ -499,23 +499,23 @@ class tag_api : public std::enable_shared_from_this<tag_api> {
 
 
 
-} } //steemit::tag
+} } //scorum::tag
 
-FC_API( steemit::tags::tag_api, (get_tags) );
+FC_API( scorum::tags::tag_api, (get_tags) );
 
-FC_REFLECT( steemit::tags::tag_object,
+FC_REFLECT( scorum::tags::tag_object,
    (id)(tag)(created)(active)(cashout)(net_rshares)(net_votes)(hot)(trending)(promoted_balance)(children)(author)(parent)(comment) )
-CHAINBASE_SET_INDEX_TYPE( steemit::tags::tag_object, steemit::tags::tag_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::tags::tag_object, scorum::tags::tag_index )
 
-FC_REFLECT( steemit::tags::tag_stats_object,
+FC_REFLECT( scorum::tags::tag_stats_object,
    (id)(tag)(total_payout)(net_votes)(top_posts)(comments)(total_trending) );
-CHAINBASE_SET_INDEX_TYPE( steemit::tags::tag_stats_object, steemit::tags::tag_stats_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::tags::tag_stats_object, scorum::tags::tag_stats_index )
 
-FC_REFLECT( steemit::tags::peer_stats_object,
+FC_REFLECT( scorum::tags::peer_stats_object,
    (id)(voter)(peer)(direct_positive_votes)(direct_votes)(indirect_positive_votes)(indirect_votes)(rank) );
-CHAINBASE_SET_INDEX_TYPE( steemit::tags::peer_stats_object, steemit::tags::peer_stats_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::tags::peer_stats_object, scorum::tags::peer_stats_index )
 
-FC_REFLECT( steemit::tags::comment_metadata, (tags) );
+FC_REFLECT( scorum::tags::comment_metadata, (tags) );
 
-FC_REFLECT( steemit::tags::author_tag_stats_object, (id)(author)(tag)(total_posts)(total_rewards) )
-CHAINBASE_SET_INDEX_TYPE( steemit::tags::author_tag_stats_object, steemit::tags::author_tag_stats_index )
+FC_REFLECT( scorum::tags::author_tag_stats_object, (id)(author)(tag)(total_posts)(total_rewards) )
+CHAINBASE_SET_INDEX_TYPE( scorum::tags::author_tag_stats_object, scorum::tags::author_tag_stats_index )

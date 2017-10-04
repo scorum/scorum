@@ -1,10 +1,10 @@
 #pragma once
 
-#include <steemit/protocol/operations.hpp>
+#include <scorum/protocol/operations.hpp>
 
-#include <steemit/chain/steem_object_types.hpp>
+#include <scorum/chain/scorum_object_types.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 struct operation_notification
 {

@@ -1,10 +1,10 @@
-# Defines Steem library target.
-project( Steem )
+# Defines Scorum library target.
+project( Scorum )
 cmake_minimum_required( VERSION 3.2 )
 
-set( BLOCKCHAIN_NAME "Steem" )
+set( BLOCKCHAIN_NAME "Scorum" )
 
-set( GUI_CLIENT_EXECUTABLE_NAME Steem )
+set( GUI_CLIENT_EXECUTABLE_NAME Scorum )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
@@ -50,9 +50,9 @@ LIST(APPEND BOOST_COMPONENTS thread
                              coroutine)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-OPTION( BUILD_STEEM_TESTNET "Build source for test network (ON OR OFF)" OFF )
-MESSAGE( STATUS "BUILD_STEEM_TESTNET: ${BUILD_STEEM_TESTNET}" )
-if( BUILD_STEEM_TESTNET  )
+OPTION( BUILD_SCORUM_TESTNET "Build source for test network (ON OR OFF)" OFF )
+MESSAGE( STATUS "BUILD_SCORUM_TESTNET: ${BUILD_SCORUM_TESTNET}" )
+if( BUILD_SCORUM_TESTNET  )
   MESSAGE( STATUS "     " )
   MESSAGE( STATUS "             CONFIGURING FOR TEST NET             " )
   MESSAGE( STATUS "     " )
@@ -101,7 +101,7 @@ FIND_PACKAGE(Boost 1.58 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 if( WIN32 )
 
-   message( STATUS "Configuring Steem on WIN32")
+   message( STATUS "Configuring Scorum on WIN32")
    set( DB_VERSION 60 )
    set( BDB_STATIC_LIBS 1 )
 
@@ -155,11 +155,11 @@ else( WIN32 ) # Apple AND Linux
 
     if( APPLE )
         # Apple Specific Options Here
-        message( STATUS "Configuring Steem on OS X" )
+        message( STATUS "Configuring Scorum on OS X" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall -Wno-conversion -Wno-deprecated-declarations" )
     else( APPLE )
         # Linux Specific Options Here
-        message( STATUS "Configuring Steem on Linux" )
+        message( STATUS "Configuring Scorum on Linux" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
         set( rt_library rt )
         set( pthread_library pthread)
@@ -191,13 +191,13 @@ else( WIN32 ) # Apple AND Linux
 
 endif( WIN32 )
 
-set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Steem for code coverage analysis")
+set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Scorum for code coverage analysis")
 
 if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
 
-# external_plugins needs to be compiled first because libraries/app depends on STEEMIT_EXTERNAL_PLUGINS being fully populated
+# external_plugins needs to be compiled first because libraries/app depends on SCORUM_EXTERNAL_PLUGINS being fully populated
 add_subdirectory( external_plugins )
 add_subdirectory( libraries )
 add_subdirectory( programs )
@@ -217,24 +217,24 @@ set(CPACK_OUTPUT_FILE_PREFIX ${CMAKE_BINARY_DIR}/packages)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
-set(CPACK_PACKAGE_NAME "steem")
-set(CPACK_PACKAGE_VENDOR "Steemit, Inc.")
+set(CPACK_PACKAGE_NAME "scorum")
+set(CPACK_PACKAGE_VENDOR "Scorum, Inc.")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_PACKAGE_DESCRIPTION "A client for the Steem network")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Steem network")
+set(CPACK_PACKAGE_DESCRIPTION "A client for the Scorum network")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Scorum network")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Steem ${CPACK_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Scorum ${CPACK_PACKAGE_VERSION}")
 
 if(WIN32)
  SET(CPACK_GENERATOR "ZIP;NSIS")
- set(CPACK_PACKAGE_NAME "Steem") # override above
+ set(CPACK_PACKAGE_NAME "Scorum") # override above
  set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
- set(CPACK_NSIS_PACKAGE_NAME "Steem v${CPACK_PACKAGE_VERSION}")
+ set(CPACK_NSIS_PACKAGE_NAME "Scorum v${CPACK_PACKAGE_VERSION}")
  set(CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}")
- set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Steem\\\"")
+ set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Scorum\\\"")
  # it seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do
  SET(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
 
@@ -253,10 +253,10 @@ endif(LINUX)
  include(CPack)
 endif(ENABLE_INSTALLER)
 
-if( BUILD_STEEM_TESTNET )
+if( BUILD_SCORUM_TESTNET )
   MESSAGE( STATUS "\n\n             CONFIGURED FOR TEST NETWORK             \n\n" )
 else()
-  MESSAGE( STATUS "\n\n             CONFIGURED FOR STEEM NETWORK             \n\n" )
+  MESSAGE( STATUS "\n\n             CONFIGURED FOR SCORUM NETWORK             \n\n" )
 endif()
 
 if( LOW_MEMORY_NODE )

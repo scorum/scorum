@@ -1,11 +1,11 @@
-#include <steemit/chain/steem_evaluator.hpp>
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/custom_operation_interpreter.hpp>
-#include <steemit/chain/steem_objects.hpp>
-#include <steemit/chain/witness_objects.hpp>
-#include <steemit/chain/block_summary_object.hpp>
+#include <scorum/chain/scorum_evaluator.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/custom_operation_interpreter.hpp>
+#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/block_summary_object.hpp>
 
-#include <steemit/chain/util/reward.hpp>
+#include <scorum/chain/util/reward.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -30,12 +30,12 @@ std::string wstring_to_utf8(const std::wstring& str)
 
 #include <limits>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
    using fc::uint128_t;
 
 inline void validate_permlink_0_1( const string& permlink )
 {
-   FC_ASSERT( permlink.size() > STEEMIT_MIN_PERMLINK_LENGTH && permlink.size() < STEEMIT_MAX_PERMLINK_LENGTH, "Permlink is not a valid size." );
+   FC_ASSERT( permlink.size() > SCORUM_MIN_PERMLINK_LENGTH && permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "Permlink is not a valid size." );
 
    for( auto c : permlink )
    {
@@ -65,8 +65,8 @@ void witness_update_evaluator::do_apply( const witness_update_operation& o )
 {
    _db.get_account( o.owner ); // verify owner exists
 
-   FC_ASSERT( o.url.size() <= STEEMIT_MAX_WITNESS_URL_LENGTH, "URL is too long" );
-   FC_ASSERT( o.props.account_creation_fee.symbol == STEEM_SYMBOL );
+   FC_ASSERT( o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long" );
+   FC_ASSERT( o.props.account_creation_fee.symbol == SCORUM_SYMBOL );
 
    const auto& by_witness_name_idx = _db.get_index< witness_index >().indices().get< by_name >();
    auto wit_itr = by_witness_name_idx.find( o.owner );
@@ -100,8 +100,8 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
 
    const witness_schedule_object& wso = _db.get_witness_schedule_object();
-   FC_ASSERT( o.fee >= asset( wso.median_props.account_creation_fee.amount * STEEMIT_CREATE_ACCOUNT_WITH_STEEM_MODIFIER, STEEM_SYMBOL ), "Insufficient Fee: ${f} required, ${p} provided.",
-                 ("f", wso.median_props.account_creation_fee * asset( STEEMIT_CREATE_ACCOUNT_WITH_STEEM_MODIFIER, STEEM_SYMBOL ) )
+   FC_ASSERT( o.fee >= asset( wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ), "Insufficient Fee: ${f} required, ${p} provided.",
+                 ("f", wso.median_props.account_creation_fee * asset( SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ) )
                  ("p", o.fee) );
 
       for( auto& a : o.owner.account_auths )
@@ -167,9 +167,9 @@ void account_create_with_delegation_evaluator::do_apply( const account_create_wi
                ( "creator.vesting_shares", creator.vesting_shares )
                ( "creator.delegated_vesting_shares", creator.delegated_vesting_shares )( "required", o.delegation ) );
 
-   auto target_delegation = asset( wso.median_props.account_creation_fee.amount * STEEMIT_CREATE_ACCOUNT_WITH_STEEM_MODIFIER * STEEMIT_CREATE_ACCOUNT_DELEGATION_RATIO, STEEM_SYMBOL ) * props.get_vesting_share_price();
+   auto target_delegation = asset( wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, SCORUM_SYMBOL ) * props.get_vesting_share_price();
 
-   auto current_delegation = asset( o.fee.amount * STEEMIT_CREATE_ACCOUNT_DELEGATION_RATIO, STEEM_SYMBOL ) * props.get_vesting_share_price() + o.delegation;
+   auto current_delegation = asset( o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, SCORUM_SYMBOL ) * props.get_vesting_share_price() + o.delegation;
 
    FC_ASSERT( current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
                ("f", target_delegation )
@@ -238,7 +238,7 @@ void account_create_with_delegation_evaluator::do_apply( const account_create_wi
          vdo.delegator = o.creator;
          vdo.delegatee = o.new_account_name;
          vdo.vesting_shares = o.delegation;
-         vdo.min_delegation_time = _db.head_block_time() + STEEMIT_CREATE_ACCOUNT_DELEGATION_TIME;
+         vdo.min_delegation_time = _db.head_block_time() + SCORUM_CREATE_ACCOUNT_DELEGATION_TIME;
       });
    }
 
@@ -249,7 +249,7 @@ void account_create_with_delegation_evaluator::do_apply( const account_create_wi
 
 void account_update_evaluator::do_apply( const account_update_operation& o )
 {
-   FC_ASSERT( o.account != STEEMIT_TEMP_ACCOUNT, "Cannot update temp account." );
+   FC_ASSERT( o.account != SCORUM_TEMP_ACCOUNT, "Cannot update temp account." );
 
    if(o.posting)
       o.posting->validate();
@@ -260,7 +260,7 @@ void account_update_evaluator::do_apply( const account_update_operation& o )
    if( o.owner )
    {
 #ifndef IS_TEST_NET
-      FC_ASSERT( _db.head_block_time() - account_auth.last_owner_update > STEEMIT_OWNER_UPDATE_LIMIT, "Owner authority can only be updated once an hour." );
+      FC_ASSERT( _db.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT, "Owner authority can only be updated once an hour." );
 #endif
       for( auto a: o.owner->account_auths )
       {
@@ -346,7 +346,7 @@ void delete_comment_evaluator::do_apply( const delete_comment_operation& o )
    }
 
    /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indicies
-   if( comment.parent_author != STEEMIT_ROOT_POST_PARENT )
+   if( comment.parent_author != SCORUM_ROOT_POST_PARENT )
    {
       auto parent = &_db.get_comment( comment.parent_author, comment.parent_permlink );
       auto now = _db.head_block_time();
@@ -357,7 +357,7 @@ void delete_comment_evaluator::do_apply( const delete_comment_operation& o )
             p.active = now;
          });
    #ifndef IS_LOW_MEM
-         if( parent->parent_author != STEEMIT_ROOT_POST_PARENT )
+         if( parent->parent_author != SCORUM_ROOT_POST_PARENT )
             parent = &_db.get_comment( parent->parent_author, parent->parent_permlink );
          else
    #endif
@@ -407,11 +407,11 @@ void comment_options_evaluator::do_apply( const comment_options_operation& o )
    FC_ASSERT( comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled." );
    FC_ASSERT( comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled." );
    FC_ASSERT( comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout." );
-   FC_ASSERT( comment.percent_steem_dollars >= o.percent_steem_dollars, "A comment cannot accept a greater percent SBD." );
+   FC_ASSERT( comment.percent_scorum_dollars >= o.percent_scorum_dollars, "A comment cannot accept a greater percent SBD." );
 
    _db.modify( comment, [&]( comment_object& c ) {
        c.max_accepted_payout   = o.max_accepted_payout;
-       c.percent_steem_dollars = o.percent_steem_dollars;
+       c.percent_scorum_dollars = o.percent_scorum_dollars;
        c.allow_votes           = o.allow_votes;
        c.allow_curation_rewards = o.allow_curation_rewards;
    });
@@ -437,10 +437,10 @@ void comment_evaluator::do_apply( const comment_operation& o )
    comment_id_type id;
 
    const comment_object* parent = nullptr;
-   if( o.parent_author != STEEMIT_ROOT_POST_PARENT )
+   if( o.parent_author != SCORUM_ROOT_POST_PARENT )
    {
       parent = &_db.get_comment( o.parent_author, o.parent_permlink );
-      FC_ASSERT( parent->depth < STEEMIT_MAX_COMMENT_DEPTH, "Comment is nested ${x} posts deep, maximum depth is ${y}.", ("x",parent->depth)("y",STEEMIT_MAX_COMMENT_DEPTH) );
+      FC_ASSERT( parent->depth < SCORUM_MAX_COMMENT_DEPTH, "Comment is nested ${x} posts deep, maximum depth is ${y}.", ("x",parent->depth)("y",SCORUM_MAX_COMMENT_DEPTH) );
    }
 
    if(o.json_metadata.size() )
@@ -450,23 +450,23 @@ void comment_evaluator::do_apply( const comment_operation& o )
 
    if ( itr == by_permlink_idx.end() )
    {
-      if( o.parent_author != STEEMIT_ROOT_POST_PARENT )
+      if( o.parent_author != SCORUM_ROOT_POST_PARENT )
       {
          FC_ASSERT( _db.get( parent->root_comment ).allow_replies, "The parent comment has disabled replies." );
       }
 
-         if( o.parent_author == STEEMIT_ROOT_POST_PARENT )
-             FC_ASSERT( ( now - auth.last_root_post ) > STEEMIT_MIN_ROOT_COMMENT_INTERVAL, "You may only post once every 5 minutes.", ("now",now)("last_root_post", auth.last_root_post) );
+         if( o.parent_author == SCORUM_ROOT_POST_PARENT )
+             FC_ASSERT( ( now - auth.last_root_post ) > SCORUM_MIN_ROOT_COMMENT_INTERVAL, "You may only post once every 5 minutes.", ("now",now)("last_root_post", auth.last_root_post) );
          else
-             FC_ASSERT( (now - auth.last_post) > STEEMIT_MIN_REPLY_INTERVAL, "You may only comment once every 20 seconds.", ("now",now)("auth.last_post",auth.last_post) );
+             FC_ASSERT( (now - auth.last_post) > SCORUM_MIN_REPLY_INTERVAL, "You may only comment once every 20 seconds.", ("now",now)("auth.last_post",auth.last_post) );
       
 
-      uint16_t reward_weight = STEEMIT_100_PERCENT;
+      uint16_t reward_weight = SCORUM_100_PERCENT;
       uint64_t post_bandwidth = auth.post_bandwidth;
 
 
       _db.modify( auth, [&]( account_object& a ) {
-         if( o.parent_author == STEEMIT_ROOT_POST_PARENT )
+         if( o.parent_author == SCORUM_ROOT_POST_PARENT )
          {
             a.last_root_post = now;
             a.post_bandwidth = uint32_t( post_bandwidth );
@@ -489,7 +489,7 @@ void comment_evaluator::do_apply( const comment_operation& o )
          com.max_cashout_time = fc::time_point_sec::maximum();
          com.reward_weight = reward_weight;
 
-         if ( o.parent_author == STEEMIT_ROOT_POST_PARENT )
+         if ( o.parent_author == SCORUM_ROOT_POST_PARENT )
          {
             com.parent_author = "";
             from_string( com.parent_permlink, o.parent_permlink );
@@ -505,7 +505,7 @@ void comment_evaluator::do_apply( const comment_operation& o )
             com.root_comment = parent->root_comment;
          }
 
-         com.cashout_time = com.created + STEEMIT_CASHOUT_WINDOW_SECONDS;
+         com.cashout_time = com.created + SCORUM_CASHOUT_WINDOW_SECONDS;
         
 
          #ifndef IS_LOW_MEM
@@ -531,7 +531,7 @@ void comment_evaluator::do_apply( const comment_operation& o )
             p.active = now;
          });
 #ifndef IS_LOW_MEM
-         if( parent->parent_author != STEEMIT_ROOT_POST_PARENT )
+         if( parent->parent_author != SCORUM_ROOT_POST_PARENT )
             parent = &_db.get_comment( parent->parent_author, parent->parent_permlink );
          else
 #endif
@@ -609,17 +609,17 @@ void escrow_transfer_evaluator::do_apply( const escrow_transfer_operation& o )
       FC_ASSERT( o.ratification_deadline > _db.head_block_time(), "The escorw ratification deadline must be after head block time." );
       FC_ASSERT( o.escrow_expiration > _db.head_block_time(), "The escrow expiration must be after head block time." );
 
-      asset steem_spent = o.steem_amount;
+      asset scorum_spent = o.scorum_amount;
       asset sbd_spent = o.sbd_amount;
-      if( o.fee.symbol == STEEM_SYMBOL )
-         steem_spent += o.fee;
+      if( o.fee.symbol == SCORUM_SYMBOL )
+         scorum_spent += o.fee;
       else
          sbd_spent += o.fee;
 
-      FC_ASSERT( from_account.balance >= steem_spent, "Account cannot cover STEEM costs of escrow. Required: ${r} Available: ${a}", ("r",steem_spent)("a",from_account.balance) );
+      FC_ASSERT( from_account.balance >= scorum_spent, "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}", ("r",scorum_spent)("a",from_account.balance) );
       FC_ASSERT( from_account.sbd_balance >= sbd_spent, "Account cannot cover SBD costs of escrow. Required: ${r} Available: ${a}", ("r",sbd_spent)("a",from_account.sbd_balance) );
 
-      _db.adjust_balance( from_account, -steem_spent );
+      _db.adjust_balance( from_account, -scorum_spent );
       _db.adjust_balance( from_account, -sbd_spent );
 
       _db.create<escrow_object>([&]( escrow_object& esc )
@@ -631,7 +631,7 @@ void escrow_transfer_evaluator::do_apply( const escrow_transfer_operation& o )
          esc.ratification_deadline  = o.ratification_deadline;
          esc.escrow_expiration      = o.escrow_expiration;
          esc.sbd_balance            = o.sbd_amount;
-         esc.steem_balance          = o.steem_amount;
+         esc.scorum_balance          = o.scorum_amount;
          esc.pending_fee            = o.fee;
       });
    }
@@ -679,7 +679,7 @@ void escrow_approve_evaluator::do_apply( const escrow_approve_operation& o )
       if( reject_escrow )
       {
          const auto& from_account = _db.get_account( o.from );
-         _db.adjust_balance( from_account, escrow.steem_balance );
+         _db.adjust_balance( from_account, escrow.scorum_balance );
          _db.adjust_balance( from_account, escrow.sbd_balance );
          _db.adjust_balance( from_account, escrow.pending_fee );
 
@@ -728,7 +728,7 @@ void escrow_release_evaluator::do_apply( const escrow_release_operation& o )
       const auto& receiver_account = _db.get_account(o.receiver);
 
       const auto& e = _db.get_escrow( o.from, o.escrow_id );
-      FC_ASSERT( e.steem_balance >= o.steem_amount, "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}", ("a", o.steem_amount)("b", e.steem_balance) );
+      FC_ASSERT( e.scorum_balance >= o.scorum_amount, "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}", ("a", o.scorum_amount)("b", e.scorum_balance) );
       FC_ASSERT( e.sbd_balance >= o.sbd_amount, "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}", ("a", o.sbd_amount)("b", e.sbd_balance) );
       FC_ASSERT( e.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).", ("o", o.to)("e", e.to) );
       FC_ASSERT( e.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).", ("o", o.agent)("e", e.agent) );
@@ -759,16 +759,16 @@ void escrow_release_evaluator::do_apply( const escrow_release_operation& o )
       }
       // If escrow expires and there is no dispute, either party can release funds to either party.
 
-      _db.adjust_balance( receiver_account, o.steem_amount );
+      _db.adjust_balance( receiver_account, o.scorum_amount );
       _db.adjust_balance( receiver_account, o.sbd_amount );
 
       _db.modify( e, [&]( escrow_object& esc )
       {
-         esc.steem_balance -= o.steem_amount;
+         esc.scorum_balance -= o.scorum_amount;
          esc.sbd_balance -= o.sbd_amount;
       });
 
-      if( e.steem_balance.amount == 0 && e.sbd_balance.amount == 0 )
+      if( e.scorum_balance.amount == 0 && e.sbd_balance.amount == 0 )
       {
          _db.remove( e );
       }
@@ -800,7 +800,7 @@ void transfer_to_vesting_evaluator::do_apply( const transfer_to_vesting_operatio
    const auto& from_account = _db.get_account(o.from);
    const auto& to_account = o.to.size() ? _db.get_account(o.to) : from_account;
 
-   FC_ASSERT( _db.get_balance( from_account, STEEM_SYMBOL) >= o.amount, "Account does not have sufficient STEEM for transfer." );
+   FC_ASSERT( _db.get_balance( from_account, SCORUM_SYMBOL) >= o.amount, "Account does not have sufficient SCORUM for transfer." );
    _db.adjust_balance( from_account, -o.amount );
    _db.create_vesting( to_account, o.amount );
 }
@@ -839,7 +839,7 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
    {    
 
         //SCORUM: We have to decide wether we use 13 weeks vesting period or low it down
-      int vesting_withdraw_intervals = STEEMIT_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
+      int vesting_withdraw_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
 
       _db.modify( account, [&]( account_object& a )
       {
@@ -851,7 +851,7 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
          FC_ASSERT( account.vesting_withdraw_rate  != new_vesting_withdraw_rate, "This operation would not change the vesting withdraw rate." );
 
          a.vesting_withdraw_rate = new_vesting_withdraw_rate;
-         a.next_vesting_withdrawal = _db.head_block_time() + fc::seconds(STEEMIT_VESTING_WITHDRAW_INTERVAL_SECONDS);
+         a.next_vesting_withdrawal = _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
          a.to_withdraw = o.vesting_shares.amount;
          a.withdrawn = 0;
       });
@@ -870,7 +870,7 @@ void set_withdraw_vesting_route_evaluator::do_apply( const set_withdraw_vesting_
    if( itr == wd_idx.end() )
    {
       FC_ASSERT( o.percent != 0, "Cannot create a 0% destination." );
-      FC_ASSERT( from_account.withdraw_routes < STEEMIT_MAX_WITHDRAW_ROUTES, "Account already has the maximum number of routes." );
+      FC_ASSERT( from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES, "Account already has the maximum number of routes." );
 
       _db.create< withdraw_vesting_route_object >( [&]( withdraw_vesting_route_object& wvdo )
       {
@@ -914,7 +914,7 @@ void set_withdraw_vesting_route_evaluator::do_apply( const set_withdraw_vesting_
       ++itr;
    }
 
-   FC_ASSERT( total_percent <= STEEMIT_100_PERCENT, "More than 100% of vesting withdrawals allocated to destinations." );
+   FC_ASSERT( total_percent <= SCORUM_100_PERCENT, "More than 100% of vesting withdrawals allocated to destinations." );
    }
    FC_CAPTURE_AND_RETHROW()
 }
@@ -927,16 +927,16 @@ void account_witness_proxy_evaluator::do_apply( const account_witness_proxy_oper
    FC_ASSERT( account.can_vote, "Account has declined the ability to vote and cannot proxy votes." );
 
    /// remove all current votes
-   std::array<share_type, STEEMIT_MAX_PROXY_RECURSION_DEPTH+1> delta;
+   std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH+1> delta;
    delta[0] = -account.vesting_shares.amount;
-   for( int i = 0; i < STEEMIT_MAX_PROXY_RECURSION_DEPTH; ++i )
+   for( int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i )
       delta[i+1] = -account.proxied_vsf_votes[i];
    _db.adjust_proxied_witness_votes( account, delta );
 
    if( o.proxy.size() ) {
       const auto& new_proxy = _db.get_account( o.proxy );
       flat_set<account_id_type> proxy_chain( { account.id, new_proxy.id } );
-      proxy_chain.reserve( STEEMIT_MAX_PROXY_RECURSION_DEPTH + 1 );
+      proxy_chain.reserve( SCORUM_MAX_PROXY_RECURSION_DEPTH + 1 );
 
       /// check for proxy loops and fail to update the proxy if it would create a loop
       auto cprox = &new_proxy;
@@ -944,7 +944,7 @@ void account_witness_proxy_evaluator::do_apply( const account_witness_proxy_oper
          const auto next_proxy = _db.get_account( cprox->proxy );
          FC_ASSERT( proxy_chain.insert( next_proxy.id ).second, "This proxy would create a proxy loop." );
          cprox = &next_proxy;
-         FC_ASSERT( proxy_chain.size() <= STEEMIT_MAX_PROXY_RECURSION_DEPTH, "Proxy chain is too long." );
+         FC_ASSERT( proxy_chain.size() <= SCORUM_MAX_PROXY_RECURSION_DEPTH, "Proxy chain is too long." );
       }
 
       /// clear all individual vote records
@@ -955,7 +955,7 @@ void account_witness_proxy_evaluator::do_apply( const account_witness_proxy_oper
       });
 
       /// add all new votes
-      for( int i = 0; i <= STEEMIT_MAX_PROXY_RECURSION_DEPTH; ++i )
+      for( int i = 0; i <= SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i )
          delta[i] = -delta[i];
       _db.adjust_proxied_witness_votes( account, delta );
    } else { /// we are clearing the proxy which means we simply update the account
@@ -982,7 +982,7 @@ void account_witness_vote_evaluator::do_apply( const account_witness_vote_operat
    if( itr == by_account_witness_idx.end() ) {
       FC_ASSERT( o.approve, "Vote doesn't exist, user must indicate a desire to approve witness." );
 
-         FC_ASSERT( voter.witnesses_voted_for < STEEMIT_MAX_ACCOUNT_WITNESS_VOTES, "Account has voted for too many witnesses." ); // TODO: Remove after hardfork 2
+         FC_ASSERT( voter.witnesses_voted_for < SCORUM_MAX_ACCOUNT_WITNESS_VOTES, "Account has voted for too many witnesses." ); // TODO: Remove after hardfork 2
 
          _db.create<witness_vote_object>( [&]( witness_vote_object& v ) {
              v.witness = witness.id;
@@ -1047,29 +1047,29 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
    int64_t elapsed_seconds   = (_db.head_block_time() - voter.last_vote_time).to_seconds();
 
-   FC_ASSERT( elapsed_seconds >= STEEMIT_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds." );
+   FC_ASSERT( elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds." );
 
-   int64_t regenerated_power = (STEEMIT_100_PERCENT * elapsed_seconds) / STEEMIT_VOTE_REGENERATION_SECONDS;
-   int64_t current_power     = std::min( int64_t(voter.voting_power + regenerated_power), int64_t(STEEMIT_100_PERCENT) );
+   int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / SCORUM_VOTE_REGENERATION_SECONDS;
+   int64_t current_power     = std::min( int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT) );
    FC_ASSERT( current_power > 0, "Account currently does not have voting power." );
 
    int64_t  abs_weight    = abs(o.weight);
-   int64_t  used_power    = (current_power * abs_weight) / STEEMIT_100_PERCENT;
+   int64_t  used_power    = (current_power * abs_weight) / SCORUM_100_PERCENT;
 
    const dynamic_global_property_object& dgpo = _db.get_dynamic_global_properties();
 
-   // used_power = (current_power * abs_weight / STEEMIT_100_PERCENT) * (reserve / max_vote_denom)
+   // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
    // The second multiplication is rounded up as of HF 259
-   int64_t max_vote_denom = dgpo.vote_power_reserve_rate * STEEMIT_VOTE_REGENERATION_SECONDS / (60*60*24);
+   int64_t max_vote_denom = dgpo.vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS / (60*60*24);
    FC_ASSERT( max_vote_denom > 0 );
 
    used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
 
    FC_ASSERT( used_power <= current_power, "Account does not have enough power to vote." );
 
-   int64_t abs_rshares    = ((uint128_t(voter.effective_vesting_shares().amount.value) * used_power) / (STEEMIT_100_PERCENT)).to_uint64();
+   int64_t abs_rshares    = ((uint128_t(voter.effective_vesting_shares().amount.value) * used_power) / (SCORUM_100_PERCENT)).to_uint64();
 
-   FC_ASSERT( abs_rshares > STEEMIT_VOTE_DUST_THRESHOLD || o.weight == 0, "Voting weight is too small, please accumulate more voting power or steem power." );
+   FC_ASSERT( abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || o.weight == 0, "Voting weight is too small, please accumulate more voting power or scorum power." );
  
    FC_ASSERT( itr == comment_vote_idx.end() || itr->num_changes != -1, "Cannot vote again on a comment after payout." );
 
@@ -1081,7 +1081,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
       if( rshares > 0 )
       {
-           FC_ASSERT( _db.head_block_time() < comment.cashout_time - STEEMIT_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
+           FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
       }
 
       //used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread their votes around over 50+ posts day for a week
@@ -1170,10 +1170,10 @@ void vote_evaluator::do_apply( const vote_operation& o )
            
                /// discount weight by time
                uint128_t w(max_vote_weight);
-               uint64_t delta_t = std::min( uint64_t((cv.last_update - comment.created).to_seconds()), uint64_t(STEEMIT_REVERSE_AUCTION_WINDOW_SECONDS) );
+               uint64_t delta_t = std::min( uint64_t((cv.last_update - comment.created).to_seconds()), uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS) );
 
                w *= delta_t;
-               w /= STEEMIT_REVERSE_AUCTION_WINDOW_SECONDS;
+               w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
                cv.weight = w.to_uint64();
       
          }
@@ -1193,7 +1193,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
    }
    else
    {
-      FC_ASSERT( itr->num_changes < STEEMIT_MAX_VOTE_CHANGES, "Voter has used the maximum number of vote changes on this comment." );
+      FC_ASSERT( itr->num_changes < SCORUM_MAX_VOTE_CHANGES, "Voter has used the maximum number of vote changes on this comment." );
 
       FC_ASSERT( itr->vote_percent != o.weight, "You have already voted in a similar way." );
 
@@ -1202,7 +1202,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
       if( itr->rshares < rshares )
       {
-            FC_ASSERT( _db.head_block_time() < comment.cashout_time - STEEMIT_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
+            FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
       }
 
       _db.modify( voter, [&]( account_object& a ){
@@ -1334,14 +1334,14 @@ void convert_evaluator::do_apply( const convert_operation& o )
   const auto& fhistory = _db.get_feed_history();
   FC_ASSERT( !fhistory.current_median_history.is_null(), "Cannot convert SBD because there is no price feed." );
 
-  auto steemit_conversion_delay = STEEMIT_CONVERSION_DELAY;
+  auto scorum_conversion_delay = SCORUM_CONVERSION_DELAY;
 
   _db.create<convert_request_object>( [&]( convert_request_object& obj )
   {
       obj.owner           = o.owner;
       obj.requestid       = o.requestid;
       obj.amount          = o.amount;
-      obj.conversion_date = _db.head_block_time() + steemit_conversion_delay;
+      obj.conversion_date = _db.head_block_time() + scorum_conversion_delay;
   });
 
 }
@@ -1445,7 +1445,7 @@ void request_account_recovery_evaluator::do_apply( const request_account_recover
       {
          req.account_to_recover = o.account_to_recover;
          req.new_owner_authority = o.new_owner_authority;
-         req.expires = _db.head_block_time() + STEEMIT_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD;
+         req.expires = _db.head_block_time() + SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD;
       });
    }
    else if( o.new_owner_authority.weight_threshold == 0 ) // Cancel Request if authority is open
@@ -1464,7 +1464,7 @@ void request_account_recovery_evaluator::do_apply( const request_account_recover
       _db.modify( *request, [&]( account_recovery_request_object& req )
       {
          req.new_owner_authority = o.new_owner_authority;
-         req.expires = _db.head_block_time() + STEEMIT_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD;
+         req.expires = _db.head_block_time() + SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD;
       });
    }
 }
@@ -1473,7 +1473,7 @@ void recover_account_evaluator::do_apply( const recover_account_operation& o )
 {
    const auto& account = _db.get_account( o.account_to_recover );
 
-   FC_ASSERT( _db.head_block_time() - account.last_account_recovery > STEEMIT_OWNER_UPDATE_LIMIT, "Owner authority can only be updated once an hour." );
+   FC_ASSERT( _db.head_block_time() - account.last_account_recovery > SCORUM_OWNER_UPDATE_LIMIT, "Owner authority can only be updated once an hour." );
 
    const auto& recovery_request_idx = _db.get_index< account_recovery_request_index >().indices().get< by_account >();
    auto request = recovery_request_idx.find( o.account_to_recover );
@@ -1516,7 +1516,7 @@ void change_recovery_account_evaluator::do_apply( const change_recovery_account_
       {
          req.account_to_recover = o.account_to_recover;
          req.recovery_account = o.new_recovery_account;
-         req.effective_on = _db.head_block_time() + STEEMIT_OWNER_AUTH_RECOVERY_PERIOD;
+         req.effective_on = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
       });
    }
    else if( account_to_recover.recovery_account != o.new_recovery_account ) // Change existing request
@@ -1524,7 +1524,7 @@ void change_recovery_account_evaluator::do_apply( const change_recovery_account_
       _db.modify( *request, [&]( change_recovery_account_request_object& req )
       {
          req.recovery_account = o.new_recovery_account;
-         req.effective_on = _db.head_block_time() + STEEMIT_OWNER_AUTH_RECOVERY_PERIOD;
+         req.effective_on = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
       });
    }
    else // Request exists and changing back to current recovery account
@@ -1548,7 +1548,7 @@ void transfer_from_savings_evaluator::do_apply( const transfer_from_savings_oper
    const auto& from = _db.get_account( op.from );
    _db.get_account(op.to); // Verify to account exists
 
-   FC_ASSERT( from.savings_withdraw_requests < STEEMIT_SAVINGS_WITHDRAW_REQUEST_LIMIT, "Account has reached limit for pending withdraw requests." );
+   FC_ASSERT( from.savings_withdraw_requests < SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT, "Account has reached limit for pending withdraw requests." );
 
    FC_ASSERT( _db.get_savings_balance( from, op.amount.symbol ) >= op.amount );
    _db.adjust_savings_balance( from, -op.amount );
@@ -1560,7 +1560,7 @@ void transfer_from_savings_evaluator::do_apply( const transfer_from_savings_oper
       from_string( s.memo, op.memo );
 #endif
       s.request_id = op.request_id;
-      s.complete = _db.head_block_time() + STEEMIT_SAVINGS_WITHDRAW_TIME;
+      s.complete = _db.head_block_time() + SCORUM_SAVINGS_WITHDRAW_TIME;
    });
 
    _db.modify( from, [&]( account_object& a )
@@ -1595,7 +1595,7 @@ void decline_voting_rights_evaluator::do_apply( const decline_voting_rights_oper
       _db.create< decline_voting_rights_request_object >( [&]( decline_voting_rights_request_object& req )
       {
          req.account = account.id;
-         req.effective_date = _db.head_block_time() + STEEMIT_OWNER_AUTH_RECOVERY_PERIOD;
+         req.effective_date = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
       });
    }
    else
@@ -1609,39 +1609,39 @@ void claim_reward_balance_evaluator::do_apply( const claim_reward_balance_operat
 {
    const auto& acnt = _db.get_account( op.account );
 
-   FC_ASSERT( op.reward_steem <= acnt.reward_steem_balance, "Cannot claim that much STEEM. Claim: ${c} Actual: ${a}",
-      ("c", op.reward_steem)("a", acnt.reward_steem_balance) );
+   FC_ASSERT( op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCORUM. Claim: ${c} Actual: ${a}",
+      ("c", op.reward_scorum)("a", acnt.reward_scorum_balance) );
    FC_ASSERT( op.reward_sbd <= acnt.reward_sbd_balance, "Cannot claim that much SBD. Claim: ${c} Actual: ${a}",
       ("c", op.reward_sbd)("a", acnt.reward_sbd_balance) );
    FC_ASSERT( op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much VESTS. Claim: ${c} Actual: ${a}",
       ("c", op.reward_vests)("a", acnt.reward_vesting_balance) );
 
-   asset reward_vesting_steem_to_move = asset( 0, STEEM_SYMBOL );
+   asset reward_vesting_scorum_to_move = asset( 0, SCORUM_SYMBOL );
    if( op.reward_vests == acnt.reward_vesting_balance )
-      reward_vesting_steem_to_move = acnt.reward_vesting_steem;
+      reward_vesting_scorum_to_move = acnt.reward_vesting_scorum;
    else
-      reward_vesting_steem_to_move = asset( ( ( uint128_t( op.reward_vests.amount.value ) * uint128_t( acnt.reward_vesting_steem.amount.value ) )
-         / uint128_t( acnt.reward_vesting_balance.amount.value ) ).to_uint64(), STEEM_SYMBOL );
+      reward_vesting_scorum_to_move = asset( ( ( uint128_t( op.reward_vests.amount.value ) * uint128_t( acnt.reward_vesting_scorum.amount.value ) )
+         / uint128_t( acnt.reward_vesting_balance.amount.value ) ).to_uint64(), SCORUM_SYMBOL );
 
-   _db.adjust_reward_balance( acnt, -op.reward_steem );
+   _db.adjust_reward_balance( acnt, -op.reward_scorum );
    _db.adjust_reward_balance( acnt, -op.reward_sbd );
-   _db.adjust_balance( acnt, op.reward_steem );
+   _db.adjust_balance( acnt, op.reward_scorum );
    _db.adjust_balance( acnt, op.reward_sbd );
 
    _db.modify( acnt, [&]( account_object& a )
    {
       a.vesting_shares += op.reward_vests;
       a.reward_vesting_balance -= op.reward_vests;
-      a.reward_vesting_steem -= reward_vesting_steem_to_move;
+      a.reward_vesting_scorum -= reward_vesting_scorum_to_move;
    });
 
    _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
    {
       gpo.total_vesting_shares += op.reward_vests;
-      gpo.total_vesting_fund_steem += reward_vesting_steem_to_move;
+      gpo.total_vesting_fund_scorum += reward_vesting_scorum_to_move;
 
       gpo.pending_rewarded_vesting_shares -= op.reward_vests;
-      gpo.pending_rewarded_vesting_steem -= reward_vesting_steem_to_move;
+      gpo.pending_rewarded_vesting_scorum -= reward_vesting_scorum_to_move;
    });
 
    _db.adjust_proxied_witness_votes( acnt, op.reward_vests.amount );
@@ -1657,7 +1657,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
 
    const auto& wso = _db.get_witness_schedule_object();
    const auto& gpo = _db.get_dynamic_global_properties();
-   auto min_delegation = asset( wso.median_props.account_creation_fee.amount * 10, STEEM_SYMBOL ) * gpo.get_vesting_share_price();
+   auto min_delegation = asset( wso.median_props.account_creation_fee.amount * 10, SCORUM_SYMBOL ) * gpo.get_vesting_share_price();
    auto min_update = wso.median_props.account_creation_fee * gpo.get_vesting_share_price();
 
    // If delegation doesn't exist, create it
@@ -1726,7 +1726,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
       {
          obj.delegator = op.delegator;
          obj.vesting_shares = delta;
-         obj.expiration = std::max( _db.head_block_time() + STEEMIT_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time );
+         obj.expiration = std::max( _db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time );
       });
 
       _db.modify( delegatee, [&]( account_object& a )
@@ -1748,4 +1748,4 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
    }
 }
 
-} } // steemit::chain
+} } // scorum::chain

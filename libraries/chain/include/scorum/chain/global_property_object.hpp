@@ -1,14 +1,14 @@
 #pragma once
 #include <fc/uint128.hpp>
 
-#include <steemit/chain/steem_object_types.hpp>
+#include <scorum/chain/scorum_object_types.hpp>
 
-#include <steemit/protocol/asset.hpp>
+#include <scorum/protocol/asset.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
-   using steemit::protocol::asset;
-   using steemit::protocol::price;
+   using scorum::protocol::asset;
+   using scorum::protocol::price;
 
    /**
     * @class dynamic_global_property_object
@@ -49,30 +49,30 @@ namespace steemit { namespace chain {
           */
          uint32_t num_pow_witnesses = 0;
 
-         asset       virtual_supply             = asset( 0, STEEM_SYMBOL );
-         asset       current_supply             = asset( 0, STEEM_SYMBOL );
-         asset       confidential_supply        = asset( 0, STEEM_SYMBOL ); ///< total asset held in confidential balances
+         asset       virtual_supply             = asset( 0, SCORUM_SYMBOL );
+         asset       current_supply             = asset( 0, SCORUM_SYMBOL );
+         asset       confidential_supply        = asset( 0, SCORUM_SYMBOL ); ///< total asset held in confidential balances
          asset       current_sbd_supply         = asset( 0, SBD_SYMBOL );
          asset       confidential_sbd_supply    = asset( 0, SBD_SYMBOL ); ///< total asset held in confidential balances
-         asset       total_vesting_fund_steem   = asset( 0, STEEM_SYMBOL );
+         asset       total_vesting_fund_scorum   = asset( 0, SCORUM_SYMBOL );
          asset       total_vesting_shares       = asset( 0, VESTS_SYMBOL );
-         asset       total_reward_fund_steem    = asset( 0, STEEM_SYMBOL );
+         asset       total_reward_fund_scorum    = asset( 0, SCORUM_SYMBOL );
          fc::uint128 total_reward_shares2; ///< the running total of REWARD^2
          asset       pending_rewarded_vesting_shares = asset( 0, VESTS_SYMBOL );
-         asset       pending_rewarded_vesting_steem = asset( 0, STEEM_SYMBOL );
+         asset       pending_rewarded_vesting_scorum = asset( 0, SCORUM_SYMBOL );
 
          price       get_vesting_share_price() const
          {
-            if ( total_vesting_fund_steem.amount == 0 || total_vesting_shares.amount == 0 )
-               return price ( asset( 1000, STEEM_SYMBOL ), asset( 1000000, VESTS_SYMBOL ) );
+            if ( total_vesting_fund_scorum.amount == 0 || total_vesting_shares.amount == 0 )
+               return price ( asset( 1000, SCORUM_SYMBOL ), asset( 1000000, VESTS_SYMBOL ) );
 
-            return price( total_vesting_shares, total_vesting_fund_steem );
+            return price( total_vesting_shares, total_vesting_fund_scorum );
          }
 
          price get_reward_vesting_share_price() const
          {
             return price( total_vesting_shares + pending_rewarded_vesting_shares,
-               total_vesting_fund_steem + pending_rewarded_vesting_steem );
+               total_vesting_fund_scorum + pending_rewarded_vesting_scorum );
          }
 
          /**
@@ -80,7 +80,7 @@ namespace steemit { namespace chain {
           */
          uint16_t sbd_interest_rate = 0;
 
-         uint16_t sbd_print_rate = STEEMIT_100_PERCENT;
+         uint16_t sbd_print_rate = SCORUM_100_PERCENT;
 
          /**
           *  Maximum block size is decided by the set of active witnesses which change every round.
@@ -124,9 +124,9 @@ namespace steemit { namespace chain {
       allocator< dynamic_global_property_object >
    > dynamic_global_property_index;
 
-} } // steemit::chain
+} } // scorum::chain
 
-FC_REFLECT( steemit::chain::dynamic_global_property_object,
+FC_REFLECT( scorum::chain::dynamic_global_property_object,
              (id)
              (head_block_number)
              (head_block_id)
@@ -139,12 +139,12 @@ FC_REFLECT( steemit::chain::dynamic_global_property_object,
              (confidential_supply)
              (current_sbd_supply)
              (confidential_sbd_supply)
-             (total_vesting_fund_steem)
+             (total_vesting_fund_scorum)
              (total_vesting_shares)
-             (total_reward_fund_steem)
+             (total_reward_fund_scorum)
              (total_reward_shares2)
              (pending_rewarded_vesting_shares)
-             (pending_rewarded_vesting_steem)
+             (pending_rewarded_vesting_scorum)
              (sbd_interest_rate)
              (sbd_print_rate)
              (maximum_block_size)
@@ -154,4 +154,4 @@ FC_REFLECT( steemit::chain::dynamic_global_property_object,
              (last_irreversible_block_num)
              (vote_power_reserve_rate)
           )
-CHAINBASE_SET_INDEX_TYPE( steemit::chain::dynamic_global_property_object, steemit::chain::dynamic_global_property_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index )

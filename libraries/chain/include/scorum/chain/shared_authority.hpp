@@ -1,12 +1,12 @@
 #pragma once
-#include <steemit/protocol/authority.hpp>
+#include <scorum/protocol/authority.hpp>
 #include <boost/interprocess/managed_mapped_file.hpp>
 
-namespace steemit { namespace chain {
-   using steemit::protocol::authority;
-   using steemit::protocol::public_key_type;
-   using steemit::protocol::account_name_type;
-   using steemit::protocol::weight_type;
+namespace scorum { namespace chain {
+   using scorum::protocol::authority;
+   using scorum::protocol::public_key_type;
+   using scorum::protocol::account_name_type;
+   using scorum::protocol::weight_type;
 
    namespace bip = boost::interprocess;
 
@@ -98,7 +98,7 @@ namespace steemit { namespace chain {
    bool operator == ( const authority& a, const shared_authority& b );
    bool operator == ( const shared_authority& a, const authority& b );
 
-} } //steemit::chain
+} } //scorum::chain
 
-FC_REFLECT_TYPENAME( steemit::chain::shared_authority::account_authority_map)
-FC_REFLECT( steemit::chain::shared_authority, (weight_threshold)(account_auths)(key_auths) )
+FC_REFLECT_TYPENAME( scorum::chain::shared_authority::account_authority_map)
+FC_REFLECT( scorum::chain::shared_authority, (weight_threshold)(account_auths)(key_auths) )

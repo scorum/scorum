@@ -1,25 +1,25 @@
 #pragma once
 
-#include <steemit/protocol/asset.hpp>
+#include <scorum/protocol/asset.hpp>
 
-namespace steemit { namespace chain { namespace util {
+namespace scorum { namespace chain { namespace util {
 
-using steemit::protocol::asset;
-using steemit::protocol::price;
+using scorum::protocol::asset;
+using scorum::protocol::price;
 
-inline asset to_sbd( const price& p, const asset& steem )
+inline asset to_sbd( const price& p, const asset& scorum )
 {
-   FC_ASSERT( steem.symbol == STEEM_SYMBOL );
+   FC_ASSERT( scorum.symbol == SCORUM_SYMBOL );
    if( p.is_null() )
       return asset( 0, SBD_SYMBOL );
-   return steem * p;
+   return scorum * p;
 }
 
-inline asset to_steem( const price& p, const asset& sbd )
+inline asset to_scorum( const price& p, const asset& sbd )
 {
    FC_ASSERT( sbd.symbol == SBD_SYMBOL );
    if( p.is_null() )
-      return asset( 0, STEEM_SYMBOL );
+      return asset( 0, SCORUM_SYMBOL );
    return sbd * p;
 }
 

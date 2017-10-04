@@ -23,20 +23,20 @@
  */
 #pragma once
 
-#include <steemit/app/plugin.hpp>
-#include <steemit/chain/database.hpp>
+#include <scorum/app/plugin.hpp>
+#include <scorum/chain/database.hpp>
 
 #include <fc/thread/future.hpp>
 
 #define RESERVE_RATIO_PRECISION ((int64_t)10000)
 #define RESERVE_RATIO_MIN_INCREMENT ((int64_t)5000)
 
-namespace steemit { namespace witness {
+namespace scorum { namespace witness {
 
 using std::string;
 using protocol::public_key_type;
 using app::application;
-using steemit::protocol::block_id_type;
+using scorum::protocol::block_id_type;
 
 namespace block_production_condition
 {
@@ -60,7 +60,7 @@ namespace detail
    class witness_plugin_impl;
 }
 
-class witness_plugin : public steemit::app::plugin
+class witness_plugin : public scorum::app::plugin
 {
 public:
    witness_plugin( application* app );
@@ -86,8 +86,8 @@ private:
 
    boost::program_options::variables_map _options;
    bool _production_enabled = false;
-   uint32_t _required_witness_participation = 33 * STEEMIT_1_PERCENT;
-   uint32_t _production_skip_flags = steemit::chain::database::skip_nothing;
+   uint32_t _required_witness_participation = 33 * SCORUM_1_PERCENT;
+   uint32_t _production_skip_flags = scorum::chain::database::skip_nothing;
 
    block_id_type    _head_block_id        = block_id_type();
    fc::time_point   _hash_start_time;
@@ -100,4 +100,4 @@ private:
    std::unique_ptr< detail::witness_plugin_impl > _my;
 };
 
-} } //steemit::witness
+} } //scorum::witness

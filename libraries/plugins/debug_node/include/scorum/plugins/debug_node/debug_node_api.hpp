@@ -8,15 +8,15 @@
 #include <fc/optional.hpp>
 #include <fc/variant_object.hpp>
 
-#include <steemit/protocol/block.hpp>
+#include <scorum/protocol/block.hpp>
 
-#include <steemit/chain/witness_objects.hpp>
+#include <scorum/chain/witness_objects.hpp>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
    struct api_context;
 } }
 
-namespace steemit { namespace plugin { namespace debug_node {
+namespace scorum { namespace plugin { namespace debug_node {
 
 namespace detail {
 class debug_node_api_impl;
@@ -36,7 +36,7 @@ struct get_dev_key_result
 class debug_node_api
 {
    public:
-      debug_node_api( const steemit::app::api_context& ctx );
+      debug_node_api( const scorum::app::api_context& ctx );
 
       void on_api_startup();
 
@@ -58,17 +58,17 @@ class debug_node_api
       /*
        * Pop a block from the blockchain, returning it
        */
-      fc::optional< steemit::chain::signed_block > debug_pop_block();
+      fc::optional< scorum::chain::signed_block > debug_pop_block();
 
       /*
        * Push an already constructed block onto the blockchain. For use with pop_block to traverse state block by block.
        */
       // not implemented
-      //void debug_push_block( steemit::chain::signed_block& block );
+      //void debug_push_block( scorum::chain::signed_block& block );
 
-      steemit::chain::witness_schedule_object debug_get_witness_schedule();
+      scorum::chain::witness_schedule_object debug_get_witness_schedule();
 
-      steemit::chain::hardfork_property_object debug_get_hardfork_property_object();
+      scorum::chain::hardfork_property_object debug_get_hardfork_property_object();
 
       /**
        * Directly manipulate database objects (will undo and re-apply last block with new changes post-applied).
@@ -127,17 +127,17 @@ class debug_node_api
 
 } } }
 
-FC_REFLECT( steemit::plugin::debug_node::get_dev_key_args,
+FC_REFLECT( scorum::plugin::debug_node::get_dev_key_args,
    (name)
    )
 
-FC_REFLECT( steemit::plugin::debug_node::get_dev_key_result,
+FC_REFLECT( scorum::plugin::debug_node::get_dev_key_result,
    (private_key)
    (public_key)
    )
 
 
-FC_API(steemit::plugin::debug_node::debug_node_api,
+FC_API(scorum::plugin::debug_node::debug_node_api,
        (debug_push_blocks)
        (debug_generate_blocks)
        (debug_generate_blocks_until)

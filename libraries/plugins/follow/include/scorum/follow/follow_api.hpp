@@ -1,13 +1,13 @@
 #pragma once
 
-#include <steemit/app/application.hpp>
-#include <steemit/app/steem_api_objects.hpp>
+#include <scorum/app/application.hpp>
+#include <scorum/app/scorum_api_objects.hpp>
 
-#include <steemit/follow/follow_objects.hpp>
+#include <scorum/follow/follow_objects.hpp>
 
 #include <fc/api.hpp>
 
-namespace steemit { namespace follow {
+namespace scorum { namespace follow {
 
 using std::vector;
 using std::string;
@@ -112,17 +112,17 @@ class follow_api
       std::shared_ptr< detail::follow_api_impl > my;
 };
 
-} } // steemit::follow
+} } // scorum::follow
 
-FC_REFLECT( steemit::follow::feed_entry, (author)(permlink)(reblog_by)(reblog_on)(entry_id) );
-FC_REFLECT( steemit::follow::comment_feed_entry, (comment)(reblog_by)(reblog_on)(entry_id) );
-FC_REFLECT( steemit::follow::blog_entry, (author)(permlink)(blog)(reblog_on)(entry_id) );
-FC_REFLECT( steemit::follow::comment_blog_entry, (comment)(blog)(reblog_on)(entry_id) );
-FC_REFLECT( steemit::follow::account_reputation, (account)(reputation) );
-FC_REFLECT( steemit::follow::follow_api_obj, (follower)(following)(what) );
-FC_REFLECT( steemit::follow::follow_count_api_obj, (account)(follower_count)(following_count) );
+FC_REFLECT( scorum::follow::feed_entry, (author)(permlink)(reblog_by)(reblog_on)(entry_id) );
+FC_REFLECT( scorum::follow::comment_feed_entry, (comment)(reblog_by)(reblog_on)(entry_id) );
+FC_REFLECT( scorum::follow::blog_entry, (author)(permlink)(blog)(reblog_on)(entry_id) );
+FC_REFLECT( scorum::follow::comment_blog_entry, (comment)(blog)(reblog_on)(entry_id) );
+FC_REFLECT( scorum::follow::account_reputation, (account)(reputation) );
+FC_REFLECT( scorum::follow::follow_api_obj, (follower)(following)(what) );
+FC_REFLECT( scorum::follow::follow_count_api_obj, (account)(follower_count)(following_count) );
 
-FC_API( steemit::follow::follow_api,
+FC_API( scorum::follow::follow_api,
    (get_followers)
    (get_following)
    (get_follow_count)

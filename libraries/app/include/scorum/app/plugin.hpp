@@ -23,10 +23,10 @@
  */
 #pragma once
 
-#include <steemit/app/application.hpp>
+#include <scorum/app/application.hpp>
 
-#include <steemit/chain/evaluator.hpp>
-#include <steemit/chain/database.hpp>
+#include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/database.hpp>
 
 #include <boost/program_options.hpp>
 
@@ -37,7 +37,7 @@
 
 #include <memory>
 
-namespace steemit { namespace app {
+namespace scorum { namespace app {
 
 using fc::static_variant;
 using fc::unique_ptr;
@@ -136,26 +136,26 @@ T dejsonify(const string& s)
 #define LOAD_VALUE_SET(options, name, container, type) \
 if( options.count(name) ) { \
       const std::vector<std::string>& ops = options[name].as<std::vector<std::string>>(); \
-      std::transform(ops.begin(), ops.end(), std::inserter(container, container.end()), &steemit::app::dejsonify<type>); \
+      std::transform(ops.begin(), ops.end(), std::inserter(container, container.end()), &scorum::app::dejsonify<type>); \
 }
 /// @}
 
-} } //steemit::app
+} } //scorum::app
 
-#define STEEMIT_DEFINE_PLUGIN( plugin_name, plugin_class ) \
-   namespace steemit { namespace plugin { \
-   std::shared_ptr< steemit::app::abstract_plugin > create_ ## plugin_name ## _plugin( app::application* app )  \
+#define SCORUM_DEFINE_PLUGIN( plugin_name, plugin_class ) \
+   namespace scorum { namespace plugin { \
+   std::shared_ptr< scorum::app::abstract_plugin > create_ ## plugin_name ## _plugin( app::application* app )  \
    { return std::make_shared< plugin_class >( app ); } \
    } }
 
 #define DEFINE_PLUGIN_EVALUATOR( PLUGIN, OPERATION, X )                     \
-class X ## _evaluator : public steemit::chain::evaluator_impl< X ## _evaluator, OPERATION > \
+class X ## _evaluator : public scorum::chain::evaluator_impl< X ## _evaluator, OPERATION > \
 {                                                                           \
    public:                                                                  \
       typedef X ## _operation operation_type;                               \
                                                                             \
       X ## _evaluator( database& db, PLUGIN* plugin )                       \
-         : steemit::chain::evaluator_impl< X ## _evaluator, OPERATION >( db ), \
+         : scorum::chain::evaluator_impl< X ## _evaluator, OPERATION >( db ), \
            _plugin( plugin )                                                \
       {}                                                                    \
                                                                             \

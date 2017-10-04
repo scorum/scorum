@@ -7,11 +7,11 @@ namespace graphene { namespace schema {
    struct abstract_schema;
 } }
 
-namespace steemit { namespace protocol {
+namespace scorum { namespace protocol {
    struct custom_json_operation;
 } }
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 class custom_operation_interpreter
 {
@@ -21,4 +21,4 @@ class custom_operation_interpreter
       virtual std::shared_ptr< graphene::schema::abstract_schema > get_operation_schema() = 0;
 };
 
-} } // steemit::chain
+} } // scorum::chain

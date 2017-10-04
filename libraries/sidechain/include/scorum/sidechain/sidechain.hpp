@@ -1,6 +1,6 @@
 #pragma once
 
-namespace steemit { namespace sidechain {
+namespace scorum { namespace sidechain {
   using std::string;
 
 #define side_ids 10
@@ -40,12 +40,12 @@ namespace steemit { namespace sidechain {
         string   sidechain; ///< name of the sidechain account
         string   name; /// sub account within the side chain
 
-        asset    steem_balance;
+        asset    scorum_balance;
         asset    dollar_balance;
   };
 
-  FC_REFLECT_DERIVED( steemit::sidechain::side_account, (graphene::db::object),
-                      (sidechain)(name)(steem_balance)(dollar_balance)
+  FC_REFLECT_DERIVED( scorum::sidechain::side_account, (graphene::db::object),
+                      (sidechain)(name)(scorum_balance)(dollar_balance)
                      );
 
 

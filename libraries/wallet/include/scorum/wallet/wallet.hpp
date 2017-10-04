@@ -1,24 +1,24 @@
 #pragma once
 
-#include <steemit/app/api.hpp>
-#include <steemit/private_message/private_message_plugin.hpp>
-#include <steemit/follow/follow_plugin.hpp>
-#include <steemit/app/steem_api_objects.hpp>
+#include <scorum/app/api.hpp>
+#include <scorum/private_message/private_message_plugin.hpp>
+#include <scorum/follow/follow_plugin.hpp>
+#include <scorum/app/scorum_api_objects.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
 
 #include <fc/real128.hpp>
 #include <fc/crypto/base58.hpp>
 
-using namespace steemit::app;
-using namespace steemit::chain;
+using namespace scorum::app;
+using namespace scorum::chain;
 using namespace graphene::utilities;
 using namespace std;
 
-namespace steemit { namespace wallet {
+namespace scorum { namespace wallet {
 
-using steemit::app::discussion;
-using namespace steemit::private_message;
+using scorum::app::discussion;
+using namespace scorum::private_message;
 
 typedef uint16_t transaction_handle_type;
 
@@ -383,16 +383,16 @@ class wallet_api
        *  that is paid by the creator. The current account creation fee can be found with the
        *  'info' wallet command.
        *
-       *  These accounts are created with combination of STEEM and delegated SP
+       *  These accounts are created with combination of SCORUM and delegated SP
        *
        *  @param creator The account creating the new account
-       *  @param steem_fee The amount of the fee to be paid with STEEM
+       *  @param scorum_fee The amount of the fee to be paid with SCORUM
        *  @param delegated_vests The amount of the fee to be paid with delegation
        *  @param new_account_name The name of the new account
        *  @param json_meta JSON Metadata associated with the new account
        *  @param broadcast true if you wish to broadcast the transaction
        */
-      annotated_signed_transaction create_account_delegated( string creator, asset steem_fee, asset delegated_vests, string new_account_name, string json_meta, bool broadcast );
+      annotated_signed_transaction create_account_delegated( string creator, asset scorum_fee, asset delegated_vests, string new_account_name, string json_meta, bool broadcast );
 
       /**
        * This method is used by faucets to create new accounts for other users which must
@@ -400,10 +400,10 @@ class wallet_api
        * wallet. There is a fee associated with account creation that is paid by the creator.
        * The current account creation fee can be found with the 'info' wallet command.
        *
-       * These accounts are created with combination of STEEM and delegated SP
+       * These accounts are created with combination of SCORUM and delegated SP
        *
        * @param creator The account creating the new account
-       * @param steem_fee The amount of the fee to be paid with STEEM
+       * @param scorum_fee The amount of the fee to be paid with SCORUM
        * @param delegated_vests The amount of the fee to be paid with delegation
        * @param newname The name of the new account
        * @param json_meta JSON Metadata associated with the new account
@@ -414,7 +414,7 @@ class wallet_api
        * @param broadcast true if you wish to broadcast the transaction
        */
       annotated_signed_transaction create_account_with_keys_delegated( string creator,
-                                            asset steem_fee,
+                                            asset scorum_fee,
                                             asset delegated_vests,
                                             string newname,
                                             string json_meta,
@@ -601,25 +601,25 @@ class wallet_api
                                           bool broadcast = false);
 
       /**
-       * Transfer funds from one account to another. STEEM and SBD can be transferred.
+       * Transfer funds from one account to another. SCORUM and SBD can be transferred.
        *
        * @param from The account the funds are coming from
        * @param to The account the funds are going to
-       * @param amount The funds being transferred. i.e. "100.000 STEEM"
+       * @param amount The funds being transferred. i.e. "100.000 SCORUM"
        * @param memo A memo for the transactionm, encrypted with the to account's public memo key
        * @param broadcast true if you wish to broadcast the transaction
        */
       annotated_signed_transaction transfer(string from, string to, asset amount, string memo, bool broadcast = false);
 
       /**
-       * Transfer funds from one account to another using escrow. STEEM and SBD can be transferred.
+       * Transfer funds from one account to another using escrow. SCORUM and SBD can be transferred.
        *
        * @param from The account the funds are coming from
        * @param to The account the funds are going to
        * @param agent The account acting as the agent in case of dispute
        * @param escrow_id A unique id for the escrow transfer. (from, escrow_id) must be a unique pair
        * @param sbd_amount The amount of SBD to transfer
-       * @param steem_amount The amount of STEEM to transfer
+       * @param scorum_amount The amount of SCORUM to transfer
        * @param fee The fee paid to the agent
        * @param ratification_deadline The deadline for 'to' and 'agent' to approve the escrow transfer
        * @param escrow_expiration The expiration of the escrow transfer, after which either party can claim the funds
@@ -632,7 +632,7 @@ class wallet_api
          string agent,
          uint32_t escrow_id,
          asset sbd_amount,
-         asset steem_amount,
+         asset scorum_amount,
          asset fee,
          time_point_sec ratification_deadline,
          time_point_sec escrow_expiration,
@@ -691,7 +691,7 @@ class wallet_api
        * @param receiver The account that will receive funds being released
        * @param escrow_id A unique id for the escrow transfer
        * @param sbd_amount The amount of SBD that will be released
-       * @param steem_amount The amount of STEEM that will be released
+       * @param scorum_amount The amount of SCORUM that will be released
        * @param broadcast true if you wish to broadcast the transaction
        */
       annotated_signed_transaction escrow_release(
@@ -702,18 +702,18 @@ class wallet_api
          string receiver,
          uint32_t escrow_id,
          asset sbd_amount,
-         asset steem_amount,
+         asset scorum_amount,
          bool broadcast = false
       );
 
       /**
-       * Transfer STEEM into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
+       * Transfer SCORUM into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
        * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
-       * VESTS are protected against dilution up until 90% of STEEM is vesting.
+       * VESTS are protected against dilution up until 90% of SCORUM is vesting.
        *
-       * @param from The account the STEEM is coming from
+       * @param from The account the SCORUM is coming from
        * @param to The account getting the VESTS
-       * @param amount The amount of STEEM to vest i.e. "100.00 STEEM"
+       * @param amount The amount of SCORUM to vest i.e. "100.00 SCORUM"
        * @param broadcast true if you wish to broadcast the transaction
        */
       annotated_signed_transaction transfer_to_vesting(string from, string to, asset amount, bool broadcast = false);
@@ -740,7 +740,7 @@ class wallet_api
        *
        * @param from The account the VESTS are withdrawn from
        * @param vesting_shares The amount of VESTS to withdraw over the next two years. Each week (amount/104) shares are
-       *    withdrawn and deposited back as STEEM. i.e. "10.000000 VESTS"
+       *    withdrawn and deposited back as SCORUM. i.e. "10.000000 VESTS"
        * @param broadcast true if you wish to broadcast the transaction
        */
       annotated_signed_transaction withdraw_vesting( string from, asset vesting_shares, bool broadcast = false );
@@ -750,17 +750,17 @@ class wallet_api
        * based on the specified weights.
        *
        * @param from The account the VESTS are withdrawn from.
-       * @param to   The account receiving either VESTS or STEEM.
+       * @param to   The account receiving either VESTS or SCORUM.
        * @param percent The percent of the withdraw to go to the 'to' account. This is denoted in hundreths of a percent.
        *    i.e. 100 is 1% and 10000 is 100%. This value must be between 1 and 100000
        * @param auto_vest Set to true if the from account should receive the VESTS as VESTS, or false if it should receive
-       *    them as STEEM.
+       *    them as SCORUM.
        * @param broadcast true if you wish to broadcast the transaction.
        */
       annotated_signed_transaction set_withdraw_vesting_route( string from, string to, uint16_t percent, bool auto_vest, bool broadcast = false );
 
       /**
-       *  This method will convert SBD to STEEM at the current_median_history price one
+       *  This method will convert SBD to SCORUM at the current_median_history price one
        *  week from the time it is executed. This method depends upon there being a valid price feed.
        *
        *  @param from The account requesting conversion of its SBD i.e. "1.000 SBD"
@@ -770,8 +770,8 @@ class wallet_api
       annotated_signed_transaction convert_sbd( string from, asset amount, bool broadcast = false );
 
       /**
-       * A witness can public a price feed for the STEEM:SBD market. The median price feed is used
-       * to process conversion requests from SBD to STEEM.
+       * A witness can public a price feed for the SCORUM:SBD market. The median price feed is used
+       * to process conversion requests from SBD to SCORUM.
        *
        * @param witness The witness publishing the price feed
        * @param exchange_rate The desired exchange rate
@@ -801,7 +801,7 @@ class wallet_api
        * you can fill in.  It's better than nothing.
        *
        * @param operation_type the type of operation to return, must be one of the
-       *                       operations defined in `steemit/chain/operations.hpp`
+       *                       operations defined in `scorum/chain/operations.hpp`
        *                       (e.g., "global_parameters_update_operation")
        * @return a default-constructed operation of the given type
        */
@@ -811,7 +811,7 @@ class wallet_api
       vector< variant > network_get_connected_peers();
 
       /**
-       * Gets the current order book for STEEM:SBD
+       * Gets the current order book for SCORUM:SBD
        *
        * @param limit Maximum number of orders to return for bids and asks. Max is 1000.
        */
@@ -823,7 +823,7 @@ class wallet_api
        *
        *  @param owner The name of the account creating the order
        *  @param order_id is a unique identifier assigned by the creator of the order, it can be reused after the order has been filled
-       *  @param amount_to_sell The amount of either SBD or STEEM you wish to sell
+       *  @param amount_to_sell The amount of either SBD or SCORUM you wish to sell
        *  @param min_to_receive The amount of the other asset you will receive at a minimum
        *  @param fill_or_kill true if you want the order to be killed if it cannot immediately be filled
        *  @param expiration the time the order should expire if it has not been filled
@@ -860,7 +860,7 @@ class wallet_api
       message_body try_decrypt_message( const message_api_obj& mo );
 
       /**
-       * Vote on a comment to be paid STEEM
+       * Vote on a comment to be paid SCORUM
        *
        * @param voter The account voting
        * @param author The author of the comment to be voted on
@@ -973,7 +973,7 @@ class wallet_api
 
       annotated_signed_transaction decline_voting_rights( string account, bool decline, bool broadcast );
 
-      annotated_signed_transaction claim_reward_balance( string account, asset reward_steem, asset reward_sbd, asset reward_vests, bool broadcast );
+      annotated_signed_transaction claim_reward_balance( string account, asset reward_scorum, asset reward_sbd, asset reward_vests, bool broadcast );
 };
 
 struct plain_keys {
@@ -983,20 +983,20 @@ struct plain_keys {
 
 } }
 
-FC_REFLECT( steemit::wallet::wallet_data,
+FC_REFLECT( scorum::wallet::wallet_data,
             (cipher_keys)
             (ws_server)
             (ws_user)
             (ws_password)
           )
 
-FC_REFLECT( steemit::wallet::brain_key_info, (brain_priv_key)(wif_priv_key) (pub_key))
+FC_REFLECT( scorum::wallet::brain_key_info, (brain_priv_key)(wif_priv_key) (pub_key))
 
-FC_REFLECT( steemit::wallet::plain_keys, (checksum)(keys) )
+FC_REFLECT( scorum::wallet::plain_keys, (checksum)(keys) )
 
-FC_REFLECT_ENUM( steemit::wallet::authority_type, (owner)(active)(posting) )
+FC_REFLECT_ENUM( scorum::wallet::authority_type, (owner)(active)(posting) )
 
-FC_API( steemit::wallet::wallet_api,
+FC_API( scorum::wallet::wallet_api,
         /// wallet api
         (help)(gethelp)
         (about)(is_new)(is_locked)(lock)(unlock)(set_password)
@@ -1090,4 +1090,4 @@ FC_API( steemit::wallet::wallet_api,
         (get_transaction)
       )
 
-FC_REFLECT( steemit::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )
+FC_REFLECT( scorum::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )

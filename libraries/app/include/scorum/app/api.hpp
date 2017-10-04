@@ -23,9 +23,9 @@
  */
 #pragma once
 
-#include <steemit/app/api_context.hpp>
-#include <steemit/app/database_api.hpp>
-#include <steemit/protocol/types.hpp>
+#include <scorum/app/api_context.hpp>
+#include <scorum/app/database_api.hpp>
+#include <scorum/protocol/types.hpp>
 
 #include <graphene/net/node.hpp>
 
@@ -41,8 +41,8 @@
 #include <string>
 #include <vector>
 
-namespace steemit { namespace app {
-   using namespace steemit::chain;
+namespace scorum { namespace app {
+   using namespace scorum::chain;
    using namespace fc::ecc;
    using namespace std;
 
@@ -170,14 +170,14 @@ namespace steemit { namespace app {
          application& _app;
    };
 
-   struct steem_version_info
+   struct scorum_version_info
    {
-      steem_version_info() {}
-      steem_version_info( fc::string bc_v, fc::string s_v, fc::string fc_v )
-         :blockchain_version( bc_v ), steem_revision( s_v ), fc_revision( fc_v ) {}
+      scorum_version_info() {}
+      scorum_version_info( fc::string bc_v, fc::string s_v, fc::string fc_v )
+         :blockchain_version( bc_v ), scorum_revision( s_v ), fc_revision( fc_v ) {}
 
       fc::string blockchain_version;
-      fc::string steem_revision;
+      fc::string scorum_revision;
       fc::string fc_revision;
    };
 
@@ -205,7 +205,7 @@ namespace steemit { namespace app {
 
          fc::api_ptr get_api_by_name( const string& api_name )const;
 
-         steem_version_info get_version();
+         scorum_version_info get_version();
 
          /// internal method, not exposed via JSON RPC
          void on_api_startup();
@@ -214,22 +214,22 @@ namespace steemit { namespace app {
          api_context _ctx;
    };
 
-}}  // steemit::app
+}}  // scorum::app
 
-FC_REFLECT( steemit::app::network_broadcast_api::transaction_confirmation,
+FC_REFLECT( scorum::app::network_broadcast_api::transaction_confirmation,
         (id)(block_num)(trx_num)(expired) )
-FC_REFLECT( steemit::app::steem_version_info, (blockchain_version)(steem_revision)(fc_revision) )
+FC_REFLECT( scorum::app::scorum_version_info, (blockchain_version)(scorum_revision)(fc_revision) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 
-FC_API(steemit::app::network_broadcast_api,
+FC_API(scorum::app::network_broadcast_api,
        (broadcast_transaction)
        (broadcast_transaction_with_callback)
        (broadcast_transaction_synchronous)
        (broadcast_block)
        (set_max_block_age)
      )
-FC_API(steemit::app::network_node_api,
+FC_API(scorum::app::network_node_api,
        (get_info)
        (add_node)
        (get_connected_peers)
@@ -237,7 +237,7 @@ FC_API(steemit::app::network_node_api,
        (get_advanced_node_parameters)
        (set_advanced_node_parameters)
      )
-FC_API(steemit::app::login_api,
+FC_API(scorum::app::login_api,
        (login)
        (get_api_by_name)
        (get_version)
