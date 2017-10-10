@@ -877,7 +877,7 @@ class wallet_api
 
       /**
        * Challenge a user's authority. The challenger pays a fee to the challenged which is depositted as
-       * Steem Power. Until the challenged proves their active key, all posting rights are revoked.
+       * Scorum Power. Until the challenged proves their active key, all posting rights are revoked.
        *
        * @param challenger The account issuing the challenge
        * @param challenged The account being challenged

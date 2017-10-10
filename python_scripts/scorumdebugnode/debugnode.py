@@ -11,10 +11,10 @@ from tempfile import TemporaryDirectory
 from threading import Lock
 from time import sleep
 
-from scorumapi.scorumnoderpc import SteemNodeRPC
+from scorumapi.scorumnoderpc import ScorumNodeRPC
 
 class DebugNode( object ):
-   """ Wraps the scorumd debug node plugin for easier automated testing of the Steem Network"""
+   """ Wraps the scorumd debug node plugin for easier automated testing of the Scorum Network"""
 
    def __init__( self, scorumd, data_dir, args='', plugins=[], apis=[], scorumd_out=None, scorumd_err=None ):
       """ Creates a scorumd debug node.
@@ -104,7 +104,7 @@ class DebugNode( object ):
       self._scorumd_process.poll()
       sleep( 5 )
       if( not self._scorumd_process.returncode ):
-         self._rpc = SteemNodeRPC( 'ws://127.0.0.1:8095', '', '' )
+         self._rpc = ScorumNodeRPC( 'ws://127.0.0.1:8095', '', '' )
       else:
          raise Exception( "scorumd did not start properly..." )
 

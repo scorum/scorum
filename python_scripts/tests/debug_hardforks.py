@@ -10,7 +10,7 @@ from time import sleep
 
 # local imports
 from scorumdebugnode import DebugNode
-from scorumapi.scorumnoderpc import SteemNodeRPC
+from scorumapi.scorumnoderpc import ScorumNodeRPC
 
 WAITING = True
 
@@ -67,7 +67,7 @@ def main( ):
 
 
 def run_scorumd_tests( debug_node ):
-   from scorumapi.scorumnoderpc import SteemNodeRPC
+   from scorumapi.scorumnoderpc import ScorumNodeRPC
 
    try:
       print( 'Replaying blocks...', )

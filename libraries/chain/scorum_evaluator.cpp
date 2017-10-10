@@ -809,8 +809,8 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
 {
    const auto& account = _db.get_account( o.account );
 
-   FC_ASSERT( account.vesting_shares >= asset( 0, VESTS_SYMBOL ), "Account does not have sufficient Steem Power for withdraw." );
-   FC_ASSERT( account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares, "Account does not have sufficient Steem Power for withdraw." );
+   FC_ASSERT( account.vesting_shares >= asset( 0, VESTS_SYMBOL ), "Account does not have sufficient Scorum Power for withdraw." );
+   FC_ASSERT( account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares, "Account does not have sufficient Scorum Power for withdraw." );
 
    if( !account.mined)
    {
@@ -821,7 +821,7 @@ void withdraw_vesting_evaluator::do_apply( const withdraw_vesting_operation& o )
       min_vests.amount.value *= 10;
 
       FC_ASSERT( account.vesting_shares > min_vests || o.vesting_shares.amount == 0 ,
-                 "Account registered by another account requires 10x account creation fee worth of Steem Power before it can be powered down." );
+                 "Account registered by another account requires 10x account creation fee worth of Scorum Power before it can be powered down." );
    }
 
    if( o.vesting_shares.amount == 0 )
@@ -1689,7 +1689,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
    {
       auto delta = op.vesting_shares - delegation->vesting_shares;
 
-      FC_ASSERT( delta >= min_update, "Steem Power increase is not enough of a difference. min_update: ${min}", ("min", min_update) );
+      FC_ASSERT( delta >= min_update, "Scorum Power increase is not enough of a difference. min_update: ${min}", ("min", min_update) );
       FC_ASSERT( available_shares >= op.vesting_shares - delegation->vesting_shares, "Account does not have enough vesting shares to delegate." );
 
       _db.modify( delegator, [&]( account_object& a )
@@ -1714,7 +1714,7 @@ void delegate_vesting_shares_evaluator::do_apply( const delegate_vesting_shares_
 
       if( op.vesting_shares.amount > 0 )
       {
-         FC_ASSERT( delta >= min_update, "Steem Power decrease is not enough of a difference. min_update: ${min}", ("min", min_update) );
+         FC_ASSERT( delta >= min_update, "Scorum Power decrease is not enough of a difference. min_update: ${min}", ("min", min_update) );
          FC_ASSERT( op.vesting_shares >= min_delegation, "Delegation must be removed or leave minimum delegation amount of ${v}", ("v", min_delegation) );
       }
       else

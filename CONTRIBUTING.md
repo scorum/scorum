@@ -1,6 +1,6 @@
 # Please Read
 
-Please read these instructions before submitting issues to the Steem GitHub repository. The issue tracker is for bugs and specific implementation discussion **only**. It should not be used for other purposes, as described below.
+Please read these instructions before submitting issues to the Scorum GitHub repository. The issue tracker is for bugs and specific implementation discussion **only**. It should not be used for other purposes, as described below.
 
 ## Bug Reports
 
@@ -8,7 +8,7 @@ If there is an existing feature that is not working correctly, or a glitch in th
 
 ## Enhancement Suggestions
 
-Do **not** use the issue tracker to suggest enhancements or improvements to the platform. The best place for these discussions is on Scorum.com. If there is a well vetted idea that has the support of the community that you feel should be considered by the development team, please email it to [sneak@scorum.com](mailto:sneak@scorum.com) for review.
+Do **not** use the issue tracker to suggest enhancements or improvements to the platform. The best place for these discussions is on Scorum.com. If there is a well vetted idea that has the support of the community that you feel should be considered by the development team, please email it to [blockchain-support@scorum.com](mailto:blockchain-support@scorum.com) for review.
 
 ## Implementation Discussion
 

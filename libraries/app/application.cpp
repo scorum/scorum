@@ -271,7 +271,7 @@ namespace detail {
          if( !read_only )
          {
             _self->_read_only = false;
-            ilog( "Starting Steem node in write mode." );
+            ilog( "Starting Scorum node in write mode." );
             _max_block_age =_options->at("max-block-age").as<int32_t>();
 
             if( _options->count("resync-blockchain") )
@@ -327,7 +327,7 @@ namespace detail {
          }
          else
          {
-            ilog( "Starting Steem node in read mode." );
+            ilog( "Starting Scorum node in read mode." );
             _chain_db->open( _data_dir / "blockchain", _shared_dir, SCORUM_INIT_SUPPLY, _shared_file_size, chainbase::database::read_only );
 
             if( _options->count( "read-forward-rpc" ) )

@@ -10,7 +10,7 @@ from time import sleep
 
 # local imports
 from scorumdebugnode import DebugNode
-from scorumapi.scorumnoderpc import SteemNodeRPC
+from scorumapi.scorumnoderpc import ScorumNodeRPC
 
 WAITING = True
 
@@ -67,7 +67,7 @@ def main( ):
 
 
 def run_scorumd_tests( debug_node ):
-   from scorumapi.scorumnoderpc import SteemNodeRPC
+   from scorumapi.scorumnoderpc import ScorumNodeRPC
 
    try:
       print( 'Replaying blocks...', )
@@ -81,7 +81,7 @@ def run_scorumd_tests( debug_node ):
       print( "Triggering payouts" )
       sys.stdout.flush()
       debug_node.debug_generate_blocks_until( 1467590400 - 3 )
-      rpc = SteemNodeRPC( 'ws://127.0.0.1:8095', '', '' )
+      rpc = ScorumNodeRPC( 'ws://127.0.0.1:8095', '', '' )
       ret = rpc.lookup_accounts( '', str( 0xFFFFFFFF ) )
 
       debug_node.debug_generate_blocks( 1 )

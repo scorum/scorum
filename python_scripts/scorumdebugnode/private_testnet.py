@@ -12,7 +12,7 @@ from time import time
 
 # local imports
 from scorumdebugnode import DebugNode
-from scorumapi.scorumnoderpc import SteemNodeRPC
+from scorumapi.scorumnoderpc import ScorumNodeRPC
 
 WAITING = True
 

@@ -6,7 +6,7 @@
 namespace scorum { namespace protocol {
 
 /*
- * This class represents the basic versioning scheme of the Steem blockchain.
+ * This class represents the basic versioning scheme of the Scorum blockchain.
  * All versions are a triple consisting of a major version, hardfork version, and release version.
  * It allows easy comparison between versions. A version is a read only object.
  */
