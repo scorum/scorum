@@ -2291,9 +2291,6 @@ void database::init_genesis( uint64_t init_supply )
          rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
          rfo.percent_content_rewards = SCORUM_100_PERCENT;
          rfo.reward_balance = gpo.total_reward_fund_scorum;
-//#ifndef IS_TEST_NET
-//         rfo.recent_claims = SCORUM_HF_19_RECENT_CLAIMS;
-//#endif
          rfo.author_reward_curve = curve_id::power1dot5;
          rfo.curation_reward_curve = curve_id::square_root;
 

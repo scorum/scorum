@@ -489,7 +489,7 @@ namespace scorum { namespace chain {
 #include <scorum/chain/account_object.hpp>
 
 FC_REFLECT_ENUM( scorum::chain::curve_id,
-                  (quadratic)(quadratic_curation)(linear)(square_root))
+                  (quadratic)(linear)(square_root)(power1dot5))
 
 FC_REFLECT( scorum::chain::limit_order_object,
              (id)(created)(expiration)(seller)(orderid)(for_sale)(sell_price) )
