@@ -2179,28 +2179,49 @@ void database::init_genesis( uint64_t init_supply )
    {
       struct auth_inhibitor
       {
-         auth_inhibitor(database& db) : db(db), old_flags(db.node_properties().skip_flags)
-         { db.node_properties().skip_flags |= skip_authority_check; }
+         auth_inhibitor(database& db)
+            : db(db)
+            , old_flags(db.node_properties().skip_flags)
+         {
+            db.node_properties().skip_flags |= skip_authority_check;
+         }
+
          ~auth_inhibitor()
-         { db.node_properties().skip_flags = old_flags; }
+         {
+            db.node_properties().skip_flags = old_flags;
+         }
+
       private:
          database& db;
          uint32_t old_flags;
       } inhibitor(*this);
 
-      // Create blockchain accounts
-      public_key_type      init_public_key(SCORUM_INIT_PUBLIC_KEY);
+      // Create initial delegate
+      public_key_type init_public_key(SCORUM_INIT_PUBLIC_KEY);
 
       create< account_object >( [&]( account_object& a )
       {
-         a.name = SCORUM_MINER_ACCOUNT;
+         a.name = SCORUM_INIT_DELEGATE_NAME;
+         a.memo_key = init_public_key;
+         a.balance = asset( init_supply, SCORUM_SYMBOL );
       } );
+
       create< account_authority_object >( [&]( account_authority_object& auth )
       {
-         auth.account = SCORUM_MINER_ACCOUNT;
+         auth.account = SCORUM_INIT_DELEGATE_NAME;
+         auth.owner.add_authority( init_public_key, 1 );
          auth.owner.weight_threshold = 1;
-         auth.active.weight_threshold = 1;
+         auth.active = auth.owner;
+         auth.posting = auth.active;
       });
+
+      create< witness_object >( [&]( witness_object& w )
+      {
+         w.owner = SCORUM_INIT_DELEGATE_NAME;
+         w.signing_key = init_public_key;
+         w.schedule = witness_object::top19;
+      } );
+      // end create initial delegate
 
       create< account_object >( [&]( account_object& a )
       {
@@ -2224,35 +2245,9 @@ void database::init_genesis( uint64_t init_supply )
          auth.active.weight_threshold = 0;
       });
 
-      for( int i = 0; i < SCORUM_NUM_INIT_MINERS; ++i )
-      {
-         create< account_object >( [&]( account_object& a )
-         {
-            a.name = SCORUM_INIT_MINER_NAME + ( i ? fc::to_string( i ) : std::string() );
-            a.memo_key = init_public_key;
-            a.balance  = asset( i ? 0 : init_supply, SCORUM_SYMBOL );
-         } );
-
-         create< account_authority_object >( [&]( account_authority_object& auth )
-         {
-            auth.account = SCORUM_INIT_MINER_NAME + ( i ? fc::to_string( i ) : std::string() );
-            auth.owner.add_authority( init_public_key, 1 );
-            auth.owner.weight_threshold = 1;
-            auth.active  = auth.owner;
-            auth.posting = auth.active;
-         });
-
-         create< witness_object >( [&]( witness_object& w )
-         {
-            w.owner        = SCORUM_INIT_MINER_NAME + ( i ? fc::to_string(i) : std::string() );
-            w.signing_key  = init_public_key;
-            w.schedule = witness_object::miner;
-         } );
-      }
-
       create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p )
       {
-         p.current_witness = SCORUM_INIT_MINER_NAME;
+         p.current_witness = SCORUM_INIT_DELEGATE_NAME;
          p.time = SCORUM_GENESIS_TIME;
          p.recent_slots_filled = fc::uint128::max_value();
          p.participation_count = 128;
@@ -2277,7 +2272,7 @@ void database::init_genesis( uint64_t init_supply )
       // Create witness scheduler
       create< witness_schedule_object >( [&]( witness_schedule_object& wso )
       {
-         wso.current_shuffled_witnesses[0] = SCORUM_INIT_MINER_NAME;
+         wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME;
          wso.max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES_HF17;
          wso.max_miner_witnesses = SCORUM_MAX_MINER_WITNESSES_HF17;
          wso.max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES_HF17;
@@ -3401,7 +3396,7 @@ void database::apply_hardfork( uint32_t hardfork )
             custom_operation test_op;
             string op_msg = "Testnet: Hardfork applied";
             test_op.data = vector< char >( op_msg.begin(), op_msg.end() );
-            test_op.required_auths.insert( SCORUM_INIT_MINER_NAME );
+            test_op.required_auths.insert( SCORUM_INIT_DELEGATE_NAME );
             operation op = test_op;   // we need the operation object to live to the end of this scope
             operation_notification note( op );
             notify_pre_apply_operation( note );

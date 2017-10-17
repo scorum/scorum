@@ -17,8 +17,6 @@
 
 #include "database_fixture.hpp"
 
-//using namespace scorum::chain::test;
-
 uint32_t SCORUM_TESTING_GENESIS_TIMESTAMP = 1431700000;
 
 namespace scorum { namespace chain {
@@ -28,49 +26,51 @@ using std::cerr;
 
 clean_database_fixture::clean_database_fixture()
 {
-   try {
-   int argc = boost::unit_test::framework::master_test_suite().argc;
-   char** argv = boost::unit_test::framework::master_test_suite().argv;
-   for( int i=1; i<argc; i++ )
+   try
    {
-      const std::string arg = argv[i];
-      if( arg == "--record-assert-trip" )
-         fc::enable_record_assert_trip = true;
-      if( arg == "--show-test-names" )
-         std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
+      int argc = boost::unit_test::framework::master_test_suite().argc;
+      char** argv = boost::unit_test::framework::master_test_suite().argv;
+      for( int i=1; i<argc; i++ )
+      {
+         const std::string arg = argv[i];
+         if( arg == "--record-assert-trip" )
+            fc::enable_record_assert_trip = true;
+         if( arg == "--show-test-names" )
+            std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
+      }
+      auto ahplugin = app.register_plugin< scorum::account_history::account_history_plugin >();
+      db_plugin = app.register_plugin< scorum::plugin::debug_node::debug_node_plugin >();
+      auto wit_plugin = app.register_plugin< scorum::witness::witness_plugin >();
+      init_account_pub_key = init_account_priv_key.get_public_key();
+
+      boost::program_options::variables_map options;
+
+      db_plugin->logging = false;
+      ahplugin->plugin_initialize( options );
+      db_plugin->plugin_initialize( options );
+      wit_plugin->plugin_initialize( options );
+
+      open_database();
+
+      generate_block();
+      db.set_hardfork( SCORUM_NUM_HARDFORKS );
+      generate_block();
+
+      //ahplugin->plugin_startup();
+      db_plugin->plugin_startup();
+      vest(SCORUM_INIT_DELEGATE_NAME, 10000 );
+
+      // Fill up the rest of the required miners
+      for( int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++ )
+      {
+         account_create( SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ), init_account_pub_key );
+         fund( SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ), SCORUM_MIN_PRODUCER_REWARD.amount.value );
+         witness_create( SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount );
+      }
+
+      validate_database();
    }
-   auto ahplugin = app.register_plugin< scorum::account_history::account_history_plugin >();
-   db_plugin = app.register_plugin< scorum::plugin::debug_node::debug_node_plugin >();
-   auto wit_plugin = app.register_plugin< scorum::witness::witness_plugin >();
-   init_account_pub_key = init_account_priv_key.get_public_key();
-
-   boost::program_options::variables_map options;
-
-   db_plugin->logging = false;
-   ahplugin->plugin_initialize( options );
-   db_plugin->plugin_initialize( options );
-   wit_plugin->plugin_initialize( options );
-
-   open_database();
-
-   generate_block();
-   db.set_hardfork( SCORUM_NUM_HARDFORKS );
-   generate_block();
-
-   //ahplugin->plugin_startup();
-   db_plugin->plugin_startup();
-   vest( "initminer", 10000 );
-
-   // Fill up the rest of the required miners
-   for( int i = SCORUM_NUM_INIT_MINERS; i < SCORUM_MAX_WITNESSES; i++ )
-   {
-      account_create( SCORUM_INIT_MINER_NAME + fc::to_string( i ), init_account_pub_key );
-      fund( SCORUM_INIT_MINER_NAME + fc::to_string( i ), SCORUM_MIN_PRODUCER_REWARD.amount.value );
-      witness_create( SCORUM_INIT_MINER_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount );
-   }
-
-   validate_database();
-   } catch ( const fc::exception& e )
+   catch ( const fc::exception& e )
    {
       edump( (e.to_detail_string()) );
       throw;
@@ -80,18 +80,23 @@ clean_database_fixture::clean_database_fixture()
 }
 
 clean_database_fixture::~clean_database_fixture()
-{ try {
-   // If we're unwinding due to an exception, don't do any more checks.
-   // This way, boost test's last checkpoint tells us approximately where the error was.
-   if( !std::uncaught_exception() )
+{
+   try
    {
-      BOOST_CHECK( db.get_node_properties().skip_flags == database::skip_nothing );
-   }
+      // If we're unwinding due to an exception, don't do any more checks.
+      // This way, boost test's last checkpoint tells us approximately where the error was.
+      if( !std::uncaught_exception() )
+      {
+         BOOST_CHECK( db.get_node_properties().skip_flags == database::skip_nothing );
+      }
 
-   if( data_dir )
-      db.close();
-   return;
-} FC_CAPTURE_AND_RETHROW() }
+      if( data_dir )
+         db.close();
+
+      return;
+   }
+   FC_CAPTURE_AND_RETHROW()
+}
 
 void clean_database_fixture::resize_shared_mem( uint64_t size )
 {
@@ -112,19 +117,18 @@ void clean_database_fixture::resize_shared_mem( uint64_t size )
 
    boost::program_options::variables_map options;
 
-
    generate_block();
    db.set_hardfork( SCORUM_NUM_HARDFORKS );
    generate_block();
 
-   vest( "initminer", 10000 );
+   vest(SCORUM_INIT_DELEGATE_NAME, 10000);
 
    // Fill up the rest of the required miners
-   for( int i = SCORUM_NUM_INIT_MINERS; i < SCORUM_MAX_WITNESSES; i++ )
+   for(int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
    {
-      account_create( SCORUM_INIT_MINER_NAME + fc::to_string( i ), init_account_pub_key );
-      fund( SCORUM_INIT_MINER_NAME + fc::to_string( i ), SCORUM_MIN_PRODUCER_REWARD.amount.value );
-      witness_create( SCORUM_INIT_MINER_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount );
+      account_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ), init_account_pub_key);
+      fund(SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ), SCORUM_MIN_PRODUCER_REWARD.amount.value);
+      witness_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
    }
 
    validate_database();
@@ -262,7 +266,7 @@ const account_object& database_fixture::account_create(
    {
       return account_create(
          name,
-         SCORUM_INIT_MINER_NAME,
+         SCORUM_INIT_DELEGATE_NAME,
          init_account_priv_key,
          std::max( db.get_witness_schedule_object().median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, share_type( 100 ) ),
          key,
@@ -315,7 +319,7 @@ void database_fixture::fund(
 {
    try
    {
-      transfer( SCORUM_INIT_MINER_NAME, account_name, amount );
+      transfer(SCORUM_INIT_DELEGATE_NAME, account_name, amount);
 
    } FC_CAPTURE_AND_RETHROW( (account_name)(amount) )
 }
@@ -465,7 +469,7 @@ void database_fixture::set_price_feed( const price& new_price )
       for ( int i = 1; i < 8; i++ )
       {
          feed_publish_operation op;
-         op.publisher = SCORUM_INIT_MINER_NAME + fc::to_string( i );
+         op.publisher = SCORUM_INIT_DELEGATE_NAME + fc::to_string( i );
          op.exchange_rate = new_price;
          trx.operations.push_back( op );
          trx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );

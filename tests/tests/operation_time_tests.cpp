@@ -1447,7 +1447,7 @@ BOOST_AUTO_TEST_CASE( feed_publish_mean )
       // Upgrade accounts to witnesses
       for( int i = 0; i < 7; i++ )
       {
-         transfer( SCORUM_INIT_MINER_NAME, accounts[i], 10000 );
+         transfer( SCORUM_INIT_DELEGATE_NAME, accounts[i], 10000 );
          witness_create( accounts[i], keys[i], "foo.bar", keys[i].get_public_key(), 1000 );
 
          ops.push_back( feed_publish_operation() );

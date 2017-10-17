@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
       signed_transaction tx;
       private_key_type priv_key = generate_private_key( "alice" );
 
-      const account_object& init = db.get_account( SCORUM_INIT_MINER_NAME );
+      const account_object& init = db.get_account(SCORUM_INIT_DELEGATE_NAME);
       asset init_starting_balance = init.balance;
 
       const auto& gpo = db.get_dynamic_global_properties();
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
 
       op.fee = asset( 100, SCORUM_SYMBOL );
       op.new_account_name = "alice";
-      op.creator = SCORUM_INIT_MINER_NAME;
+      op.creator = SCORUM_INIT_DELEGATE_NAME;
       op.owner = authority( 1, priv_key.get_public_key(), 1 );
       op.active = authority( 2, priv_key.get_public_key(), 2 );
       op.memo_key = priv_key.get_public_key();
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
       BOOST_TEST_MESSAGE( "--- Test failure when creator cannot cover fee" );
       tx.signatures.clear();
       tx.operations.clear();
-      op.fee = asset( db.get_account( SCORUM_INIT_MINER_NAME ).balance.amount + 1, SCORUM_SYMBOL );
+      op.fee = asset( db.get_account( SCORUM_INIT_DELEGATE_NAME ).balance.amount + 1, SCORUM_SYMBOL );
       op.new_account_name = "bob";
       tx.operations.push_back( op );
       tx.sign( init_account_priv_key, db.get_chain_id() );
@@ -2083,7 +2083,7 @@ BOOST_AUTO_TEST_CASE( account_witness_proxy_apply )
       BOOST_TEST_MESSAGE( "--- Test votes are transferred when a proxy is added" );
       account_witness_vote_operation vote;
       vote.account= "bob";
-      vote.witness = SCORUM_INIT_MINER_NAME;
+      vote.witness = SCORUM_INIT_DELEGATE_NAME;
       tx.operations.clear();
       tx.signatures.clear();
       tx.operations.push_back( vote );
@@ -2100,7 +2100,7 @@ BOOST_AUTO_TEST_CASE( account_witness_proxy_apply )
 
       db.push_transaction( tx, 0 );
 
-      BOOST_REQUIRE( db.get_witness( SCORUM_INIT_MINER_NAME ).votes == ( alice.vesting_shares + bob.vesting_shares ).amount );
+      BOOST_REQUIRE( db.get_witness( SCORUM_INIT_DELEGATE_NAME ).votes == ( alice.vesting_shares + bob.vesting_shares ).amount );
       validate_database();
 
       BOOST_TEST_MESSAGE( "--- Test votes are removed when a proxy is removed" );
@@ -2112,7 +2112,7 @@ BOOST_AUTO_TEST_CASE( account_witness_proxy_apply )
 
       db.push_transaction( tx, 0 );
 
-      BOOST_REQUIRE( db.get_witness( SCORUM_INIT_MINER_NAME ).votes == bob.vesting_shares.amount );
+      BOOST_REQUIRE( db.get_witness( SCORUM_INIT_DELEGATE_NAME ).votes == bob.vesting_shares.amount );
       validate_database();
    }
    FC_LOG_AND_RETHROW()
@@ -6563,7 +6563,7 @@ BOOST_AUTO_TEST_CASE( comment_beneficiaries_apply )
 
       for( size_t i = 0; i < 8; i++ )
       {
-         b.beneficiaries.push_back( beneficiary_route_type( account_name_type( SCORUM_INIT_MINER_NAME + fc::to_string( i ) ), SCORUM_1_PERCENT ) );
+         b.beneficiaries.push_back( beneficiary_route_type( account_name_type( SCORUM_INIT_DELEGATE_NAME + fc::to_string( i ) ), SCORUM_1_PERCENT ) );
       }
 
       op.author = "alice";

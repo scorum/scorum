@@ -39,7 +39,7 @@
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 #else // IS LIVE SCORUM NETWORK
 
-#define SCORUM_INIT_PUBLIC_KEY_STR             "STM8GC13uCZbP44HzMLV6zPZGwVQ8Nt4Kji8PapsPiNq1BK153XTX"
+#define SCORUM_INIT_PUBLIC_KEY_STR             "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
 #define SCORUM_CHAIN_ID                        (scorum::protocol::chain_id_type())
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
@@ -47,7 +47,7 @@
 #define STMD_SYMBOL   (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('T') << 16) | (uint64_t('M') << 24) | (uint64_t('D') << 32) ) ///< SCORUM Dollars with 3 digits of precision
 #define SCORUM_ADDRESS_PREFIX                  "STM"
 
-#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1458835200))
+#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508167500))
 #define SCORUM_MINING_TIME                     (fc::time_point_sec(1458838800))
 #define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF12 (60*60*24)    /// 1 day
 #define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF17 (60*60*12)    /// 12 hours
@@ -74,8 +74,8 @@
 #define SCORUM_START_VESTING_BLOCK             (SCORUM_BLOCKS_PER_DAY * 7)
 #define SCORUM_START_MINER_VOTING_BLOCK        (SCORUM_BLOCKS_PER_DAY * 30)
 
-#define SCORUM_INIT_MINER_NAME                 "initminer"
-#define SCORUM_NUM_INIT_MINERS                 1
+#define SCORUM_INIT_DELEGATE_NAME              "initdelegate"
+#define SCORUM_NUM_INIT_DELEGATES              1
 #define SCORUM_INIT_TIME                       (fc::time_point_sec());
 
 #define SCORUM_MAX_WITNESSES                   21
@@ -255,8 +255,6 @@
  *  Reserved Account IDs with special meaning
  */
 ///@{
-/// Represents the current witnesses
-#define SCORUM_MINER_ACCOUNT                   "miners"
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
 #define SCORUM_NULL_ACCOUNT                    "null"
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)

@@ -80,8 +80,13 @@ void update_median_witness_props( database& db )
  */
 void update_witness_schedule(database& db)
 {
-   if( (db.head_block_num() % SCORUM_MAX_WITNESSES) == 0 ) //wso.next_shuffle_block_num )
-   {
+//    const witness_schedule_object& wso = db.get_witness_schedule_object();
+//
+//    if( db.head_block_num() == wso.next_shuffle_block_num )
+//    {
+
+    if( (db.head_block_num() % SCORUM_MAX_WITNESSES) == 0 ) //wso.next_shuffle_block_num )
+    {
         const witness_schedule_object& wso = db.get_witness_schedule_object();
         vector< account_name_type > active_witnesses;
         active_witnesses.reserve( SCORUM_MAX_WITNESSES );
