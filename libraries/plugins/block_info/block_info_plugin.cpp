@@ -1,14 +1,14 @@
 
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/global_property_object.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/global_property_object.hpp>
 
-#include <steemit/plugins/block_info/block_info.hpp>
-#include <steemit/plugins/block_info/block_info_api.hpp>
-#include <steemit/plugins/block_info/block_info_plugin.hpp>
+#include <scorum/plugins/block_info/block_info.hpp>
+#include <scorum/plugins/block_info/block_info_api.hpp>
+#include <scorum/plugins/block_info/block_info_plugin.hpp>
 
 #include <string>
 
-namespace steemit { namespace plugin { namespace block_info {
+namespace scorum { namespace plugin { namespace block_info {
 
 block_info_plugin::block_info_plugin( application* app ) : plugin( app ) {}
 block_info_plugin::~block_info_plugin() {}
@@ -53,6 +53,6 @@ void block_info_plugin::on_applied_block( const chain::signed_block& b )
    return;
 }
 
-} } } // steemit::plugin::block_info
+} } } // scorum::plugin::block_info
 
-STEEMIT_DEFINE_PLUGIN( block_info, steemit::plugin::block_info::block_info_plugin )
+SCORUM_DEFINE_PLUGIN( block_info, scorum::plugin::block_info::block_info_plugin )

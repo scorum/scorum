@@ -38,9 +38,9 @@
 
 #include <graphene/utilities/key_conversion.hpp>
 
-#include <steemit/app/api.hpp>
-#include <steemit/protocol/protocol.hpp>
-#include <steemit/wallet/wallet.hpp>
+#include <scorum/app/api.hpp>
+#include <scorum/protocol/protocol.hpp>
+#include <scorum/wallet/wallet.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -59,9 +59,9 @@
 
 
 using namespace graphene::utilities;
-using namespace steemit::app;
-using namespace steemit::chain;
-using namespace steemit::wallet;
+using namespace scorum::app;
+using namespace scorum::chain;
+using namespace scorum::wallet;
 using namespace std;
 namespace bpo = boost::program_options;
 

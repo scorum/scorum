@@ -2,15 +2,15 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/words.hpp>
 
-#include <steemit/app/api.hpp>
-#include <steemit/protocol/base.hpp>
-#include <steemit/follow/follow_operations.hpp>
-#include <steemit/private_message/private_message_operations.hpp>
-#include <steemit/wallet/wallet.hpp>
-#include <steemit/wallet/api_documentation.hpp>
-#include <steemit/wallet/reflect_util.hpp>
+#include <scorum/app/api.hpp>
+#include <scorum/protocol/base.hpp>
+#include <scorum/follow/follow_operations.hpp>
+#include <scorum/private_message/private_message_operations.hpp>
+#include <scorum/wallet/wallet.hpp>
+#include <scorum/wallet/api_documentation.hpp>
+#include <scorum/wallet/reflect_util.hpp>
 
-#include <steemit/account_by_key/account_by_key_api.hpp>
+#include <scorum/account_by_key/account_by_key_api.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -60,7 +60,7 @@
 
 #define BRAIN_KEY_WORD_COUNT 16
 
-namespace steemit { namespace wallet {
+namespace scorum { namespace wallet {
 
 namespace detail {
 
@@ -297,7 +297,7 @@ public:
       result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
       result["median_sbd_price"] = _remote_db->get_current_median_history_price();
       result["account_creation_fee"] = _remote_db->get_chain_properties().account_creation_fee;
-      result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund( STEEMIT_POST_REWARD_FUND_NAME )).get_object();
+      result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund( SCORUM_POST_REWARD_FUND_NAME )).get_object();
       return result;
    }
 
@@ -309,10 +309,10 @@ public:
          client_version = client_version.substr( pos + 1 );
 
       fc::mutable_variant_object result;
-      result["blockchain_version"]       = STEEMIT_BLOCKCHAIN_VERSION;
+      result["blockchain_version"]       = SCORUM_BLOCKCHAIN_VERSION;
       result["client_version"]           = client_version;
-      result["steem_revision"]           = graphene::utilities::git_revision_sha;
-      result["steem_revision_age"]       = fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) );
+      result["scorum_revision"]           = graphene::utilities::git_revision_sha;
+      result["scorum_revision_age"]       = fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) );
       result["fc_revision"]              = fc::git_revision_sha;
       result["fc_revision_age"]          = fc::get_approximate_relative_time_string( fc::time_point_sec( fc::git_revision_unix_timestamp ) );
       result["compile_date"]             = "compiled on " __DATE__ " at " __TIME__;
@@ -335,7 +335,7 @@ public:
       {
          auto v = _remote_api->get_version();
          result["server_blockchain_version"] = v.blockchain_version;
-         result["server_steem_revision"] = v.steem_revision;
+         result["server_scorum_revision"] = v.scorum_revision;
          result["server_fc_revision"] = v.fc_revision;
       }
       catch( fc::exception& )
@@ -388,7 +388,7 @@ public:
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
          FC_THROW("Invalid private key");
-      steemit::chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
+      scorum::chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
 
       _keys[wif_pub_key] = wif_key;
       return true;
@@ -459,7 +459,7 @@ public:
       for (int key_index = 0; ; ++key_index)
       {
          fc::ecc::private_key derived_private_key = derive_private_key(key_to_wif(parent_key), key_index);
-         steemit::chain::public_key_type derived_public_key = derived_private_key.get_public_key();
+         scorum::chain::public_key_type derived_public_key = derived_private_key.get_public_key();
          if( _keys.find(derived_public_key) == _keys.end() )
          {
             if (number_of_consecutive_unused_keys)
@@ -495,9 +495,9 @@ public:
          int memo_key_index = find_first_unused_derived_key_index(active_privkey);
          fc::ecc::private_key memo_privkey = derive_private_key( key_to_wif(active_privkey), memo_key_index);
 
-         steemit::chain::public_key_type owner_pubkey = owner_privkey.get_public_key();
-         steemit::chain::public_key_type active_pubkey = active_privkey.get_public_key();
-         steemit::chain::public_key_type memo_pubkey = memo_privkey.get_public_key();
+         scorum::chain::public_key_type owner_pubkey = owner_privkey.get_public_key();
+         scorum::chain::public_key_type active_pubkey = active_privkey.get_public_key();
+         scorum::chain::public_key_type memo_pubkey = memo_privkey.get_public_key();
 
          account_create_operation account_create_op;
 
@@ -543,7 +543,7 @@ public:
 
    void set_transaction_expiration( uint32_t tx_expiration_seconds )
    {
-      FC_ASSERT( tx_expiration_seconds < STEEMIT_MAX_TIME_UNTIL_EXPIRATION );
+      FC_ASSERT( tx_expiration_seconds < SCORUM_MAX_TIME_UNTIL_EXPIRATION );
       _tx_expiration_seconds = tx_expiration_seconds;
    }
 
@@ -674,7 +674,7 @@ public:
       }
 
       auto minimal_signing_keys = tx.minimize_required_signatures(
-         STEEMIT_CHAIN_ID,
+         SCORUM_CHAIN_ID,
          available_keys,
          [&]( const string& account_name ) -> const authority&
          { return (get_account_from_lut( account_name ).active); },
@@ -682,14 +682,14 @@ public:
          { return (get_account_from_lut( account_name ).owner); },
          [&]( const string& account_name ) -> const authority&
          { return (get_account_from_lut( account_name ).posting); },
-         STEEMIT_MAX_SIG_CHECK_DEPTH
+         SCORUM_MAX_SIG_CHECK_DEPTH
          );
 
       for( const public_key_type& k : minimal_signing_keys )
       {
          auto it = available_private_keys.find(k);
          FC_ASSERT( it != available_private_keys.end() );
-         tx.sign( it->second, STEEMIT_CHAIN_ID );
+         tx.sign( it->second, SCORUM_CHAIN_ID );
       }
 
       if( broadcast ) {
@@ -726,11 +726,11 @@ public:
          std::stringstream out;
 
          auto accounts = result.as<vector<account_api_obj>>();
-         asset total_steem;
+         asset total_scorum;
          asset total_vest(0, VESTS_SYMBOL );
          asset total_sbd(0, SBD_SYMBOL );
          for( const auto& a : accounts ) {
-            total_steem += a.balance;
+            total_scorum += a.balance;
             total_vest  += a.vesting_shares;
             total_sbd  += a.sbd_balance;
             out << std::left << std::setw( 17 ) << std::string(a.name)
@@ -740,7 +740,7 @@ public:
          }
          out << "-------------------------------------------------------------------------\n";
             out << std::left << std::setw( 17 ) << "TOTAL"
-                << std::right << std::setw(18) << fc::variant(total_steem).as_string() <<" "
+                << std::right << std::setw(18) << fc::variant(total_scorum).as_string() <<" "
                 << std::right << std::setw(26) << fc::variant(total_vest).as_string() <<" "
                 << std::right << std::setw(16) << fc::variant(total_sbd).as_string() <<"\n";
          return out.str();
@@ -780,7 +780,7 @@ public:
              ss << ' ' << setw( 10 ) << o.orderid;
              ss << ' ' << setw( 10 ) << o.real_price;
              ss << ' ' << setw( 10 ) << fc::variant( asset( o.for_sale, o.sell_price.base.symbol ) ).as_string();
-             ss << ' ' << setw( 10 ) << (o.sell_price.base.symbol == STEEM_SYMBOL ? "SELL" : "BUY");
+             ss << ' ' << setw( 10 ) << (o.sell_price.base.symbol == SCORUM_SYMBOL ? "SELL" : "BUY");
              ss << "\n";
           }
           return ss.str();
@@ -798,10 +798,10 @@ public:
             << ' '
             << setw( spacing + 3 ) << "Sum(SBD)"
             << setw( spacing + 1) << "SBD"
-            << setw( spacing + 1 ) << "STEEM"
+            << setw( spacing + 1 ) << "SCORUM"
             << setw( spacing + 1 ) << "Price"
             << setw( spacing + 1 ) << "Price"
-            << setw( spacing + 1 ) << "STEEM "
+            << setw( spacing + 1 ) << "SCORUM "
             << setw( spacing + 1 ) << "SBD " << "Sum(SBD)"
             << "\n====================================================================================================="
             << "|=====================================================================================================\n";
@@ -814,7 +814,7 @@ public:
                ss
                   << ' ' << setw( spacing ) << bid_sum.to_string()
                   << ' ' << setw( spacing ) << asset( orders.bids[i].sbd, SBD_SYMBOL ).to_string()
-                  << ' ' << setw( spacing ) << asset( orders.bids[i].steem, STEEM_SYMBOL ).to_string()
+                  << ' ' << setw( spacing ) << asset( orders.bids[i].scorum, SCORUM_SYMBOL ).to_string()
                   << ' ' << setw( spacing ) << orders.bids[i].real_price; //(~orders.bids[i].order_price).to_real();
             }
             else
@@ -829,7 +829,7 @@ public:
                ask_sum += asset( orders.asks[i].sbd, SBD_SYMBOL );
                //ss << ' ' << setw( spacing ) << (~orders.asks[i].order_price).to_real()
                ss << ' ' << setw( spacing ) << orders.asks[i].real_price
-                  << ' ' << setw( spacing ) << asset( orders.asks[i].steem, STEEM_SYMBOL ).to_string()
+                  << ' ' << setw( spacing ) << asset( orders.asks[i].scorum, SCORUM_SYMBOL ).to_string()
                   << ' ' << setw( spacing ) << asset( orders.asks[i].sbd, SBD_SYMBOL ).to_string()
                   << ' ' << setw( spacing ) << ask_sum.to_string();
             }
@@ -966,11 +966,11 @@ public:
    const string _wallet_filename_extension = ".wallet";
 };
 
-} } } // steemit::wallet::detail
+} } } // scorum::wallet::detail
 
 
 
-namespace steemit { namespace wallet {
+namespace scorum { namespace wallet {
 
 wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
    : my(new detail::wallet_api_impl(*this, initial_data, rapi))
@@ -1298,7 +1298,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys( string creato
    op.posting = authority( 1, posting, 1 );
    op.memo_key = memo;
    op.json_metadata = json_meta;
-   op.fee = my->_remote_db->get_chain_properties().account_creation_fee * asset( STEEMIT_CREATE_ACCOUNT_WITH_STEEM_MODIFIER, STEEM_SYMBOL );
+   op.fee = my->_remote_db->get_chain_properties().account_creation_fee * asset( SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL );
 
    signed_transaction tx;
    tx.operations.push_back(op);
@@ -1313,7 +1313,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys( string creato
  * wallet.
  */
 annotated_signed_transaction wallet_api::create_account_with_keys_delegated( string creator,
-                                      asset steem_fee,
+                                      asset scorum_fee,
                                       asset delegated_vests,
                                       string new_account_name,
                                       string json_meta,
@@ -1332,7 +1332,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated( str
    op.posting = authority( 1, posting, 1 );
    op.memo_key = memo;
    op.json_metadata = json_meta;
-   op.fee = steem_fee;
+   op.fee = scorum_fee;
    op.delegation = delegated_vests;
 
    signed_transaction tx;
@@ -1699,7 +1699,7 @@ annotated_signed_transaction wallet_api::create_account( string creator, string 
  *  This method will genrate new owner, active, and memo keys for the new account which
  *  will be controlable by this wallet.
  */
-annotated_signed_transaction wallet_api::create_account_delegated( string creator, asset steem_fee, asset delegated_vests, string new_account_name, string json_meta, bool broadcast )
+annotated_signed_transaction wallet_api::create_account_delegated( string creator, asset scorum_fee, asset delegated_vests, string new_account_name, string json_meta, bool broadcast )
 { try {
    FC_ASSERT( !is_locked() );
    auto owner = suggest_brain_key();
@@ -1710,7 +1710,7 @@ annotated_signed_transaction wallet_api::create_account_delegated( string creato
    import_key( active.wif_priv_key );
    import_key( posting.wif_priv_key );
    import_key( memo.wif_priv_key );
-   return create_account_with_keys_delegated( creator, steem_fee, delegated_vests, new_account_name, json_meta,  owner.pub_key, active.pub_key, posting.pub_key, memo.pub_key, broadcast );
+   return create_account_with_keys_delegated( creator, scorum_fee, delegated_vests, new_account_name, json_meta,  owner.pub_key, active.pub_key, posting.pub_key, memo.pub_key, broadcast );
 } FC_CAPTURE_AND_RETHROW( (creator)(new_account_name)(json_meta) ) }
 
 
@@ -1871,7 +1871,7 @@ annotated_signed_transaction wallet_api::escrow_transfer(
       string agent,
       uint32_t escrow_id,
       asset sbd_amount,
-      asset steem_amount,
+      asset scorum_amount,
       asset fee,
       time_point_sec ratification_deadline,
       time_point_sec escrow_expiration,
@@ -1886,7 +1886,7 @@ annotated_signed_transaction wallet_api::escrow_transfer(
    op.agent = agent;
    op.escrow_id = escrow_id;
    op.sbd_amount = sbd_amount;
-   op.steem_amount = steem_amount;
+   op.scorum_amount = scorum_amount;
    op.fee = fee;
    op.ratification_deadline = ratification_deadline;
    op.escrow_expiration = escrow_expiration;
@@ -1956,7 +1956,7 @@ annotated_signed_transaction wallet_api::escrow_release(
    string receiver,
    uint32_t escrow_id,
    asset sbd_amount,
-   asset steem_amount,
+   asset scorum_amount,
    bool broadcast
 )
 {
@@ -1969,7 +1969,7 @@ annotated_signed_transaction wallet_api::escrow_release(
    op.receiver = receiver;
    op.escrow_id = escrow_id;
    op.sbd_amount = sbd_amount;
-   op.steem_amount = steem_amount;
+   op.scorum_amount = scorum_amount;
 
    signed_transaction tx;
    tx.operations.push_back( op );
@@ -2160,12 +2160,12 @@ annotated_signed_transaction wallet_api::decline_voting_rights( string account, 
    return my->sign_transaction( tx, broadcast );
 }
 
-annotated_signed_transaction wallet_api::claim_reward_balance( string account, asset reward_steem, asset reward_sbd, asset reward_vests, bool broadcast )
+annotated_signed_transaction wallet_api::claim_reward_balance( string account, asset reward_scorum, asset reward_sbd, asset reward_vests, bool broadcast )
 {
    FC_ASSERT( !is_locked() );
    claim_reward_balance_operation op;
    op.account = account;
-   op.reward_steem = reward_steem;
+   op.reward_scorum = reward_scorum;
    op.reward_sbd = reward_sbd;
    op.reward_vests = reward_vests;
 
@@ -2275,7 +2275,7 @@ annotated_signed_transaction wallet_api::vote( string voter, string author, stri
    op.voter = voter;
    op.author = author;
    op.permlink = permlink;
-   op.weight = weight * STEEMIT_1_PERCENT;
+   op.weight = weight * SCORUM_1_PERCENT;
 
    signed_transaction tx;
    tx.operations.push_back( op );
@@ -2365,7 +2365,7 @@ annotated_signed_transaction      wallet_api::send_private_message( string from,
 
    custom_operation op;
    op.required_auths.insert(from);
-   op.id = STEEMIT_PRIVATE_MESSAGE_COP_ID;
+   op.id = SCORUM_PRIVATE_MESSAGE_COP_ID;
 
 
    private_message_operation pmo;
@@ -2472,5 +2472,5 @@ vector<extended_message_object>   wallet_api::get_outbox( string account, fc::ti
    return result;
 }
 
-} } // steemit::wallet
+} } // scorum::wallet
 

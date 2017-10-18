@@ -1,7 +1,7 @@
-#include <steemit/account_by_key/account_by_key_api.hpp>
-#include <steemit/account_by_key/account_by_key_objects.hpp>
+#include <scorum/account_by_key/account_by_key_api.hpp>
+#include <scorum/account_by_key/account_by_key_objects.hpp>
 
-namespace steemit { namespace account_by_key {
+namespace scorum { namespace account_by_key {
 
 namespace detail
 {
@@ -9,12 +9,12 @@ namespace detail
 class account_by_key_api_impl
 {
    public:
-      account_by_key_api_impl( steemit::app::application& app )
+      account_by_key_api_impl( scorum::app::application& app )
          :_app( app ) {}
 
       vector< vector< account_name_type > > get_key_references( vector< public_key_type >& keys )const;
 
-      steemit::app::application& _app;
+      scorum::app::application& _app;
 };
 
 vector< vector< account_name_type > > account_by_key_api_impl::get_key_references( vector< public_key_type >& keys )const
@@ -43,7 +43,7 @@ vector< vector< account_name_type > > account_by_key_api_impl::get_key_reference
 
 } // detail
 
-account_by_key_api::account_by_key_api( const steemit::app::api_context& ctx )
+account_by_key_api::account_by_key_api( const scorum::app::api_context& ctx )
 {
    my = std::make_shared< detail::account_by_key_api_impl >( ctx.app );
 }
@@ -58,4 +58,4 @@ vector< vector< account_name_type > > account_by_key_api::get_key_references( ve
    });
 }
 
-} } // steemit::account_by_key
+} } // scorum::account_by_key

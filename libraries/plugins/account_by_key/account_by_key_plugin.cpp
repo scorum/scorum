@@ -1,15 +1,15 @@
-#include <steemit/account_by_key/account_by_key_plugin.hpp>
-#include <steemit/account_by_key/account_by_key_objects.hpp>
+#include <scorum/account_by_key/account_by_key_plugin.hpp>
+#include <scorum/account_by_key/account_by_key_objects.hpp>
 
-#include <steemit/chain/account_object.hpp>
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/index.hpp>
-#include <steemit/chain/operation_notification.hpp>
+#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/index.hpp>
+#include <scorum/chain/operation_notification.hpp>
 
 #include <graphene/schema/schema.hpp>
 #include <graphene/schema/schema_impl.hpp>
 
-namespace steemit { namespace account_by_key {
+namespace scorum { namespace account_by_key {
 
 namespace detail
 {
@@ -19,7 +19,7 @@ class account_by_key_plugin_impl
    public:
       account_by_key_plugin_impl( account_by_key_plugin& _plugin ) : _self( _plugin ) {}
 
-      steemit::chain::database& database()
+      scorum::chain::database& database()
       {
          return _self.database();
       }
@@ -118,23 +118,7 @@ struct post_operation_visitor
 
    void operator()( const hardfork_operation& op )const
    {
-      if( op.hardfork_id == STEEMIT_HARDFORK_0_9 )
-      {
-         auto& db = _plugin.database();
-
-         for( const std::string& acc : hardfork9::get_compromised_accounts() )
-         {
-            const account_object* account = db.find_account( acc );
-            if( account == nullptr )
-               continue;
-
-            db.create< key_lookup_object >( [&]( key_lookup_object& o )
-            {
-               o.key = public_key_type( "STM7sw22HqsXbz7D2CmJfmMwt9rimtk518dRzsR1f8Cgw52dQR1pR" );
-               o.account = account->name;
-            });
-         }
-      }
+      // removed due to hardfork removal
    }
 };
 
@@ -216,7 +200,7 @@ void account_by_key_plugin_impl::post_operation( const operation_notification& n
 
 } // detail
 
-account_by_key_plugin::account_by_key_plugin( steemit::app::application* app )
+account_by_key_plugin::account_by_key_plugin( scorum::app::application* app )
    : plugin( app ), my( new detail::account_by_key_plugin_impl( *this ) ) {}
 
 void account_by_key_plugin::plugin_set_program_options(
@@ -244,6 +228,6 @@ void account_by_key_plugin::plugin_startup()
    app().register_api_factory< account_by_key_api >( "account_by_key_api" );
 }
 
-} } // steemit::account_by_key
+} } // scorum::account_by_key
 
-STEEMIT_DEFINE_PLUGIN( account_by_key, steemit::account_by_key::account_by_key_plugin )
+SCORUM_DEFINE_PLUGIN( account_by_key, scorum::account_by_key::account_by_key_plugin )

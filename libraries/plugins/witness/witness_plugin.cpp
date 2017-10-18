@@ -21,16 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <steemit/witness/witness_plugin.hpp>
-#include <steemit/witness/witness_objects.hpp>
-#include <steemit/witness/witness_operations.hpp>
+#include <scorum/witness/witness_plugin.hpp>
+#include <scorum/witness/witness_objects.hpp>
+#include <scorum/witness/witness_operations.hpp>
 
-#include <steemit/chain/account_object.hpp>
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/database_exceptions.hpp>
-#include <steemit/chain/generic_custom_operation_interpreter.hpp>
-#include <steemit/chain/index.hpp>
-#include <steemit/chain/steem_objects.hpp>
+#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/database_exceptions.hpp>
+#include <scorum/chain/generic_custom_operation_interpreter.hpp>
+#include <scorum/chain/index.hpp>
+#include <scorum/chain/scorum_objects.hpp>
 
 #include <fc/time.hpp>
 
@@ -46,7 +46,7 @@
 #define DISTANCE_CALC_PRECISION (10000)
 
 
-namespace steemit { namespace witness {
+namespace scorum { namespace witness {
 
 namespace bpo = boost::program_options;
 
@@ -56,13 +56,13 @@ using std::vector;
 using protocol::signed_transaction;
 using chain::account_object;
 
-void new_chain_banner( const steemit::chain::database& db )
+void new_chain_banner( const scorum::chain::database& db )
 {
    std::cerr << "\n"
       "********************************\n"
       "*                              *\n"
       "*   ------- NEW CHAIN ------   *\n"
-      "*   -   Welcome to Steem!  -   *\n"
+      "*   -   Welcome to Scorum!  -   *\n"
       "*   ------------------------   *\n"
       "*                              *\n"
       "********************************\n"
@@ -72,7 +72,7 @@ void new_chain_banner( const steemit::chain::database& db )
 
 namespace detail
 {
-   using namespace steemit::chain;
+   using namespace scorum::chain;
 
 
    class witness_plugin_impl
@@ -113,7 +113,7 @@ namespace detail
 
       void operator()( const comment_payout_beneficiaries& cpb )const
       {
-         STEEMIT_ASSERT( cpb.beneficiaries.size() <= 8,
+         SCORUM_ASSERT( cpb.beneficiaries.size() <= 8,
             chain::plugin_exception,
             "Cannot specify more than 8 beneficiaries." );
       }
@@ -148,27 +148,27 @@ namespace detail
       for( auto& key_weight_pair : auth.owner.key_auths )
       {
          for( auto& key : keys )
-            STEEMIT_ASSERT( key_weight_pair.first != key, chain::plugin_exception,
+            SCORUM_ASSERT( key_weight_pair.first != key, chain::plugin_exception,
                "Detected private owner key in memo field. You should change your owner keys." );
       }
 
       for( auto& key_weight_pair : auth.active.key_auths )
       {
          for( auto& key : keys )
-            STEEMIT_ASSERT( key_weight_pair.first != key, chain::plugin_exception,
+            SCORUM_ASSERT( key_weight_pair.first != key, chain::plugin_exception,
                "Detected private active key in memo field. You should change your active keys." );
       }
 
       for( auto& key_weight_pair : auth.posting.key_auths )
       {
          for( auto& key : keys )
-            STEEMIT_ASSERT( key_weight_pair.first != key, chain::plugin_exception,
+            SCORUM_ASSERT( key_weight_pair.first != key, chain::plugin_exception,
                "Detected private posting key in memo field. You should change your posting keys." );
       }
 
       const auto& memo_key = account.memo_key;
       for( auto& key : keys )
-         STEEMIT_ASSERT( memo_key != key, chain::plugin_exception,
+         SCORUM_ASSERT( memo_key != key, chain::plugin_exception,
             "Detected private memo key in memo field. You should change your memo key." );
    }
 
@@ -197,14 +197,14 @@ namespace detail
 
       void operator()( const comment_operation& o )const
       {
-         if( o.parent_author != STEEMIT_ROOT_POST_PARENT )
+         if( o.parent_author != SCORUM_ROOT_POST_PARENT )
          {
             const auto& parent = _db.find_comment( o.parent_author, o.parent_permlink );
 
             if( parent != nullptr )
-            STEEMIT_ASSERT( parent->depth < STEEMIT_SOFT_MAX_COMMENT_DEPTH,
+            SCORUM_ASSERT( parent->depth < SCORUM_SOFT_MAX_COMMENT_DEPTH,
                chain::plugin_exception,
-               "Comment is nested ${x} posts deep, maximum depth is ${y}.", ("x",parent->depth)("y",STEEMIT_SOFT_MAX_COMMENT_DEPTH) );
+               "Comment is nested ${x} posts deep, maximum depth is ${y}.", ("x",parent->depth)("y",SCORUM_SOFT_MAX_COMMENT_DEPTH) );
          }
 
          auto itr = _db.find< comment_object, by_permlink >( boost::make_tuple( o.author, o.permlink ) );
@@ -213,7 +213,7 @@ namespace detail
          {
             auto edit_lock = _db.find< content_edit_lock_object, by_account >( o.author );
 
-            STEEMIT_ASSERT( edit_lock != nullptr && _db.head_block_time() < edit_lock->lock_time,
+            SCORUM_ASSERT( edit_lock != nullptr && _db.head_block_time() < edit_lock->lock_time,
                chain::plugin_exception,
                "The comment is archived" );
          }
@@ -290,10 +290,10 @@ namespace detail
          db.create< reserve_ratio_object >( [&]( reserve_ratio_object& r )
          {
             r.average_block_size = 0;
-            r.current_reserve_ratio = STEEMIT_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
-            r.max_virtual_bandwidth = ( uint128_t( STEEMIT_MAX_BLOCK_SIZE * STEEMIT_MAX_RESERVE_RATIO )
-                                      * STEEMIT_BANDWIDTH_PRECISION * STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS )
-                                      / STEEMIT_BLOCK_INTERVAL;
+            r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
+            r.max_virtual_bandwidth = ( uint128_t( SCORUM_MAX_BLOCK_SIZE * SCORUM_MAX_RESERVE_RATIO )
+                                      * SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS )
+                                      / SCORUM_BLOCK_INTERVAL;
          });
       }
       else
@@ -334,8 +334,8 @@ namespace detail
                   // By default, we should always slowly increase the reserve ratio.
                   r.current_reserve_ratio += std::max( RESERVE_RATIO_MIN_INCREMENT, ( r.current_reserve_ratio * distance ) / ( distance - DISTANCE_CALC_PRECISION ) );
 
-                  if( r.current_reserve_ratio > STEEMIT_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION )
-                     r.current_reserve_ratio = STEEMIT_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
+                  if( r.current_reserve_ratio > SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION )
+                     r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
                }
 
                if( old_reserve_ratio != r.current_reserve_ratio )
@@ -347,8 +347,8 @@ namespace detail
                }
 
                r.max_virtual_bandwidth = ( uint128_t( max_block_size ) * uint128_t( r.current_reserve_ratio )
-                                         * uint128_t( STEEMIT_BANDWIDTH_PRECISION * STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS ) )
-                                         / ( STEEMIT_BLOCK_INTERVAL * RESERVE_RATIO_PRECISION );
+                                         * uint128_t( SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS ) )
+                                         / ( SCORUM_BLOCK_INTERVAL * RESERVE_RATIO_PRECISION );
             }
          });
       }
@@ -374,14 +374,14 @@ namespace detail
          }
 
          share_type new_bandwidth;
-         share_type trx_bandwidth = trx_size * STEEMIT_BANDWIDTH_PRECISION;
+         share_type trx_bandwidth = trx_size * SCORUM_BANDWIDTH_PRECISION;
          auto delta_time = ( _db.head_block_time() - band->last_bandwidth_update ).to_seconds();
 
-         if( delta_time > STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS )
+         if( delta_time > SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS )
             new_bandwidth = 0;
          else
-            new_bandwidth = ( ( ( STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time ) * fc::uint128( band->average_bandwidth.value ) )
-               / STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS ).to_uint64();
+            new_bandwidth = ( ( ( SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time ) * fc::uint128( band->average_bandwidth.value ) )
+               / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS ).to_uint64();
 
          new_bandwidth += trx_bandwidth;
 
@@ -400,8 +400,8 @@ namespace detail
          has_bandwidth = ( account_vshares * max_virtual_bandwidth ) > ( account_average_bandwidth * total_vshares );
 
          if( _db.is_producing() )
-            STEEMIT_ASSERT( has_bandwidth, chain::plugin_exception,
-               "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up STEEM.",
+            SCORUM_ASSERT( has_bandwidth, chain::plugin_exception,
+               "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
                ("account", a.name)
                ("account_vshares", account_vshares)
                ("account_average_bandwidth", account_average_bandwidth)
@@ -438,7 +438,7 @@ void witness_plugin::plugin_set_program_options(
    string witness_id_example = "initwitness";
    command_line_options.add_options()
          ("enable-stale-production", bpo::bool_switch()->notifier([this](bool e){_production_enabled = e;}), "Enable block production, even if the chain is stale.")
-         ("required-participation", bpo::bool_switch()->notifier([this](int e){_required_witness_participation = uint32_t(e*STEEMIT_1_PERCENT);}), "Percent of witnesses (0-99) that must be participating in order to produce blocks")
+         ("required-participation", bpo::bool_switch()->notifier([this](int e){_required_witness_participation = uint32_t(e*SCORUM_1_PERCENT);}), "Percent of witnesses (0-99) that must be participating in order to produce blocks")
          ("witness,w", bpo::value<vector<string>>()->composing()->multitoken(),
           ("name of witness controlled by this node (e.g. " + witness_id_example+" )" ).c_str())
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken(), "WIF PRIVATE KEY to be used by one or more witnesses or miners" )
@@ -496,7 +496,7 @@ void witness_plugin::plugin_startup()
       {
          if( d.head_block_num() == 0 )
             new_chain_banner(d);
-         _production_skip_flags |= steemit::chain::database::skip_undo_history_check;
+         _production_skip_flags |= scorum::chain::database::skip_undo_history_check;
       }
       schedule_production_loop();
    }
@@ -530,9 +530,9 @@ void witness_plugin::schedule_production_loop()
 
 block_production_condition::block_production_condition_enum witness_plugin::block_production_loop()
 {
-   if( fc::time_point::now() < fc::time_point(STEEMIT_GENESIS_TIME) )
+   if( fc::time_point::now() < fc::time_point(SCORUM_GENESIS_TIME) )
    {
-      wlog( "waiting until genesis time to produce block: ${t}", ("t",STEEMIT_GENESIS_TIME) );
+      wlog( "waiting until genesis time to produce block: ${t}", ("t",SCORUM_GENESIS_TIME) );
       schedule_production_loop();
       return block_production_condition::wait_for_genesis;
    }
@@ -548,7 +548,7 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
       //We're trying to exit. Go ahead and let this one out.
       throw;
    }
-   catch( const steemit::chain::unknown_hardfork_exception& e )
+   catch( const scorum::chain::unknown_hardfork_exception& e )
    {
       // Hit a hardfork that the current node know nothing about, stop production and inform user
       elog( "${e}\nNode may be out of date...", ("e", e.to_detail_string()) );
@@ -642,7 +642,7 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
    auto itr = witness_by_name.find( scheduled_witness );
 
    fc::time_point_sec scheduled_time = db.get_slot_time( slot );
-   steemit::protocol::public_key_type scheduled_key = itr->signing_key;
+   scorum::protocol::public_key_type scheduled_key = itr->signing_key;
    auto private_key_itr = _private_keys.find( scheduled_key );
 
    if( private_key_itr == _private_keys.end() )
@@ -655,7 +655,7 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
    uint32_t prate = db.witness_participation_rate();
    if( prate < _required_witness_participation )
    {
-      capture("pct", uint32_t(100*uint64_t(prate) / STEEMIT_1_PERCENT));
+      capture("pct", uint32_t(100*uint64_t(prate) / SCORUM_1_PERCENT));
       return block_production_condition::low_participation;
    }
 
@@ -693,6 +693,6 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
    return block_production_condition::exception_producing_block;
 }
 
-} } // steemit::witness
+} } // scorum::witness
 
-STEEMIT_DEFINE_PLUGIN( witness, steemit::witness::witness_plugin )
+SCORUM_DEFINE_PLUGIN( witness, scorum::witness::witness_plugin )

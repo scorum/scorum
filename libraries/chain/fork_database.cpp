@@ -1,8 +1,8 @@
-#include <steemit/chain/fork_database.hpp>
+#include <scorum/chain/fork_database.hpp>
 
-#include <steemit/chain/database_exceptions.hpp>
+#include <scorum/chain/database_exceptions.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 fork_database::fork_database()
 {
@@ -61,7 +61,7 @@ void  fork_database::_push_block(const item_ptr& item)
    {
       auto& index = _index.get<block_id>();
       auto itr = index.find(item->previous_id());
-      STEEMIT_ASSERT(itr != index.end(), unlinkable_block_exception, "block does not link to known chain");
+      SCORUM_ASSERT(itr != index.end(), unlinkable_block_exception, "block does not link to known chain");
       FC_ASSERT(!(*itr)->invalid);
       item->prev = *itr;
    }
@@ -240,4 +240,4 @@ void fork_database::remove(block_id_type id)
    _index.get<block_id>().erase(id);
 }
 
-} } // steemit::chain
+} } // scorum::chain

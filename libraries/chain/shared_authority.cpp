@@ -1,6 +1,6 @@
-#include <steemit/chain/shared_authority.hpp>
+#include <scorum/chain/shared_authority.hpp>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 shared_authority::operator authority()const
 {
@@ -90,4 +90,4 @@ bool operator == ( const shared_authority& a, const authority& b )
    return authority( a ) == b;
 }
 
-} } // steemit::chain
+} } // scorum::chain

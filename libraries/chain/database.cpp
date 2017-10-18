@@ -1,26 +1,26 @@
-#include <steemit/protocol/steem_operations.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
-#include <steemit/chain/block_summary_object.hpp>
-#include <steemit/chain/compound.hpp>
-#include <steemit/chain/custom_operation_interpreter.hpp>
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/database_exceptions.hpp>
-#include <steemit/chain/db_with.hpp>
-#include <steemit/chain/evaluator_registry.hpp>
-#include <steemit/chain/global_property_object.hpp>
-#include <steemit/chain/history_object.hpp>
-#include <steemit/chain/index.hpp>
-#include <steemit/chain/steem_evaluator.hpp>
-#include <steemit/chain/steem_objects.hpp>
-#include <steemit/chain/transaction_object.hpp>
-#include <steemit/chain/shared_db_merkle.hpp>
-#include <steemit/chain/operation_notification.hpp>
-#include <steemit/chain/witness_schedule.hpp>
+#include <scorum/chain/block_summary_object.hpp>
+#include <scorum/chain/compound.hpp>
+#include <scorum/chain/custom_operation_interpreter.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/database_exceptions.hpp>
+#include <scorum/chain/db_with.hpp>
+#include <scorum/chain/evaluator_registry.hpp>
+#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/index.hpp>
+#include <scorum/chain/scorum_evaluator.hpp>
+#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/transaction_object.hpp>
+#include <scorum/chain/shared_db_merkle.hpp>
+#include <scorum/chain/operation_notification.hpp>
+#include <scorum/chain/witness_schedule.hpp>
 
-#include <steemit/chain/util/asset.hpp>
-#include <steemit/chain/util/reward.hpp>
-#include <steemit/chain/util/uint256.hpp>
-#include <steemit/chain/util/reward.hpp>
+#include <scorum/chain/util/asset.hpp>
+#include <scorum/chain/util/reward.hpp>
+#include <scorum/chain/util/uint256.hpp>
+#include <scorum/chain/util/reward.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -34,7 +34,7 @@
 #include <fstream>
 #include <functional>
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 //namespace db2 = graphene::db2;
 
@@ -60,19 +60,19 @@ struct db_schema
 
 } }
 
-FC_REFLECT( steemit::chain::object_schema_repr, (space_type)(type) )
-FC_REFLECT( steemit::chain::operation_schema_repr, (id)(type) )
-FC_REFLECT( steemit::chain::db_schema, (types)(object_types)(operation_type)(custom_operation_types) )
+FC_REFLECT( scorum::chain::object_schema_repr, (space_type)(type) )
+FC_REFLECT( scorum::chain::operation_schema_repr, (id)(type) )
+FC_REFLECT( scorum::chain::db_schema, (types)(object_types)(operation_type)(custom_operation_types) )
 
-namespace steemit { namespace chain {
+namespace scorum { namespace chain {
 
 using boost::container::flat_set;
 
 struct reward_fund_context
 {
    uint128_t   recent_claims = 0;
-   asset       reward_balance = asset( 0, STEEM_SYMBOL );
-   share_type  steem_awarded = 0;
+   asset       reward_balance = asset( 0, SCORUM_SYMBOL );
+   share_type  scorum_awarded = 0;
 };
 
 class database_impl
@@ -154,7 +154,7 @@ void database::reindex( const fc::path& data_dir, const fc::path& shared_mem_dir
       _fork_db.reset();    // override effect of _fork_db.start_block() call in open()
 
       auto start = fc::time_point::now();
-      STEEMIT_ASSERT( _block_log.head(), block_log_exception, "No blocks in block log. Cannot reindex an empty chain." );
+      SCORUM_ASSERT( _block_log.head(), block_log_exception, "No blocks in block log. Cannot reindex an empty chain." );
 
       ilog( "Replaying blocks..." );
 
@@ -346,7 +346,7 @@ std::vector< block_id_type > database::get_block_ids_on_fork( block_id_type head
 
 chain_id_type database::get_chain_id() const
 {
-   return STEEMIT_CHAIN_ID;
+   return SCORUM_CHAIN_ID;
 }
 
 const witness_object& database::get_witness( const account_name_type& name ) const
@@ -451,7 +451,7 @@ const time_point_sec database::calculate_discussion_payout_time( const comment_o
 
 const reward_fund_object& database::get_reward_fund( const comment_object& c ) const
 {
-   return get< reward_fund_object, by_name >( STEEMIT_POST_REWARD_FUND_NAME );
+   return get< reward_fund_object, by_name >( SCORUM_POST_REWARD_FUND_NAME );
 }
 
 void database::pay_fee( const account_object& account, asset fee )
@@ -468,7 +468,7 @@ void database::pay_fee( const account_object& account, asset fee )
 uint32_t database::witness_participation_rate()const
 {
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-   return uint64_t(STEEMIT_100_PERCENT) * dpo.recent_slots_filled.popcount() / 128;
+   return uint64_t(SCORUM_100_PERCENT) * dpo.recent_slots_filled.popcount() / 128;
 }
 
 void database::add_checkpoints( const flat_map< uint32_t, block_id_type >& checkpts )
@@ -630,7 +630,8 @@ void database::push_transaction( const signed_transaction& trx, uint32_t skip )
    {
       try
       {
-         FC_ASSERT( fc::raw::pack_size(trx) <= (get_dynamic_global_properties().maximum_block_size - 256) );
+         size_t trx_size = fc::raw::pack_size(trx);
+         FC_ASSERT( trx_size <= (get_dynamic_global_properties().maximum_block_size - 256) );
          set_producing( true );
          detail::with_skip_flags( *this, skip,
             [&]()
@@ -713,7 +714,7 @@ signed_block database::_generate_block(
       FC_ASSERT( witness_obj.signing_key == block_signing_private_key.get_public_key() );
 
    static const size_t max_block_header_size = fc::raw::pack_size( signed_block_header() ) + 4;
-   auto maximum_block_size = get_dynamic_global_properties().maximum_block_size; //STEEMIT_MAX_BLOCK_SIZE;
+   auto maximum_block_size = get_dynamic_global_properties().maximum_block_size; //SCORUM_MAX_BLOCK_SIZE;
    size_t total_block_size = max_block_header_size;
 
    signed_block pending_block;
@@ -790,19 +791,19 @@ signed_block database::_generate_block(
 
       const auto& witness = get_witness( witness_owner );
 
-      if( witness.running_version != STEEMIT_BLOCKCHAIN_VERSION )
-         pending_block.extensions.insert( block_header_extensions( STEEMIT_BLOCKCHAIN_VERSION ) );
+      if( witness.running_version != SCORUM_BLOCKCHAIN_VERSION )
+         pending_block.extensions.insert( block_header_extensions( SCORUM_BLOCKCHAIN_VERSION ) );
 
       const auto& hfp = get_hardfork_property_object();
 
-      if( hfp.current_hardfork_version < STEEMIT_BLOCKCHAIN_HARDFORK_VERSION // Binary is newer hardfork than has been applied
+      if( hfp.current_hardfork_version < SCORUM_BLOCKCHAIN_HARDFORK_VERSION // Binary is newer hardfork than has been applied
          && ( witness.hardfork_version_vote != _hardfork_versions[ hfp.last_hardfork + 1 ] || witness.hardfork_time_vote != _hardfork_times[ hfp.last_hardfork + 1 ] ) ) // Witness vote does not match binary configuration
       {
          // Make vote match binary configuration
          pending_block.extensions.insert( block_header_extensions( hardfork_version_vote( _hardfork_versions[ hfp.last_hardfork + 1 ], _hardfork_times[ hfp.last_hardfork + 1 ] ) ) );
       }
-      else if( hfp.current_hardfork_version == STEEMIT_BLOCKCHAIN_HARDFORK_VERSION // Binary does not know of a new hardfork
-         && witness.hardfork_version_vote > STEEMIT_BLOCKCHAIN_HARDFORK_VERSION ) // Voting for hardfork in the future, that we do not know of...
+      else if( hfp.current_hardfork_version == SCORUM_BLOCKCHAIN_HARDFORK_VERSION // Binary does not know of a new hardfork
+         && witness.hardfork_version_vote > SCORUM_BLOCKCHAIN_HARDFORK_VERSION ) // Voting for hardfork in the future, that we do not know of...
       {
          // Make vote match binary configuration. This is vote to not apply the new hardfork.
          pending_block.extensions.insert( block_header_extensions( hardfork_version_vote( _hardfork_versions[ hfp.last_hardfork ], _hardfork_times[ hfp.last_hardfork ] ) ) );
@@ -815,7 +816,7 @@ signed_block database::_generate_block(
    // TODO:  Move this to _push_block() so session is restored.
    if( !(skip & skip_block_size_check) )
    {
-      FC_ASSERT( fc::raw::pack_size(pending_block) <= STEEMIT_MAX_BLOCK_SIZE );
+      FC_ASSERT( fc::raw::pack_size(pending_block) <= SCORUM_MAX_BLOCK_SIZE );
    }
 
    push_block( pending_block, skip );
@@ -836,7 +837,7 @@ void database::pop_block()
 
       /// save the head block so we can recover its transactions
       optional<signed_block> head_block = fetch_block_by_id( head_id );
-      STEEMIT_ASSERT( head_block.valid(), pop_empty_chain, "there are no blocks to pop" );
+      SCORUM_ASSERT( head_block.valid(), pop_empty_chain, "there are no blocks to pop" );
 
       _fork_db.pop_block();
       undo();
@@ -865,12 +866,12 @@ void database::notify_pre_apply_operation( operation_notification& note )
    note.trx_in_block = _current_trx_in_block;
    note.op_in_trx    = _current_op_in_trx;
 
-   STEEMIT_TRY_NOTIFY( pre_apply_operation, note )
+   SCORUM_TRY_NOTIFY( pre_apply_operation, note )
 }
 
 void database::notify_post_apply_operation( const operation_notification& note )
 {
-   STEEMIT_TRY_NOTIFY( post_apply_operation, note )
+   SCORUM_TRY_NOTIFY( post_apply_operation, note )
 }
 
 inline const void database::push_virtual_operation( const operation& op, bool force )
@@ -890,22 +891,22 @@ inline const void database::push_virtual_operation( const operation& op, bool fo
 
 void database::notify_applied_block( const signed_block& block )
 {
-   STEEMIT_TRY_NOTIFY( applied_block, block )
+   SCORUM_TRY_NOTIFY( applied_block, block )
 }
 
 void database::notify_on_pending_transaction( const signed_transaction& tx )
 {
-   STEEMIT_TRY_NOTIFY( on_pending_transaction, tx )
+   SCORUM_TRY_NOTIFY( on_pending_transaction, tx )
 }
 
 void database::notify_on_pre_apply_transaction( const signed_transaction& tx )
 {
-   STEEMIT_TRY_NOTIFY( on_pre_apply_transaction, tx )
+   SCORUM_TRY_NOTIFY( on_pre_apply_transaction, tx )
 }
 
 void database::notify_on_applied_transaction( const signed_transaction& tx )
 {
-   STEEMIT_TRY_NOTIFY( on_applied_transaction, tx )
+   SCORUM_TRY_NOTIFY( on_applied_transaction, tx )
 }
 
 account_name_type database::get_scheduled_witness( uint32_t slot_num )const
@@ -921,7 +922,7 @@ fc::time_point_sec database::get_slot_time(uint32_t slot_num)const
    if( slot_num == 0 )
       return fc::time_point_sec();
 
-   auto interval = STEEMIT_BLOCK_INTERVAL;
+   auto interval = SCORUM_BLOCK_INTERVAL;
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
 
    if( head_block_num() == 0 )
@@ -946,20 +947,20 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when)const
    fc::time_point_sec first_slot_time = get_slot_time( 1 );
    if( when < first_slot_time )
       return 0;
-   return (when - first_slot_time).to_seconds() / STEEMIT_BLOCK_INTERVAL + 1;
+   return (when - first_slot_time).to_seconds() / SCORUM_BLOCK_INTERVAL + 1;
 }
 
 /**
- *  Converts STEEM into sbd and adds it to to_account while reducing the STEEM supply
- *  by STEEM and increasing the sbd supply by the specified amount.
+ *  Converts SCORUM into sbd and adds it to to_account while reducing the SCORUM supply
+ *  by SCORUM and increasing the sbd supply by the specified amount.
  */
-std::pair< asset, asset > database::create_sbd( const account_object& to_account, asset steem, bool to_reward_balance )
+std::pair< asset, asset > database::create_sbd( const account_object& to_account, asset scorum, bool to_reward_balance )
 {
-   std::pair< asset, asset > assets( asset( 0, SBD_SYMBOL ), asset( 0, STEEM_SYMBOL ) );
+   std::pair< asset, asset > assets( asset( 0, SBD_SYMBOL ), asset( 0, SCORUM_SYMBOL ) );
 
    try
    {
-      if( steem.amount == 0 )
+      if( scorum.amount == 0 )
          return assets;
 
       const auto& median_price = get_feed_history().current_median_history;
@@ -967,50 +968,50 @@ std::pair< asset, asset > database::create_sbd( const account_object& to_account
 
       if( !median_price.is_null() )
       {
-         auto to_sbd = ( gpo.sbd_print_rate * steem.amount ) / STEEMIT_100_PERCENT;
-         auto to_steem = steem.amount - to_sbd;
+         auto to_sbd = ( gpo.sbd_print_rate * scorum.amount ) / SCORUM_100_PERCENT;
+         auto to_scorum = scorum.amount - to_sbd;
 
-         auto sbd = asset( to_sbd, STEEM_SYMBOL ) * median_price;
+         auto sbd = asset( to_sbd, SCORUM_SYMBOL ) * median_price;
 
          if( to_reward_balance )
          {
             adjust_reward_balance( to_account, sbd );
-            adjust_reward_balance( to_account, asset( to_steem, STEEM_SYMBOL ) );
+            adjust_reward_balance( to_account, asset( to_scorum, SCORUM_SYMBOL ) );
          }
          else
          {
             adjust_balance( to_account, sbd );
-            adjust_balance( to_account, asset( to_steem, STEEM_SYMBOL ) );
+            adjust_balance( to_account, asset( to_scorum, SCORUM_SYMBOL ) );
          }
 
-         adjust_supply( asset( -to_sbd, STEEM_SYMBOL ) );
+         adjust_supply( asset( -to_sbd, SCORUM_SYMBOL ) );
          adjust_supply( sbd );
          assets.first = sbd;
-         assets.second = to_steem;
+         assets.second = to_scorum;
       }
       else
       {
-         adjust_balance( to_account, steem );
-         assets.second = steem;
+         adjust_balance( to_account, scorum );
+         assets.second = scorum;
       }
    }
-   FC_CAPTURE_LOG_AND_RETHROW( (to_account.name)(steem) )
+   FC_CAPTURE_LOG_AND_RETHROW( (to_account.name)(scorum) )
 
    return assets;
 }
 
 /**
  * @param to_account - the account to receive the new vesting shares
- * @param STEEM - STEEM to be converted to vesting shares
+ * @param SCORUM - SCORUM to be converted to vesting shares
  */
-asset database::create_vesting( const account_object& to_account, asset steem, bool to_reward_balance )
+asset database::create_vesting( const account_object& to_account, asset scorum, bool to_reward_balance )
 {
    try
    {
       const auto& cprops = get_dynamic_global_properties();
 
       /**
-       *  The ratio of total_vesting_shares / total_vesting_fund_steem should not
+       *  The ratio of total_vesting_shares / total_vesting_fund_scorum should not
        *  change as the result of the user adding funds
        *
        *  V / C  = (V+Vn) / (C+Cn)
@@ -1022,14 +1023,14 @@ asset database::create_vesting( const account_object& to_account, asset steem, b
        *
        *  128 bit math is requred due to multiplying of 64 bit numbers. This is done in asset and price.
        */
-      asset new_vesting = steem * ( to_reward_balance ? cprops.get_reward_vesting_share_price() : cprops.get_vesting_share_price() );
+      asset new_vesting = scorum * ( to_reward_balance ? cprops.get_reward_vesting_share_price() : cprops.get_vesting_share_price() );
 
       modify( to_account, [&]( account_object& to )
       {
          if( to_reward_balance )
          {
             to.reward_vesting_balance += new_vesting;
-            to.reward_vesting_steem += steem;
+            to.reward_vesting_scorum += scorum;
          }
          else
             to.vesting_shares += new_vesting;
@@ -1040,11 +1041,11 @@ asset database::create_vesting( const account_object& to_account, asset steem, b
          if( to_reward_balance )
          {
             props.pending_rewarded_vesting_shares += new_vesting;
-            props.pending_rewarded_vesting_steem += steem;
+            props.pending_rewarded_vesting_scorum += scorum;
          }
          else
          {
-            props.total_vesting_fund_steem += steem;
+            props.total_vesting_fund_scorum += scorum;
             props.total_vesting_shares += new_vesting;
          }
       } );
@@ -1054,7 +1055,7 @@ asset database::create_vesting( const account_object& to_account, asset steem, b
 
       return new_vesting;
    }
-   FC_CAPTURE_AND_RETHROW( (to_account.name)(steem) )
+   FC_CAPTURE_AND_RETHROW( (to_account.name)(scorum) )
 }
 
 fc::sha256 database::get_pow_target()const
@@ -1078,20 +1079,20 @@ uint32_t database::get_pow_summary_target()const
 }
 
 void database::adjust_proxied_witness_votes( const account_object& a,
-                                   const std::array< share_type, STEEMIT_MAX_PROXY_RECURSION_DEPTH+1 >& delta,
+                                   const std::array< share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH+1 >& delta,
                                    int depth )
 {
-   if( a.proxy != STEEMIT_PROXY_TO_SELF_ACCOUNT )
+   if( a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT )
    {
       /// nested proxies are not supported, vote will not propagate
-      if( depth >= STEEMIT_MAX_PROXY_RECURSION_DEPTH )
+      if( depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH )
          return;
 
       const auto& proxy = get_account( a.proxy );
 
       modify( proxy, [&]( account_object& a )
       {
-         for( int i = STEEMIT_MAX_PROXY_RECURSION_DEPTH - depth - 1; i >= 0; --i )
+         for( int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth - 1; i >= 0; --i )
          {
             a.proxied_vsf_votes[i+depth] += delta[i];
          }
@@ -1102,7 +1103,7 @@ void database::adjust_proxied_witness_votes( const account_object& a,
    else
    {
       share_type total_delta = 0;
-      for( int i = STEEMIT_MAX_PROXY_RECURSION_DEPTH - depth; i >= 0; --i )
+      for( int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth; i >= 0; --i )
          total_delta += delta[i];
       adjust_witness_votes( a, total_delta );
    }
@@ -1110,10 +1111,10 @@ void database::adjust_proxied_witness_votes( const account_object& a,
 
 void database::adjust_proxied_witness_votes( const account_object& a, share_type delta, int depth )
 {
-   if( a.proxy != STEEMIT_PROXY_TO_SELF_ACCOUNT )
+   if( a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT )
    {
       /// nested proxies are not supported, vote will not propagate
-      if( depth >= STEEMIT_MAX_PROXY_RECURSION_DEPTH )
+      if( depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH )
          return;
 
       const auto& proxy = get_account( a.proxy );
@@ -1182,19 +1183,19 @@ void database::clear_witness_votes( const account_object& a )
 void database::clear_null_account_balance()
 {
 
-   const auto& null_account = get_account( STEEMIT_NULL_ACCOUNT );
-   asset total_steem( 0, STEEM_SYMBOL );
+   const auto& null_account = get_account( SCORUM_NULL_ACCOUNT );
+   asset total_scorum( 0, SCORUM_SYMBOL );
    asset total_sbd( 0, SBD_SYMBOL );
 
    if( null_account.balance.amount > 0 )
    {
-      total_steem += null_account.balance;
+      total_scorum += null_account.balance;
       adjust_balance( null_account, -null_account.balance );
    }
 
    if( null_account.savings_balance.amount > 0 )
    {
-      total_steem += null_account.savings_balance;
+      total_scorum += null_account.savings_balance;
       adjust_savings_balance( null_account, -null_account.savings_balance );
    }
 
@@ -1213,12 +1214,12 @@ void database::clear_null_account_balance()
    if( null_account.vesting_shares.amount > 0 )
    {
       const auto& gpo = get_dynamic_global_properties();
-      auto converted_steem = null_account.vesting_shares * gpo.get_vesting_share_price();
+      auto converted_scorum = null_account.vesting_shares * gpo.get_vesting_share_price();
 
       modify( gpo, [&]( dynamic_global_property_object& g )
       {
          g.total_vesting_shares -= null_account.vesting_shares;
-         g.total_vesting_fund_steem -= converted_steem;
+         g.total_vesting_fund_scorum -= converted_scorum;
       });
 
       modify( null_account, [&]( account_object& a )
@@ -1226,13 +1227,13 @@ void database::clear_null_account_balance()
          a.vesting_shares.amount = 0;
       });
 
-      total_steem += converted_steem;
+      total_scorum += converted_scorum;
    }
 
-   if( null_account.reward_steem_balance.amount > 0 )
+   if( null_account.reward_scorum_balance.amount > 0 )
    {
-      total_steem += null_account.reward_steem_balance;
-      adjust_reward_balance( null_account, -null_account.reward_steem_balance );
+      total_scorum += null_account.reward_scorum_balance;
+      adjust_reward_balance( null_account, -null_account.reward_scorum_balance );
    }
 
    if( null_account.reward_sbd_balance.amount > 0 )
@@ -1245,23 +1246,23 @@ void database::clear_null_account_balance()
    {
       const auto& gpo = get_dynamic_global_properties();
 
-      total_steem += null_account.reward_vesting_steem;
+      total_scorum += null_account.reward_vesting_scorum;
 
       modify( gpo, [&]( dynamic_global_property_object& g )
       {
          g.pending_rewarded_vesting_shares -= null_account.reward_vesting_balance;
-         g.pending_rewarded_vesting_steem -= null_account.reward_vesting_steem;
+         g.pending_rewarded_vesting_scorum -= null_account.reward_vesting_scorum;
       });
 
       modify( null_account, [&]( account_object& a )
       {
-         a.reward_vesting_steem.amount = 0;
+         a.reward_vesting_scorum.amount = 0;
          a.reward_vesting_balance.amount = 0;
       });
    }
 
-   if( total_steem.amount > 0 )
-      adjust_supply( -total_steem );
+   if( total_scorum.amount > 0 )
+      adjust_supply( -total_scorum );
 
    if( total_sbd.amount > 0 )
       adjust_supply( -total_sbd );
@@ -1285,7 +1286,7 @@ void database::adjust_rshares2( const comment_object& c, fc::uint128_t old_rshar
 
 void database::update_owner_authority( const account_object& account, const authority& owner_authority )
 {
-   if( head_block_num() >= STEEMIT_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM )
+   if( head_block_num() >= SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM )
    {
       create< owner_authority_history_object >( [&]( owner_authority_history_object& hist )
       {
@@ -1327,18 +1328,18 @@ void database::process_vesting_withdrawals()
       else
          to_withdraw = std::min( from_account.vesting_shares.amount, from_account.vesting_withdraw_rate.amount ).value;
 
-      share_type vests_deposited_as_steem = 0;
+      share_type vests_deposited_as_scorum = 0;
       share_type vests_deposited_as_vests = 0;
-      asset total_steem_converted = asset( 0, STEEM_SYMBOL );
+      asset total_scorum_converted = asset( 0, SCORUM_SYMBOL );
 
-      // Do two passes, the first for vests, the second for steem. Try to maintain as much accuracy for vests as possible.
+      // Do two passes, the first for vests, the second for scorum. Try to maintain as much accuracy for vests as possible.
       for( auto itr = didx.upper_bound( boost::make_tuple( from_account.id, account_id_type() ) );
            itr != didx.end() && itr->from_account == from_account.id;
            ++itr )
       {
          if( itr->auto_vest )
          {
-            share_type to_deposit = ( ( fc::uint128_t ( to_withdraw.value ) * itr->percent ) / STEEMIT_100_PERCENT ).to_uint64();
+            share_type to_deposit = ( ( fc::uint128_t ( to_withdraw.value ) * itr->percent ) / SCORUM_100_PERCENT ).to_uint64();
             vests_deposited_as_vests += to_deposit;
 
             if( to_deposit > 0 )
@@ -1365,38 +1366,38 @@ void database::process_vesting_withdrawals()
          {
             const auto& to_account = get(itr->to_account);
 
-            share_type to_deposit = ( ( fc::uint128_t ( to_withdraw.value ) * itr->percent ) / STEEMIT_100_PERCENT ).to_uint64();
-            vests_deposited_as_steem += to_deposit;
-            auto converted_steem = asset( to_deposit, VESTS_SYMBOL ) * cprops.get_vesting_share_price();
-            total_steem_converted += converted_steem;
+            share_type to_deposit = ( ( fc::uint128_t ( to_withdraw.value ) * itr->percent ) / SCORUM_100_PERCENT ).to_uint64();
+            vests_deposited_as_scorum += to_deposit;
+            auto converted_scorum = asset( to_deposit, VESTS_SYMBOL ) * cprops.get_vesting_share_price();
+            total_scorum_converted += converted_scorum;
 
             if( to_deposit > 0 )
             {
                modify( to_account, [&]( account_object& a )
                {
-                  a.balance += converted_steem;
+                  a.balance += converted_scorum;
                });
 
                modify( cprops, [&]( dynamic_global_property_object& o )
                {
-                  o.total_vesting_fund_steem -= converted_steem;
+                  o.total_vesting_fund_scorum -= converted_scorum;
                   o.total_vesting_shares.amount -= to_deposit;
                });
 
-               push_virtual_operation( fill_vesting_withdraw_operation( from_account.name, to_account.name, asset( to_deposit, VESTS_SYMBOL), converted_steem ) );
+               push_virtual_operation( fill_vesting_withdraw_operation( from_account.name, to_account.name, asset( to_deposit, VESTS_SYMBOL), converted_scorum ) );
             }
          }
       }
 
-      share_type to_convert = to_withdraw - vests_deposited_as_steem - vests_deposited_as_vests;
+      share_type to_convert = to_withdraw - vests_deposited_as_scorum - vests_deposited_as_vests;
       FC_ASSERT( to_convert >= 0, "Deposited more vests than were supposed to be withdrawn" );
 
-      auto converted_steem = asset( to_convert, VESTS_SYMBOL ) * cprops.get_vesting_share_price();
+      auto converted_scorum = asset( to_convert, VESTS_SYMBOL ) * cprops.get_vesting_share_price();
 
       modify( from_account, [&]( account_object& a )
       {
          a.vesting_shares.amount -= to_withdraw;
-         a.balance += converted_steem;
+         a.balance += converted_scorum;
          a.withdrawn += to_withdraw;
 
          if( a.withdrawn >= a.to_withdraw || a.vesting_shares.amount == 0 )
@@ -1406,20 +1407,20 @@ void database::process_vesting_withdrawals()
          }
          else
          {
-            a.next_vesting_withdrawal += fc::seconds( STEEMIT_VESTING_WITHDRAW_INTERVAL_SECONDS );
+            a.next_vesting_withdrawal += fc::seconds( SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS );
          }
       });
 
       modify( cprops, [&]( dynamic_global_property_object& o )
       {
-         o.total_vesting_fund_steem -= converted_steem;
+         o.total_vesting_fund_scorum -= converted_scorum;
          o.total_vesting_shares.amount -= to_convert;
       });
 
       if( to_withdraw > 0 )
          adjust_proxied_witness_votes( from_account, -to_withdraw );
 
-      push_virtual_operation( fill_vesting_withdraw_operation( from_account.name, from_account.name, asset( to_withdraw, VESTS_SYMBOL ), converted_steem ) );
+      push_virtual_operation( fill_vesting_withdraw_operation( from_account.name, from_account.name, asset( to_withdraw, VESTS_SYMBOL ), converted_scorum ) );
    }
 }
 
@@ -1466,7 +1467,7 @@ share_type database::pay_curators( const comment_object& c, share_type& max_rewa
             {
                unclaimed_rewards -= claim;
                const auto& voter = get(itr->voter);
-               auto reward = create_vesting( voter, asset( claim, STEEM_SYMBOL ), true);
+               auto reward = create_vesting( voter, asset( claim, SCORUM_SYMBOL ), true);
 
                push_virtual_operation( curation_reward_operation( voter.name, reward, c.author, to_string( c.permlink ) ) );
 
@@ -1512,7 +1513,7 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
 
          if( reward_tokens > 0 )
          {
-            share_type curation_tokens = ( ( reward_tokens * get_curation_rewards_percent( comment ) ) / STEEMIT_100_PERCENT ).to_uint64();
+            share_type curation_tokens = ( ( reward_tokens * get_curation_rewards_percent( comment ) ) / SCORUM_100_PERCENT ).to_uint64();
             share_type author_tokens = reward_tokens.to_uint64() - curation_tokens;
 
             author_tokens += pay_curators( comment, curation_tokens );
@@ -1521,7 +1522,7 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
 
             for( auto& b : comment.beneficiaries )
             {
-               auto benefactor_tokens = ( author_tokens * b.weight ) / STEEMIT_100_PERCENT;
+               auto benefactor_tokens = ( author_tokens * b.weight ) / SCORUM_100_PERCENT;
                auto vest_created = create_vesting( get_account( b.account ), benefactor_tokens, true );
                push_virtual_operation( comment_benefactor_reward_operation( b.account, comment.author, to_string( comment.permlink ), vest_created ) );
                total_beneficiary += benefactor_tokens;
@@ -1529,17 +1530,17 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
 
             author_tokens -= total_beneficiary;
 
-            auto sbd_steem     = ( author_tokens * comment.percent_steem_dollars ) / ( 2 * STEEMIT_100_PERCENT ) ;
-            auto vesting_steem = author_tokens - sbd_steem;
+            auto sbd_scorum     = ( author_tokens * comment.percent_scorum_dollars ) / ( 2 * SCORUM_100_PERCENT ) ;
+            auto vesting_scorum = author_tokens - sbd_scorum;
 
             const auto& author = get_account( comment.author );
-            auto vest_created = create_vesting( author, vesting_steem, true );
-            auto sbd_payout = create_sbd( author, sbd_steem, true );
+            auto vest_created = create_vesting( author, vesting_scorum, true );
+            auto sbd_payout = create_sbd( author, sbd_scorum, true );
 
-            adjust_total_payout( comment, sbd_payout.first + to_sbd( sbd_payout.second + asset( vesting_steem, STEEM_SYMBOL ) ), to_sbd( asset( curation_tokens, STEEM_SYMBOL ) ), to_sbd( asset( total_beneficiary, STEEM_SYMBOL ) ) );
+            adjust_total_payout( comment, sbd_payout.first + to_sbd( sbd_payout.second + asset( vesting_scorum, SCORUM_SYMBOL ) ), to_sbd( asset( curation_tokens, SCORUM_SYMBOL ) ), to_sbd( asset( total_beneficiary, SCORUM_SYMBOL ) ) );
 
             push_virtual_operation( author_reward_operation( comment.author, to_string( comment.permlink ), sbd_payout.first, sbd_payout.second, vest_created ) );
-            push_virtual_operation( comment_reward_operation( comment.author, to_string( comment.permlink ), to_sbd( asset( claimed_reward, STEEM_SYMBOL ) ) ) );
+            push_virtual_operation( comment_reward_operation( comment.author, to_string( comment.permlink ), to_sbd( asset( claimed_reward, SCORUM_SYMBOL ) ) ) );
 
             #ifndef IS_LOW_MEM
                modify( comment, [&]( comment_object& c )
@@ -1606,15 +1607,15 @@ void database::process_comment_cashout()
    /// don't allow any content to get paid out until the website is ready to launch
    /// and people have had a week to start posting.  The first cashout will be the biggest because it
    /// will represent 2+ months of rewards.
-   if( !has_hardfork( STEEMIT_FIRST_CASHOUT_TIME ) )
-      return;
+   //if( !has_hardfork( SCORUM_FIRST_CASHOUT_TIME ) )
+   //   return;
 
    const auto& gpo = get_dynamic_global_properties();
    util::comment_reward_context ctx;
-   ctx.current_steem_price = get_feed_history().current_median_history;
+   ctx.current_scorum_price = get_feed_history().current_median_history;
 
    vector< reward_fund_context > funds;
-   vector< share_type > steem_awarded;
+   vector< share_type > scorum_awarded;
    const auto& reward_idx = get_index< reward_fund_index, by_id >();
 
    // Decay recent rshares of each fund
@@ -1624,7 +1625,7 @@ void database::process_comment_cashout()
       modify( *itr, [&]( reward_fund_object& rfo )
       {
          fc::microseconds decay_rate;
-         decay_rate = STEEMIT_RECENT_RSHARES_DECAY_RATE_HF19;
+         decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE_HF19;
          rfo.recent_claims -= ( rfo.recent_claims * ( head_block_time() - rfo.last_update ).to_seconds() ) / decay_rate.to_seconds();
          rfo.last_update = head_block_time();
       });
@@ -1676,8 +1677,8 @@ void database::process_comment_cashout()
    {
          auto fund_id = get_reward_fund( *current ).id._id;
          ctx.total_reward_shares2 = funds[ fund_id ].recent_claims;
-         ctx.total_reward_fund_steem = funds[ fund_id ].reward_balance;
-         funds[ fund_id ].steem_awarded += cashout_comment_helper( ctx, *current );
+         ctx.total_reward_fund_scorum = funds[ fund_id ].reward_balance;
+         funds[ fund_id ].scorum_awarded += cashout_comment_helper( ctx, *current );
          current = cidx.begin();
    }
 
@@ -1689,14 +1690,14 @@ void database::process_comment_cashout()
          modify( get< reward_fund_object, by_id >( reward_fund_id_type( i ) ), [&]( reward_fund_object& rfo )
          {
             rfo.recent_claims = funds[ i ].recent_claims;
-            rfo.reward_balance -= funds[ i ].steem_awarded;
+            rfo.reward_balance -= funds[ i ].scorum_awarded;
          });
       }
    }
 }
 
 /**
- *  Overall the network has an inflation rate of 102% of virtual steem per year
+ *  Overall the network has an inflation rate of 102% of virtual scorum per year
  *  90% of inflation is directed to vesting shares
  *  10% of inflation is directed to subjective proof of work voting
  *  1% of inflation is directed to liquidity providers
@@ -1712,27 +1713,26 @@ void database::process_funds()
 
    //SCORUM: compare to our inflation rate strategy
 
-   if( has_hardfork( STEEMIT_HARDFORK_0_16__551) )
-   {
+ 
       /**
        * At block 7,000,000 have a 9.5% instantaneous inflation rate, decreasing to 0.95% at a rate of 0.01%
        * every 250k blocks. This narrowing will take approximately 20.5 years and will complete on block 220,750,000
        */
-      int64_t start_inflation_rate = int64_t( STEEMIT_INFLATION_RATE_START_PERCENT );
-      int64_t inflation_rate_adjustment = int64_t( head_block_num() / STEEMIT_INFLATION_NARROWING_PERIOD );
-      int64_t inflation_rate_floor = int64_t( STEEMIT_INFLATION_RATE_STOP_PERCENT );
+      int64_t start_inflation_rate = int64_t( SCORUM_INFLATION_RATE_START_PERCENT );
+      int64_t inflation_rate_adjustment = int64_t( head_block_num() / SCORUM_INFLATION_NARROWING_PERIOD );
+      int64_t inflation_rate_floor = int64_t( SCORUM_INFLATION_RATE_STOP_PERCENT );
 
       // below subtraction cannot underflow int64_t because inflation_rate_adjustment is <2^32
       int64_t current_inflation_rate = std::max( start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor );
 
-      auto new_steem = ( props.virtual_supply.amount * current_inflation_rate ) / ( int64_t( STEEMIT_100_PERCENT ) * int64_t( STEEMIT_BLOCKS_PER_YEAR ) );
-      auto content_reward = ( new_steem * STEEMIT_CONTENT_REWARD_PERCENT ) / STEEMIT_100_PERCENT;
+      auto new_scorum = ( props.virtual_supply.amount * current_inflation_rate ) / ( int64_t( SCORUM_100_PERCENT ) * int64_t( SCORUM_BLOCKS_PER_YEAR ) );
+      auto content_reward = ( new_scorum * SCORUM_CONTENT_REWARD_PERCENT ) / SCORUM_100_PERCENT;
       content_reward = pay_reward_funds( content_reward ); /// 75% to content creator
-      auto vesting_reward = ( new_steem * STEEMIT_VESTING_FUND_PERCENT ) / STEEMIT_100_PERCENT; /// 15% to vesting fund
-      auto witness_reward = new_steem - content_reward - vesting_reward; /// Remaining 10% to witness pay
+      auto vesting_reward = ( new_scorum * SCORUM_VESTING_FUND_PERCENT ) / SCORUM_100_PERCENT; /// 15% to vesting fund
+      auto witness_reward = new_scorum - content_reward - vesting_reward; /// Remaining 10% to witness pay
 
       const auto& cwit = get_witness( props.current_witness );
-      witness_reward *= STEEMIT_MAX_WITNESSES;
+      witness_reward *= SCORUM_MAX_WITNESSES;
 
       if( cwit.schedule == witness_object::timeshare )
          witness_reward *= wso.timeshare_weight;
@@ -1745,41 +1745,18 @@ void database::process_funds()
 
       witness_reward /= wso.witness_pay_normalization_factor;
 
-      new_steem = content_reward + vesting_reward + witness_reward;
+      new_scorum = content_reward + vesting_reward + witness_reward;
 
       modify( props, [&]( dynamic_global_property_object& p )
       {
-         p.total_vesting_fund_steem += asset( vesting_reward, STEEM_SYMBOL );
-         p.current_supply           += asset( new_steem, STEEM_SYMBOL );
-         p.virtual_supply           += asset( new_steem, STEEM_SYMBOL );
+         p.total_vesting_fund_scorum += asset( vesting_reward, SCORUM_SYMBOL );
+         p.current_supply           += asset( new_scorum, SCORUM_SYMBOL );
+         p.virtual_supply           += asset( new_scorum, SCORUM_SYMBOL );
       });
 
-      const auto& producer_reward = create_vesting( get_account( cwit.owner ), asset( witness_reward, STEEM_SYMBOL ) );
+      const auto& producer_reward = create_vesting( get_account( cwit.owner ), asset( witness_reward, SCORUM_SYMBOL ) );
       push_virtual_operation( producer_reward_operation( cwit.owner, producer_reward ) );
 
-   }
-   else
-   {
-      auto content_reward = get_content_reward();
-      auto curate_reward = get_curation_reward();
-      auto witness_pay = get_producer_reward();
-      auto vesting_reward = content_reward + curate_reward + witness_pay;
-
-      content_reward = content_reward + curate_reward;
-
-      if( props.head_block_number < STEEMIT_START_VESTING_BLOCK )
-         vesting_reward.amount = 0;
-      else
-         vesting_reward.amount.value *= 9;
-
-      modify( props, [&]( dynamic_global_property_object& p )
-      {
-          p.total_vesting_fund_steem += vesting_reward;
-          p.total_reward_fund_steem  += content_reward;
-          p.current_supply += content_reward + witness_pay + vesting_reward;
-          p.virtual_supply += content_reward + witness_pay + vesting_reward;
-      } );
-   }
 }
 
 void database::process_savings_withdraws()
@@ -1805,72 +1782,15 @@ void database::process_savings_withdraws()
 
 asset database::get_liquidity_reward()const
 {
-   if( has_hardfork( STEEMIT_HARDFORK_0_12__178 ) )
-      return asset( 0, STEEM_SYMBOL );
+//   SCORUM: check liquidity reward
+//   if( has_hardfork( SCORUM_HARDFORK_0_12__178 ) )
+   return asset( 0, SCORUM_SYMBOL );
 
    const auto& props = get_dynamic_global_properties();
-   static_assert( STEEMIT_LIQUIDITY_REWARD_PERIOD_SEC == 60*60, "this code assumes a 1 hour time interval" );
-   asset percent( protocol::calc_percent_reward_per_hour< STEEMIT_LIQUIDITY_APR_PERCENT >( props.virtual_supply.amount ), STEEM_SYMBOL );
-   return std::max( percent, STEEMIT_MIN_LIQUIDITY_REWARD );
+   static_assert( SCORUM_LIQUIDITY_REWARD_PERIOD_SEC == 60*60, "this code assumes a 1 hour time interval" );
+   asset percent( protocol::calc_percent_reward_per_hour< SCORUM_LIQUIDITY_APR_PERCENT >( props.virtual_supply.amount ), SCORUM_SYMBOL );
+   return std::max( percent, SCORUM_MIN_LIQUIDITY_REWARD );
 }
-
-asset database::get_content_reward()const
-{
-   const auto& props = get_dynamic_global_properties();
-   static_assert( STEEMIT_BLOCK_INTERVAL == 3, "this code assumes a 3-second time interval" );
-   asset percent( protocol::calc_percent_reward_per_block< STEEMIT_CONTENT_APR_PERCENT >( props.virtual_supply.amount ), STEEM_SYMBOL );
-   return std::max( percent, STEEMIT_MIN_CONTENT_REWARD );
-}
-
-asset database::get_curation_reward()const
-{
-   const auto& props = get_dynamic_global_properties();
-   static_assert( STEEMIT_BLOCK_INTERVAL == 3, "this code assumes a 3-second time interval" );
-   asset percent( protocol::calc_percent_reward_per_block< STEEMIT_CURATE_APR_PERCENT >( props.virtual_supply.amount ), STEEM_SYMBOL);
-   return std::max( percent, STEEMIT_MIN_CURATE_REWARD );
-}
-
-asset database::get_producer_reward()
-{
-   const auto& props = get_dynamic_global_properties();
-   static_assert( STEEMIT_BLOCK_INTERVAL == 3, "this code assumes a 3-second time interval" );
-   asset percent( protocol::calc_percent_reward_per_block< STEEMIT_PRODUCER_APR_PERCENT >( props.virtual_supply.amount ), STEEM_SYMBOL);
-   auto pay = std::max( percent, STEEMIT_MIN_PRODUCER_REWARD );
-   const auto& witness_account = get_account( props.current_witness );
-
-   /// pay witness in vesting shares
-   if( props.head_block_number >= STEEMIT_START_MINER_VOTING_BLOCK || (witness_account.vesting_shares.amount.value == 0) ) {
-      // const auto& witness_obj = get_witness( props.current_witness );
-      const auto& producer_reward = create_vesting( witness_account, pay );
-      push_virtual_operation( producer_reward_operation( witness_account.name, producer_reward ) );
-   }
-   else
-   {
-      modify( get_account( witness_account.name), [&]( account_object& a )
-      {
-         a.balance += pay;
-      } );
-   }
-
-   return pay;
-}
-
-asset database::get_pow_reward()const
-{
-   const auto& props = get_dynamic_global_properties();
-
-#ifndef IS_TEST_NET
-   /// 0 block rewards until at least STEEMIT_MAX_WITNESSES have produced a POW
-   if( props.num_pow_witnesses < STEEMIT_MAX_WITNESSES && props.head_block_number < STEEMIT_START_VESTING_BLOCK )
-      return asset( 0, STEEM_SYMBOL );
-#endif
-
-   static_assert( STEEMIT_BLOCK_INTERVAL == 3, "this code assumes a 3-second time interval" );
-   static_assert( STEEMIT_MAX_WITNESSES == 21, "this code assumes 21 per round" );
-   asset percent( calc_percent_reward_per_round< STEEMIT_POW_APR_PERCENT >( props.virtual_supply.amount ), STEEM_SYMBOL);
-   return std::max( percent, STEEMIT_MIN_POW_REWARD );
-}
-
 
 void database::pay_liquidity_reward()
 {
@@ -1879,7 +1799,7 @@ void database::pay_liquidity_reward()
       return;
 #endif
 
-   if( (head_block_num() % STEEMIT_LIQUIDITY_REWARD_BLOCKS) == 0 )
+   if( (head_block_num() % SCORUM_LIQUIDITY_REWARD_BLOCKS) == 0 )
    {
       auto reward = get_liquidity_reward();
 
@@ -1894,7 +1814,7 @@ void database::pay_liquidity_reward()
          adjust_balance( get(itr->owner), reward );
          modify( *itr, [&]( liquidity_reward_balance_object& obj )
          {
-            obj.steem_volume = 0;
+            obj.scorum_volume = 0;
             obj.sbd_volume   = 0;
             obj.last_update  = head_block_time();
             obj.weight = 0;
@@ -1907,12 +1827,7 @@ void database::pay_liquidity_reward()
 
 uint16_t database::get_curation_rewards_percent( const comment_object& c ) const
 {
-   if( has_hardfork( STEEMIT_HARDFORK_0_17__774 ) )
       return get_reward_fund( c ).percent_curation_rewards;
-   else if( has_hardfork( STEEMIT_HARDFORK_0_8__116 ) )
-      return STEEMIT_1_PERCENT * 25;
-   else
-      return STEEMIT_1_PERCENT * 50;
 }
 
 share_type database::pay_reward_funds( share_type reward )
@@ -1923,16 +1838,16 @@ share_type database::pay_reward_funds( share_type reward )
    for( auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr )
    {
       // reward is a per block reward and the percents are 16-bit. This should never overflow
-      auto r = ( reward * itr->percent_content_rewards ) / STEEMIT_100_PERCENT;
+      auto r = ( reward * itr->percent_content_rewards ) / SCORUM_100_PERCENT;
 
       modify( *itr, [&]( reward_fund_object& rfo )
       {
-         rfo.reward_balance += asset( r, STEEM_SYMBOL );
+         rfo.reward_balance += asset( r, SCORUM_SYMBOL );
       });
 
       used_rewards += r;
 
-      // Sanity check to ensure we aren't printing more STEEM than has been allocated through inflation
+      // Sanity check to ensure we aren't printing more SCORUM than has been allocated through inflation
       FC_ASSERT( used_rewards <= reward );
    }
 
@@ -1941,7 +1856,7 @@ share_type database::pay_reward_funds( share_type reward )
 
 /**
  *  Iterates over all conversion requests with a conversion date before
- *  the head block time and then converts them to/from steem/sbd at the
+ *  the head block time and then converts them to/from scorum/sbd at the
  *  current median price feed history price times the premium
  */
 void database::process_conversions()
@@ -1955,7 +1870,7 @@ void database::process_conversions()
       return;
 
    asset net_sbd( 0, SBD_SYMBOL );
-   asset net_steem( 0, STEEM_SYMBOL );
+   asset net_scorum( 0, SCORUM_SYMBOL );
 
    while( itr != request_by_date.end() && itr->conversion_date <= now )
    {
@@ -1965,7 +1880,7 @@ void database::process_conversions()
       adjust_balance( user, amount_to_issue );
 
       net_sbd   += itr->amount;
-      net_steem += amount_to_issue;
+      net_scorum += amount_to_issue;
 
       push_virtual_operation( fill_convert_request_operation ( user.name, itr->requestid, itr->amount, amount_to_issue ) );
 
@@ -1976,21 +1891,21 @@ void database::process_conversions()
    const auto& props = get_dynamic_global_properties();
    modify( props, [&]( dynamic_global_property_object& p )
    {
-       p.current_supply += net_steem;
+       p.current_supply += net_scorum;
        p.current_sbd_supply -= net_sbd;
-       p.virtual_supply += net_steem;
+       p.virtual_supply += net_scorum;
        p.virtual_supply -= net_sbd * get_feed_history().current_median_history;
    } );
 }
 
-asset database::to_sbd( const asset& steem )const
+asset database::to_sbd( const asset& scorum )const
 {
-   return util::to_sbd( get_feed_history().current_median_history, steem );
+   return util::to_sbd( get_feed_history().current_median_history, scorum );
 }
 
-asset database::to_steem( const asset& sbd )const
+asset database::to_scorum( const asset& sbd )const
 {
-   return util::to_steem( get_feed_history().current_median_history, sbd );
+   return util::to_scorum( get_feed_history().current_median_history, sbd );
 }
 
 void database::account_recovery_processing()
@@ -2009,7 +1924,7 @@ void database::account_recovery_processing()
    const auto& hist_idx = get_index< owner_authority_history_index >().indices(); //by id
    auto hist = hist_idx.begin();
 
-   while( hist != hist_idx.end() && time_point_sec( hist->last_valid_time + STEEMIT_OWNER_AUTH_RECOVERY_PERIOD ) < head_block_time() )
+   while( hist != hist_idx.end() && time_point_sec( hist->last_valid_time + SCORUM_OWNER_AUTH_RECOVERY_PERIOD ) < head_block_time() )
    {
       remove( *hist );
       hist = hist_idx.begin();
@@ -2042,7 +1957,7 @@ void database::expire_escrow_ratification()
       ++escrow_itr;
 
       const auto& from_account = get_account( old_escrow.from );
-      adjust_balance( from_account, old_escrow.steem_balance );
+      adjust_balance( from_account, old_escrow.scorum_balance );
       adjust_balance( from_account, old_escrow.sbd_balance );
       adjust_balance( from_account, old_escrow.pending_fee );
 
@@ -2060,9 +1975,9 @@ void database::process_decline_voting_rights()
       const auto& account = get(itr->account);
 
       /// remove all current votes
-      std::array<share_type, STEEMIT_MAX_PROXY_RECURSION_DEPTH+1> delta;
+      std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH+1> delta;
       delta[0] = -account.vesting_shares.amount;
-      for( int i = 0; i < STEEMIT_MAX_PROXY_RECURSION_DEPTH; ++i )
+      for( int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i )
          delta[i+1] = -account.proxied_vsf_votes[i];
       adjust_proxied_witness_votes( account, delta );
 
@@ -2071,7 +1986,7 @@ void database::process_decline_voting_rights()
       modify( get(itr->account), [&]( account_object& a )
       {
          a.can_vote = false;
-         a.proxy = STEEMIT_PROXY_TO_SELF_ACCOUNT;
+         a.proxy = SCORUM_PROXY_TO_SELF_ACCOUNT;
       });
 
       remove( *itr );
@@ -2264,86 +2179,85 @@ void database::init_genesis( uint64_t init_supply )
    {
       struct auth_inhibitor
       {
-         auth_inhibitor(database& db) : db(db), old_flags(db.node_properties().skip_flags)
-         { db.node_properties().skip_flags |= skip_authority_check; }
+         auth_inhibitor(database& db)
+            : db(db)
+            , old_flags(db.node_properties().skip_flags)
+         {
+            db.node_properties().skip_flags |= skip_authority_check;
+         }
+
          ~auth_inhibitor()
-         { db.node_properties().skip_flags = old_flags; }
+         {
+            db.node_properties().skip_flags = old_flags;
+         }
+
       private:
          database& db;
          uint32_t old_flags;
       } inhibitor(*this);
 
-      // Create blockchain accounts
-      public_key_type      init_public_key(STEEMIT_INIT_PUBLIC_KEY);
+      // Create initial delegate
+      public_key_type init_public_key(SCORUM_INIT_PUBLIC_KEY);
 
       create< account_object >( [&]( account_object& a )
       {
-         a.name = STEEMIT_MINER_ACCOUNT;
+         a.name = SCORUM_INIT_DELEGATE_NAME;
+         a.memo_key = init_public_key;
+         a.balance = asset( init_supply, SCORUM_SYMBOL );
+      } );
+
+      create< account_authority_object >( [&]( account_authority_object& auth )
+      {
+         auth.account = SCORUM_INIT_DELEGATE_NAME;
+         auth.owner.add_authority( init_public_key, 1 );
+         auth.owner.weight_threshold = 1;
+         auth.active = auth.owner;
+         auth.posting = auth.active;
+      });
+
+      create< witness_object >( [&]( witness_object& w )
+      {
+         w.owner = SCORUM_INIT_DELEGATE_NAME;
+         w.signing_key = init_public_key;
+         w.schedule = witness_object::top19;
+      } );
+      // end create initial delegate
+
+      create< account_object >( [&]( account_object& a )
+      {
+         a.name = SCORUM_NULL_ACCOUNT;
       } );
       create< account_authority_object >( [&]( account_authority_object& auth )
       {
-         auth.account = STEEMIT_MINER_ACCOUNT;
+         auth.account = SCORUM_NULL_ACCOUNT;
          auth.owner.weight_threshold = 1;
          auth.active.weight_threshold = 1;
       });
 
       create< account_object >( [&]( account_object& a )
       {
-         a.name = STEEMIT_NULL_ACCOUNT;
+         a.name = SCORUM_TEMP_ACCOUNT;
       } );
       create< account_authority_object >( [&]( account_authority_object& auth )
       {
-         auth.account = STEEMIT_NULL_ACCOUNT;
-         auth.owner.weight_threshold = 1;
-         auth.active.weight_threshold = 1;
-      });
-
-      create< account_object >( [&]( account_object& a )
-      {
-         a.name = STEEMIT_TEMP_ACCOUNT;
-      } );
-      create< account_authority_object >( [&]( account_authority_object& auth )
-      {
-         auth.account = STEEMIT_TEMP_ACCOUNT;
+         auth.account = SCORUM_TEMP_ACCOUNT;
          auth.owner.weight_threshold = 0;
          auth.active.weight_threshold = 0;
       });
 
-      for( int i = 0; i < STEEMIT_NUM_INIT_MINERS; ++i )
-      {
-         create< account_object >( [&]( account_object& a )
-         {
-            a.name = STEEMIT_INIT_MINER_NAME + ( i ? fc::to_string( i ) : std::string() );
-            a.memo_key = init_public_key;
-            a.balance  = asset( i ? 0 : init_supply, STEEM_SYMBOL );
-         } );
-
-         create< account_authority_object >( [&]( account_authority_object& auth )
-         {
-            auth.account = STEEMIT_INIT_MINER_NAME + ( i ? fc::to_string( i ) : std::string() );
-            auth.owner.add_authority( init_public_key, 1 );
-            auth.owner.weight_threshold = 1;
-            auth.active  = auth.owner;
-            auth.posting = auth.active;
-         });
-
-         create< witness_object >( [&]( witness_object& w )
-         {
-            w.owner        = STEEMIT_INIT_MINER_NAME + ( i ? fc::to_string(i) : std::string() );
-            w.signing_key  = init_public_key;
-            w.schedule = witness_object::miner;
-         } );
-      }
-
       create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p )
       {
-         p.current_witness = STEEMIT_INIT_MINER_NAME;
-         p.time = STEEMIT_GENESIS_TIME;
+         p.current_witness = SCORUM_INIT_DELEGATE_NAME;
+         p.time = SCORUM_GENESIS_TIME;
          p.recent_slots_filled = fc::uint128::max_value();
          p.participation_count = 128;
-         p.current_supply = asset( init_supply, STEEM_SYMBOL );
+         p.current_supply = asset( init_supply, SCORUM_SYMBOL );
          p.virtual_supply = p.current_supply;
-         p.maximum_block_size = STEEMIT_MAX_BLOCK_SIZE;
+         p.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
+
+         p.total_reward_fund_scorum = asset( 0, SCORUM_SYMBOL );
+         p.total_reward_shares2 = 0;
+
       } );
 
       // Nothing to do
@@ -2352,14 +2266,39 @@ void database::init_genesis( uint64_t init_supply )
          create< block_summary_object >( [&]( block_summary_object& ) {});
       create< hardfork_property_object >( [&](hardfork_property_object& hpo )
       {
-         hpo.processed_hardforks.push_back( STEEMIT_GENESIS_TIME );
+         hpo.processed_hardforks.push_back( SCORUM_GENESIS_TIME );
       } );
 
       // Create witness scheduler
       create< witness_schedule_object >( [&]( witness_schedule_object& wso )
       {
-         wso.current_shuffled_witnesses[0] = STEEMIT_INIT_MINER_NAME;
+         wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME;
+         wso.max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES_HF17;
+         wso.max_miner_witnesses = SCORUM_MAX_MINER_WITNESSES_HF17;
+         wso.max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES_HF17;
       } );
+
+      const auto& gpo = get_dynamic_global_properties();
+
+      auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo )
+      {
+         rfo.name = SCORUM_POST_REWARD_FUND_NAME;
+         rfo.last_update = head_block_time();
+         rfo.content_constant = SCORUM_CONTENT_CONSTANT_HF0;
+         rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
+         rfo.percent_content_rewards = SCORUM_100_PERCENT;
+         rfo.reward_balance = gpo.total_reward_fund_scorum;
+//#ifndef IS_TEST_NET
+//         rfo.recent_claims = SCORUM_HF_19_RECENT_CLAIMS;
+//#endif
+         rfo.author_reward_curve = curve_id::linear;
+         rfo.curation_reward_curve = curve_id::square_root;
+
+      });
+
+      // As a shortcut in payout processing, we use the id as an array index.
+      // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
+      FC_ASSERT( post_rf.id._id == 0 );
    }
    FC_CAPTURE_AND_RETHROW()
 }
@@ -2381,7 +2320,7 @@ void database::notify_changed_objects()
    {
       /*vector< graphene::chainbase::generic_id > ids;
       get_changed_ids( ids );
-      STEEMIT_TRY_NOTIFY( changed_objects, ids )*/
+      SCORUM_TRY_NOTIFY( changed_objects, ids )*/
       /*
       if( _undo_db.enabled() )
       {
@@ -2396,7 +2335,7 @@ void database::notify_changed_objects()
             changed_ids.push_back( item.first );
             removed.emplace_back( item.second.get() );
          }
-         STEEMIT_TRY_NOTIFY( changed_objects, changed_ids )
+         SCORUM_TRY_NOTIFY( changed_objects, changed_ids )
       }
       */
    }
@@ -2655,7 +2594,7 @@ void database::process_header_extensions( const signed_block& next_block )
 
 void database::update_median_feed() {
 try {
-   if( (head_block_num() % STEEMIT_FEED_INTERVAL_BLOCKS) != 0 )
+   if( (head_block_num() % SCORUM_FEED_INTERVAL_BLOCKS) != 0 )
       return;
 
    auto now = head_block_time();
@@ -2664,14 +2603,14 @@ try {
    for( int i = 0; i < wso.num_scheduled_witnesses; i++ )
    {
       const auto& wit = get_witness( wso.current_shuffled_witnesses[i] );
-         if( now < wit.last_sbd_exchange_update + STEEMIT_MAX_FEED_AGE_SECONDS
+         if( now < wit.last_sbd_exchange_update + SCORUM_MAX_FEED_AGE_SECONDS
             && !wit.sbd_exchange_rate.is_null() )
          {
             feeds.push_back( wit.sbd_exchange_rate );
          }
    }
 
-   if( feeds.size() >= STEEMIT_MIN_FEEDS )
+   if( feeds.size() >= SCORUM_MIN_FEEDS )
    {
       std::sort( feeds.begin(), feeds.end() );
       auto median_feed = feeds[feeds.size()/2];
@@ -2679,10 +2618,10 @@ try {
       modify( get_feed_history(), [&]( feed_history_object& fho )
       {
          fho.price_history.push_back( median_feed );
-         size_t steemit_feed_history_window = STEEMIT_FEED_HISTORY_WINDOW_PRE_HF_16;
-         steemit_feed_history_window = STEEMIT_FEED_HISTORY_WINDOW;
+         size_t scorum_feed_history_window = SCORUM_FEED_HISTORY_WINDOW_PRE_HF_16;
+         scorum_feed_history_window = SCORUM_FEED_HISTORY_WINDOW;
 
-         if( fho.price_history.size() > steemit_feed_history_window )
+         if( fho.price_history.size() > scorum_feed_history_window )
             fho.price_history.pop_front();
 
          if( fho.price_history.size() )
@@ -2725,7 +2664,7 @@ void database::_apply_transaction(const signed_transaction& trx)
       trx.validate();
 
    auto& trx_idx = get_index<transaction_index>();
-   const chain_id_type& chain_id = STEEMIT_CHAIN_ID;
+   const chain_id_type& chain_id = SCORUM_CHAIN_ID;
    auto trx_id = trx.id();
    // idump((trx_id)(skip&skip_transaction_dupe_check));
    FC_ASSERT( (skip & skip_transaction_dupe_check) ||
@@ -2740,7 +2679,7 @@ void database::_apply_transaction(const signed_transaction& trx)
 
       try
       {
-         trx.verify_authority( chain_id, get_active, get_owner, get_posting, STEEMIT_MAX_SIG_CHECK_DEPTH );
+         trx.verify_authority( chain_id, get_active, get_owner, get_posting, SCORUM_MAX_SIG_CHECK_DEPTH );
       }
       catch( protocol::tx_missing_active_auth& e )
       {
@@ -2757,17 +2696,17 @@ void database::_apply_transaction(const signed_transaction& trx)
       {
          const auto& tapos_block_summary = get< block_summary_object >( trx.ref_block_num );
          //Verify TaPoS block summary has correct ID prefix, and that this block's time is not past the expiration
-         STEEMIT_ASSERT( trx.ref_block_prefix == tapos_block_summary.block_id._hash[1], transaction_tapos_exception,
+         SCORUM_ASSERT( trx.ref_block_prefix == tapos_block_summary.block_id._hash[1], transaction_tapos_exception,
                     "", ("trx.ref_block_prefix", trx.ref_block_prefix)
                     ("tapos_block_summary",tapos_block_summary.block_id._hash[1]));
       }
 
       fc::time_point_sec now = head_block_time();
 
-      STEEMIT_ASSERT( trx.expiration <= now + fc::seconds(STEEMIT_MAX_TIME_UNTIL_EXPIRATION), transaction_expiration_exception,
-                  "", ("trx.expiration",trx.expiration)("now",now)("max_til_exp",STEEMIT_MAX_TIME_UNTIL_EXPIRATION));
+      SCORUM_ASSERT( trx.expiration <= now + fc::seconds(SCORUM_MAX_TIME_UNTIL_EXPIRATION), transaction_expiration_exception,
+                  "", ("trx.expiration",trx.expiration)("now",now)("max_til_exp",SCORUM_MAX_TIME_UNTIL_EXPIRATION));
       // Simple solution to pending trx bug when now == trx.expiration
-      STEEMIT_ASSERT( now < trx.expiration, transaction_expiration_exception, "", ("now",now)("trx.exp",trx.expiration) );
+      SCORUM_ASSERT( now < trx.expiration, transaction_expiration_exception, "", ("now",now)("trx.exp",trx.expiration) );
    }
 
    //Insert transaction into unique transactions database.
@@ -2853,7 +2792,7 @@ void database::update_global_dynamic_data( const signed_block& b )
             {
                w.total_missed++;
               
-                  if( head_block_num() - w.last_confirmed_block_num  > STEEMIT_BLOCKS_PER_DAY )
+                  if( head_block_num() - w.last_confirmed_block_num  > SCORUM_BLOCKS_PER_DAY )
                   {
                      w.signing_key = public_key_type();
                      push_virtual_operation( shutdown_witness_operation( w.owner ) );
@@ -2883,11 +2822,11 @@ void database::update_global_dynamic_data( const signed_block& b )
 
    if( !(get_node_properties().skip_flags & skip_undo_history_check) )
    {
-      STEEMIT_ASSERT( _dgp.head_block_number - _dgp.last_irreversible_block_num  < STEEMIT_MAX_UNDO_HISTORY, undo_database_exception,
+      SCORUM_ASSERT( _dgp.head_block_number - _dgp.last_irreversible_block_num  < SCORUM_MAX_UNDO_HISTORY, undo_database_exception,
                  "The database does not have enough undo history to support a blockchain with so many missed blocks. "
                  "Please add a checkpoint if you would like to continue applying blocks beyond this point.",
                  ("last_irreversible_block_num",_dgp.last_irreversible_block_num)("head", _dgp.head_block_number)
-                 ("max_undo",STEEMIT_MAX_UNDO_HISTORY) );
+                 ("max_undo",SCORUM_MAX_UNDO_HISTORY) );
    }
 } FC_CAPTURE_AND_RETHROW() }
 
@@ -2896,21 +2835,21 @@ void database::update_virtual_supply()
    modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& dgp )
    {
       dgp.virtual_supply = dgp.current_supply
-         + ( get_feed_history().current_median_history.is_null() ? asset( 0, STEEM_SYMBOL ) : dgp.current_sbd_supply * get_feed_history().current_median_history );
+         + ( get_feed_history().current_median_history.is_null() ? asset( 0, SCORUM_SYMBOL ) : dgp.current_sbd_supply * get_feed_history().current_median_history );
 
       auto median_price = get_feed_history().current_median_history;
 
       if( !median_price.is_null() )
       {
-         auto percent_sbd = uint16_t( ( ( fc::uint128_t( ( dgp.current_sbd_supply * get_feed_history().current_median_history ).amount.value ) * STEEMIT_100_PERCENT )
+         auto percent_sbd = uint16_t( ( ( fc::uint128_t( ( dgp.current_sbd_supply * get_feed_history().current_median_history ).amount.value ) * SCORUM_100_PERCENT )
             / dgp.virtual_supply.amount.value ).to_uint64() );
 
-         if( percent_sbd <= STEEMIT_SBD_START_PERCENT )
-            dgp.sbd_print_rate = STEEMIT_100_PERCENT;
-         else if( percent_sbd >= STEEMIT_SBD_STOP_PERCENT )
+         if( percent_sbd <= SCORUM_SBD_START_PERCENT )
+            dgp.sbd_print_rate = SCORUM_100_PERCENT;
+         else if( percent_sbd >= SCORUM_SBD_STOP_PERCENT )
             dgp.sbd_print_rate = 0;
          else
-            dgp.sbd_print_rate = ( ( STEEMIT_SBD_STOP_PERCENT - percent_sbd ) * STEEMIT_100_PERCENT ) / ( STEEMIT_SBD_STOP_PERCENT - STEEMIT_SBD_START_PERCENT );
+            dgp.sbd_print_rate = ( ( SCORUM_SBD_STOP_PERCENT - percent_sbd ) * SCORUM_100_PERCENT ) / ( SCORUM_SBD_STOP_PERCENT - SCORUM_SBD_START_PERCENT );
       }
    });
 } FC_CAPTURE_AND_RETHROW() }
@@ -2935,12 +2874,12 @@ void database::update_last_irreversible_block()
     * Prior to voting taking over, we must be more conservative...
     *
     */
-   if( head_block_num() < STEEMIT_START_MINER_VOTING_BLOCK )
+   if( head_block_num() < SCORUM_START_MINER_VOTING_BLOCK )
    {
       modify( dpo, [&]( dynamic_global_property_object& _dpo )
       {
-         if ( head_block_num() > STEEMIT_MAX_WITNESSES )
-            _dpo.last_irreversible_block_num = head_block_num() - STEEMIT_MAX_WITNESSES;
+         if ( head_block_num() > SCORUM_MAX_WITNESSES )
+            _dpo.last_irreversible_block_num = head_block_num() - SCORUM_MAX_WITNESSES;
       } );
    }
    else
@@ -2952,13 +2891,13 @@ void database::update_last_irreversible_block()
       for( int i = 0; i < wso.num_scheduled_witnesses; i++ )
          wit_objs.push_back( &get_witness( wso.current_shuffled_witnesses[i] ) );
 
-      static_assert( STEEMIT_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero" );
+      static_assert( SCORUM_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero" );
 
       // 1 1 1 2 2 2 2 2 2 2 -> 2     .7*10 = 7
       // 1 1 1 1 1 1 1 2 2 2 -> 1
       // 3 3 3 3 3 3 3 3 3 3 -> 3
 
-      size_t offset = ((STEEMIT_100_PERCENT - STEEMIT_IRREVERSIBLE_THRESHOLD) * wit_objs.size() / STEEMIT_100_PERCENT);
+      size_t offset = ((SCORUM_100_PERCENT - SCORUM_IRREVERSIBLE_THRESHOLD) * wit_objs.size() / SCORUM_100_PERCENT);
 
       std::nth_element( wit_objs.begin(), wit_objs.begin() + offset, wit_objs.end(),
          []( const witness_object* a, const witness_object* b )
@@ -3064,6 +3003,20 @@ int database::match( const limit_order_object& new_order, const limit_order_obje
 
    auto age = head_block_time() - old_order.created;
 
+   // SCORUM: uncomment if block to enable liqudity reward
+//   if( age >= SCORUM_MIN_LIQUIDITY_REWARD_PERIOD_SEC )
+//   {
+//      if( old_order_receives.symbol == SCORUM_SYMBOL )
+//      {
+//         adjust_liquidity_reward( get_account( old_order.seller ), old_order_receives, false );
+//         adjust_liquidity_reward( get_account( new_order.seller ), -old_order_receives, false );
+//      }
+//      else
+//      {
+//         adjust_liquidity_reward( get_account( old_order.seller ), new_order_receives, true );
+//         adjust_liquidity_reward( get_account( new_order.seller ), -new_order_receives, true );
+//      }
+//   }
    push_virtual_operation( fill_order_operation( new_order.seller, new_order.orderid, new_order_pays, old_order.seller, old_order.orderid, old_order_pays ) );
 
    int result = 0;
@@ -3082,17 +3035,17 @@ void database::adjust_liquidity_reward( const account_object& owner, const asset
    {
       modify<liquidity_reward_balance_object>( *itr, [&]( liquidity_reward_balance_object& r )
       {
-         if( head_block_time() - r.last_update >= STEEMIT_LIQUIDITY_TIMEOUT_SEC )
+         if( head_block_time() - r.last_update >= SCORUM_LIQUIDITY_TIMEOUT_SEC )
          {
             r.sbd_volume = 0;
-            r.steem_volume = 0;
+            r.scorum_volume = 0;
             r.weight = 0;
          }
 
          if( is_sdb )
             r.sbd_volume += volume.amount.value;
          else
-            r.steem_volume += volume.amount.value;
+            r.scorum_volume += volume.amount.value;
 
          r.update_weight();
          r.last_update = head_block_time();
@@ -3106,7 +3059,7 @@ void database::adjust_liquidity_reward( const account_object& owner, const asset
          if( is_sdb )
             r.sbd_volume = volume.amount.value;
          else
-            r.steem_volume = volume.amount.value;
+            r.scorum_volume = volume.amount.value;
 
          r.update_weight();
          r.last_update = head_block_time();
@@ -3208,7 +3161,7 @@ void database::adjust_balance( const account_object& a, const asset& delta )
    {
       switch( delta.symbol )
       {
-         case STEEM_SYMBOL:
+         case SCORUM_SYMBOL:
             acnt.balance += delta;
             break;
          case SBD_SYMBOL:
@@ -3218,11 +3171,11 @@ void database::adjust_balance( const account_object& a, const asset& delta )
                acnt.sbd_seconds_last_update = head_block_time();
 
                if( acnt.sbd_seconds > 0 &&
-                   (acnt.sbd_seconds_last_update - acnt.sbd_last_interest_payment).to_seconds() > STEEMIT_SBD_INTEREST_COMPOUND_INTERVAL_SEC )
+                   (acnt.sbd_seconds_last_update - acnt.sbd_last_interest_payment).to_seconds() > SCORUM_SBD_INTEREST_COMPOUND_INTERVAL_SEC )
                {
-                  auto interest = acnt.sbd_seconds / STEEMIT_SECONDS_PER_YEAR;
+                  auto interest = acnt.sbd_seconds / SCORUM_SECONDS_PER_YEAR;
                   interest *= get_dynamic_global_properties().sbd_interest_rate;
-                  interest /= STEEMIT_100_PERCENT;
+                  interest /= SCORUM_100_PERCENT;
                   asset interest_paid(interest.to_uint64(), SBD_SYMBOL);
                   acnt.sbd_balance += interest_paid;
                   acnt.sbd_seconds = 0;
@@ -3253,7 +3206,7 @@ void database::adjust_savings_balance( const account_object& a, const asset& del
    {
       switch( delta.symbol )
       {
-         case STEEM_SYMBOL:
+         case SCORUM_SYMBOL:
             acnt.savings_balance += delta;
             break;
          case SBD_SYMBOL:
@@ -3263,11 +3216,11 @@ void database::adjust_savings_balance( const account_object& a, const asset& del
                acnt.savings_sbd_seconds_last_update = head_block_time();
 
                if( acnt.savings_sbd_seconds > 0 &&
-                   (acnt.savings_sbd_seconds_last_update - acnt.savings_sbd_last_interest_payment).to_seconds() > STEEMIT_SBD_INTEREST_COMPOUND_INTERVAL_SEC )
+                   (acnt.savings_sbd_seconds_last_update - acnt.savings_sbd_last_interest_payment).to_seconds() > SCORUM_SBD_INTEREST_COMPOUND_INTERVAL_SEC )
                {
-                  auto interest = acnt.savings_sbd_seconds / STEEMIT_SECONDS_PER_YEAR;
+                  auto interest = acnt.savings_sbd_seconds / SCORUM_SECONDS_PER_YEAR;
                   interest *= get_dynamic_global_properties().sbd_interest_rate;
-                  interest /= STEEMIT_100_PERCENT;
+                  interest /= SCORUM_100_PERCENT;
                   asset interest_paid(interest.to_uint64(), SBD_SYMBOL);
                   acnt.savings_sbd_balance += interest_paid;
                   acnt.savings_sbd_seconds = 0;
@@ -3298,8 +3251,8 @@ void database::adjust_reward_balance( const account_object& a, const asset& delt
    {
       switch( delta.symbol )
       {
-         case STEEM_SYMBOL:
-            acnt.reward_steem_balance += delta;
+         case SCORUM_SYMBOL:
+            acnt.reward_scorum_balance += delta;
             break;
          case SBD_SYMBOL:
             acnt.reward_sbd_balance += delta;
@@ -3315,19 +3268,19 @@ void database::adjust_supply( const asset& delta, bool adjust_vesting )
 {
 
    const auto& props = get_dynamic_global_properties();
-   if( props.head_block_number < STEEMIT_BLOCKS_PER_DAY*7 )
+   if( props.head_block_number < SCORUM_BLOCKS_PER_DAY*7 )
       adjust_vesting = false;
 
    modify( props, [&]( dynamic_global_property_object& props )
    {
       switch( delta.symbol )
       {
-         case STEEM_SYMBOL:
+         case SCORUM_SYMBOL:
          {
-            asset new_vesting( (adjust_vesting && delta.amount > 0) ? delta.amount * 9 : 0, STEEM_SYMBOL );
+            asset new_vesting( (adjust_vesting && delta.amount > 0) ? delta.amount * 9 : 0, SCORUM_SYMBOL );
             props.current_supply += delta + new_vesting;
             props.virtual_supply += delta + new_vesting;
-            props.total_vesting_fund_steem += new_vesting;
+            props.total_vesting_fund_scorum += new_vesting;
             assert( props.current_supply.amount.value >= 0 );
             break;
          }
@@ -3347,7 +3300,7 @@ asset database::get_balance( const account_object& a, asset_symbol_type symbol )
 {
    switch( symbol )
    {
-      case STEEM_SYMBOL:
+      case SCORUM_SYMBOL:
          return a.balance;
       case SBD_SYMBOL:
          return a.sbd_balance;
@@ -3360,7 +3313,7 @@ asset database::get_savings_balance( const account_object& a, asset_symbol_type 
 {
    switch( symbol )
    {
-      case STEEM_SYMBOL:
+      case SCORUM_SYMBOL:
          return a.savings_balance;
       case SBD_SYMBOL:
          return a.savings_sbd_balance;
@@ -3371,71 +3324,20 @@ asset database::get_savings_balance( const account_object& a, asset_symbol_type 
 
 void database::init_hardforks()
 {
-   _hardfork_times[ 0 ] = fc::time_point_sec( STEEMIT_GENESIS_TIME );
+   _hardfork_times[ 0 ] = fc::time_point_sec( SCORUM_GENESIS_TIME );
    _hardfork_versions[ 0 ] = hardfork_version( 0, 0 );
-   FC_ASSERT( STEEMIT_HARDFORK_0_1 == 1, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_1 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_1_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_1 ] = STEEMIT_HARDFORK_0_1_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_2 == 2, "Invlaid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_2 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_2_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_2 ] = STEEMIT_HARDFORK_0_2_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_3 == 3, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_3 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_3_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_3 ] = STEEMIT_HARDFORK_0_3_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_4 == 4, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_4 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_4_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_4 ] = STEEMIT_HARDFORK_0_4_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_5 == 5, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_5 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_5_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_5 ] = STEEMIT_HARDFORK_0_5_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_6 == 6, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_6 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_6_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_6 ] = STEEMIT_HARDFORK_0_6_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_7 == 7, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_7 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_7_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_7 ] = STEEMIT_HARDFORK_0_7_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_8 == 8, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_8 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_8_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_8 ] = STEEMIT_HARDFORK_0_8_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_9 == 9, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_9 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_9_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_9 ] = STEEMIT_HARDFORK_0_9_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_10 == 10, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_10 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_10_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_10 ] = STEEMIT_HARDFORK_0_10_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_11 == 11, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_11 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_11_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_11 ] = STEEMIT_HARDFORK_0_11_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_12 == 12, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_12 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_12_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_12 ] = STEEMIT_HARDFORK_0_12_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_13 == 13, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_13 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_13_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_13 ] = STEEMIT_HARDFORK_0_13_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_14 == 14, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_14 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_14_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_14 ] = STEEMIT_HARDFORK_0_14_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_15 == 15, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_15 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_15_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_15 ] = STEEMIT_HARDFORK_0_15_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_16 == 16, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_16 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_16_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_16 ] = STEEMIT_HARDFORK_0_16_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_17 == 17, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_17 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_17_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_17 ] = STEEMIT_HARDFORK_0_17_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_18 == 18, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_18 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_18_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_18 ] = STEEMIT_HARDFORK_0_18_VERSION;
-   FC_ASSERT( STEEMIT_HARDFORK_0_19 == 19, "Invalid hardfork configuration" );
-   _hardfork_times[ STEEMIT_HARDFORK_0_19 ] = fc::time_point_sec( STEEMIT_HARDFORK_0_19_TIME );
-   _hardfork_versions[ STEEMIT_HARDFORK_0_19 ] = STEEMIT_HARDFORK_0_19_VERSION;
+   
+   //SCORUM: structure to initialize hardofrks
+
+   //FC_ASSERT( SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork configuration" );
+   //_hardfork_times[ SCORUM_HARDFORK_0_1 ] = fc::time_point_sec( SCORUM_HARDFORK_0_1_TIME );
+   //_hardfork_versions[ SCORUM_HARDFORK_0_1 ] = SCORUM_HARDFORK_0_1_VERSION;
 
 
    const auto& hardforks = get_hardfork_property_object();
-   FC_ASSERT( hardforks.last_hardfork <= STEEMIT_NUM_HARDFORKS, "Chain knows of more hardforks than configuration", ("hardforks.last_hardfork",hardforks.last_hardfork)("STEEMIT_NUM_HARDFORKS",STEEMIT_NUM_HARDFORKS) );
-   FC_ASSERT( _hardfork_versions[ hardforks.last_hardfork ] <= STEEMIT_BLOCKCHAIN_VERSION, "Blockchain version is older than last applied hardfork" );
-   FC_ASSERT( STEEMIT_BLOCKCHAIN_HARDFORK_VERSION == _hardfork_versions[ STEEMIT_NUM_HARDFORKS ] );
+   FC_ASSERT( hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration", ("hardforks.last_hardfork",hardforks.last_hardfork)("SCORUM_NUM_HARDFORKS",SCORUM_NUM_HARDFORKS) );
+   FC_ASSERT( _hardfork_versions[ hardforks.last_hardfork ] <= SCORUM_BLOCKCHAIN_VERSION, "Blockchain version is older than last applied hardfork" );
+   FC_ASSERT( SCORUM_BLOCKCHAIN_HARDFORK_VERSION == _hardfork_versions[ SCORUM_NUM_HARDFORKS ] );
 }
 
 void database::process_hardforks()
@@ -3445,27 +3347,15 @@ void database::process_hardforks()
       // If there are upcoming hardforks and the next one is later, do nothing
       const auto& hardforks = get_hardfork_property_object();
 
-      if( has_hardfork( STEEMIT_HARDFORK_0_5__54 ) )
-      {
          while( _hardfork_versions[ hardforks.last_hardfork ] < hardforks.next_hardfork
             && hardforks.next_hardfork_time <= head_block_time() )
          {
-            if( hardforks.last_hardfork < STEEMIT_NUM_HARDFORKS ) {
+            if( hardforks.last_hardfork < SCORUM_NUM_HARDFORKS ) {
                apply_hardfork( hardforks.last_hardfork + 1 );
             }
             else
                throw unknown_hardfork_exception();
          }
-      }
-      else
-      {
-         while( hardforks.last_hardfork < STEEMIT_NUM_HARDFORKS
-               && _hardfork_times[ hardforks.last_hardfork + 1 ] <= head_block_time()
-               && hardforks.last_hardfork < STEEMIT_HARDFORK_0_5__54 )
-         {
-            apply_hardfork( hardforks.last_hardfork + 1 );
-         }
-      }
    }
    FC_CAPTURE_AND_RETHROW()
 }
@@ -3479,7 +3369,7 @@ void database::set_hardfork( uint32_t hardfork, bool apply_now )
 {
    auto const& hardforks = get_hardfork_property_object();
 
-   for( uint32_t i = hardforks.last_hardfork + 1; i <= hardfork && i <= STEEMIT_NUM_HARDFORKS; i++ )
+   for( uint32_t i = hardforks.last_hardfork + 1; i <= hardfork && i <= SCORUM_NUM_HARDFORKS; i++ )
    {
          modify( hardforks, [&]( hardfork_property_object& hpo )
          {
@@ -3499,14 +3389,14 @@ void database::apply_hardfork( uint32_t hardfork )
 
    switch( hardfork )
    {
-      case STEEMIT_HARDFORK_0_1:
+      case SCORUM_HARDFORK_0_1:
          perform_vesting_share_split( 1000000 );
 #ifdef IS_TEST_NET
          {
             custom_operation test_op;
             string op_msg = "Testnet: Hardfork applied";
             test_op.data = vector< char >( op_msg.begin(), op_msg.end() );
-            test_op.required_auths.insert( STEEMIT_INIT_MINER_NAME );
+            test_op.required_auths.insert( SCORUM_INIT_DELEGATE_NAME );
             operation op = test_op;   // we need the operation object to live to the end of this scope
             operation_notification note( op );
             notify_pre_apply_operation( note );
@@ -3514,239 +3404,6 @@ void database::apply_hardfork( uint32_t hardfork )
          }
          break;
 #endif
-         break;
-      case STEEMIT_HARDFORK_0_2:
-         retally_witness_votes();
-         break;
-      case STEEMIT_HARDFORK_0_3:
-         retally_witness_votes();
-         break;
-      case STEEMIT_HARDFORK_0_4:
-         reset_virtual_schedule_time(*this);
-         break;
-      case STEEMIT_HARDFORK_0_5:
-         break;
-      case STEEMIT_HARDFORK_0_6:
-         retally_witness_vote_counts();
-         retally_comment_children();
-         break;
-      case STEEMIT_HARDFORK_0_7:
-         break;
-      case STEEMIT_HARDFORK_0_8:
-         retally_witness_vote_counts(true);
-         break;
-      case STEEMIT_HARDFORK_0_9:
-         {
-            for( const std::string& acc : hardfork9::get_compromised_accounts() )
-            {
-               const account_object* account = find_account( acc );
-               if( account == nullptr )
-                  continue;
-
-               update_owner_authority( *account, authority( 1, public_key_type( "STM7sw22HqsXbz7D2CmJfmMwt9rimtk518dRzsR1f8Cgw52dQR1pR" ), 1 ) );
-
-               modify( get< account_authority_object, by_account >( account->name ), [&]( account_authority_object& auth )
-               {
-                  auth.active  = authority( 1, public_key_type( "STM7sw22HqsXbz7D2CmJfmMwt9rimtk518dRzsR1f8Cgw52dQR1pR" ), 1 );
-                  auth.posting = authority( 1, public_key_type( "STM7sw22HqsXbz7D2CmJfmMwt9rimtk518dRzsR1f8Cgw52dQR1pR" ), 1 );
-               });
-            }
-         }
-         break;
-      case STEEMIT_HARDFORK_0_10:
-         retally_liquidity_weight();
-         break;
-      case STEEMIT_HARDFORK_0_11:
-         break;
-      case STEEMIT_HARDFORK_0_12:
-         {
-            const auto& comment_idx = get_index< comment_index >().indices();
-
-            for( auto itr = comment_idx.begin(); itr != comment_idx.end(); ++itr )
-            {
-               // At the hardfork time, all new posts with no votes get their cashout time set to +12 hrs from head block time.
-               // All posts with a payout get their cashout time set to +30 days. This hardfork takes place within 30 days
-               // initial payout so we don't have to handle the case of posts that should be frozen that aren't
-               if( itr->parent_author == STEEMIT_ROOT_POST_PARENT )
-               {
-                  // Post has not been paid out and has no votes (cashout_time == 0 === net_rshares == 0, under current semmantics)
-                  if( itr->last_payout == fc::time_point_sec::min() && itr->cashout_time == fc::time_point_sec::maximum() )
-                  {
-                     modify( *itr, [&]( comment_object & c )
-                     {
-                        c.cashout_time = head_block_time() + STEEMIT_CASHOUT_WINDOW_SECONDS_PRE_HF17;
-                     });
-                  }
-                  // Has been paid out, needs to be on second cashout window
-                  else if( itr->last_payout > fc::time_point_sec() )
-                  {
-                     modify( *itr, [&]( comment_object& c )
-                     {
-                        c.cashout_time = c.last_payout + STEEMIT_SECOND_CASHOUT_WINDOW;
-                     });
-                  }
-               }
-            }
-
-            modify( get< account_authority_object, by_account >( STEEMIT_MINER_ACCOUNT ), [&]( account_authority_object& auth )
-            {
-               auth.posting = authority();
-               auth.posting.weight_threshold = 1;
-            });
-
-            modify( get< account_authority_object, by_account >( STEEMIT_NULL_ACCOUNT ), [&]( account_authority_object& auth )
-            {
-               auth.posting = authority();
-               auth.posting.weight_threshold = 1;
-            });
-
-            modify( get< account_authority_object, by_account >( STEEMIT_TEMP_ACCOUNT ), [&]( account_authority_object& auth )
-            {
-               auth.posting = authority();
-               auth.posting.weight_threshold = 1;
-            });
-         }
-         break;
-      case STEEMIT_HARDFORK_0_13:
-         break;
-      case STEEMIT_HARDFORK_0_14:
-         break;
-      case STEEMIT_HARDFORK_0_15:
-         break;
-      case STEEMIT_HARDFORK_0_16:
-         {
-            modify( get_feed_history(), [&]( feed_history_object& fho )
-            {
-               while( fho.price_history.size() > STEEMIT_FEED_HISTORY_WINDOW )
-                  fho.price_history.pop_front();
-            });
-         }
-         break;
-      case STEEMIT_HARDFORK_0_17:
-         {
-            static_assert(
-               STEEMIT_MAX_VOTED_WITNESSES_HF0 + STEEMIT_MAX_MINER_WITNESSES_HF0 + STEEMIT_MAX_RUNNER_WITNESSES_HF0 == STEEMIT_MAX_WITNESSES,
-               "HF0 witness counts must add up to STEEMIT_MAX_WITNESSES" );
-            static_assert(
-               STEEMIT_MAX_VOTED_WITNESSES_HF17 + STEEMIT_MAX_MINER_WITNESSES_HF17 + STEEMIT_MAX_RUNNER_WITNESSES_HF17 == STEEMIT_MAX_WITNESSES,
-               "HF17 witness counts must add up to STEEMIT_MAX_WITNESSES" );
-
-            modify( get_witness_schedule_object(), [&]( witness_schedule_object& wso )
-            {
-               wso.max_voted_witnesses = STEEMIT_MAX_VOTED_WITNESSES_HF17;
-               wso.max_miner_witnesses = STEEMIT_MAX_MINER_WITNESSES_HF17;
-               wso.max_runner_witnesses = STEEMIT_MAX_RUNNER_WITNESSES_HF17;
-            });
-
-            const auto& gpo = get_dynamic_global_properties();
-
-            auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo )
-            {
-               rfo.name = STEEMIT_POST_REWARD_FUND_NAME;
-               rfo.last_update = head_block_time();
-               rfo.content_constant = STEEMIT_CONTENT_CONSTANT_HF0;
-               rfo.percent_curation_rewards = STEEMIT_1_PERCENT * 25;
-               rfo.percent_content_rewards = STEEMIT_100_PERCENT;
-               rfo.reward_balance = gpo.total_reward_fund_steem;
-#ifndef IS_TEST_NET
-               rfo.recent_claims = STEEMIT_HF_17_RECENT_CLAIMS;
-#endif
-               rfo.author_reward_curve = curve_id::quadratic;
-               rfo.curation_reward_curve = curve_id::quadratic_curation;
-            });
-
-            // As a shortcut in payout processing, we use the id as an array index.
-            // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
-            FC_ASSERT( post_rf.id._id == 0 );
-
-            modify( gpo, [&]( dynamic_global_property_object& g )
-            {
-               g.total_reward_fund_steem = asset( 0, STEEM_SYMBOL );
-               g.total_reward_shares2 = 0;
-            });
-
-            /*
-            * For all current comments we will either keep their current cashout time, or extend it to 1 week
-            * after creation.
-            *
-            * We cannot do a simple iteration by cashout time because we are editting cashout time.
-            * More specifically, we will be adding an explicit cashout time to all comments with parents.
-            * To find all discussions that have not been paid out we fir iterate over posts by cashout time.
-            * Before the hardfork these are all root posts. Iterate over all of their children, adding each
-            * to a specific list. Next, update payout times for all discussions on the root post. This defines
-            * the min cashout time for each child in the discussion. Then iterate over the children and set
-            * their cashout time in a similar way, grabbing the root post as their inherent cashout time.
-            */
-            const auto& comment_idx = get_index< comment_index, by_cashout_time >();
-            const auto& by_root_idx = get_index< comment_index, by_root >();
-            vector< const comment_object* > root_posts;
-            root_posts.reserve( STEEMIT_HF_17_NUM_POSTS );
-            vector< const comment_object* > replies;
-            replies.reserve( STEEMIT_HF_17_NUM_REPLIES );
-
-            for( auto itr = comment_idx.begin(); itr != comment_idx.end() && itr->cashout_time < fc::time_point_sec::maximum(); ++itr )
-            {
-               root_posts.push_back( &(*itr) );
-
-               for( auto reply_itr = by_root_idx.lower_bound( itr->id ); reply_itr != by_root_idx.end() && reply_itr->root_comment == itr->id; ++reply_itr )
-               {
-                  replies.push_back( &(*reply_itr) );
-               }
-            }
-
-            for( auto itr : root_posts )
-            {
-               modify( *itr, [&]( comment_object& c )
-               {
-                  c.cashout_time = std::max( c.created + STEEMIT_CASHOUT_WINDOW_SECONDS, c.cashout_time );
-               });
-            }
-
-            for( auto itr : replies )
-            {
-               modify( *itr, [&]( comment_object& c )
-               {
-                  c.cashout_time = std::max( calculate_discussion_payout_time( c ), c.created + STEEMIT_CASHOUT_WINDOW_SECONDS );
-               });
-            }
-         }
-         break;
-      case STEEMIT_HARDFORK_0_18:
-         break;
-      case STEEMIT_HARDFORK_0_19:
-         {
-            modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
-            {
-               gpo.vote_power_reserve_rate = 10;
-            });
-
-            modify( get< reward_fund_object, by_name >( STEEMIT_POST_REWARD_FUND_NAME ), [&]( reward_fund_object &rfo )
-            {
-#ifndef IS_TEST_NET
-               rfo.recent_claims = STEEMIT_HF_19_RECENT_CLAIMS;
-#endif
-               rfo.author_reward_curve = curve_id::linear;
-               rfo.curation_reward_curve = curve_id::square_root;
-            });
-
-            /* Remove all 0 delegation objects */
-            vector< const vesting_delegation_object* > to_remove;
-            const auto& delegation_idx = get_index< vesting_delegation_index, by_id >();
-            auto delegation_itr = delegation_idx.begin();
-
-            while( delegation_itr != delegation_idx.end() )
-            {
-               if( delegation_itr->vesting_shares.amount == 0 )
-                  to_remove.push_back( &(*delegation_itr) );
-
-               ++delegation_itr;
-            }
-
-            for( const vesting_delegation_object* delegation_ptr: to_remove )
-            {
-               remove( *delegation_ptr );
-            }
-         }
          break;
       default:
          break;
@@ -3782,10 +3439,10 @@ void database::validate_invariants()const
    try
    {
       const auto& account_idx = get_index<account_index>().indices().get<by_name>();
-      asset total_supply = asset( 0, STEEM_SYMBOL );
+      asset total_supply = asset( 0, SCORUM_SYMBOL );
       asset total_sbd = asset( 0, SBD_SYMBOL );
       asset total_vesting = asset( 0, VESTS_SYMBOL );
-      asset pending_vesting_steem = asset( 0, STEEM_SYMBOL );
+      asset pending_vesting_scorum = asset( 0, SCORUM_SYMBOL );
       share_type total_vsf_votes = share_type( 0 );
 
       auto gpo = get_dynamic_global_properties();
@@ -3799,17 +3456,17 @@ void database::validate_invariants()const
       {
          total_supply += itr->balance;
          total_supply += itr->savings_balance;
-         total_supply += itr->reward_steem_balance;
+         total_supply += itr->reward_scorum_balance;
          total_sbd += itr->sbd_balance;
          total_sbd += itr->savings_sbd_balance;
          total_sbd += itr->reward_sbd_balance;
          total_vesting += itr->vesting_shares;
          total_vesting += itr->reward_vesting_balance;
-         pending_vesting_steem += itr->reward_vesting_steem;
-         total_vsf_votes += ( itr->proxy == STEEMIT_PROXY_TO_SELF_ACCOUNT ?
+         pending_vesting_scorum += itr->reward_vesting_scorum;
+         total_vsf_votes += ( itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT ?
                                  itr->witness_vote_weight() :
-                                 ( STEEMIT_MAX_PROXY_RECURSION_DEPTH > 0 ?
-                                      itr->proxied_vsf_votes[STEEMIT_MAX_PROXY_RECURSION_DEPTH - 1] :
+                                 ( SCORUM_MAX_PROXY_RECURSION_DEPTH > 0 ?
+                                      itr->proxied_vsf_votes[SCORUM_MAX_PROXY_RECURSION_DEPTH - 1] :
                                       itr->vesting_shares.amount ) );
       }
 
@@ -3817,7 +3474,7 @@ void database::validate_invariants()const
 
       for( auto itr = convert_request_idx.begin(); itr != convert_request_idx.end(); ++itr )
       {
-         if( itr->amount.symbol == STEEM_SYMBOL )
+         if( itr->amount.symbol == SCORUM_SYMBOL )
             total_supply += itr->amount;
          else if( itr->amount.symbol == SBD_SYMBOL )
             total_sbd += itr->amount;
@@ -3829,9 +3486,9 @@ void database::validate_invariants()const
 
       for( auto itr = limit_order_idx.begin(); itr != limit_order_idx.end(); ++itr )
       {
-         if( itr->sell_price.base.symbol == STEEM_SYMBOL )
+         if( itr->sell_price.base.symbol == SCORUM_SYMBOL )
          {
-            total_supply += asset( itr->for_sale, STEEM_SYMBOL );
+            total_supply += asset( itr->for_sale, SCORUM_SYMBOL );
          }
          else if ( itr->sell_price.base.symbol == SBD_SYMBOL )
          {
@@ -3843,27 +3500,27 @@ void database::validate_invariants()const
 
       for( auto itr = escrow_idx.begin(); itr != escrow_idx.end(); ++itr )
       {
-         total_supply += itr->steem_balance;
+         total_supply += itr->scorum_balance;
          total_sbd += itr->sbd_balance;
 
-         if( itr->pending_fee.symbol == STEEM_SYMBOL )
+         if( itr->pending_fee.symbol == SCORUM_SYMBOL )
             total_supply += itr->pending_fee;
          else if( itr->pending_fee.symbol == SBD_SYMBOL )
             total_sbd += itr->pending_fee;
          else
-            FC_ASSERT( false, "found escrow pending fee that is not SBD or STEEM" );
+            FC_ASSERT( false, "found escrow pending fee that is not SBD or SCORUM" );
       }
 
       const auto& savings_withdraw_idx = get_index< savings_withdraw_index >().indices().get< by_id >();
 
       for( auto itr = savings_withdraw_idx.begin(); itr != savings_withdraw_idx.end(); ++itr )
       {
-         if( itr->amount.symbol == STEEM_SYMBOL )
+         if( itr->amount.symbol == SCORUM_SYMBOL )
             total_supply += itr->amount;
          else if( itr->amount.symbol == SBD_SYMBOL )
             total_sbd += itr->amount;
          else
-            FC_ASSERT( false, "found savings withdraw that is not SBD or STEEM" );
+            FC_ASSERT( false, "found savings withdraw that is not SBD or SCORUM" );
       }
       fc::uint128_t total_rshares2;
 
@@ -3885,13 +3542,13 @@ void database::validate_invariants()const
          total_supply += itr->reward_balance;
       }
 
-      total_supply += gpo.total_vesting_fund_steem + gpo.total_reward_fund_steem + gpo.pending_rewarded_vesting_steem;
+      total_supply += gpo.total_vesting_fund_scorum + gpo.total_reward_fund_scorum + gpo.pending_rewarded_vesting_scorum;
 
       FC_ASSERT( gpo.current_supply == total_supply, "", ("gpo.current_supply",gpo.current_supply)("total_supply",total_supply) );
       FC_ASSERT( gpo.current_sbd_supply == total_sbd, "", ("gpo.current_sbd_supply",gpo.current_sbd_supply)("total_sbd",total_sbd) );
       FC_ASSERT( gpo.total_vesting_shares + gpo.pending_rewarded_vesting_shares == total_vesting, "", ("gpo.total_vesting_shares",gpo.total_vesting_shares)("total_vesting",total_vesting) );
       FC_ASSERT( gpo.total_vesting_shares.amount == total_vsf_votes, "", ("total_vesting_shares",gpo.total_vesting_shares)("total_vsf_votes",total_vsf_votes) );
-      FC_ASSERT( gpo.pending_rewarded_vesting_steem == pending_vesting_steem, "", ("pending_rewarded_vesting_steem",gpo.pending_rewarded_vesting_steem)("pending_vesting_steem", pending_vesting_steem));
+      FC_ASSERT( gpo.pending_rewarded_vesting_scorum == pending_vesting_scorum, "", ("pending_rewarded_vesting_scorum",gpo.pending_rewarded_vesting_scorum)("pending_vesting_scorum", pending_vesting_scorum));
 
       FC_ASSERT( gpo.virtual_supply >= gpo.current_supply );
       if ( !get_feed_history().current_median_history.is_null() )
@@ -3921,11 +3578,11 @@ void database::perform_vesting_share_split( uint32_t magnitude )
             a.vesting_shares.amount *= magnitude;
             a.withdrawn             *= magnitude;
             a.to_withdraw           *= magnitude;
-            a.vesting_withdraw_rate  = asset( a.to_withdraw / STEEMIT_VESTING_WITHDRAW_INTERVALS_PRE_HF_16, VESTS_SYMBOL );
+            a.vesting_withdraw_rate  = asset( a.to_withdraw / SCORUM_VESTING_WITHDRAW_INTERVALS_PRE_HF_16, VESTS_SYMBOL );
             if( a.vesting_withdraw_rate.amount == 0 )
                a.vesting_withdraw_rate.amount = 1;
 
-            for( uint32_t i = 0; i < STEEMIT_MAX_PROXY_RECURSION_DEPTH; ++i )
+            for( uint32_t i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i )
                a.proxied_vsf_votes[i] *= magnitude;
          } );
       }
@@ -3966,7 +3623,7 @@ void database::retally_comment_children()
 
    for( auto itr = cidx.begin(); itr != cidx.end(); ++itr )
    {
-      if( itr->parent_author != STEEMIT_ROOT_POST_PARENT )
+      if( itr->parent_author != SCORUM_ROOT_POST_PARENT )
       {
 // Low memory nodes only need immediate child count, full nodes track total children
 #ifdef IS_LOW_MEM
@@ -3983,7 +3640,7 @@ void database::retally_comment_children()
                c.children++;
             });
 
-            if( parent->parent_author != STEEMIT_ROOT_POST_PARENT )
+            if( parent->parent_author != SCORUM_ROOT_POST_PARENT )
                parent = &get_comment( parent->parent_author, parent->parent_permlink );
             else
                parent = nullptr;
@@ -4012,7 +3669,7 @@ void database::retally_witness_votes()
    // Apply all existing votes by account
    for( auto itr = account_idx.begin(); itr != account_idx.end(); ++itr )
    {
-      if( itr->proxy != STEEMIT_PROXY_TO_SELF_ACCOUNT ) continue;
+      if( itr->proxy != SCORUM_PROXY_TO_SELF_ACCOUNT ) continue;
 
       const auto& a = *itr;
 
@@ -4035,7 +3692,7 @@ void database::retally_witness_vote_counts( bool force )
    {
       const auto& a = *itr;
       uint16_t witnesses_voted_for = 0;
-      if( force || (a.proxy != STEEMIT_PROXY_TO_SELF_ACCOUNT  ) )
+      if( force || (a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT  ) )
       {
         const auto& vidx = get_index< witness_vote_index >().indices().get< by_account_witness >();
         auto wit_itr = vidx.lower_bound( boost::make_tuple( a.id, witness_id_type() ) );
@@ -4055,4 +3712,4 @@ void database::retally_witness_vote_counts( bool force )
    }
 }
 
-} } //steemit::chain
+} } //scorum::chain

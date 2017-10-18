@@ -1,14 +1,14 @@
-#include <steemit/market_history/market_history_api.hpp>
+#include <scorum/market_history/market_history_api.hpp>
 
-#include <steemit/chain/database.hpp>
-#include <steemit/chain/index.hpp>
-#include <steemit/chain/operation_notification.hpp>
+#include <scorum/chain/database.hpp>
+#include <scorum/chain/index.hpp>
+#include <scorum/chain/operation_notification.hpp>
 
-namespace steemit { namespace market_history {
+namespace scorum { namespace market_history {
 
 namespace detail {
 
-using steemit::protocol::fill_order_operation;
+using scorum::protocol::fill_order_operation;
 
 class market_history_plugin_impl
 {
@@ -61,30 +61,30 @@ void market_history_plugin_impl::update_market_histories( const operation_notifi
                b.open = open;
                b.seconds = bucket;
 
-               if( op.open_pays.symbol == STEEM_SYMBOL )
+               if( op.open_pays.symbol == SCORUM_SYMBOL )
                {
-                  b.high_steem = op.open_pays.amount;
+                  b.high_scorum = op.open_pays.amount;
                   b.high_sbd = op.current_pays.amount;
-                  b.low_steem = op.open_pays.amount;
+                  b.low_scorum = op.open_pays.amount;
                   b.low_sbd = op.current_pays.amount;
-                  b.open_steem = op.open_pays.amount;
+                  b.open_scorum = op.open_pays.amount;
                   b.open_sbd = op.current_pays.amount;
-                  b.close_steem = op.open_pays.amount;
+                  b.close_scorum = op.open_pays.amount;
                   b.close_sbd = op.current_pays.amount;
-                  b.steem_volume = op.open_pays.amount;
+                  b.scorum_volume = op.open_pays.amount;
                   b.sbd_volume = op.current_pays.amount;
                }
                else
                {
-                  b.high_steem = op.current_pays.amount;
+                  b.high_scorum = op.current_pays.amount;
                   b.high_sbd = op.open_pays.amount;
-                  b.low_steem = op.current_pays.amount;
+                  b.low_scorum = op.current_pays.amount;
                   b.low_sbd = op.open_pays.amount;
-                  b.open_steem = op.current_pays.amount;
+                  b.open_scorum = op.current_pays.amount;
                   b.open_sbd = op.open_pays.amount;
-                  b.close_steem = op.current_pays.amount;
+                  b.close_scorum = op.current_pays.amount;
                   b.close_sbd = op.open_pays.amount;
-                  b.steem_volume = op.current_pays.amount;
+                  b.scorum_volume = op.current_pays.amount;
                   b.sbd_volume = op.open_pays.amount;
                }
             });
@@ -93,41 +93,41 @@ void market_history_plugin_impl::update_market_histories( const operation_notifi
          {
             db.modify( *itr, [&]( bucket_object& b )
             {
-               if( op.open_pays.symbol == STEEM_SYMBOL )
+               if( op.open_pays.symbol == SCORUM_SYMBOL )
                {
-                  b.steem_volume += op.open_pays.amount;
+                  b.scorum_volume += op.open_pays.amount;
                   b.sbd_volume += op.current_pays.amount;
-                  b.close_steem = op.open_pays.amount;
+                  b.close_scorum = op.open_pays.amount;
                   b.close_sbd = op.current_pays.amount;
 
                   if( b.high() < price( op.current_pays, op.open_pays ) )
                   {
-                     b.high_steem = op.open_pays.amount;
+                     b.high_scorum = op.open_pays.amount;
                      b.high_sbd = op.current_pays.amount;
                   }
 
                   if( b.low() > price( op.current_pays, op.open_pays ) )
                   {
-                     b.low_steem = op.open_pays.amount;
+                     b.low_scorum = op.open_pays.amount;
                      b.low_sbd = op.current_pays.amount;
                   }
                }
                else
                {
-                  b.steem_volume += op.current_pays.amount;
+                  b.scorum_volume += op.current_pays.amount;
                   b.sbd_volume += op.open_pays.amount;
-                  b.close_steem = op.current_pays.amount;
+                  b.close_scorum = op.current_pays.amount;
                   b.close_sbd = op.open_pays.amount;
 
                   if( b.high() < price( op.open_pays, op.current_pays ) )
                   {
-                     b.high_steem = op.current_pays.amount;
+                     b.high_scorum = op.current_pays.amount;
                      b.high_sbd = op.open_pays.amount;
                   }
 
                   if( b.low() > price( op.open_pays, op.current_pays ) )
                   {
-                     b.low_steem = op.current_pays.amount;
+                     b.low_scorum = op.current_pays.amount;
                      b.low_sbd = op.open_pays.amount;
                   }
                }
@@ -215,6 +215,6 @@ uint32_t market_history_plugin::get_max_history_per_bucket() const
    return _my->_maximum_history_per_bucket_size;
 }
 
-} } // steemit::market_history
+} } // scorum::market_history
 
-STEEMIT_DEFINE_PLUGIN( market_history, steemit::market_history::market_history_plugin )
+SCORUM_DEFINE_PLUGIN( market_history, scorum::market_history::market_history_plugin )
