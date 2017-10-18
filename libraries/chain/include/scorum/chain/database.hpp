@@ -9,6 +9,8 @@
 #include <scorum/chain/block_log.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
+#include <scorum/chain/genesis/genesis_state.hpp>
+
 #include <scorum/protocol/protocol.hpp>
 
 //#include <graphene/db2/database.hpp>
@@ -445,6 +447,12 @@ namespace scorum { namespace chain {
          void init_hardforks();
          void process_hardforks();
          void apply_hardfork( uint32_t hardfork );
+
+         genesis_state load_genesis_state();
+         void validate_genesis_file(string& genesis_file_path);
+         void init_genesis_accounts(vector<genesis_account> genesis_accounts);
+         void init_genesis_witnesses(vector<genesis_witness> witnesses);
+         void init_genesis_global_objects(uint64_t init_supply);
 
          ///@}
 

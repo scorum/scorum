@@ -34,6 +34,11 @@
 #include <fstream>
 #include <functional>
 
+#include <fc/io/json.hpp>
+#include <openssl/md5.h>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
+
 namespace scorum { namespace chain {
 
 //namespace db2 = graphene::db2;
@@ -2245,7 +2250,70 @@ void database::init_genesis( uint64_t init_supply )
          auth.active.weight_threshold = 0;
       });
 
-      create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p )
+      // Create witness scheduler
+      create< witness_schedule_object >( [&]( witness_schedule_object& wso )
+      {
+         wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME;
+         wso.max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES_HF17;
+         wso.max_miner_witnesses = SCORUM_MAX_MINER_WITNESSES_HF17;
+         wso.max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES_HF17;
+      } );
+
+      auto genesis_state = load_genesis_state();
+      init_genesis_accounts(genesis_state.accounts);
+      init_genesis_global_objects(init_supply);
+   }
+   FC_CAPTURE_AND_RETHROW()
+}
+
+genesis_state database::load_genesis_state(){
+      auto genesis_file_path = string("./genesis.json");
+      auto genesis_file = fc::path(genesis_file_path);
+      FC_ASSERT( fc::exists( genesis_file ), "Genesis file '${file}' was not found.", ("file", genesis_file) );
+      validate_genesis_file(genesis_file_path);
+      return fc::json::from_file(genesis_file).as<genesis_state>();
+}
+
+void database::validate_genesis_file(string& genesis_file_path){
+      unsigned char digest[MD5_DIGEST_LENGTH];
+      char genesis_file_checksum [] = "0000000000000000000000000";
+      char md5hash[33];
+      boost::iostreams::mapped_file_source src(genesis_file_path);
+      MD5((unsigned char*) src.data(), src.size(), (unsigned char*) &digest);
+      for(int i = 0; i < 16; i++) {
+         sprintf(&md5hash[i*2], "%02x", (unsigned int)digest[i]);
+      }
+      FC_ASSERT( memcmp(md5hash, genesis_file_checksum, 32) == 0 , "Checksum of genesis file [${h}] is not equal [${s}]", ("h", md5hash)("s", genesis_file_checksum) );
+}
+
+void database::init_genesis_accounts(vector<genesis_account> genesis_accounts) {
+      for (genesis_account& account : genesis_accounts) {
+         create< account_object >( [&]( account_object& a )
+         {
+            a.name = account.name;
+            a.memo_key = account.public_key;
+            a.balance = asset( account.scr_amount, SCORUM_SYMBOL );
+            a.json_metadata = "{created_at: 'GENESIS'}";
+            a.recovery_account = SCORUM_INIT_DELEGATE_NAME;
+         });
+   
+         create< account_authority_object >( [&]( account_authority_object& auth )
+         {
+            auth.account = account.name;
+            auth.owner.add_authority( account.public_key, 1 );
+            auth.owner.weight_threshold = 1;
+            auth.active = auth.owner;
+            auth.posting = auth.active;
+         });
+      }
+}
+
+void database::init_genesis_witnesses(vector<genesis_witness> witnesses){
+      return;
+}
+
+void database::init_genesis_global_objects(uint64_t init_supply){
+      auto gpo = create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p )
       {
          p.current_witness = SCORUM_INIT_DELEGATE_NAME;
          p.time = SCORUM_GENESIS_TIME;
@@ -2269,40 +2337,21 @@ void database::init_genesis( uint64_t init_supply )
          hpo.processed_hardforks.push_back( SCORUM_GENESIS_TIME );
       } );
 
-      // Create witness scheduler
-      create< witness_schedule_object >( [&]( witness_schedule_object& wso )
-      {
-         wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME;
-         wso.max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES_HF17;
-         wso.max_miner_witnesses = SCORUM_MAX_MINER_WITNESSES_HF17;
-         wso.max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES_HF17;
-      } );
-
-      const auto& gpo = get_dynamic_global_properties();
-
       auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo )
       {
-         rfo.name = SCORUM_POST_REWARD_FUND_NAME;
-         rfo.last_update = head_block_time();
-         rfo.content_constant = SCORUM_CONTENT_CONSTANT_HF0;
-         rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
-         rfo.percent_content_rewards = SCORUM_100_PERCENT;
-         rfo.reward_balance = gpo.total_reward_fund_scorum;
-//#ifndef IS_TEST_NET
-//         rfo.recent_claims = SCORUM_HF_19_RECENT_CLAIMS;
-//#endif
-         rfo.author_reward_curve = curve_id::linear;
-         rfo.curation_reward_curve = curve_id::square_root;
-
+            rfo.name = SCORUM_POST_REWARD_FUND_NAME;
+            rfo.last_update = head_block_time();
+            rfo.content_constant = SCORUM_CONTENT_CONSTANT_HF0;
+            rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
+            rfo.percent_content_rewards = SCORUM_100_PERCENT;
+            rfo.reward_balance = gpo.total_reward_fund_scorum;
+            rfo.author_reward_curve = curve_id::linear;
+            rfo.curation_reward_curve = curve_id::square_root;
       });
-
       // As a shortcut in payout processing, we use the id as an array index.
       // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
       FC_ASSERT( post_rf.id._id == 0 );
-   }
-   FC_CAPTURE_AND_RETHROW()
 }
-
 
 void database::validate_transaction( const signed_transaction& trx )
 {
