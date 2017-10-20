@@ -1156,13 +1156,10 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
          if( curation_reward_eligible )
          {
-            //SCORUM: this two_s is not used
-            const uint128_t two_s = 2 * util::get_content_constant_s();
-               
             const auto& reward_fund = _db.get_reward_fund( comment );
             auto curve = reward_fund.curation_reward_curve;
-            uint64_t old_weight = util::evaluate_reward_curve( old_vote_rshares.value, curve, reward_fund.content_constant ).to_uint64();
-            uint64_t new_weight = util::evaluate_reward_curve( comment.vote_rshares.value, curve, reward_fund.content_constant ).to_uint64();
+            uint64_t old_weight = util::evaluate_reward_curve( old_vote_rshares.value, curve).to_uint64();
+            uint64_t new_weight = util::evaluate_reward_curve( comment.vote_rshares.value, curve).to_uint64();
             cv.weight = new_weight - old_weight;
 
             max_vote_weight = cv.weight;
