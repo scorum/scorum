@@ -101,24 +101,23 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
    const witness_schedule_object& wso = _db.get_witness_schedule_object();
    FC_ASSERT( o.fee >= asset( wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ), "Insufficient Fee: ${f} required, ${p} provided.",
-                 ("f", wso.median_props.account_creation_fee * asset( SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ) )
-                 ("p", o.fee) );
+              ("f", wso.median_props.account_creation_fee * asset( SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ) )
+              ("p", o.fee) );
 
-      for( auto& a : o.owner.account_auths )
-      {
-         _db.get_account( a.first );
-      }
+   for( auto& a : o.owner.account_auths )
+   {
+      _db.get_account( a.first );
+   }
 
-      for( auto& a : o.active.account_auths )
-      {
-         _db.get_account( a.first );
-      }
+   for( auto& a : o.active.account_auths )
+   {
+      _db.get_account( a.first );
+   }
 
-      for( auto& a : o.posting.account_auths )
-      {
-         _db.get_account( a.first );
-      }
-   
+   for( auto& a : o.posting.account_auths )
+   {
+      _db.get_account( a.first );
+   }
 
    _db.modify( creator, [&]( account_object& c ){
       c.balance -= o.fee;
@@ -133,7 +132,6 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
       acc.mined = false;
 
       acc.recovery_account = o.creator;
-
 
       #ifndef IS_LOW_MEM
          from_string( acc.json_metadata, o.json_metadata );

@@ -2,25 +2,24 @@
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  */
 #pragma once
+
 #include <scorum/chain/global_property_object.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/node_property_object.hpp>
 #include <scorum/chain/fork_database.hpp>
 #include <scorum/chain/block_log.hpp>
 #include <scorum/chain/operation_notification.hpp>
-
-#include <scorum/chain/genesis/genesis_state.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/protocol/protocol.hpp>
 
-//#include <graphene/db2/database.hpp>
 #include <fc/signals.hpp>
-
 #include <fc/log/logger.hpp>
 
 #include <map>
 
-namespace scorum { namespace chain {
+namespace scorum {
+namespace chain {
 
    using scorum::protocol::signed_transaction;
    using scorum::protocol::operation;
@@ -32,9 +31,7 @@ namespace scorum { namespace chain {
    class database_impl;
    class custom_operation_interpreter;
 
-   namespace util {
-      struct comment_reward_context;
-   }
+   namespace util { struct comment_reward_context; }
 
    /**
     *   @class database
@@ -79,7 +76,7 @@ namespace scorum { namespace chain {
           *
           * @param data_dir Path to open or create database in
           */
-         void open( const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t initial_supply = SCORUM_INIT_SUPPLY, uint64_t shared_file_size = 0, uint32_t chainbase_flags = 0 );
+         void open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -366,7 +363,8 @@ namespace scorum { namespace chain {
          /// Reset the object graph in-memory
          void initialize_indexes();
          void init_schema();
-         void init_genesis(uint64_t initial_supply = SCORUM_INIT_SUPPLY );
+         void init_genesis();
+         void set_init_genesis_state(const genesis_state_type& genesis_state);
 
          /**
           *  This method validates transactions without adding it to the pending state.
@@ -448,11 +446,9 @@ namespace scorum { namespace chain {
          void process_hardforks();
          void apply_hardfork( uint32_t hardfork );
 
-         genesis_state load_genesis_state();
-         void validate_genesis_file(string& genesis_file_path);
-         void init_genesis_accounts(vector<genesis_account> genesis_accounts);
-         void init_genesis_witnesses(vector<genesis_witness> witnesses);
-         void init_genesis_global_objects(uint64_t init_supply);
+         void init_genesis_accounts(const vector<genesis_state_type::account_type>& accounts);
+         void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
+         void init_genesis_global_property_object(uint64_t init_supply);
 
          ///@}
 
@@ -487,7 +483,8 @@ namespace scorum { namespace chain {
          uint32_t                      _last_free_gb_printed = 0;
 
          flat_map< std::string, std::shared_ptr< custom_operation_interpreter > >   _custom_operation_interpreters;
-         std::string                       _json_schema;
+         std::string                   _json_schema;
+         genesis_state_type            _genesis_state;
    };
 
 } }

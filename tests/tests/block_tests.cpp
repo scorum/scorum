@@ -29,6 +29,7 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/history_object.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/account_history/account_history_plugin.hpp>
 
@@ -59,7 +60,7 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
       {
          database db;
          db._log_hardforks = false;
-         db.open(data_dir.path(), data_dir.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+         db.open(data_dir.path(), data_dir.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
          b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
 
          // TODO:  Change this test when we correct #406
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
       {
          database db;
          db._log_hardforks = false;
-         db.open(data_dir.path(), data_dir.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+         db.open(data_dir.path(), data_dir.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
          BOOST_CHECK_EQUAL( db.head_block_num(), cutoff_block.block_num() );
          b = cutoff_block;
          for( uint32_t i = 0; i < 200; ++i )
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE( undo_block )
       {
          database db;
          db._log_hardforks = false;
-         db.open(data_dir.path(), data_dir.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+         db.open(data_dir.path(), data_dir.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
          fc::time_point_sec now( SCORUM_TESTING_GENESIS_TIMESTAMP );
          std::vector< time_point_sec > time_stack;
 
@@ -164,10 +165,10 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
 
       database db1;
       db1._log_hardforks = false;
-      db1.open( data_dir1.path(), data_dir1.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db1.open( data_dir1.path(), data_dir1.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
       database db2;
       db2._log_hardforks = false;
-      db2.open( data_dir2.path(), data_dir2.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db2.open( data_dir2.path(), data_dir2.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
 
       auto init_account_priv_key  = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")) );
       for( uint32_t i = 0; i < 10; ++i )
@@ -226,12 +227,13 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
    try {
       fc::temp_directory dir1( graphene::utilities::temp_directory_path() ),
                          dir2( graphene::utilities::temp_directory_path() );
-      database db1,
-               db2;
+      database db1;
+      database db2;
+
       db1._log_hardforks = false;
-      db1.open( dir1.path(), dir1.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db1.open( dir1.path(), dir1.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
       db2._log_hardforks = false;
-      db2.open( dir2.path(), dir2.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db2.open( dir2.path(), dir2.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
 
       auto init_account_priv_key  = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")) );
       public_key_type init_account_pub_key  = init_account_priv_key.get_public_key();
@@ -285,12 +287,12 @@ BOOST_AUTO_TEST_CASE( duplicate_transactions )
    try {
       fc::temp_directory dir1( graphene::utilities::temp_directory_path() ),
                          dir2( graphene::utilities::temp_directory_path() );
-      database db1,
-               db2;
+      database db1;
+      database db2;
       db1._log_hardforks = false;
-      db1.open(dir1.path(), dir1.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db1.open(dir1.path(), dir1.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
       db2._log_hardforks = false;
-      db2.open(dir2.path(), dir2.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db2.open(dir2.path(), dir2.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
       BOOST_CHECK( db1.get_chain_id() == db2.get_chain_id() );
 
       auto skip_sigs = database::skip_transaction_signatures | database::skip_authority_check;
@@ -340,7 +342,7 @@ BOOST_AUTO_TEST_CASE( tapos )
       fc::temp_directory dir1( graphene::utilities::temp_directory_path() );
       database db1;
       db1._log_hardforks = false;
-      db1.open(dir1.path(), dir1.path(), INITIAL_TEST_SUPPLY, TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
+      db1.open(dir1.path(), dir1.path(), TEST_SHARED_MEM_SIZE, chainbase::database::read_write );
 
       auto init_account_priv_key  = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")) );
       public_key_type init_account_pub_key  = init_account_priv_key.get_public_key();

@@ -29,6 +29,7 @@
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/scorum_object_types.hpp>
 #include <scorum/chain/database_exceptions.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <fc/time.hpp>
 
@@ -58,7 +59,9 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
-namespace scorum { namespace app {
+namespace scorum {
+namespace app {
+
 using graphene::net::item_hash_t;
 using graphene::net::item_id;
 using graphene::net::message;
@@ -79,7 +82,7 @@ api_context::api_context( application& _app, const std::string& _api_name, std::
 
 namespace detail {
 
-   class application_impl : public graphene::net::node_delegate
+   class application_impl: public graphene::net::node_delegate
    {
    public:
       fc::optional<fc::temp_file> _lock_file;
@@ -251,145 +254,162 @@ namespace detail {
       }
 
       void startup()
-      { try {
-         _shared_file_size = fc::parse_size( _options->at( "shared-file-size" ).as< string >() );
-         ilog( "shared_file_size is ${n} bytes", ("n", _shared_file_size) );
-         bool read_only = _options->count( "read-only" );
-         register_builtin_apis();
-
-         if( _options->count("check-locks") )
-            _chain_db->set_require_locking( true );
-
-         if( _options->count("shared-file-dir") )
-            _shared_dir = fc::path( _options->at("shared-file-dir").as<string>() );
-         else
-            _shared_dir = _data_dir / "blockchain";
-
-         if( _options->count( "disable_get_block" ) )
-            _self->_disable_get_block = true;
-
-         if( !read_only )
+      {
+         try
          {
-            _self->_read_only = false;
-            ilog( "Starting Scorum node in write mode." );
-            _max_block_age =_options->at("max-block-age").as<int32_t>();
+            _shared_file_size = fc::parse_size( _options->at( "shared-file-size" ).as<std::string>() );
+            ilog( "shared_file_size is ${n} bytes", ("n", _shared_file_size) );
+            bool read_only = _options->count( "read-only" );
+            register_builtin_apis();
 
-            if( _options->count("resync-blockchain") )
-               _chain_db->wipe(_data_dir / "blockchain", _shared_dir, true);
+            if( _options->count("check-locks") )
+               _chain_db->set_require_locking( true );
 
-            _chain_db->set_flush_interval( _options->at("flush").as<uint32_t>() );
+            if( _options->count("shared-file-dir") )
+               _shared_dir = fc::path( _options->at("shared-file-dir").as<std::string>() );
+            else
+               _shared_dir = _data_dir / "blockchain";
 
-            flat_map<uint32_t,block_id_type> loaded_checkpoints;
-            if( _options->count("checkpoint") )
+            if( _options->count( "disable_get_block" ) )
+               _self->_disable_get_block = true;
+
+            genesis_state_type genesis_state;
+
+            if (_options->count("genesis-json"))
             {
-               auto cps = _options->at("checkpoint").as<vector<string>>();
-               loaded_checkpoints.reserve( cps.size() );
-               for( auto cp : cps )
-               {
-                  auto item = fc::json::from_string(cp).as<std::pair<uint32_t,block_id_type> >();
-                  loaded_checkpoints[item.first] = item.second;
-               }
+               fc::path genesis_json_filename = _options->at("genesis-json").as<boost::filesystem::path>();
+
+               std::string genesis_str;
+               fc::read_file_contents(genesis_json_filename, genesis_str );
+
+               genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
             }
-            _chain_db->add_checkpoints( loaded_checkpoints );
 
-            if( _options->count("replay-blockchain") )
+            if( !read_only )
             {
-               ilog("Replaying blockchain on user request.");
-               _chain_db->reindex( _data_dir / "blockchain", _shared_dir, _shared_file_size );
+               _self->_read_only = false;
+               ilog( "Starting Scorum node in write mode." );
+               _max_block_age =_options->at("max-block-age").as<int32_t>();
+
+               if( _options->count("resync-blockchain") )
+                  _chain_db->wipe(_data_dir / "blockchain", _shared_dir, true);
+
+               _chain_db->set_flush_interval( _options->at("flush").as<uint32_t>() );
+
+               flat_map<uint32_t,block_id_type> loaded_checkpoints;
+               if( _options->count("checkpoint") )
+               {
+                  auto cps = _options->at("checkpoint").as<vector<std::string>>();
+                  loaded_checkpoints.reserve( cps.size() );
+                  for( auto cp : cps )
+                  {
+                     auto item = fc::json::from_string(cp).as<std::pair<uint32_t,block_id_type> >();
+                     loaded_checkpoints[item.first] = item.second;
+                  }
+               }
+               _chain_db->add_checkpoints( loaded_checkpoints );
+
+               if( _options->count("replay-blockchain") )
+               {
+                  ilog("Replaying blockchain on user request.");
+                  _chain_db->reindex( _data_dir / "blockchain", _shared_dir, _shared_file_size );
+               }
+               else
+               {
+                  try
+                  {
+                     _chain_db->open(_data_dir / "blockchain",
+                                     _shared_dir,
+                                     _shared_file_size,
+                                     chainbase::database::read_write);
+                  }
+                  catch( fc::assert_exception& )
+                  {
+                     wlog( "Error when opening database. Attempting reindex..." );
+
+                     try
+                     {
+                        _chain_db->reindex( _data_dir / "blockchain", _shared_dir, _shared_file_size );
+                     }
+                     catch( chain::block_log_exception& )
+                     {
+                        wlog( "Error opening block log. Having to resync from network..." );
+                        _chain_db->open( _data_dir / "blockchain", _shared_dir, _shared_file_size, chainbase::database::read_write);
+                     }
+                  }
+               }
+
+               if( _options->count("force-validate") )
+               {
+                  ilog( "All transaction signatures will be validated" );
+                  _force_validate = true;
+               }
             }
             else
             {
-               try
-               {
-                  _chain_db->open(_data_dir / "blockchain", _shared_dir, SCORUM_INIT_SUPPLY, _shared_file_size, chainbase::database::read_write );\
-               }
-               catch( fc::assert_exception& )
-               {
-                  wlog( "Error when opening database. Attempting reindex..." );
+               ilog( "Starting Scorum node in read mode." );
+               _chain_db->open( _data_dir / "blockchain", _shared_dir, _shared_file_size, chainbase::database::read_only);
 
+               if( _options->count( "read-forward-rpc" ) )
+               {
                   try
                   {
-                     _chain_db->reindex( _data_dir / "blockchain", _shared_dir, _shared_file_size );
+                     _self->_remote_endpoint = _options->at( "read-forward-rpc" ).as<std::string>();
                   }
-                  catch( chain::block_log_exception& )
+                  catch( fc::exception& e )
                   {
-                     wlog( "Error opening block log. Having to resync from network..." );
-                     _chain_db->open( _data_dir / "blockchain", _shared_dir, SCORUM_INIT_SUPPLY, _shared_file_size, chainbase::database::read_write );
+                     wlog( "Error connecting to remote RPC, network api forwarding disabled.  ${e}", ("e", e.to_detail_string()) );
                   }
                }
             }
+            _chain_db->show_free_memory( true );
 
-            if( _options->count("force-validate") )
+            if( _options->count("api-user") )
             {
-               ilog( "All transaction signatures will be validated" );
-               _force_validate = true;
-            }
-         }
-         else
-         {
-            ilog( "Starting Scorum node in read mode." );
-            _chain_db->open( _data_dir / "blockchain", _shared_dir, SCORUM_INIT_SUPPLY, _shared_file_size, chainbase::database::read_only );
-
-            if( _options->count( "read-forward-rpc" ) )
-            {
-               try
+               for( const std::string& api_access_str : _options->at("api-user").as< std::vector<std::string> >() )
                {
-                  _self->_remote_endpoint = _options->at( "read-forward-rpc" ).as< string >();
-               }
-               catch( fc::exception& e )
-               {
-                  wlog( "Error connecting to remote RPC, network api forwarding disabled.  ${e}", ("e", e.to_detail_string()) );
+                  api_access_info info = fc::json::from_string( api_access_str ).as<api_access_info>();
+                  FC_ASSERT( info.username != "" );
+                  _apiaccess.permission_map[info.username] = info;
                }
             }
-         }
-         _chain_db->show_free_memory( true );
-
-         if( _options->count("api-user") )
-         {
-            for( const std::string& api_access_str : _options->at("api-user").as< std::vector<std::string> >() )
+            else
             {
-               api_access_info info = fc::json::from_string( api_access_str ).as<api_access_info>();
-               FC_ASSERT( info.username != "" );
-               _apiaccess.permission_map[info.username] = info;
+               // TODO:  Remove this generous default access policy
+               // when the UI logs in properly
+               _apiaccess = api_access();
+               api_access_info wild_access;
+               wild_access.username = "*";
+               wild_access.password_hash_b64 = "*";
+               wild_access.password_salt_b64 = "*";
+               wild_access.allowed_apis.push_back( "database_api" );
+               wild_access.allowed_apis.push_back( "network_broadcast_api" );
+               wild_access.allowed_apis.push_back( "tag_api" );
+               _apiaccess.permission_map["*"] = wild_access;
             }
-         }
-         else
-         {
-            // TODO:  Remove this generous default access policy
-            // when the UI logs in properly
-            _apiaccess = api_access();
-            api_access_info wild_access;
-            wild_access.username = "*";
-            wild_access.password_hash_b64 = "*";
-            wild_access.password_salt_b64 = "*";
-            wild_access.allowed_apis.push_back( "database_api" );
-            wild_access.allowed_apis.push_back( "network_broadcast_api" );
-            wild_access.allowed_apis.push_back( "tag_api" );
-            _apiaccess.permission_map["*"] = wild_access;
-         }
 
-         for( const std::string& arg : _options->at("public-api").as< std::vector< std::string > >() )
-         {
-            vector<string> names;
-            boost::split(names, arg, boost::is_any_of(" \t,"));
-            for( const std::string& name : names )
+            for( const std::string& arg : _options->at("public-api").as< std::vector< std::string > >() )
             {
-               ilog( "API ${name} enabled publicly", ("name", name) );
-               _public_apis.push_back( name );
+               vector<std::string> names;
+               boost::split(names, arg, boost::is_any_of(" \t,"));
+               for( const std::string& name : names )
+               {
+                  ilog( "API ${name} enabled publicly", ("name", name) );
+                  _public_apis.push_back( name );
+               }
             }
-         }
-         _running = true;
+            _running = true;
 
-         if( !read_only )
-         {
-            reset_p2p_node(_data_dir);
-         }
+            if( !read_only )
+            {
+               reset_p2p_node(_data_dir);
+            }
 
-         reset_websocket_server();
-         reset_websocket_tls_server();
-      } FC_LOG_AND_RETHROW() }
+            reset_websocket_server();
+            reset_websocket_tls_server();
+         } FC_LOG_AND_RETHROW() }
 
-      optional< api_access_info > get_api_access_info(const string& username)const
+      optional< api_access_info > get_api_access_info(const std::string& username)const
       {
          optional< api_access_info > result;
          auto it = _apiaccess.permission_map.find(username);
@@ -402,12 +422,12 @@ namespace detail {
          return it->second;
       }
 
-      void set_api_access_info(const string& username, api_access_info&& permissions)
+      void set_api_access_info(const std::string& username, api_access_info&& permissions)
       {
          _apiaccess.permission_map.insert(std::make_pair(username, std::move(permissions)));
       }
 
-      void register_api_factory( const string& name, std::function< fc::api_ptr( const api_context& ) > factory )
+      void register_api_factory( const std::string& name, std::function< fc::api_ptr( const api_context& ) > factory )
       {
          _api_factories_by_name[name] = factory;
       }
@@ -511,7 +531,7 @@ namespace detail {
             } catch ( const scorum::chain::unlinkable_block_exception& e ) {
                // translate to a graphene::net exception
                fc_elog(fc::logger::get("sync"),
-                     "Error when pushing block, current head block is ${head}:\n${e}",
+                     "Error when pushing block, current head block is ${head3}:\n${e}",
                      ("e", e.to_detail_string())
                      ("head", head_block_num));
                elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
@@ -984,6 +1004,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("enable-plugin", bpo::value< vector<string> >()->composing()->default_value(default_plugins, str_default_plugins), "Plugin(s) to enable, may be specified multiple times")
          ("max-block-age", bpo::value< int32_t >()->default_value(200), "Maximum age of head block when broadcasting tx via API")
          ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
+         ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()

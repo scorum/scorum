@@ -39,6 +39,19 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
+BOOST_AUTO_TEST_CASE(deserialize_genesis_state)
+{
+   std::string genesis_str = "{\"accounts\":[{"
+                             "\"name\":\"sasha\","
+                             "\"public_key\":\"TST1111111111111111111111111111111114T1Anm\","
+                             "\"scr_amount\":100,"
+                             "\"sp_amount\":100}]}";
+
+   genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
+
+   BOOST_CHECK(genesis_state.accounts.size() == 1);
+}
+
 BOOST_FIXTURE_TEST_SUITE( serialization_tests, clean_database_fixture )
 
    /*

@@ -73,7 +73,6 @@ fc::variant_object get_config()
    // we need this line present but inactivated so CI check for all constants in config.hpp doesn't complain.
    result["SCORUM_INIT_PRIVATE_KEY"] = SCORUM_INIT_PRIVATE_KEY;
 #endif
-   result["SCORUM_INIT_SUPPLY"] = SCORUM_INIT_SUPPLY;
    result["SCORUM_INIT_TIME"] = SCORUM_INIT_TIME;
    result["SCORUM_IRREVERSIBLE_THRESHOLD"] = SCORUM_IRREVERSIBLE_THRESHOLD;
    result["SCORUM_LIQUIDITY_APR_PERCENT"] = SCORUM_LIQUIDITY_APR_PERCENT;

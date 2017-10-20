@@ -47,7 +47,7 @@
 #define STMD_SYMBOL   (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('T') << 16) | (uint64_t('M') << 24) | (uint64_t('D') << 32) ) ///< SCORUM Dollars with 3 digits of precision
 #define SCORUM_ADDRESS_PREFIX                  "STM"
 
-#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508167500))
+#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508331600))
 #define SCORUM_MINING_TIME                     (fc::time_point_sec(1458838800))
 #define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF12 (60*60*24)    /// 1 day
 #define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF17 (60*60*12)    /// 12 hours
@@ -213,7 +213,6 @@
 #define SCORUM_MAX_PERMLINK_LENGTH             256
 #define SCORUM_MAX_WITNESS_URL_LENGTH          2048
 
-#define SCORUM_INIT_SUPPLY                     int64_t(0)
 #define SCORUM_MAX_SHARE_SUPPLY                int64_t(1000000000000000ll)
 #define SCORUM_MAX_SIG_CHECK_DEPTH             2
 
