@@ -34,6 +34,12 @@ struct genesis_state_type
 
    }
 
+   genesis_state_type(uint64_t supply)
+      : init_supply(supply)
+   {
+
+   }
+
    uint64_t                     init_supply;
    std::vector<account_type>    accounts;
    std::vector<witness_type>    witness_candidates;
