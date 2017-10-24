@@ -318,6 +318,7 @@ namespace detail {
                {
                   try
                   {
+                     _chain_db->set_init_genesis_state(genesis_state);
                      _chain_db->open(_data_dir / "blockchain",
                                      _shared_dir,
                                      _shared_file_size,
