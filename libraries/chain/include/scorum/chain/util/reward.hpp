@@ -28,11 +28,17 @@ struct comment_reward_context
    asset      total_reward_fund_scorum;
    price      current_scorum_price;
    curve_id   reward_curve = quadratic;
+   uint128_t  content_constant = SCORUM_CONTENT_CONSTANT_HF0;
 };
 
 uint64_t get_rshare_reward( const comment_reward_context& ctx );
 
-uint128_t evaluate_reward_curve( const uint128_t& rshares, const curve_id& curve = quadratic);
+inline uint128_t get_content_constant_s()
+{
+   return SCORUM_CONTENT_CONSTANT_HF0; // looking good for posters
+}
+
+uint128_t evaluate_reward_curve( const uint128_t& rshares, const curve_id& curve = quadratic, const uint128_t& content_constant = SCORUM_CONTENT_CONSTANT_HF0 );
 
 inline bool is_comment_payout_dust( const price& p, uint64_t scorum_payout )
 {
@@ -49,4 +55,5 @@ FC_REFLECT( scorum::chain::util::comment_reward_context,
    (total_reward_fund_scorum)
    (current_scorum_price)
    (reward_curve)
+   (content_constant)
    )

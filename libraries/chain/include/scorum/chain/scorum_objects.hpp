@@ -252,9 +252,9 @@ namespace scorum { namespace chain {
    enum curve_id
    {
       quadratic,
+      quadratic_curation,
       linear,
-      square_root,
-      power1dot5
+      square_root
    };
 
    class reward_fund_object : public object< reward_fund_object_type, reward_fund_object >
@@ -273,6 +273,7 @@ namespace scorum { namespace chain {
          asset                   reward_balance = asset( 0, SCORUM_SYMBOL );
          fc::uint128_t           recent_claims = 0;
          time_point_sec          last_update;
+         uint128_t               content_constant = 0;
          uint16_t                percent_curation_rewards = 0;
          uint16_t                percent_content_rewards = 0;
          curve_id                author_reward_curve;
@@ -489,7 +490,7 @@ namespace scorum { namespace chain {
 #include <scorum/chain/account_object.hpp>
 
 FC_REFLECT_ENUM( scorum::chain::curve_id,
-                  (quadratic)(linear)(square_root)(power1dot5))
+                  (quadratic)(quadratic_curation)(linear)(square_root))
 
 FC_REFLECT( scorum::chain::limit_order_object,
              (id)(created)(expiration)(seller)(orderid)(for_sale)(sell_price) )
@@ -532,6 +533,7 @@ FC_REFLECT( scorum::chain::reward_fund_object,
             (reward_balance)
             (recent_claims)
             (last_update)
+            (content_constant)
             (percent_curation_rewards)
             (percent_content_rewards)
             (author_reward_curve)

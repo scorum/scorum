@@ -47,7 +47,7 @@ uint64_t get_rshare_reward( const comment_reward_context& ctx )
 
    //idump( (ctx) );
 
-   u256 claim = to256( evaluate_reward_curve( ctx.rshares.value, ctx.reward_curve ) );
+   u256 claim = to256( evaluate_reward_curve( ctx.rshares.value, ctx.reward_curve, ctx.content_constant ) );
    claim = ( claim * ctx.reward_weight ) / SCORUM_100_PERCENT;
 
    u256 payout_u256 = ( rf * claim ) / total_claims;
@@ -65,23 +65,29 @@ uint64_t get_rshare_reward( const comment_reward_context& ctx )
    } FC_CAPTURE_AND_RETHROW( (ctx) )
 }
 
-uint128_t evaluate_reward_curve( const uint128_t& rshares, const curve_id& curve )
+uint128_t evaluate_reward_curve( const uint128_t& rshares, const curve_id& curve, const uint128_t& content_constant )
 {
    uint128_t result = 0;
 
    switch( curve )
    {
       case quadratic:
-         result = rshares*rshares;
+         {
+            uint128_t rshares_plus_s = rshares + content_constant;
+            result = rshares_plus_s * rshares_plus_s - content_constant * content_constant;
+         }
+         break;
+      case quadratic_curation:
+         {
+            uint128_t two_alpha = content_constant * 2;
+            result = uint128_t( rshares.lo, 0 ) / ( two_alpha + rshares );
+         }
          break;
       case linear:
          result = rshares;
          break;
       case square_root:
          result = approx_sqrt( rshares );
-         break;
-      case power1dot5:
-         result = approx_sqrt( rshares*rshares*rshares );
          break;
    }
 

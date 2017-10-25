@@ -156,31 +156,27 @@ void check_memo(const string& memo, const account_object& account, const account
     {
         for (auto& key : keys)
             SCORUM_ASSERT(key_weight_pair.first != key, chain::plugin_exception,
-                "Detected private owner key in memo field. You should "
-                "change your owner keys.");
+                "Detected private owner key in memo field. You should change your owner keys.");
     }
 
     for (auto& key_weight_pair : auth.active.key_auths)
     {
         for (auto& key : keys)
             SCORUM_ASSERT(key_weight_pair.first != key, chain::plugin_exception,
-                "Detected private active key in memo field. You should "
-                "change your active keys.");
+                "Detected private active key in memo field. You should change your active keys.");
     }
 
     for (auto& key_weight_pair : auth.posting.key_auths)
     {
         for (auto& key : keys)
             SCORUM_ASSERT(key_weight_pair.first != key, chain::plugin_exception,
-                "Detected private posting key in memo field. You should "
-                "change your posting keys.");
+                "Detected private posting key in memo field. You should change your posting keys.");
     }
 
     const auto& memo_key = account.memo_key;
     for (auto& key : keys)
         SCORUM_ASSERT(memo_key != key, chain::plugin_exception,
-            "Detected private memo key in memo field. You should change "
-            "your memo key.");
+            "Detected private memo key in memo field. You should change your memo key.");
 }
 
 struct operation_visitor
@@ -314,15 +310,12 @@ void witness_plugin_impl::on_block(const signed_block& b)
             * About once per minute the average network use is consulted and used to
             * adjust the reserve ratio. Anything above 25% usage reduces the reserve
             * ratio proportional to the distance from 25%. If usage is at 50% then
-            * the reserve ratio will half. Likewise, if it is at 12% it will increase
-            * by 50%.
+            * the reserve ratio will half. Likewise, if it is at 12% it will increase by 50%.
             *
-            * If the reserve ratio is consistently low, then it is probably time to
-            * increase
+            * If the reserve ratio is consistently low, then it is probably time to increase
             * the capcacity of the network.
             *
-            * This algorithm is designed to react quickly to observations
-            * significantly
+            * This algorithm is designed to react quickly to observations significantly
             * different from past observed behavior and make small adjustments when
             * behavior is within expected norms.
             */
@@ -414,8 +407,7 @@ void witness_plugin_impl::update_account_bandwidth(
 
         if (_db.is_producing())
             SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
-                "Account: ${account} bandwidth limit exceeded. Please wait "
-                "to transact or power up SCORUM.",
+                "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
                 ("account", a.name)("account_vshares", account_vshares)(
                               "account_average_bandwidth", account_average_bandwidth)(
                               "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
@@ -455,8 +447,8 @@ void witness_plugin::plugin_set_program_options(boost::program_options::options_
         "Enable block production, even if the chain is stale.")("required-participation",
         bpo::bool_switch()->notifier(
             [this](int e) { _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT); }),
-        "Percent of witnesses (0-99) that must be participating in order to "
-        "produce blocks")("witness,w", bpo::value<vector<string> >()->composing()->multitoken(),
+        "Percent of witnesses (0-99) that must be participating in order to produce blocks")("witness,w",
+        bpo::value<vector<string> >()->composing()->multitoken(),
         ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())("private-key",
         bpo::value<vector<string> >()->composing()->multitoken(),
         "WIF PRIVATE KEY to be used by one or more witnesses or miners");
@@ -522,8 +514,7 @@ void witness_plugin::plugin_startup()
         }
         else
         {
-            elog("No witnesses configured! Please add witness names and private keys "
-                 "to configuration.");
+            elog("No witnesses configured! Please add witness names and private keys to configuration.");
         }
         ilog("witness plugin:  plugin_startup() end");
     }
@@ -543,8 +534,7 @@ void witness_plugin::schedule_production_loop()
 
     fc::time_point next_wakeup(fc_now + fc::microseconds(time_to_next_second));
 
-    // wdump(
-    // (now.time_since_epoch().count())(next_wakeup.time_since_epoch().count()) );
+    // wdump( (now.time_since_epoch().count())(next_wakeup.time_since_epoch().count()) );
     _block_production_task = fc::schedule([this] { block_production_loop(); }, next_wakeup, "Witness Block Production");
 }
 
@@ -570,8 +560,7 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
     }
     catch (const scorum::chain::unknown_hardfork_exception& e)
     {
-        // Hit a hardfork that the current node know nothing about, stop production
-        // and inform user
+        // Hit a hardfork that the current node know nothing about, stop production and inform user
         elog("${e}\nNode may be out of date...", ("e", e.to_detail_string()));
         throw;
     }
@@ -587,8 +576,8 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
         ilog("Generated block #${n} with timestamp ${t} at time ${c} by ${w}", (capture));
         break;
     case block_production_condition::not_synced:
-        // ilog("Not producing block because production is disabled until we receive
-        // a recent block (see: --enable-stale-production)");
+        // ilog("Not producing block because production is disabled until we receive a recent block (see:
+        // --enable-stale-production)");
         break;
     case block_production_condition::not_my_turn:
         // ilog("Not producing block because it isn't my turn");
@@ -597,23 +586,20 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
         // ilog("Not producing block because slot has not yet arrived");
         break;
     case block_production_condition::no_private_key:
-        ilog("Not producing block for ${scheduled_witness} because I don't have "
-             "the private key for ${scheduled_key}",
+        ilog("Not producing block for ${scheduled_witness} because I don't have the private key for ${scheduled_key}",
             (capture));
         break;
     case block_production_condition::low_participation:
-        elog("Not producing block because node appears to be on a minority fork "
-             "with only ${pct}% witness participation",
+        elog(
+            "Not producing block because node appears to be on a minority fork with only ${pct}% witness participation",
             (capture));
         break;
     case block_production_condition::lag:
-        elog("Not producing block because node didn't wake up within 500ms of the "
-             "slot time.");
+        elog("Not producing block because node didn't wake up within 500ms of the slot time.");
         break;
     case block_production_condition::consecutive:
-        elog("Not producing block because the last block was generated by the same "
-             "witness.\nThis node is probably disconnected from the network so "
-             "block production has been disabled.\nDisable this check with "
+        elog("Not producing block because the last block was generated by the same witness.\nThis node is probably "
+             "disconnected from the network so block production has been disabled.\nDisable this check with "
              "--allow-consecutive option.");
         break;
     case block_production_condition::exception_producing_block:
@@ -634,8 +620,7 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
     fc::time_point now_fine = fc::time_point::now();
     fc::time_point_sec now = now_fine + fc::microseconds(500000);
 
-    // If the next block production opportunity is in the present or future, we're
-    // synced.
+    // If the next block production opportunity is in the present or future, we're synced.
     if (!_production_enabled)
     {
         if (db.get_slot_time(1) >= now)

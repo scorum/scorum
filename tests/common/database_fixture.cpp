@@ -7,6 +7,7 @@
 #include <scorum/chain/history_object.hpp>
 #include <scorum/account_history/account_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -113,7 +114,7 @@ void clean_database_fixture::resize_shared_mem( uint64_t size )
    }
    init_account_pub_key = init_account_priv_key.get_public_key();
 
-   db.open( data_dir->path(), data_dir->path(), INITIAL_TEST_SUPPLY, size, chainbase::database::read_write );
+   db.open( data_dir->path(), data_dir->path(), size, chainbase::database::read_write );
 
    boost::program_options::variables_map options;
 
@@ -145,7 +146,7 @@ live_database_fixture::live_database_fixture()
       auto ahplugin = app.register_plugin< scorum::account_history::account_history_plugin >();
       ahplugin->plugin_initialize( boost::program_options::variables_map() );
 
-      db.open( _chain_dir, _chain_dir );
+      db.open(_chain_dir, _chain_dir, 0, 0);
 
       validate_database();
       generate_block();
@@ -193,7 +194,7 @@ void database_fixture::open_database()
    if( !data_dir ) {
       data_dir = fc::temp_directory( graphene::utilities::temp_directory_path() );
       db._log_hardforks = false;
-      db.open( data_dir->path(), data_dir->path(), INITIAL_TEST_SUPPLY, 1024 * 1024 * 8, chainbase::database::read_write ); // 8 MB file for testing
+      db.open( data_dir->path(), data_dir->path(), 1024 * 1024 * 8, chainbase::database::read_write ); // 8 MB file for testing
    }
 }
 
@@ -216,31 +217,30 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
 }
 
 const account_object& database_fixture::account_create(
-   const string& name,
-   const string& creator,
-   const private_key_type& creator_key,
-   const share_type& fee,
-   const public_key_type& key,
-   const public_key_type& post_key,
-   const string& json_metadata
-   )
+      const string& name,
+      const string& creator,
+      const private_key_type& creator_key,
+      const share_type& fee,
+      const public_key_type& key,
+      const public_key_type& post_key,
+      const string& json_metadata
+      )
 {
    try
    {
 
-         account_create_with_delegation_operation op;
-         op.new_account_name = name;
-         op.creator = creator;
-         op.fee = asset( fee, SCORUM_SYMBOL );
-         op.delegation = asset( 0, VESTS_SYMBOL );
-         op.owner = authority( 1, key, 1 );
-         op.active = authority( 1, key, 1 );
-         op.posting = authority( 1, post_key, 1 );
-         op.memo_key = key;
-         op.json_metadata = json_metadata;
+      account_create_with_delegation_operation op;
+      op.new_account_name = name;
+      op.creator = creator;
+      op.fee = asset( fee, SCORUM_SYMBOL );
+      op.delegation = asset( 0, VESTS_SYMBOL );
+      op.owner = authority( 1, key, 1 );
+      op.active = authority( 1, key, 1 );
+      op.posting = authority( 1, post_key, 1 );
+      op.memo_key = key;
+      op.json_metadata = json_metadata;
 
-         trx.operations.push_back( op );
-    
+      trx.operations.push_back( op );
 
       trx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
       trx.sign( creator_key, db.get_chain_id() );
@@ -257,39 +257,39 @@ const account_object& database_fixture::account_create(
 }
 
 const account_object& database_fixture::account_create(
-   const string& name,
-   const public_key_type& key,
-   const public_key_type& post_key
-)
+      const string& name,
+      const public_key_type& key,
+      const public_key_type& post_key
+      )
 {
    try
    {
       return account_create(
-         name,
-         SCORUM_INIT_DELEGATE_NAME,
-         init_account_priv_key,
-         std::max( db.get_witness_schedule_object().median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, share_type( 100 ) ),
-         key,
-         post_key,
-         "" );
+               name,
+               SCORUM_INIT_DELEGATE_NAME,
+               init_account_priv_key,
+               std::max( db.get_witness_schedule_object().median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, share_type( 100 ) ),
+               key,
+               post_key,
+               "" );
    }
    FC_CAPTURE_AND_RETHROW( (name) );
 }
 
 const account_object& database_fixture::account_create(
-   const string& name,
-   const public_key_type& key
-)
+      const string& name,
+      const public_key_type& key
+      )
 {
    return account_create( name, key, key );
 }
 
 const witness_object& database_fixture::witness_create(
-   const string& owner,
-   const private_key_type& owner_key,
-   const string& url,
-   const public_key_type& signing_key,
-   const share_type& fee )
+      const string& owner,
+      const private_key_type& owner_key,
+      const string& url,
+      const public_key_type& signing_key,
+      const share_type& fee )
 {
    try
    {
@@ -313,9 +313,9 @@ const witness_object& database_fixture::witness_create(
 }
 
 void database_fixture::fund(
-   const string& account_name,
-   const share_type& amount
-   )
+      const string& account_name,
+      const share_type& amount
+      )
 {
    try
    {
@@ -325,9 +325,9 @@ void database_fixture::fund(
 }
 
 void database_fixture::fund(
-   const string& account_name,
-   const asset& amount
-   )
+      const string& account_name,
+      const asset& amount
+      )
 {
    try
    {
@@ -369,8 +369,8 @@ void database_fixture::fund(
 }
 
 void database_fixture::convert(
-   const string& account_name,
-   const asset& amount )
+      const string& account_name,
+      const asset& amount )
 {
    try
    {
@@ -395,9 +395,9 @@ void database_fixture::convert(
 }
 
 void database_fixture::transfer(
-   const string& from,
-   const string& to,
-   const share_type& amount )
+      const string& from,
+      const string& to,
+      const share_type& amount )
 {
    try
    {
@@ -479,17 +479,18 @@ void database_fixture::set_price_feed( const price& new_price )
    } FC_CAPTURE_AND_RETHROW( (new_price) )
 
    generate_blocks( SCORUM_BLOCKS_PER_HOUR );
+
    BOOST_REQUIRE(
-#ifdef IS_TEST_NET
-      !db.skip_price_feed_limit_check ||
-#endif
-      db.get(feed_history_id_type()).current_median_history == new_price
-   );
+         #ifdef IS_TEST_NET
+            !db.skip_price_feed_limit_check ||
+         #endif
+            db.get(feed_history_id_type()).current_median_history == new_price
+            );
 }
 
 const asset& database_fixture::get_balance( const string& account_name )const
 {
-  return db.get_account( account_name ).balance;
+   return db.get_account( account_name ).balance;
 }
 
 void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)
@@ -529,9 +530,14 @@ bool _push_block( database& db, const signed_block& b, uint32_t skip_flags /* = 
 }
 
 void _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags /* = 0 */ )
-{ try {
-   db.push_transaction( tx, skip_flags );
-} FC_CAPTURE_AND_RETHROW((tx)) }
+{
+   try
+   {
+      db.push_transaction( tx, skip_flags );
+   }
+   FC_CAPTURE_AND_RETHROW((tx))
+}
+
 
 } // scorum::chain::test
 

@@ -35,9 +35,10 @@
 
 #include <boost/program_options.hpp>
 
-namespace scorum { namespace app {
+namespace scorum {
+namespace app {
+
    namespace detail { class application_impl; }
-   using std::string;
 
    class abstract_plugin;
    class plugin;
@@ -71,10 +72,10 @@ namespace scorum { namespace app {
 
          void register_abstract_plugin( std::shared_ptr< abstract_plugin > plug );
          void enable_plugin( const std::string& name );
-         std::shared_ptr<abstract_plugin> get_plugin( const string& name )const;
+         std::shared_ptr<abstract_plugin> get_plugin( const std::string& name )const;
 
          template<typename PluginType>
-         std::shared_ptr<PluginType> get_plugin( const string& name ) const
+         std::shared_ptr<PluginType> get_plugin( const std::string& name ) const
          {
             std::shared_ptr<abstract_plugin> abs_plugin = get_plugin( name );
             std::shared_ptr<PluginType> result = std::dynamic_pointer_cast<PluginType>( abs_plugin );
@@ -87,19 +88,19 @@ namespace scorum { namespace app {
          //std::shared_ptr<graphene::db::object_database> pending_trx_database() const;
 
          void set_block_production(bool producing_blocks);
-         fc::optional< api_access_info > get_api_access_info( const string& username )const;
-         void set_api_access_info(const string& username, api_access_info&& permissions);
+         fc::optional< api_access_info > get_api_access_info( const std::string& username )const;
+         void set_api_access_info(const std::string& username, api_access_info&& permissions);
 
          /**
           * Register a way to instantiate the named API with the application.
           */
-         void register_api_factory( const string& name, std::function< fc::api_ptr( const api_context& ) > factory );
+         void register_api_factory( const std::string& name, std::function< fc::api_ptr( const api_context& ) > factory );
 
          /**
           * Convenience method to build an API factory from a type which only requires a reference to the application.
           */
          template< typename Api >
-         void register_api_factory( const string& name )
+         void register_api_factory( const std::string& name )
          {
 #ifndef IS_TEST_NET
             idump((name));
@@ -125,7 +126,7 @@ namespace scorum { namespace app {
 
          bool _read_only = true;
          bool _disable_get_block = false;
-         fc::optional< string > _remote_endpoint;
+         fc::optional< std::string > _remote_endpoint;
          fc::optional< fc::api< network_broadcast_api > > _remote_net_api;
          fc::optional< fc::api< login_api > > _remote_login;
          fc::http::websocket_connection_ptr _ws_ptr;
