@@ -1511,7 +1511,6 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
 
             const auto rf = get_reward_fund( comment );
             ctx.reward_curve = rf.author_reward_curve;
-            ctx.content_constant = rf.content_constant;
 
          const share_type reward = util::get_rshare_reward( ctx );
          uint128_t reward_tokens = uint128_t( reward.value );
@@ -1656,7 +1655,7 @@ void database::process_comment_cashout()
          if( current->net_rshares > 0 )
          {
             const auto& rf = get_reward_fund( *current );
-            funds[ rf.id._id ].recent_claims += util::evaluate_reward_curve( current->net_rshares.value, rf.author_reward_curve, rf.content_constant );
+            funds[ rf.id._id ].recent_claims += util::evaluate_reward_curve( current->net_rshares.value, rf.author_reward_curve );
          }
 
          ++current;
@@ -2354,7 +2353,6 @@ void database::init_genesis_global_property_object(uint64_t init_supply)
    {
       rfo.name = SCORUM_POST_REWARD_FUND_NAME;
       rfo.last_update = head_block_time();
-      rfo.content_constant = SCORUM_CONTENT_CONSTANT_HF0;
       rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
       rfo.percent_content_rewards = SCORUM_100_PERCENT;
       rfo.reward_balance = gpo.total_reward_fund_scorum;
