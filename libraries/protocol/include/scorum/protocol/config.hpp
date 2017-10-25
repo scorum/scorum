@@ -19,24 +19,16 @@
 #define SCORUM_ADDRESS_PREFIX                  "TST"
 
 #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1451606400))
-#define SCORUM_MINING_TIME                     (fc::time_point_sec(1451606400))
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF12 (SCORUM_CASHOUT_WINDOW_SECONDS)
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF17 (SCORUM_CASHOUT_WINDOW_SECONDS)
-#define SCORUM_SECOND_CASHOUT_WINDOW           (60*60*24*3) /// 3 days
-#define SCORUM_MAX_CASHOUT_WINDOW_SECONDS      (60*60*24) /// 1 day
-#define SCORUM_VOTE_CHANGE_LOCKOUT_PERIOD      (60*10) /// 10 minutes
-#define SCORUM_UPVOTE_LOCKOUT_HF7              (fc::minutes(1))
-#define SCORUM_UPVOTE_LOCKOUT_HF17             (fc::minutes(5))
+#define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
 
-
-#define SCORUM_ORIGINAL_MIN_ACCOUNT_CREATION_FEE 0
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE          0
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::seconds(0)
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
+
 #else // IS LIVE SCORUM NETWORK
 
 #define SCORUM_INIT_PUBLIC_KEY_STR             "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
@@ -48,17 +40,9 @@
 #define SCORUM_ADDRESS_PREFIX                  "STM"
 
 #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508331600))
-#define SCORUM_MINING_TIME                     (fc::time_point_sec(1458838800))
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF12 (60*60*24)    /// 1 day
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF17 (60*60*12)    /// 12 hours
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60*24*7)  /// 7 days
-#define SCORUM_SECOND_CASHOUT_WINDOW           (60*60*24*30) /// 30 days
-#define SCORUM_MAX_CASHOUT_WINDOW_SECONDS      (60*60*24*14) /// 2 weeks
-#define SCORUM_VOTE_CHANGE_LOCKOUT_PERIOD      (60*60*2)     /// 2 hours
-#define SCORUM_UPVOTE_LOCKOUT_HF7              (fc::minutes(1))
-#define SCORUM_UPVOTE_LOCKOUT_HF17             (fc::hours(12))
+#define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
 
-#define SCORUM_ORIGINAL_MIN_ACCOUNT_CREATION_FEE  100000
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE           1
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
@@ -228,7 +212,6 @@
 #define SCORUM_FEED_HISTORY_WINDOW             (12*7) // 3.5 days
 #define SCORUM_MAX_FEED_AGE_SECONDS            (60*60*24*7) // 7 days
 #define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
-#define SCORUM_CONVERSION_DELAY_PRE_HF_16      (fc::days(7))
 #define SCORUM_CONVERSION_DELAY                (fc::hours(SCORUM_FEED_HISTORY_WINDOW)) //3.5 day conversion
 
 #define SCORUM_MIN_UNDO_HISTORY                10

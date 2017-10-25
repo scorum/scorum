@@ -1079,7 +1079,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
       if( rshares > 0 )
       {
-           FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
+           FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT, "Cannot increase payout within last twelve hours before payout." );
       }
 
       //used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread their votes around over 50+ posts day for a week
@@ -1195,7 +1195,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
       if( itr->rshares < rshares )
       {
-            FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
+            FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT, "Cannot increase payout within last twelve hours before payout." );
       }
 
       _db.modify( voter, [&]( account_object& a ){
