@@ -1,6 +1,9 @@
 /*
  * Copyright (c) 2016 Steemit, Inc., and contributors.
  */
+
+// clang-format off
+
 #pragma once
 
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 1) )
@@ -222,3 +225,5 @@
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT                (account_name_type())
 ///@}
+
+// clang-format on
