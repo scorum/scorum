@@ -1614,7 +1614,6 @@ void database::process_comment_cashout()
    //if( !has_hardfork( SCORUM_FIRST_CASHOUT_TIME ) )
    //   return;
 
-   const auto& gpo = get_dynamic_global_properties();
    util::comment_reward_context ctx;
    ctx.current_scorum_price = get_feed_history().current_median_history;
 
@@ -1639,13 +1638,12 @@ void database::process_comment_cashout()
       rf_ctx.reward_balance = itr->reward_balance;
 
       // The index is by ID, so the ID should be the current size of the vector (0, 1, 2, etc...)
-      assert( funds.size() == itr->id._id );
+      assert( (int64_t) funds.size() == itr->id._id );
 
       funds.push_back( rf_ctx );
    }
 
    const auto& cidx        = get_index< comment_index >().indices().get< by_cashout_time >();
-   const auto& com_by_root = get_index< comment_index >().indices().get< by_root >();
 
    auto current = cidx.begin();
    //  add all rshares about to be cashed out to the reward funds. This ensures equal satoshi per rshare payment
@@ -3059,9 +3057,8 @@ int database::match( const limit_order_object& new_order, const limit_order_obje
    assert( new_order_pays == new_order.amount_for_sale() ||
            old_order_pays == old_order.amount_for_sale() );
 
-   auto age = head_block_time() - old_order.created;
-
-   // SCORUM: uncomment if block to enable liqudity reward
+//// SCORUM: uncomment if block to enable liqudity reward
+//   auto age = head_block_time() - old_order.created;
 //   if( age >= SCORUM_MIN_LIQUIDITY_REWARD_PERIOD_SEC )
 //   {
 //      if( old_order_receives.symbol == SCORUM_SYMBOL )

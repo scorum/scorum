@@ -1093,7 +1093,6 @@ void vote_evaluator::do_apply( const vote_operation& o )
       /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into total rshares^2
       fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
       const auto& root = _db.get( comment.root_comment );
-      auto old_root_abs_rshares = root.children_abs_rshares.value;
 
       fc::uint128_t avg_cashout_sec;
 
@@ -1206,7 +1205,6 @@ void vote_evaluator::do_apply( const vote_operation& o )
       /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into total rshares^2
       fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
       const auto& root = _db.get( comment.root_comment );
-      auto old_root_abs_rshares = root.children_abs_rshares.value;
 
       fc::uint128_t avg_cashout_sec;
 
