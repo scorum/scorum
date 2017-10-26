@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Scorun, Inc., and contributors.
+ * Copyright (c) 2016 Steemit, Inc., and contributors.
  */
 #pragma once
 
