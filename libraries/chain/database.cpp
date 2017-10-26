@@ -1629,7 +1629,7 @@ void database::process_comment_cashout()
       modify( *itr, [&]( reward_fund_object& rfo )
       {
          fc::microseconds decay_rate;
-         decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE_HF19;
+         decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
          rfo.recent_claims -= ( rfo.recent_claims * ( head_block_time() - rfo.last_update ).to_seconds() ) / decay_rate.to_seconds();
          rfo.last_update = head_block_time();
       });
@@ -2253,9 +2253,6 @@ void database::init_genesis()
       create< witness_schedule_object >( [&]( witness_schedule_object& wso )
       {
          wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME;
-         wso.max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES_HF17;
-         wso.max_miner_witnesses = SCORUM_MAX_MINER_WITNESSES_HF17;
-         wso.max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES_HF17;
       } );
 
       init_genesis_accounts(_genesis_state.accounts);

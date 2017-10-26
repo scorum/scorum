@@ -160,9 +160,8 @@ namespace scorum { namespace chain {
          chain_properties                                                  median_props;
          version                                                           majority_version;
 
-         uint8_t max_voted_witnesses            = SCORUM_MAX_VOTED_WITNESSES_HF0;
-         uint8_t max_miner_witnesses            = SCORUM_MAX_MINER_WITNESSES_HF0;
-         uint8_t max_runner_witnesses           = SCORUM_MAX_RUNNER_WITNESSES_HF0;
+         uint8_t max_voted_witnesses            = SCORUM_MAX_VOTED_WITNESSES;
+         uint8_t max_runner_witnesses           = SCORUM_MAX_RUNNER_WITNESSES;
          uint8_t hardfork_required_witnesses    = SCORUM_HARDFORK_REQUIRED_WITNESSES;
    };
 
@@ -258,7 +257,6 @@ FC_REFLECT( scorum::chain::witness_schedule_object,
              (top19_weight)(timeshare_weight)(miner_weight)(witness_pay_normalization_factor)
              (median_props)(majority_version)
              (max_voted_witnesses)
-             (max_miner_witnesses)
              (max_runner_witnesses)
              (hardfork_required_witnesses)
           )

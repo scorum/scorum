@@ -64,13 +64,8 @@
 
 #define SCORUM_MAX_WITNESSES                   21
 
-#define SCORUM_MAX_VOTED_WITNESSES_HF0         19
-#define SCORUM_MAX_MINER_WITNESSES_HF0         1
-#define SCORUM_MAX_RUNNER_WITNESSES_HF0        1
-
-#define SCORUM_MAX_VOTED_WITNESSES_HF17        20
-#define SCORUM_MAX_MINER_WITNESSES_HF17        0
-#define SCORUM_MAX_RUNNER_WITNESSES_HF17       1
+#define SCORUM_MAX_VOTED_WITNESSES             20
+#define SCORUM_MAX_RUNNER_WITNESSES            1
 
 #define SCORUM_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
@@ -90,9 +85,6 @@
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
-#define SCORUM_POST_AVERAGE_WINDOW             (60*60*24u) // 1 day
-#define SCORUM_POST_MAX_BANDWIDTH              (4*SCORUM_100_PERCENT) // 2 posts per 1 days, average 1 every 12 hours
-#define SCORUM_POST_WEIGHT_CONSTANT            (uint64_t(SCORUM_POST_MAX_BANDWIDTH) * SCORUM_POST_MAX_BANDWIDTH)
 
 #define SCORUM_MAX_ACCOUNT_WITNESS_VOTES       30
 
@@ -107,14 +99,8 @@
 #define SCORUM_CONTENT_REWARD_PERCENT          (75*SCORUM_1_PERCENT) //75% of inflation, 7.125% inflation
 #define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT) //15% of inflation, 1.425% inflation
 
-#define SCORUM_MINER_PAY_PERCENT               (SCORUM_1_PERCENT) // 1%
-#define SCORUM_MIN_RATION                      100000
-#define SCORUM_MAX_RATION_DECAY_RATE           (1000000)
-#define SCORUM_FREE_TRANSACTIONS_WITH_NEW_ACCOUNT 100
-
 #define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (60*60*24*7) ///< 1 week
 #define SCORUM_BANDWIDTH_PRECISION             (uint64_t(1000000)) ///< 1 million
-#define SCORUM_MAX_COMMENT_DEPTH_PRE_HF17      6
 #define SCORUM_MAX_COMMENT_DEPTH               0xffff // 64k
 #define SCORUM_SOFT_MAX_COMMENT_DEPTH          0xff // 255
 
@@ -125,8 +111,6 @@
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME     fc::days(30)
 
 #define SCORUM_MINING_REWARD                   asset( 1000, SCORUM_SYMBOL )
-#define SCORUM_EQUIHASH_N                      140
-#define SCORUM_EQUIHASH_K                      6
 
 #define SCORUM_LIQUIDITY_TIMEOUT_SEC           (fc::seconds(60*60*24*7)) // After one week volume is set to 0
 #define SCORUM_MIN_LIQUIDITY_REWARD_PERIOD_SEC fc::seconds(60*30) /// 30 min required on books to receive volume
@@ -138,15 +122,9 @@
 #define SCORUM_MIN_PRODUCER_REWARD             SCORUM_MINING_REWARD
 #define SCORUM_MIN_POW_REWARD                  SCORUM_MINING_REWARD
 
-#define SCORUM_ACTIVE_CHALLENGE_FEE            asset( 2000, SCORUM_SYMBOL )
-#define SCORUM_OWNER_CHALLENGE_FEE             asset( 30000, SCORUM_SYMBOL )
-#define SCORUM_ACTIVE_CHALLENGE_COOLDOWN       fc::days(1)
-#define SCORUM_OWNER_CHALLENGE_COOLDOWN        fc::days(1)
-
 #define SCORUM_POST_REWARD_FUND_NAME           ("post")
 #define SCORUM_COMMENT_REWARD_FUND_NAME        ("comment")
-#define SCORUM_RECENT_RSHARES_DECAY_RATE_HF17  (fc::days(30))
-#define SCORUM_RECENT_RSHARES_DECAY_RATE_HF19  (fc::days(15))
+#define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 
 // 5ccc e802 de5f
@@ -199,7 +177,6 @@
 #define SCORUM_MAX_SHARE_SUPPLY                int64_t(1000000000000000ll)
 #define SCORUM_MAX_SIG_CHECK_DEPTH             2
 
-#define SCORUM_MIN_TRANSACTION_SIZE_LIMIT      1024
 #define SCORUM_SECONDS_PER_YEAR                (uint64_t(60*60*24*365ll))
 
 #define SCORUM_SBD_INTEREST_COMPOUND_INTERVAL_SEC  (60*60*24*30)
