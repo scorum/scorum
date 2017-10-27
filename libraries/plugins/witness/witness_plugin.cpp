@@ -291,7 +291,7 @@ namespace detail
          {
             r.average_block_size = 0;
             r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
-            r.max_virtual_bandwidth = ( uint128_t( SCORUM_MAX_BLOCK_SIZE * SCORUM_MAX_RESERVE_RATIO )
+            r.max_virtual_bandwidth = ( uint128_t(SCORUM_MAX_BLOCK_SIZE) * SCORUM_MAX_RESERVE_RATIO
                                       * SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS )
                                       / SCORUM_BLOCK_INTERVAL;
          });
