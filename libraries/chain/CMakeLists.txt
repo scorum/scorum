@@ -44,6 +44,10 @@ if(MSVC)
   set_source_files_properties( database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
+if(UNIX)
+  set_source_files_properties( scorum_evaluator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare" )
+endif(UNIX)
+
 INSTALL( TARGETS
    scorum_chain
 
