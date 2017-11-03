@@ -46,10 +46,6 @@ public:
     ~database();
 
     bool is_producing() const { return _is_producing; }
-    void set_producing(bool p) { _is_producing = p; }
-    bool _is_producing = false;
-
-    bool _log_hardforks = true;
 
     enum validation_steps
     {
@@ -107,8 +103,6 @@ public:
      */
     bool is_known_block(const block_id_type& id) const;
     bool is_known_transaction(const transaction_id_type& id) const;
-    fc::sha256 get_pow_target() const;
-    uint32_t get_pow_summary_target() const;
     block_id_type find_block_id_for_num(uint32_t block_num) const;
     block_id_type get_block_id_for_num(uint32_t block_num) const;
     optional<signed_block> fetch_block_by_id(const block_id_type& id) const;
@@ -167,6 +161,7 @@ public:
 
     bool push_block(const signed_block& b, uint32_t skip = skip_nothing);
     void push_transaction(const signed_transaction& trx, uint32_t skip = skip_nothing);
+    /*!!!TODO!!! (why '_' for public method?)*/
     void _maybe_warn_multiple_production(uint32_t height) const;
     bool _push_block(const signed_block& b);
     void _push_transaction(const signed_transaction& trx);
@@ -332,7 +327,6 @@ public:
     asset get_content_reward() const;
     asset get_producer_reward();
     asset get_curation_reward() const;
-    asset get_pow_reward() const;
 
     uint16_t get_curation_rewards_percent(const comment_object& c) const;
 
@@ -461,6 +455,7 @@ private:
     block_log _block_log;
 
     // this function needs access to _plugin_index_signal
+    // !!!TODO!!! (why private? why friend?)
     template <typename MultiIndexType> friend void add_plugin_index(database& db);
 
     fc::signal<void()> _plugin_index_signal;
@@ -483,6 +478,13 @@ private:
     flat_map<std::string, std::shared_ptr<custom_operation_interpreter>> _custom_operation_interpreters;
     std::string _json_schema;
     genesis_state_type _genesis_state;
+
+private:
+
+    void set_producing(bool p) { _is_producing = p; }
+    bool _is_producing = false;
+
+    bool _log_hardforks = true;
 };
 }
 }
