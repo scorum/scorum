@@ -1073,16 +1073,13 @@ void database_api::set_pending_payout( discussion& d )const
       d.promoted = asset( itr->promoted_balance, SBD_SYMBOL );
    }
 
-   const auto& props = my->_db.get_dynamic_global_properties();
    const auto& hist  = my->_db.get_feed_history();
 
    asset pot = my->_db.get_reward_fund( my->_db.get_comment( d.author, d.permlink ) ).reward_balance;
 
-
    if( !hist.current_median_history.is_null() ) pot = pot * hist.current_median_history;
 
    u256 total_r2 = to256( my->_db.get_reward_fund( my->_db.get_comment( d.author, d.permlink ) ).recent_claims );
-
 
    if( total_r2 > 0 )
    {
