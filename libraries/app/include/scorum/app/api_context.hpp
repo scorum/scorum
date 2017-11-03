@@ -6,13 +6,15 @@
 
 #include <fc/api.hpp>
 
-namespace fc { namespace rpc {
+namespace fc {
+namespace rpc {
 
 class websocket_api_connection;
+}
+}
 
-} }
-
-namespace scorum { namespace app {
+namespace scorum {
+namespace app {
 
 class application;
 
@@ -23,8 +25,8 @@ class application;
 
 struct api_session_data
 {
-   std::shared_ptr< fc::rpc::websocket_api_connection >        wsc;
-   std::map< std::string, fc::api_ptr >                        api_map;
+    std::shared_ptr<fc::rpc::websocket_api_connection> wsc;
+    std::map<std::string, fc::api_ptr> api_map;
 };
 
 /**
@@ -33,11 +35,11 @@ struct api_session_data
 
 struct api_context
 {
-   api_context( application& _app, const std::string& _api_name, std::weak_ptr< api_session_data > _session );
+    api_context(application& _app, const std::string& _api_name, std::weak_ptr<api_session_data> _session);
 
-   application&                              app;
-   std::string                               api_name;
-   std::weak_ptr< api_session_data >         session;
+    application& app;
+    std::string api_name;
+    std::weak_ptr<api_session_data> session;
 };
-
-} }
+}
+}

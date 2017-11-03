@@ -29,30 +29,24 @@
 #include <string>
 #include <vector>
 
-namespace scorum { namespace app {
+namespace scorum {
+namespace app {
 
 struct api_access_info
 {
-   std::string username;
-   std::string password_hash_b64;
-   std::string password_salt_b64;
-   std::vector< std::string > allowed_apis;
+    std::string username;
+    std::string password_hash_b64;
+    std::string password_salt_b64;
+    std::vector<std::string> allowed_apis;
 };
 
 struct api_access
 {
-   std::map< std::string, api_access_info > permission_map;
+    std::map<std::string, api_access_info> permission_map;
 };
+}
+} // scorum::app
 
-} } // scorum::app
+FC_REFLECT(scorum::app::api_access_info, (username)(password_hash_b64)(password_salt_b64)(allowed_apis))
 
-FC_REFLECT( scorum::app::api_access_info,
-    (username)
-    (password_hash_b64)
-    (password_salt_b64)
-    (allowed_apis)
-   )
-
-FC_REFLECT( scorum::app::api_access,
-    (permission_map)
-   )
+FC_REFLECT(scorum::app::api_access, (permission_map))
