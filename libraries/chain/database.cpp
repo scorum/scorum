@@ -399,26 +399,6 @@ const escrow_object* database::find_escrow( const account_name_type& name, uint3
    return find< escrow_object, by_from_id >( boost::make_tuple( name, escrow_id ) );
 }
 
-const limit_order_object& database::get_limit_order( const account_name_type& name, uint32_t orderid )const
-{ try {
-   return get< limit_order_object, by_account >( boost::make_tuple( name, orderid ) );
-} FC_CAPTURE_AND_RETHROW( (name)(orderid) ) }
-
-const limit_order_object* database::find_limit_order( const account_name_type& name, uint32_t orderid )const
-{
-   return find< limit_order_object, by_account >( boost::make_tuple( name, orderid ) );
-}
-
-const savings_withdraw_object& database::get_savings_withdraw( const account_name_type& owner, uint32_t request_id )const
-{ try {
-   return get< savings_withdraw_object, by_from_rid >( boost::make_tuple( owner, request_id ) );
-} FC_CAPTURE_AND_RETHROW( (owner)(request_id) ) }
-
-const savings_withdraw_object* database::find_savings_withdraw( const account_name_type& owner, uint32_t request_id )const
-{
-   return find< savings_withdraw_object, by_from_rid >( boost::make_tuple( owner, request_id ) );
-}
-
 const dynamic_global_property_object&database::get_dynamic_global_properties() const
 { try {
    return get< dynamic_global_property_object >();
@@ -428,11 +408,6 @@ const node_property_object& database::get_node_properties() const
 {
    return _node_property_object;
 }
-
-const feed_history_object& database::get_feed_history()const
-{ try {
-   return get< feed_history_object >();
-} FC_CAPTURE_AND_RETHROW() }
 
 const witness_schedule_object& database::get_witness_schedule_object()const
 { try {
@@ -951,56 +926,6 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when)const
 }
 
 /**
- *  Converts SCORUM into sbd and adds it to to_account while reducing the SCORUM supply
- *  by SCORUM and increasing the sbd supply by the specified amount.
- */
-std::pair< asset, asset > database::create_sbd( const account_object& to_account, asset scorum, bool to_reward_balance )
-{
-   std::pair< asset, asset > assets( asset( 0, SBD_SYMBOL ), asset( 0, SCORUM_SYMBOL ) );
-
-   try
-   {
-      if( scorum.amount == 0 )
-         return assets;
-
-      const auto& median_price = get_feed_history().current_median_history;
-      const auto& gpo = get_dynamic_global_properties();
-
-      if( !median_price.is_null() )
-      {
-         auto to_sbd = ( gpo.sbd_print_rate * scorum.amount ) / SCORUM_100_PERCENT;
-         auto to_scorum = scorum.amount - to_sbd;
-
-         auto sbd = asset( to_sbd, SCORUM_SYMBOL ) * median_price;
-
-         if( to_reward_balance )
-         {
-            adjust_reward_balance( to_account, sbd );
-            adjust_reward_balance( to_account, asset( to_scorum, SCORUM_SYMBOL ) );
-         }
-         else
-         {
-            adjust_balance( to_account, sbd );
-            adjust_balance( to_account, asset( to_scorum, SCORUM_SYMBOL ) );
-         }
-
-         adjust_supply( asset( -to_sbd, SCORUM_SYMBOL ) );
-         adjust_supply( sbd );
-         assets.first = sbd;
-         assets.second = to_scorum;
-      }
-      else
-      {
-         adjust_balance( to_account, scorum );
-         assets.second = scorum;
-      }
-   }
-   FC_CAPTURE_LOG_AND_RETHROW( (to_account.name)(scorum) )
-
-   return assets;
-}
-
-/**
  * @param to_account - the account to receive the new vesting shares
  * @param SCORUM - SCORUM to be converted to vesting shares
  */
@@ -1056,26 +981,6 @@ asset database::create_vesting( const account_object& to_account, asset scorum, 
       return new_vesting;
    }
    FC_CAPTURE_AND_RETHROW( (to_account.name)(scorum) )
-}
-
-fc::sha256 database::get_pow_target()const
-{
-   const auto& dgp = get_dynamic_global_properties();
-   fc::sha256 target;
-   target._hash[0] = -1;
-   target._hash[1] = -1;
-   target._hash[2] = -1;
-   target._hash[3] = -1;
-   target = target >> ((dgp.num_pow_witnesses/4)+4);
-   return target;
-}
-
-uint32_t database::get_pow_summary_target()const
-{
-   const dynamic_global_property_object& dgp = get_dynamic_global_properties();
-   if( dgp.num_pow_witnesses >= 1004 )
-      return 0;
-   return (0xFE00 - 0x0040 * dgp.num_pow_witnesses ) << 0x10;
 }
 
 void database::adjust_proxied_witness_votes( const account_object& a,
@@ -1185,30 +1090,11 @@ void database::clear_null_account_balance()
 
    const auto& null_account = get_account( SCORUM_NULL_ACCOUNT );
    asset total_scorum( 0, SCORUM_SYMBOL );
-   asset total_sbd( 0, SBD_SYMBOL );
 
    if( null_account.balance.amount > 0 )
    {
       total_scorum += null_account.balance;
       adjust_balance( null_account, -null_account.balance );
-   }
-
-   if( null_account.savings_balance.amount > 0 )
-   {
-      total_scorum += null_account.savings_balance;
-      adjust_savings_balance( null_account, -null_account.savings_balance );
-   }
-
-   if( null_account.sbd_balance.amount > 0 )
-   {
-      total_sbd += null_account.sbd_balance;
-      adjust_balance( null_account, -null_account.sbd_balance );
-   }
-
-   if( null_account.savings_sbd_balance.amount > 0 )
-   {
-      total_sbd += null_account.savings_sbd_balance;
-      adjust_savings_balance( null_account, -null_account.savings_sbd_balance );
    }
 
    if( null_account.vesting_shares.amount > 0 )
@@ -1236,12 +1122,6 @@ void database::clear_null_account_balance()
       adjust_reward_balance( null_account, -null_account.reward_scorum_balance );
    }
 
-   if( null_account.reward_sbd_balance.amount > 0 )
-   {
-      total_sbd += null_account.reward_sbd_balance;
-      adjust_reward_balance( null_account, -null_account.reward_sbd_balance );
-   }
-
    if( null_account.reward_vesting_balance.amount > 0 )
    {
       const auto& gpo = get_dynamic_global_properties();
@@ -1263,9 +1143,6 @@ void database::clear_null_account_balance()
 
    if( total_scorum.amount > 0 )
       adjust_supply( -total_scorum );
-
-   if( total_sbd.amount > 0 )
-      adjust_supply( -total_sbd );
 }
 
 /**
@@ -1491,7 +1368,7 @@ void fill_comment_reward_context_local_state( util::comment_reward_context& ctx,
 {
    ctx.rshares = comment.net_rshares;
    ctx.reward_weight = comment.reward_weight;
-   ctx.max_sbd = comment.max_accepted_payout;
+   ctx.max_scr = comment.max_accepted_payout;
 }
 
 share_type database::cashout_comment_helper( util::comment_reward_context& ctx, const comment_object& comment )
@@ -1529,17 +1406,17 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
 
             author_tokens -= total_beneficiary;
 
-            auto sbd_scorum     = ( author_tokens * comment.percent_scorum_dollars ) / ( 2 * SCORUM_100_PERCENT ) ;
-            auto vesting_scorum = author_tokens - sbd_scorum;
+            auto scorum     = ( author_tokens * comment.percent_scrs ) / ( 2 * SCORUM_100_PERCENT ) ;
+            auto vesting_scorum = author_tokens - scorum;
 
             const auto& author = get_account( comment.author );
             auto vest_created = create_vesting( author, vesting_scorum, true );
-            auto sbd_payout = create_sbd( author, sbd_scorum, true );
+            auto scr_payout = asset( scorum, SCORUM_SYMBOL );
 
-            adjust_total_payout( comment, sbd_payout.first + to_sbd( sbd_payout.second + asset( vesting_scorum, SCORUM_SYMBOL ) ), to_sbd( asset( curation_tokens, SCORUM_SYMBOL ) ), to_sbd( asset( total_beneficiary, SCORUM_SYMBOL ) ) );
+            adjust_total_payout( comment, scr_payout + asset( vesting_scorum, SCORUM_SYMBOL ) , asset( curation_tokens, SCORUM_SYMBOL ),  asset( total_beneficiary, SCORUM_SYMBOL ) );
 
-            push_virtual_operation( author_reward_operation( comment.author, to_string( comment.permlink ), sbd_payout.first, sbd_payout.second, vest_created ) );
-            push_virtual_operation( comment_reward_operation( comment.author, to_string( comment.permlink ), to_sbd( asset( claimed_reward, SCORUM_SYMBOL ) ) ) );
+            push_virtual_operation( author_reward_operation( comment.author, to_string( comment.permlink ), scr_payout, vest_created ) );
+            push_virtual_operation( comment_reward_operation( comment.author, to_string( comment.permlink ), asset( claimed_reward, SCORUM_SYMBOL ) ) );
 
             #ifndef IS_LOW_MEM
                modify( comment, [&]( comment_object& c )
@@ -1611,7 +1488,6 @@ void database::process_comment_cashout()
 
    const auto& gpo = get_dynamic_global_properties();
    util::comment_reward_context ctx;
-   ctx.current_scorum_price = get_feed_history().current_median_history;
 
    vector< reward_fund_context > funds;
    vector< share_type > scorum_awarded;
@@ -1758,72 +1634,6 @@ void database::process_funds()
 
 }
 
-void database::process_savings_withdraws()
-{
-  const auto& idx = get_index< savings_withdraw_index >().indices().get< by_complete_from_rid >();
-  auto itr = idx.begin();
-  while( itr != idx.end() ) {
-     if( itr->complete > head_block_time() )
-        break;
-     adjust_balance( get_account( itr->to ), itr->amount );
-
-     modify( get_account( itr->from ), [&]( account_object& a )
-     {
-        a.savings_withdraw_requests--;
-     });
-
-     push_virtual_operation( fill_transfer_from_savings_operation( itr->from, itr->to, itr->amount, itr->request_id, to_string( itr->memo) ) );
-
-     remove( *itr );
-     itr = idx.begin();
-  }
-}
-
-asset database::get_liquidity_reward()const
-{
-//   SCORUM: check liquidity reward
-//   if( has_hardfork( SCORUM_HARDFORK_0_12__178 ) )
-   return asset( 0, SCORUM_SYMBOL );
-
-   const auto& props = get_dynamic_global_properties();
-   static_assert( SCORUM_LIQUIDITY_REWARD_PERIOD_SEC == 60*60, "this code assumes a 1 hour time interval" );
-   asset percent( protocol::calc_percent_reward_per_hour< SCORUM_LIQUIDITY_APR_PERCENT >( props.virtual_supply.amount ), SCORUM_SYMBOL );
-   return std::max( percent, SCORUM_MIN_LIQUIDITY_REWARD );
-}
-
-void database::pay_liquidity_reward()
-{
-#ifdef IS_TEST_NET
-   if( !liquidity_rewards_enabled )
-      return;
-#endif
-
-   if( (head_block_num() % SCORUM_LIQUIDITY_REWARD_BLOCKS) == 0 )
-   {
-      auto reward = get_liquidity_reward();
-
-      if( reward.amount == 0 )
-         return;
-
-      const auto& ridx = get_index< liquidity_reward_balance_index >().indices().get< by_volume_weight >();
-      auto itr = ridx.begin();
-      if( itr != ridx.end() && itr->volume_weight() > 0 )
-      {
-         adjust_supply( reward, true );
-         adjust_balance( get(itr->owner), reward );
-         modify( *itr, [&]( liquidity_reward_balance_object& obj )
-         {
-            obj.scorum_volume = 0;
-            obj.sbd_volume   = 0;
-            obj.last_update  = head_block_time();
-            obj.weight = 0;
-         } );
-
-         push_virtual_operation( liquidity_reward_operation( get(itr->owner).name, reward ) );
-      }
-   }
-}
-
 uint16_t database::get_curation_rewards_percent( const comment_object& c ) const
 {
       return get_reward_fund( c ).percent_curation_rewards;
@@ -1851,60 +1661,6 @@ share_type database::pay_reward_funds( share_type reward )
    }
 
    return used_rewards;
-}
-
-/**
- *  Iterates over all conversion requests with a conversion date before
- *  the head block time and then converts them to/from scorum/sbd at the
- *  current median price feed history price times the premium
- */
-void database::process_conversions()
-{
-   auto now = head_block_time();
-   const auto& request_by_date = get_index< convert_request_index >().indices().get< by_conversion_date >();
-   auto itr = request_by_date.begin();
-
-   const auto& fhistory = get_feed_history();
-   if( fhistory.current_median_history.is_null() )
-      return;
-
-   asset net_sbd( 0, SBD_SYMBOL );
-   asset net_scorum( 0, SCORUM_SYMBOL );
-
-   while( itr != request_by_date.end() && itr->conversion_date <= now )
-   {
-      const auto& user = get_account( itr->owner );
-      auto amount_to_issue = itr->amount * fhistory.current_median_history;
-
-      adjust_balance( user, amount_to_issue );
-
-      net_sbd   += itr->amount;
-      net_scorum += amount_to_issue;
-
-      push_virtual_operation( fill_convert_request_operation ( user.name, itr->requestid, itr->amount, amount_to_issue ) );
-
-      remove( *itr );
-      itr = request_by_date.begin();
-   }
-
-   const auto& props = get_dynamic_global_properties();
-   modify( props, [&]( dynamic_global_property_object& p )
-   {
-       p.current_supply += net_scorum;
-       p.current_sbd_supply -= net_sbd;
-       p.virtual_supply += net_scorum;
-       p.virtual_supply -= net_sbd * get_feed_history().current_median_history;
-   } );
-}
-
-asset database::to_sbd( const asset& scorum )const
-{
-   return util::to_sbd( get_feed_history().current_median_history, scorum );
-}
-
-asset database::to_scorum( const asset& sbd )const
-{
-   return util::to_scorum( get_feed_history().current_median_history, sbd );
 }
 
 void database::account_recovery_processing()
@@ -1957,7 +1713,6 @@ void database::expire_escrow_ratification()
 
       const auto& from_account = get_account( old_escrow.from );
       adjust_balance( from_account, old_escrow.scorum_balance );
-      adjust_balance( from_account, old_escrow.sbd_balance );
       adjust_balance( from_account, old_escrow.pending_fee );
 
       remove( old_escrow );
@@ -2036,11 +1791,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< custom_evaluator                         >();
    _my->_evaluator_registry.register_evaluator< custom_binary_evaluator                  >();
    _my->_evaluator_registry.register_evaluator< custom_json_evaluator                    >();
-   _my->_evaluator_registry.register_evaluator< feed_publish_evaluator                   >();
-   _my->_evaluator_registry.register_evaluator< convert_evaluator                        >();
-   _my->_evaluator_registry.register_evaluator< limit_order_create_evaluator             >();
-   _my->_evaluator_registry.register_evaluator< limit_order_create2_evaluator            >();
-   _my->_evaluator_registry.register_evaluator< limit_order_cancel_evaluator             >();
    _my->_evaluator_registry.register_evaluator< prove_authority_evaluator                >();
    _my->_evaluator_registry.register_evaluator< request_account_recovery_evaluator       >();
    _my->_evaluator_registry.register_evaluator< recover_account_evaluator                >();
@@ -2049,9 +1799,6 @@ void database::initialize_evaluators()
    _my->_evaluator_registry.register_evaluator< escrow_approve_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< escrow_dispute_evaluator                 >();
    _my->_evaluator_registry.register_evaluator< escrow_release_evaluator                 >();
-   _my->_evaluator_registry.register_evaluator< transfer_to_savings_evaluator            >();
-   _my->_evaluator_registry.register_evaluator< transfer_from_savings_evaluator          >();
-   _my->_evaluator_registry.register_evaluator< cancel_transfer_from_savings_evaluator   >();
    _my->_evaluator_registry.register_evaluator< decline_voting_rights_evaluator          >();
    _my->_evaluator_registry.register_evaluator< claim_reward_balance_evaluator           >();
    _my->_evaluator_registry.register_evaluator< account_create_with_delegation_evaluator >();
@@ -2085,10 +1832,6 @@ void database::initialize_indexes()
    add_core_index< comment_index                           >(*this);
    add_core_index< comment_vote_index                      >(*this);
    add_core_index< witness_vote_index                      >(*this);
-   add_core_index< limit_order_index                       >(*this);
-   add_core_index< feed_history_index                      >(*this);
-   add_core_index< convert_request_index                   >(*this);
-   add_core_index< liquidity_reward_balance_index          >(*this);
    add_core_index< operation_index                         >(*this);
    add_core_index< account_history_index                   >(*this);
    add_core_index< hardfork_property_index                 >(*this);
@@ -2097,7 +1840,6 @@ void database::initialize_indexes()
    add_core_index< account_recovery_request_index          >(*this);
    add_core_index< change_recovery_account_request_index   >(*this);
    add_core_index< escrow_index                            >(*this);
-   add_core_index< savings_withdraw_index                  >(*this);
    add_core_index< decline_voting_rights_request_index     >(*this);
    add_core_index< reward_fund_index                       >(*this);
    add_core_index< vesting_delegation_index                >(*this);
@@ -2260,7 +2002,6 @@ void database::init_genesis( uint64_t init_supply )
       } );
 
       // Nothing to do
-      create< feed_history_object >( [&]( feed_history_object& o ) {});
       for( int i = 0; i < 0x10000; i++ )
          create< block_summary_object >( [&]( block_summary_object& ) {});
       create< hardfork_property_object >( [&](hardfork_property_object& hpo )
@@ -2507,21 +2248,15 @@ void database::_apply_block( const signed_block& next_block )
 
    create_block_summary(next_block);
    clear_expired_transactions();
-   clear_expired_orders();
    clear_expired_delegations();
    update_witness_schedule(*this);
 
-   update_median_feed();
-   update_virtual_supply();
-
    clear_null_account_balance();
    process_funds();
-   process_conversions();
+
    process_comment_cashout();
    process_vesting_withdrawals();
    process_savings_withdraws();
-   pay_liquidity_reward();
-   update_virtual_supply();
 
    account_recovery_processing();
    expire_escrow_ratification();
@@ -2584,65 +2319,6 @@ void database::process_header_extensions( const signed_block& next_block )
       ++itr;
    }
 }
-
-
-
-void database::update_median_feed() {
-try {
-   if( (head_block_num() % SCORUM_FEED_INTERVAL_BLOCKS) != 0 )
-      return;
-
-   auto now = head_block_time();
-   const witness_schedule_object& wso = get_witness_schedule_object();
-   vector<price> feeds; feeds.reserve( wso.num_scheduled_witnesses );
-   for( int i = 0; i < wso.num_scheduled_witnesses; i++ )
-   {
-      const auto& wit = get_witness( wso.current_shuffled_witnesses[i] );
-         if( now < wit.last_sbd_exchange_update + SCORUM_MAX_FEED_AGE_SECONDS
-            && !wit.sbd_exchange_rate.is_null() )
-         {
-            feeds.push_back( wit.sbd_exchange_rate );
-         }
-   }
-
-   if( feeds.size() >= SCORUM_MIN_FEEDS )
-   {
-      std::sort( feeds.begin(), feeds.end() );
-      auto median_feed = feeds[feeds.size()/2];
-
-      modify( get_feed_history(), [&]( feed_history_object& fho )
-      {
-         fho.price_history.push_back( median_feed );
-         size_t scorum_feed_history_window = SCORUM_FEED_HISTORY_WINDOW_PRE_HF_16;
-         scorum_feed_history_window = SCORUM_FEED_HISTORY_WINDOW;
-
-         if( fho.price_history.size() > scorum_feed_history_window )
-            fho.price_history.pop_front();
-
-         if( fho.price_history.size() )
-         {
-            std::deque< price > copy;
-            for( auto i : fho.price_history )
-            {
-               copy.push_back( i );
-            }
-
-            std::sort( copy.begin(), copy.end() ); /// TODO: use nth_item
-            fho.current_median_history = copy[copy.size()/2];
-
-#ifdef IS_TEST_NET
-            if( skip_price_feed_limit_check )
-               return;
-#endif
-               const auto& gpo = get_dynamic_global_properties();
-               price min_price( asset( 9 * gpo.current_sbd_supply.amount, SBD_SYMBOL ), gpo.current_supply ); // This price limits SBD to 10% market cap
-
-               if( min_price > fho.current_median_history )
-                  fho.current_median_history = min_price;
-         }
-      });
-   }
-} FC_CAPTURE_AND_RETHROW() }
 
 void database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
@@ -2825,30 +2501,6 @@ void database::update_global_dynamic_data( const signed_block& b )
    }
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::update_virtual_supply()
-{ try {
-   modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& dgp )
-   {
-      dgp.virtual_supply = dgp.current_supply
-         + ( get_feed_history().current_median_history.is_null() ? asset( 0, SCORUM_SYMBOL ) : dgp.current_sbd_supply * get_feed_history().current_median_history );
-
-      auto median_price = get_feed_history().current_median_history;
-
-      if( !median_price.is_null() )
-      {
-         auto percent_sbd = uint16_t( ( ( fc::uint128_t( ( dgp.current_sbd_supply * get_feed_history().current_median_history ).amount.value ) * SCORUM_100_PERCENT )
-            / dgp.virtual_supply.amount.value ).to_uint64() );
-
-         if( percent_sbd <= SCORUM_SBD_START_PERCENT )
-            dgp.sbd_print_rate = SCORUM_100_PERCENT;
-         else if( percent_sbd >= SCORUM_SBD_STOP_PERCENT )
-            dgp.sbd_print_rate = 0;
-         else
-            dgp.sbd_print_rate = ( ( SCORUM_SBD_STOP_PERCENT - percent_sbd ) * SCORUM_100_PERCENT ) / ( SCORUM_SBD_STOP_PERCENT - SCORUM_SBD_START_PERCENT );
-      }
-   });
-} FC_CAPTURE_AND_RETHROW() }
-
 void database::update_signing_witness(const witness_object& signing_witness, const signed_block& new_block)
 { try {
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
@@ -2939,176 +2591,6 @@ void database::update_last_irreversible_block()
    _fork_db.set_max_size( dpo.head_block_number - dpo.last_irreversible_block_num + 1 );
 } FC_CAPTURE_AND_RETHROW() }
 
-
-bool database::apply_order( const limit_order_object& new_order_object )
-{
-   auto order_id = new_order_object.id;
-
-   const auto& limit_price_idx = get_index<limit_order_index>().indices().get<by_price>();
-
-   auto max_price = ~new_order_object.sell_price;
-   auto limit_itr = limit_price_idx.lower_bound(max_price.max());
-   auto limit_end = limit_price_idx.upper_bound(max_price);
-
-   bool finished = false;
-   while( !finished && limit_itr != limit_end )
-   {
-      auto old_limit_itr = limit_itr;
-      ++limit_itr;
-      // match returns 2 when only the old order was fully filled. In this case, we keep matching; otherwise, we stop.
-      finished = ( match(new_order_object, *old_limit_itr, old_limit_itr->sell_price) & 0x1 );
-   }
-
-   return find< limit_order_object >( order_id ) == nullptr;
-}
-
-int database::match( const limit_order_object& new_order, const limit_order_object& old_order, const price& match_price )
-{
-   assert( new_order.sell_price.quote.symbol == old_order.sell_price.base.symbol );
-   assert( new_order.sell_price.base.symbol  == old_order.sell_price.quote.symbol );
-   assert( new_order.for_sale > 0 && old_order.for_sale > 0 );
-   assert( match_price.quote.symbol == new_order.sell_price.base.symbol );
-   assert( match_price.base.symbol == old_order.sell_price.base.symbol );
-
-   auto new_order_for_sale = new_order.amount_for_sale();
-   auto old_order_for_sale = old_order.amount_for_sale();
-
-   asset new_order_pays, new_order_receives, old_order_pays, old_order_receives;
-
-   if( new_order_for_sale <= old_order_for_sale * match_price )
-   {
-      old_order_receives = new_order_for_sale;
-      new_order_receives  = new_order_for_sale * match_price;
-   }
-   else
-   {
-      //This line once read: assert( old_order_for_sale < new_order_for_sale * match_price );
-      //This assert is not always true -- see trade_amount_equals_zero in operation_tests.cpp
-      //Although new_order_for_sale is greater than old_order_for_sale * match_price, old_order_for_sale == new_order_for_sale * match_price
-      //Removing the assert seems to be safe -- apparently no asset is created or destroyed.
-      new_order_receives = old_order_for_sale;
-      old_order_receives = old_order_for_sale * match_price;
-   }
-
-   old_order_pays = new_order_receives;
-   new_order_pays = old_order_receives;
-
-   assert( new_order_pays == new_order.amount_for_sale() ||
-           old_order_pays == old_order.amount_for_sale() );
-
-   auto age = head_block_time() - old_order.created;
-
-   // SCORUM: uncomment if block to enable liqudity reward
-//   if( age >= SCORUM_MIN_LIQUIDITY_REWARD_PERIOD_SEC )
-//   {
-//      if( old_order_receives.symbol == SCORUM_SYMBOL )
-//      {
-//         adjust_liquidity_reward( get_account( old_order.seller ), old_order_receives, false );
-//         adjust_liquidity_reward( get_account( new_order.seller ), -old_order_receives, false );
-//      }
-//      else
-//      {
-//         adjust_liquidity_reward( get_account( old_order.seller ), new_order_receives, true );
-//         adjust_liquidity_reward( get_account( new_order.seller ), -new_order_receives, true );
-//      }
-//   }
-   push_virtual_operation( fill_order_operation( new_order.seller, new_order.orderid, new_order_pays, old_order.seller, old_order.orderid, old_order_pays ) );
-
-   int result = 0;
-   result |= fill_order( new_order, new_order_pays, new_order_receives );
-   result |= fill_order( old_order, old_order_pays, old_order_receives ) << 1;
-   assert( result != 0 );
-   return result;
-}
-
-
-void database::adjust_liquidity_reward( const account_object& owner, const asset& volume, bool is_sdb )
-{
-   const auto& ridx = get_index< liquidity_reward_balance_index >().indices().get< by_owner >();
-   auto itr = ridx.find( owner.id );
-   if( itr != ridx.end() )
-   {
-      modify<liquidity_reward_balance_object>( *itr, [&]( liquidity_reward_balance_object& r )
-      {
-         if( head_block_time() - r.last_update >= SCORUM_LIQUIDITY_TIMEOUT_SEC )
-         {
-            r.sbd_volume = 0;
-            r.scorum_volume = 0;
-            r.weight = 0;
-         }
-
-         if( is_sdb )
-            r.sbd_volume += volume.amount.value;
-         else
-            r.scorum_volume += volume.amount.value;
-
-         r.update_weight();
-         r.last_update = head_block_time();
-      } );
-   }
-   else
-   {
-      create<liquidity_reward_balance_object>( [&](liquidity_reward_balance_object& r )
-      {
-         r.owner = owner.id;
-         if( is_sdb )
-            r.sbd_volume = volume.amount.value;
-         else
-            r.scorum_volume = volume.amount.value;
-
-         r.update_weight();
-         r.last_update = head_block_time();
-      } );
-   }
-}
-
-
-bool database::fill_order( const limit_order_object& order, const asset& pays, const asset& receives )
-{
-   try
-   {
-      FC_ASSERT( order.amount_for_sale().symbol == pays.symbol );
-      FC_ASSERT( pays.symbol != receives.symbol );
-
-      const account_object& seller = get_account( order.seller );
-
-      adjust_balance( seller, receives );
-
-      if( pays == order.amount_for_sale() )
-      {
-         remove( order );
-         return true;
-      }
-      else
-      {
-         modify( order, [&]( limit_order_object& b )
-         {
-            b.for_sale -= pays.amount;
-         } );
-         /**
-          *  There are times when the AMOUNT_FOR_SALE * SALE_PRICE == 0 which means that we
-          *  have hit the limit where the seller is asking for nothing in return.  When this
-          *  happens we must refund any balance back to the seller, it is too small to be
-          *  sold at the sale price.
-          */
-         if( order.amount_to_receive().amount == 0 )
-         {
-            cancel_order(order);
-            return true;
-         }
-         return false;
-      }
-   }
-   FC_CAPTURE_AND_RETHROW( (order)(pays)(receives) )
-}
-
-void database::cancel_order( const limit_order_object& order )
-{
-   adjust_balance( get_account(order.seller), order.amount_for_sale() );
-   remove(order);
-}
-
-
 void database::clear_expired_transactions()
 {
    //Look for expired transactions in the deduplication list, and remove them.
@@ -3117,18 +2599,6 @@ void database::clear_expired_transactions()
    const auto& dedupe_index = transaction_idx.indices().get< by_expiration >();
    while( ( !dedupe_index.empty() ) && ( head_block_time() > dedupe_index.begin()->expiration ) )
       remove( *dedupe_index.begin() );
-}
-
-void database::clear_expired_orders()
-{
-   auto now = head_block_time();
-   const auto& orders_by_exp = get_index<limit_order_index>().indices().get<by_expiration>();
-   auto itr = orders_by_exp.begin();
-   while( itr != orders_by_exp.end() && itr->expiration < now )
-   {
-      cancel_order( *itr );
-      itr = orders_by_exp.begin();
-   }
 }
 
 void database::clear_expired_delegations()
@@ -3159,82 +2629,8 @@ void database::adjust_balance( const account_object& a, const asset& delta )
          case SCORUM_SYMBOL:
             acnt.balance += delta;
             break;
-         case SBD_SYMBOL:
-            if( a.sbd_seconds_last_update != head_block_time() )
-            {
-               acnt.sbd_seconds += fc::uint128_t(a.sbd_balance.amount.value) * (head_block_time() - a.sbd_seconds_last_update).to_seconds();
-               acnt.sbd_seconds_last_update = head_block_time();
-
-               if( acnt.sbd_seconds > 0 &&
-                   (acnt.sbd_seconds_last_update - acnt.sbd_last_interest_payment).to_seconds() > SCORUM_SBD_INTEREST_COMPOUND_INTERVAL_SEC )
-               {
-                  auto interest = acnt.sbd_seconds / SCORUM_SECONDS_PER_YEAR;
-                  interest *= get_dynamic_global_properties().sbd_interest_rate;
-                  interest /= SCORUM_100_PERCENT;
-                  asset interest_paid(interest.to_uint64(), SBD_SYMBOL);
-                  acnt.sbd_balance += interest_paid;
-                  acnt.sbd_seconds = 0;
-                  acnt.sbd_last_interest_payment = head_block_time();
-
-                  if(interest > 0)
-                     push_virtual_operation( interest_operation( a.name, interest_paid ) );
-
-                  modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& props)
-                  {
-                     props.current_sbd_supply += interest_paid;
-                     props.virtual_supply += interest_paid * get_feed_history().current_median_history;
-                  } );
-               }
-            }
-            acnt.sbd_balance += delta;
-            break;
          default:
             FC_ASSERT( false, "invalid symbol" );
-      }
-   } );
-}
-
-
-void database::adjust_savings_balance( const account_object& a, const asset& delta )
-{
-   modify( a, [&]( account_object& acnt )
-   {
-      switch( delta.symbol )
-      {
-         case SCORUM_SYMBOL:
-            acnt.savings_balance += delta;
-            break;
-         case SBD_SYMBOL:
-            if( a.savings_sbd_seconds_last_update != head_block_time() )
-            {
-               acnt.savings_sbd_seconds += fc::uint128_t(a.savings_sbd_balance.amount.value) * (head_block_time() - a.savings_sbd_seconds_last_update).to_seconds();
-               acnt.savings_sbd_seconds_last_update = head_block_time();
-
-               if( acnt.savings_sbd_seconds > 0 &&
-                   (acnt.savings_sbd_seconds_last_update - acnt.savings_sbd_last_interest_payment).to_seconds() > SCORUM_SBD_INTEREST_COMPOUND_INTERVAL_SEC )
-               {
-                  auto interest = acnt.savings_sbd_seconds / SCORUM_SECONDS_PER_YEAR;
-                  interest *= get_dynamic_global_properties().sbd_interest_rate;
-                  interest /= SCORUM_100_PERCENT;
-                  asset interest_paid(interest.to_uint64(), SBD_SYMBOL);
-                  acnt.savings_sbd_balance += interest_paid;
-                  acnt.savings_sbd_seconds = 0;
-                  acnt.savings_sbd_last_interest_payment = head_block_time();
-
-                  if(interest > 0)
-                     push_virtual_operation( interest_operation( a.name, interest_paid ) );
-
-                  modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& props)
-                  {
-                     props.current_sbd_supply += interest_paid;
-                     props.virtual_supply += interest_paid * get_feed_history().current_median_history;
-                  } );
-               }
-            }
-            acnt.savings_sbd_balance += delta;
-            break;
-         default:
-            FC_ASSERT( !"invalid symbol" );
       }
    } );
 }
@@ -3248,9 +2644,6 @@ void database::adjust_reward_balance( const account_object& a, const asset& delt
       {
          case SCORUM_SYMBOL:
             acnt.reward_scorum_balance += delta;
-            break;
-         case SBD_SYMBOL:
-            acnt.reward_sbd_balance += delta;
             break;
          default:
             FC_ASSERT( false, "invalid symbol" );
@@ -3279,11 +2672,6 @@ void database::adjust_supply( const asset& delta, bool adjust_vesting )
             assert( props.current_supply.amount.value >= 0 );
             break;
          }
-         case SBD_SYMBOL:
-            props.current_sbd_supply += delta;
-            props.virtual_supply = props.current_sbd_supply * get_feed_history().current_median_history + props.current_supply;
-            assert( props.current_sbd_supply.amount.value >= 0 );
-            break;
          default:
             FC_ASSERT( false, "invalid symbol" );
       }
@@ -3297,23 +2685,8 @@ asset database::get_balance( const account_object& a, asset_symbol_type symbol )
    {
       case SCORUM_SYMBOL:
          return a.balance;
-      case SBD_SYMBOL:
-         return a.sbd_balance;
       default:
          FC_ASSERT( false, "invalid symbol" );
-   }
-}
-
-asset database::get_savings_balance( const account_object& a, asset_symbol_type symbol )const
-{
-   switch( symbol )
-   {
-      case SCORUM_SYMBOL:
-         return a.savings_balance;
-      case SBD_SYMBOL:
-         return a.savings_sbd_balance;
-      default:
-         FC_ASSERT( !"invalid symbol" );
    }
 }
 
@@ -3417,15 +2790,6 @@ void database::apply_hardfork( uint32_t hardfork )
    push_virtual_operation( hardfork_operation( hardfork ), true );
 }
 
-void database::retally_liquidity_weight() {
-   const auto& ridx = get_index< liquidity_reward_balance_index >().indices().get< by_owner >();
-   for( const auto& i : ridx ) {
-      modify( i, []( liquidity_reward_balance_object& o ){
-         o.update_weight();
-      });
-   }
-}
-
 /**
  * Verifies all supply invariantes check out
  */
@@ -3435,7 +2799,6 @@ void database::validate_invariants()const
    {
       const auto& account_idx = get_index<account_index>().indices().get<by_name>();
       asset total_supply = asset( 0, SCORUM_SYMBOL );
-      asset total_sbd = asset( 0, SBD_SYMBOL );
       asset total_vesting = asset( 0, VESTS_SYMBOL );
       asset pending_vesting_scorum = asset( 0, SCORUM_SYMBOL );
       share_type total_vsf_votes = share_type( 0 );
@@ -3450,11 +2813,7 @@ void database::validate_invariants()const
       for( auto itr = account_idx.begin(); itr != account_idx.end(); ++itr )
       {
          total_supply += itr->balance;
-         total_supply += itr->savings_balance;
          total_supply += itr->reward_scorum_balance;
-         total_sbd += itr->sbd_balance;
-         total_sbd += itr->savings_sbd_balance;
-         total_sbd += itr->reward_sbd_balance;
          total_vesting += itr->vesting_shares;
          total_vesting += itr->reward_vesting_balance;
          pending_vesting_scorum += itr->reward_vesting_scorum;
@@ -3465,58 +2824,18 @@ void database::validate_invariants()const
                                       itr->vesting_shares.amount ) );
       }
 
-      const auto& convert_request_idx = get_index< convert_request_index >().indices();
-
-      for( auto itr = convert_request_idx.begin(); itr != convert_request_idx.end(); ++itr )
-      {
-         if( itr->amount.symbol == SCORUM_SYMBOL )
-            total_supply += itr->amount;
-         else if( itr->amount.symbol == SBD_SYMBOL )
-            total_sbd += itr->amount;
-         else
-            FC_ASSERT( false, "Encountered illegal symbol in convert_request_object" );
-      }
-
-      const auto& limit_order_idx = get_index< limit_order_index >().indices();
-
-      for( auto itr = limit_order_idx.begin(); itr != limit_order_idx.end(); ++itr )
-      {
-         if( itr->sell_price.base.symbol == SCORUM_SYMBOL )
-         {
-            total_supply += asset( itr->for_sale, SCORUM_SYMBOL );
-         }
-         else if ( itr->sell_price.base.symbol == SBD_SYMBOL )
-         {
-            total_sbd += asset( itr->for_sale, SBD_SYMBOL );
-         }
-      }
-
       const auto& escrow_idx = get_index< escrow_index >().indices().get< by_id >();
 
       for( auto itr = escrow_idx.begin(); itr != escrow_idx.end(); ++itr )
       {
          total_supply += itr->scorum_balance;
-         total_sbd += itr->sbd_balance;
 
          if( itr->pending_fee.symbol == SCORUM_SYMBOL )
             total_supply += itr->pending_fee;
-         else if( itr->pending_fee.symbol == SBD_SYMBOL )
-            total_sbd += itr->pending_fee;
          else
             FC_ASSERT( false, "found escrow pending fee that is not SBD or SCORUM" );
       }
 
-      const auto& savings_withdraw_idx = get_index< savings_withdraw_index >().indices().get< by_id >();
-
-      for( auto itr = savings_withdraw_idx.begin(); itr != savings_withdraw_idx.end(); ++itr )
-      {
-         if( itr->amount.symbol == SCORUM_SYMBOL )
-            total_supply += itr->amount;
-         else if( itr->amount.symbol == SBD_SYMBOL )
-            total_sbd += itr->amount;
-         else
-            FC_ASSERT( false, "found savings withdraw that is not SBD or SCORUM" );
-      }
       fc::uint128_t total_rshares2;
 
       const auto& comment_idx = get_index< comment_index >().indices();
@@ -3540,17 +2859,11 @@ void database::validate_invariants()const
       total_supply += gpo.total_vesting_fund_scorum + gpo.total_reward_fund_scorum + gpo.pending_rewarded_vesting_scorum;
 
       FC_ASSERT( gpo.current_supply == total_supply, "", ("gpo.current_supply",gpo.current_supply)("total_supply",total_supply) );
-      FC_ASSERT( gpo.current_sbd_supply == total_sbd, "", ("gpo.current_sbd_supply",gpo.current_sbd_supply)("total_sbd",total_sbd) );
       FC_ASSERT( gpo.total_vesting_shares + gpo.pending_rewarded_vesting_shares == total_vesting, "", ("gpo.total_vesting_shares",gpo.total_vesting_shares)("total_vesting",total_vesting) );
       FC_ASSERT( gpo.total_vesting_shares.amount == total_vsf_votes, "", ("total_vesting_shares",gpo.total_vesting_shares)("total_vsf_votes",total_vsf_votes) );
       FC_ASSERT( gpo.pending_rewarded_vesting_scorum == pending_vesting_scorum, "", ("pending_rewarded_vesting_scorum",gpo.pending_rewarded_vesting_scorum)("pending_vesting_scorum", pending_vesting_scorum));
 
       FC_ASSERT( gpo.virtual_supply >= gpo.current_supply );
-      if ( !get_feed_history().current_median_history.is_null() )
-      {
-         FC_ASSERT( gpo.current_sbd_supply * get_feed_history().current_median_history + gpo.current_supply
-            == gpo.virtual_supply, "", ("gpo.current_sbd_supply",gpo.current_sbd_supply)("get_feed_history().current_median_history",get_feed_history().current_median_history)("gpo.current_supply",gpo.current_supply)("gpo.virtual_supply",gpo.virtual_supply) );
-      }
    }
    FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) );
 }

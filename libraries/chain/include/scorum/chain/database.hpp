@@ -131,15 +131,8 @@ namespace scorum { namespace chain {
          const escrow_object&   get_escrow(  const account_name_type& name, uint32_t escrow_id )const;
          const escrow_object*   find_escrow( const account_name_type& name, uint32_t escrow_id )const;
 
-         const limit_order_object& get_limit_order(  const account_name_type& owner, uint32_t id )const;
-         const limit_order_object* find_limit_order( const account_name_type& owner, uint32_t id )const;
-
-         const savings_withdraw_object& get_savings_withdraw(  const account_name_type& owner, uint32_t request_id )const;
-         const savings_withdraw_object* find_savings_withdraw( const account_name_type& owner, uint32_t request_id )const;
-
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
-         const feed_history_object&             get_feed_history()const;
          const witness_schedule_object&         get_witness_schedule_object()const;
          const hardfork_property_object&        get_hardfork_property_object()const;
 
@@ -282,20 +275,16 @@ namespace scorum { namespace chain {
          uint32_t get_slot_at_time(fc::time_point_sec when)const;
 
          /** @return the sbd created and deposited to_account, may return SCORUM if there is no median feed */
-         std::pair< asset, asset > create_sbd( const account_object& to_account, asset scorum, bool to_reward_balance=false );
          asset create_vesting( const account_object& to_account, asset scorum, bool to_reward_balance=false );
          void adjust_total_payout( const comment_object& a, const asset& sbd, const asset& curator_sbd_value, const asset& beneficiary_value );
 
-         void        adjust_liquidity_reward( const account_object& owner, const asset& volume, bool is_bid );
          void        adjust_balance( const account_object& a, const asset& delta );
-         void        adjust_savings_balance( const account_object& a, const asset& delta );
          void        adjust_reward_balance( const account_object& a, const asset& delta );
          void        adjust_supply( const asset& delta, bool adjust_vesting = false );
          void        adjust_rshares2( const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2 );
          void        update_owner_authority( const account_object& account, const authority& owner_authority );
 
          asset       get_balance( const account_object& a, asset_symbol_type symbol )const;
-         asset       get_savings_balance( const account_object& a, asset_symbol_type symbol )const;
          asset       get_balance( const string& aname, asset_symbol_type symbol )const { return get_balance( get_account(aname), symbol ); }
 
          /** this updates the votes for witnesses as a result of account voting proxy changing */
@@ -329,24 +318,14 @@ namespace scorum { namespace chain {
          void process_decline_voting_rights();
          void update_median_feed();
 
-         asset get_liquidity_reward()const;
          asset get_content_reward()const;
          asset get_producer_reward();
          asset get_curation_reward()const;
-         asset get_pow_reward()const;
 
          uint16_t get_curation_rewards_percent( const comment_object& c ) const;
 
          share_type pay_reward_funds( share_type reward );
 
-         void  pay_liquidity_reward();
-
-         /**
-          * Helper method to return the current sbd value of a given amount of
-          * SCORUM.  Return 0 SBD if there isn't a current_median_history
-          */
-         asset to_sbd( const asset& scorum )const;
-         asset to_scorum( const asset& sbd )const;
 
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
@@ -377,16 +356,10 @@ namespace scorum { namespace chain {
          std::deque< signed_transaction >       _popped_tx;
 
 
-         bool apply_order( const limit_order_object& new_order_object );
-         bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives );
-         void cancel_order( const limit_order_object& obj );
-         int  match( const limit_order_object& bid, const limit_order_object& ask, const price& trade_price );
-
          void perform_vesting_share_split( uint32_t magnitude );
          void retally_comment_children();
          void retally_witness_votes();
          void retally_witness_vote_counts( bool force = false );
-         void retally_liquidity_weight();
          void update_virtual_supply();
 
          bool has_hardfork( uint32_t hardfork )const;
@@ -406,8 +379,6 @@ namespace scorum { namespace chain {
          void show_free_memory( bool force );
 
 #ifdef IS_TEST_NET
-         bool liquidity_rewards_enabled = true;
-         bool skip_price_feed_limit_check = true;
          bool skip_transaction_delta_check = true;
 #endif
 
@@ -438,7 +409,6 @@ namespace scorum { namespace chain {
          void update_signing_witness(const witness_object& signing_witness, const signed_block& new_block);
          void update_last_irreversible_block();
          void clear_expired_transactions();
-         void clear_expired_orders();
          void clear_expired_delegations();
          void process_header_extensions( const signed_block& next_block );
 

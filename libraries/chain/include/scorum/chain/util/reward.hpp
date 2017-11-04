@@ -23,10 +23,9 @@ struct comment_reward_context
 {
    share_type rshares;
    uint16_t   reward_weight = 0;
-   asset      max_sbd;
+   asset      max_scr;
    uint128_t  total_reward_shares2;
    asset      total_reward_fund_scorum;
-   price      current_scorum_price;
    curve_id   reward_curve = quadratic;
 };
 
@@ -34,9 +33,17 @@ uint64_t get_rshare_reward( const comment_reward_context& ctx );
 
 uint128_t evaluate_reward_curve( const uint128_t& rshares, const curve_id& curve = quadratic);
 
-inline bool is_comment_payout_dust( const price& p, uint64_t scorum_payout )
+//SCORUM: decide who will we approach MIN PAYOUT if we don't have stable coin
+inline bool is_comment_payout_dust(uint64_t scorum_payout )
 {
-   return to_sbd( p, asset( scorum_payout, SCORUM_SYMBOL ) ) < SCORUM_MIN_PAYOUT_SBD;
+   //SCORUM: original logic of steem
+   //return to_sbd( p, asset( scorum_payout, SCORUM_SYMBOL ) ) < SCORUM_MIN_PAYOUT_SBD;
+
+   //SCORUM: it make sense to move SCORUM_MIN_PAYOUT to global properties and let witnesses vote on it
+   return asset(scorum_payout) < SCORUM_MIN_PAYOUT;
+
+   //SCORUM: no payout limits
+   //return scorum_payout <= 0;
 }
 
 } } } // scorum::chain::util
@@ -44,9 +51,8 @@ inline bool is_comment_payout_dust( const price& p, uint64_t scorum_payout )
 FC_REFLECT( scorum::chain::util::comment_reward_context,
    (rshares)
    (reward_weight)
-   (max_sbd)
+   (max_scr)
    (total_reward_shares2)
    (total_reward_fund_scorum)
-   (current_scorum_price)
    (reward_curve)
    )

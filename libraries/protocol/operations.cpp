@@ -9,8 +9,6 @@ struct is_market_op_visitor {
 
    template<typename T>
    bool operator()( T&& v )const { return false; }
-   bool operator()( const limit_order_create_operation& )const { return true; }
-   bool operator()( const limit_order_cancel_operation& )const { return true; }
    bool operator()( const transfer_operation& )const { return true; }
    bool operator()( const transfer_to_vesting_operation& )const { return true; }
 };

@@ -31,33 +31,12 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 using namespace std;
 
-struct order
-{
-   price                order_price;
-   double               real_price; // dollars per scorum
-   share_type           scorum;
-   share_type           sbd;
-   fc::time_point_sec   created;
-};
-
-struct order_book
-{
-   vector< order >      asks;
-   vector< order >      bids;
-};
-
 struct api_context;
 
 struct scheduled_hardfork
 {
    hardfork_version     hf_version;
    fc::time_point_sec   live_time;
-};
-
-struct liquidity_balance
-{
-   string               account;
-   fc::uint128_t        weight;
 };
 
 struct withdraw_route
@@ -126,7 +105,6 @@ class database_api
       state get_state( string path )const;
 
       vector< account_name_type > get_active_witnesses()const;
-      vector< account_name_type > get_miner_queue()const;
 
       /////////////////////////////
       // Blocks and transactions //
@@ -173,8 +151,6 @@ class database_api
        */
       dynamic_global_property_api_obj  get_dynamic_global_properties()const;
       chain_properties                 get_chain_properties()const;
-      price                            get_current_median_history_price()const;
-      feed_history_api_obj             get_feed_history()const;
       witness_schedule_api_obj         get_witness_schedule()const;
       hardfork_version                 get_hardfork_version()const;
       scheduled_hardfork               get_next_scheduled_hardfork()const;
@@ -229,9 +205,6 @@ class database_api
 
       optional< account_bandwidth_api_obj > get_account_bandwidth( string account, witness::bandwidth_type type )const;
 
-      vector< savings_withdraw_api_obj > get_savings_withdraw_from( string account )const;
-      vector< savings_withdraw_api_obj > get_savings_withdraw_to( string account )const;
-
       vector< vesting_delegation_api_obj > get_vesting_delegations( string account, string from, uint32_t limit = 100 )const;
       vector< vesting_delegation_expiration_api_obj > get_expiring_vesting_delegations( string account, time_point_sec from, uint32_t limit = 100 )const;
 
@@ -248,7 +221,6 @@ class database_api
        */
       vector<optional<witness_api_obj>> get_witnesses(const vector<witness_id_type>& witness_ids)const;
 
-      vector<convert_request_api_obj> get_conversion_requests( const string& account_name )const;
 
       /**
        * @brief Get the witness owned by a given account
@@ -280,20 +252,6 @@ class database_api
       ////////////
       // Market //
       ////////////
-
-      /**
-       * @breif Gets the current order book for SCORUM:SBD market
-       * @param limit Maximum number of orders for each side of the spread to return -- Must not exceed 1000
-       */
-      order_book get_order_book( uint32_t limit = 1000 )const;
-      vector<extended_limit_order> get_open_orders( string owner )const;
-
-      /**
-       * @breif Gets the current liquidity reward queue.
-       * @param start_account The account to start the list from, or "" to get the head of the queue
-       * @param limit Maxmimum number of accounts to return -- Must not exceed 1000
-       */
-      vector< liquidity_balance > get_liquidity_queue( string start_account, uint32_t limit = 1000 )const;
 
       ////////////////////////////
       // Authority / validation //
@@ -437,10 +395,7 @@ class database_api
 
 } }
 
-FC_REFLECT( scorum::app::order, (order_price)(real_price)(scorum)(sbd)(created) );
-FC_REFLECT( scorum::app::order_book, (asks)(bids) );
 FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) );
-FC_REFLECT( scorum::app::liquidity_balance, (account)(weight) );
 FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) );
 
 FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) );
@@ -479,8 +434,6 @@ FC_API(scorum::app::database_api,
    (get_config)
    (get_dynamic_global_properties)
    (get_chain_properties)
-   (get_feed_history)
-   (get_current_median_history_price)
    (get_witness_schedule)
    (get_hardfork_version)
    (get_next_scheduled_hardfork)
@@ -495,22 +448,14 @@ FC_API(scorum::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
-   (get_conversion_requests)
    (get_account_history)
    (get_owner_history)
    (get_recovery_request)
    (get_escrow)
    (get_withdraw_routes)
    (get_account_bandwidth)
-   (get_savings_withdraw_from)
-   (get_savings_withdraw_to)
    (get_vesting_delegations)
    (get_expiring_vesting_delegations)
-
-   // Market
-   (get_order_book)
-   (get_open_orders)
-   (get_liquidity_queue)
 
    // Authority / validation
    (get_transaction_hex)
@@ -538,5 +483,4 @@ FC_API(scorum::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
    (get_active_witnesses)
-   (get_miner_queue)
 )

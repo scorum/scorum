@@ -16,36 +16,11 @@ namespace scorum { namespace app {
 
 using namespace scorum::chain;
 
-/*struct limit_order
-{
-   limit_order( chain::limit_order_object& o ):
-      id( o.id ),
-      created( o.created ),
-      expiration( o.expiration ),
-      seller( o.seller ),
-      orderid( o.orderid ),
-      for_sale( o.for_sale ),
-      sell_price( o.sell_price )
-   {}
-
-   limit_order(){}
-
-   chain::limit_order_id_type id;
-   time_point_sec             created;
-   time_point_sec             expiration;
-   account_name_type          seller;
-   uint32_t                   orderid = 0;
-   share_type                 for_sale;
-   price                      sell_price;
-};*/
 
 typedef chain::change_recovery_account_request_object  change_recovery_account_request_api_obj;
 typedef chain::block_summary_object                    block_summary_api_obj;
 typedef chain::comment_vote_object                     comment_vote_api_obj;
-typedef chain::convert_request_object                  convert_request_api_obj;
 typedef chain::escrow_object                           escrow_api_obj;
-typedef chain::liquidity_reward_balance_object         liquidity_reward_balance_api_obj;
-typedef chain::limit_order_object                      limit_order_api_obj;
 typedef chain::withdraw_vesting_route_object           withdraw_vesting_route_api_obj;
 typedef chain::decline_voting_rights_request_object    decline_voting_rights_request_api_obj;
 typedef chain::witness_vote_object                     witness_vote_api_obj;
@@ -87,7 +62,7 @@ struct comment_api_obj
       net_votes( o.net_votes ),
       root_comment( o.root_comment ),
       max_accepted_payout( o.max_accepted_payout ),
-      percent_scorum_dollars( o.percent_scorum_dollars ),
+      percent_scrs( o.percent_scrs ),
       allow_replies( o.allow_replies ),
       allow_votes( o.allow_votes ),
       allow_curation_rewards( o.allow_curation_rewards )
@@ -139,7 +114,7 @@ struct comment_api_obj
    comment_id_type   root_comment;
 
    asset             max_accepted_payout;
-   uint16_t          percent_scorum_dollars = 0;
+   uint16_t          percent_scrs = 0;
    bool              allow_replies = false;
    bool              allow_votes = false;
    bool              allow_curation_rewards = false;
@@ -191,17 +166,6 @@ struct account_api_obj
       voting_power( a.voting_power ),
       last_vote_time( a.last_vote_time ),
       balance( a.balance ),
-      savings_balance( a.savings_balance ),
-      sbd_balance( a.sbd_balance ),
-      sbd_seconds( a.sbd_seconds ),
-      sbd_seconds_last_update( a.sbd_seconds_last_update ),
-      sbd_last_interest_payment( a.sbd_last_interest_payment ),
-      savings_sbd_balance( a.savings_sbd_balance ),
-      savings_sbd_seconds( a.savings_sbd_seconds ),
-      savings_sbd_seconds_last_update( a.savings_sbd_seconds_last_update ),
-      savings_sbd_last_interest_payment( a.savings_sbd_last_interest_payment ),
-      savings_withdraw_requests( a.savings_withdraw_requests ),
-      reward_sbd_balance( a.reward_sbd_balance ),
       reward_scorum_balance( a.reward_scorum_balance ),
       reward_vesting_balance( a.reward_vesting_balance ),
       reward_vesting_scorum( a.reward_vesting_scorum ),
@@ -286,21 +250,7 @@ struct account_api_obj
    time_point_sec    last_vote_time;
 
    asset             balance;
-   asset             savings_balance;
 
-   asset             sbd_balance;
-   uint128_t         sbd_seconds;
-   time_point_sec    sbd_seconds_last_update;
-   time_point_sec    sbd_last_interest_payment;
-
-   asset             savings_sbd_balance;
-   uint128_t         savings_sbd_seconds;
-   time_point_sec    savings_sbd_seconds_last_update;
-   time_point_sec    savings_sbd_last_interest_payment;
-
-   uint8_t           savings_withdraw_requests = 0;
-
-   asset             reward_sbd_balance;
    asset             reward_scorum_balance;
    asset             reward_vesting_balance;
    asset             reward_vesting_scorum;
@@ -371,44 +321,6 @@ struct account_recovery_request_api_obj
 struct account_history_api_obj
 {
 
-};
-
-struct savings_withdraw_api_obj
-{
-   savings_withdraw_api_obj( const chain::savings_withdraw_object& o ) :
-      id( o.id ),
-      from( o.from ),
-      to( o.to ),
-      memo( to_string( o.memo ) ),
-      request_id( o.request_id ),
-      amount( o.amount ),
-      complete( o.complete )
-   {}
-
-   savings_withdraw_api_obj() {}
-
-   savings_withdraw_id_type   id;
-   account_name_type          from;
-   account_name_type          to;
-   string                     memo;
-   uint32_t                   request_id = 0;
-   asset                      amount;
-   time_point_sec             complete;
-};
-
-struct feed_history_api_obj
-{
-   feed_history_api_obj( const chain::feed_history_object& f ) :
-      id( f.id ),
-      current_median_history( f.current_median_history ),
-      price_history( f.price_history.begin(), f.price_history.end() )
-   {}
-
-   feed_history_api_obj() {}
-
-   feed_history_id_type id;
-   price                current_median_history;
-   deque< price >       price_history;
 };
 
 struct witness_api_obj
@@ -515,7 +427,7 @@ FC_REFLECT( scorum::app::comment_api_obj,
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
              (total_vote_weight)(reward_weight)(total_payout_value)(curator_payout_value)(author_rewards)(net_votes)(root_comment)
-             (max_accepted_payout)(percent_scorum_dollars)(allow_replies)(allow_votes)(allow_curation_rewards)
+             (max_accepted_payout)(percent_scrs)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
 
@@ -525,10 +437,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)(reset_account)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (savings_balance)
-             (sbd_balance)(sbd_seconds)(sbd_seconds_last_update)(sbd_last_interest_payment)
-             (savings_sbd_balance)(savings_sbd_seconds)(savings_sbd_seconds_last_update)(savings_sbd_last_interest_payment)(savings_withdraw_requests)
-             (reward_sbd_balance)(reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
+             (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
              (posting_rewards)
@@ -550,22 +459,6 @@ FC_REFLECT( scorum::app::account_recovery_request_api_obj,
              (account_to_recover)
              (new_owner_authority)
              (expires)
-          )
-
-FC_REFLECT( scorum::app::savings_withdraw_api_obj,
-             (id)
-             (from)
-             (to)
-             (memo)
-             (request_id)
-             (amount)
-             (complete)
-          )
-
-FC_REFLECT( scorum::app::feed_history_api_obj,
-             (id)
-             (current_median_history)
-             (price_history)
           )
 
 FC_REFLECT( scorum::app::tag_api_obj,

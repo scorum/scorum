@@ -60,14 +60,6 @@ struct operation_process
       });
    }
 
-   void operator()( const interest_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.sbd_paid_as_interest += op.interest.amount;
-      });
-   }
-
    void operator()( const account_create_operation& op )const
    {
       _db.modify( _bucket, [&]( bucket_object& b )
@@ -130,7 +122,7 @@ struct operation_process
       _db.modify( _bucket, [&]( bucket_object& b )
       {
          b.payouts++;
-         b.sbd_paid_to_authors += op.sbd_payout.amount;
+         b.scr_paid_to_authors += op.scorum_payout.amount;
          b.vests_paid_to_authors += op.vesting_payout.amount;
       });
    }
@@ -140,14 +132,6 @@ struct operation_process
       _db.modify( _bucket, [&]( bucket_object& b )
       {
          b.vests_paid_to_curators += op.reward.amount;
-      });
-   }
-
-   void operator()( const liquidity_reward_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.liquidity_rewards_paid += op.payout.amount;
       });
    }
 
@@ -174,48 +158,6 @@ struct operation_process
 
          if( account.vesting_withdraw_rate.amount == 0 )
             b.finished_vesting_withdrawals++;
-      });
-   }
-
-   void operator()( const limit_order_create_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.limit_orders_created++;
-      });
-   }
-
-   void operator()( const fill_order_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.limit_orders_filled += 2;
-      });
-   }
-
-   void operator()( const limit_order_cancel_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.limit_orders_cancelled++;
-      });
-   }
-
-   void operator()( const convert_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.sbd_conversion_requests_created++;
-         b.sbd_to_be_converted += op.amount.amount;
-      });
-   }
-
-   void operator()( const fill_convert_request_operation& op )const
-   {
-      _db.modify( _bucket, [&]( bucket_object& b )
-      {
-         b.sbd_conversion_requests_filled++;
-         b.scorum_converted += op.amount_out.amount;
       });
    }
 };

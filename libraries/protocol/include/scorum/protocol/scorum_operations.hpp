@@ -119,7 +119,7 @@ namespace scorum { namespace protocol {
     *  operation allows authors to update properties associated with their post.
     *
     *  The max_accepted_payout may be decreased, but never increased.
-    *  The percent_scorum_dollars may be decreased, but never increased
+    *  The percent_scrs may be decreased, but never increased
     *
     */
    struct comment_options_operation : public base_operation
@@ -127,8 +127,8 @@ namespace scorum { namespace protocol {
       account_name_type author;
       string            permlink;
 
-      asset             max_accepted_payout    = asset( 1000000000, SBD_SYMBOL );       /// SBD value of the maximum payout this post will receive
-      uint16_t          percent_scorum_dollars  = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
+      asset             max_accepted_payout    = asset( 1000000000, SCORUM_SYMBOL );       /// SBD value of the maximum payout this post will receive
+      uint16_t          percent_scrs  = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
       bool              allow_votes            = true;      /// allows a post to receive votes;
       bool              allow_curation_rewards = true; /// allows voters to recieve curation rewards. Rewards return to reward fund.
       comment_options_extensions_type extensions;
@@ -219,7 +219,6 @@ namespace scorum { namespace protocol {
       account_name_type agent;
       uint32_t          escrow_id = 30;
 
-      asset             sbd_amount = asset( 0, SBD_SYMBOL );
       asset             scorum_amount = asset( 0, SCORUM_SYMBOL );
       asset             fee;
 
@@ -291,7 +290,6 @@ namespace scorum { namespace protocol {
       account_name_type receiver; ///< the account that should receive funds (might be from, might be to)
 
       uint32_t          escrow_id = 30;
-      asset             sbd_amount = asset( 0, SBD_SYMBOL ); ///< the amount of sbd to release
       asset             scorum_amount = asset( 0, SCORUM_SYMBOL ); ///< the amount of scorum to release
 
       void validate()const;
@@ -377,14 +375,11 @@ namespace scorum { namespace protocol {
        *  to tune rate limiting and capacity
        */
       uint32_t          maximum_block_size = SCORUM_MIN_BLOCK_SIZE_LIMIT * 2;
-      uint16_t          sbd_interest_rate  = SCORUM_DEFAULT_SBD_INTEREST_RATE;
 
       void validate()const
       {
          FC_ASSERT( account_creation_fee.amount >= SCORUM_MIN_ACCOUNT_CREATION_FEE);
          FC_ASSERT( maximum_block_size >= SCORUM_MIN_BLOCK_SIZE_LIMIT);
-         FC_ASSERT( sbd_interest_rate >= 0 );
-         FC_ASSERT( sbd_interest_rate <= SCORUM_100_PERCENT );
       }
    };
 
@@ -491,103 +486,6 @@ namespace scorum { namespace protocol {
       void get_required_posting_authorities( flat_set<account_name_type>& a )const{ for( const auto& i : required_posting_auths ) a.insert(i); }
       void get_required_authorities( vector< authority >& a )const{ for( const auto& i : required_auths ) a.push_back( i ); }
    };
-
-
-   /**
-    *  Feeds can only be published by the top N witnesses which are included in every round and are
-    *  used to define the exchange rate between scorum and the dollar.
-    */
-   struct feed_publish_operation : public base_operation
-   {
-      account_name_type publisher;
-      price             exchange_rate;
-
-      void  validate()const;
-      void  get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(publisher); }
-   };
-
-
-   /**
-    *  This operation instructs the blockchain to start a conversion between SCORUM and SBD,
-    *  The funds are deposited after SCORUM_CONVERSION_DELAY
-    */
-   struct convert_operation : public base_operation
-   {
-      account_name_type owner;
-      uint32_t          requestid = 0;
-      asset             amount;
-
-      void  validate()const;
-      void  get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
-   };
-
-
-   /**
-    * This operation creates a limit order and matches it against existing open orders.
-    */
-   struct limit_order_create_operation : public base_operation
-   {
-      account_name_type owner;
-      uint32_t          orderid = 0; /// an ID assigned by owner, must be unique
-      asset             amount_to_sell;
-      asset             min_to_receive;
-      bool              fill_or_kill = false;
-      time_point_sec    expiration = time_point_sec::maximum();
-
-      void  validate()const;
-      void  get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
-
-      price             get_price()const { return amount_to_sell / min_to_receive; }
-
-      pair< asset_symbol_type, asset_symbol_type > get_market()const
-      {
-         return amount_to_sell.symbol < min_to_receive.symbol ?
-                std::make_pair(amount_to_sell.symbol, min_to_receive.symbol) :
-                std::make_pair(min_to_receive.symbol, amount_to_sell.symbol);
-      }
-   };
-
-
-   /**
-    *  This operation is identical to limit_order_create except it serializes the price rather
-    *  than calculating it from other fields.
-    */
-   struct limit_order_create2_operation : public base_operation
-   {
-      account_name_type owner;
-      uint32_t          orderid = 0; /// an ID assigned by owner, must be unique
-      asset             amount_to_sell;
-      bool              fill_or_kill = false;
-      price             exchange_rate;
-      time_point_sec    expiration = time_point_sec::maximum();
-
-      void  validate()const;
-      void  get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
-
-      price             get_price()const { return exchange_rate; }
-
-      pair< asset_symbol_type, asset_symbol_type > get_market()const
-      {
-         return exchange_rate.base.symbol < exchange_rate.quote.symbol ?
-                std::make_pair(exchange_rate.base.symbol, exchange_rate.quote.symbol) :
-                std::make_pair(exchange_rate.quote.symbol, exchange_rate.base.symbol);
-      }
-   };
-
-
-   /**
-    *  Cancels an order and returns the balance to owner.
-    */
-   struct limit_order_cancel_operation : public base_operation
-   {
-      account_name_type owner;
-      uint32_t          orderid = 0;
-
-      void  validate()const;
-      void  get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
-   };
-
-
 
 
    /**
@@ -719,39 +617,6 @@ namespace scorum { namespace protocol {
       void validate() const;
    };
 
-
-   struct transfer_to_savings_operation : public base_operation {
-      account_name_type from;
-      account_name_type to;
-      asset             amount;
-      string            memo;
-
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert( from ); }
-      void validate() const;
-   };
-
-
-   struct transfer_from_savings_operation : public base_operation {
-      account_name_type from;
-      uint32_t          request_id = 0;
-      account_name_type to;
-      asset             amount;
-      string            memo;
-
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert( from ); }
-      void validate() const;
-   };
-
-
-   struct cancel_transfer_from_savings_operation : public base_operation {
-      account_name_type from;
-      uint32_t          request_id = 0;
-
-      void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert( from ); }
-      void validate() const;
-   };
-
-
    struct decline_voting_rights_operation : public base_operation
    {
       account_name_type account;
@@ -765,7 +630,6 @@ namespace scorum { namespace protocol {
    {
       account_name_type account;
       asset             reward_scorum;
-      asset             reward_sbd;
       asset             reward_vests;
 
       void get_required_posting_authorities( flat_set< account_name_type >& a )const{ a.insert( account ); }
@@ -792,15 +656,7 @@ namespace scorum { namespace protocol {
    };
 } } // scorum::protocol
 
-
-FC_REFLECT( scorum::protocol::transfer_to_savings_operation, (from)(to)(amount)(memo) )
-FC_REFLECT( scorum::protocol::transfer_from_savings_operation, (from)(request_id)(to)(amount)(memo) )
-FC_REFLECT( scorum::protocol::cancel_transfer_from_savings_operation, (from)(request_id) )
-
-FC_REFLECT( scorum::protocol::convert_operation, (owner)(requestid)(amount) )
-FC_REFLECT( scorum::protocol::feed_publish_operation, (publisher)(exchange_rate) )
-
-FC_REFLECT( scorum::protocol::chain_properties, (account_creation_fee)(maximum_block_size)(sbd_interest_rate) );
+FC_REFLECT( scorum::protocol::chain_properties, (account_creation_fee)(maximum_block_size) );
 
 FC_REFLECT( scorum::protocol::account_create_operation,
             (fee)
@@ -844,25 +700,22 @@ FC_REFLECT( scorum::protocol::vote_operation, (voter)(author)(permlink)(weight) 
 FC_REFLECT( scorum::protocol::custom_operation, (required_auths)(id)(data) )
 FC_REFLECT( scorum::protocol::custom_json_operation, (required_auths)(required_posting_auths)(id)(json) )
 FC_REFLECT( scorum::protocol::custom_binary_operation, (required_owner_auths)(required_active_auths)(required_posting_auths)(required_auths)(id)(data) )
-FC_REFLECT( scorum::protocol::limit_order_create_operation, (owner)(orderid)(amount_to_sell)(min_to_receive)(fill_or_kill)(expiration) )
-FC_REFLECT( scorum::protocol::limit_order_create2_operation, (owner)(orderid)(amount_to_sell)(exchange_rate)(fill_or_kill)(expiration) )
-FC_REFLECT( scorum::protocol::limit_order_cancel_operation, (owner)(orderid) )
 
 FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) );
 
 FC_REFLECT( scorum::protocol::beneficiary_route_type, (account)(weight) )
 FC_REFLECT( scorum::protocol::comment_payout_beneficiaries, (beneficiaries) )
 FC_REFLECT_TYPENAME( scorum::protocol::comment_options_extension )
-FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_scorum_dollars)(allow_votes)(allow_curation_rewards)(extensions) )
+FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_scrs)(allow_votes)(allow_curation_rewards)(extensions) )
 
-FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(sbd_amount)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) );
+FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) );
 FC_REFLECT( scorum::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) );
 FC_REFLECT( scorum::protocol::escrow_dispute_operation, (from)(to)(agent)(who)(escrow_id) );
-FC_REFLECT( scorum::protocol::escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(sbd_amount)(scorum_amount) );
+FC_REFLECT( scorum::protocol::escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(scorum_amount) );
 FC_REFLECT( scorum::protocol::prove_authority_operation, (challenged)(require_owner) );
 FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_account)(account_to_recover)(new_owner_authority)(extensions) );
 FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) );
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) );
-FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_sbd)(reward_vests) )
+FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_vests) )
 FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );

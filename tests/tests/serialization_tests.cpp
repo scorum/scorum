@@ -140,9 +140,6 @@ BOOST_AUTO_TEST_CASE( asset_test )
       BOOST_CHECK_EQUAL( sbd.decimals(), 3 );
       BOOST_CHECK_EQUAL( sbd.symbol_name(), "TBD" );
       BOOST_CHECK_EQUAL( sbd.to_string(), "654.321 TBD" );
-      BOOST_CHECK_EQUAL( sbd.symbol, SBD_SYMBOL);
-      BOOST_CHECK_EQUAL( asset(50, SBD_SYMBOL).to_string(), "0.050 TBD" );
-      BOOST_CHECK_EQUAL( asset(50000, SBD_SYMBOL).to_string(), "50.000 TBD" );
 
       BOOST_CHECK_THROW( scorum.set_decimals(100), fc::exception );
       char* scorum_sy = (char*) &scorum.symbol;

@@ -54,10 +54,10 @@ uint64_t get_rshare_reward( const comment_reward_context& ctx )
    FC_ASSERT( payout_u256 <= u256( uint64_t( std::numeric_limits<int64_t>::max() ) ) );
    uint64_t payout = static_cast< uint64_t >( payout_u256 );
 
-   if( is_comment_payout_dust( ctx.current_scorum_price, payout ) )
+   if( is_comment_payout_dust(payout ) )
       payout = 0;
 
-   asset max_scorum = to_scorum( ctx.current_scorum_price, ctx.max_sbd );
+   asset max_scorum = ctx.max_scr;
 
    payout = std::min( payout, uint64_t( max_scorum.amount.value ) );
 

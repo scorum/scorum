@@ -47,10 +47,9 @@ struct statistics
    uint32_t             new_reply_votes = 0;                         ///< New votes on replies
    uint32_t             changed_reply_votes = 0;                     ///< Changed votes on replies
    uint32_t             payouts = 0;                                 ///< Number of comment payouts
-   share_type           sbd_paid_to_authors = 0;                     ///< Ammount of SBD paid to authors
+   share_type           scr_paid_to_authors = 0;                     ///< Ammount of SCR paid to authors
    share_type           vests_paid_to_authors = 0;                   ///< Ammount of VESS paid to authors
    share_type           vests_paid_to_curators = 0;                  ///< Ammount of VESTS paid to curators
-   share_type           liquidity_rewards_paid = 0;                  ///< Ammount of SCORUM paid to market makers
    uint32_t             transfers_to_vesting = 0;                    ///< Transfers of SCORUM into VESTS
    share_type           scorum_vested = 0;                           ///< Ammount of SCORUM vested
    uint32_t             new_vesting_withdrawal_requests = 0;         ///< New vesting withdrawal requests
@@ -138,10 +137,9 @@ FC_REFLECT( scorum::blockchain_statistics::statistics,
    (new_reply_votes)
    (changed_reply_votes)
    (payouts)
-   (sbd_paid_to_authors)
+   (scr_paid_to_authors)
    (vests_paid_to_authors)
    (vests_paid_to_curators)
-   (liquidity_rewards_paid)
    (transfers_to_vesting)
    (scorum_vested)
    (new_vesting_withdrawal_requests)

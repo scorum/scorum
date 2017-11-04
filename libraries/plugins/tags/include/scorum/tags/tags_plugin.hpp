@@ -261,7 +261,7 @@ class tag_stats_object : public object< tag_stats_object_type, tag_stats_object 
       id_type           id;
 
       tag_name_type     tag;
-      asset             total_payout = asset( 0, SBD_SYMBOL );
+      asset             total_payout = asset( 0, SCORUM_SYMBOL );
       int32_t           net_votes = 0;
       uint32_t          top_posts = 0;
       uint32_t          comments  = 0;
@@ -401,7 +401,7 @@ class author_tag_stats_object : public object< author_tag_stats_object_type, aut
       id_type         id;
       account_id_type author;
       tag_name_type   tag;
-      asset           total_rewards = asset( 0, SBD_SYMBOL );
+      asset           total_rewards = asset( 0, SCORUM_SYMBOL );
       uint32_t        total_posts = 0;
 };
 typedef oid< author_tag_stats_object > author_tag_stats_id_type;

@@ -11,7 +11,6 @@ struct block_info
    uint32_t                  block_size                  = 0;
    uint64_t                  aslot                       = 0;
    uint32_t                  last_irreversible_block_num = 0;
-   uint32_t                  num_pow_witnesses           = 0;
 };
 
 struct block_with_info
@@ -27,7 +26,6 @@ FC_REFLECT( scorum::plugin::block_info::block_info,
    (block_size)
    (aslot)
    (last_irreversible_block_num)
-   (num_pow_witnesses)
    )
 
 FC_REFLECT( scorum::plugin::block_info::block_with_info,

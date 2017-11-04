@@ -38,22 +38,10 @@ namespace scorum { namespace chain {
          account_name_type current_witness;
 
 
-         /**
-          *  The total POW accumulated, aka the sum of num_pow_witness at the time new POW is added
-          */
-         uint64_t total_pow = -1;
-
-         /**
-          * The current count of how many pending POW witnesses there are, determines the difficulty
-          * of doing pow
-          */
-         uint32_t num_pow_witnesses = 0;
 
          asset       virtual_supply             = asset( 0, SCORUM_SYMBOL );
          asset       current_supply             = asset( 0, SCORUM_SYMBOL );
          asset       confidential_supply        = asset( 0, SCORUM_SYMBOL ); ///< total asset held in confidential balances
-         asset       current_sbd_supply         = asset( 0, SBD_SYMBOL );
-         asset       confidential_sbd_supply    = asset( 0, SBD_SYMBOL ); ///< total asset held in confidential balances
          asset       total_vesting_fund_scorum   = asset( 0, SCORUM_SYMBOL );
          asset       total_vesting_shares       = asset( 0, VESTS_SYMBOL );
          asset       total_reward_fund_scorum    = asset( 0, SCORUM_SYMBOL );
@@ -75,12 +63,6 @@ namespace scorum { namespace chain {
                total_vesting_fund_scorum + pending_rewarded_vesting_scorum );
          }
 
-         /**
-          *  This property defines the interest rate that SBD deposits receive.
-          */
-         uint16_t sbd_interest_rate = 0;
-
-         uint16_t sbd_print_rate = SCORUM_100_PERCENT;
 
          /**
           *  Maximum block size is decided by the set of active witnesses which change every round.
@@ -132,21 +114,15 @@ FC_REFLECT( scorum::chain::dynamic_global_property_object,
              (head_block_id)
              (time)
              (current_witness)
-             (total_pow)
-             (num_pow_witnesses)
              (virtual_supply)
              (current_supply)
              (confidential_supply)
-             (current_sbd_supply)
-             (confidential_sbd_supply)
              (total_vesting_fund_scorum)
              (total_vesting_shares)
              (total_reward_fund_scorum)
              (total_reward_shares2)
              (pending_rewarded_vesting_shares)
              (pending_rewarded_vesting_scorum)
-             (sbd_interest_rate)
-             (sbd_print_rate)
              (maximum_block_size)
              (current_aslot)
              (recent_slots_filled)

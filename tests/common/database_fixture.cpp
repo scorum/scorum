@@ -337,61 +337,18 @@ void database_fixture::fund(
          {
             if( amount.symbol == SCORUM_SYMBOL )
                a.balance += amount;
-            else if( amount.symbol == SBD_SYMBOL )
-            {
-               a.sbd_balance += amount;
-               a.sbd_seconds_last_update = db.head_block_time();
-            }
          });
 
          db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
          {
             if( amount.symbol == SCORUM_SYMBOL )
                gpo.current_supply += amount;
-            else if( amount.symbol == SBD_SYMBOL )
-               gpo.current_sbd_supply += amount;
          });
-
-         if( amount.symbol == SBD_SYMBOL )
-         {
-            const auto& median_feed = db.get_feed_history();
-            if( median_feed.current_median_history.is_null() )
-               db.modify( median_feed, [&]( feed_history_object& f )
-               {
-                  f.current_median_history = price( asset( 1, SBD_SYMBOL ), asset( 1, SCORUM_SYMBOL ) );
-               });
-         }
 
          db.update_virtual_supply();
       }, default_skip );
    }
    FC_CAPTURE_AND_RETHROW( (account_name)(amount) )
-}
-
-void database_fixture::convert(
-   const string& account_name,
-   const asset& amount )
-{
-   try
-   {
-      const account_object& account = db.get_account( account_name );
-
-
-      if ( amount.symbol == SCORUM_SYMBOL )
-      {
-         db.adjust_balance( account, -amount );
-         db.adjust_balance( account, db.to_sbd( amount ) );
-         db.adjust_supply( -amount );
-         db.adjust_supply( db.to_sbd( amount ) );
-      }
-      else if ( amount.symbol == SBD_SYMBOL )
-      {
-         db.adjust_balance( account, -amount );
-         db.adjust_balance( account, db.to_scorum( amount ) );
-         db.adjust_supply( -amount );
-         db.adjust_supply( db.to_scorum( amount ) );
-      }
-   } FC_CAPTURE_AND_RETHROW( (account_name)(amount) )
 }
 
 void database_fixture::transfer(
@@ -460,31 +417,6 @@ void database_fixture::proxy( const string& account, const string& proxy )
       db.push_transaction( trx, ~0 );
       trx.operations.clear();
    } FC_CAPTURE_AND_RETHROW( (account)(proxy) )
-}
-
-void database_fixture::set_price_feed( const price& new_price )
-{
-   try
-   {
-      for ( int i = 1; i < 8; i++ )
-      {
-         feed_publish_operation op;
-         op.publisher = SCORUM_INIT_DELEGATE_NAME + fc::to_string( i );
-         op.exchange_rate = new_price;
-         trx.operations.push_back( op );
-         trx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
-         db.push_transaction( trx, ~0 );
-         trx.operations.clear();
-      }
-   } FC_CAPTURE_AND_RETHROW( (new_price) )
-
-   generate_blocks( SCORUM_BLOCKS_PER_HOUR );
-   BOOST_REQUIRE(
-#ifdef IS_TEST_NET
-      !db.skip_price_feed_limit_check ||
-#endif
-      db.get(feed_history_id_type()).current_median_history == new_price
-   );
 }
 
 const asset& database_fixture::get_balance( const string& account_name )const

@@ -71,8 +71,6 @@ struct account_stats_bucket_object : public object< account_stats_bucket_object_
    share_type           curation_rewards_vests = 0;               ///< VESTS paid for curation rewards
    share_type           curation_rewards_scorum_value = 0;         ///< SCORUM Value of curation rewards
    share_type           curation_rewards_payout_sbd_value = 0;    ///< SBD Value of curation rewards at time of payout
-   uint32_t             liquidity_reward_payouts = 0;             ///< Number of liquidity reward payouts
-   share_type           liquidity_rewards = 0;                    ///< Amount of SCORUM paid as liquidity rewards
    uint32_t             transfers_to = 0;                         ///< Account to account transfers to this account
    uint32_t             transfers_from = 0;                       ///< Account to account transfers from this account
    share_type           scorum_sent = 0;                           ///< SCORUM sent from this account
@@ -189,8 +187,6 @@ FC_REFLECT( scorum::account_statistics::account_stats_bucket_object,
    (curation_rewards_vests)
    (curation_rewards_scorum_value)
    (curation_rewards_payout_sbd_value)
-   (liquidity_reward_payouts)
-   (liquidity_rewards)
    (transfers_to)
    (transfers_from)
    (scorum_sent)

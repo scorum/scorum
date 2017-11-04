@@ -407,11 +407,11 @@ void comment_options_evaluator::do_apply( const comment_options_operation& o )
    FC_ASSERT( comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled." );
    FC_ASSERT( comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled." );
    FC_ASSERT( comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout." );
-   FC_ASSERT( comment.percent_scorum_dollars >= o.percent_scorum_dollars, "A comment cannot accept a greater percent SBD." );
+   FC_ASSERT( comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent SBD." );
 
    _db.modify( comment, [&]( comment_object& c ) {
        c.max_accepted_payout   = o.max_accepted_payout;
-       c.percent_scorum_dollars = o.percent_scorum_dollars;
+       c.percent_scrs = o.percent_scrs;
        c.allow_votes           = o.allow_votes;
        c.allow_curation_rewards = o.allow_curation_rewards;
    });
@@ -610,17 +610,12 @@ void escrow_transfer_evaluator::do_apply( const escrow_transfer_operation& o )
       FC_ASSERT( o.escrow_expiration > _db.head_block_time(), "The escrow expiration must be after head block time." );
 
       asset scorum_spent = o.scorum_amount;
-      asset sbd_spent = o.sbd_amount;
       if( o.fee.symbol == SCORUM_SYMBOL )
          scorum_spent += o.fee;
-      else
-         sbd_spent += o.fee;
 
       FC_ASSERT( from_account.balance >= scorum_spent, "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}", ("r",scorum_spent)("a",from_account.balance) );
-      FC_ASSERT( from_account.sbd_balance >= sbd_spent, "Account cannot cover SBD costs of escrow. Required: ${r} Available: ${a}", ("r",sbd_spent)("a",from_account.sbd_balance) );
 
       _db.adjust_balance( from_account, -scorum_spent );
-      _db.adjust_balance( from_account, -sbd_spent );
 
       _db.create<escrow_object>([&]( escrow_object& esc )
       {
@@ -630,7 +625,6 @@ void escrow_transfer_evaluator::do_apply( const escrow_transfer_operation& o )
          esc.agent                  = o.agent;
          esc.ratification_deadline  = o.ratification_deadline;
          esc.escrow_expiration      = o.escrow_expiration;
-         esc.sbd_balance            = o.sbd_amount;
          esc.scorum_balance          = o.scorum_amount;
          esc.pending_fee            = o.fee;
       });
@@ -680,7 +674,6 @@ void escrow_approve_evaluator::do_apply( const escrow_approve_operation& o )
       {
          const auto& from_account = _db.get_account( o.from );
          _db.adjust_balance( from_account, escrow.scorum_balance );
-         _db.adjust_balance( from_account, escrow.sbd_balance );
          _db.adjust_balance( from_account, escrow.pending_fee );
 
          _db.remove( escrow );
@@ -729,7 +722,6 @@ void escrow_release_evaluator::do_apply( const escrow_release_operation& o )
 
       const auto& e = _db.get_escrow( o.from, o.escrow_id );
       FC_ASSERT( e.scorum_balance >= o.scorum_amount, "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}", ("a", o.scorum_amount)("b", e.scorum_balance) );
-      FC_ASSERT( e.sbd_balance >= o.sbd_amount, "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}", ("a", o.sbd_amount)("b", e.sbd_balance) );
       FC_ASSERT( e.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).", ("o", o.to)("e", e.to) );
       FC_ASSERT( e.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).", ("o", o.agent)("e", e.agent) );
       FC_ASSERT( o.receiver == e.from || o.receiver == e.to, "Funds must be released to 'from' (${f}) or 'to' (${t})", ("f", e.from)("t", e.to) );
@@ -760,15 +752,13 @@ void escrow_release_evaluator::do_apply( const escrow_release_operation& o )
       // If escrow expires and there is no dispute, either party can release funds to either party.
 
       _db.adjust_balance( receiver_account, o.scorum_amount );
-      _db.adjust_balance( receiver_account, o.sbd_amount );
 
       _db.modify( e, [&]( escrow_object& esc )
       {
          esc.scorum_balance -= o.scorum_amount;
-         esc.sbd_balance -= o.sbd_amount;
       });
 
-      if( e.scorum_balance.amount == 0 && e.sbd_balance.amount == 0 )
+      if( e.scorum_balance.amount == 0)
       {
          _db.remove( e );
       }
@@ -1312,92 +1302,6 @@ void custom_binary_evaluator::do_apply( const custom_binary_operation& o )
    }
 }
 
-void feed_publish_evaluator::do_apply( const feed_publish_operation& o )
-{
-  const auto& witness = _db.get_witness( o.publisher );
-  _db.modify( witness, [&]( witness_object& w ){
-      w.sbd_exchange_rate = o.exchange_rate;
-      w.last_sbd_exchange_update = _db.head_block_time();
-  });
-}
-
-void convert_evaluator::do_apply( const convert_operation& o )
-{
-  const auto& owner = _db.get_account( o.owner );
-  FC_ASSERT( _db.get_balance( owner, o.amount.symbol ) >= o.amount, "Account does not have sufficient balance for conversion." );
-
-  _db.adjust_balance( owner, -o.amount );
-
-  const auto& fhistory = _db.get_feed_history();
-  FC_ASSERT( !fhistory.current_median_history.is_null(), "Cannot convert SBD because there is no price feed." );
-
-  auto scorum_conversion_delay = SCORUM_CONVERSION_DELAY;
-
-  _db.create<convert_request_object>( [&]( convert_request_object& obj )
-  {
-      obj.owner           = o.owner;
-      obj.requestid       = o.requestid;
-      obj.amount          = o.amount;
-      obj.conversion_date = _db.head_block_time() + scorum_conversion_delay;
-  });
-
-}
-
-void limit_order_create_evaluator::do_apply( const limit_order_create_operation& o )
-{
-   FC_ASSERT( o.expiration > _db.head_block_time(), "Limit order has to expire after head block time." );
-
-   const auto& owner = _db.get_account( o.owner );
-
-   FC_ASSERT( _db.get_balance( owner, o.amount_to_sell.symbol ) >= o.amount_to_sell, "Account does not have sufficient funds for limit order." );
-
-   _db.adjust_balance( owner, -o.amount_to_sell );
-
-   const auto& order = _db.create<limit_order_object>( [&]( limit_order_object& obj )
-   {
-       obj.created    = _db.head_block_time();
-       obj.seller     = o.owner;
-       obj.orderid    = o.orderid;
-       obj.for_sale   = o.amount_to_sell.amount;
-       obj.sell_price = o.get_price();
-       obj.expiration = o.expiration;
-   });
-
-   bool filled = _db.apply_order( order );
-
-   if( o.fill_or_kill ) FC_ASSERT( filled, "Cancelling order because it was not filled." );
-}
-
-void limit_order_create2_evaluator::do_apply( const limit_order_create2_operation& o )
-{
-   FC_ASSERT( o.expiration > _db.head_block_time(), "Limit order has to expire after head block time." );
-
-   const auto& owner = _db.get_account( o.owner );
-
-   FC_ASSERT( _db.get_balance( owner, o.amount_to_sell.symbol ) >= o.amount_to_sell, "Account does not have sufficient funds for limit order." );
-
-   _db.adjust_balance( owner, -o.amount_to_sell );
-
-   const auto& order = _db.create<limit_order_object>( [&]( limit_order_object& obj )
-   {
-       obj.created    = _db.head_block_time();
-       obj.seller     = o.owner;
-       obj.orderid    = o.orderid;
-       obj.for_sale   = o.amount_to_sell.amount;
-       obj.sell_price = o.exchange_rate;
-       obj.expiration = o.expiration;
-   });
-
-   bool filled = _db.apply_order( order );
-
-   if( o.fill_or_kill ) FC_ASSERT( filled, "Cancelling order because it was not filled." );
-}
-
-void limit_order_cancel_evaluator::do_apply( const limit_order_cancel_operation& o )
-{
-   _db.cancel_order( _db.get_limit_order( o.owner, o.orderid ) );
-}
-
 void prove_authority_evaluator::do_apply( const prove_authority_operation& o )
 {
    const auto& challenged = _db.get_account( o.challenged );
@@ -1530,55 +1434,6 @@ void change_recovery_account_evaluator::do_apply( const change_recovery_account_
    }
 }
 
-void transfer_to_savings_evaluator::do_apply( const transfer_to_savings_operation& op )
-{
-   const auto& from = _db.get_account( op.from );
-   const auto& to   = _db.get_account(op.to);
-   FC_ASSERT( _db.get_balance( from, op.amount.symbol ) >= op.amount, "Account does not have sufficient funds to transfer to savings." );
-
-   _db.adjust_balance( from, -op.amount );
-   _db.adjust_savings_balance( to, op.amount );
-}
-
-void transfer_from_savings_evaluator::do_apply( const transfer_from_savings_operation& op )
-{
-   const auto& from = _db.get_account( op.from );
-   _db.get_account(op.to); // Verify to account exists
-
-   FC_ASSERT( from.savings_withdraw_requests < SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT, "Account has reached limit for pending withdraw requests." );
-
-   FC_ASSERT( _db.get_savings_balance( from, op.amount.symbol ) >= op.amount );
-   _db.adjust_savings_balance( from, -op.amount );
-   _db.create<savings_withdraw_object>( [&]( savings_withdraw_object& s ) {
-      s.from   = op.from;
-      s.to     = op.to;
-      s.amount = op.amount;
-#ifndef IS_LOW_MEM
-      from_string( s.memo, op.memo );
-#endif
-      s.request_id = op.request_id;
-      s.complete = _db.head_block_time() + SCORUM_SAVINGS_WITHDRAW_TIME;
-   });
-
-   _db.modify( from, [&]( account_object& a )
-   {
-      a.savings_withdraw_requests++;
-   });
-}
-
-void cancel_transfer_from_savings_evaluator::do_apply( const cancel_transfer_from_savings_operation& op )
-{
-   const auto& swo = _db.get_savings_withdraw( op.from, op.request_id );
-   _db.adjust_savings_balance( _db.get_account( swo.from ), swo.amount );
-   _db.remove( swo );
-
-   const auto& from = _db.get_account( op.from );
-   _db.modify( from, [&]( account_object& a )
-   {
-      a.savings_withdraw_requests--;
-   });
-}
-
 void decline_voting_rights_evaluator::do_apply( const decline_voting_rights_operation& o )
 {
    const auto& account = _db.get_account( o.account );
@@ -1608,8 +1463,6 @@ void claim_reward_balance_evaluator::do_apply( const claim_reward_balance_operat
 
    FC_ASSERT( op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCORUM. Claim: ${c} Actual: ${a}",
       ("c", op.reward_scorum)("a", acnt.reward_scorum_balance) );
-   FC_ASSERT( op.reward_sbd <= acnt.reward_sbd_balance, "Cannot claim that much SBD. Claim: ${c} Actual: ${a}",
-      ("c", op.reward_sbd)("a", acnt.reward_sbd_balance) );
    FC_ASSERT( op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much VESTS. Claim: ${c} Actual: ${a}",
       ("c", op.reward_vests)("a", acnt.reward_vesting_balance) );
 
@@ -1621,9 +1474,7 @@ void claim_reward_balance_evaluator::do_apply( const claim_reward_balance_operat
          / uint128_t( acnt.reward_vesting_balance.amount.value ) ).to_uint64(), SCORUM_SYMBOL );
 
    _db.adjust_reward_balance( acnt, -op.reward_scorum );
-   _db.adjust_reward_balance( acnt, -op.reward_sbd );
    _db.adjust_balance( acnt, op.reward_scorum );
-   _db.adjust_balance( acnt, op.reward_sbd );
 
    _db.modify( acnt, [&]( account_object& a )
    {

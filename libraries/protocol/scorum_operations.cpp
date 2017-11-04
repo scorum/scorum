@@ -120,8 +120,8 @@ namespace scorum { namespace protocol {
    void comment_options_operation::validate()const
    {
       validate_account_name( author );
-      FC_ASSERT( percent_scorum_dollars <= SCORUM_100_PERCENT, "Percent cannot exceed 100%" );
-      FC_ASSERT( max_accepted_payout.symbol == SBD_SYMBOL, "Max accepted payout must be in SBD" );
+      FC_ASSERT( percent_scrs <= SCORUM_100_PERCENT, "Percent cannot exceed 100%" );
+      FC_ASSERT( max_accepted_payout.symbol == SCORUM_SYMBOL, "Max accepted payout must be in SBD" );
       FC_ASSERT( max_accepted_payout.amount.value >= 0, "Cannot accept less than 0 payout" );
       validate_permlink( permlink );
       for( auto& e : extensions )
@@ -219,62 +219,15 @@ namespace scorum { namespace protocol {
       for( const auto& a : required_auths ) a.validate();
    }
 
-   void feed_publish_operation::validate()const
-   {
-      validate_account_name( publisher );
-      FC_ASSERT( ( is_asset_type( exchange_rate.base, SCORUM_SYMBOL ) && is_asset_type( exchange_rate.quote, SBD_SYMBOL ) )
-         || ( is_asset_type( exchange_rate.base, SBD_SYMBOL ) && is_asset_type( exchange_rate.quote, SCORUM_SYMBOL ) ),
-         "Price feed must be a SCORUM/SBD price" );
-      exchange_rate.validate();
-   }
-
-   void limit_order_create_operation::validate()const
-   {
-      validate_account_name( owner );
-      FC_ASSERT( ( is_asset_type( amount_to_sell, SCORUM_SYMBOL ) && is_asset_type( min_to_receive, SBD_SYMBOL ) )
-         || ( is_asset_type( amount_to_sell, SBD_SYMBOL ) && is_asset_type( min_to_receive, SCORUM_SYMBOL ) ),
-         "Limit order must be for the SCORUM:SBD market" );
-      (amount_to_sell / min_to_receive).validate();
-   }
-   void limit_order_create2_operation::validate()const
-   {
-      validate_account_name( owner );
-      FC_ASSERT( amount_to_sell.symbol == exchange_rate.base.symbol, "Sell asset must be the base of the price" );
-      exchange_rate.validate();
-
-      FC_ASSERT( ( is_asset_type( amount_to_sell, SCORUM_SYMBOL ) && is_asset_type( exchange_rate.quote, SBD_SYMBOL ) ) ||
-                 ( is_asset_type( amount_to_sell, SBD_SYMBOL ) && is_asset_type( exchange_rate.quote, SCORUM_SYMBOL ) ),
-                 "Limit order must be for the SCORUM:SBD market" );
-
-      FC_ASSERT( (amount_to_sell * exchange_rate).amount > 0, "Amount to sell cannot round to 0 when traded" );
-   }
-
-   void limit_order_cancel_operation::validate()const
-   {
-      validate_account_name( owner );
-   }
-
-   void convert_operation::validate()const
-   {
-      validate_account_name( owner );
-      /// only allow conversion from SBD to SCORUM, allowing the opposite can enable traders to abuse
-      /// market fluxuations through converting large quantities without moving the price.
-      FC_ASSERT( is_asset_type( amount, SBD_SYMBOL ), "Can only convert SBD to SCORUM" );
-      FC_ASSERT( amount.amount > 0, "Must convert some SBD" );
-   }
-
    void escrow_transfer_operation::validate()const
    {
       validate_account_name( from );
       validate_account_name( to );
       validate_account_name( agent );
       FC_ASSERT( fee.amount >= 0, "fee cannot be negative" );
-      FC_ASSERT( sbd_amount.amount >= 0, "sbd amount cannot be negative" );
       FC_ASSERT( scorum_amount.amount >= 0, "scorum amount cannot be negative" );
-      FC_ASSERT( sbd_amount.amount > 0 || scorum_amount.amount > 0, "escrow must transfer a non-zero amount" );
       FC_ASSERT( from != agent && to != agent, "agent must be a third party" );
-      FC_ASSERT( (fee.symbol == SCORUM_SYMBOL) || (fee.symbol == SBD_SYMBOL), "fee must be SCORUM or SBD" );
-      FC_ASSERT( sbd_amount.symbol == SBD_SYMBOL, "sbd amount must contain SBD" );
+      FC_ASSERT( fee.symbol == SCORUM_SYMBOL , "fee must be SCORUM" );
       FC_ASSERT( scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCORUM" );
       FC_ASSERT( ratification_deadline < escrow_expiration, "ratification deadline must be before escrow expiration" );
       if ( json_meta.size() > 0 )
@@ -311,10 +264,7 @@ namespace scorum { namespace protocol {
       validate_account_name( receiver );
       FC_ASSERT( who == from || who == to || who == agent, "who must be from or to or agent" );
       FC_ASSERT( receiver == from || receiver == to, "receiver must be from or to" );
-      FC_ASSERT( sbd_amount.amount >= 0, "sbd amount cannot be negative" );
       FC_ASSERT( scorum_amount.amount >= 0, "scorum amount cannot be negative" );
-      FC_ASSERT( sbd_amount.amount > 0 || scorum_amount.amount > 0, "escrow must release a non-zero amount" );
-      FC_ASSERT( sbd_amount.symbol == SBD_SYMBOL, "sbd amount must contain SBD" );
       FC_ASSERT( scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCORUM" );
    }
 
@@ -342,26 +292,6 @@ namespace scorum { namespace protocol {
       validate_account_name( new_recovery_account );
    }
 
-   void transfer_to_savings_operation::validate()const {
-      validate_account_name( from );
-      validate_account_name( to );
-      FC_ASSERT( amount.amount > 0 );
-      FC_ASSERT( amount.symbol == SCORUM_SYMBOL || amount.symbol == SBD_SYMBOL );
-      FC_ASSERT( memo.size() < SCORUM_MAX_MEMO_SIZE, "Memo is too large" );
-      FC_ASSERT( fc::is_utf8( memo ), "Memo is not UTF8" );
-   }
-   void transfer_from_savings_operation::validate()const {
-      validate_account_name( from );
-      validate_account_name( to );
-      FC_ASSERT( amount.amount > 0 );
-      FC_ASSERT( amount.symbol == SCORUM_SYMBOL || amount.symbol == SBD_SYMBOL );
-      FC_ASSERT( memo.size() < SCORUM_MAX_MEMO_SIZE, "Memo is too large" );
-      FC_ASSERT( fc::is_utf8( memo ), "Memo is not UTF8" );
-   }
-   void cancel_transfer_from_savings_operation::validate()const {
-      validate_account_name( from );
-   }
-
    void decline_voting_rights_operation::validate()const
    {
       validate_account_name( account );
@@ -371,12 +301,10 @@ namespace scorum { namespace protocol {
    {
       validate_account_name( account );
       FC_ASSERT( is_asset_type( reward_scorum, SCORUM_SYMBOL ), "Reward Scorum must be SCORUM" );
-      FC_ASSERT( is_asset_type( reward_sbd, SBD_SYMBOL ), "Reward Scorum must be SBD" );
       FC_ASSERT( is_asset_type( reward_vests, VESTS_SYMBOL ), "Reward Scorum must be VESTS" );
       FC_ASSERT( reward_scorum.amount >= 0, "Cannot claim a negative amount" );
-      FC_ASSERT( reward_sbd.amount >= 0, "Cannot claim a negative amount" );
       FC_ASSERT( reward_vests.amount >= 0, "Cannot claim a negative amount" );
-      FC_ASSERT( reward_scorum.amount > 0 || reward_sbd.amount > 0 || reward_vests.amount > 0, "Must claim something." );
+      FC_ASSERT( reward_scorum.amount > 0 || reward_vests.amount > 0, "Must claim something." );
    }
 
    void delegate_vesting_shares_operation::validate()const
