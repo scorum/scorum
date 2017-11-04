@@ -2317,7 +2317,6 @@ void database::_apply_block( const signed_block& next_block )
 
    process_comment_cashout();
    process_vesting_withdrawals();
-   process_savings_withdraws();
 
    account_recovery_processing();
    expire_escrow_ratification();

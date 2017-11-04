@@ -1533,8 +1533,6 @@ BOOST_AUTO_TEST_CASE( withdraw_vesting_apply )
             gpo.current_supply += wso.median_props.account_creation_fee - ASSET( "0.001 TESTS" ) - gpo.total_vesting_fund_scorum;
             gpo.total_vesting_fund_scorum = wso.median_props.account_creation_fee - ASSET( "0.001 TESTS" );
          });
-
-         db.update_virtual_supply();
       }, database::skip_witness_signature );
 
       withdraw_vesting_operation op;
