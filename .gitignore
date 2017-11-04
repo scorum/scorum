@@ -48,5 +48,6 @@ witness_node_data_dir
 *.pyo
 *.egg-info/
 .vscode/
+.idea/
 .vs/
 *.vcxproj*
