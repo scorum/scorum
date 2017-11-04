@@ -44,6 +44,9 @@ witness_node_data_dir
 
 *.wallet
 
+#Mergetool
+*.orig
+
 #Python
 *.pyc
 *.pyo
@@ -52,4 +55,5 @@ witness_node_data_dir
 #IDE
 .vscode/
 *.user
-
+.vs/
+*.vcxproj*
