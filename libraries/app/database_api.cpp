@@ -912,7 +912,6 @@ void database_api::set_pending_payout( discussion& d )const
    if( itr != cidx.end() && itr->comment == d.id )  {
       d.promoted = asset( itr->promoted_balance, SCORUM_SYMBOL );
    }
-
    const auto& props = my->_db.get_dynamic_global_properties();
 
    asset pot = my->_db.get_reward_fund( my->_db.get_comment( d.author, d.permlink ) ).reward_balance;
