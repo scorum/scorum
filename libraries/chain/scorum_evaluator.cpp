@@ -101,24 +101,23 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
    const witness_schedule_object& wso = _db.get_witness_schedule_object();
    FC_ASSERT( o.fee >= asset( wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ), "Insufficient Fee: ${f} required, ${p} provided.",
-                 ("f", wso.median_props.account_creation_fee * asset( SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ) )
-                 ("p", o.fee) );
+              ("f", wso.median_props.account_creation_fee * asset( SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL ) )
+              ("p", o.fee) );
 
-      for( auto& a : o.owner.account_auths )
-      {
-         _db.get_account( a.first );
-      }
+   for( auto& a : o.owner.account_auths )
+   {
+      _db.get_account( a.first );
+   }
 
-      for( auto& a : o.active.account_auths )
-      {
-         _db.get_account( a.first );
-      }
+   for( auto& a : o.active.account_auths )
+   {
+      _db.get_account( a.first );
+   }
 
-      for( auto& a : o.posting.account_auths )
-      {
-         _db.get_account( a.first );
-      }
-   
+   for( auto& a : o.posting.account_auths )
+   {
+      _db.get_account( a.first );
+   }
 
    _db.modify( creator, [&]( account_object& c ){
       c.balance -= o.fee;
@@ -133,7 +132,6 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
       acc.mined = false;
 
       acc.recovery_account = o.creator;
-
 
       #ifndef IS_LOW_MEM
          from_string( acc.json_metadata, o.json_metadata );
@@ -1071,7 +1069,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
       if( rshares > 0 )
       {
-           FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
+           FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT, "Cannot increase payout within last twelve hours before payout." );
       }
 
       //used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread their votes around over 50+ posts day for a week
@@ -1085,7 +1083,6 @@ void vote_evaluator::do_apply( const vote_operation& o )
       /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into total rshares^2
       fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
       const auto& root = _db.get( comment.root_comment );
-      auto old_root_abs_rshares = root.children_abs_rshares.value;
 
       fc::uint128_t avg_cashout_sec;
 
@@ -1154,15 +1151,13 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
             max_vote_weight = cv.weight;
 
-           
-               /// discount weight by time
-               uint128_t w(max_vote_weight);
-               uint64_t delta_t = std::min( uint64_t((cv.last_update - comment.created).to_seconds()), uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS) );
+            /// discount weight by time
+            uint128_t w(max_vote_weight);
+            uint64_t delta_t = std::min( uint64_t((cv.last_update - comment.created).to_seconds()), uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS) );
 
-               w *= delta_t;
-               w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-               cv.weight = w.to_uint64();
-      
+            w *= delta_t;
+            w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
+            cv.weight = w.to_uint64();
          }
          else
          {
@@ -1189,7 +1184,7 @@ void vote_evaluator::do_apply( const vote_operation& o )
 
       if( itr->rshares < rshares )
       {
-            FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17, "Cannot increase payout within last twelve hours before payout." );
+            FC_ASSERT( _db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT, "Cannot increase payout within last twelve hours before payout." );
       }
 
       _db.modify( voter, [&]( account_object& a ){
@@ -1200,7 +1195,6 @@ void vote_evaluator::do_apply( const vote_operation& o )
       /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into total rshares^2
       fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
       const auto& root = _db.get( comment.root_comment );
-      auto old_root_abs_rshares = root.children_abs_rshares.value;
 
       fc::uint128_t avg_cashout_sec;
 

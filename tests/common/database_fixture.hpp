@@ -154,7 +154,14 @@ struct database_fixture {
    bool skip_key_index_test = false;
    uint32_t anon_acct_count;
 
-   database_fixture(): app(), db( *app.chain_database() ) {}
+   database_fixture(): app(), db( *app.chain_database() )
+   {
+      genesis_state_type genesis_state;
+      genesis_state.init_supply = INITIAL_TEST_SUPPLY;
+
+      db.set_init_genesis_state(genesis_state);
+   }
+
    ~database_fixture() {}
 
    static fc::ecc::private_key generate_private_key( string seed = "init_key" );

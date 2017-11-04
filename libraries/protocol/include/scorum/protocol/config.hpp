@@ -1,6 +1,9 @@
 /*
- * Copyright (c) 2016 Scorun, Inc., and contributors.
+ * Copyright (c) 2016 Steemit, Inc., and contributors.
  */
+
+// clang-format off
+
 #pragma once
 
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 1) )
@@ -17,24 +20,16 @@
 #define SCORUM_ADDRESS_PREFIX                  "TST"
 
 #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1451606400))
-#define SCORUM_MINING_TIME                     (fc::time_point_sec(1451606400))
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF12 (SCORUM_CASHOUT_WINDOW_SECONDS)
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF17 (SCORUM_CASHOUT_WINDOW_SECONDS)
-#define SCORUM_SECOND_CASHOUT_WINDOW           (60*60*24*3) /// 3 days
-#define SCORUM_MAX_CASHOUT_WINDOW_SECONDS      (60*60*24) /// 1 day
-#define SCORUM_VOTE_CHANGE_LOCKOUT_PERIOD      (60*10) /// 10 minutes
-#define SCORUM_UPVOTE_LOCKOUT_HF7              (fc::minutes(1))
-#define SCORUM_UPVOTE_LOCKOUT_HF17             (fc::minutes(5))
+#define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
 
-
-#define SCORUM_ORIGINAL_MIN_ACCOUNT_CREATION_FEE 0
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE          0
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::seconds(0)
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
+
 #else // IS LIVE SCORUM NETWORK
 
 #define SCORUM_INIT_PUBLIC_KEY_STR             "SCR5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
@@ -43,18 +38,10 @@
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
-#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508167500))
-#define SCORUM_MINING_TIME                     (fc::time_point_sec(1458838800))
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF12 (60*60*24)    /// 1 day
-#define SCORUM_CASHOUT_WINDOW_SECONDS_PRE_HF17 (60*60*12)    /// 12 hours
+#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508331600))
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60*24*7)  /// 7 days
-#define SCORUM_SECOND_CASHOUT_WINDOW           (60*60*24*30) /// 30 days
-#define SCORUM_MAX_CASHOUT_WINDOW_SECONDS      (60*60*24*14) /// 2 weeks
-#define SCORUM_VOTE_CHANGE_LOCKOUT_PERIOD      (60*60*2)     /// 2 hours
-#define SCORUM_UPVOTE_LOCKOUT_HF7              (fc::minutes(1))
-#define SCORUM_UPVOTE_LOCKOUT_HF17             (fc::hours(12))
+#define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
 
-#define SCORUM_ORIGINAL_MIN_ACCOUNT_CREATION_FEE  100000
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE           1
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
@@ -76,13 +63,8 @@
 
 #define SCORUM_MAX_WITNESSES                   21
 
-#define SCORUM_MAX_VOTED_WITNESSES_HF0         19
-#define SCORUM_MAX_MINER_WITNESSES_HF0         1
-#define SCORUM_MAX_RUNNER_WITNESSES_HF0        1
-
-#define SCORUM_MAX_VOTED_WITNESSES_HF17        20
-#define SCORUM_MAX_MINER_WITNESSES_HF17        0
-#define SCORUM_MAX_RUNNER_WITNESSES_HF17       1
+#define SCORUM_MAX_VOTED_WITNESSES             20
+#define SCORUM_MAX_RUNNER_WITNESSES            1
 
 #define SCORUM_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
@@ -102,9 +84,6 @@
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
-#define SCORUM_POST_AVERAGE_WINDOW             (60*60*24u) // 1 day
-#define SCORUM_POST_MAX_BANDWIDTH              (4*SCORUM_100_PERCENT) // 2 posts per 1 days, average 1 every 12 hours
-#define SCORUM_POST_WEIGHT_CONSTANT            (uint64_t(SCORUM_POST_MAX_BANDWIDTH) * SCORUM_POST_MAX_BANDWIDTH)
 
 #define SCORUM_MAX_ACCOUNT_WITNESS_VOTES       30
 
@@ -118,14 +97,8 @@
 #define SCORUM_CONTENT_REWARD_PERCENT          (75*SCORUM_1_PERCENT) //75% of inflation, 7.125% inflation
 #define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT) //15% of inflation, 1.425% inflation
 
-#define SCORUM_MINER_PAY_PERCENT               (SCORUM_1_PERCENT) // 1%
-#define SCORUM_MIN_RATION                      100000
-#define SCORUM_MAX_RATION_DECAY_RATE           (1000000)
-#define SCORUM_FREE_TRANSACTIONS_WITH_NEW_ACCOUNT 100
-
 #define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (60*60*24*7) ///< 1 week
 #define SCORUM_BANDWIDTH_PRECISION             (uint64_t(1000000)) ///< 1 million
-#define SCORUM_MAX_COMMENT_DEPTH_PRE_HF17      6
 #define SCORUM_MAX_COMMENT_DEPTH               0xffff // 64k
 #define SCORUM_SOFT_MAX_COMMENT_DEPTH          0xff // 255
 
@@ -136,23 +109,15 @@
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME     fc::days(30)
 
 #define SCORUM_MINING_REWARD                   asset( 1000, SCORUM_SYMBOL )
-#define SCORUM_EQUIHASH_N                      140
-#define SCORUM_EQUIHASH_K                      6
 
 #define SCORUM_MIN_CONTENT_REWARD              SCORUM_MINING_REWARD
 #define SCORUM_MIN_CURATE_REWARD               SCORUM_MINING_REWARD
 #define SCORUM_MIN_PRODUCER_REWARD             SCORUM_MINING_REWARD
 #define SCORUM_MIN_POW_REWARD                  SCORUM_MINING_REWARD
 
-#define SCORUM_ACTIVE_CHALLENGE_FEE            asset( 2000, SCORUM_SYMBOL )
-#define SCORUM_OWNER_CHALLENGE_FEE             asset( 30000, SCORUM_SYMBOL )
-#define SCORUM_ACTIVE_CHALLENGE_COOLDOWN       fc::days(1)
-#define SCORUM_OWNER_CHALLENGE_COOLDOWN        fc::days(1)
-
 #define SCORUM_POST_REWARD_FUND_NAME           ("post")
 #define SCORUM_COMMENT_REWARD_FUND_NAME        ("comment")
-#define SCORUM_RECENT_RSHARES_DECAY_RATE_HF17  (fc::days(30))
-#define SCORUM_RECENT_RSHARES_DECAY_RATE_HF19  (fc::days(15))
+#define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 
 // 5ccc e802 de5f
@@ -200,11 +165,9 @@
 #define SCORUM_MAX_PERMLINK_LENGTH             256
 #define SCORUM_MAX_WITNESS_URL_LENGTH          2048
 
-#define SCORUM_INIT_SUPPLY                     int64_t(0)
 #define SCORUM_MAX_SHARE_SUPPLY                int64_t(1000000000000000ll)
 #define SCORUM_MAX_SIG_CHECK_DEPTH             2
 
-#define SCORUM_MIN_TRANSACTION_SIZE_LIMIT      1024
 #define SCORUM_SECONDS_PER_YEAR                (uint64_t(60*60*24*365ll))
 
 #define SCORUM_MAX_TRANSACTION_SIZE            (1024*64)
@@ -216,7 +179,6 @@
 #define SCORUM_FEED_HISTORY_WINDOW             (12*7) // 3.5 days
 #define SCORUM_MAX_FEED_AGE_SECONDS            (60*60*24*7) // 7 days
 #define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
-#define SCORUM_CONVERSION_DELAY_PRE_HF_16      (fc::days(7))
 #define SCORUM_CONVERSION_DELAY                (fc::hours(SCORUM_FEED_HISTORY_WINDOW)) //3.5 day conversion
 
 #define SCORUM_MIN_UNDO_HISTORY                10
@@ -250,3 +212,5 @@
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT                (account_name_type())
 ///@}
+
+// clang-format on

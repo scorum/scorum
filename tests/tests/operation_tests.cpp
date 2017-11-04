@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE( vote_apply )
 
          BOOST_TEST_MESSAGE( "--- Test failure when increasing rshares within lockout period" );
 
-         generate_blocks( fc::time_point_sec( ( new_bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT_HF17 ).sec_since_epoch() + SCORUM_BLOCK_INTERVAL ), true );
+         generate_blocks( fc::time_point_sec( ( new_bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT ).sec_since_epoch() + SCORUM_BLOCK_INTERVAL ), true );
 
          op.weight = SCORUM_100_PERCENT;
          tx.operations.clear();
@@ -2031,7 +2031,7 @@ BOOST_AUTO_TEST_CASE( account_witness_proxy_apply )
       validate_database();
 
       BOOST_TEST_MESSAGE( "--- Test adding a grandchild proxy" );
-      // alice \
+      // alice 
       // bob->  sam->dave
 
       tx.operations.clear();

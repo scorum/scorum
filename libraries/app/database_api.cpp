@@ -921,13 +921,12 @@ void database_api::set_pending_payout( discussion& d )const
 
    u256 total_r2 = to256( my->_db.get_reward_fund( my->_db.get_comment( d.author, d.permlink ) ).recent_claims );
 
-
    if( total_r2 > 0 )
    {
       uint128_t vshares;
       const auto& rf = my->_db.get_reward_fund( my->_db.get_comment( d.author, d.permlink ) );
       vshares = d.net_rshares.value > 0 ? scorum::chain::util::evaluate_reward_curve( d.net_rshares.value, rf.author_reward_curve) : 0;
-   
+
       u256 r2 = to256(vshares); //to256(abs_net_rshares);
       r2 *= pot.amount.value;
       r2 /= total_r2;

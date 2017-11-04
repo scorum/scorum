@@ -67,7 +67,6 @@ int main( int argc, char** argv, char** envp )
 
 /*
 #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1458835200))
-#define SCORUM_MINING_TIME                     (fc::time_point_sec(1458838800))
 #define SCORUM_FIRST_CASHOUT_TIME              (fc::time_point_sec(1467590400))  /// July 4th
 */
 

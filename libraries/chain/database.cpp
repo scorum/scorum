@@ -34,6 +34,11 @@
 #include <fstream>
 #include <functional>
 
+#include <fc/io/json.hpp>
+#include <openssl/md5.h>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <scorum/chain/genesis_state.hpp>
+
 namespace scorum { namespace chain {
 
 //namespace db2 = graphene::db2;
@@ -95,7 +100,7 @@ database::~database()
    clear_pending();
 }
 
-void database::open( const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t initial_supply, uint64_t shared_file_size, uint32_t chainbase_flags )
+void database::open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags)
 {
    try
    {
@@ -110,7 +115,7 @@ void database::open( const fc::path& data_dir, const fc::path& shared_mem_dir, u
          if( !find< dynamic_global_property_object >() )
             with_write_lock( [&]()
             {
-               init_genesis( initial_supply );
+               init_genesis();
             });
 
          _block_log.open( data_dir / "block_log" );
@@ -150,7 +155,7 @@ void database::reindex( const fc::path& data_dir, const fc::path& shared_mem_dir
    {
       ilog( "Reindexing Blockchain" );
       wipe( data_dir, shared_mem_dir, false );
-      open( data_dir, shared_mem_dir, 0, shared_file_size, chainbase::database::read_write );
+      open( data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write );
       _fork_db.reset();    // override effect of _fork_db.start_block() call in open()
 
       auto start = fc::time_point::now();
@@ -1486,7 +1491,6 @@ void database::process_comment_cashout()
    //if( !has_hardfork( SCORUM_FIRST_CASHOUT_TIME ) )
    //   return;
 
-   const auto& gpo = get_dynamic_global_properties();
    util::comment_reward_context ctx;
 
    vector< reward_fund_context > funds;
@@ -1500,7 +1504,7 @@ void database::process_comment_cashout()
       modify( *itr, [&]( reward_fund_object& rfo )
       {
          fc::microseconds decay_rate;
-         decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE_HF19;
+         decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
          rfo.recent_claims -= ( rfo.recent_claims * ( head_block_time() - rfo.last_update ).to_seconds() ) / decay_rate.to_seconds();
          rfo.last_update = head_block_time();
       });
@@ -1510,13 +1514,12 @@ void database::process_comment_cashout()
       rf_ctx.reward_balance = itr->reward_balance;
 
       // The index is by ID, so the ID should be the current size of the vector (0, 1, 2, etc...)
-      assert( funds.size() == itr->id._id );
+      assert( (int64_t) funds.size() == itr->id._id );
 
       funds.push_back( rf_ctx );
    }
 
    const auto& cidx        = get_index< comment_index >().indices().get< by_cashout_time >();
-   const auto& com_by_root = get_index< comment_index >().indices().get< by_root >();
 
    auto current = cidx.begin();
    //  add all rshares about to be cashed out to the reward funds. This ensures equal satoshi per rshare payment
@@ -1914,7 +1917,7 @@ void database::init_schema()
    return;*/
 }
 
-void database::init_genesis( uint64_t init_supply )
+void database::init_genesis()
 {
    try
    {
@@ -1944,7 +1947,7 @@ void database::init_genesis( uint64_t init_supply )
       {
          a.name = SCORUM_INIT_DELEGATE_NAME;
          a.memo_key = init_public_key;
-         a.balance = asset( init_supply, SCORUM_SYMBOL );
+         a.balance = asset(_genesis_state.init_supply, SCORUM_SYMBOL );
       } );
 
       create< account_authority_object >( [&]( account_authority_object& auth )
@@ -1986,59 +1989,117 @@ void database::init_genesis( uint64_t init_supply )
          auth.active.weight_threshold = 0;
       });
 
-      create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p )
-      {
-         p.current_witness = SCORUM_INIT_DELEGATE_NAME;
-         p.time = SCORUM_GENESIS_TIME;
-         p.recent_slots_filled = fc::uint128::max_value();
-         p.participation_count = 128;
-         p.current_supply = asset( init_supply, SCORUM_SYMBOL );
-         p.virtual_supply = p.current_supply;
-         p.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
-
-         p.total_reward_fund_scorum = asset( 0, SCORUM_SYMBOL );
-         p.total_reward_shares2 = 0;
-
-      } );
-
-      // Nothing to do
-      for( int i = 0; i < 0x10000; i++ )
-         create< block_summary_object >( [&]( block_summary_object& ) {});
-      create< hardfork_property_object >( [&](hardfork_property_object& hpo )
-      {
-         hpo.processed_hardforks.push_back( SCORUM_GENESIS_TIME );
-      } );
-
       // Create witness scheduler
       create< witness_schedule_object >( [&]( witness_schedule_object& wso )
       {
          wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME;
-         wso.max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES_HF17;
-         wso.max_miner_witnesses = SCORUM_MAX_MINER_WITNESSES_HF17;
-         wso.max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES_HF17;
       } );
 
-      const auto& gpo = get_dynamic_global_properties();
+      init_genesis_accounts(_genesis_state.accounts);
+      init_genesis_witnesses(_genesis_state.witness_candidates);
 
-      auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo )
-      {
-         rfo.name = SCORUM_POST_REWARD_FUND_NAME;
-         rfo.last_update = head_block_time();
-         rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
-         rfo.percent_content_rewards = SCORUM_100_PERCENT;
-         rfo.reward_balance = gpo.total_reward_fund_scorum;
-         rfo.author_reward_curve = curve_id::power1dot5;
-         rfo.curation_reward_curve = curve_id::square_root;
-
-      });
-
-      // As a shortcut in payout processing, we use the id as an array index.
-      // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
-      FC_ASSERT( post_rf.id._id == 0 );
+      init_genesis_global_property_object(_genesis_state.init_supply);
    }
    FC_CAPTURE_AND_RETHROW()
 }
 
+void database::set_init_genesis_state(const genesis_state_type &genesis_state)
+{
+   _genesis_state = genesis_state;
+}
+
+void database::init_genesis_accounts(const vector<genesis_state_type::account_type>& accounts)
+{
+   for (auto& account : accounts)
+   {
+      create< account_object >( [&]( account_object& a )
+      {
+         a.name = account.name;
+         a.memo_key = account.public_key;
+         a.balance = asset( account.scr_amount, SCORUM_SYMBOL );
+         a.json_metadata = "{created_at: 'GENESIS'}";
+         a.recovery_account = SCORUM_INIT_DELEGATE_NAME;
+      });
+
+      create< account_authority_object >( [&]( account_authority_object& auth )
+      {
+         auth.account = account.name;
+         auth.owner.add_authority( account.public_key, 1 );
+         auth.owner.weight_threshold = 1;
+         auth.active = auth.owner;
+         auth.posting = auth.active;
+      });
+   }
+}
+
+void database::init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses)
+{
+   for (auto& witness : witnesses)
+   {
+      create< account_object >( [&]( account_object& a )
+      {
+         a.name = witness.name;
+         a.memo_key = witness.public_key;
+         a.balance = asset( witness.balance, SCORUM_SYMBOL);
+      });
+
+      create< account_authority_object >( [&]( account_authority_object& auth )
+      {
+         auth.account = witness.name;
+         auth.owner.add_authority( witness.public_key, 1);
+         auth.owner.weight_threshold = 1;
+         auth.active = auth.owner;
+         auth.posting = auth.active;
+      });
+
+      create< witness_object >( [&]( witness_object& w )
+      {
+         w.owner = witness.name;
+         w.signing_key = witness.public_key;;
+         w.schedule = witness_object::top19;
+      });
+   }
+}
+
+void database::init_genesis_global_property_object(uint64_t init_supply)
+{
+   auto gpo = create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p )
+   {
+      p.current_witness = SCORUM_INIT_DELEGATE_NAME;
+      p.time = SCORUM_GENESIS_TIME;
+      p.recent_slots_filled = fc::uint128::max_value();
+      p.participation_count = 128;
+      p.current_supply = asset( init_supply, SCORUM_SYMBOL );
+      p.virtual_supply = p.current_supply;
+      p.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
+
+      p.total_reward_fund_scorum = asset( 0, SCORUM_SYMBOL );
+      p.total_reward_shares2 = 0;
+   });
+
+   // Nothing to do
+   for( int i = 0; i < 0x10000; i++ )
+      create< block_summary_object >( [&]( block_summary_object& ) {});
+   create< hardfork_property_object >( [&](hardfork_property_object& hpo )
+   {
+      hpo.processed_hardforks.push_back( SCORUM_GENESIS_TIME );
+   } );
+
+   auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo )
+   {
+      rfo.name = SCORUM_POST_REWARD_FUND_NAME;
+      rfo.last_update = head_block_time();
+      rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
+      rfo.percent_content_rewards = SCORUM_100_PERCENT;
+      rfo.reward_balance = gpo.total_reward_fund_scorum;
+      rfo.author_reward_curve = curve_id::linear;
+      rfo.curation_reward_curve = curve_id::square_root;
+   });
+
+   // As a shortcut in payout processing, we use the id as an array index.
+   // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
+   FC_ASSERT( post_rf.id._id == 0 );
+}
 
 void database::validate_transaction( const signed_transaction& trx )
 {
