@@ -17,6 +17,7 @@
 #include <fc/log/logger.hpp>
 
 #include <map>
+#include <memory>
 
 namespace scorum {
 namespace chain {
@@ -31,6 +32,8 @@ namespace chain {
    class database_impl;
    class custom_operation_interpreter;
 
+   class i_database_index;
+
    namespace util { struct comment_reward_context; }
 
    /**
@@ -39,13 +42,13 @@ namespace chain {
     */
    class database : public chainbase::database
    {
-      public:
+       friend class i_database_index;
+
+    public:
          database();
          ~database();
 
          bool is_producing()const { return _is_producing; }
-         void set_producing( bool p ) { _is_producing = p;  }
-         bool _is_producing = false;
 
          bool _log_hardforks = true;
 
@@ -374,12 +377,17 @@ namespace chain {
          bool skip_transaction_delta_check = true;
 #endif
 
-   protected:
+         i_database_index &i_index();
+
+    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          //void pop_undo() { object_database::pop_undo(); }
          void notify_changed_objects();
 
-      private:
+    private:
+         void set_producing( bool p ) { _is_producing = p;  }
+         bool _is_producing = false;
+
          optional< chainbase::database::session > _pending_tx_session;
 
          void apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
@@ -416,16 +424,14 @@ namespace chain {
 
          std::unique_ptr< database_impl > _my;
 
+         std::unique_ptr< i_database_index > _p_index;
+
          vector< signed_transaction >  _pending_tx;
          fork_database                 _fork_db;
          fc::time_point_sec            _hardfork_times[ SCORUM_NUM_HARDFORKS + 1 ];
          protocol::hardfork_version    _hardfork_versions[ SCORUM_NUM_HARDFORKS + 1 ];
 
          block_log                     _block_log;
-
-         // this function needs access to _plugin_index_signal
-         template< typename MultiIndexType >
-         friend void add_plugin_index( database& db );
 
          fc::signal< void() >          _plugin_index_signal;
 

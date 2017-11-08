@@ -33,6 +33,8 @@ struct environment_check
     bool windows = false;
 };
 
+database::~database() {}
+
 void database::open(const bfs::path& dir, uint32_t flags, uint64_t shared_file_size)
 {
 

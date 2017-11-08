@@ -9,7 +9,6 @@
 #include <scorum/chain/evaluator_registry.hpp>
 #include <scorum/chain/global_property_object.hpp>
 #include <scorum/chain/history_object.hpp>
-#include <scorum/chain/index.hpp>
 #include <scorum/chain/scorum_evaluator.hpp>
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/transaction_object.hpp>
@@ -38,6 +37,8 @@
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <scorum/chain/genesis_state.hpp>
+
+#include <scorum/chain/database_index.hpp>
 
 namespace scorum { namespace chain {
 
@@ -93,11 +94,24 @@ database_impl::database_impl( database& self )
    : _self(self), _evaluator_registry(self) {}
 
 database::database()
-   : _my( new database_impl(*this) ) {}
+   : _my( new database_impl(*this) )
+{
+
+}
 
 database::~database()
 {
    clear_pending();
+}
+
+i_database_index &database::i_index()
+{
+    if (!_p_index)
+    {
+        //replace to make_unique if C++14 will be supported
+        _p_index = std::unique_ptr< i_database_index >(new i_database_index(*this));
+    }
+    return (*_p_index);
 }
 
 void database::open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags)
@@ -1825,28 +1839,28 @@ std::shared_ptr< custom_operation_interpreter > database::get_custom_json_evalua
 
 void database::initialize_indexes()
 {
-   add_core_index< dynamic_global_property_index           >(*this);
-   add_core_index< account_index                           >(*this);
-   add_core_index< account_authority_index                 >(*this);
-   add_core_index< witness_index                           >(*this);
-   add_core_index< transaction_index                       >(*this);
-   add_core_index< block_summary_index                     >(*this);
-   add_core_index< witness_schedule_index                  >(*this);
-   add_core_index< comment_index                           >(*this);
-   add_core_index< comment_vote_index                      >(*this);
-   add_core_index< witness_vote_index                      >(*this);
-   add_core_index< operation_index                         >(*this);
-   add_core_index< account_history_index                   >(*this);
-   add_core_index< hardfork_property_index                 >(*this);
-   add_core_index< withdraw_vesting_route_index            >(*this);
-   add_core_index< owner_authority_history_index           >(*this);
-   add_core_index< account_recovery_request_index          >(*this);
-   add_core_index< change_recovery_account_request_index   >(*this);
-   add_core_index< escrow_index                            >(*this);
-   add_core_index< decline_voting_rights_request_index     >(*this);
-   add_core_index< reward_fund_index                       >(*this);
-   add_core_index< vesting_delegation_index                >(*this);
-   add_core_index< vesting_delegation_expiration_index     >(*this);
+   i_index().add_core_index< dynamic_global_property_index           >();
+   i_index().add_core_index< account_index                           >();
+   i_index().add_core_index< account_authority_index                 >();
+   i_index().add_core_index< witness_index                           >();
+   i_index().add_core_index< transaction_index                       >();
+   i_index().add_core_index< block_summary_index                     >();
+   i_index().add_core_index< witness_schedule_index                  >();
+   i_index().add_core_index< comment_index                           >();
+   i_index().add_core_index< comment_vote_index                      >();
+   i_index().add_core_index< witness_vote_index                      >();
+   i_index().add_core_index< operation_index                         >();
+   i_index().add_core_index< account_history_index                   >();
+   i_index().add_core_index< hardfork_property_index                 >();
+   i_index().add_core_index< withdraw_vesting_route_index            >();
+   i_index().add_core_index< owner_authority_history_index           >();
+   i_index().add_core_index< account_recovery_request_index          >();
+   i_index().add_core_index< change_recovery_account_request_index   >();
+   i_index().add_core_index< escrow_index                            >();
+   i_index().add_core_index< decline_voting_rights_request_index     >();
+   i_index().add_core_index< reward_fund_index                       >();
+   i_index().add_core_index< vesting_delegation_index                >();
+   i_index().add_core_index< vesting_delegation_expiration_index     >();
 
    _plugin_index_signal();
 }

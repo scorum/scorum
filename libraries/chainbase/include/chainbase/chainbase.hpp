@@ -724,6 +724,10 @@ private:
  */
 class database
 {
+protected:
+
+    virtual ~database() = 0;
+
 public:
     enum open_flags
     {

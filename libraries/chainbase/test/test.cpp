@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-using namespace chainbase;
 using namespace boost::multi_index;
 
 // BOOST_TEST_SUITE( serialization_tests, clean_database_fixture )
@@ -32,6 +31,20 @@ typedef multi_index_container<book, indexed_by<ordered_unique<member<book, book:
 
 CHAINBASE_SET_INDEX_TYPE(book, book_index)
 
+    class moc_database: public chainbase::database
+    {
+        typedef chainbase::database _Base;
+    public:
+        ~moc_database(){}
+
+        void undo()
+        {
+            _Base::undo();
+        }
+
+        //!!!TODO (if chainbase::database became private)
+    };
+
 BOOST_AUTO_TEST_CASE(open_and_create)
 {
     boost::filesystem::path temp = boost::filesystem::unique_path();
@@ -39,12 +52,12 @@ BOOST_AUTO_TEST_CASE(open_and_create)
     {
         std::cerr << temp.native() << " \n";
 
-        chainbase::database db;
+        moc_database db;
         BOOST_CHECK_THROW(db.open(temp), std::runtime_error); /// temp does not exist
 
-        db.open(temp, database::read_write, 1024 * 1024 * 8);
+        db.open(temp, chainbase::database::read_write, 1024 * 1024 * 8);
 
-        chainbase::database db2; /// open an already created db
+        moc_database db2; /// open an already created db
         db2.open(temp);
         BOOST_CHECK_THROW(
             db2.add_index<book_index>(), std::runtime_error); /// index does not exist in read only database
@@ -126,7 +139,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
     }
     catch (...)
     {
-        bfs::remove_all(temp);
+        chainbase::bfs::remove_all(temp);
         throw;
     }
 }

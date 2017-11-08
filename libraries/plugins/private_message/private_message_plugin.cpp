@@ -31,7 +31,7 @@
 #include <scorum/protocol/config.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/index.hpp>
+#include <scorum/chain/database_index.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 
 #include <fc/smart_ref_impl.hpp>
@@ -128,7 +128,7 @@ void private_message_plugin::plugin_initialize(const boost::program_options::var
 {
     ilog("Intializing private message plugin");
     chain::database& db = database();
-    add_plugin_index<message_index>(db);
+    db.i_index().add_plugin_index<message_index>();
 
     app().register_api_factory<private_message_api>("private_message_api");
 
