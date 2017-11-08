@@ -106,7 +106,7 @@ As you can see, the `debug_node` performs a local edit of each witness's public 
 
 The important information in the above is:
 
-    ... "signing_key":"STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV" ...
+    ... "signing_key":"SCR6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV" ...
     ... "head_block_number":1505 ...
 
 which demonstrates the witness keys have been reset and the head block number has been advanced with new blocks.  The blocks are signed by the above private key, and the database is edited to set the block signing key of the scheduled witnesses accordingly so the node accepts the simulated signatures as valid.
@@ -114,7 +114,7 @@ which demonstrates the witness keys have been reset and the head block number ha
 If we want to take control of an account we can do so by editing its key with `debug_update_object` command like this:
 
     curl --data '{"jsonrpc": "2.0", "method": "call", "params": [0,"lookup_account_names",[["scorum"]]], "id": 8}' http://127.0.0.1:8090/rpc    # find out ID of account we want is 2.2.28
-    curl --data '{"jsonrpc": "2.0", "method": "call", "params": [2,"debug_update_object",[{"_action":"update","id":"2.2.28","active":{"weight_threshold":1,"key_auths":[["STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",1]]}}]], "id": 9}]' http://127.0.0.1:8090/rpc
+    curl --data '{"jsonrpc": "2.0", "method": "call", "params": [2,"debug_update_object",[{"_action":"update","id":"2.2.28","active":{"weight_threshold":1,"key_auths":[["SCR6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",1]]}}]], "id": 9}]' http://127.0.0.1:8090/rpc
 
 Now that we've reset its key, we can take control of it in the wallet:
     programs/cli_wallet/cli_wallet -w debug_wallet.json -s ws://127.0.0.1:8090

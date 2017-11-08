@@ -16,8 +16,6 @@
 
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('T') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< SCORUM with 3 digits of precision
-#define SBD_SYMBOL    (uint64_t(3) | (uint64_t('T') << 8) | (uint64_t('B') << 16) | (uint64_t('D') << 24) ) ///< Test Backed Dollars with 3 digits of precision
-#define STMD_SYMBOL   (uint64_t(3) | (uint64_t('T') << 8) | (uint64_t('S') << 16) | (uint64_t('T') << 24) | (uint64_t('D') << 32) ) ///< Test Dollars with 3 digits of precision
 
 #define SCORUM_ADDRESS_PREFIX                  "TST"
 
@@ -34,16 +32,17 @@
 
 #else // IS LIVE SCORUM NETWORK
 
-#define SCORUM_INIT_PUBLIC_KEY_STR             "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
+#define SCORUM_INIT_PUBLIC_KEY_STR             "SCR5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
 #define SCORUM_CHAIN_ID                        (scorum::protocol::chain_id_type())
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
-#define SBD_SYMBOL    (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('B') << 16) | (uint64_t('D') << 24) ) ///< SCORUM Backed Dollars with 3 digits of precision
-#define STMD_SYMBOL   (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('T') << 16) | (uint64_t('M') << 24) | (uint64_t('D') << 32) ) ///< SCORUM Dollars with 3 digits of precision
-#define SCORUM_ADDRESS_PREFIX                  "STM"
+#define SCORUM_ADDRESS_PREFIX                  "SCR"
 
 #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508331600))
+
+#define SCORUM_MINING_TIME                     (fc::time_point_sec(1451606400)) 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60*24*7)  /// 7 days
+#define SCORUM_SECOND_CASHOUT_WINDOW           (60*60*24*30) /// 30 days 
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
 
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE           1
@@ -94,7 +93,6 @@
 #define SCORUM_100_PERCENT                     10000
 #define SCORUM_1_PERCENT                       (SCORUM_100_PERCENT/100)
 #define SCORUM_1_TENTH_PERCENT                 (SCORUM_100_PERCENT/1000)
-#define SCORUM_DEFAULT_SBD_INTEREST_RATE       (10*SCORUM_1_PERCENT) ///< 10% APR
 
 #define SCORUM_INFLATION_RATE_START_PERCENT    (978) // Fixes block 7,000,000 to 9.5%
 #define SCORUM_INFLATION_RATE_STOP_PERCENT     (95) // 0.95%
@@ -115,11 +113,6 @@
 
 #define SCORUM_MINING_REWARD                   asset( 1000, SCORUM_SYMBOL )
 
-#define SCORUM_LIQUIDITY_TIMEOUT_SEC           (fc::seconds(60*60*24*7)) // After one week volume is set to 0
-#define SCORUM_MIN_LIQUIDITY_REWARD_PERIOD_SEC fc::seconds(60*30) /// 30 min required on books to receive volume
-#define SCORUM_LIQUIDITY_REWARD_PERIOD_SEC     (60*60)
-#define SCORUM_LIQUIDITY_REWARD_BLOCKS         (SCORUM_LIQUIDITY_REWARD_PERIOD_SEC/SCORUM_BLOCK_INTERVAL)
-#define SCORUM_MIN_LIQUIDITY_REWARD            (asset( 1000*SCORUM_LIQUIDITY_REWARD_BLOCKS, SCORUM_SYMBOL )) // Minumum reward to be paid out to liquidity providers
 #define SCORUM_MIN_CONTENT_REWARD              SCORUM_MINING_REWARD
 #define SCORUM_MIN_CURATE_REWARD               SCORUM_MINING_REWARD
 #define SCORUM_MIN_PRODUCER_REWARD             SCORUM_MINING_REWARD
@@ -165,10 +158,8 @@
 #define SCORUM_PRODUCER_APR_PERCENT             750
 #define SCORUM_POW_APR_PERCENT                  750
 
-#define SCORUM_MIN_PAYOUT_SBD                  (asset(20,SBD_SYMBOL))
+#define SCORUM_MIN_PAYOUT                  (asset(5,SCORUM_SYMBOL))
 
-#define SCORUM_SBD_STOP_PERCENT                (5*SCORUM_1_PERCENT ) // Stop printing SBD at 5% Market Cap
-#define SCORUM_SBD_START_PERCENT               (2*SCORUM_1_PERCENT) // Start reducing printing of SBD at 2% Market Cap
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
 #define SCORUM_MAX_ACCOUNT_NAME_LENGTH         16
@@ -182,7 +173,6 @@
 
 #define SCORUM_SECONDS_PER_YEAR                (uint64_t(60*60*24*365ll))
 
-#define SCORUM_SBD_INTEREST_COMPOUND_INTERVAL_SEC  (60*60*24*30)
 #define SCORUM_MAX_TRANSACTION_SIZE            (1024*64)
 #define SCORUM_MIN_BLOCK_SIZE_LIMIT            (SCORUM_MAX_TRANSACTION_SIZE)
 #define SCORUM_MAX_BLOCK_SIZE                  (SCORUM_MAX_TRANSACTION_SIZE*SCORUM_BLOCK_INTERVAL*2000)
