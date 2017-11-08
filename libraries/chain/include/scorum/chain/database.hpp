@@ -143,8 +143,6 @@ namespace chain {
           */
          void pay_fee( const account_object& a, asset fee );
 
-         void max_bandwidth_per_share()const;
-
          /**
           *  Calculate the percent of block production slots that were missed in the
           *  past 128 blocks, not including the current block.
@@ -316,10 +314,6 @@ namespace chain {
          void process_decline_voting_rights();
          void update_median_feed();
 
-         asset get_content_reward()const;
-         asset get_producer_reward();
-         asset get_curation_reward()const;
-
          uint16_t get_curation_rewards_percent( const comment_object& c ) const;
 
          share_type pay_reward_funds( share_type reward );
@@ -439,7 +433,6 @@ namespace chain {
          uint32_t                      _current_block_num    = 0;
          uint16_t                      _current_trx_in_block = 0;
          uint16_t                      _current_op_in_trx    = 0;
-         uint16_t                      _current_virtual_op   = 0;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
