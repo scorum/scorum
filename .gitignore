@@ -54,6 +54,8 @@ witness_node_data_dir
 
 #IDE
 .vscode/
+.idea/
 *.user
 .vs/
 *.vcxproj*
+*.cbp

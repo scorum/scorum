@@ -193,9 +193,7 @@ void database_fixture::open_database()
 {
    if( !data_dir ) {
       data_dir = fc::temp_directory( graphene::utilities::temp_directory_path() );
-      /* !!!TODO!!! (db._log_hardforks will be initialized in contructor of new database class)
       db._log_hardforks = false;
-      */
       db.open( data_dir->path(), data_dir->path(), 1024 * 1024 * 8, chainbase::database::read_write ); // 8 MB file for testing
    }
 }
@@ -346,9 +344,6 @@ void database_fixture::fund(
             if( amount.symbol == SCORUM_SYMBOL )
                gpo.current_supply += amount;
          });
-
-         //!!! broken test (update_virtual_supply implementation was removed in 'staging' branch)
-         //db.update_virtual_supply();
       }, default_skip );
    }
    FC_CAPTURE_AND_RETHROW( (account_name)(amount) )
@@ -405,8 +400,6 @@ void database_fixture::vest( const string& account, const asset& amount )
 
       db.create_vesting( db.get_account( account ), amount );
 
-      //!!! broken test (update_virtual_supply implementation was removed in 'staging' branch)
-      //db.update_virtual_supply();
    }, default_skip );
 }
 
