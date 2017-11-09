@@ -40,7 +40,6 @@
 
 #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508331600))
 
-#define SCORUM_MINING_TIME                     (fc::time_point_sec(1451606400)) 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60*24*7)  /// 7 days
 #define SCORUM_SECOND_CASHOUT_WINDOW           (60*60*24*30) /// 30 days 
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
