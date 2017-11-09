@@ -1441,6 +1441,8 @@ share_type database::cashout_comment_helper( util::comment_reward_context& ctx, 
             const auto& author = get_account( comment.author );
             auto vest_created = create_vesting( author, vesting_scorum, true );
             auto scr_payout = asset( scorum, SCORUM_SYMBOL );
+            
+            adjust_reward_balance( author, scr_payout);
 
             adjust_total_payout( comment, scr_payout + asset( vesting_scorum, SCORUM_SYMBOL ) , asset( curation_tokens, SCORUM_SYMBOL ),  asset( total_beneficiary, SCORUM_SYMBOL ) );
 

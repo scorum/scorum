@@ -67,8 +67,9 @@ BOOST_AUTO_TEST_CASE( comment_payout_equalize )
       // A,B,D : posters
       // U,V,W : voters
 
+      //SCORUM: we don't have stable coin but might have an threshold
       // set a ridiculously high SCORUM price ($1 / satoshi) to disable dust threshold
-      set_price_feed( price( ASSET( "0.001 TESTS" ), ASSET( "1.000 TBD" ) ) );
+      //set_price_feed( price( ASSET( "0.001 TESTS" ), ASSET( "1.000 TBD" ) ) );
 
       for( const auto& voter : voters )
       {
