@@ -219,6 +219,17 @@ e.g.:
 
 This will only build `scorumd`.
 
+## To build with TEST_NET
+
+
+    export OPENSSL_ROOT_DIR=$(brew --prefix)/Cellar/openssl/1.0.2l/
+    export BOOST_ROOT=$(brew --prefix)/Cellar/boost@1.60/1.60.0/
+    git submodule update --init --recursive
+    mkdir build 
+    cd build
+    cmake -DBOOST_ROOT="$BOOST_ROOT" -DCMAKE_BUILD_TYPE=Debug . -DBUILD_SCORUM_TEST_NET=ON
+    make -j$(sysctl -n hw.logicalcpu) chain_test
+
 ## Building on Other Platforms
 
 - Windows build instructions do not yet exist.

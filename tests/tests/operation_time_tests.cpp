@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE( comment_payout_equalize )
       std::vector< voter_actor > voters;
 
       authors.emplace_back( "alice", alice_private_key );
-      authors.emplace_back( "bob"  , bob_private_key, ASSET( "0.000 TBD" ) );
+      authors.emplace_back( "bob"  , bob_private_key, ASSET( "0.000 TESTS" ) );
       authors.emplace_back( "dave" , dave_private_key );
       voters.emplace_back( "ulysses", ulysses_private_key, "alice");
       voters.emplace_back( "vivian" , vivian_private_key , "bob"  );
@@ -1649,7 +1649,6 @@ BOOST_AUTO_TEST_CASE( clear_null_account )
          db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
          {
             gpo.current_supply += ASSET( "2.000 TESTS" );
-            gpo.virtual_supply += ASSET( "3.000 TESTS" );
             gpo.pending_rewarded_vesting_shares += ASSET( "1.000000 VESTS" );
             gpo.pending_rewarded_vesting_scorum += ASSET( "1.000 TESTS" );
          });

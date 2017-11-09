@@ -1629,7 +1629,7 @@ void database::process_funds()
       // below subtraction cannot underflow int64_t because inflation_rate_adjustment is <2^32
       int64_t current_inflation_rate = std::max( start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor );
 
-      auto new_scorum = ( props.virtual_supply.amount * current_inflation_rate ) / ( int64_t( SCORUM_100_PERCENT ) * int64_t( SCORUM_BLOCKS_PER_YEAR ) );
+      auto new_scorum = ( props.current_supply.amount * current_inflation_rate ) / ( int64_t( SCORUM_100_PERCENT ) * int64_t( SCORUM_BLOCKS_PER_YEAR ) );
       auto content_reward = ( new_scorum * SCORUM_CONTENT_REWARD_PERCENT ) / SCORUM_100_PERCENT;
       content_reward = pay_reward_funds( content_reward ); /// 75% to content creator
       auto vesting_reward = ( new_scorum * SCORUM_VESTING_FUND_PERCENT ) / SCORUM_100_PERCENT; /// 15% to vesting fund
@@ -1655,7 +1655,6 @@ void database::process_funds()
       {
          p.total_vesting_fund_scorum += asset( vesting_reward, SCORUM_SYMBOL );
          p.current_supply           += asset( new_scorum, SCORUM_SYMBOL );
-         p.virtual_supply           += asset( new_scorum, SCORUM_SYMBOL );
       });
 
       const auto& producer_reward = create_vesting( get_account( cwit.owner ), asset( witness_reward, SCORUM_SYMBOL ) );
@@ -2096,7 +2095,6 @@ void database::init_genesis_global_property_object(uint64_t init_supply)
       p.recent_slots_filled = fc::uint128::max_value();
       p.participation_count = 128;
       p.current_supply = asset( init_supply, SCORUM_SYMBOL );
-      p.virtual_supply = p.current_supply;
       p.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
 
       p.total_reward_fund_scorum = asset( 0, SCORUM_SYMBOL );
@@ -2753,7 +2751,6 @@ void database::adjust_supply( const asset& delta, bool adjust_vesting )
          {
             asset new_vesting( (adjust_vesting && delta.amount > 0) ? delta.amount * 9 : 0, SCORUM_SYMBOL );
             props.current_supply += delta + new_vesting;
-            props.virtual_supply += delta + new_vesting;
             props.total_vesting_fund_scorum += new_vesting;
             assert( props.current_supply.amount.value >= 0 );
             break;
@@ -2949,7 +2946,6 @@ void database::validate_invariants()const
       FC_ASSERT( gpo.total_vesting_shares.amount == total_vsf_votes, "", ("total_vesting_shares",gpo.total_vesting_shares)("total_vsf_votes",total_vsf_votes) );
       FC_ASSERT( gpo.pending_rewarded_vesting_scorum == pending_vesting_scorum, "", ("pending_rewarded_vesting_scorum",gpo.pending_rewarded_vesting_scorum)("pending_vesting_scorum", pending_vesting_scorum));
 
-      FC_ASSERT( gpo.virtual_supply >= gpo.current_supply );
    }
    FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) );
 }
