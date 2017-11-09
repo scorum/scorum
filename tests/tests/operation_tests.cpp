@@ -2628,7 +2628,6 @@ BOOST_AUTO_TEST_CASE( escrow_transfer_apply )
       ACTORS( (alice)(bob)(sam) )
 
       fund( "alice", 10000 );
-
       signed_transaction tx;
 
       escrow_transfer_operation op;
@@ -4778,8 +4777,6 @@ BOOST_AUTO_TEST_CASE( comment_beneficiaries_apply )
       BOOST_TEST_MESSAGE( "Test Comment Beneficiaries" );
       ACTORS( (alice)(bob)(sam)(dave) )
       generate_block();
-
-//      set_price_feed( price( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) ) );
 
       comment_operation comment;
       vote_operation vote;

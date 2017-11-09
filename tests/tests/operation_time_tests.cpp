@@ -1631,7 +1631,6 @@ BOOST_AUTO_TEST_CASE( clear_null_account )
 
       signed_transaction tx;
       tx.operations.push_back( transfer1 );
-//      tx.operations.push_back( transfer2 );
       tx.operations.push_back( vest );
       tx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
       tx.sign( alice_private_key, db.get_chain_id() );
