@@ -1090,66 +1090,6 @@ void database::clear_witness_votes( const account_object& a )
       });
 }
 
-void database::clear_null_account_balance()
-{
-
-   const auto& null_account = get_account( SCORUM_NULL_ACCOUNT );
-   asset total_scorum( 0, SCORUM_SYMBOL );
-
-   if( null_account.balance.amount > 0 )
-   {
-      total_scorum += null_account.balance;
-      adjust_balance( null_account, -null_account.balance );
-   }
-
-   if( null_account.vesting_shares.amount > 0 )
-   {
-      const auto& gpo = get_dynamic_global_properties();
-      auto converted_scorum = null_account.vesting_shares * gpo.get_vesting_share_price();
-
-      modify( gpo, [&]( dynamic_global_property_object& g )
-      {
-         g.total_vesting_shares -= null_account.vesting_shares;
-         g.total_vesting_fund_scorum -= converted_scorum;
-      });
-
-      modify( null_account, [&]( account_object& a )
-      {
-         a.vesting_shares.amount = 0;
-      });
-
-      total_scorum += converted_scorum;
-   }
-
-   if( null_account.reward_scorum_balance.amount > 0 )
-   {
-      total_scorum += null_account.reward_scorum_balance;
-      adjust_reward_balance( null_account, -null_account.reward_scorum_balance );
-   }
-
-   if( null_account.reward_vesting_balance.amount > 0 )
-   {
-      const auto& gpo = get_dynamic_global_properties();
-
-      total_scorum += null_account.reward_vesting_scorum;
-
-      modify( gpo, [&]( dynamic_global_property_object& g )
-      {
-         g.pending_rewarded_vesting_shares -= null_account.reward_vesting_balance;
-         g.pending_rewarded_vesting_scorum -= null_account.reward_vesting_scorum;
-      });
-
-      modify( null_account, [&]( account_object& a )
-      {
-         a.reward_vesting_scorum.amount = 0;
-         a.reward_vesting_balance.amount = 0;
-      });
-   }
-
-   if( total_scorum.amount > 0 )
-      adjust_supply( -total_scorum );
-}
-
 /**
  * This method updates total_reward_shares2 on DGPO, and children_rshares2 on comments, when a comment's rshares2 changes
  * from old_rshares2 to new_rshares2.  Maintaining invariants that children_rshares2 is the sum of all descendants' rshares2,
@@ -1968,28 +1908,6 @@ void database::init_genesis()
       } );
       // end create initial delegate
 
-      create< account_object >( [&]( account_object& a )
-      {
-         a.name = SCORUM_NULL_ACCOUNT;
-      } );
-      create< account_authority_object >( [&]( account_authority_object& auth )
-      {
-         auth.account = SCORUM_NULL_ACCOUNT;
-         auth.owner.weight_threshold = 1;
-         auth.active.weight_threshold = 1;
-      });
-
-      create< account_object >( [&]( account_object& a )
-      {
-         a.name = SCORUM_TEMP_ACCOUNT;
-      } );
-      create< account_authority_object >( [&]( account_authority_object& auth )
-      {
-         auth.account = SCORUM_TEMP_ACCOUNT;
-         auth.owner.weight_threshold = 0;
-         auth.active.weight_threshold = 0;
-      });
-
       // Create witness scheduler
       create< witness_schedule_object >( [&]( witness_schedule_object& wso )
       {
@@ -2312,7 +2230,6 @@ void database::_apply_block( const signed_block& next_block )
    clear_expired_delegations();
    update_witness_schedule(*this);
 
-   clear_null_account_balance();
    process_funds();
 
    process_comment_cashout();
