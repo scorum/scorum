@@ -121,7 +121,7 @@ namespace scorum { namespace protocol {
    {
       validate_account_name( author );
       FC_ASSERT( percent_scrs <= SCORUM_100_PERCENT, "Percent cannot exceed 100%" );
-      FC_ASSERT( max_accepted_payout.symbol == SCORUM_SYMBOL, "Max accepted payout must be in SBD" );
+      FC_ASSERT( max_accepted_payout.symbol == SCORUM_SYMBOL, "Max accepted payout must be in SCR" );
       FC_ASSERT( max_accepted_payout.amount.value >= 0, "Cannot accept less than 0 payout" );
       validate_permlink( permlink );
       for( auto& e : extensions )

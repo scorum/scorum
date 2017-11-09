@@ -133,7 +133,6 @@ BOOST_AUTO_TEST_CASE( asset_test )
 
       BOOST_TEST_MESSAGE( "Asset Test" );
       asset scorum = asset::from_string( "123.456 TESTS" );
-      asset sbd = asset::from_string( "654.321 TBD" );
       asset tmp = asset::from_string( "0.456 TESTS" );
       BOOST_CHECK_EQUAL( tmp.amount.value, 456 );
       tmp = asset::from_string( "0.056 TESTS" );
@@ -147,12 +146,6 @@ BOOST_AUTO_TEST_CASE( asset_test )
       BOOST_CHECK_EQUAL( scorum.symbol, SCORUM_SYMBOL);
       BOOST_CHECK_EQUAL( asset(50, SCORUM_SYMBOL).to_string(), "0.050 TESTS" );
       BOOST_CHECK_EQUAL( asset(50000, SCORUM_SYMBOL).to_string(), "50.000 TESTS" );
-
-      BOOST_CHECK( std::abs( sbd.to_real() - 654.321 ) < 0.0005 );
-      BOOST_CHECK_EQUAL( sbd.amount.value, 654321 );
-      BOOST_CHECK_EQUAL( sbd.decimals(), 3 );
-      BOOST_CHECK_EQUAL( sbd.symbol_name(), "TBD" );
-      BOOST_CHECK_EQUAL( sbd.to_string(), "654.321 TBD" );
 
       BOOST_CHECK_THROW( scorum.set_decimals(100), fc::exception );
       char* scorum_sy = (char*) &scorum.symbol;

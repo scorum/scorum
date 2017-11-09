@@ -38,8 +38,6 @@ namespace scorum { namespace chain {
          account_name_type current_witness;
 
 
-
-         asset       virtual_supply             = asset( 0, SCORUM_SYMBOL );
          asset       current_supply             = asset( 0, SCORUM_SYMBOL );
          asset       confidential_supply        = asset( 0, SCORUM_SYMBOL ); ///< total asset held in confidential balances
          asset       total_vesting_fund_scorum   = asset( 0, SCORUM_SYMBOL );
@@ -114,7 +112,6 @@ FC_REFLECT( scorum::chain::dynamic_global_property_object,
              (head_block_id)
              (time)
              (current_witness)
-             (virtual_supply)
              (current_supply)
              (confidential_supply)
              (total_vesting_fund_scorum)
