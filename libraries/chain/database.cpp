@@ -37,6 +37,7 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <scorum/chain/genesis_state.hpp>
 
+#include <scorum/chain/dbservice.hpp>
 #include <scorum/chain/database_index.hpp>
 #include <scorum/chain/database_witness_schedule.hpp>
 
@@ -104,11 +105,21 @@ database::~database()
    clear_pending();
 }
 
+i_dbservice &database::i_service()
+{
+    if (!_i_service)
+    {
+        //TODO (replace to make_unique if C++14 will be supported)
+        _i_service = std::unique_ptr< i_dbservice >(new i_dbservice(*this));
+    }
+    return (*_i_service);
+}
+
 i_database_index &database::i_index()
 {
     if (!_i_index)
     {
-        //replace to make_unique if C++14 will be supported
+        //TODO (replace to make_unique if C++14 will be supported)
         _i_index = std::unique_ptr< i_database_index >(new i_database_index(*this));
     }
     return (*_i_index);
@@ -118,7 +129,7 @@ i_database_witness_schedule &database::i_witness_schedule()
 {
     if (!_i_database_witness_schedule)
     {
-        //replace to make_unique if C++14 will be supported
+        //TODO (replace to make_unique if C++14 will be supported)
         _i_database_witness_schedule = std::unique_ptr< i_database_witness_schedule >(new i_database_witness_schedule(*this));
     }
     return (*_i_database_witness_schedule);

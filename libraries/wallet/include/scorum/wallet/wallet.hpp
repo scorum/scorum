@@ -685,6 +685,18 @@ class wallet_api
       );
 
       /**
+       * Transfer SCORUM into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
+       * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
+       * VESTS are protected against dilution up until 90% of SCORUM is vesting.
+       *
+       * @param from The account the SCORUM is coming from
+       * @param to The account getting the VESTS
+       * @param amount The amount of SCORUM to vest i.e. "100.00 SCORUM"
+       * @param broadcast true if you wish to broadcast the transaction
+       */
+      annotated_signed_transaction transfer_to_vesting(string from, string to, asset amount, bool broadcast = false);
+
+      /**
        * Set up a vesting withdraw request. The request is fulfilled once a week over the next two year (104 weeks).
        *
        * @param from The account the VESTS are withdrawn from
@@ -943,6 +955,7 @@ FC_API( scorum::wallet::wallet_api,
         (escrow_approve)
         (escrow_dispute)
         (escrow_release)
+        (transfer_to_vesting)
         (withdraw_vesting)
         (set_withdraw_vesting_route)
         (post_comment)

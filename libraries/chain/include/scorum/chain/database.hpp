@@ -32,6 +32,7 @@ namespace chain {
    class database_impl;
    class custom_operation_interpreter;
 
+   class i_dbservice;
    class i_database_index;
    class i_database_witness_schedule;
 
@@ -43,6 +44,7 @@ namespace chain {
     */
    class database : public chainbase::database
    {
+       friend class i_dbservice;
        friend class i_database_index;
        friend class i_database_witness_schedule;
 
@@ -50,9 +52,15 @@ namespace chain {
          database();
          ~database();
 
+        i_dbservice &i_service();
+
          bool is_producing()const { return _is_producing; }
 
          bool _log_hardforks = true;
+
+#ifdef IS_TEST_NET
+         bool skip_transaction_delta_check = true;
+#endif
 
          enum validation_steps
          {
@@ -418,14 +426,11 @@ namespace chain {
 
          ///@}
 
-#ifdef IS_TEST_NET
-         bool skip_transaction_delta_check = true;
-#endif
-
    private:
 
          std::unique_ptr< database_impl > _my;
 
+         std::unique_ptr< i_dbservice > _i_service;
          std::unique_ptr< i_database_index > _i_index;
          std::unique_ptr< i_database_witness_schedule > _i_database_witness_schedule;
 

@@ -42,7 +42,7 @@ CHAINBASE_SET_INDEX_TYPE(book, book_index)
             _Base::undo();
         }
 
-        //!!!TODO (if chainbase::database became private)
+        //TODO (if chainbase::database became private)
     };
 
 BOOST_AUTO_TEST_CASE(open_and_create)
