@@ -168,8 +168,6 @@ BOOST_AUTO_TEST_CASE( comment_payout_dust )
       vest( "alice", ASSET( "10.000 TESTS" ) );
       vest( "bob", ASSET( "10.000 TESTS" ) );
 
-      set_price_feed( price( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) ) );
-
       generate_block();
       validate_database();
 
@@ -300,7 +298,6 @@ BOOST_AUTO_TEST_CASE( recent_claims_decay )
       ACTORS( (alice)(bob) )
       generate_block();
 
-      set_price_feed( price( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) ) );
       generate_block();
 
       comment_operation comment;
@@ -1506,9 +1503,6 @@ BOOST_AUTO_TEST_CASE( comment_freeze )
       vest( "bob", 10000 );
       vest( "sam", 10000 );
       vest( "dave", 10000 );
-
-      auto exchange_rate = price( ASSET( "1.250 TESTS" ), ASSET( "1.000 TBD" ) );
-      set_price_feed( exchange_rate );
 
       signed_transaction tx;
 
