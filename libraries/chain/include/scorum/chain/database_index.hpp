@@ -9,17 +9,15 @@ namespace chain {
     {
         friend class database;
 
-     private:
+     protected:
+
+        explicit i_database_index(database &db): _db(db){}
 
         template <typename MultiIndexType>
         void _add_index_impl()
         {
             _db.add_index<MultiIndexType>();
         }
-
-     protected:
-
-        explicit i_database_index(database &db): _db(db){}
 
         template <typename MultiIndexType>
         void add_core_index()

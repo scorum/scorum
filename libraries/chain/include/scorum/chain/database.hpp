@@ -33,6 +33,7 @@ namespace chain {
    class custom_operation_interpreter;
 
    class i_database_index;
+   class i_database_witness_schedule;
 
    namespace util { struct comment_reward_context; }
 
@@ -43,6 +44,7 @@ namespace chain {
    class database : public chainbase::database
    {
        friend class i_database_index;
+       friend class i_database_witness_schedule;
 
     public:
          database();
@@ -373,29 +375,23 @@ namespace chain {
          void set_flush_interval( uint32_t flush_blocks );
          void show_free_memory( bool force );
 
-#ifdef IS_TEST_NET
-         bool skip_transaction_delta_check = true;
-#endif
-
          i_database_index &i_index();
 
     protected:
+
+         i_database_witness_schedule &i_witness_schedule();
+
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          //void pop_undo() { object_database::pop_undo(); }
          void notify_changed_objects();
 
-    private:
          void set_producing( bool p ) { _is_producing = p;  }
-         bool _is_producing = false;
-
-         optional< chainbase::database::session > _pending_tx_session;
 
          void apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
          void apply_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
          void _apply_block( const signed_block& next_block );
          void _apply_transaction( const signed_transaction& trx );
          void apply_operation( const operation& op );
-
 
          ///Steps involved in applying a new block
          ///@{
@@ -422,9 +418,20 @@ namespace chain {
 
          ///@}
 
+#ifdef IS_TEST_NET
+         bool skip_transaction_delta_check = true;
+#endif
+
+   private:
+
          std::unique_ptr< database_impl > _my;
 
-         std::unique_ptr< i_database_index > _p_index;
+         std::unique_ptr< i_database_index > _i_index;
+         std::unique_ptr< i_database_witness_schedule > _i_database_witness_schedule;
+
+         bool _is_producing = false;
+
+         optional< chainbase::database::session > _pending_tx_session;
 
          vector< signed_transaction >  _pending_tx;
          fork_database                 _fork_db;

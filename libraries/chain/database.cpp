@@ -14,7 +14,6 @@
 #include <scorum/chain/transaction_object.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/witness_schedule.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
@@ -39,6 +38,7 @@
 #include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/chain/database_index.hpp>
+#include <scorum/chain/database_witness_schedule.hpp>
 
 namespace scorum { namespace chain {
 
@@ -106,12 +106,22 @@ database::~database()
 
 i_database_index &database::i_index()
 {
-    if (!_p_index)
+    if (!_i_index)
     {
         //replace to make_unique if C++14 will be supported
-        _p_index = std::unique_ptr< i_database_index >(new i_database_index(*this));
+        _i_index = std::unique_ptr< i_database_index >(new i_database_index(*this));
     }
-    return (*_p_index);
+    return (*_i_index);
+}
+
+i_database_witness_schedule &database::i_witness_schedule()
+{
+    if (!_i_database_witness_schedule)
+    {
+        //replace to make_unique if C++14 will be supported
+        _i_database_witness_schedule = std::unique_ptr< i_database_witness_schedule >(new i_database_witness_schedule(*this));
+    }
+    return (*_i_database_witness_schedule);
 }
 
 void database::open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags)
@@ -2324,7 +2334,7 @@ void database::_apply_block( const signed_block& next_block )
    create_block_summary(next_block);
    clear_expired_transactions();
    clear_expired_delegations();
-   update_witness_schedule(*this);
+  i_witness_schedule().update_witness_schedule();
 
    clear_null_account_balance();
    process_funds();
