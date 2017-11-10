@@ -27,14 +27,15 @@
 
 extern uint32_t SCORUM_TESTING_GENESIS_TIMESTAMP;
 
-boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
-   std::srand(time(NULL));
-   std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
-   const char* genesis_timestamp_str = getenv("SCORUM_TESTING_GENESIS_TIMESTAMP");
-   if( genesis_timestamp_str != nullptr )
-   {
-      SCORUM_TESTING_GENESIS_TIMESTAMP = std::stoul( genesis_timestamp_str );
-   }
-   std::cout << "SCORUM_TESTING_GENESIS_TIMESTAMP is " << SCORUM_TESTING_GENESIS_TIMESTAMP << std::endl;
-   return nullptr;
+boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
+{
+    std::srand(time(NULL));
+    std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
+    const char* genesis_timestamp_str = getenv("SCORUM_TESTING_GENESIS_TIMESTAMP");
+    if (genesis_timestamp_str != nullptr)
+    {
+        SCORUM_TESTING_GENESIS_TIMESTAMP = std::stoul(genesis_timestamp_str);
+    }
+    std::cout << "SCORUM_TESTING_GENESIS_TIMESTAMP is " << SCORUM_TESTING_GENESIS_TIMESTAMP << std::endl;
+    return nullptr;
 }

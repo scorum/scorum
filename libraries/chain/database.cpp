@@ -9,13 +9,11 @@
 #include <scorum/chain/evaluator_registry.hpp>
 #include <scorum/chain/global_property_object.hpp>
 #include <scorum/chain/history_object.hpp>
-#include <scorum/chain/index.hpp>
 #include <scorum/chain/scorum_evaluator.hpp>
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/transaction_object.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/witness_schedule.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
@@ -38,6 +36,10 @@
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <scorum/chain/genesis_state.hpp>
+
+#include <scorum/chain/dbservice.hpp>
+#include <scorum/chain/database_index.hpp>
+#include <scorum/chain/database_witness_schedule.hpp>
 
 namespace scorum { namespace chain {
 
@@ -93,11 +95,44 @@ database_impl::database_impl( database& self )
    : _self(self), _evaluator_registry(self) {}
 
 database::database()
-   : _my( new database_impl(*this) ) {}
+   : _my( new database_impl(*this) )
+{
+
+}
 
 database::~database()
 {
    clear_pending();
+}
+
+i_dbservice &database::i_service()
+{
+    if (!_i_service)
+    {
+        //TODO (replace to make_unique if C++14 will be supported)
+        _i_service = std::unique_ptr< i_dbservice >(new i_dbservice(*this));
+    }
+    return (*_i_service);
+}
+
+i_database_index &database::i_index()
+{
+    if (!_i_index)
+    {
+        //TODO (replace to make_unique if C++14 will be supported)
+        _i_index = std::unique_ptr< i_database_index >(new i_database_index(*this));
+    }
+    return (*_i_index);
+}
+
+i_database_witness_schedule &database::i_witness_schedule()
+{
+    if (!_i_database_witness_schedule)
+    {
+        //TODO (replace to make_unique if C++14 will be supported)
+        _i_database_witness_schedule = std::unique_ptr< i_database_witness_schedule >(new i_database_witness_schedule(*this));
+    }
+    return (*_i_database_witness_schedule);
 }
 
 void database::open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags)
@@ -1766,28 +1801,28 @@ std::shared_ptr< custom_operation_interpreter > database::get_custom_json_evalua
 
 void database::initialize_indexes()
 {
-   add_core_index< dynamic_global_property_index           >(*this);
-   add_core_index< account_index                           >(*this);
-   add_core_index< account_authority_index                 >(*this);
-   add_core_index< witness_index                           >(*this);
-   add_core_index< transaction_index                       >(*this);
-   add_core_index< block_summary_index                     >(*this);
-   add_core_index< witness_schedule_index                  >(*this);
-   add_core_index< comment_index                           >(*this);
-   add_core_index< comment_vote_index                      >(*this);
-   add_core_index< witness_vote_index                      >(*this);
-   add_core_index< operation_index                         >(*this);
-   add_core_index< account_history_index                   >(*this);
-   add_core_index< hardfork_property_index                 >(*this);
-   add_core_index< withdraw_vesting_route_index            >(*this);
-   add_core_index< owner_authority_history_index           >(*this);
-   add_core_index< account_recovery_request_index          >(*this);
-   add_core_index< change_recovery_account_request_index   >(*this);
-   add_core_index< escrow_index                            >(*this);
-   add_core_index< decline_voting_rights_request_index     >(*this);
-   add_core_index< reward_fund_index                       >(*this);
-   add_core_index< vesting_delegation_index                >(*this);
-   add_core_index< vesting_delegation_expiration_index     >(*this);
+   i_index().add_core_index< dynamic_global_property_index           >();
+   i_index().add_core_index< account_index                           >();
+   i_index().add_core_index< account_authority_index                 >();
+   i_index().add_core_index< witness_index                           >();
+   i_index().add_core_index< transaction_index                       >();
+   i_index().add_core_index< block_summary_index                     >();
+   i_index().add_core_index< witness_schedule_index                  >();
+   i_index().add_core_index< comment_index                           >();
+   i_index().add_core_index< comment_vote_index                      >();
+   i_index().add_core_index< witness_vote_index                      >();
+   i_index().add_core_index< operation_index                         >();
+   i_index().add_core_index< account_history_index                   >();
+   i_index().add_core_index< hardfork_property_index                 >();
+   i_index().add_core_index< withdraw_vesting_route_index            >();
+   i_index().add_core_index< owner_authority_history_index           >();
+   i_index().add_core_index< account_recovery_request_index          >();
+   i_index().add_core_index< change_recovery_account_request_index   >();
+   i_index().add_core_index< escrow_index                            >();
+   i_index().add_core_index< decline_voting_rights_request_index     >();
+   i_index().add_core_index< reward_fund_index                       >();
+   i_index().add_core_index< vesting_delegation_index                >();
+   i_index().add_core_index< vesting_delegation_expiration_index     >();
 
    _plugin_index_signal();
 }
@@ -2228,7 +2263,7 @@ void database::_apply_block( const signed_block& next_block )
    create_block_summary(next_block);
    clear_expired_transactions();
    clear_expired_delegations();
-   update_witness_schedule(*this);
+  i_witness_schedule().update_witness_schedule();
 
    process_funds();
 

@@ -3,6 +3,7 @@
 
 #include <fc/uint128.hpp>
 
-namespace scorum { namespace chain {
-
-} } // scorum::chain
+namespace scorum {
+namespace chain {
+}
+} // scorum::chain
