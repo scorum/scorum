@@ -525,8 +525,8 @@ BOOST_AUTO_TEST_CASE(comment_apply)
 
         BOOST_TEST_MESSAGE("--- Test modifying a comment");
         const auto& mod_sam_comment = db.get_comment("sam", string("dolor"));
-        const auto& mod_bob_comment = db.get_comment("bob", string("ipsum"));
-        const auto& mod_alice_comment = db.get_comment("alice", string("lorem"));
+//        const auto& mod_bob_comment = db.get_comment("bob", string("ipsum"));
+//        const auto& mod_alice_comment = db.get_comment("alice", string("lorem"));
         fc::time_point_sec created = mod_sam_comment.created;
 
         db.modify(mod_sam_comment, [&](comment_object& com) {
@@ -898,13 +898,12 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             auto sam_weight /*= ( ( uint128_t( new_sam.vesting_shares.amount.value ) ) / 400 + 1 ).to_uint64();*/
                 = ((uint128_t(new_sam.vesting_shares.amount.value)
                        * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
-                    / SCORUM_100_PERCENT)
-                      .to_uint64();
+                    / SCORUM_100_PERCENT).to_uint64();
 
             BOOST_REQUIRE(new_sam.voting_power
                 == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)));
-            BOOST_REQUIRE(new_bob_comment.net_rshares.value == old_abs_rshares - sam_weight);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares.value == old_abs_rshares + sam_weight);
+            BOOST_REQUIRE(new_bob_comment.net_rshares.value == static_cast<int64_t>(old_abs_rshares - sam_weight));
+            BOOST_REQUIRE(new_bob_comment.abs_rshares.value == static_cast<int64_t>(old_abs_rshares + sam_weight));
             BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
             BOOST_REQUIRE(itr != vote_idx.end());
             validate_database();
@@ -941,8 +940,7 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             db.push_transaction(tx, 0);
 
             auto new_rshares = ((fc::uint128_t(db.get_account("alice").vesting_shares.amount.value) * used_power)
-                / SCORUM_100_PERCENT)
-                                   .to_uint64();
+                / SCORUM_100_PERCENT).to_uint64();
 
             BOOST_REQUIRE(db.get_comment("alice", string("foo")).cashout_time
                 == db.get_comment("alice", string("foo")).created + SCORUM_CASHOUT_WINDOW_SECONDS);
@@ -979,7 +977,7 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares + new_rshares);
             BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares + new_rshares);
             BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == new_rshares);
+            BOOST_REQUIRE(alice_bob_vote->rshares == static_cast<int64_t>(new_rshares));
             BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
             BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
             BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
@@ -1010,7 +1008,7 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares - new_rshares);
             BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares + new_rshares);
             BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == -1 * new_rshares);
+            BOOST_REQUIRE(alice_bob_vote->rshares == static_cast<int64_t>(-1 * new_rshares));
             BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
             BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
             BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
@@ -1502,7 +1500,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
             validate_database();
 
             BOOST_TEST_MESSAGE("--- Test withdrawing more vests than available");
-            auto old_withdraw_amount = alice.to_withdraw;
+
             tx.operations.clear();
             tx.signatures.clear();
 
@@ -4141,7 +4139,6 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         signed_transaction tx;
         ACTORS((alice));
         // 150 * fee = ( 5 * SCORUM ) + SP
-        auto gpo = db.get_dynamic_global_properties();
         generate_blocks(1);
         fund("alice", ASSET("1510.000 TESTS"));
         vest("alice", ASSET("1000.000 TESTS"));
