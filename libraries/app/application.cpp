@@ -87,7 +87,8 @@ namespace detail {
       bool _force_validate = false;
 
       void reset_p2p_node(const fc::path& data_dir)
-      { try {
+      { 
+        try {
          _p2p_network = std::make_shared<graphene::net::node>("Graphene Reference Implementation");
 
          _p2p_network->load_configuration(data_dir / "p2p");
@@ -235,7 +236,6 @@ namespace detail {
 
       application_impl(application* self)
          : _self(self),
-           //_pending_trx_db(std::make_shared<graphene::db::object_database>()),
            _chain_db(std::make_shared<chain::database>())
       {
       }
@@ -251,7 +251,12 @@ namespace detail {
       }
 
       void startup()
-      { try {
+      { 
+        try 
+        {
+         if (_options->count("data-dir"))
+            _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
+
          _shared_file_size = fc::parse_size( _options->at( "shared-file-size" ).as< string >() );
          ilog( "shared_file_size is ${n} bytes", ("n", _shared_file_size) );
          bool read_only = _options->count( "read-only" );
@@ -911,7 +916,6 @@ namespace detail {
       const bpo::variables_map* _options = nullptr;
       api_access _apiaccess;
 
-      //std::shared_ptr<graphene::db::object_database>   _pending_trx_db;
       std::shared_ptr<scorum::chain::database>        _chain_db;
       std::shared_ptr<graphene::net::node>             _p2p_network;
       std::shared_ptr<fc::http::websocket_server>      _websocket_server;
@@ -946,10 +950,6 @@ application::~application()
    {
       my->_chain_db->close();
    }
-   /*if( my->_pending_trx_db )
-   {
-      my->_pending_trx_db->close();
-   }*/
 }
 
 void application::set_program_options(boost::program_options::options_description& command_line_options,
@@ -972,6 +972,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
          ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
+         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
          ("shared-file-dir", bpo::value<string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
          ("shared-file-size", bpo::value<string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
          ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
@@ -998,9 +999,97 @@ void application::set_program_options(boost::program_options::options_descriptio
    configuration_file_options.add(_cfg_options);
 }
 
-void application::initialize(const fc::path& data_dir, const boost::program_options::variables_map& options)
+const std::string application::print_config(const boost::program_options::variables_map& vm)
 {
-   my->_data_dir = data_dir;
+    namespace po = boost::program_options;
+
+    std::stringstream stream;
+    for (po::variables_map::const_iterator it = vm.begin(); it != vm.end(); it++) 
+    {
+        stream << "> " << it->first;
+
+        if (((boost::any)it->second.value()).empty()) {
+            stream << "(empty)";
+        }
+        if (vm[it->first].defaulted() || it->second.defaulted()) {
+            stream << "(default)";
+        }
+        stream << "=";
+
+        try
+        {
+            stream << vm[it->first].as<int32_t>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast &) {}
+
+        try
+        {
+            stream << vm[it->first].as<uint32_t>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast &) {}
+
+        try
+        {
+            stream << vm[it->first].as<bool>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast &) {}
+
+        try
+        {
+            stream << vm[it->first].as<double>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast &) {}
+
+        try
+        {
+            stream << vm[it->first].as<boost::filesystem::path>().string() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast &) {}
+
+        try
+        {
+            std::string temp = vm[it->first].as<std::string>();
+            if (temp.size()) 
+            {
+                stream << temp << std::endl;
+            }
+            else 
+            {
+                stream << "true" << std::endl;
+            }
+            continue;
+        }
+        catch (const boost::bad_any_cast &) {}
+
+        // Assumes that the only remainder is vector<string>
+        try 
+        {
+            auto vect = vm[it->first].as<std::vector<std::string> >();
+            uint i = 0;
+            for (auto oit = vect.begin(); oit != vect.end(); ++oit, ++i) 
+            {
+                stream << "\r> " << it->first << "[" << i << "]=" << (*oit) << std::endl;
+            }
+        }
+        catch (const boost::bad_any_cast &) 
+        {
+            stream << "UnknownType(" << ((boost::any)it->second.value()).type().name() << ")" << std::endl;
+        }
+    }
+
+    return stream.str();
+}
+
+
+void application::initialize(const boost::program_options::variables_map& options)
+{
+   ilog("initializing node with config:\n${config}", ("config", print_config(options)));
+
    my->_options = &options;
 }
 
@@ -1037,10 +1126,6 @@ std::shared_ptr<chain::database> application::chain_database() const
 {
    return my->_chain_db;
 }
-/*std::shared_ptr<graphene::db::object_database> application::pending_trx_database() const
-{
-   return my->_pending_trx_db;
-}*/
 
 void application::set_block_production(bool producing_blocks)
 {
