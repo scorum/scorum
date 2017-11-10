@@ -17,6 +17,7 @@
 #include <fc/log/logger.hpp>
 
 #include <map>
+#include <memory>
 
 namespace scorum {
 namespace chain {
@@ -31,6 +32,10 @@ namespace chain {
    class database_impl;
    class custom_operation_interpreter;
 
+   class i_dbservice;
+   class i_database_index;
+   class i_database_witness_schedule;
+
    namespace util { struct comment_reward_context; }
 
    /**
@@ -39,15 +44,23 @@ namespace chain {
     */
    class database : public chainbase::database
    {
-      public:
+       friend class i_dbservice;
+       friend class i_database_index;
+       friend class i_database_witness_schedule;
+
+    public:
          database();
          ~database();
 
+        i_dbservice &i_service();
+
          bool is_producing()const { return _is_producing; }
-         void set_producing( bool p ) { _is_producing = p;  }
-         bool _is_producing = false;
 
          bool _log_hardforks = true;
+
+#ifdef IS_TEST_NET
+         bool skip_transaction_delta_check = true;
+#endif
 
          enum validation_steps
          {
@@ -142,8 +155,6 @@ namespace chain {
           *  Deducts fee from the account and the share supply
           */
          void pay_fee( const account_object& a, asset fee );
-
-         void max_bandwidth_per_share()const;
 
          /**
           *  Calculate the percent of block production slots that were missed in the
@@ -311,15 +322,10 @@ namespace chain {
          void process_comment_cashout();
          void process_funds();
          void process_conversions();
-         void process_savings_withdraws();
          void account_recovery_processing();
          void expire_escrow_ratification();
          void process_decline_voting_rights();
          void update_median_feed();
-
-         asset get_content_reward()const;
-         asset get_producer_reward();
-         asset get_curation_reward()const;
 
          uint16_t get_curation_rewards_percent( const comment_object& c ) const;
 
@@ -377,24 +383,23 @@ namespace chain {
          void set_flush_interval( uint32_t flush_blocks );
          void show_free_memory( bool force );
 
-#ifdef IS_TEST_NET
-         bool skip_transaction_delta_check = true;
-#endif
+         i_database_index &i_index();
 
-   protected:
+    protected:
+
+         i_database_witness_schedule &i_witness_schedule();
+
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          //void pop_undo() { object_database::pop_undo(); }
          void notify_changed_objects();
 
-      private:
-         optional< chainbase::database::session > _pending_tx_session;
+         void set_producing( bool p ) { _is_producing = p;  }
 
          void apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
          void apply_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
          void _apply_block( const signed_block& next_block );
          void _apply_transaction( const signed_transaction& trx );
          void apply_operation( const operation& op );
-
 
          ///Steps involved in applying a new block
          ///@{
@@ -419,7 +424,17 @@ namespace chain {
 
          ///@}
 
+   private:
+
          std::unique_ptr< database_impl > _my;
+
+         std::unique_ptr< i_dbservice > _i_service;
+         std::unique_ptr< i_database_index > _i_index;
+         std::unique_ptr< i_database_witness_schedule > _i_database_witness_schedule;
+
+         bool _is_producing = false;
+
+         optional< chainbase::database::session > _pending_tx_session;
 
          vector< signed_transaction >  _pending_tx;
          fork_database                 _fork_db;
@@ -428,17 +443,12 @@ namespace chain {
 
          block_log                     _block_log;
 
-         // this function needs access to _plugin_index_signal
-         template< typename MultiIndexType >
-         friend void add_plugin_index( database& db );
-
          fc::signal< void() >          _plugin_index_signal;
 
          transaction_id_type           _current_trx_id;
          uint32_t                      _current_block_num    = 0;
          uint16_t                      _current_trx_in_block = 0;
          uint16_t                      _current_op_in_trx    = 0;
-         uint16_t                      _current_virtual_op   = 0;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 

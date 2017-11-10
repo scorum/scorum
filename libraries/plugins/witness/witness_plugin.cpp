@@ -27,9 +27,9 @@
 
 #include <scorum/chain/account_object.hpp>
 #include <scorum/chain/database.hpp>
+#include <scorum/chain/database_index.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
-#include <scorum/chain/index.hpp>
 #include <scorum/chain/scorum_objects.hpp>
 
 #include <fc/time.hpp>
@@ -472,9 +472,9 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
         db.pre_apply_operation.connect([&](const operation_notification& note) { _my->pre_operation(note); });
         db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
 
-        add_plugin_index<account_bandwidth_index>(db);
-        add_plugin_index<content_edit_lock_index>(db);
-        add_plugin_index<reserve_ratio_index>(db);
+        db.i_index().add_plugin_index<account_bandwidth_index>();
+        db.i_index().add_plugin_index<content_edit_lock_index>();
+        db.i_index().add_plugin_index<reserve_ratio_index>();
     }
     FC_LOG_AND_RETHROW()
 }
