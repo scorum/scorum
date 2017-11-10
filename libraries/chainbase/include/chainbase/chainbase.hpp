@@ -32,13 +32,8 @@
 #define CHAINBASE_NUM_RW_LOCKS 10
 #endif
 
-#ifdef CHAINBASE_CHECK_LOCKING
 #define CHAINBASE_REQUIRE_READ_LOCK(m, t) require_read_lock(m, typeid(t).name())
 #define CHAINBASE_REQUIRE_WRITE_LOCK(m, t) require_write_lock(m, typeid(t).name())
-#else
-#define CHAINBASE_REQUIRE_READ_LOCK(m, t)
-#define CHAINBASE_REQUIRE_WRITE_LOCK(m, t)
-#endif
 
 namespace chainbase {
 
@@ -744,7 +739,6 @@ public:
     void wipe(const bfs::path& dir);
     void set_require_locking(bool enable_require_locking);
 
-#ifdef CHAINBASE_CHECK_LOCKING
     void require_lock_fail(const char* method, const char* lock_type, const char* tname) const;
 
     void require_read_lock(const char* method, const char* tname) const
@@ -758,7 +752,6 @@ public:
         if (BOOST_UNLIKELY(_enable_require_locking & (_write_lock_count <= 0)))
             require_lock_fail(method, "write", tname);
     }
-#endif
 
     struct session
     {
@@ -1006,10 +999,8 @@ public:
     auto with_read_lock(Lambda&& callback, uint64_t wait_micro = 1000000) -> decltype((*(Lambda*)nullptr)())
     {
         read_lock lock(_rw_manager->current_lock(), bip::defer_lock_type());
-#ifdef CHAINBASE_CHECK_LOCKING
         BOOST_ATTRIBUTE_UNUSED
         int_incrementer ii(_read_lock_count);
-#endif
 
         if (!wait_micro)
         {
@@ -1032,10 +1023,8 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error("cannot acquire write lock on read-only process"));
 
         write_lock lock(_rw_manager->current_lock(), boost::defer_lock_t());
-#ifdef CHAINBASE_CHECK_LOCKING
         BOOST_ATTRIBUTE_UNUSED
         int_incrementer ii(_write_lock_count);
-#endif
 
         if (!wait_micro)
         {
