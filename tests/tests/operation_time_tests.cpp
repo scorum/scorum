@@ -1568,7 +1568,7 @@ BOOST_AUTO_TEST_CASE( comment_freeze )
 
       tx.operations.clear();
       tx.signatures.clear();
-
+      
       tx.operations.push_back( vote );
       tx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
       tx.sign( bob_private_key, db.get_chain_id() );
@@ -1601,78 +1601,6 @@ BOOST_AUTO_TEST_CASE( comment_freeze )
       tx.operations.push_back( comment );
       tx.sign( alice_private_key, db.get_chain_id() );
       SCORUM_REQUIRE_THROW( db.push_transaction( tx, 0 ), fc::exception );
-   }
-   FC_LOG_AND_RETHROW()
-}
-
-
-BOOST_AUTO_TEST_CASE( clear_null_account )
-{
-   try
-   {
-      BOOST_TEST_MESSAGE( "Testing clearing the null account's balances on block" );
-
-      ACTORS( (alice) );
-      generate_block();
-
-      fund( "alice", ASSET( "10.000 TESTS" ) );
-
-      transfer_operation transfer1;
-      transfer1.from = "alice";
-      transfer1.to = SCORUM_NULL_ACCOUNT;
-      transfer1.amount = ASSET( "1.000 TESTS" );
-
-      transfer_to_vesting_operation vest;
-      vest.from = "alice";
-      vest.to = SCORUM_NULL_ACCOUNT;
-      vest.amount = ASSET( "3.000 TESTS" );
-
-      BOOST_TEST_MESSAGE( "--- Transferring to NULL Account" );
-
-      signed_transaction tx;
-      tx.operations.push_back( transfer1 );
-      tx.operations.push_back( vest );
-      tx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
-      tx.sign( alice_private_key, db.get_chain_id() );
-      db.push_transaction( tx, 0 );
-      validate_database();
-
-      db_plugin->debug_update( [=]( database& db )
-      {
-         db.modify( db.get_account( SCORUM_NULL_ACCOUNT ), [&]( account_object& a )
-         {
-            a.reward_scorum_balance = ASSET( "1.000 TESTS" );
-            a.reward_vesting_balance = ASSET( "1.000000 VESTS" );
-            a.reward_vesting_scorum = ASSET( "1.000 TESTS" );
-         });
-
-         db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
-         {
-            gpo.current_supply += ASSET( "2.000 TESTS" );
-            gpo.pending_rewarded_vesting_shares += ASSET( "1.000000 VESTS" );
-            gpo.pending_rewarded_vesting_scorum += ASSET( "1.000 TESTS" );
-         });
-      });
-
-      validate_database();
-
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).balance == ASSET( "5.000 TESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).vesting_shares > ASSET( "0.000000 VESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).reward_scorum_balance == ASSET( "1.000 TESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).reward_vesting_balance == ASSET( "1.000000 VESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).reward_vesting_scorum == ASSET( "1.000 TESTS" ) );
-      BOOST_REQUIRE( db.get_account( "alice" ).balance == ASSET( "2.000 TESTS" ) );
-
-      BOOST_TEST_MESSAGE( "--- Generating block to clear balances" );
-      generate_block();
-      validate_database();
-
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).balance == ASSET( "0.000 TESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).vesting_shares == ASSET( "0.000000 VESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).reward_scorum_balance == ASSET( "0.000 TESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).reward_vesting_balance == ASSET( "0.000000 VESTS" ) );
-      BOOST_REQUIRE( db.get_account( SCORUM_NULL_ACCOUNT ).reward_vesting_scorum == ASSET( "0.000 TESTS" ) );
-      BOOST_REQUIRE( db.get_account( "alice" ).balance == ASSET( "2.000 TESTS" ) );
    }
    FC_LOG_AND_RETHROW()
 }

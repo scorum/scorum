@@ -2554,10 +2554,14 @@ BOOST_AUTO_TEST_CASE( escrow_transfer_validate )
       op.ratification_deadline = db.head_block_time() + 100;
       op.escrow_expiration = db.head_block_time() + 200;
 
+
+      BOOST_TEST_MESSAGE( "--- failure when sbd symbol != SCR" );
+      op.scorum_amount.symbol = VESTS_SYMBOL;
       SCORUM_REQUIRE_THROW( op.validate(), fc::exception );
 
       BOOST_TEST_MESSAGE( "--- failure when scorum == 0" );
       op.fee.symbol = SCORUM_SYMBOL;
+      op.scorum_amount.symbol = SCORUM_SYMBOL;
       op.scorum_amount.amount = 0;
       SCORUM_REQUIRE_THROW( op.validate(), fc::exception );
 
@@ -2580,6 +2584,7 @@ BOOST_AUTO_TEST_CASE( escrow_transfer_validate )
       SCORUM_REQUIRE_THROW( op.validate(), fc::exception );
 
       BOOST_TEST_MESSAGE( "--- success" );
+      op.scorum_amount.symbol = SCORUM_SYMBOL;
       op.ratification_deadline = op.escrow_expiration - 100;
       op.validate();
    }

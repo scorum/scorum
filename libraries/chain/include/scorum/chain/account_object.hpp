@@ -44,7 +44,6 @@ namespace scorum { namespace chain {
          time_point_sec    last_owner_proved = time_point_sec::min();
          time_point_sec    last_active_proved = time_point_sec::min();
          account_name_type recovery_account;
-         account_name_type reset_account = SCORUM_NULL_ACCOUNT;
          time_point_sec    last_account_recovery;
          uint32_t          comment_count = 0;
          uint32_t          lifetime_vote_count = 0;
@@ -422,7 +421,7 @@ namespace scorum { namespace chain {
 FC_REFLECT( scorum::chain::account_object,
              (id)(name)(memo_key)(json_metadata)(proxy)(last_account_update)
              (created)(mined)
-             (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)(reset_account)
+             (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
              (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)

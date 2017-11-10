@@ -225,10 +225,10 @@ namespace scorum { namespace protocol {
       validate_account_name( to );
       validate_account_name( agent );
       FC_ASSERT( fee.amount >= 0, "fee cannot be negative" );
-      FC_ASSERT( scorum_amount.amount >= 0, "scorum amount cannot be negative" );
+      FC_ASSERT( scorum_amount.amount > 0, "scorum amount cannot be negative" );
       FC_ASSERT( from != agent && to != agent, "agent must be a third party" );
-      FC_ASSERT( fee.symbol == SCORUM_SYMBOL , "fee must be SCORUM" );
-      FC_ASSERT( scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCORUM" );
+      FC_ASSERT( fee.symbol == SCORUM_SYMBOL , "fee must be SCR" );
+      FC_ASSERT( scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCR" );
       FC_ASSERT( ratification_deadline < escrow_expiration, "ratification deadline must be before escrow expiration" );
       if ( json_meta.size() > 0 )
       {
