@@ -150,9 +150,7 @@
 
 // These constants add up to GRAPHENE_100_PERCENT.  Each GRAPHENE_1_PERCENT is equivalent to 1% per year APY
 // *including the corresponding 9x vesting rewards*
-#define SCORUM_CURATE_APR_PERCENT              3875
 #define SCORUM_CONTENT_APR_PERCENT             3875
-#define SCORUM_LIQUIDITY_APR_PERCENT            750
 #define SCORUM_PRODUCER_APR_PERCENT             750
 #define SCORUM_POW_APR_PERCENT                  750
 
@@ -175,12 +173,8 @@
 #define SCORUM_MIN_BLOCK_SIZE_LIMIT            (SCORUM_MAX_TRANSACTION_SIZE)
 #define SCORUM_MAX_BLOCK_SIZE                  (SCORUM_MAX_TRANSACTION_SIZE*SCORUM_BLOCK_INTERVAL*2000)
 #define SCORUM_BLOCKS_PER_HOUR                 (60*60/SCORUM_BLOCK_INTERVAL)
-#define SCORUM_FEED_INTERVAL_BLOCKS            (SCORUM_BLOCKS_PER_HOUR)
-#define SCORUM_FEED_HISTORY_WINDOW_PRE_HF_16   (24*7) /// 7 days * 24 hours per day
-#define SCORUM_FEED_HISTORY_WINDOW             (12*7) // 3.5 days
 #define SCORUM_MAX_FEED_AGE_SECONDS            (60*60*24*7) // 7 days
 #define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
-#define SCORUM_CONVERSION_DELAY                (fc::hours(SCORUM_FEED_HISTORY_WINDOW)) //3.5 day conversion
 
 #define SCORUM_MIN_UNDO_HISTORY                10
 #define SCORUM_MAX_UNDO_HISTORY                10000

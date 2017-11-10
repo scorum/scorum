@@ -432,21 +432,20 @@ private:
 
 // clang-format off
 
-FC_API( scorum::tags::tag_api, (get_tags) );
+FC_API( scorum::tags::tag_api, (get_tags) )
 
 FC_REFLECT( scorum::tags::tag_object,
    (id)(tag)(created)(active)(cashout)(net_rshares)(net_votes)(hot)(trending)(promoted_balance)(children)(author)(parent)(comment) )
 CHAINBASE_SET_INDEX_TYPE( scorum::tags::tag_object, scorum::tags::tag_index )
 
-FC_REFLECT( scorum::tags::tag_stats_object,
-   (id)(tag)(total_payout)(net_votes)(top_posts)(comments)(total_trending) );
+FC_REFLECT( scorum::tags::tag_stats_object, (id)(tag)(total_payout)(net_votes)(top_posts)(comments)(total_trending))
 CHAINBASE_SET_INDEX_TYPE( scorum::tags::tag_stats_object, scorum::tags::tag_stats_index )
 
 FC_REFLECT( scorum::tags::peer_stats_object,
-   (id)(voter)(peer)(direct_positive_votes)(direct_votes)(indirect_positive_votes)(indirect_votes)(rank) );
+   (id)(voter)(peer)(direct_positive_votes)(direct_votes)(indirect_positive_votes)(indirect_votes)(rank) )
 CHAINBASE_SET_INDEX_TYPE( scorum::tags::peer_stats_object, scorum::tags::peer_stats_index )
 
-FC_REFLECT( scorum::tags::comment_metadata, (tags) );
+FC_REFLECT( scorum::tags::comment_metadata, (tags) )
 
 FC_REFLECT( scorum::tags::author_tag_stats_object, (id)(author)(tag)(total_posts)(total_rewards) )
 CHAINBASE_SET_INDEX_TYPE( scorum::tags::author_tag_stats_object, scorum::tags::author_tag_stats_index )

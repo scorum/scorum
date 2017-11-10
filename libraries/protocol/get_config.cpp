@@ -11,11 +11,15 @@ fc::variant_object get_config()
 {
     fc::mutable_variant_object result;
 
+// clang-format off
+
 #ifdef IS_TEST_NET
-    result["IS_TEST_NET"] = true;
+    result[ "IS_TEST_NET" ] = true;
 #else
-    result["IS_TEST_NET"] = false;
+    result[ "IS_TEST_NET" ] = false;
 #endif
+
+// clang-format on
 
     result["SCORUM_100_PERCENT"] = SCORUM_100_PERCENT;
     result["SCORUM_1_PERCENT"] = SCORUM_1_PERCENT;
@@ -43,7 +47,6 @@ fc::variant_object get_config()
     result["SCORUM_COMMENT_REWARD_FUND_NAME"] = SCORUM_COMMENT_REWARD_FUND_NAME;
     result["SCORUM_CONTENT_APR_PERCENT"] = SCORUM_CONTENT_APR_PERCENT;
     result["SCORUM_CONTENT_REWARD_PERCENT"] = SCORUM_CONTENT_REWARD_PERCENT;
-    result["SCORUM_CONVERSION_DELAY"] = SCORUM_CONVERSION_DELAY;
     result["SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO"] = SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO;
     result["SCORUM_CREATE_ACCOUNT_DELEGATION_TIME"] = SCORUM_CREATE_ACCOUNT_DELEGATION_TIME;
     result["SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER"] = SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
