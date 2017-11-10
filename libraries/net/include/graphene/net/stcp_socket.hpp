@@ -57,6 +57,7 @@ public:
     using istream::get;
     void get(char& c) { read(&c, 1); }
     fc::sha512 get_shared_secret() const { return _shared_secret; }
+
 private:
     void do_key_exchange();
 

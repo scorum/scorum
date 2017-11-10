@@ -9,17 +9,17 @@
 #include <iostream>
 #include <vector>
 
-#define CURATE_OFF      0
-#define VCURATE_OFF     1
-#define CONTENT_OFF     2
-#define VCONTENT_OFF    3
-#define PRODUCER_OFF    4
-#define VPRODUCER_OFF   5
-#define LIQUIDITY_OFF   6
-#define VLIQUIDITY_OFF  7
-#define POW_OFF         8
-#define VPOW_OFF        9
-#define REWARD_TYPES   10
+#define CURATE_OFF 0
+#define VCURATE_OFF 1
+#define CONTENT_OFF 2
+#define VCONTENT_OFF 3
+#define PRODUCER_OFF 4
+#define VPRODUCER_OFF 5
+#define LIQUIDITY_OFF 6
+#define VLIQUIDITY_OFF 7
+#define POW_OFF 8
+#define VPOW_OFF 9
+#define REWARD_TYPES 10
 
 using scorum::protocol::asset;
 using scorum::protocol::share_type;
@@ -52,71 +52,74 @@ s is total supply
 Some possible sources of inaccuracy, the direction and estimated relative sizes of these effects:
 
 - Missed blocks not modeled (lowers SCORUM supply, small)
-- Miner queue length very approximately modeled (assumed to go to 100 during the first blocks and then stay there) (may lower or raise SCORUM supply, very small)
-- Creation / destruction of SCORUM used to back SBD not modeled (moves SCORUM supply in direction opposite to changes in dollar value of 1 SCORUM, large)
+- Miner queue length very approximately modeled (assumed to go to 100 during the first blocks and then stay there) (may
+lower or raise SCORUM supply, very small)
+- Creation / destruction of SCORUM used to back SBD not modeled (moves SCORUM supply in direction opposite to changes in
+dollar value of 1 SCORUM, large)
 - Interest paid to SBD not modeled (raises SCORUM supply, medium)
-- Lost / forgotten private keys / wallets and deliberate burning of SCORUM not modeled (lowers SCORUM supply, unknown but likely small)
+- Lost / forgotten private keys / wallets and deliberate burning of SCORUM not modeled (lowers SCORUM supply, unknown
+but likely small)
 - Possible bugs or mismatches with implementation (unknown)
 
 */
 
-int main( int argc, char** argv, char** envp )
+int main(int argc, char** argv, char** envp)
 {
-   std::vector< share_type > reward_delta;
-   std::vector< share_type > reward_total;
+    std::vector<share_type> reward_delta;
+    std::vector<share_type> reward_total;
 
-/*
-#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1458835200))
-#define SCORUM_FIRST_CASHOUT_TIME              (fc::time_point_sec(1467590400))  /// July 4th
-*/
+    /*
+    #define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1458835200))
+    #define SCORUM_FIRST_CASHOUT_TIME              (fc::time_point_sec(1467590400))  /// July 4th
+    */
 
+    for (int i = 0; i < REWARD_TYPES; i++)
+    {
+        reward_delta.emplace_back();
+        reward_total.emplace_back();
+    }
 
-   for( int i=0; i<REWARD_TYPES; i++ )
-   {
-      reward_delta.emplace_back();
-      reward_total.emplace_back();
-   }
+    auto block_inflation_model = [&](uint32_t block_num, share_type& current_supply) {
+        uint32_t vesting_factor = (block_num < SCORUM_START_VESTING_BLOCK) ? 0 : 9;
 
-   auto block_inflation_model = [&]( uint32_t block_num, share_type& current_supply )
-   {
-      uint32_t vesting_factor = (block_num < SCORUM_START_VESTING_BLOCK) ? 0 : 9;
+        share_type curate_reward = calc_percent_reward_per_block<SCORUM_CURATE_APR_PERCENT>(current_supply);
+        reward_delta[CURATE_OFF] = std::max(curate_reward, SCORUM_MIN_CURATE_REWARD.amount);
+        reward_delta[VCURATE_OFF] = reward_delta[CURATE_OFF] * vesting_factor;
 
-      share_type curate_reward   = calc_percent_reward_per_block< SCORUM_CURATE_APR_PERCENT >( current_supply );
-      reward_delta[ CURATE_OFF ] = std::max( curate_reward, SCORUM_MIN_CURATE_REWARD.amount );
-      reward_delta[ VCURATE_OFF ] = reward_delta[ CURATE_OFF ] * vesting_factor;
+        share_type content_reward = calc_percent_reward_per_block<SCORUM_CONTENT_APR_PERCENT>(current_supply);
+        reward_delta[CONTENT_OFF] = std::max(content_reward, SCORUM_MIN_CONTENT_REWARD.amount);
+        reward_delta[VCONTENT_OFF] = reward_delta[CONTENT_OFF] * vesting_factor;
 
-      share_type content_reward  = calc_percent_reward_per_block< SCORUM_CONTENT_APR_PERCENT >( current_supply );
-      reward_delta[ CONTENT_OFF ] = std::max( content_reward, SCORUM_MIN_CONTENT_REWARD.amount );
-      reward_delta[ VCONTENT_OFF ] = reward_delta[ CONTENT_OFF ] * vesting_factor;
+        share_type producer_reward = calc_percent_reward_per_block<SCORUM_PRODUCER_APR_PERCENT>(current_supply);
+        reward_delta[PRODUCER_OFF] = std::max(producer_reward, SCORUM_MIN_PRODUCER_REWARD.amount);
+        reward_delta[VPRODUCER_OFF] = reward_delta[PRODUCER_OFF] * vesting_factor;
 
-      share_type producer_reward = calc_percent_reward_per_block< SCORUM_PRODUCER_APR_PERCENT >( current_supply );
-      reward_delta[ PRODUCER_OFF ] = std::max( producer_reward, SCORUM_MIN_PRODUCER_REWARD.amount );
-      reward_delta[ VPRODUCER_OFF ] = reward_delta[ PRODUCER_OFF ] * vesting_factor;
+        current_supply += reward_delta[CURATE_OFF] + reward_delta[VCURATE_OFF] + reward_delta[CONTENT_OFF]
+            + reward_delta[VCONTENT_OFF] + reward_delta[PRODUCER_OFF] + reward_delta[VPRODUCER_OFF];
+        // supply for above is computed by using pre-updated supply for computing all 3 amounts.
+        // supply for below reward types is basically a self-contained event which updates the supply immediately before
+        // the next reward type's computation.;
 
-      current_supply += reward_delta[CURATE_OFF] + reward_delta[VCURATE_OFF] + reward_delta[CONTENT_OFF] + reward_delta[VCONTENT_OFF] + reward_delta[PRODUCER_OFF] + reward_delta[VPRODUCER_OFF];
-      // supply for above is computed by using pre-updated supply for computing all 3 amounts.
-      // supply for below reward types is basically a self-contained event which updates the supply immediately before the next reward type's computation.;
+        for (int i = 0; i < REWARD_TYPES; i++)
+        {
+            reward_total[i] += reward_delta[i];
+        }
 
-      for( int i=0; i<REWARD_TYPES; i++ )
-      {
-         reward_total[i] += reward_delta[i];
-      }
+        return;
+    };
 
-      return;
-   };
+    share_type current_supply = 0;
 
-   share_type current_supply = 0;
+    for (uint32_t b = 1; b < 10 * SCORUM_BLOCKS_PER_YEAR; b++)
+    {
+        block_inflation_model(b, current_supply);
+        if (b % 1000 == 0)
+        {
+            fc::mutable_variant_object mvo;
+            mvo("rvec", reward_total)("b", b)("s", current_supply);
+            std::cout << fc::json::to_string(mvo) << std::endl;
+        }
+    }
 
-   for( uint32_t b=1; b<10*SCORUM_BLOCKS_PER_YEAR; b++ )
-   {
-      block_inflation_model( b, current_supply );
-      if( b%1000 == 0 )
-      {
-         fc::mutable_variant_object mvo;
-         mvo("rvec", reward_total)("b", b)("s", current_supply);
-         std::cout << fc::json::to_string(mvo) << std::endl;
-      }
-   }
-
-   return 0;
+    return 0;
 }

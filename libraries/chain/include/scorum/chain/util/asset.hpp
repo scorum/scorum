@@ -2,8 +2,11 @@
 
 #include <scorum/protocol/asset.hpp>
 
-namespace scorum { namespace chain { namespace util {
+namespace scorum {
+namespace chain {
+namespace util {
 
 using scorum::protocol::asset;
-
-} } }
+}
+}
+}

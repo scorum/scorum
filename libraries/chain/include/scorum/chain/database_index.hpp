@@ -5,37 +5,28 @@
 namespace scorum {
 namespace chain {
 
-    struct i_database_index
+struct i_database_index
+{
+    friend class database;
+
+protected:
+    explicit i_database_index(database& db)
+        : _db(db)
     {
-        friend class database;
+    }
 
-     protected:
+    template <typename MultiIndexType> void _add_index_impl() { _db.add_index<MultiIndexType>(); }
 
-        explicit i_database_index(database &db): _db(db){}
+    template <typename MultiIndexType> void add_core_index() { _add_index_impl<MultiIndexType>(); }
 
-        template <typename MultiIndexType>
-        void _add_index_impl()
-        {
-            _db.add_index<MultiIndexType>();
-        }
+public:
+    template <typename MultiIndexType> void add_plugin_index()
+    {
+        _db._plugin_index_signal.connect([this]() { this->_add_index_impl<MultiIndexType>(); });
+    }
 
-        template <typename MultiIndexType>
-        void add_core_index()
-        {
-            _add_index_impl<MultiIndexType>();
-        }
-
-     public:
-
-        template <typename MultiIndexType>
-        void add_plugin_index()
-        {
-            _db._plugin_index_signal.connect([this]() { this->_add_index_impl<MultiIndexType>(); });
-        }
-
-     private:
-
-        database &_db;
-    };
+private:
+    database& _db;
+};
 }
 }

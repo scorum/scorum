@@ -28,8 +28,12 @@ typedef fc::static_variant<private_message_operation> private_message_plugin_ope
 }
 }
 
+// clang-format off
+
 FC_REFLECT(scorum::private_message::private_message_operation,
     (from)(to)(from_memo_key)(to_memo_key)(sent_time)(checksum)(encrypted_message))
 
 DECLARE_OPERATION_TYPE(scorum::private_message::private_message_plugin_operation)
 FC_REFLECT_TYPENAME(scorum::private_message::private_message_plugin_operation)
+
+// clang-format on

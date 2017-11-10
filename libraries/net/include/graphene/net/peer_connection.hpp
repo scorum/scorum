@@ -264,10 +264,8 @@ public:
         boost::multi_index::indexed_by<boost::multi_index::hashed_unique<boost::multi_index::member<timestamped_item_id,
                                                                              item_id, &timestamped_item_id::item>,
                                            std::hash<item_id>>,
-                                             boost::multi_index::
-                                                 ordered_non_unique<boost::multi_index::tag<timestamp_index>,
-                                                     boost::multi_index::member<timestamped_item_id, fc::time_point_sec,
-                                                                        &timestamped_item_id::timestamp>>>>
+            boost::multi_index::ordered_non_unique<boost::multi_index::tag<timestamp_index>,
+                boost::multi_index::member<timestamped_item_id, fc::time_point_sec, &timestamped_item_id::timestamp>>>>
         timestamped_items_set_type;
     timestamped_items_set_type inventory_peer_advertised_to_us;
     timestamped_items_set_type inventory_advertised_to_peer;
@@ -351,6 +349,6 @@ FC_REFLECT_ENUM(graphene::net::peer_connection::their_connection_state,
     (disconnected)(just_connected)(connection_accepted)(connection_rejected))
 FC_REFLECT_ENUM(graphene::net::peer_connection::connection_negotiation_status,
     (disconnected)(connecting)(connected)(accepting)(accepted)(hello_sent)(peer_connection_accepted)(
-                    peer_connection_rejected)(negotiation_complete)(closing)(closed))
+        peer_connection_rejected)(negotiation_complete)(closing)(closed))
 
 FC_REFLECT(graphene::net::peer_connection::timestamped_item_id, (item)(timestamp));

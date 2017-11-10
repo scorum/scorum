@@ -414,6 +414,8 @@ struct get_current_connections_reply_message
 }
 } // graphene::net
 
+// clang-format off
+
 FC_REFLECT_ENUM(
     graphene::net::core_message_type_enum,
     (trx_message_type)(block_message_type)(core_message_type_first)(item_ids_inventory_message_type)(
@@ -462,6 +464,8 @@ FC_REFLECT(graphene::net::current_connection_data, (connection_duration)(remote_
 FC_REFLECT(graphene::net::get_current_connections_reply_message,
     (upload_rate_one_minute)(download_rate_one_minute)(upload_rate_fifteen_minutes)(download_rate_fifteen_minutes)(
                upload_rate_one_hour)(download_rate_one_hour)(current_connections))
+
+// clang-format on
 
 #include <unordered_map>
 #include <fc/crypto/city.hpp>

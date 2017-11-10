@@ -140,22 +140,16 @@ using namespace boost::multi_index;
 
 typedef multi_index_container<message_object,
     indexed_by<ordered_unique<tag<by_id>, member<message_object, message_id_type, &message_object::id>>,
-                                  ordered_unique<tag<by_to_date>,
-                                      composite_key<message_object,
-                                                     member<message_object, account_name_type, &message_object::to>,
-                                                     member<message_object, time_point_sec,
-                                                         &message_object::receive_time>,
-                                                     member<message_object, message_id_type, &message_object::id>>,
-                                      composite_key_compare<std::less<string>, std::greater<time_point_sec>,
-                                                     std::less<message_id_type>>>,
-                                  ordered_unique<tag<by_from_date>,
-                                      composite_key<message_object,
-                                                     member<message_object, account_name_type, &message_object::from>,
-                                                     member<message_object, time_point_sec,
-                                                         &message_object::receive_time>,
-                                                     member<message_object, message_id_type, &message_object::id>>,
-                                      composite_key_compare<std::less<string>, std::greater<time_point_sec>,
-                                                     std::less<message_id_type>>>>,
+        ordered_unique<tag<by_to_date>,
+            composite_key<message_object, member<message_object, account_name_type, &message_object::to>,
+                member<message_object, time_point_sec, &message_object::receive_time>,
+                member<message_object, message_id_type, &message_object::id>>,
+            composite_key_compare<std::less<string>, std::greater<time_point_sec>, std::less<message_id_type>>>,
+        ordered_unique<tag<by_from_date>,
+            composite_key<message_object, member<message_object, account_name_type, &message_object::from>,
+                member<message_object, time_point_sec, &message_object::receive_time>,
+                member<message_object, message_id_type, &message_object::id>>,
+            composite_key_compare<std::less<string>, std::greater<time_point_sec>, std::less<message_id_type>>>>,
     allocator<message_object>>
     message_index;
 
@@ -205,6 +199,8 @@ private:
 }
 } // scorum::private_message
 
+// clang-format off
+
 FC_API(scorum::private_message::private_message_api, (get_inbox)(get_outbox));
 
 FC_REFLECT(scorum::private_message::message_body, (thread_start)(subject)(body)(json_meta)(cc));
@@ -218,3 +214,5 @@ FC_REFLECT(scorum::private_message::message_api_obj,
 
 FC_REFLECT_DERIVED(
     scorum::private_message::extended_message_object, (scorum::private_message::message_api_obj), (message));
+
+// clang-format on

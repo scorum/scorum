@@ -60,6 +60,7 @@ struct strcmp_less
     bool operator()(const shared_string& a, const std::string& b) const { return less(a.c_str(), b.c_str()); }
 
     bool operator()(const std::string& a, const shared_string& b) const { return less(a.c_str(), b.c_str()); }
+
 private:
     inline bool less(const char* a, const char* b) const { return std::strcmp(a, b) < 0; }
 };
@@ -619,6 +620,7 @@ public:
     virtual void squash() override { _session.squash(); }
     virtual void undo() override { _session.undo(); }
     virtual int64_t revision() const override { return _session.revision(); }
+
 private:
     SessionType _session;
 };
@@ -655,6 +657,7 @@ public:
     void add_index_extension(std::shared_ptr<index_extension> ext) { _extensions.push_back(ext); }
     const index_extensions& get_index_extensions() const { return _extensions; }
     void* get() const { return _idx_ptr; }
+
 private:
     void* _idx_ptr;
     index_extensions _extensions;
@@ -684,6 +687,7 @@ public:
     virtual uint32_t type_id() const override { return BaseIndex::value_type::type_id; }
 
     virtual void remove_object(int64_t id) override { return _base.remove_object(id); }
+
 private:
     BaseIndex& _base;
 };
@@ -725,7 +729,6 @@ private:
 class database
 {
 protected:
-
     virtual ~database() = 0;
 
 public:

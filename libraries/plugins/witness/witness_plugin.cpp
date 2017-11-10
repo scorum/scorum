@@ -89,13 +89,13 @@ public:
     void update_account_bandwidth(const account_object& a, uint32_t trx_size, const bandwidth_type type);
 
     witness_plugin& _self;
-    std::shared_ptr<generic_custom_operation_interpreter<witness_plugin_operation> > _custom_operation_interpreter;
+    std::shared_ptr<generic_custom_operation_interpreter<witness_plugin_operation>> _custom_operation_interpreter;
 };
 
 void witness_plugin_impl::plugin_initialize()
 {
     _custom_operation_interpreter
-        = std::make_shared<generic_custom_operation_interpreter<witness_plugin_operation> >(_self.database());
+        = std::make_shared<generic_custom_operation_interpreter<witness_plugin_operation>>(_self.database());
 
     _custom_operation_interpreter->register_evaluator<enable_content_editing_evaluator>(&_self);
 
@@ -282,16 +282,15 @@ void witness_plugin_impl::on_block(const signed_block& b)
         db.create<reserve_ratio_object>([&](reserve_ratio_object& r) {
             r.average_block_size = 0;
             r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
-            r.max_virtual_bandwidth = ( uint128_t(SCORUM_MAX_BLOCK_SIZE) * SCORUM_MAX_RESERVE_RATIO
-                                      * SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS )
-                                      / SCORUM_BLOCK_INTERVAL;
-         });
-      }
-      else
-      {
-         db.modify( *reserve_ratio_ptr, [&]( reserve_ratio_object& r )
-         {
-            r.average_block_size = ( 99 * r.average_block_size + fc::raw::pack_size( b ) ) / 100;
+            r.max_virtual_bandwidth = (uint128_t(SCORUM_MAX_BLOCK_SIZE) * SCORUM_MAX_RESERVE_RATIO
+                                          * SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+                / SCORUM_BLOCK_INTERVAL;
+        });
+    }
+    else
+    {
+        db.modify(*reserve_ratio_ptr, [&](reserve_ratio_object& r) {
+            r.average_block_size = (99 * r.average_block_size + fc::raw::pack_size(b)) / 100;
 
             /**
             * About once per minute the average network use is consulted and used to
@@ -374,7 +373,7 @@ void witness_plugin_impl::update_account_bandwidth(
         else
             new_bandwidth
                 = (((SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time) * fc::uint128(band->average_bandwidth.value))
-                      / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+                    / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
                       .to_uint64();
 
         new_bandwidth += trx_bandwidth;
@@ -396,8 +395,8 @@ void witness_plugin_impl::update_account_bandwidth(
             SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
                 "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
                 ("account", a.name)("account_vshares", account_vshares)(
-                              "account_average_bandwidth", account_average_bandwidth)(
-                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
+                    "account_average_bandwidth", account_average_bandwidth)(
+                    "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
     }
 }
 }
@@ -435,9 +434,9 @@ void witness_plugin::plugin_set_program_options(boost::program_options::options_
         bpo::bool_switch()->notifier(
             [this](int e) { _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT); }),
         "Percent of witnesses (0-99) that must be participating in order to produce blocks")("witness,w",
-        bpo::value<vector<string> >()->composing()->multitoken(),
+        bpo::value<vector<string>>()->composing()->multitoken(),
         ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())("private-key",
-        bpo::value<vector<string> >()->composing()->multitoken(),
+        bpo::value<vector<string>>()->composing()->multitoken(),
         "WIF PRIVATE KEY to be used by one or more witnesses or miners");
     config_file_options.add(command_line_options);
 }
@@ -457,7 +456,7 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
 
         if (options.count("private-key"))
         {
-            const std::vector<std::string> keys = options["private-key"].as<std::vector<std::string> >();
+            const std::vector<std::string> keys = options["private-key"].as<std::vector<std::string>>();
             for (const std::string& wif_key : keys)
             {
                 fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(wif_key);

@@ -3,23 +3,24 @@
 namespace scorum {
 namespace chain {
 
-    struct i_database_witness_schedule
+struct i_database_witness_schedule
+{
+    friend class database;
+
+protected:
+    explicit i_database_witness_schedule(database& db)
+        : _db(db)
     {
-        friend class database;
+    }
 
-    protected:
+    void _reset_virtual_schedule_time();
 
-        explicit i_database_witness_schedule(database &db): _db(db){}
+    void _update_median_witness_props();
 
-        void _reset_virtual_schedule_time();
+    void update_witness_schedule();
 
-        void _update_median_witness_props();
-
-        void update_witness_schedule();
-
-    private:
-
-        database &_db;
-    };
+private:
+    database& _db;
+};
 }
 }

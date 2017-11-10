@@ -31,19 +31,17 @@ typedef multi_index_container<book, indexed_by<ordered_unique<member<book, book:
 
 CHAINBASE_SET_INDEX_TYPE(book, book_index)
 
-    class moc_database: public chainbase::database
-    {
-        typedef chainbase::database _Base;
-    public:
-        ~moc_database(){}
+class moc_database : public chainbase::database
+{
+    typedef chainbase::database _Base;
 
-        void undo()
-        {
-            _Base::undo();
-        }
+public:
+    ~moc_database() {}
 
-        //TODO (if chainbase::database became private)
-    };
+    void undo() { _Base::undo(); }
+
+    // TODO (if chainbase::database became private)
+};
 
 BOOST_AUTO_TEST_CASE(open_and_create)
 {

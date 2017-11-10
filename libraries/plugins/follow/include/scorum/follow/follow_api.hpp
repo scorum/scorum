@@ -126,4 +126,4 @@ FC_REFLECT(scorum::follow::follow_count_api_obj, (account)(follower_count)(follo
 
 FC_API(scorum::follow::follow_api,
     (get_followers)(get_following)(get_follow_count)(get_feed_entries)(get_feed)(get_blog_entries)(get_blog)(
-           get_account_reputations)(get_reblogged_by)(get_blog_authors))
+        get_account_reputations)(get_reblogged_by)(get_blog_authors))

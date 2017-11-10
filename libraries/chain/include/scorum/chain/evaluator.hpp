@@ -38,7 +38,7 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    //TODO (replace database to i_dbservice)
+    // TODO (replace database to i_dbservice)
 
     database& db() { return _db; }
 

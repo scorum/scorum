@@ -55,9 +55,8 @@ void i_database_witness_schedule::_update_median_witness_props()
         _wso.median_props.maximum_block_size = median_maximum_block_size;
     });
 
-    _db.modify(_db.get_dynamic_global_properties(), [&](dynamic_global_property_object& _dgpo) {
-        _dgpo.maximum_block_size = median_maximum_block_size;
-    });
+    _db.modify(_db.get_dynamic_global_properties(),
+        [&](dynamic_global_property_object& _dgpo) { _dgpo.maximum_block_size = median_maximum_block_size; });
 }
 
 /**
@@ -144,7 +143,7 @@ void i_database_witness_schedule::update_witness_schedule()
         FC_ASSERT(active_witnesses.size() == expected_active_witnesses,
             "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
             ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
-                      "expected_active_witnesses", expected_active_witnesses));
+                "expected_active_witnesses", expected_active_witnesses));
 
         auto majority_version = wso.majority_version;
 

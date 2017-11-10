@@ -144,4 +144,4 @@ FC_API(scorum::plugin::debug_node::debug_node_api,
     //(debug_stream_json_objects)
     //(debug_stream_json_objects_flush)
     (debug_set_hardfork)(debug_has_hardfork)(debug_get_witness_schedule)(debug_get_hardfork_property_object)(
-           debug_get_json_schema)(debug_set_dev_key_prefix)(debug_get_dev_key))
+        debug_get_json_schema)(debug_set_dev_key_prefix)(debug_get_dev_key))

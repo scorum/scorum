@@ -316,6 +316,7 @@ public:
     void add_node_delegate(node_delegate* node_delegate_to_add);
 
     virtual uint32_t get_connection_count() const override { return 8; }
+
 private:
     struct node_info;
     void message_sender(node_info* destination_node);
