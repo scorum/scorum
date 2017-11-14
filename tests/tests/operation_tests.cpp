@@ -25,46 +25,64 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 using fc::string;
 
-BOOST_FIXTURE_TEST_SUITE(operation_tests, clean_database_fixture)
+BOOST_AUTO_TEST_SUITE(test_account_create_operation_get_authorities)
 
-BOOST_AUTO_TEST_CASE(account_create_validate)
+BOOST_AUTO_TEST_CASE(there_is_no_owner_authority)
 {
     try
     {
-    }
-    FC_LOG_AND_RETHROW()
-}
-
-BOOST_AUTO_TEST_CASE(account_create_authorities)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Testing: account_create_authorities");
-
         account_create_operation op;
         op.creator = "alice";
         op.new_account_name = "bob";
 
-        flat_set<account_name_type> auths;
-        flat_set<account_name_type> expected;
+        flat_set<account_name_type> authorities;
 
-        BOOST_TEST_MESSAGE("--- Testing owner authority");
-        op.get_required_owner_authorities(auths);
-        BOOST_REQUIRE(auths == expected);
+        op.get_required_owner_authorities(authorities);
 
-        BOOST_TEST_MESSAGE("--- Testing active authority");
-        expected.insert("alice");
-        op.get_required_active_authorities(auths);
-        BOOST_REQUIRE(auths == expected);
-
-        BOOST_TEST_MESSAGE("--- Testing posting authority");
-        expected.clear();
-        auths.clear();
-        op.get_required_posting_authorities(auths);
-        BOOST_REQUIRE(auths == expected);
+        BOOST_CHECK(authorities.empty() == true);
     }
     FC_LOG_AND_RETHROW()
 }
+
+BOOST_AUTO_TEST_CASE(there_is_no_posting_authority)
+{
+    try
+    {
+        account_create_operation op;
+        op.creator = "alice";
+        op.new_account_name = "bob";
+
+        flat_set<account_name_type> authorities;
+
+        op.get_required_posting_authorities(authorities);
+
+        BOOST_CHECK(authorities.empty() == true);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(creator_have_active_authority)
+{
+    try
+    {
+        account_create_operation op;
+        op.creator = "alice";
+        op.new_account_name = "bob";
+
+        flat_set<account_name_type> authorities;
+
+        op.get_required_active_authorities(authorities);
+
+        const flat_set<account_name_type> expected = {"alice"};
+
+        BOOST_CHECK(authorities == expected);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(operation_tests, clean_database_fixture)
 
 BOOST_AUTO_TEST_CASE(account_create_apply)
 {
