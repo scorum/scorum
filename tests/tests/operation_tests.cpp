@@ -72,7 +72,8 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
     {
         BOOST_TEST_MESSAGE("Testing: account_create_apply");
 
-        signed_transaction tx;
+        generate_blocks(SCORUM_BLOCKS_PER_HOUR);
+
         private_key_type priv_key = generate_private_key("alice");
 
         const account_object& init = db.get_account(SCORUM_INIT_DELEGATE_NAME);
@@ -91,6 +92,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         op.json_metadata = "{\"foo\":\"bar\"}";
 
         BOOST_TEST_MESSAGE("--- Test normal account creation");
+        signed_transaction tx;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
         tx.sign(init_account_priv_key, db.get_chain_id());
@@ -2691,6 +2693,7 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_apply)
         BOOST_TEST_MESSAGE("--- success");
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;
+        tx.expiration = db.head_block_time() + 100;
         tx.operations.clear();
         tx.signatures.clear();
         tx.operations.push_back(op);
@@ -4263,6 +4266,7 @@ BOOST_AUTO_TEST_CASE(claim_reward_balance_apply)
 
         ACTORS((alice))
         generate_block();
+        generate_blocks(SCORUM_BLOCKS_PER_HOUR);
 
         db_plugin->debug_update([](database& db) {
             db.modify(db.get_account("alice"), [](account_object& a) {
