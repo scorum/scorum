@@ -6,7 +6,6 @@
 #include <scorum/chain/history_object.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/database_index.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
 namespace scorum {
@@ -333,7 +332,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
         db.pre_apply_operation.connect([&](const operation_notification& o) { _my->pre_operation(o); });
         db.post_apply_operation.connect([&](const operation_notification& o) { _my->post_operation(o); });
 
-        db.i_index().add_plugin_index<bucket_index>();
+        db.add_plugin_index<bucket_index>();
 
         if (options.count("chain-stats-bucket-size"))
         {

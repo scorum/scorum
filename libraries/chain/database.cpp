@@ -37,10 +37,6 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <scorum/chain/genesis_state.hpp>
 
-#include <scorum/chain/dbservice.hpp>
-#include <scorum/chain/database_index.hpp>
-#include <scorum/chain/database_witness_schedule.hpp>
-
 namespace scorum {
 namespace chain {
 
@@ -105,37 +101,6 @@ database::database()
 }
 
 database::~database() { clear_pending(); }
-
-i_dbservice& database::i_service()
-{
-    if (!_i_service)
-    {
-        // TODO (replace to make_unique if C++14 will be supported)
-        _i_service = std::unique_ptr<i_dbservice>(new i_dbservice(*this));
-    }
-    return (*_i_service);
-}
-
-i_database_index& database::i_index()
-{
-    if (!_i_index)
-    {
-        // TODO (replace to make_unique if C++14 will be supported)
-        _i_index = std::unique_ptr<i_database_index>(new i_database_index(*this));
-    }
-    return (*_i_index);
-}
-
-i_database_witness_schedule& database::i_witness_schedule()
-{
-    if (!_i_database_witness_schedule)
-    {
-        // TODO (replace to make_unique if C++14 will be supported)
-        _i_database_witness_schedule
-            = std::unique_ptr<i_database_witness_schedule>(new i_database_witness_schedule(*this));
-    }
-    return (*_i_database_witness_schedule);
-}
 
 void database::open(
     const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags)
@@ -1795,28 +1760,28 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 
 void database::initialize_indexes()
 {
-    i_index().add_core_index<dynamic_global_property_index>();
-    i_index().add_core_index<account_index>();
-    i_index().add_core_index<account_authority_index>();
-    i_index().add_core_index<witness_index>();
-    i_index().add_core_index<transaction_index>();
-    i_index().add_core_index<block_summary_index>();
-    i_index().add_core_index<witness_schedule_index>();
-    i_index().add_core_index<comment_index>();
-    i_index().add_core_index<comment_vote_index>();
-    i_index().add_core_index<witness_vote_index>();
-    i_index().add_core_index<operation_index>();
-    i_index().add_core_index<account_history_index>();
-    i_index().add_core_index<hardfork_property_index>();
-    i_index().add_core_index<withdraw_vesting_route_index>();
-    i_index().add_core_index<owner_authority_history_index>();
-    i_index().add_core_index<account_recovery_request_index>();
-    i_index().add_core_index<change_recovery_account_request_index>();
-    i_index().add_core_index<escrow_index>();
-    i_index().add_core_index<decline_voting_rights_request_index>();
-    i_index().add_core_index<reward_fund_index>();
-    i_index().add_core_index<vesting_delegation_index>();
-    i_index().add_core_index<vesting_delegation_expiration_index>();
+    _add_index_impl<dynamic_global_property_index>();
+    _add_index_impl<account_index>();
+    _add_index_impl<account_authority_index>();
+    _add_index_impl<witness_index>();
+    _add_index_impl<transaction_index>();
+    _add_index_impl<block_summary_index>();
+    _add_index_impl<witness_schedule_index>();
+    _add_index_impl<comment_index>();
+    _add_index_impl<comment_vote_index>();
+    _add_index_impl<witness_vote_index>();
+    _add_index_impl<operation_index>();
+    _add_index_impl<account_history_index>();
+    _add_index_impl<hardfork_property_index>();
+    _add_index_impl<withdraw_vesting_route_index>();
+    _add_index_impl<owner_authority_history_index>();
+    _add_index_impl<account_recovery_request_index>();
+    _add_index_impl<change_recovery_account_request_index>();
+    _add_index_impl<escrow_index>();
+    _add_index_impl<decline_voting_rights_request_index>();
+    _add_index_impl<reward_fund_index>();
+    _add_index_impl<vesting_delegation_index>();
+    _add_index_impl<vesting_delegation_expiration_index>();
 
     _plugin_index_signal();
 }
@@ -2229,7 +2194,9 @@ void database::_apply_block(const signed_block& next_block)
         create_block_summary(next_block);
         clear_expired_transactions();
         clear_expired_delegations();
-        i_witness_schedule().update_witness_schedule();
+
+        //in dbs_database_witness_schedule.cpp
+        update_witness_schedule();
 
         process_funds();
 

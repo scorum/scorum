@@ -13,6 +13,8 @@
 
 #include <scorum/protocol/protocol.hpp>
 
+#include <scorum/chain/dbservice.hpp>
+
 #include <fc/signals.hpp>
 #include <fc/log/logger.hpp>
 
@@ -32,10 +34,6 @@ using scorum::protocol::price;
 class database_impl;
 class custom_operation_interpreter;
 
-class i_dbservice;
-class i_database_index;
-class i_database_witness_schedule;
-
 namespace util {
 struct comment_reward_context;
 }
@@ -44,17 +42,13 @@ struct comment_reward_context;
  *   @class database
  *   @brief tracks the blockchain state in an extensible manner
  */
-class database : public chainbase::database
+class database : public chainbase::database,
+                 public dbservice
 {
-    friend class i_dbservice;
-    friend class i_database_index;
-    friend class i_database_witness_schedule;
 
 public:
     database();
     ~database();
-
-    i_dbservice& i_service();
 
     bool is_producing() const { return _is_producing; }
 
@@ -382,10 +376,26 @@ public:
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
 
-    i_database_index& i_index();
+    //witness_schedule
+
+    void update_witness_schedule();
+
+    //index
+
+    template <typename MultiIndexType> void add_plugin_index()
+    {
+        _plugin_index_signal.connect([this]() { this->_add_index_impl<MultiIndexType>(); });
+    }
+
+private:
+
+    void _reset_virtual_schedule_time();
+
+    void _update_median_witness_props();
+
+    template <typename MultiIndexType> void _add_index_impl() { add_index<MultiIndexType>(); }
 
 protected:
-    i_database_witness_schedule& i_witness_schedule();
 
     // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
     // void pop_undo() { object_database::pop_undo(); }
@@ -424,10 +434,6 @@ protected:
 
 private:
     std::unique_ptr<database_impl> _my;
-
-    std::unique_ptr<i_dbservice> _i_service;
-    std::unique_ptr<i_database_index> _i_index;
-    std::unique_ptr<i_database_witness_schedule> _i_database_witness_schedule;
 
     bool _is_producing = false;
 

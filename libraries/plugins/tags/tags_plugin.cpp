@@ -5,7 +5,6 @@
 #include <scorum/protocol/config.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/database_index.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/account_object.hpp>
@@ -486,10 +485,11 @@ tags_plugin::tags_plugin(application* app)
     , my(new detail::tags_plugin_impl(*this))
 {
     chain::database& db = database();
-    db.i_index().add_plugin_index<tag_index>();
-    db.i_index().add_plugin_index<tag_stats_index>();
-    db.i_index().add_plugin_index<peer_stats_index>();
-    db.i_index().add_plugin_index<author_tag_stats_index>();
+
+    db.add_plugin_index<tag_index>();
+    db.add_plugin_index<tag_stats_index>();
+    db.add_plugin_index<peer_stats_index>();
+    db.add_plugin_index<author_tag_stats_index>();
 }
 
 tags_plugin::~tags_plugin() {}
