@@ -176,7 +176,7 @@ else( WIN32 ) # Apple AND Linux
         endif()
     endif()
 
-#    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
     # based on http://www.delorie.com/gnu/docs/gdb/gdb_70.html
