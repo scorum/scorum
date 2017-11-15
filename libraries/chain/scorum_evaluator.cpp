@@ -1,11 +1,12 @@
 #include <scorum/chain/scorum_evaluator.hpp>
-#include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
 #include <scorum/chain/custom_operation_interpreter.hpp>
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/witness_objects.hpp>
 #include <scorum/chain/block_summary_object.hpp>
 
 #include <scorum/chain/util/reward.hpp>
+
+#include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>

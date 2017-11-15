@@ -22,7 +22,8 @@ class witness_object;
 class account_object;
 class comment_object;
 class escrow_object;
-class shared_authority;
+
+class authority;
 
 }
 }
