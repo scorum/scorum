@@ -3,10 +3,9 @@
 namespace scorum {
 namespace chain {
 
-dbs_witness::dbs_witness(dbservice &db): _db(db)
+dbs_witness::dbs_witness(dbservice& db)
+    : _db(db)
 {
-
 }
-
 }
 }

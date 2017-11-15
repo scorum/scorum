@@ -372,7 +372,7 @@ void witness_plugin_impl::update_account_bandwidth(
         else
             new_bandwidth
                 = (((SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time) * fc::uint128(band->average_bandwidth.value))
-                    / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+                      / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
                       .to_uint64();
 
         new_bandwidth += trx_bandwidth;
@@ -394,8 +394,8 @@ void witness_plugin_impl::update_account_bandwidth(
             SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
                 "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
                 ("account", a.name)("account_vshares", account_vshares)(
-                    "account_average_bandwidth", account_average_bandwidth)(
-                    "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
+                              "account_average_bandwidth", account_average_bandwidth)(
+                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
     }
 }
 }

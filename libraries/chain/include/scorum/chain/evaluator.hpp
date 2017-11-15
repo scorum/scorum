@@ -52,7 +52,7 @@ protected:
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
-        X##_evaluator(dbservice& db)                                                                                    \
+        X##_evaluator(dbservice& db)                                                                                   \
             : scorum::chain::evaluator_impl<X##_evaluator>(db)                                                         \
         {                                                                                                              \
         }                                                                                                              \

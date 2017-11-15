@@ -14,6 +14,5 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::price;
 using scorum::protocol::public_key_type;
-
 }
 }

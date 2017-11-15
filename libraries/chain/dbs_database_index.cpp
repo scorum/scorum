@@ -5,10 +5,6 @@
 namespace scorum {
 namespace chain {
 
-    db_database_index::db_database_index(dbservice& db)
-    {
-        _db = *static_cast<database *>(&db);
-    }
-
+db_database_index::db_database_index(dbservice& db) { _db = *static_cast<database*>(&db); }
 }
 }

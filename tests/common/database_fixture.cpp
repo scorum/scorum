@@ -263,8 +263,8 @@ const account_object& database_fixture::account_create(
     {
         return account_create(name, SCORUM_INIT_DELEGATE_NAME, init_account_priv_key,
             std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                    * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                share_type(100)),
+                                      * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
+                                  share_type(100)),
             key, post_key, "");
     }
     FC_CAPTURE_AND_RETHROW((name));

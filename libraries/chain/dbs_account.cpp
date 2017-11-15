@@ -6,19 +6,14 @@
 namespace scorum {
 namespace chain {
 
-dbs_account::dbs_account(dbservice &db): _db(static_cast<database &>(db))
+dbs_account::dbs_account(dbservice& db)
+    : _db(static_cast<database&>(db))
 {
 }
 
-void dbs_account::write_account_creation_by_faucets(
-                       const account_name_type& new_account_name,
-                       const account_name_type& creator_name,
-                       const public_key_type &memo_key,
-                       const string &json_metadata,
-                       const authority& owner,
-                       const authority& active,
-                       const authority& posting,
-                       const asset &fee)
+void dbs_account::write_account_creation_by_faucets(const account_name_type& new_account_name,
+    const account_name_type& creator_name, const public_key_type& memo_key, const string& json_metadata,
+    const authority& owner, const authority& active, const authority& posting, const asset& fee)
 {
     const auto& props = _db.get_dynamic_global_properties();
     const auto& creator = _db.get_account(creator_name);
@@ -51,16 +46,10 @@ void dbs_account::write_account_creation_by_faucets(
         _db.create_vesting(new_account, fee);
 }
 
-void dbs_account::write_account_creation_with_delegation(
-                       const account_name_type& new_account_name,
-                       const account_name_type& creator_name,
-                       const public_key_type &memo_key,
-                       const string &json_metadata,
-                       const authority& owner,
-                       const authority& active,
-                       const authority& posting,
-                       const asset &fee,
-                       const asset &delegation)
+void dbs_account::write_account_creation_with_delegation(const account_name_type& new_account_name,
+    const account_name_type& creator_name, const public_key_type& memo_key, const string& json_metadata,
+    const authority& owner, const authority& active, const authority& posting, const asset& fee,
+    const asset& delegation)
 {
     const auto& props = _db.get_dynamic_global_properties();
     const auto& creator = _db.get_account(creator_name);
@@ -107,6 +96,5 @@ void dbs_account::write_account_creation_with_delegation(
     if (fee.amount > 0)
         _db.create_vesting(new_account, fee);
 }
-
 }
 }

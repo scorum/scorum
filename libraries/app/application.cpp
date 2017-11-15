@@ -510,11 +510,11 @@ public:
                     fc_ilog(fc::logger::get("sync"),
                         "chain pushing sync block #${block_num} ${block_hash}, head is ${head}",
                         ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)(
-                            "head", head_block_num));
+                                "head", head_block_num));
                 else
                     fc_ilog(fc::logger::get("sync"), "chain pushing block #${block_num} ${block_hash}, head is ${head}",
                         ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)(
-                            "head", head_block_num));
+                                "head", head_block_num));
                 if (sync_mode && blk_msg.block.block_num() % 10000 == 0)
                 {
                     ilog("Syncing Blockchain --- Got block: #${n} time: ${t}",
@@ -533,16 +533,16 @@ public:
                     // you can help the network code out by throwing a block_older_than_undo_history exception.
                     // when the net code sees that, it will stop trying to push blocks from that chain, but
                     // leave that peer connected so that they can get sync blocks from us
-                    bool result = _chain_db->push_block(blk_msg.block,
-                        (_is_block_producer | _force_validate) ? database::skip_nothing
-                                                               : database::skip_transaction_signatures);
+                    bool result = _chain_db->push_block(blk_msg.block, (_is_block_producer | _force_validate)
+                            ? database::skip_nothing
+                            : database::skip_transaction_signatures);
 
                     if (!sync_mode)
                     {
                         fc::microseconds latency = fc::time_point::now() - blk_msg.block.timestamp;
                         ilog("Got ${t} transactions on block ${b} by ${w} -- latency: ${l} ms",
                             ("t", blk_msg.block.transactions.size())("b", blk_msg.block.block_num())(
-                                "w", blk_msg.block.witness)("l", latency.count() / 1000));
+                                 "w", blk_msg.block.witness)("l", latency.count() / 1000));
                     }
 
                     return result;
@@ -676,7 +676,7 @@ public:
                     if (!opt_block)
                         elog("Couldn't find block ${id} -- corresponding ID in our chain is ${id2}",
                             ("id", id.item_hash)(
-                                "id2", _chain_db->get_block_id_for_num(block_header::num_from_id(id.item_hash))));
+                                 "id2", _chain_db->get_block_id_for_num(block_header::num_from_id(id.item_hash))));
                     FC_ASSERT(opt_block.valid());
                     // ilog("Serving up block #${num}", ("num", opt_block->block_num()));
                     return block_message(std::move(*opt_block));
@@ -807,7 +807,7 @@ public:
                             boost::reverse(fork_history);
 
                             if (last_non_fork_block == block_id_type()) // if the fork goes all the way back to genesis
-                                                                        // (does graphene's fork db allow this?)
+                                // (does graphene's fork db allow this?)
                                 non_fork_high_block_num = 0;
                             else
                                 non_fork_high_block_num = block_header::num_from_id(last_non_fork_block);
@@ -958,7 +958,7 @@ public:
         {
             _p2p_network->close();
             fc::usleep(fc::seconds(1)); // p2p node has some calls to the database, give it a second to shutdown before
-                                        // invalidating the chain db pointer
+            // invalidating the chain db pointer
         }
         if (_chain_db)
             _chain_db->close();

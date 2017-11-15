@@ -136,7 +136,8 @@ void reblog_evaluator::do_apply(const reblog_operation& o)
             b.blog_feed_id = next_blog_id;
         });
 
-        const auto& stats_idx = _db._temporary_public_impl().get_index<blog_author_stats_index, by_blogger_guest_count>();
+        const auto& stats_idx
+            = _db._temporary_public_impl().get_index<blog_author_stats_index, by_blogger_guest_count>();
         auto stats_itr = stats_idx.lower_bound(boost::make_tuple(o.account, c.author));
         if (stats_itr != stats_idx.end() && stats_itr->blogger == o.account && stats_itr->guest == c.author)
         {
@@ -193,7 +194,8 @@ void reblog_evaluator::do_apply(const reblog_operation& o)
                         });
                     }
 
-                    const auto& old_feed_idx = _db._temporary_public_impl().get_index<feed_index>().indices().get<by_old_feed>();
+                    const auto& old_feed_idx
+                        = _db._temporary_public_impl().get_index<feed_index>().indices().get<by_old_feed>();
                     auto old_feed = old_feed_idx.lower_bound(itr->follower);
 
                     while (old_feed->account == itr->follower

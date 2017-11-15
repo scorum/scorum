@@ -7,23 +7,20 @@
 namespace scorum {
 namespace chain {
 
-    class dbservice;
+class dbservice;
 
-    class dbs_witness
-    {
-    public:
-        explicit dbs_witness(dbservice& db);
+class dbs_witness
+{
+public:
+    explicit dbs_witness(dbservice& db);
 
-        typedef std::unique_ptr<dbs_witness> ptr;
+    typedef std::unique_ptr<dbs_witness> ptr;
 
-    public:
+public:
+    // TODO
 
-        //TODO
-
-    private:
-
-        dbservice &_db;
-    };
-
+private:
+    dbservice& _db;
+};
 }
 }

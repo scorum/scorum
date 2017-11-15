@@ -126,21 +126,21 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 {
     const auto& creator = _db.get_account(o.creator);
 
-    //check creator balance
+    // check creator balance
 
     FC_ASSERT(creator.balance >= o.fee, "Insufficient balance to create account.",
         ("creator.balance", creator.balance)("required", o.fee));
 
-    //check fee
+    // check fee
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
     FC_ASSERT(o.fee >= asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
                            SCORUM_SYMBOL),
         "Insufficient Fee: ${f} required, ${p} provided.",
         ("f", wso.median_props.account_creation_fee * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))(
-            "p", o.fee));
+                  "p", o.fee));
 
-    //check accounts existence
+    // check accounts existence
 
     for (auto& a : o.owner.account_auths)
     {
@@ -157,18 +157,11 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
         _db.get_account(a.first);
     }
 
-    //write in to DB
+    // write in to DB
 
-    dbs_account &db_account = _db.obtain_specific<dbs_account>();
+    dbs_account& db_account = _db.obtain_specific<dbs_account>();
     db_account.write_account_creation_by_faucets(
-                o.new_account_name,
-                o.creator,
-                o.memo_key,
-                o.json_metadata,
-                o.owner,
-                o.active,
-                o.posting,
-                o.fee);
+        o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active, o.posting, o.fee);
 }
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
@@ -179,19 +172,19 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
-    //check creator balance
+    // check creator balance
 
     FC_ASSERT(creator.balance >= o.fee, "Insufficient balance to create account.",
         ("creator.balance", creator.balance)("required", o.fee));
 
-    //check delegation fee
+    // check delegation fee
 
     FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares
                 - asset(creator.to_withdraw - creator.withdrawn, VESTS_SYMBOL)
             >= o.delegation,
         "Insufficient vesting shares to delegate to new account.",
         ("creator.vesting_shares", creator.vesting_shares)(
-            "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
+                  "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
 
     auto target_delegation
         = asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
@@ -205,12 +198,12 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
         ("f", target_delegation)("p", current_delegation)("account_creation_fee",
-            wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation", o.delegation));
+                  wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation", o.delegation));
 
     FC_ASSERT(o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
         ("f", wso.median_props.account_creation_fee)("p", o.fee));
 
-    //check accounts existence
+    // check accounts existence
 
     for (auto& a : o.owner.account_auths)
     {
@@ -227,17 +220,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
         _db.get_account(a.first);
     }
 
-    dbs_account &db_account = _db.obtain_specific<dbs_account>();
+    dbs_account& db_account = _db.obtain_specific<dbs_account>();
     db_account.write_account_creation_with_delegation(
-                o.new_account_name,
-                o.creator,
-                o.memo_key,
-                o.json_metadata,
-                o.owner,
-                o.active,
-                o.posting,
-                o.fee,
-                o.delegation);
+        o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active, o.posting, o.fee, o.delegation);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -326,7 +311,8 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     if (comment.net_rshares > 0)
         return;
 
-    const auto& vote_idx = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
+    const auto& vote_idx
+        = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
 
     auto vote_itr = vote_idx.lower_bound(comment_id_type(comment.id));
     while (vote_itr != vote_idx.end() && vote_itr->comment == comment.id)
@@ -425,7 +411,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
         FC_ASSERT(o.title.size() + o.body.size() + o.json_metadata.size(),
             "Cannot update comment because nothing appears to be changing.");
 
-        const auto& by_permlink_idx = _db._temporary_public_impl().get_index<comment_index>().indices().get<by_permlink>();
+        const auto& by_permlink_idx
+            = _db._temporary_public_impl().get_index<comment_index>().indices().get<by_permlink>();
         auto itr = by_permlink_idx.find(boost::make_tuple(o.author, o.permlink));
 
         const auto& auth = _db.get_account(o.author); /// prove it exists
@@ -453,7 +440,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
         {
             if (o.parent_author != SCORUM_ROOT_POST_PARENT)
             {
-                FC_ASSERT(_db._temporary_public_impl().get(parent->root_comment).allow_replies, "The parent comment has disabled replies.");
+                FC_ASSERT(_db._temporary_public_impl().get(parent->root_comment).allow_replies,
+                    "The parent comment has disabled replies.");
             }
 
             if (o.parent_author == SCORUM_ROOT_POST_PARENT)
@@ -872,7 +860,8 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
     {
         const auto& from_account = _db.get_account(o.from_account);
         const auto& to_account = _db.get_account(o.to_account);
-        const auto& wd_idx = _db._temporary_public_impl().get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
+        const auto& wd_idx
+            = _db._temporary_public_impl().get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
         auto itr = wd_idx.find(boost::make_tuple(from_account.id, to_account.id));
 
         if (itr == wd_idx.end())
@@ -881,12 +870,13 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
             FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
                 "Account already has the maximum number of routes.");
 
-            _db._temporary_public_impl().create<withdraw_vesting_route_object>([&](withdraw_vesting_route_object& wvdo) {
-                wvdo.from_account = from_account.id;
-                wvdo.to_account = to_account.id;
-                wvdo.percent = o.percent;
-                wvdo.auto_vest = o.auto_vest;
-            });
+            _db._temporary_public_impl().create<withdraw_vesting_route_object>(
+                [&](withdraw_vesting_route_object& wvdo) {
+                    wvdo.from_account = from_account.id;
+                    wvdo.to_account = to_account.id;
+                    wvdo.percent = o.percent;
+                    wvdo.auto_vest = o.auto_vest;
+                });
 
             _db._temporary_public_impl().modify(from_account, [&](account_object& a) { a.withdraw_routes++; });
         }
@@ -977,7 +967,8 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
     const auto& witness = _db.get_witness(o.witness);
 
-    const auto& by_account_witness_idx = _db._temporary_public_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
+    const auto& by_account_witness_idx
+        = _db._temporary_public_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
     auto itr = by_account_witness_idx.find(boost::make_tuple(voter.id, witness.id));
 
     if (itr == by_account_witness_idx.end())
@@ -1025,7 +1016,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
         if (_db.calculate_discussion_payout_time(comment) == fc::time_point_sec::maximum())
         {
 #ifndef CLEAR_VOTES
-            const auto& comment_vote_idx = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
+            const auto& comment_vote_idx
+                = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
             auto itr = comment_vote_idx.find(std::make_tuple(comment.id, voter.id));
 
             if (itr == comment_vote_idx.end())
@@ -1044,7 +1036,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
             return;
         }
 
-        const auto& comment_vote_idx = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
+        const auto& comment_vote_idx
+            = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
         auto itr = comment_vote_idx.find(std::make_tuple(comment.id, voter.id));
 
         int64_t elapsed_seconds = (_db.head_block_time() - voter.last_vote_time).to_seconds();
@@ -1124,7 +1117,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     c.net_votes--;
             });
 
-            _db._temporary_public_impl().modify(root, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            _db._temporary_public_impl().modify(
+                root, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
 
@@ -1190,7 +1184,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             if (max_vote_weight) // Optimization
             {
-                _db._temporary_public_impl().modify(comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
+                _db._temporary_public_impl().modify(
+                    comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
             }
         }
         else
@@ -1241,7 +1236,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     c.net_votes -= 2;
             });
 
-            _db._temporary_public_impl().modify(root, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            _db._temporary_public_impl().modify(
+                root, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
 
@@ -1249,7 +1245,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
             new_rshares = util::evaluate_reward_curve(new_rshares);
             old_rshares = util::evaluate_reward_curve(old_rshares);
 
-            _db._temporary_public_impl().modify(comment, [&](comment_object& c) { c.total_vote_weight -= itr->weight; });
+            _db._temporary_public_impl().modify(
+                comment, [&](comment_object& c) { c.total_vote_weight -= itr->weight; });
 
             _db._temporary_public_impl().modify(*itr, [&](comment_vote_object& cv) {
                 cv.rshares = rshares;
@@ -1335,10 +1332,12 @@ void request_account_recovery_evaluator::do_apply(const request_account_recovery
         FC_ASSERT(account_to_recover.recovery_account == o.recovery_account,
             "Cannot recover an account that does not have you as there recovery partner.");
     else // Empty string recovery account defaults to top witness
-        FC_ASSERT(_db._temporary_public_impl().get_index<witness_index>().indices().get<by_vote_name>().begin()->owner == o.recovery_account,
+        FC_ASSERT(_db._temporary_public_impl().get_index<witness_index>().indices().get<by_vote_name>().begin()->owner
+                == o.recovery_account,
             "Top witness must recover an account with no recovery partner.");
 
-    const auto& recovery_request_idx = _db._temporary_public_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
+    const auto& recovery_request_idx
+        = _db._temporary_public_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
     auto request = recovery_request_idx.find(o.account_to_recover);
 
     if (request == recovery_request_idx.end()) // New Request
@@ -1385,14 +1384,16 @@ void recover_account_evaluator::do_apply(const recover_account_operation& o)
     FC_ASSERT(_db.head_block_time() - account.last_account_recovery > SCORUM_OWNER_UPDATE_LIMIT,
         "Owner authority can only be updated once an hour.");
 
-    const auto& recovery_request_idx = _db._temporary_public_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
+    const auto& recovery_request_idx
+        = _db._temporary_public_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
     auto request = recovery_request_idx.find(o.account_to_recover);
 
     FC_ASSERT(request != recovery_request_idx.end(), "There are no active recovery requests for this account.");
     FC_ASSERT(
         request->new_owner_authority == o.new_owner_authority, "New owner authority does not match recovery request.");
 
-    const auto& recent_auth_idx = _db._temporary_public_impl().get_index<owner_authority_history_index>().indices().get<by_account>();
+    const auto& recent_auth_idx
+        = _db._temporary_public_impl().get_index<owner_authority_history_index>().indices().get<by_account>();
     auto hist = recent_auth_idx.lower_bound(o.account_to_recover);
     bool found = false;
 
@@ -1408,7 +1409,8 @@ void recover_account_evaluator::do_apply(const recover_account_operation& o)
 
     _db._temporary_public_impl().remove(*request); // Remove first, update_owner_authority may invalidate iterator
     _db.update_owner_authority(account, o.new_owner_authority);
-    _db._temporary_public_impl().modify(account, [&](account_object& a) { a.last_account_recovery = _db.head_block_time(); });
+    _db._temporary_public_impl().modify(
+        account, [&](account_object& a) { a.last_account_recovery = _db.head_block_time(); });
 }
 
 void change_recovery_account_evaluator::do_apply(const change_recovery_account_operation& o)
@@ -1422,11 +1424,12 @@ void change_recovery_account_evaluator::do_apply(const change_recovery_account_o
 
     if (request == change_recovery_idx.end()) // New request
     {
-        _db._temporary_public_impl().create<change_recovery_account_request_object>([&](change_recovery_account_request_object& req) {
-            req.account_to_recover = o.account_to_recover;
-            req.recovery_account = o.new_recovery_account;
-            req.effective_on = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
-        });
+        _db._temporary_public_impl().create<change_recovery_account_request_object>(
+            [&](change_recovery_account_request_object& req) {
+                req.account_to_recover = o.account_to_recover;
+                req.recovery_account = o.new_recovery_account;
+                req.effective_on = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
+            });
     }
     else if (account_to_recover.recovery_account != o.new_recovery_account) // Change existing request
     {
@@ -1444,17 +1447,19 @@ void change_recovery_account_evaluator::do_apply(const change_recovery_account_o
 void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_operation& o)
 {
     const auto& account = _db.get_account(o.account);
-    const auto& request_idx = _db._temporary_public_impl().get_index<decline_voting_rights_request_index>().indices().get<by_account>();
+    const auto& request_idx
+        = _db._temporary_public_impl().get_index<decline_voting_rights_request_index>().indices().get<by_account>();
     auto itr = request_idx.find(account.id);
 
     if (o.decline)
     {
         FC_ASSERT(itr == request_idx.end(), "Cannot create new request because one already exists.");
 
-        _db._temporary_public_impl().create<decline_voting_rights_request_object>([&](decline_voting_rights_request_object& req) {
-            req.account = account.id;
-            req.effective_date = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
-        });
+        _db._temporary_public_impl().create<decline_voting_rights_request_object>(
+            [&](decline_voting_rights_request_object& req) {
+                req.account = account.id;
+                req.effective_date = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
+            });
     }
     else
     {
@@ -1506,7 +1511,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
 {
     const auto& delegator = _db.get_account(op.delegator);
     const auto& delegatee = _db.get_account(op.delegatee);
-    auto delegation = _db._temporary_public_impl().find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
+    auto delegation = _db._temporary_public_impl().find<vesting_delegation_object, by_delegation>(
+        boost::make_tuple(op.delegator, op.delegatee));
 
     auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
@@ -1531,9 +1537,11 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
             obj.min_delegation_time = _db.head_block_time();
         });
 
-        _db._temporary_public_impl().modify(delegator, [&](account_object& a) { a.delegated_vesting_shares += op.vesting_shares; });
+        _db._temporary_public_impl().modify(
+            delegator, [&](account_object& a) { a.delegated_vesting_shares += op.vesting_shares; });
 
-        _db._temporary_public_impl().modify(delegatee, [&](account_object& a) { a.received_vesting_shares += op.vesting_shares; });
+        _db._temporary_public_impl().modify(
+            delegatee, [&](account_object& a) { a.received_vesting_shares += op.vesting_shares; });
     }
     // Else if the delegation is increasing
     else if (op.vesting_shares >= delegation->vesting_shares)
@@ -1549,7 +1557,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
 
         _db._temporary_public_impl().modify(delegatee, [&](account_object& a) { a.received_vesting_shares += delta; });
 
-        _db._temporary_public_impl().modify(*delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
+        _db._temporary_public_impl().modify(
+            *delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
     }
     // Else the delegation is decreasing
     else /* delegation->vesting_shares > op.vesting_shares */
@@ -1569,18 +1578,20 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
                 "Delegation would set vesting_shares to zero, but it is already zero");
         }
 
-        _db._temporary_public_impl().create<vesting_delegation_expiration_object>([&](vesting_delegation_expiration_object& obj) {
-            obj.delegator = op.delegator;
-            obj.vesting_shares = delta;
-            obj.expiration
-                = std::max(_db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time);
-        });
+        _db._temporary_public_impl().create<vesting_delegation_expiration_object>(
+            [&](vesting_delegation_expiration_object& obj) {
+                obj.delegator = op.delegator;
+                obj.vesting_shares = delta;
+                obj.expiration
+                    = std::max(_db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time);
+            });
 
         _db._temporary_public_impl().modify(delegatee, [&](account_object& a) { a.received_vesting_shares -= delta; });
 
         if (op.vesting_shares.amount > 0)
         {
-            _db._temporary_public_impl().modify(*delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
+            _db._temporary_public_impl().modify(
+                *delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
         }
         else
         {

@@ -21,7 +21,8 @@ void enable_content_editing_evaluator::do_apply(const enable_content_editing_ope
         }
         else
         {
-            _db._temporary_public_impl().modify(*edit_lock, [&](content_edit_lock_object& lock) { lock.lock_time = o.relock_time; });
+            _db._temporary_public_impl().modify(
+                *edit_lock, [&](content_edit_lock_object& lock) { lock.lock_time = o.relock_time; });
         }
     }
     FC_CAPTURE_AND_RETHROW((o))

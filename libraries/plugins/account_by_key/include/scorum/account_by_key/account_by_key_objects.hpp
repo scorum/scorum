@@ -54,9 +54,11 @@ struct by_key;
 
 typedef multi_index_container<key_lookup_object,
     indexed_by<ordered_unique<tag<by_id>, member<key_lookup_object, key_lookup_id_type, &key_lookup_object::id>>,
-        ordered_unique<tag<by_key>,
-            composite_key<key_lookup_object, member<key_lookup_object, public_key_type, &key_lookup_object::key>,
-                member<key_lookup_object, account_name_type, &key_lookup_object::account>>>>,
+                                  ordered_unique<tag<by_key>,
+                                      composite_key<key_lookup_object, member<key_lookup_object, public_key_type,
+                                                                           &key_lookup_object::key>,
+                                                     member<key_lookup_object, account_name_type,
+                                                         &key_lookup_object::account>>>>,
     allocator<key_lookup_object>>
     key_lookup_index;
 }

@@ -66,9 +66,9 @@ public:
     /// TRENDING = UNCLAIMED + PENDING
     share_type net_rshares; // reward is proportional to rshares^2, this is the sum of all votes (positive and negative)
     share_type abs_rshares; /// this is used to track the total abs(weight) of votes for the purpose of calculating
-                            /// cashout_time
+    /// cashout_time
     share_type vote_rshares; /// Total positive rshares from all votes. Used to calculate delta weights. Needed to
-                             /// handle vote changing and removal.
+    /// handle vote changing and removal.
 
     share_type children_abs_rshares; /// this is used to calculate cashout time of a discussion.
     time_point_sec cashout_time; /// 24 hours from the weighted average of vote time
@@ -130,27 +130,34 @@ struct by_comment_weight_voter;
 struct by_voter_last_update;
 typedef multi_index_container<comment_vote_object,
     indexed_by<ordered_unique<tag<by_id>, member<comment_vote_object, comment_vote_id_type, &comment_vote_object::id>>,
-        ordered_unique<tag<by_comment_voter>,
-            composite_key<comment_vote_object,
-                member<comment_vote_object, comment_id_type, &comment_vote_object::comment>,
-                member<comment_vote_object, account_id_type, &comment_vote_object::voter>>>,
-        ordered_unique<tag<by_voter_comment>,
-            composite_key<comment_vote_object,
-                member<comment_vote_object, account_id_type, &comment_vote_object::voter>,
-                member<comment_vote_object, comment_id_type, &comment_vote_object::comment>>>,
-        ordered_unique<tag<by_voter_last_update>,
-            composite_key<comment_vote_object,
-                member<comment_vote_object, account_id_type, &comment_vote_object::voter>,
-                member<comment_vote_object, time_point_sec, &comment_vote_object::last_update>,
-                member<comment_vote_object, comment_id_type, &comment_vote_object::comment>>,
-            composite_key_compare<std::less<account_id_type>, std::greater<time_point_sec>,
-                std::less<comment_id_type>>>,
-        ordered_unique<tag<by_comment_weight_voter>,
-            composite_key<comment_vote_object,
-                member<comment_vote_object, comment_id_type, &comment_vote_object::comment>,
-                member<comment_vote_object, uint64_t, &comment_vote_object::weight>,
-                member<comment_vote_object, account_id_type, &comment_vote_object::voter>>,
-            composite_key_compare<std::less<comment_id_type>, std::greater<uint64_t>, std::less<account_id_type>>>>,
+                                  ordered_unique<tag<by_comment_voter>,
+                                      composite_key<comment_vote_object, member<comment_vote_object, comment_id_type,
+                                                                             &comment_vote_object::comment>,
+                                                     member<comment_vote_object, account_id_type,
+                                                         &comment_vote_object::voter>>>,
+                                  ordered_unique<tag<by_voter_comment>,
+                                      composite_key<comment_vote_object, member<comment_vote_object, account_id_type,
+                                                                             &comment_vote_object::voter>,
+                                                     member<comment_vote_object, comment_id_type,
+                                                         &comment_vote_object::comment>>>,
+                                  ordered_unique<tag<by_voter_last_update>,
+                                      composite_key<comment_vote_object, member<comment_vote_object, account_id_type,
+                                                                             &comment_vote_object::voter>,
+                                                     member<comment_vote_object, time_point_sec,
+                                                         &comment_vote_object::last_update>,
+                                                     member<comment_vote_object, comment_id_type,
+                                                         &comment_vote_object::comment>>,
+                                      composite_key_compare<std::less<account_id_type>, std::greater<time_point_sec>,
+                                                     std::less<comment_id_type>>>,
+                                  ordered_unique<tag<by_comment_weight_voter>,
+                                      composite_key<comment_vote_object, member<comment_vote_object, comment_id_type,
+                                                                             &comment_vote_object::comment>,
+                                                     member<comment_vote_object, uint64_t,
+                                                         &comment_vote_object::weight>,
+                                                     member<comment_vote_object, account_id_type,
+                                                         &comment_vote_object::voter>>,
+                                      composite_key_compare<std::less<comment_id_type>, std::greater<uint64_t>,
+                                                     std::less<account_id_type>>>>,
     allocator<comment_vote_object>>
     comment_vote_index;
 
@@ -174,40 +181,51 @@ struct by_author_last_update;
  */
 typedef multi_index_container<comment_object,
     indexed_by<
-        /// CONSENUSS INDICIES - used by evaluators
-        ordered_unique<tag<by_id>, member<comment_object, comment_id_type, &comment_object::id>>,
-        ordered_unique<tag<by_cashout_time>,
-            composite_key<comment_object, member<comment_object, time_point_sec, &comment_object::cashout_time>,
-                member<comment_object, comment_id_type, &comment_object::id>>>,
-        ordered_unique<tag<by_permlink>, /// used by consensus to find posts referenced in ops
-            composite_key<comment_object, member<comment_object, account_name_type, &comment_object::author>,
-                member<comment_object, shared_string, &comment_object::permlink>>,
-            composite_key_compare<std::less<account_name_type>, strcmp_less>>,
-        ordered_unique<tag<by_root>,
-            composite_key<comment_object, member<comment_object, comment_id_type, &comment_object::root_comment>,
-                member<comment_object, comment_id_type, &comment_object::id>>>,
-        ordered_unique<tag<by_parent>, /// used by consensus to find posts referenced in ops
-            composite_key<comment_object, member<comment_object, account_name_type, &comment_object::parent_author>,
-                member<comment_object, shared_string, &comment_object::parent_permlink>,
-                member<comment_object, comment_id_type, &comment_object::id>>,
-            composite_key_compare<std::less<account_name_type>, strcmp_less, std::less<comment_id_type>>>
+                                  /// CONSENUSS INDICIES - used by evaluators
+                                  ordered_unique<tag<by_id>,
+                                      member<comment_object, comment_id_type, &comment_object::id>>,
+                                  ordered_unique<tag<by_cashout_time>,
+                                      composite_key<comment_object, member<comment_object, time_point_sec,
+                                                                        &comment_object::cashout_time>,
+                                                     member<comment_object, comment_id_type, &comment_object::id>>>,
+                                  ordered_unique<tag<by_permlink>, /// used by consensus to find posts referenced in ops
+                                      composite_key<comment_object,
+                                                     member<comment_object, account_name_type, &comment_object::author>,
+                                                     member<comment_object, shared_string, &comment_object::permlink>>,
+                                      composite_key_compare<std::less<account_name_type>, strcmp_less>>,
+                                  ordered_unique<tag<by_root>,
+                                      composite_key<comment_object, member<comment_object, comment_id_type,
+                                                                        &comment_object::root_comment>,
+                                                     member<comment_object, comment_id_type, &comment_object::id>>>,
+                                  ordered_unique<tag<by_parent>, /// used by consensus to find posts referenced in ops
+                                      composite_key<comment_object, member<comment_object, account_name_type,
+                                                                        &comment_object::parent_author>,
+                                                     member<comment_object, shared_string,
+                                                         &comment_object::parent_permlink>,
+                                                     member<comment_object, comment_id_type, &comment_object::id>>,
+                                      composite_key_compare<std::less<account_name_type>, strcmp_less,
+                                                     std::less<comment_id_type>>>
 /// NON_CONSENSUS INDICIES - used by APIs
 #ifndef IS_LOW_MEM
-        ,
-        ordered_unique<tag<by_last_update>,
-            composite_key<comment_object, member<comment_object, account_name_type, &comment_object::parent_author>,
-                member<comment_object, time_point_sec, &comment_object::last_update>,
-                member<comment_object, comment_id_type, &comment_object::id>>,
-            composite_key_compare<std::less<account_name_type>, std::greater<time_point_sec>,
-                std::less<comment_id_type>>>,
-        ordered_unique<tag<by_author_last_update>,
-            composite_key<comment_object, member<comment_object, account_name_type, &comment_object::author>,
-                member<comment_object, time_point_sec, &comment_object::last_update>,
-                member<comment_object, comment_id_type, &comment_object::id>>,
-            composite_key_compare<std::less<account_name_type>, std::greater<time_point_sec>,
-                std::less<comment_id_type>>>
+                                  ,
+                                  ordered_unique<tag<by_last_update>,
+                                      composite_key<comment_object, member<comment_object, account_name_type,
+                                                                        &comment_object::parent_author>,
+                                                     member<comment_object, time_point_sec,
+                                                         &comment_object::last_update>,
+                                                     member<comment_object, comment_id_type, &comment_object::id>>,
+                                      composite_key_compare<std::less<account_name_type>, std::greater<time_point_sec>,
+                                                     std::less<comment_id_type>>>,
+                                  ordered_unique<tag<by_author_last_update>,
+                                      composite_key<comment_object,
+                                                     member<comment_object, account_name_type, &comment_object::author>,
+                                                     member<comment_object, time_point_sec,
+                                                         &comment_object::last_update>,
+                                                     member<comment_object, comment_id_type, &comment_object::id>>,
+                                      composite_key_compare<std::less<account_name_type>, std::greater<time_point_sec>,
+                                                     std::less<comment_id_type>>>
 #endif
-        >,
+                                  >,
     allocator<comment_object>>
     comment_index;
 }

@@ -81,7 +81,7 @@ struct account_stats_bucket_object : public object<account_stats_bucket_object_t
     uint32_t sbd_interest_payments = 0; ///< Number of times interest was paid to SBD
     share_type sbd_paid_as_interest = 0; ///< Amount of SBD paid as interest
     uint32_t transfers_to_vesting = 0; ///< Transfers to vesting by this account. Note: Transfer to vesting from A to B
-                                       ///counts as a transfer from A to B followed by a vesting deposit by B.
+    /// counts as a transfer from A to B followed by a vesting deposit by B.
     share_type scorum_vested = 0; ///< SCORUM vested by the account
     share_type new_vests = 0; ///< New VESTS by vesting transfers
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
@@ -158,7 +158,8 @@ private:
 }
 } // scorum::account_statistics
 
-FC_REFLECT(scorum::account_statistics::account_stats_bucket_object,
+FC_REFLECT(
+    scorum::account_statistics::account_stats_bucket_object,
     (id)(open)(seconds)(name)(transactions)(market_bandwidth)(non_market_bandwidth)(total_ops)(market_ops)(forum_ops)(
         root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(replies_deleted)(
         new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(author_reward_payouts)(

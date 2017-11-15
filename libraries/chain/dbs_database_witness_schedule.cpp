@@ -8,7 +8,7 @@ namespace chain {
 
 void database::_reset_virtual_schedule_time()
 {
-    database &_db = (*this);
+    database& _db = (*this);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
     _db.modify(wso, [&](witness_schedule_object& o) {
@@ -28,7 +28,7 @@ void database::_reset_virtual_schedule_time()
 
 void database::_update_median_witness_props()
 {
-    database &_db = (*this);
+    database& _db = (*this);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
@@ -67,7 +67,7 @@ void database::_update_median_witness_props()
  */
 void database::update_witness_schedule()
 {
-    database &_db = (*this);
+    database& _db = (*this);
 
     //    const witness_schedule_object& wso = _db.get_witness_schedule_object();
     //
@@ -147,7 +147,7 @@ void database::update_witness_schedule()
         FC_ASSERT(active_witnesses.size() == expected_active_witnesses,
             "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
             ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
-                "expected_active_witnesses", expected_active_witnesses));
+                      "expected_active_witnesses", expected_active_witnesses));
 
         auto majority_version = wso.majority_version;
 

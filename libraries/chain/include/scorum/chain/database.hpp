@@ -42,8 +42,7 @@ struct comment_reward_context;
  *   @class database
  *   @brief tracks the blockchain state in an extensible manner
  */
-class database : public chainbase::database,
-                 public dbservice
+class database : public chainbase::database, public dbservice
 {
 
 public:
@@ -376,11 +375,11 @@ public:
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
 
-    //witness_schedule
+    // witness_schedule
 
     void update_witness_schedule();
 
-    //index
+    // index
 
     template <typename MultiIndexType> void add_plugin_index()
     {
@@ -388,7 +387,6 @@ public:
     }
 
 private:
-
     void _reset_virtual_schedule_time();
 
     void _update_median_witness_props();
@@ -396,7 +394,6 @@ private:
     template <typename MultiIndexType> void _add_index_impl() { add_index<MultiIndexType>(); }
 
 protected:
-
     // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
     // void pop_undo() { object_database::pop_undo(); }
     void notify_changed_objects();
