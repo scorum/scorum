@@ -1,11 +1,10 @@
-# Introducing Scorum (beta)
+# Introducing Scorum
 
-Scorum is an experimental Delegated Proof of Stake blockchain with an unproven consensus
+Scorum is an spots media blockchain with Delegated Proof of Stake consensus
 algorithm.
 
-  - Currency symbol SCORUM
-  - 1.000 SCORUM block reward at launch
-  - 10% APR inflation narrowing to 1% APR over 20 years.
+  - Currency symbol SCR
+  - No emission
 
 # Public Announcement & Discussion
 
