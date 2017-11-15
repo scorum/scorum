@@ -55,14 +55,14 @@ public:
     application();
     ~application();
 
-         void set_program_options(boost::program_options::options_description& command_line_options,
-                                  boost::program_options::options_description& configuration_file_options)const;
-         void initialize(const boost::program_options::variables_map&options);
-         void initialize_plugins(const boost::program_options::variables_map& options);
-         void startup();
-         void shutdown();
-         void startup_plugins();
-         void shutdown_plugins();
+    void set_program_options(boost::program_options::options_description& command_line_options,
+                             boost::program_options::options_description& configuration_file_options)const;
+    void initialize(const boost::program_options::variables_map&options);
+    void initialize_plugins(const boost::program_options::variables_map& options);
+    void startup();
+    void shutdown();
+    void startup_plugins();
+    void shutdown_plugins();
 
     template <typename PluginType> std::shared_ptr<PluginType> register_plugin()
     {
@@ -132,10 +132,10 @@ public:
     std::shared_ptr<fc::rpc::websocket_api_connection> _ws_apic;
     fc::http::websocket_client _client;
 
-      private:
-         const std::string print_config(const boost::program_options::variables_map& vm);
-      
-         std::shared_ptr<detail::application_impl> my;
+private:
+    const std::string print_config(const boost::program_options::variables_map& vm);
+
+    std::shared_ptr<detail::application_impl> my;
 
     boost::program_options::options_description _cli_options;
     boost::program_options::options_description _cfg_options;

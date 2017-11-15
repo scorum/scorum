@@ -255,8 +255,8 @@ public:
     }
 
       application_impl(application* self)
-         : _self(self),
-           _chain_db(std::make_shared<chain::database>())
+         : _self(self)
+         , _chain_db(std::make_shared<chain::database>())
       {
       }
 
@@ -1024,7 +1024,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
 
     // clang-format off
-   configuration_file_options.add_options()
+    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
          ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
          ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
@@ -1043,8 +1043,8 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("max-block-age", bpo::value< int32_t >()->default_value(200), "Maximum age of head block when broadcasting tx via API")
          ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
          ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from");
-   command_line_options.add(configuration_file_options);
-   command_line_options.add_options()
+    command_line_options.add(configuration_file_options);
+    command_line_options.add_options()
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
          ("force-validate", "Force validation of all transactions")
@@ -1072,6 +1072,14 @@ const std::string application::print_config(const boost::program_options::variab
             stream << "(default)";
         }
         stream << "=";
+
+        //check if param is secure
+        if (it->first == "server-pem-password" ||
+            it->first == "private-key")
+        {
+            stream << "..." << std::endl;
+            continue;
+        }
 
         try
         {
