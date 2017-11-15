@@ -8,6 +8,7 @@
 #include <boost/variant.hpp>
 
 #include <scorum/chain/dbservice_common.hpp>
+#include <scorum/chain/custom_operation_interpreter.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
