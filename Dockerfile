@@ -53,7 +53,7 @@ RUN \
         -DSKIP_BY_TX_ID=ON \
         .. && \
     make -j$(nproc) chain_test test_fixed_string && \
-#    ./tests/chain_test && \
+    ./tests/chain_test && \
     ./programs/util/test_fixed_string && \
     cd /usr/local/src/scorum && \
     doxygen && \
