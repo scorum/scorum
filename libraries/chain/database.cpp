@@ -949,8 +949,10 @@ void database::notify_on_pre_apply_transaction(const signed_transaction& tx)
     SCORUM_TRY_NOTIFY(on_pre_apply_transaction, tx)
 }
 
-void database::notify_on_applied_transaction(
-    const signed_transaction& tx){ SCORUM_TRY_NOTIFY(on_applied_transaction, tx) }
+void database::notify_on_applied_transaction(const signed_transaction& tx)
+{
+    SCORUM_TRY_NOTIFY(on_applied_transaction, tx)
+}
 
 account_name_type database::get_scheduled_witness(uint32_t slot_num) const
 {
@@ -1203,7 +1205,7 @@ void database::process_vesting_withdrawals()
         share_type to_withdraw;
         if (from_account.to_withdraw - from_account.withdrawn < from_account.vesting_withdraw_rate.amount)
             to_withdraw = std::min(from_account.vesting_shares.amount,
-                from_account.to_withdraw % from_account.vesting_withdraw_rate.amount)
+                              from_account.to_withdraw % from_account.vesting_withdraw_rate.amount)
                               .value;
         else
             to_withdraw = std::min(from_account.vesting_shares.amount, from_account.vesting_withdraw_rate.amount).value;
@@ -2174,7 +2176,7 @@ void database::_apply_block(const signed_block& next_block)
             {
                 FC_ASSERT(next_block.transaction_merkle_root == merkle_root, "Merkle check failed",
                     ("next_block.transaction_merkle_root", next_block.transaction_merkle_root)("calc", merkle_root)(
-                        "next_block", next_block)("id", next_block.id()));
+                              "next_block", next_block)("id", next_block.id()));
             }
             catch (fc::assert_exception& e)
             {
@@ -2492,7 +2494,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 "The database does not have enough undo history to support a blockchain with so many missed blocks. "
                 "Please add a checkpoint if you would like to continue applying blocks beyond this point.",
                 ("last_irreversible_block_num", _dgp.last_irreversible_block_num)("head", _dgp.head_block_number)(
-                    "max_undo", SCORUM_MAX_UNDO_HISTORY));
+                              "max_undo", SCORUM_MAX_UNDO_HISTORY));
         }
     }
     FC_CAPTURE_AND_RETHROW()
@@ -2862,7 +2864,7 @@ void database::validate_invariants() const
             ("total_vesting_shares", gpo.total_vesting_shares)("total_vsf_votes", total_vsf_votes));
         FC_ASSERT(gpo.pending_rewarded_vesting_scorum == pending_vesting_scorum, "",
             ("pending_rewarded_vesting_scorum", gpo.pending_rewarded_vesting_scorum)(
-                "pending_vesting_scorum", pending_vesting_scorum));
+                      "pending_vesting_scorum", pending_vesting_scorum));
     }
     FC_CAPTURE_LOG_AND_RETHROW((head_block_num()));
 }

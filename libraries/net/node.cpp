@@ -166,14 +166,15 @@ private:
         {
         }
     };
-    typedef boost::multi_index_container<message_info,
-        bmi::indexed_by<bmi::ordered_unique<bmi::tag<message_hash_index>,
-                            bmi::member<message_info, message_hash_type, &message_info::message_hash>>,
-            bmi::ordered_non_unique<bmi::tag<message_contents_hash_index>,
-                bmi::member<message_info, fc::uint160_t, &message_info::message_contents_hash>>,
-            bmi::ordered_non_unique<bmi::tag<block_clock_index>,
-                bmi::member<message_info, uint32_t, &message_info::block_clock_when_received>>>>
-        message_cache_container;
+    typedef boost::
+        multi_index_container<message_info,
+            bmi::indexed_by<bmi::ordered_unique<bmi::tag<message_hash_index>,
+                                bmi::member<message_info, message_hash_type, &message_info::message_hash>>,
+                                  bmi::ordered_non_unique<bmi::tag<message_contents_hash_index>,
+                                      bmi::member<message_info, fc::uint160_t, &message_info::message_contents_hash>>,
+                                  bmi::ordered_non_unique<bmi::tag<block_clock_index>,
+                                      bmi::member<message_info, uint32_t, &message_info::block_clock_when_received>>>>
+            message_cache_container;
 
     message_cache_container _message_cache;
 
@@ -297,7 +298,8 @@ private:
 
     typedef boost::accumulators::accumulator_set<int64_t,
         boost::accumulators::stats<boost::accumulators::tag::min, boost::accumulators::tag::rolling_mean,
-            boost::accumulators::tag::max, boost::accumulators::tag::sum, boost::accumulators::tag::count>>
+                                                     boost::accumulators::tag::max, boost::accumulators::tag::sum,
+                                                     boost::accumulators::tag::count>>
         call_stats_accumulator;
 #define NODE_DELEGATE_METHOD_NAMES                                                                                     \
     (has_item)(handle_message)(handle_block)(handle_transaction)(get_block_ids)(get_item)(get_blockchain_synopsis)(    \
@@ -364,7 +366,7 @@ private:
                      "executing the method, and a ${p2p_delay}us delay after it finished before the p2p thread started "
                      "processing the response",
                     ("execution_duration", actual_execution_time)("delegate_delay", delay_before)(
-                        "p2p_delay", delay_after));
+                         "p2p_delay", delay_after));
             }
         }
         void starting_execution() { _begin_execution_time = fc::time_point::now(); }
@@ -465,9 +467,10 @@ public:
     typedef boost::multi_index_container<prioritized_item_id,
         boost::multi_index::
             indexed_by<boost::multi_index::ordered_unique<boost::multi_index::identity<prioritized_item_id>>,
-                boost::multi_index::hashed_unique<boost::multi_index::tag<item_id_index>,
-                    boost::multi_index::member<prioritized_item_id, item_id, &prioritized_item_id::item>,
-                    std::hash<item_id>>>>
+                                             boost::multi_index::hashed_unique<boost::multi_index::tag<item_id_index>,
+                                                 boost::multi_index::member<prioritized_item_id, item_id,
+                                                                                   &prioritized_item_id::item>,
+                                                 std::hash<item_id>>>>
         items_to_fetch_set_type;
     unsigned _items_to_fetch_sequence_counter;
     items_to_fetch_set_type _items_to_fetch; /// list of items we know another peer has and we want
@@ -1042,7 +1045,7 @@ void node_impl::request_sync_items_from_peer(
     VERIFY_CORRECT_THREAD();
     dlog("requesting ${item_count} item(s) ${items_to_request} from peer ${endpoint}",
         ("item_count", items_to_request.size())("items_to_request", items_to_request)(
-            "endpoint", peer->get_remote_endpoint()));
+             "endpoint", peer->get_remote_endpoint()));
     for (const item_hash_t& item_to_request : items_to_request)
     {
         _active_sync_requests.insert(active_sync_requests_map::value_type(item_to_request, fc::time_point::now()));
@@ -1173,14 +1176,16 @@ void node_impl::fetch_items_loop()
             bool operator<(const peer_and_items_to_fetch& rhs) const { return peer < rhs.peer; }
             size_t number_of_items() const { return item_ids.size(); }
         };
-        typedef boost::multi_index_container<peer_and_items_to_fetch,
-            boost::multi_index::
-                indexed_by<boost::multi_index::ordered_unique<boost::multi_index::member<peer_and_items_to_fetch,
-                               peer_connection_ptr, &peer_and_items_to_fetch::peer>>,
-                    boost::multi_index::ordered_non_unique<boost::multi_index::tag<requested_item_count_index>,
-                        boost::multi_index::const_mem_fun<peer_and_items_to_fetch, size_t,
-                            &peer_and_items_to_fetch::number_of_items>>>>
-            fetch_messages_to_send_set;
+        typedef boost::
+            multi_index_container<peer_and_items_to_fetch,
+                boost::multi_index::
+                    indexed_by<boost::multi_index::ordered_unique<boost::multi_index::member<peer_and_items_to_fetch,
+                                   peer_connection_ptr, &peer_and_items_to_fetch::peer>>,
+                                      boost::multi_index::
+                                          ordered_non_unique<boost::multi_index::tag<requested_item_count_index>,
+                                              boost::multi_index::const_mem_fun<peer_and_items_to_fetch, size_t,
+                                                                 &peer_and_items_to_fetch::number_of_items>>>>
+                fetch_messages_to_send_set;
         fetch_messages_to_send_set items_by_peer;
 
         // initialize the fetch_messages_to_send with an empty set of items for all idle peers
@@ -1252,7 +1257,7 @@ void node_impl::fetch_items_loop()
             {
                 dlog("requesting ${count} items of type ${type} from peer ${endpoint}: ${hashes}",
                     ("count", items_by_type.second.size())("type", (uint32_t)items_by_type.first)(
-                        "endpoint", peer_and_items.peer->get_remote_endpoint())("hashes", items_by_type.second));
+                         "endpoint", peer_and_items.peer->get_remote_endpoint())("hashes", items_by_type.second));
                 if (items_by_type.first == core_message_type_enum::block_message_type)
                     for (const item_hash_t& id : items_by_type.second)
                     {
@@ -1349,7 +1354,7 @@ void node_impl::advertise_inventory_loop()
                 }
                 dlog("advertising ${count} new item(s) of ${types} type(s) to peer ${endpoint}",
                     ("count", total_items_to_send_to_this_peer)("types", items_to_advertise_by_type.size())(
-                        "endpoint", peer->get_remote_endpoint()));
+                         "endpoint", peer->get_remote_endpoint()));
                 for (auto items_group : items_to_advertise_by_type)
                     inventory_messages_to_send.push_back(
                         std::make_pair(peer, item_ids_inventory_message(items_group.first, items_group.second)));
@@ -1412,10 +1417,10 @@ void node_impl::terminate_inactive_connections_loop()
                     ("peer", handshaking_peer->get_remote_endpoint())("timeout", handshaking_timeout));
                 wlog("Peer's negotiating status: ${status}, bytes sent: ${sent}, bytes received: ${received}",
                     ("status", handshaking_peer->negotiation_status)("sent", handshaking_peer->get_total_bytes_sent())(
-                        "received", handshaking_peer->get_total_bytes_received()));
-                handshaking_peer->connection_closed_error = fc::exception(FC_LOG_MESSAGE(warn,
-                    "Terminating handshaking connection due to inactivity of ${timeout} seconds.  Negotiating "
-                    "status: ${status}, bytes sent: ${sent}, bytes received: ${received}",
+                         "received", handshaking_peer->get_total_bytes_received()));
+                handshaking_peer->connection_closed_error = fc::exception(FC_LOG_MESSAGE(
+                    warn, "Terminating handshaking connection due to inactivity of ${timeout} seconds.  Negotiating "
+                          "status: ${status}, bytes sent: ${sent}, bytes received: ${received}",
                     ("peer", handshaking_peer->get_remote_endpoint())("timeout", handshaking_timeout)("status",
                         handshaking_peer->negotiation_status)("sent", handshaking_peer->get_total_bytes_sent())(
                         "received", handshaking_peer->get_total_bytes_received())));
@@ -1459,11 +1464,11 @@ void node_impl::terminate_inactive_connections_loop()
                     fc_wlog(fc::logger::get("sync"), "disconnecting peer ${peer} because they haven't made any "
                                                      "progress on my remaining ${count} sync item requests",
                         ("peer", active_peer->get_remote_endpoint())(
-                            "count", active_peer->sync_items_requested_from_peer.size()));
+                                "count", active_peer->sync_items_requested_from_peer.size()));
                     wlog("Disconnecting peer ${peer} because they haven't made any progress on my remaining ${count} "
                          "sync item requests",
                         ("peer", active_peer->get_remote_endpoint())(
-                            "count", active_peer->sync_items_requested_from_peer.size()));
+                             "count", active_peer->sync_items_requested_from_peer.size()));
                     disconnect_due_to_request_timeout = true;
                     break;
                 }
@@ -1473,11 +1478,11 @@ void node_impl::terminate_inactive_connections_loop()
                     fc_wlog(fc::logger::get("sync"), "Disconnecting peer ${peer} because they didn't respond to my "
                                                      "request for sync item ids after ${synopsis}",
                         ("peer", active_peer->get_remote_endpoint())(
-                            "synopsis", active_peer->item_ids_requested_from_peer->get<0>()));
+                                "synopsis", active_peer->item_ids_requested_from_peer->get<0>()));
                     wlog("Disconnecting peer ${peer} because they didn't respond to my request for sync item ids after "
                          "${synopsis}",
                         ("peer", active_peer->get_remote_endpoint())(
-                            "synopsis", active_peer->item_ids_requested_from_peer->get<0>()));
+                             "synopsis", active_peer->item_ids_requested_from_peer->get<0>()));
                     disconnect_due_to_request_timeout = true;
                 }
                 if (!disconnect_due_to_request_timeout)
@@ -1578,12 +1583,12 @@ void node_impl::terminate_inactive_connections_loop()
     // disconnect reason, so it may yield)
     for (const peer_connection_ptr& peer : peers_to_disconnect_gently)
     {
-        fc::exception detailed_error(FC_LOG_MESSAGE(warn, "Disconnecting due to inactivity",
+        fc::exception detailed_error(FC_LOG_MESSAGE(
+            warn, "Disconnecting due to inactivity",
             ("last_message_received_seconds_ago",
                 (peer->get_last_message_received_time() - fc::time_point::now()).count() / fc::seconds(1).count())(
-                "last_message_sent_seconds_ago",
-                (peer->get_last_message_sent_time() - fc::time_point::now()).count() / fc::seconds(1).count())(
-                "inactivity_timeout",
+                "last_message_sent_seconds_ago", (peer->get_last_message_sent_time() - fc::time_point::now()).count()
+                    / fc::seconds(1).count())("inactivity_timeout",
                 _active_connections.find(peer) != _active_connections.end() ? _peer_inactivity_timeout * 10
                                                                             : _peer_inactivity_timeout)));
         disconnect_from_peer(peer.get(), "Disconnecting due to inactivity", false, detailed_error);
@@ -1843,20 +1848,20 @@ void node_impl::display_current_connections()
     VERIFY_CORRECT_THREAD();
     dlog("Currently have ${current} of [${desired}/${max}] connections",
         ("current", get_number_of_connections())("desired", _desired_number_of_connections)(
-            "max", _maximum_number_of_connections));
+             "max", _maximum_number_of_connections));
     dlog("   my id is ${id}", ("id", _node_id));
 
     for (const peer_connection_ptr& active_connection : _active_connections)
     {
         dlog("        active: ${endpoint} with ${id}   [${direction}]",
             ("endpoint", active_connection->get_remote_endpoint())("id", active_connection->node_id)(
-                "direction", active_connection->direction));
+                 "direction", active_connection->direction));
     }
     for (const peer_connection_ptr& handshaking_connection : _handshaking_connections)
     {
         dlog("   handshaking: ${endpoint} with ${id}  [${direction}]",
             ("endpoint", handshaking_connection->get_remote_endpoint())("id", handshaking_connection->node_id)(
-                "direction", handshaking_connection->direction));
+                 "direction", handshaking_connection->direction));
     }
 }
 
@@ -1866,7 +1871,7 @@ void node_impl::on_message(peer_connection* originating_peer, const message& rec
     message_hash_type message_hash = received_message.id();
     dlog("handling message ${type} ${hash} size ${size} from peer ${endpoint}",
         ("type", graphene::net::core_message_type_enum(received_message.msg_type))("hash", message_hash)(
-            "size", received_message.size)("endpoint", originating_peer->get_remote_endpoint()));
+             "size", received_message.size)("endpoint", originating_peer->get_remote_endpoint()));
     switch (received_message.msg_type)
     {
     case core_message_type_enum::hello_message_type:
@@ -2178,8 +2183,8 @@ void node_impl::on_hello_message(peer_connection* originating_peer, const hello_
                 dlog("peer is firewalled: they think their outbound endpoint is ${reported_endpoint}, but I see it as "
                      "${actual_endpoint}",
                     ("reported_endpoint",
-                        fc::ip::endpoint(originating_peer->inbound_address, originating_peer->outbound_port))(
-                        "actual_endpoint", peers_actual_outbound_endpoint));
+                         fc::ip::endpoint(originating_peer->inbound_address, originating_peer->outbound_port))(
+                         "actual_endpoint", peers_actual_outbound_endpoint));
                 originating_peer->is_firewalled = firewalled_state::firewalled;
             }
 
@@ -2251,7 +2256,7 @@ void node_impl::on_connection_rejected_message(
     {
         ilog("Received a rejection from ${peer} in response to my \"hello\", reason: \"${reason}\"",
             ("peer", originating_peer->get_remote_endpoint())(
-                "reason", connection_rejected_message_received.reason_string));
+                 "reason", connection_rejected_message_received.reason_string));
 
         if (connection_rejected_message_received.reason_code == rejection_reason_code::connected_to_self)
         {
@@ -2370,7 +2375,7 @@ void node_impl::on_fetch_blockchain_item_ids_message(peer_connection* originatin
         dlog("sync: received a request for item ids starting at the beginning of the chain from peer ${peer_endpoint} "
              "(full request: ${synopsis})",
             ("peer_endpoint", originating_peer->get_remote_endpoint())(
-                "synopsis", fetch_blockchain_item_ids_message_received.blockchain_synopsis));
+                 "synopsis", fetch_blockchain_item_ids_message_received.blockchain_synopsis));
     }
     else
     {
@@ -2378,7 +2383,7 @@ void node_impl::on_fetch_blockchain_item_ids_message(peer_connection* originatin
         dlog("sync: received a request for item ids after ${last_item_seen} from peer ${peer_endpoint} (full request: "
              "${synopsis})",
             ("last_item_seen", peers_last_item_hash_seen)("peer_endpoint", originating_peer->get_remote_endpoint())(
-                "synopsis", fetch_blockchain_item_ids_message_received.blockchain_synopsis));
+                 "synopsis", fetch_blockchain_item_ids_message_received.blockchain_synopsis));
         peers_last_item_seen.item_hash = peers_last_item_hash_seen;
     }
 
@@ -2439,8 +2444,8 @@ void node_impl::on_fetch_blockchain_item_ids_message(peer_connection* originatin
         dlog("sync: peer is out of sync, sending peer ${count} items ids: first: ${first_item_id}, last: "
              "${last_item_id}",
             ("count", reply_message.item_hashes_available.size())(
-                "first_item_id", reply_message.item_hashes_available.front())(
-                "last_item_id", reply_message.item_hashes_available.back()));
+                 "first_item_id", reply_message.item_hashes_available.front())(
+                 "last_item_id", reply_message.item_hashes_available.back()));
         if (!originating_peer->we_need_sync_items_from_peer
             && !fetch_blockchain_item_ids_message_received.blockchain_synopsis.empty()
             && !_delegate->has_item(peers_last_item_seen))
@@ -2566,7 +2571,7 @@ void node_impl::fetch_next_batch_of_item_ids_from_peer(
         dlog("sync: sending a request for the next items after ${last_item_seen} to peer ${peer}, (full request is "
              "${blockchain_synopsis})",
             ("last_item_seen", last_item_seen)("peer", peer->get_remote_endpoint())(
-                "blockchain_synopsis", blockchain_synopsis));
+                 "blockchain_synopsis", blockchain_synopsis));
         peer->item_ids_requested_from_peer = boost::make_tuple(blockchain_synopsis, fc::time_point::now());
         peer->send_message(fetch_blockchain_item_ids_message(_sync_item_type, blockchain_synopsis));
     }
@@ -2605,7 +2610,7 @@ void node_impl::on_blockchain_item_ids_inventory_message(peer_connection* origin
                          "the ${position}th block in their reply was block number ${actual_num}, "
                          "but it should have been number ${expected_num}",
                         ("peer_endpoint", originating_peer->get_remote_endpoint())("position", i)(
-                            "actual_num", actual_num)("expected_num", expected_num));
+                             "actual_num", actual_num)("expected_num", expected_num));
                     fc::exception error_for_peer(
                         FC_LOG_MESSAGE(error, "You gave an invalid response to my request for sync blocks.  The list "
                                               "of blocks you provided is not sequential, "
@@ -2650,7 +2655,7 @@ void node_impl::on_blockchain_item_ids_inventory_message(peer_connection* origin
                          "the synopsis ${synopsis}, but they "
                          "provided a list of blocks starting with ${first_block}",
                         ("peer_endpoint", originating_peer->get_remote_endpoint())(
-                            "synopsis", synopsis_sent_in_request)("first_block", first_item_hash));
+                             "synopsis", synopsis_sent_in_request)("first_block", first_item_hash));
                     fc::exception error_for_peer(
                         FC_LOG_MESSAGE(error, "You gave an invalid response for my request for sync blocks.  I asked "
                                               "for blocks following something in "
@@ -2672,7 +2677,7 @@ void node_impl::on_blockchain_item_ids_inventory_message(peer_connection* origin
         {
             dlog("sync: received a list of ${count} available items from ${peer_endpoint}",
                 ("count", blockchain_item_ids_inventory_message_received.item_hashes_available.size())(
-                    "peer_endpoint", originating_peer->get_remote_endpoint()));
+                     "peer_endpoint", originating_peer->get_remote_endpoint()));
             // for( const item_hash_t& item_hash : blockchain_item_ids_inventory_message_received.item_hashes_available
             // )
             //{
@@ -2718,7 +2723,7 @@ void node_impl::on_blockchain_item_ids_inventory_message(peer_connection* origin
                     {
                         dlog("The item ${newitem} is the first item for peer ${peer}",
                             ("newitem", blockchain_item_ids_inventory_message_received.item_hashes_available.front())(
-                                "peer", peer->get_remote_endpoint()));
+                                 "peer", peer->get_remote_endpoint()));
                         is_first_item_for_other_peer = true;
                         break;
                     }
@@ -2737,8 +2742,8 @@ void node_impl::on_blockchain_item_ids_inventory_message(peer_connection* origin
                         dlog("popping item because delegate has already seen it.  peer ${peer}'s last block the "
                              "delegate has seen is now ${block_id} (actual block #${actual_block_num})",
                             ("peer", originating_peer->get_remote_endpoint())(
-                                "block_id", originating_peer->last_block_delegate_has_seen)(
-                                "actual_block_num", _delegate->get_block_number(item_hashes_received.front())));
+                                 "block_id", originating_peer->last_block_delegate_has_seen)(
+                                 "actual_block_num", _delegate->get_block_number(item_hashes_received.front())));
 
                         item_hashes_received.pop_front();
                     }
@@ -2812,7 +2817,7 @@ void node_impl::on_blockchain_item_ids_inventory_message(peer_connection* origin
                                           "blocks offered: ${blocks}, Minimum time of the last block you offered: "
                                           "${minimum_time_of_last_offered_block}, Now: ${now}",
                         ("blocks", originating_peer->number_of_unfetched_item_ids)("minimum_time_of_last_offered_block",
-                            minimum_time_of_last_offered_block)("now", _delegate->get_blockchain_now())));
+                                       minimum_time_of_last_offered_block)("now", _delegate->get_blockchain_now())));
                 disconnect_from_peer(originating_peer,
                     "You offered me a list of more sync blocks than could possibly exist", true, error_for_peer);
                 return;
@@ -2908,7 +2913,7 @@ void node_impl::on_fetch_items_message(
     VERIFY_CORRECT_THREAD();
     dlog("received items request for ids ${ids} of type ${type} from peer ${endpoint}",
         ("ids", fetch_items_message_received.items_to_fetch)("type", fetch_items_message_received.item_type)(
-            "endpoint", originating_peer->get_remote_endpoint()));
+             "endpoint", originating_peer->get_remote_endpoint()));
 
     fc::optional<message> last_block_message_sent;
 
@@ -2937,7 +2942,7 @@ void node_impl::on_fetch_items_message(
             dlog("received item request from peer ${endpoint}, returning the item from delegate with id ${id} size "
                  "${size}",
                 ("id", requested_message.id())("size", requested_message.size)(
-                    "endpoint", originating_peer->get_remote_endpoint()));
+                     "endpoint", originating_peer->get_remote_endpoint()));
             reply_messages.push_back(requested_message);
             if (fetch_items_message_received.item_type == block_message_type)
                 last_block_message_sent = requested_message;
@@ -3017,7 +3022,7 @@ void node_impl::on_item_ids_inventory_message(
 
     dlog("received inventory of ${count} items from peer ${endpoint}",
         ("count", item_ids_inventory_message_received.item_hashes_available.size())(
-            "endpoint", originating_peer->get_remote_endpoint()));
+             "endpoint", originating_peer->get_remote_endpoint()));
     for (const item_hash_t& item_hash : item_ids_inventory_message_received.item_hashes_available)
     {
         if (_message_ids_currently_being_processed.find(item_hash) != _message_ids_currently_being_processed.end())
@@ -3098,23 +3103,23 @@ void node_impl::on_closing_connection_message(
     {
         elog("Peer ${peer} is disconnecting us because of an error: ${msg}, exception: ${error}",
             ("peer", originating_peer->get_remote_endpoint())(
-                "msg", closing_connection_message_received.reason_for_closing)(
-                "error", closing_connection_message_received.error));
+                 "msg", closing_connection_message_received.reason_for_closing)(
+                 "error", closing_connection_message_received.error));
         std::ostringstream message;
         message << "Peer " << fc::variant(originating_peer->get_remote_endpoint()).as_string()
                 << " disconnected us: " << closing_connection_message_received.reason_for_closing;
         fc::exception detailed_error(
             FC_LOG_MESSAGE(warn, "Peer ${peer} is disconnecting us because of an error: ${msg}, exception: ${error}",
                 ("peer", originating_peer->get_remote_endpoint())(
-                    "msg", closing_connection_message_received.reason_for_closing)(
-                    "error", closing_connection_message_received.error)));
+                               "msg", closing_connection_message_received.reason_for_closing)(
+                               "error", closing_connection_message_received.error)));
         _delegate->error_encountered(message.str(), detailed_error);
     }
     else
     {
         wlog("Peer ${peer} is disconnecting us because: ${msg}",
             ("peer", originating_peer->get_remote_endpoint())(
-                "msg", closing_connection_message_received.reason_for_closing));
+                 "msg", closing_connection_message_received.reason_for_closing));
     }
     if (originating_peer->we_have_requested_close)
         originating_peer->close_connection();
@@ -3237,11 +3242,11 @@ void node_impl::send_sync_block_to_node_delegate(const graphene::net::block_mess
                                          "fork older than our undo history would "
                                          "allow us to switch to: ${e}",
             ("block_num", block_message_to_send.block.block_num())("block_hash", block_message_to_send.block_id)(
-                "e", (fc::exception)e));
+                    "e", (fc::exception)e));
         wlog("Failed to push sync block ${num} (id:${id}): block is on a fork older than our undo history would "
              "allow us to switch to: ${e}",
             ("num", block_message_to_send.block.block_num())("id", block_message_to_send.block_id)(
-                "e", (fc::exception)e));
+                 "e", (fc::exception)e));
         handle_message_exception = e;
         discontinue_fetching_blocks_from_peer = true;
     }
@@ -3254,7 +3259,7 @@ void node_impl::send_sync_block_to_node_delegate(const graphene::net::block_mess
         fc_wlog(fc::logger::get("sync"),
             "p2p failed to push sync block #${block_num} ${block_hash}: client rejected sync block sent by peer: ${e}",
             ("block_num", block_message_to_send.block.block_num())("block_hash", block_message_to_send.block_id)(
-                "e", e));
+                    "e", e));
         wlog("Failed to push sync block ${num} (id:${id}): client rejected sync block sent by peer: ${e}",
             ("num", block_message_to_send.block.block_num())("id", block_message_to_send.block_id)("e", e));
         handle_message_exception = e;
@@ -3506,7 +3511,7 @@ void node_impl::process_backlog_of_sync_blocks()
                             dlog("Removed item from ${endpoint}'s list of items being processed, still processing "
                                  "${len} blocks",
                                 ("endpoint", peer->get_remote_endpoint())(
-                                    "len", peer->ids_of_items_being_processed.size()));
+                                     "len", peer->ids_of_items_being_processed.size()));
 
                             // if we just processed the last item in our list from this peer, we will want to
                             // send another request to find out if we are now in sync (this is normally handled in
@@ -3594,8 +3599,8 @@ void node_impl::process_block_during_normal_operation(peer_connection* originati
             fc_ilog(fc::logger::get("sync"),
                 "p2p pushing block #${block_num} ${block_hash} from ${peer} (message_id was ${id})",
                 ("block_num", block_message_to_process.block.block_num())(
-                    "block_hash", block_message_to_process.block_id)("peer", originating_peer->get_remote_endpoint())(
-                    "id", message_hash));
+                        "block_hash", block_message_to_process.block_id)(
+                        "peer", originating_peer->get_remote_endpoint())("id", message_hash));
             _delegate->handle_block(block_message_to_process, false, contained_transaction_message_ids);
             _message_ids_currently_being_processed.erase(message_hash);
             message_validated_time = fc::time_point::now();
@@ -3626,8 +3631,8 @@ void node_impl::process_block_during_normal_operation(peer_connection* originati
             fc_ilog(fc::logger::get("sync"),
                 "p2p NOT pushing block #${block_num} ${block_hash} from ${peer} because we recently pushed it",
                 ("block_num", block_message_to_process.block.block_num())(
-                    "block_hash", block_message_to_process.block_id)("peer", originating_peer->get_remote_endpoint())(
-                    "id", message_hash));
+                        "block_hash", block_message_to_process.block_id)(
+                        "peer", originating_peer->get_remote_endpoint())("id", message_hash));
             dlog("Already received and accepted this block (presumably through sync mechanism), treating it as "
                  "accepted");
         }
@@ -3803,11 +3808,11 @@ void node_impl::process_block_message(
         ("endpoint", originating_peer->get_remote_endpoint())("block_id", block_message_to_process.block_id));
     fc::exception detailed_error(
         FC_LOG_MESSAGE(error, "You sent me a block that I didn't ask for, block_id: ${block_id}",
-            ("block_id", block_message_to_process.block_id)(
-                "graphene_git_revision_sha", originating_peer->graphene_git_revision_sha)(
-                "graphene_git_revision_unix_timestamp", originating_peer->graphene_git_revision_unix_timestamp)(
-                "fc_git_revision_sha", originating_peer->fc_git_revision_sha)(
-                "fc_git_revision_unix_timestamp", originating_peer->fc_git_revision_unix_timestamp)));
+            ("block_id", block_message_to_process.block_id)("graphene_git_revision_sha",
+                           originating_peer->graphene_git_revision_sha)("graphene_git_revision_unix_timestamp",
+                           originating_peer->graphene_git_revision_unix_timestamp)(
+                           "fc_git_revision_sha", originating_peer->fc_git_revision_sha)(
+                           "fc_git_revision_unix_timestamp", originating_peer->fc_git_revision_unix_timestamp)));
     disconnect_from_peer(originating_peer, "You sent me a block that I didn't ask for", true, detailed_error);
 }
 
@@ -3833,7 +3838,7 @@ void node_impl::on_current_time_reply_message(
             / 2);
     originating_peer->round_trip_delay = (reply_received_time - current_time_reply_message_received.request_sent_time)
         - (current_time_reply_message_received.reply_transmitted_time
-              - current_time_reply_message_received.request_received_time);
+                                             - current_time_reply_message_received.request_received_time);
 }
 
 void node_impl::forward_firewall_check_to_next_available_peer(firewall_check_state_data* firewall_check_state)
@@ -3942,8 +3947,8 @@ void node_impl::on_check_firewall_reply_message(
         // we'll try another peer.
         wlog("Peer ${reporter} reports firewall check status ${status} for ${peer}",
             ("reporter", originating_peer->get_remote_endpoint())(
-                "status", check_firewall_reply_message_received.result)(
-                "peer", check_firewall_reply_message_received.endpoint_checked));
+                 "status", check_firewall_reply_message_received.result)(
+                 "peer", check_firewall_reply_message_received.endpoint_checked));
 
         if (check_firewall_reply_message_received.result == firewall_check_result::unable_to_connect
             || check_firewall_reply_message_received.result == firewall_check_result::connection_successful)
@@ -3989,7 +3994,7 @@ void node_impl::on_check_firewall_reply_message(
         // this is a reply to a firewall check we initiated.
         wlog("Firewall check we initiated has returned with result: ${result}, endpoint = ${endpoint}",
             ("result", check_firewall_reply_message_received.result)(
-                "endpoint", check_firewall_reply_message_received.endpoint_checked));
+                 "endpoint", check_firewall_reply_message_received.endpoint_checked));
         if (check_firewall_reply_message_received.result == firewall_check_result::connection_successful)
         {
             _is_firewalled = firewalled_state::not_firewalled;
@@ -4620,9 +4625,9 @@ void node_impl::connect_to_task(peer_connection_ptr new_peer, const fc::ip::endp
             reply.result = connect_failed_exception ? firewall_check_result::unable_to_connect
                                                     : firewall_check_result::connection_successful;
             wlog("firewall check of ${peer_checked} ${success_or_failure}, sending reply to ${requester}",
-                ("peer_checked", new_peer->get_remote_endpoint())(
-                    "success_or_failure", connect_failed_exception ? "failed" : "succeeded")(
-                    "requester", requesting_peer->get_remote_endpoint()));
+                ("peer_checked", new_peer->get_remote_endpoint())("success_or_failure", connect_failed_exception
+                         ? "failed"
+                         : "succeeded")("requester", requesting_peer->get_remote_endpoint()));
 
             requesting_peer->send_message(reply);
         }
@@ -4982,14 +4987,14 @@ void node_impl::dump_node_status()
     ilog(" number of peers: ${active} active, ${handshaking}, ${closing} closing.  attempting to maintain ${desired} - "
          "${maximum} peers",
         ("active", _active_connections.size())("handshaking", _handshaking_connections.size())(
-            "closing", _closing_connections.size())("desired", _desired_number_of_connections)(
-            "maximum", _maximum_number_of_connections));
+             "closing", _closing_connections.size())("desired", _desired_number_of_connections)(
+             "maximum", _maximum_number_of_connections));
     for (const peer_connection_ptr& peer : _active_connections)
     {
         ilog("       active peer ${endpoint} peer_is_in_sync_with_us:${in_sync_with_us} "
              "we_are_in_sync_with_peer:${in_sync_with_them}",
             ("endpoint", peer->get_remote_endpoint())("in_sync_with_us", !peer->peer_needs_sync_items_from_us)(
-                "in_sync_with_them", !peer->we_need_sync_items_from_peer));
+                 "in_sync_with_them", !peer->we_need_sync_items_from_peer));
         if (peer->we_need_sync_items_from_peer)
             ilog("              above peer has ${count} sync items we might need",
                 ("count", peer->ids_of_items_to_get.size()));
@@ -5680,14 +5685,14 @@ fc::variant_object statistics_gathering_node_delegate_wrapper::get_call_statisti
         return _node_delegate->method_name(__VA_ARGS__);                                                               \
     }                                                                                                                  \
     else                                                                                                               \
-        return _thread                                                                                                 \
-            ->async(                                                                                                   \
-                [&]() {                                                                                                \
-                    call_statistics_collector::actual_execution_measurement_helper helper(statistics_collector);       \
-                    return _node_delegate->method_name(__VA_ARGS__);                                                   \
-                },                                                                                                     \
-                "invoke " BOOST_STRINGIZE(method_name))                                                                \
-            .wait()
+    return _thread                                                                                                     \
+        ->async(                                                                                                       \
+            [&]() {                                                                                                    \
+                call_statistics_collector::actual_execution_measurement_helper helper(statistics_collector);           \
+                return _node_delegate->method_name(__VA_ARGS__);                                                       \
+            },                                                                                                         \
+            "invoke " BOOST_STRINGIZE(method_name))                                                                    \
+        .wait()
 #endif
 
 bool statistics_gathering_node_delegate_wrapper::has_item(const net::item_id& id)

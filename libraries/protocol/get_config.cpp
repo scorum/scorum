@@ -19,7 +19,7 @@ fc::variant_object get_config()
     result[ "IS_TEST_NET" ] = false;
 #endif
 
-// clang-format on
+    // clang-format on
 
     result["SCORUM_100_PERCENT"] = SCORUM_100_PERCENT;
     result["SCORUM_1_PERCENT"] = SCORUM_1_PERCENT;

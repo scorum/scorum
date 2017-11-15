@@ -40,9 +40,7 @@ struct escrow_transfer_apply_fixture : public clean_database_fixture
         op.escrow_expiration = db.head_block_time() + 200;
     }
 
-    ~escrow_transfer_apply_fixture()
-    {
-    }
+    ~escrow_transfer_apply_fixture() {}
 
     escrow_transfer_operation op;
 };
@@ -69,7 +67,8 @@ BOOST_AUTO_TEST_CASE(failure_when_from_cannot_cover_amount_plus_fee)
 
 BOOST_AUTO_TEST_CASE(failure_when_ratification_deadline_is_in_the_past)
 {
-    try {
+    try
+    {
         ACTORS((alice)(bob)(sam))
         fund("alice", 10000);
 
@@ -115,7 +114,7 @@ BOOST_AUTO_TEST_CASE(success_escrow_transfer_apply)
         op.escrow_expiration = db.head_block_time() + 200;
 
         signed_transaction tx;
-        tx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
+        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
 

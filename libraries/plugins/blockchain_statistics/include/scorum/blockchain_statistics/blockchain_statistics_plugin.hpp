@@ -119,9 +119,10 @@ struct by_id;
 struct by_bucket;
 typedef multi_index_container<bucket_object,
     indexed_by<ordered_unique<tag<by_id>, member<bucket_object, bucket_id_type, &bucket_object::id>>,
-        ordered_unique<tag<by_bucket>,
-            composite_key<bucket_object, member<bucket_object, uint32_t, &bucket_object::seconds>,
-                member<bucket_object, fc::time_point_sec, &bucket_object::open>>>>,
+                                  ordered_unique<tag<by_bucket>,
+                                      composite_key<bucket_object,
+                                                     member<bucket_object, uint32_t, &bucket_object::seconds>,
+                                                     member<bucket_object, fc::time_point_sec, &bucket_object::open>>>>,
     allocator<bucket_object>>
     bucket_index;
 }
@@ -129,12 +130,12 @@ typedef multi_index_container<bucket_object,
 
 FC_REFLECT(scorum::blockchain_statistics::bucket_object,
     (id)(open)(seconds)(blocks)(bandwidth)(operations)(transactions)(transfers)(scorum_transferred)(sbd_transferred)(
-        sbd_paid_as_interest)(paid_accounts_created)(mined_accounts_created)(root_comments)(root_comment_edits)(
-        root_comments_deleted)(replies)(reply_edits)(replies_deleted)(new_root_votes)(changed_root_votes)(
-        new_reply_votes)(changed_reply_votes)(payouts)(scr_paid_to_authors)(vests_paid_to_authors)(
-        vests_paid_to_curators)(transfers_to_vesting)(scorum_vested)(new_vesting_withdrawal_requests)(
-        modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(
-        finished_vesting_withdrawals)(vests_withdrawn)(vests_transferred)(sbd_conversion_requests_created)(
-        sbd_to_be_converted)(sbd_conversion_requests_filled)(scorum_converted)(limit_orders_created)(
-        limit_orders_filled)(limit_orders_cancelled)(total_pow)(estimated_hashpower))
+               sbd_paid_as_interest)(paid_accounts_created)(mined_accounts_created)(root_comments)(root_comment_edits)(
+               root_comments_deleted)(replies)(reply_edits)(replies_deleted)(new_root_votes)(changed_root_votes)(
+               new_reply_votes)(changed_reply_votes)(payouts)(scr_paid_to_authors)(vests_paid_to_authors)(
+               vests_paid_to_curators)(transfers_to_vesting)(scorum_vested)(new_vesting_withdrawal_requests)(
+               modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(
+               finished_vesting_withdrawals)(vests_withdrawn)(vests_transferred)(sbd_conversion_requests_created)(
+               sbd_to_be_converted)(sbd_conversion_requests_filled)(scorum_converted)(limit_orders_created)(
+               limit_orders_filled)(limit_orders_cancelled)(total_pow)(estimated_hashpower))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_statistics::bucket_object, scorum::blockchain_statistics::bucket_index)

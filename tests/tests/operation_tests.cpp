@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(creator_have_active_authority)
 
         op.get_required_active_authorities(authorities);
 
-        const flat_set<account_name_type> expected = {"alice"};
+        const flat_set<account_name_type> expected = { "alice" };
 
         BOOST_CHECK(authorities == expected);
     }
@@ -545,8 +545,8 @@ BOOST_AUTO_TEST_CASE(comment_apply)
 
         BOOST_TEST_MESSAGE("--- Test modifying a comment");
         const auto& mod_sam_comment = db.get_comment("sam", string("dolor"));
-//        const auto& mod_bob_comment = db.get_comment("bob", string("ipsum"));
-//        const auto& mod_alice_comment = db.get_comment("alice", string("lorem"));
+        //        const auto& mod_bob_comment = db.get_comment("bob", string("ipsum"));
+        //        const auto& mod_alice_comment = db.get_comment("alice", string("lorem"));
         fc::time_point_sec created = mod_sam_comment.created;
 
         db.modify(mod_sam_comment, [&](comment_object& com) {
@@ -918,7 +918,8 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             auto sam_weight /*= ( ( uint128_t( new_sam.vesting_shares.amount.value ) ) / 400 + 1 ).to_uint64();*/
                 = ((uint128_t(new_sam.vesting_shares.amount.value)
                        * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
-                    / SCORUM_100_PERCENT).to_uint64();
+                      / SCORUM_100_PERCENT)
+                      .to_uint64();
 
             BOOST_REQUIRE(new_sam.voting_power
                 == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)));
@@ -960,7 +961,8 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             db.push_transaction(tx, 0);
 
             auto new_rshares = ((fc::uint128_t(db.get_account("alice").vesting_shares.amount.value) * used_power)
-                / SCORUM_100_PERCENT).to_uint64();
+                                   / SCORUM_100_PERCENT)
+                                   .to_uint64();
 
             BOOST_REQUIRE(db.get_comment("alice", string("foo")).cashout_time
                 == db.get_comment("alice", string("foo")).created + SCORUM_CASHOUT_WINDOW_SECONDS);

@@ -202,9 +202,10 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
             {
                 try
                 {
-                    auto cutoff = fc::time_point_sec((safe<uint32_t>(db.head_block_time().sec_since_epoch())
-                        - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
-                                                         .value);
+                    auto cutoff = fc::time_point_sec(
+                        (safe<uint32_t>(db.head_block_time().sec_since_epoch())
+                            - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
+                            .value);
 
                     itr = bucket_idx.lower_bound(boost::make_tuple(bucket, fc::time_point_sec()));
 

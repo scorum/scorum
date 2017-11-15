@@ -124,8 +124,8 @@ struct book
 
 typedef multi_index_container<book,
     indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, author)>,
-        ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, name)>,
-        ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
+                                  ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, name)>,
+                                  ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
     bip::allocator<book, bip::managed_mapped_file::segment_manager>>
     book_container;
 
