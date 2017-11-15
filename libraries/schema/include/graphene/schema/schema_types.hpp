@@ -7,4 +7,3 @@
 #include <graphene/schema/schema_types/static_variant.hpp>
 #include <graphene/schema/schema_types/pair.hpp>
 #include <graphene/schema/schema_types/vector.hpp>
-

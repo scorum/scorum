@@ -1,93 +1,87 @@
 #include <scorum/chain/shared_authority.hpp>
 
-namespace scorum { namespace chain {
+namespace scorum {
+namespace chain {
 
-shared_authority::operator authority()const
+shared_authority::operator authority() const
 {
-   authority result;
+    authority result;
 
-   result.account_auths.reserve( account_auths.size() );
-   for( const auto& item : account_auths )
-      result.account_auths.insert( item );
+    result.account_auths.reserve(account_auths.size());
+    for (const auto& item : account_auths)
+        result.account_auths.insert(item);
 
-   result.key_auths.reserve( key_auths.size() );
-   for( const auto& item : key_auths )
-      result.key_auths.insert( item );
+    result.key_auths.reserve(key_auths.size());
+    for (const auto& item : key_auths)
+        result.key_auths.insert(item);
 
-   result.weight_threshold = weight_threshold;
+    result.weight_threshold = weight_threshold;
 
-   return result;
+    return result;
 }
 
-shared_authority& shared_authority::operator=( const authority& a )
+shared_authority& shared_authority::operator=(const authority& a)
 {
-   clear();
+    clear();
 
-   for( const auto& item : a.account_auths )
-      account_auths.insert( item );
+    for (const auto& item : a.account_auths)
+        account_auths.insert(item);
 
-   for( const auto& item : a.key_auths )
-      key_auths.insert( item );
+    for (const auto& item : a.key_auths)
+        key_auths.insert(item);
 
-   weight_threshold = a.weight_threshold;
+    weight_threshold = a.weight_threshold;
 
-   return *this;
+    return *this;
 }
 
-void shared_authority::add_authority( const public_key_type& k, weight_type w )
+void shared_authority::add_authority(const public_key_type& k, weight_type w) { key_auths[k] = w; }
+
+void shared_authority::add_authority(const account_name_type& k, weight_type w) { account_auths[k] = w; }
+
+vector<public_key_type> shared_authority::get_keys() const
 {
-   key_auths[k] = w;
+    vector<public_key_type> result;
+    result.reserve(key_auths.size());
+    for (const auto& k : key_auths)
+        result.push_back(k.first);
+    return result;
 }
 
-void shared_authority::add_authority( const account_name_type& k, weight_type w )
+bool shared_authority::is_impossible() const
 {
-   account_auths[k] = w;
+    uint64_t auth_weights = 0;
+    for (const auto& item : account_auths)
+        auth_weights += item.second;
+    for (const auto& item : key_auths)
+        auth_weights += item.second;
+    return auth_weights < weight_threshold;
 }
 
-vector<public_key_type> shared_authority::get_keys()const
+uint32_t shared_authority::num_auths() const { return account_auths.size() + key_auths.size(); }
+
+void shared_authority::clear()
 {
-   vector<public_key_type> result;
-   result.reserve( key_auths.size() );
-   for( const auto& k : key_auths )
-      result.push_back(k.first);
-   return result;
+    account_auths.clear();
+    key_auths.clear();
 }
 
-bool shared_authority::is_impossible()const
+void shared_authority::validate() const
 {
-   uint64_t auth_weights = 0;
-   for( const auto& item : account_auths ) auth_weights += item.second;
-   for( const auto& item : key_auths ) auth_weights += item.second;
-   return auth_weights < weight_threshold;
+    for (const auto& item : account_auths)
+    {
+        FC_ASSERT(protocol::is_valid_account_name(item.first));
+    }
 }
 
-uint32_t shared_authority::num_auths()const { return account_auths.size() + key_auths.size(); }
-
-void shared_authority::clear() { account_auths.clear(); key_auths.clear(); }
-
-void shared_authority::validate()const
+bool operator==(const shared_authority& a, const shared_authority& b)
 {
-   for( const auto& item : account_auths )
-   {
-      FC_ASSERT( protocol::is_valid_account_name( item.first ) );
-   }
+    return (a.weight_threshold == b.weight_threshold) && (a.account_auths == b.account_auths)
+        && (a.key_auths == b.key_auths);
 }
 
-bool operator == ( const shared_authority& a, const shared_authority& b )
-{
-   return ( a.weight_threshold == b.weight_threshold ) &&
-            ( a.account_auths  == b.account_auths )    &&
-            ( a.key_auths      == b.key_auths );
-}
+bool operator==(const authority& a, const shared_authority& b) { return a == authority(b); }
 
-bool operator == ( const authority& a, const shared_authority& b )
-{
-   return a == authority( b );
+bool operator==(const shared_authority& a, const authority& b) { return authority(a) == b; }
 }
-
-bool operator == ( const shared_authority& a, const authority& b )
-{
-   return authority( a ) == b;
-}
-
-} } // scorum::chain
+} // scorum::chain
