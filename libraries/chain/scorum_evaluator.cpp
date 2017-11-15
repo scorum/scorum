@@ -125,12 +125,12 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 {
     const auto& creator = _db.get_account(o.creator);
 
-    dbs_property &srv = _db.obtain_specific<dbs_property>();
-
-    const auto& props = _db.get_dynamic_global_properties();
+    //check creator balance
 
     FC_ASSERT(creator.balance >= o.fee, "Insufficient balance to create account.",
         ("creator.balance", creator.balance)("required", o.fee));
+
+    //check fee
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
     FC_ASSERT(o.fee >= asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
@@ -138,6 +138,8 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
         "Insufficient Fee: ${f} required, ${p} provided.",
         ("f", wso.median_props.account_creation_fee * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))(
             "p", o.fee));
+
+    //check accounts existence
 
     for (auto& a : o.owner.account_auths)
     {
@@ -154,42 +156,34 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
         _db.get_account(a.first);
     }
 
-    _db._temporary_public_impl().modify(creator, [&](account_object& c) { c.balance -= o.fee; });
+    //write in to DB
 
-    const auto& new_account = _db._temporary_public_impl().create<account_object>([&](account_object& acc) {
-        acc.name = o.new_account_name;
-        acc.memo_key = o.memo_key;
-        acc.created = props.time;
-        acc.last_vote_time = props.time;
-        acc.mined = false;
-
-        acc.recovery_account = o.creator;
-
-#ifndef IS_LOW_MEM
-        from_string(acc.json_metadata, o.json_metadata);
-#endif
-    });
-
-    _db._temporary_public_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = o.new_account_name;
-        auth.owner = o.owner;
-        auth.active = o.active;
-        auth.posting = o.posting;
-        auth.last_owner_update = fc::time_point_sec::min();
-    });
-
-    if (o.fee.amount > 0)
-        _db.create_vesting(new_account, o.fee);
+    dbs_account &db_account = _db.obtain_specific<dbs_account>();
+    db_account.write_account_creation_by_faucets(
+                o.new_account_name,
+                o.creator,
+                o.memo_key,
+                o.json_metadata,
+                o.owner,
+                o.active,
+                o.posting,
+                o.fee);
 }
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
 {
-    const auto& creator = _db.get_account(o.creator);
     const auto& props = _db.get_dynamic_global_properties();
+
+    const auto& creator = _db.get_account(o.creator);
+
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
+
+    //check creator balance
 
     FC_ASSERT(creator.balance >= o.fee, "Insufficient balance to create account.",
         ("creator.balance", creator.balance)("required", o.fee));
+
+    //check delegation fee
 
     FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares
                 - asset(creator.to_withdraw - creator.withdrawn, VESTS_SYMBOL)
@@ -215,7 +209,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     FC_ASSERT(o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
         ("f", wso.median_props.account_creation_fee)("p", o.fee));
 
-    // SCORUM: the same iterations
+    //check accounts existence
 
     for (auto& a : o.owner.account_auths)
     {
@@ -232,47 +226,17 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
         _db.get_account(a.first);
     }
 
-    _db._temporary_public_impl().modify(creator, [&](account_object& c) {
-        c.balance -= o.fee;
-        c.delegated_vesting_shares += o.delegation;
-    });
-
-    const auto& new_account = _db._temporary_public_impl().create<account_object>([&](account_object& acc) {
-        acc.name = o.new_account_name;
-        acc.memo_key = o.memo_key;
-        acc.created = props.time;
-        acc.last_vote_time = props.time;
-        acc.mined = false;
-
-        acc.recovery_account = o.creator;
-
-        acc.received_vesting_shares = o.delegation;
-
-#ifndef IS_LOW_MEM
-        from_string(acc.json_metadata, o.json_metadata);
-#endif
-    });
-
-    _db._temporary_public_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = o.new_account_name;
-        auth.owner = o.owner;
-        auth.active = o.active;
-        auth.posting = o.posting;
-        auth.last_owner_update = fc::time_point_sec::min();
-    });
-
-    if (o.delegation.amount > 0)
-    {
-        _db._temporary_public_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vdo) {
-            vdo.delegator = o.creator;
-            vdo.delegatee = o.new_account_name;
-            vdo.vesting_shares = o.delegation;
-            vdo.min_delegation_time = _db.head_block_time() + SCORUM_CREATE_ACCOUNT_DELEGATION_TIME;
-        });
-    }
-
-    if (o.fee.amount > 0)
-        _db.create_vesting(new_account, o.fee);
+    dbs_account &db_account = _db.obtain_specific<dbs_account>();
+    db_account.write_account_creation_with_delegation(
+                o.new_account_name,
+                o.creator,
+                o.memo_key,
+                o.json_metadata,
+                o.owner,
+                o.active,
+                o.posting,
+                o.fee,
+                o.delegation);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)

@@ -7,12 +7,11 @@
 
 #include <boost/variant.hpp>
 
-#include <scorum/chain/global_property_object.hpp>
-#include <scorum/chain/custom_operation_interpreter.hpp>
+#include <scorum/chain/dbservice_common.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_property.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+//TODO: ...
 
 namespace chainbase
 {
@@ -22,22 +21,11 @@ class database; //for _temporary_public_imp only
 namespace scorum {
 namespace chain {
 
-    using scorum::protocol::authority;
-    using scorum::protocol::asset;
-    using scorum::protocol::asset_symbol_type;
-    using scorum::protocol::price;
-
-    class witness_object;
-    class account_object;
-    class comment_object;
-    class escrow_object;
-
     class dbservice
     {
 
         typedef  boost::variant<
         dbs_account::ptr,
-        dbs_property::ptr,
         dbs_witness::ptr> _dbs_type;
 
     protected:

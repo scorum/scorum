@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <scorum/chain/dbservice_common.hpp>
+
 namespace scorum {
 namespace chain {
 

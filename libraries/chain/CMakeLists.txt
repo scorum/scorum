@@ -25,7 +25,6 @@ add_library( scorum_chain
 
              dbservice.cpp
              dbs_account.cpp
-             dbs_property.cpp
              dbs_witness.cpp
 
              scorum_evaluator.cpp
