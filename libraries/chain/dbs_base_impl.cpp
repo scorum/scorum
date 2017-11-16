@@ -11,13 +11,24 @@ dbs_base::dbs_base(database& db)
 {
 }
 
-dbs_base::~dbs_base() {}
+dbs_base::~dbs_base()
+{
+}
 
-dbservice& dbs_base::db() { return static_cast<dbservice&>(_db_core); }
+dbservice& dbs_base::db()
+{
+    return static_cast<dbservice&>(_db_core);
+}
 
-database& dbs_base::db_impl() { return _db_core; }
+database& dbs_base::db_impl()
+{
+    return _db_core;
+}
 
-const database& dbs_base::db_impl() const { return _db_core; }
+const database& dbs_base::db_impl() const
+{
+    return _db_core;
+}
 
 // dbservice
 
@@ -26,6 +37,8 @@ dbservice_dbs_factory::dbservice_dbs_factory(database& db)
 {
 }
 
-dbservice_dbs_factory::~dbservice_dbs_factory() {}
+dbservice_dbs_factory::~dbservice_dbs_factory()
+{
+}
 }
 }

@@ -51,7 +51,7 @@ inline void validate_permlink_0_1(const string& permlink)
         case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': case '0':
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
         case '-':
-        // clang-format on
+            // clang-format on
             break;
         default:
             FC_ASSERT(false, "Invalid permlink character: ${s}", ("s", std::string() + c));
@@ -129,8 +129,8 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     // write in to DB
 
-    accountService.create_account_by_faucets(
-        o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active, o.posting, o.fee);
+    accountService.create_account_by_faucets(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+                                             o.active, o.posting, o.fee);
 }
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
@@ -183,8 +183,8 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     accountService.check_account_existence(o.posting.account_auths);
 
-    accountService.create_account_with_delegation(
-        o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active, o.posting, o.fee, o.delegation);
+    accountService.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+                                                  o.active, o.posting, o.fee, o.delegation);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -402,7 +402,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
             if (o.parent_author != SCORUM_ROOT_POST_PARENT)
             {
                 FC_ASSERT(_db._temporary_public_impl().get(parent->root_comment).allow_replies,
-                    "The parent comment has disabled replies.");
+                          "The parent comment has disabled replies.");
             }
 
             if (o.parent_author == SCORUM_ROOT_POST_PARENT)
@@ -1103,8 +1103,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     c.net_votes--;
             });
 
-            _db._temporary_public_impl().modify(
-                root, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            _db._temporary_public_impl().modify(root,
+                                                [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
 
@@ -1170,8 +1170,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             if (max_vote_weight) // Optimization
             {
-                _db._temporary_public_impl().modify(
-                    comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
+                _db._temporary_public_impl().modify(comment,
+                                                    [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
             }
         }
         else
@@ -1222,8 +1222,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     c.net_votes -= 2;
             });
 
-            _db._temporary_public_impl().modify(
-                root, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            _db._temporary_public_impl().modify(root,
+                                                [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
 
@@ -1231,8 +1231,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
             new_rshares = util::evaluate_reward_curve(new_rshares);
             old_rshares = util::evaluate_reward_curve(old_rshares);
 
-            _db._temporary_public_impl().modify(
-                comment, [&](comment_object& c) { c.total_vote_weight -= itr->weight; });
+            _db._temporary_public_impl().modify(comment,
+                                                [&](comment_object& c) { c.total_vote_weight -= itr->weight; });
 
             _db._temporary_public_impl().modify(*itr, [&](comment_vote_object& cv) {
                 cv.rshares = rshares;
@@ -1317,7 +1317,7 @@ void request_account_recovery_evaluator::do_apply(const request_account_recovery
                   "Cannot recover an account that does not have you as there recovery partner.");
     else // Empty string recovery account defaults to top witness
         FC_ASSERT(_db._temporary_public_impl().get_index<witness_index>().indices().get<by_vote_name>().begin()->owner
-                == o.recovery_account,
+                      == o.recovery_account,
                   "Top witness must recover an account with no recovery partner.");
 
     const auto& recovery_request_idx
@@ -1388,8 +1388,8 @@ void recover_account_evaluator::do_apply(const recover_account_operation& o)
 
     _db._temporary_public_impl().remove(*request); // Remove first, update_owner_authority may invalidate iterator
     accountService.update_owner_authority(account, o.new_owner_authority);
-    _db._temporary_public_impl().modify(
-        account, [&](account_object& a) { a.last_account_recovery = _db.head_block_time(); });
+    _db._temporary_public_impl().modify(account,
+                                        [&](account_object& a) { a.last_account_recovery = _db.head_block_time(); });
 }
 
 void change_recovery_account_evaluator::do_apply(const change_recovery_account_operation& o)
@@ -1527,8 +1527,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         _db._temporary_public_impl().modify(
             delegator, [&](account_object& a) { a.delegated_vesting_shares += op.vesting_shares; });
 
-        _db._temporary_public_impl().modify(
-            delegatee, [&](account_object& a) { a.received_vesting_shares += op.vesting_shares; });
+        _db._temporary_public_impl().modify(delegatee,
+                                            [&](account_object& a) { a.received_vesting_shares += op.vesting_shares; });
     }
     // Else if the delegation is increasing
     else if (op.vesting_shares >= delegation->vesting_shares)

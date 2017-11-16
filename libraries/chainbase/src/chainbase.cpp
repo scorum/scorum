@@ -141,7 +141,10 @@ void database::wipe(const bfs::path& dir)
     _index_map.clear();
 }
 
-void database::set_require_locking(bool enable_require_locking) { _enable_require_locking = enable_require_locking; }
+void database::set_require_locking(bool enable_require_locking)
+{
+    _enable_require_locking = enable_require_locking;
+}
 
 void database::require_lock_fail(const char* method, const char* lock_type, const char* tname) const
 {

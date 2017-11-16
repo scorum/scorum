@@ -12,8 +12,13 @@ dbs_account::dbs_account(database& db)
 }
 
 void dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
-    const account_name_type& creator_name, const public_key_type& memo_key, const string& json_metadata,
-    const authority& owner, const authority& active, const authority& posting, const asset& fee)
+                                            const account_name_type& creator_name,
+                                            const public_key_type& memo_key,
+                                            const string& json_metadata,
+                                            const authority& owner,
+                                            const authority& active,
+                                            const authority& posting,
+                                            const asset& fee)
 {
     const auto& props = db_impl().get_dynamic_global_properties();
     const auto& creator = db_impl().get_account(creator_name);
@@ -47,9 +52,14 @@ void dbs_account::create_account_by_faucets(const account_name_type& new_account
 }
 
 void dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
-    const account_name_type& creator_name, const public_key_type& memo_key, const string& json_metadata,
-    const authority& owner, const authority& active, const authority& posting, const asset& fee,
-    const asset& delegation)
+                                                 const account_name_type& creator_name,
+                                                 const public_key_type& memo_key,
+                                                 const string& json_metadata,
+                                                 const authority& owner,
+                                                 const authority& active,
+                                                 const authority& posting,
+                                                 const asset& fee,
+                                                 const asset& delegation)
 {
     const auto& props = db_impl().get_dynamic_global_properties();
     const auto& creator = db_impl().get_account(creator_name);
@@ -113,7 +123,7 @@ void dbs_account::check_account_existence(const account_name_type& name) const
 
 void dbs_account::check_account_existence(const account_authority_map& names) const
 {
-    for (const auto &a : names)
+    for (const auto& a : names)
     {
         check_account_existence(a.first);
     }
@@ -130,11 +140,11 @@ void dbs_account::update_owner_authority(const account_object& account, const au
         });
     }
 
-    db_impl().modify(
-        db_impl().get<account_authority_object, by_account>(account.name), [&](account_authority_object& auth) {
-            auth.owner = owner_authority;
-            auth.last_owner_update = db_impl().head_block_time();
-        });
+    db_impl().modify(db_impl().get<account_authority_object, by_account>(account.name),
+                     [&](account_authority_object& auth) {
+                         auth.owner = owner_authority;
+                         auth.last_owner_update = db_impl().head_block_time();
+                     });
 }
 
 void dbs_account::prove_authority(const account_object& challenged, bool require_owner)
@@ -149,6 +159,5 @@ void dbs_account::prove_authority(const account_object& challenged, bool require
         }
     });
 }
-
 }
 }
