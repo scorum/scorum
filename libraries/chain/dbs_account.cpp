@@ -116,16 +116,49 @@ const account_object& dbs_account::get_account(const account_name_type& name) co
     FC_CAPTURE_AND_RETHROW((name))
 }
 
-void dbs_account::check_account_existence(const account_name_type& name) const
+const account_authority_object& dbs_account::get_account_authority(const account_name_type& name) const
 {
-    get_account(name);
+    try
+    {
+        return db_impl().get<account_authority_object, by_account>(name);
+    }
+    FC_CAPTURE_AND_RETHROW((name))
 }
 
-void dbs_account::check_account_existence(const account_authority_map& names) const
+void dbs_account::update_acount(const account_object& account,
+    const account_authority_object& account_authority,
+                   const public_key_type& memo_key,
+                   const string& json_metadata,
+                    const optional<authority> &owner,
+                    const optional<authority> &active,
+                    const optional<authority> &posting)
 {
-    for (const auto& a : names)
+    db_impl().modify(account, [&](account_object& acc) {
+        if (memo_key != public_key_type())
+            acc.memo_key = memo_key;
+
+        if ((active || owner) && acc.active_challenged)
+        {
+            acc.active_challenged = false;
+            acc.last_active_proved = db_impl().head_block_time();
+        }
+
+        acc.last_account_update = db_impl().head_block_time();
+
+#ifndef IS_LOW_MEM
+        if (json_metadata.size() > 0)
+            from_string(acc.json_metadata, json_metadata);
+#endif
+    });
+
+    if (active || posting)
     {
-        check_account_existence(a.first);
+        db_impl().modify(account_authority, [&](account_authority_object& auth) {
+            if (active)
+                auth.active = *active;
+            if (posting)
+                auth.posting = *posting;
+        });
     }
 }
 
@@ -145,6 +178,19 @@ void dbs_account::update_owner_authority(const account_object& account, const au
                          auth.owner = owner_authority;
                          auth.last_owner_update = db_impl().head_block_time();
                      });
+}
+
+void dbs_account::check_account_existence(const account_name_type& name) const
+{
+    get_account(name);
+}
+
+void dbs_account::check_account_existence(const account_authority_map& names) const
+{
+    for (const auto& a : names)
+    {
+        check_account_existence(a.first);
+    }
 }
 
 void dbs_account::prove_authority(const account_object& challenged, bool require_owner)

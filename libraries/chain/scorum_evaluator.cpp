@@ -195,7 +195,7 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     dbs_account& accountService = _db.obtain_service<dbs_account>();
 
     const auto& account = accountService.get_account(o.account);
-    const auto& account_auth = _db._temporary_public_impl().get<account_authority_object, by_account>(o.account);
+    const auto& account_auth = accountService.get_account_authority(o.account);
 
     if (o.owner)
     {
@@ -218,33 +218,7 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
         accountService.check_account_existence(o.posting->account_auths);
     }
 
-    _db._temporary_public_impl().modify(account, [&](account_object& acc) {
-        if (o.memo_key != public_key_type())
-            acc.memo_key = o.memo_key;
-
-        if ((o.active || o.owner) && acc.active_challenged)
-        {
-            acc.active_challenged = false;
-            acc.last_active_proved = _db.head_block_time();
-        }
-
-        acc.last_account_update = _db.head_block_time();
-
-#ifndef IS_LOW_MEM
-        if (o.json_metadata.size() > 0)
-            from_string(acc.json_metadata, o.json_metadata);
-#endif
-    });
-
-    if (o.active || o.posting)
-    {
-        _db._temporary_public_impl().modify(account_auth, [&](account_authority_object& auth) {
-            if (o.active)
-                auth.active = *o.active;
-            if (o.posting)
-                auth.posting = *o.posting;
-        });
-    }
+    accountService.update_acount(account, account_auth, o.memo_key, o.json_metadata, o.owner, o.active, o.posting);
 }
 
 /**
