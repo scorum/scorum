@@ -96,7 +96,7 @@ struct strcmp_equal
 
 void witness_update_evaluator::do_apply(const witness_update_operation& o)
 {
-    _db.obtain_specific<dbs_account>().check_account_existence(o.owner);
+    _db.obtain_service<dbs_account>().check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
     FC_ASSERT(o.props.account_creation_fee.symbol == SCORUM_SYMBOL);
@@ -125,7 +125,7 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
 
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
-    dbs_account& accountService = _db.obtain_specific<dbs_account>();
+    dbs_account& accountService = _db.obtain_service<dbs_account>();
 
     const auto& creator = accountService.get_account(o.creator);
 
@@ -170,7 +170,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     const auto& props = _db.get_dynamic_global_properties();
 
-    dbs_account& accountService = _db.obtain_specific<dbs_account>();
+    dbs_account& accountService = _db.obtain_service<dbs_account>();
 
     const auto& creator = accountService.get_account(o.creator);
 

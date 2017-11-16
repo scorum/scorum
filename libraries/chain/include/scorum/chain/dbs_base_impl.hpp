@@ -54,7 +54,7 @@ protected:
 public:
 
     template <typename ConcreteService>
-    ConcreteService &obtain_specific()
+    ConcreteService &obtain_service()
     {
         auto it = _dbs.find(typeid(ConcreteService).name());
         if (BOOST_UNLIKELY(it == _dbs.end()))
