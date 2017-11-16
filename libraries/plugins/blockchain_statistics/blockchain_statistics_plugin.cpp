@@ -22,7 +22,9 @@ public:
         : _self(plugin)
     {
     }
-    virtual ~blockchain_statistics_plugin_impl() {}
+    virtual ~blockchain_statistics_plugin_impl()
+    {
+    }
 
     void on_block(const signed_block& b);
     void pre_operation(const operation_notification& o);
@@ -49,7 +51,9 @@ struct operation_process
 
     typedef void result_type;
 
-    template <typename T> void operator()(const T&) const {}
+    template <typename T> void operator()(const T&) const
+    {
+    }
 
     void operator()(const transfer_operation& op) const
     {
@@ -201,9 +205,10 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
             {
                 try
                 {
-                    auto cutoff = fc::time_point_sec((safe<uint32_t>(db.head_block_time().sec_since_epoch())
-                        - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
-                                                         .value);
+                    auto cutoff = fc::time_point_sec(
+                        (safe<uint32_t>(db.head_block_time().sec_since_epoch())
+                         - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
+                            .value);
 
                     itr = bucket_idx.lower_bound(boost::make_tuple(bucket, fc::time_point_sec()));
 
@@ -307,16 +312,19 @@ blockchain_statistics_plugin::blockchain_statistics_plugin(application* app)
 {
 }
 
-blockchain_statistics_plugin::~blockchain_statistics_plugin() {}
-
-void blockchain_statistics_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+blockchain_statistics_plugin::~blockchain_statistics_plugin()
 {
-    cli.add_options()("chain-stats-bucket-size",
+}
+
+void blockchain_statistics_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                                              boost::program_options::options_description& cfg)
+{
+    cli.add_options()(
+        "chain-stats-bucket-size",
         boost::program_options::value<string>()->default_value("[60,3600,21600,86400,604800,2592000]"),
         "Track blockchain statistics by grouping orders into buckets of equal size measured in seconds specified as a "
-        "JSON array of numbers")("chain-stats-history-per-bucket",
-        boost::program_options::value<uint32_t>()->default_value(100),
+        "JSON array of numbers")(
+        "chain-stats-history-per-bucket", boost::program_options::value<uint32_t>()->default_value(100),
         "How far back in time to track history for each bucket size, measured in the number of buckets (default: 100)");
     cfg.add(cli);
 }
@@ -359,7 +367,10 @@ void blockchain_statistics_plugin::plugin_startup()
     ilog("chain_stats plugin: plugin_startup() end");
 }
 
-const flat_set<uint32_t>& blockchain_statistics_plugin::get_tracked_buckets() const { return _my->_tracked_buckets; }
+const flat_set<uint32_t>& blockchain_statistics_plugin::get_tracked_buckets() const
+{
+    return _my->_tracked_buckets;
+}
 
 uint32_t blockchain_statistics_plugin::get_max_history_per_bucket() const
 {

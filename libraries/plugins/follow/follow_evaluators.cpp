@@ -199,7 +199,7 @@ void reblog_evaluator::do_apply(const reblog_operation& o)
                     auto old_feed = old_feed_idx.lower_bound(itr->follower);
 
                     while (old_feed->account == itr->follower
-                        && next_id - old_feed->account_feed_id > _plugin->max_feed_size)
+                           && next_id - old_feed->account_feed_id > _plugin->max_feed_size)
                     {
                         _db._temporary_public_impl().remove(*old_feed);
                         old_feed = old_feed_idx.lower_bound(itr->follower);

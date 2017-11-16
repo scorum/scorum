@@ -55,17 +55,23 @@ message peer_connection::real_queued_message::get_message(peer_connection_delega
         std::vector<char> packed_current_time = fc::raw::pack(fc::time_point::now());
         assert(message_send_time_field_offset + packed_current_time.size() <= message_to_send.data.size());
         memcpy(message_to_send.data.data() + message_send_time_field_offset, packed_current_time.data(),
-            packed_current_time.size());
+               packed_current_time.size());
     }
     return message_to_send;
 }
-size_t peer_connection::real_queued_message::get_size_in_queue() { return message_to_send.data.size(); }
+size_t peer_connection::real_queued_message::get_size_in_queue()
+{
+    return message_to_send.data.size();
+}
 message peer_connection::virtual_queued_message::get_message(peer_connection_delegate* node)
 {
     return node->get_message_for_item(item_to_send);
 }
 
-size_t peer_connection::virtual_queued_message::get_size_in_queue() { return sizeof(item_id); }
+size_t peer_connection::virtual_queued_message::get_size_in_queue()
+{
+    return sizeof(item_id);
+}
 
 peer_connection::peer_connection(peer_connection_delegate* delegate)
     : _node(delegate)
@@ -190,8 +196,14 @@ void peer_connection::accept_connection()
 
     struct scope_logger
     {
-        scope_logger() { dlog("entering peer_connection::accept_connection()"); }
-        ~scope_logger() { dlog("leaving peer_connection::accept_connection()"); }
+        scope_logger()
+        {
+            dlog("entering peer_connection::accept_connection()");
+        }
+        ~scope_logger()
+        {
+            dlog("leaving peer_connection::accept_connection()");
+        }
     } accept_connection_scope_logger;
 
     try
@@ -213,7 +225,7 @@ void peer_connection::accept_connection()
         their_state = their_connection_state::just_connected;
         our_state = our_connection_state::just_connected;
         ilog("established inbound connection from ${remote_endpoint}, sending hello",
-            ("remote_endpoint", _message_connection.get_socket().remote_endpoint()));
+             ("remote_endpoint", _message_connection.get_socket().remote_endpoint()));
     }
     catch (const fc::exception& e)
     {
@@ -249,7 +261,7 @@ void peer_connection::connect_to(const fc::ip::endpoint& remote_endpoint, fc::op
             {
                 wlog("Failed to bind to desired local endpoint ${endpoint}, will connect using an OS-selected "
                      "endpoint: ${except}",
-                    ("endpoint", *local_endpoint)("except", except));
+                     ("endpoint", *local_endpoint)("except", except));
             }
         }
         negotiation_status = connection_negotiation_status::connecting;
@@ -262,7 +274,7 @@ void peer_connection::connect_to(const fc::ip::endpoint& remote_endpoint, fc::op
     catch (fc::exception& e)
     {
         elog("fatal: error connecting to peer ${remote_endpoint}: ${e}",
-            ("remote_endpoint", remote_endpoint)("e", e.to_detail_string()));
+             ("remote_endpoint", remote_endpoint)("e", e.to_detail_string()));
         throw;
     }
 } // connect_to()
@@ -271,7 +283,10 @@ void peer_connection::on_message(message_oriented_connection* originating_connec
 {
     VERIFY_CORRECT_THREAD();
     _currently_handling_message = true;
-    BOOST_SCOPE_EXIT(this_) { this_->_currently_handling_message = false; }
+    BOOST_SCOPE_EXIT(this_)
+    {
+        this_->_currently_handling_message = false;
+    }
     BOOST_SCOPE_EXIT_END
     _node->on_message(this, received_message);
 }
@@ -358,7 +373,7 @@ void peer_connection::send_queueable_message(std::unique_ptr<queued_message>&& m
     if (_total_queued_messages_size > GRAPHENE_NET_MAXIMUM_QUEUED_MESSAGES_IN_BYTES)
     {
         elog("send queue exceeded maximum size of ${max} bytes (current size ${current} bytes)",
-            ("max", GRAPHENE_NET_MAXIMUM_QUEUED_MESSAGES_IN_BYTES)("current", _total_queued_messages_size));
+             ("max", GRAPHENE_NET_MAXIMUM_QUEUED_MESSAGES_IN_BYTES)("current", _total_queued_messages_size));
         try
         {
             close_connection();
@@ -492,8 +507,8 @@ fc::sha512 peer_connection::get_shared_secret() const
 void peer_connection::clear_old_inventory()
 {
     VERIFY_CORRECT_THREAD();
-    fc::time_point_sec oldest_inventory_to_keep(
-        fc::time_point::now() - fc::minutes(GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES));
+    fc::time_point_sec oldest_inventory_to_keep(fc::time_point::now()
+                                                - fc::minutes(GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES));
 
     // expire old items from inventory_advertised_to_peer
     auto oldest_inventory_to_keep_iter
@@ -511,9 +526,10 @@ void peer_connection::clear_old_inventory()
     inventory_peer_advertised_to_us.get<timestamp_index>().erase(begin_iter, oldest_inventory_to_keep_iter);
     dlog("Expiring old inventory for peer ${peer}: removing ${to_peer} items advertised to peer (${remain_to_peer} "
          "left), and ${to_us} advertised to us (${remain_to_us} left)",
-        ("peer", get_remote_endpoint())("to_peer", number_of_elements_advertised_to_peer_to_discard)("remain_to_peer",
-            inventory_advertised_to_peer.size())("to_us", number_of_elements_peer_advertised_to_discard)(
-            "remain_to_us", inventory_peer_advertised_to_us.size()));
+         ("peer", get_remote_endpoint())("to_peer", number_of_elements_advertised_to_peer_to_discard)(
+             "remain_to_peer", inventory_advertised_to_peer.size())(
+             "to_us", number_of_elements_peer_advertised_to_discard)("remain_to_us",
+                                                                     inventory_peer_advertised_to_us.size()));
 }
 
 // we have a higher limit for blocks than transactions so we will still fetch blocks even when transactions are

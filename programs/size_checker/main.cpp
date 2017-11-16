@@ -92,10 +92,10 @@ int main(int argc, char** argv)
         }
 
         // sort them by mem size
-        std::stable_sort(
-            g_op_types.begin(), g_op_types.end(), [](const fc::variant_object& oa, const fc::variant_object& ob) {
-                return oa["mem_size"].as_uint64() > ob["mem_size"].as_uint64();
-            });
+        std::stable_sort(g_op_types.begin(), g_op_types.end(),
+                         [](const fc::variant_object& oa, const fc::variant_object& ob) {
+                             return oa["mem_size"].as_uint64() > ob["mem_size"].as_uint64();
+                         });
         std::cout << "[\n";
         for (size_t i = 0; i < g_op_types.size(); i++)
         {

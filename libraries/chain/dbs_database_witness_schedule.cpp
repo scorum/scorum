@@ -58,7 +58,7 @@ void database::_update_median_witness_props()
     });
 
     _db.modify(_db.get_dynamic_global_properties(),
-        [&](dynamic_global_property_object& _dgpo) { _dgpo.maximum_block_size = median_maximum_block_size; });
+               [&](dynamic_global_property_object& _dgpo) { _dgpo.maximum_block_size = median_maximum_block_size; });
 }
 
 /**
@@ -145,9 +145,9 @@ void database::update_witness_schedule()
 
         size_t expected_active_witnesses = std::min(size_t(SCORUM_MAX_WITNESSES), widx.size());
         FC_ASSERT(active_witnesses.size() == expected_active_witnesses,
-            "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
-            ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
-                "expected_active_witnesses", expected_active_witnesses));
+                  "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
+                  ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
+                      "expected_active_witnesses", expected_active_witnesses));
 
         auto majority_version = wso.majority_version;
 
@@ -213,7 +213,7 @@ void database::update_witness_schedule()
         if (hf_itr == hardfork_version_votes.end())
         {
             _db.modify(_db.get_hardfork_property_object(),
-                [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
+                       [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
         }
 
         assert(num_elected + num_timeshare == active_witnesses.size());

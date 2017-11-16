@@ -35,9 +35,15 @@ shared_authority& shared_authority::operator=(const authority& a)
     return *this;
 }
 
-void shared_authority::add_authority(const public_key_type& k, weight_type w) { key_auths[k] = w; }
+void shared_authority::add_authority(const public_key_type& k, weight_type w)
+{
+    key_auths[k] = w;
+}
 
-void shared_authority::add_authority(const account_name_type& k, weight_type w) { account_auths[k] = w; }
+void shared_authority::add_authority(const account_name_type& k, weight_type w)
+{
+    account_auths[k] = w;
+}
 
 vector<public_key_type> shared_authority::get_keys() const
 {
@@ -58,7 +64,10 @@ bool shared_authority::is_impossible() const
     return auth_weights < weight_threshold;
 }
 
-uint32_t shared_authority::num_auths() const { return account_auths.size() + key_auths.size(); }
+uint32_t shared_authority::num_auths() const
+{
+    return account_auths.size() + key_auths.size();
+}
 
 void shared_authority::clear()
 {
@@ -80,8 +89,14 @@ bool operator==(const shared_authority& a, const shared_authority& b)
         && (a.key_auths == b.key_auths);
 }
 
-bool operator==(const authority& a, const shared_authority& b) { return a == authority(b); }
+bool operator==(const authority& a, const shared_authority& b)
+{
+    return a == authority(b);
+}
 
-bool operator==(const shared_authority& a, const authority& b) { return authority(a) == b; }
+bool operator==(const shared_authority& a, const authority& b)
+{
+    return authority(a) == b;
+}
 }
 } // scorum::chain

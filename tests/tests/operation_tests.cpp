@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(creator_have_active_authority)
 
         op.get_required_active_authorities(authorities);
 
-        const flat_set<account_name_type> expected = {"alice"};
+        const flat_set<account_name_type> expected = { "alice" };
 
         BOOST_CHECK(authorities == expected);
     }
@@ -169,8 +169,9 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_TEST_MESSAGE("--- Test failure covering witness fee");
         generate_block();
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                [&](witness_schedule_object& wso) { wso.median_props.account_creation_fee = ASSET("10.000 TESTS"); });
+            db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& wso) {
+                wso.median_props.account_creation_fee = ASSET("10.000 TESTS");
+            });
         });
         generate_block();
 
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(account_update_authorities)
         private_key_type active_key = generate_private_key("new_key");
 
         db.modify(db.get<account_authority_object, by_account>("alice"),
-            [&](account_authority_object& a) { a.active = authority(1, active_key.get_public_key(), 1); });
+                  [&](account_authority_object& a) { a.active = authority(1, active_key.get_public_key(), 1); });
 
         account_update_operation op;
         op.account = "alice";
@@ -465,7 +466,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         BOOST_REQUIRE(alice_comment.net_rshares.value == 0);
         BOOST_REQUIRE(alice_comment.abs_rshares.value == 0);
         BOOST_REQUIRE(alice_comment.cashout_time
-            == fc::time_point_sec(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)));
+                      == fc::time_point_sec(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)));
 
 #ifndef IS_LOW_MEM
         BOOST_REQUIRE(to_string(alice_comment.title) == op.title);
@@ -812,14 +813,16 @@ BOOST_AUTO_TEST_CASE(vote_apply)
                 = (db.get_dynamic_global_properties().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
                 / (60 * 60 * 24);
 
-            BOOST_REQUIRE(
-                alice.voting_power == old_voting_power - ((old_voting_power + max_vote_denom - 1) / max_vote_denom));
+            BOOST_REQUIRE(alice.voting_power
+                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) / max_vote_denom));
             BOOST_REQUIRE(alice.last_vote_time == db.head_block_time());
             BOOST_REQUIRE(alice_comment.net_rshares.value
-                == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power) / SCORUM_100_PERCENT);
+                          == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power)
+                              / SCORUM_100_PERCENT);
             BOOST_REQUIRE(alice_comment.cashout_time == alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
             BOOST_REQUIRE(itr->rshares
-                == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power) / SCORUM_100_PERCENT);
+                          == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power)
+                              / SCORUM_100_PERCENT);
             BOOST_REQUIRE(itr != vote_idx.end());
             validate_database();
 
@@ -853,11 +856,11 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             itr = vote_idx.find(std::make_tuple(bob_comment.id, alice.id));
 
             BOOST_REQUIRE(db.get_account("alice").voting_power
-                == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
-                                          / (2 * max_vote_denom * SCORUM_100_PERCENT)));
+                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
+                                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
             BOOST_REQUIRE(bob_comment.net_rshares.value
-                == alice.vesting_shares.amount.value * (old_voting_power - db.get_account("alice").voting_power)
-                    / SCORUM_100_PERCENT);
+                          == alice.vesting_shares.amount.value
+                              * (old_voting_power - db.get_account("alice").voting_power) / SCORUM_100_PERCENT);
             BOOST_REQUIRE(bob_comment.cashout_time == bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
             BOOST_REQUIRE(itr != vote_idx.end());
             validate_database();
@@ -887,11 +890,11 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             uint128_t new_cashout_time = db.head_block_time().sec_since_epoch() + SCORUM_CASHOUT_WINDOW_SECONDS;
 
             BOOST_REQUIRE(new_bob.voting_power
-                == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / max_vote_denom));
+                          == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / max_vote_denom));
             BOOST_REQUIRE(new_alice_comment.net_rshares.value
-                == old_abs_rshares
-                    + new_bob.vesting_shares.amount.value * (old_voting_power - new_bob.voting_power)
-                        / SCORUM_100_PERCENT);
+                          == old_abs_rshares
+                              + new_bob.vesting_shares.amount.value * (old_voting_power - new_bob.voting_power)
+                                  / SCORUM_100_PERCENT);
             BOOST_REQUIRE(new_alice_comment.cashout_time == new_alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
             BOOST_REQUIRE(itr != vote_idx.end());
             validate_database();
@@ -917,12 +920,12 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             new_cashout_time = db.head_block_time().sec_since_epoch() + SCORUM_CASHOUT_WINDOW_SECONDS;
             auto sam_weight /*= ( ( uint128_t( new_sam.vesting_shares.amount.value ) ) / 400 + 1 ).to_uint64();*/
                 = ((uint128_t(new_sam.vesting_shares.amount.value)
-                       * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
-                    / SCORUM_100_PERCENT)
+                    * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
+                   / SCORUM_100_PERCENT)
                       .to_uint64();
 
             BOOST_REQUIRE(new_sam.voting_power
-                == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)));
+                          == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)));
             BOOST_REQUIRE(new_bob_comment.net_rshares.value == static_cast<int64_t>(old_abs_rshares - sam_weight));
             BOOST_REQUIRE(new_bob_comment.abs_rshares.value == static_cast<int64_t>(old_abs_rshares + sam_weight));
             BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
@@ -961,11 +964,11 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             db.push_transaction(tx, 0);
 
             auto new_rshares = ((fc::uint128_t(db.get_account("alice").vesting_shares.amount.value) * used_power)
-                / SCORUM_100_PERCENT)
+                                / SCORUM_100_PERCENT)
                                    .to_uint64();
 
             BOOST_REQUIRE(db.get_comment("alice", string("foo")).cashout_time
-                == db.get_comment("alice", string("foo")).created + SCORUM_CASHOUT_WINDOW_SECONDS);
+                          == db.get_comment("alice", string("foo")).created + SCORUM_CASHOUT_WINDOW_SECONDS);
 
             validate_database();
 
@@ -1064,8 +1067,8 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             BOOST_TEST_MESSAGE("--- Test failure when increasing rshares within lockout period");
 
             generate_blocks(fc::time_point_sec((new_bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
-                                + SCORUM_BLOCK_INTERVAL),
-                true);
+                                               + SCORUM_BLOCK_INTERVAL),
+                            true);
 
             op.weight = SCORUM_100_PERCENT;
             tx.operations.clear();
@@ -1497,10 +1500,10 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
 
             BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
             BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
-                == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 2)).value);
+                          == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 2)).value);
             BOOST_REQUIRE(alice.to_withdraw.value == op.vesting_shares.amount.value);
-            BOOST_REQUIRE(
-                alice.next_vesting_withdrawal == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+            BOOST_REQUIRE(alice.next_vesting_withdrawal
+                          == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
             validate_database();
 
             BOOST_TEST_MESSAGE("--- Test changing vesting withdrawal");
@@ -1515,10 +1518,10 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
 
             BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
             BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
-                == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
+                          == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
             BOOST_REQUIRE(alice.to_withdraw.value == op.vesting_shares.amount.value);
-            BOOST_REQUIRE(
-                alice.next_vesting_withdrawal == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+            BOOST_REQUIRE(alice.next_vesting_withdrawal
+                          == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
             validate_database();
 
             BOOST_TEST_MESSAGE("--- Test withdrawing more vests than available");
@@ -1534,9 +1537,9 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
 
             BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
             BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
-                == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
-            BOOST_REQUIRE(
-                alice.next_vesting_withdrawal == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+                          == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
+            BOOST_REQUIRE(alice.next_vesting_withdrawal
+                          == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
             validate_database();
 
             BOOST_TEST_MESSAGE("--- Test withdrawing 0 to reset vesting withdraw");
@@ -1567,8 +1570,9 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
             [=](database& db) {
                 auto& wso = db.get_witness_schedule_object();
 
-                db.modify(wso,
-                    [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("10.000 TESTS"); });
+                db.modify(wso, [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("10.000 TESTS");
+                });
 
                 db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
                     gpo.current_supply
@@ -2091,8 +2095,8 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
         BOOST_REQUIRE(sam.proxy == "dave");
         BOOST_REQUIRE(sam.proxied_vsf_votes_total() == (bob.vesting_shares + alice.vesting_shares).amount);
         BOOST_REQUIRE(dave.proxy == SCORUM_PROXY_TO_SELF_ACCOUNT);
-        BOOST_REQUIRE(
-            dave.proxied_vsf_votes_total() == (sam.vesting_shares + bob.vesting_shares + alice.vesting_shares).amount);
+        BOOST_REQUIRE(dave.proxied_vsf_votes_total()
+                      == (sam.vesting_shares + bob.vesting_shares + alice.vesting_shares).amount);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test removing a grandchild proxy");
@@ -2137,8 +2141,8 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(
-            db.get_witness(SCORUM_INIT_DELEGATE_NAME).votes == (alice.vesting_shares + bob.vesting_shares).amount);
+        BOOST_REQUIRE(db.get_witness(SCORUM_INIT_DELEGATE_NAME).votes
+                      == (alice.vesting_shares + bob.vesting_shares).amount);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test votes are removed when a proxy is removed");
@@ -2435,7 +2439,7 @@ BOOST_AUTO_TEST_CASE(account_recovery)
         db.push_transaction(tx, 0);
 
         generate_blocks(db.head_block_time()
-            + (SCORUM_OWNER_AUTH_RECOVERY_PERIOD - SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD));
+                        + (SCORUM_OWNER_AUTH_RECOVERY_PERIOD - SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD));
         generate_block();
 
         request.new_owner_authority = authority(1, generate_private_key("last key").get_public_key(), 1);
@@ -2500,7 +2504,7 @@ BOOST_AUTO_TEST_CASE(change_recovery_account)
               };
 
         auto recover_account = [&](const std::string& account_to_recover, const fc::ecc::private_key& new_owner_key,
-            const fc::ecc::private_key& recent_owner_key) {
+                                   const fc::ecc::private_key& recent_owner_key) {
             recover_account_operation op;
             op.account_to_recover = account_to_recover;
             op.new_owner_authority = authority(1, public_key_type(new_owner_key.get_public_key()), 1);
@@ -2523,7 +2527,7 @@ BOOST_AUTO_TEST_CASE(change_recovery_account)
 
         auto request_account_recovery
             = [&](const std::string& recovery_account, const fc::ecc::private_key& recovery_account_key,
-                const std::string& account_to_recover, const public_key_type& new_owner_key) {
+                  const std::string& account_to_recover, const public_key_type& new_owner_key) {
                   request_account_recovery_operation op;
                   op.recovery_account = recovery_account;
                   op.account_to_recover = account_to_recover;
@@ -2537,7 +2541,7 @@ BOOST_AUTO_TEST_CASE(change_recovery_account)
               };
 
         auto change_owner = [&](const std::string& account, const fc::ecc::private_key& old_private_key,
-            const public_key_type& new_public_key) {
+                                const public_key_type& new_public_key) {
             account_update_operation op;
             op.account = account;
             op.owner = authority(1, new_public_key, 1);
@@ -2559,8 +2563,8 @@ BOOST_AUTO_TEST_CASE(change_recovery_account)
         fc::ecc::private_key alice_priv2 = fc::ecc::private_key::regenerate(fc::sha256::hash("alice_k2"));
         public_key_type alice_pub1 = public_key_type(alice_priv1.get_public_key());
 
-        generate_blocks(
-            db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD - fc::seconds(SCORUM_BLOCK_INTERVAL), true);
+        generate_blocks(db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD - fc::seconds(SCORUM_BLOCK_INTERVAL),
+                        true);
         // cannot request account recovery until recovery account is approved
         SCORUM_REQUIRE_THROW(request_account_recovery("sam", sam_private_key, "alice", alice_pub1), fc::exception);
         generate_blocks(1);
@@ -3819,8 +3823,8 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        generate_blocks(
-            db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD - fc::seconds(SCORUM_BLOCK_INTERVAL), true);
+        generate_blocks(db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD - fc::seconds(SCORUM_BLOCK_INTERVAL),
+                        true);
         BOOST_REQUIRE(db.get_account("alice").can_vote);
         witness_create("alice", alice_private_key, "foo.bar", alice_private_key.get_public_key(), 0);
 
@@ -4088,7 +4092,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         db_plugin->debug_update([=](database& db) {
             db.modify(db.get_witness_schedule_object(),
-                [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
+                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
         });
 
         generate_block();
@@ -4123,7 +4127,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET("100000000.000000 VESTS"));
         BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET("100000000.000000 VESTS"));
         BOOST_REQUIRE(bob_acc.effective_vesting_shares()
-            == bob_acc.vesting_shares - bob_acc.delegated_vesting_shares + bob_acc.received_vesting_shares);
+                      == bob_acc.vesting_shares - bob_acc.delegated_vesting_shares + bob_acc.received_vesting_shares);
 
         BOOST_TEST_MESSAGE("--- Test delegator object integrety. ");
         auto delegation
@@ -4143,8 +4147,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         tx.clear();
         op.fee = asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-            SCORUM_SYMBOL);
+                           * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                       SCORUM_SYMBOL);
         op.delegation = asset(0, VESTS_SYMBOL);
         op.new_account_name = "sam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -4165,8 +4169,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient fee fo reach target delegation.");
         fund("alice", asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                              * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                          SCORUM_SYMBOL));
+                                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                            SCORUM_SYMBOL));
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         validate_database();
@@ -4351,7 +4355,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         db_plugin->debug_update([=](database& db) {
             db.modify(db.get_witness_schedule_object(),
-                [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
+                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
         });
 
         generate_block();
@@ -4429,11 +4433,11 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         auto& alice_comment = db.get_comment("alice", string("foo"));
         auto itr = vote_idx.find(std::make_tuple(alice_comment.id, bob_acc.id));
         BOOST_REQUIRE(alice_comment.net_rshares.value
-            == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
-                / SCORUM_100_PERCENT);
+                      == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
+                          / SCORUM_100_PERCENT);
         BOOST_REQUIRE(itr->rshares
-            == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
-                / SCORUM_100_PERCENT);
+                      == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
+                          / SCORUM_100_PERCENT);
 
         generate_block();
         ACTORS((sam)(dave))
@@ -4541,7 +4545,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         db_plugin->debug_update([=](database& db) {
             db.modify(db.get_witness_schedule_object(),
-                [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
+                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
         });
 
         generate_block();
@@ -4566,8 +4570,9 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         generate_block();
 
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("100.000 TESTS"); });
+            db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                w.median_props.account_creation_fee = ASSET("100.000 TESTS");
+            });
         });
 
         generate_block();
@@ -4761,9 +4766,9 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
         generate_block();
 
         BOOST_REQUIRE(db.get_account("bob").reward_scorum_balance == ASSET("0.000 TESTS"));
-        BOOST_REQUIRE(
-            db.get_account("bob").reward_vesting_scorum.amount + db.get_account("sam").reward_vesting_scorum.amount
-            == db.get_comment("alice", string("test")).beneficiary_payout_value.amount);
+        BOOST_REQUIRE(db.get_account("bob").reward_vesting_scorum.amount
+                          + db.get_account("sam").reward_vesting_scorum.amount
+                      == db.get_comment("alice", string("test")).beneficiary_payout_value.amount);
     }
     FC_LOG_AND_RETHROW()
 }

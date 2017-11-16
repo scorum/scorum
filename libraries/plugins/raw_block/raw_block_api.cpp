@@ -71,7 +71,9 @@ void raw_block_api::push_raw_block(std::string block_b64)
     return;
 }
 
-void raw_block_api::on_api_startup() {}
+void raw_block_api::on_api_startup()
+{
+}
 }
 }
 } // scorum::plugin::raw_block

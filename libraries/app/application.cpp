@@ -120,7 +120,7 @@ public:
                     catch (const fc::exception& e)
                     {
                         wlog("caught exception ${e} while adding seed node ${endpoint}",
-                            ("e", e.to_detail_string())("endpoint", endpoint_string));
+                             ("e", e.to_detail_string())("endpoint", endpoint_string));
                     }
                 }
             }
@@ -164,7 +164,7 @@ public:
             string::size_type colon_pos = endpoint_string.find(':');
             if (colon_pos == std::string::npos)
                 FC_THROW("Missing required port number in endpoint string \"${endpoint_string}\"",
-                    ("endpoint_string", endpoint_string));
+                         ("endpoint_string", endpoint_string));
             std::string port_string = endpoint_string.substr(colon_pos + 1);
             try
             {
@@ -174,7 +174,7 @@ public:
                 std::vector<fc::ip::endpoint> endpoints = fc::resolve(hostname, port);
                 if (endpoints.empty())
                     FC_THROW_EXCEPTION(fc::unknown_host_exception, "The host name can not be resolved: ${hostname}",
-                        ("hostname", hostname));
+                                       ("hostname", hostname));
                 return endpoints;
             }
             catch (const boost::bad_lexical_cast&)
@@ -256,13 +256,13 @@ public:
 
     application_impl(application* self)
         : _self(self)
-        ,
-        //_pending_trx_db(std::make_shared<graphene::db::object_database>()),
-        _chain_db(std::make_shared<chain::database>())
+        , _chain_db(std::make_shared<chain::database>())
     {
     }
 
-    ~application_impl() {}
+    ~application_impl()
+    {
+    }
 
     void register_builtin_apis()
     {
@@ -276,6 +276,9 @@ public:
     {
         try
         {
+            if (_options->count("data-dir"))
+                _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
+
             _shared_file_size = fc::parse_size(_options->at("shared-file-size").as<std::string>());
             ilog("shared_file_size is ${n} bytes", ("n", _shared_file_size));
             bool read_only = _options->count("read-only");
@@ -338,8 +341,8 @@ public:
                     try
                     {
                         _chain_db->set_init_genesis_state(genesis_state);
-                        _chain_db->open(
-                            _data_dir / "blockchain", _shared_dir, _shared_file_size, chainbase::database::read_write);
+                        _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
+                                        chainbase::database::read_write);
                     }
                     catch (fc::assert_exception&)
                     {
@@ -353,7 +356,7 @@ public:
                         {
                             wlog("Error opening block log. Having to resync from network...");
                             _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                chainbase::database::read_write);
+                                            chainbase::database::read_write);
                         }
                     }
                 }
@@ -367,8 +370,8 @@ public:
             else
             {
                 ilog("Starting Scorum node in read mode.");
-                _chain_db->open(
-                    _data_dir / "blockchain", _shared_dir, _shared_file_size, chainbase::database::read_only);
+                _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
+                                chainbase::database::read_only);
 
                 if (_options->count("read-forward-rpc"))
                 {
@@ -379,7 +382,7 @@ public:
                     catch (fc::exception& e)
                     {
                         wlog("Error connecting to remote RPC, network api forwarding disabled.  ${e}",
-                            ("e", e.to_detail_string()));
+                             ("e", e.to_detail_string()));
                     }
                 }
             }
@@ -495,8 +498,9 @@ public:
      *
      * @throws exception if error validating the item, otherwise the item is safe to broadcast on.
      */
-    virtual bool handle_block(const graphene::net::block_message& blk_msg, bool sync_mode,
-        std::vector<fc::uint160_t>& contained_transaction_message_ids) override
+    virtual bool handle_block(const graphene::net::block_message& blk_msg,
+                              bool sync_mode,
+                              std::vector<fc::uint160_t>& contained_transaction_message_ids) override
     {
         try
         {
@@ -508,17 +512,17 @@ public:
 
                 if (sync_mode)
                     fc_ilog(fc::logger::get("sync"),
-                        "chain pushing sync block #${block_num} ${block_hash}, head is ${head}",
-                        ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)(
-                            "head", head_block_num));
+                            "chain pushing sync block #${block_num} ${block_hash}, head is ${head}",
+                            ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)("head",
+                                                                                                     head_block_num));
                 else
                     fc_ilog(fc::logger::get("sync"), "chain pushing block #${block_num} ${block_hash}, head is ${head}",
-                        ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)(
-                            "head", head_block_num));
+                            ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)("head",
+                                                                                                     head_block_num));
                 if (sync_mode && blk_msg.block.block_num() % 10000 == 0)
                 {
                     ilog("Syncing Blockchain --- Got block: #${n} time: ${t}",
-                        ("t", blk_msg.block.timestamp)("n", blk_msg.block.block_num()));
+                         ("t", blk_msg.block.timestamp)("n", blk_msg.block.block_num()));
                 }
 
                 time_point_sec now = fc::time_point::now();
@@ -534,15 +538,16 @@ public:
                     // when the net code sees that, it will stop trying to push blocks from that chain, but
                     // leave that peer connected so that they can get sync blocks from us
                     bool result = _chain_db->push_block(blk_msg.block,
-                        (_is_block_producer | _force_validate) ? database::skip_nothing
-                                                               : database::skip_transaction_signatures);
+                                                        (_is_block_producer | _force_validate)
+                                                            ? database::skip_nothing
+                                                            : database::skip_transaction_signatures);
 
                     if (!sync_mode)
                     {
                         fc::microseconds latency = fc::time_point::now() - blk_msg.block.timestamp;
                         ilog("Got ${t} transactions on block ${b} by ${w} -- latency: ${l} ms",
-                            ("t", blk_msg.block.transactions.size())("b", blk_msg.block.block_num())(
-                                "w", blk_msg.block.witness)("l", latency.count() / 1000));
+                             ("t", blk_msg.block.transactions.size())("b", blk_msg.block.block_num())(
+                                 "w", blk_msg.block.witness)("l", latency.count() / 1000));
                     }
 
                     return result;
@@ -551,15 +556,15 @@ public:
                 {
                     // translate to a graphene::net exception
                     fc_elog(fc::logger::get("sync"), "Error when pushing block, current head block is ${head3}:\n${e}",
-                        ("e", e.to_detail_string())("head", head_block_num));
+                            ("e", e.to_detail_string())("head", head_block_num));
                     elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
                     FC_THROW_EXCEPTION(graphene::net::unlinkable_block_exception, "Error when pushing block:\n${e}",
-                        ("e", e.to_detail_string()));
+                                       ("e", e.to_detail_string()));
                 }
                 catch (const fc::exception& e)
                 {
                     fc_elog(fc::logger::get("sync"), "Error when pushing block, current head block is ${head}:\n${e}",
-                        ("e", e.to_detail_string())("head", head_block_num));
+                            ("e", e.to_detail_string())("head", head_block_num));
                     elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
                     throw;
                 }
@@ -603,8 +608,9 @@ public:
      * in our blockchain after the last item returned in the result,
      * or 0 if the result contains the last item in the blockchain
      */
-    virtual std::vector<item_hash_t> get_block_ids(
-        const std::vector<item_hash_t>& blockchain_synopsis, uint32_t& remaining_item_count, uint32_t limit) override
+    virtual std::vector<item_hash_t> get_block_ids(const std::vector<item_hash_t>& blockchain_synopsis,
+                                                   uint32_t& remaining_item_count,
+                                                   uint32_t limit) override
     {
         try
         {
@@ -632,7 +638,7 @@ public:
                     for (const item_hash_t& block_id_in_synopsis : boost::adaptors::reverse(blockchain_synopsis))
                     {
                         if (block_id_in_synopsis == block_id_type() || (_chain_db->is_known_block(block_id_in_synopsis)
-                                                                           && is_included_block(block_id_in_synopsis)))
+                                                                        && is_included_block(block_id_in_synopsis)))
                         {
                             last_known_block_id = block_id_in_synopsis;
                             found_a_block_in_synopsis = true;
@@ -641,7 +647,8 @@ public:
                     }
 
                     if (!found_a_block_in_synopsis)
-                        FC_THROW_EXCEPTION(graphene::net::peer_is_on_an_unreachable_fork,
+                        FC_THROW_EXCEPTION(
+                            graphene::net::peer_is_on_an_unreachable_fork,
                             "Unable to provide a list of blocks starting at any of the blocks in peer's synopsis");
                 }
 
@@ -675,8 +682,8 @@ public:
                     auto opt_block = _chain_db->fetch_block_by_id(id.item_hash);
                     if (!opt_block)
                         elog("Couldn't find block ${id} -- corresponding ID in our chain is ${id2}",
-                            ("id", id.item_hash)(
-                                "id2", _chain_db->get_block_id_for_num(block_header::num_from_id(id.item_hash))));
+                             ("id", id.item_hash)(
+                                 "id2", _chain_db->get_block_id_for_num(block_header::num_from_id(id.item_hash))));
                     FC_ASSERT(opt_block.valid());
                     // ilog("Serving up block #${num}", ("num", opt_block->block_num()));
                     return block_message(std::move(*opt_block));
@@ -746,8 +753,8 @@ public:
      * successfully pushed to the blockchain, so that tells us whether the peer is on a fork or on
      * the main chain.
      */
-    virtual std::vector<item_hash_t> get_blockchain_synopsis(
-        const item_hash_t& reference_point, uint32_t number_of_blocks_after_reference_point) override
+    virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point,
+                                                             uint32_t number_of_blocks_after_reference_point) override
     {
         try
         {
@@ -820,7 +827,7 @@ public:
                             // unable to get fork history for some reason.  maybe not linked?
                             // we can't return a synopsis of its chain
                             elog("Unable to construct a blockchain synopsis for reference hash ${hash}: ${exception}",
-                                ("hash", reference_point)("exception", e));
+                                 ("hash", reference_point)("exception", e));
                             throw;
                         }
                         if (non_fork_high_block_num < low_block_num)
@@ -829,9 +836,9 @@ public:
                                  "too long ago "
                                  "(our chains diverge after block #${non_fork_high_block_num} but only undoable to "
                                  "block #${low_block_num})",
-                                ("low_block_num", low_block_num)("non_fork_high_block_num", non_fork_high_block_num));
+                                 ("low_block_num", low_block_num)("non_fork_high_block_num", non_fork_high_block_num));
                             FC_THROW_EXCEPTION(graphene::net::block_older_than_undo_history,
-                                "Peer is are on a fork I'm unable to switch to");
+                                               "Peer is are on a fork I'm unable to switch to");
                         }
                     }
                 }
@@ -927,7 +934,10 @@ public:
     }
 
     /** returns fc::time_point::now(); */
-    virtual fc::time_point_sec get_blockchain_now() override { return fc::time_point::now(); }
+    virtual fc::time_point_sec get_blockchain_now() override
+    {
+        return fc::time_point::now();
+    }
 
     virtual item_hash_t get_head_block_id() const override
     {
@@ -971,7 +981,6 @@ public:
     const bpo::variables_map* _options = nullptr;
     api_access _apiaccess;
 
-    // std::shared_ptr<graphene::db::object_database>   _pending_trx_db;
     std::shared_ptr<scorum::chain::database> _chain_db;
     std::shared_ptr<graphene::net::node> _p2p_network;
     std::shared_ptr<fc::http::websocket_server> _websocket_server;
@@ -1006,14 +1015,10 @@ application::~application()
     {
         my->_chain_db->close();
     }
-    /*if( my->_pending_trx_db )
-    {
-       my->_pending_trx_db->close();
-    }*/
 }
 
 void application::set_program_options(boost::program_options::options_description& command_line_options,
-    boost::program_options::options_description& configuration_file_options) const
+                                      boost::program_options::options_description& configuration_file_options) const
 {
     std::vector<std::string> default_apis;
     default_apis.push_back("database_api");
@@ -1028,11 +1033,12 @@ void application::set_program_options(boost::program_options::options_descriptio
     std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
 
     // clang-format off
-   configuration_file_options.add_options()
+    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
          ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
          ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
+         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
          ("shared-file-dir", bpo::value<string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
          ("shared-file-size", bpo::value<string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
          ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
@@ -1046,8 +1052,8 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("max-block-age", bpo::value< int32_t >()->default_value(200), "Maximum age of head block when broadcasting tx via API")
          ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
          ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from");
-   command_line_options.add(configuration_file_options);
-   command_line_options.add_options()
+    command_line_options.add(configuration_file_options);
+    command_line_options.add_options()
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
          ("force-validate", "Force validation of all transactions")
@@ -1059,9 +1065,117 @@ void application::set_program_options(boost::program_options::options_descriptio
     configuration_file_options.add(_cfg_options);
 }
 
-void application::initialize(const fc::path& data_dir, const boost::program_options::variables_map& options)
+const std::string application::print_config(const boost::program_options::variables_map& vm)
 {
-    my->_data_dir = data_dir;
+    namespace po = boost::program_options;
+
+    std::stringstream stream;
+    for (po::variables_map::const_iterator it = vm.begin(); it != vm.end(); it++)
+    {
+        stream << "> " << it->first;
+
+        if (((boost::any)it->second.value()).empty())
+        {
+            stream << "(empty)";
+        }
+        if (vm[it->first].defaulted() || it->second.defaulted())
+        {
+            stream << "(default)";
+        }
+        stream << "=";
+
+        // check if param is secure
+        if (it->first == "server-pem-password" || it->first == "private-key")
+        {
+            stream << "..." << std::endl;
+            continue;
+        }
+
+        try
+        {
+            stream << vm[it->first].as<int32_t>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast&)
+        {
+        }
+
+        try
+        {
+            stream << vm[it->first].as<uint32_t>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast&)
+        {
+        }
+
+        try
+        {
+            stream << vm[it->first].as<bool>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast&)
+        {
+        }
+
+        try
+        {
+            stream << vm[it->first].as<double>() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast&)
+        {
+        }
+
+        try
+        {
+            stream << vm[it->first].as<boost::filesystem::path>().string() << std::endl;
+            continue;
+        }
+        catch (const boost::bad_any_cast&)
+        {
+        }
+
+        try
+        {
+            std::string temp = vm[it->first].as<std::string>();
+            if (temp.size())
+            {
+                stream << temp << std::endl;
+            }
+            else
+            {
+                stream << "true" << std::endl;
+            }
+            continue;
+        }
+        catch (const boost::bad_any_cast&)
+        {
+        }
+
+        // Assumes that the only remainder is vector<string>
+        try
+        {
+            auto vect = vm[it->first].as<std::vector<std::string>>();
+            uint i = 0;
+            for (auto oit = vect.begin(); oit != vect.end(); ++oit, ++i)
+            {
+                stream << "\r> " << it->first << "[" << i << "]=" << (*oit) << std::endl;
+            }
+        }
+        catch (const boost::bad_any_cast&)
+        {
+            stream << "UnknownType(" << ((boost::any)it->second.value()).type().name() << ")" << std::endl;
+        }
+    }
+
+    return stream.str();
+}
+
+void application::initialize(const boost::program_options::variables_map& options)
+{
+    ilog("initializing node with config:\n${config}", ("config", print_config(options)));
+
     my->_options = &options;
 }
 
@@ -1096,15 +1210,20 @@ std::shared_ptr<abstract_plugin> application::get_plugin(const string& name) con
     return null_plugin;
 }
 
-graphene::net::node_ptr application::p2p_node() { return my->_p2p_network; }
-
-std::shared_ptr<chain::database> application::chain_database() const { return my->_chain_db; }
-/*std::shared_ptr<graphene::db::object_database> application::pending_trx_database() const
+graphene::net::node_ptr application::p2p_node()
 {
-   return my->_pending_trx_db;
-}*/
+    return my->_p2p_network;
+}
 
-void application::set_block_production(bool producing_blocks) { my->_is_block_producer = producing_blocks; }
+std::shared_ptr<chain::database> application::chain_database() const
+{
+    return my->_chain_db;
+}
+
+void application::set_block_production(bool producing_blocks)
+{
+    my->_is_block_producer = producing_blocks;
+}
 
 optional<api_access_info> application::get_api_access_info(const string& username) const
 {
@@ -1121,9 +1240,15 @@ void application::register_api_factory(const string& name, std::function<fc::api
     return my->register_api_factory(name, factory);
 }
 
-fc::api_ptr application::create_api_by_name(const api_context& ctx) { return my->create_api_by_name(ctx); }
+fc::api_ptr application::create_api_by_name(const api_context& ctx)
+{
+    return my->create_api_by_name(ctx);
+}
 
-void application::get_max_block_age(int32_t& result) { my->get_max_block_age(result); }
+void application::get_max_block_age(int32_t& result)
+{
+    my->get_max_block_age(result);
+}
 
 void application::connect_to_write_node()
 {
@@ -1144,7 +1269,10 @@ void application::shutdown_plugins()
         entry.second->plugin_shutdown();
     return;
 }
-void application::shutdown() { my->shutdown(); }
+void application::shutdown()
+{
+    my->shutdown();
+}
 
 void application::register_abstract_plugin(std::shared_ptr<abstract_plugin> plug)
 {

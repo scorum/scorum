@@ -58,12 +58,14 @@ delayed_node_plugin::delayed_node_plugin(application* app)
 {
 }
 
-delayed_node_plugin::~delayed_node_plugin() {}
+delayed_node_plugin::~delayed_node_plugin()
+{
+}
 
 void delayed_node_plugin::plugin_set_program_options(bpo::options_description& cli, bpo::options_description& cfg)
 {
     cli.add_options()("trusted-node", boost::program_options::value<std::string>(),
-        "RPC endpoint of a trusted validating node (required)");
+                      "RPC endpoint of a trusted validating node (required)");
     cfg.add(cli);
 }
 

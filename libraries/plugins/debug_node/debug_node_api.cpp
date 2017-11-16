@@ -27,11 +27,16 @@ namespace detail {
 class debug_private_key_storage : public private_key_storage
 {
 public:
-    debug_private_key_storage() {}
-    virtual ~debug_private_key_storage() {}
+    debug_private_key_storage()
+    {
+    }
+    virtual ~debug_private_key_storage()
+    {
+    }
 
     virtual void maybe_get_private_key(fc::optional<fc::ecc::private_key>& result,
-        const scorum::chain::public_key_type& pubkey, const std::string& account_name) override;
+                                       const scorum::chain::public_key_type& pubkey,
+                                       const std::string& account_name) override;
 
     std::string dev_key_prefix;
     std::map<scorum::chain::public_key_type, fc::ecc::private_key> key_table;
@@ -44,8 +49,9 @@ public:
 
     uint32_t debug_push_blocks(const std::string& src_filename, uint32_t count, bool skip_validate_invariants);
     uint32_t debug_generate_blocks(const std::string& debug_key, uint32_t count);
-    uint32_t debug_generate_blocks_until(
-        const std::string& debug_key, const fc::time_point_sec& head_block_time, bool generate_sparsely);
+    uint32_t debug_generate_blocks_until(const std::string& debug_key,
+                                         const fc::time_point_sec& head_block_time,
+                                         bool generate_sparsely);
     fc::optional<scorum::chain::signed_block> debug_pop_block();
     // void debug_push_block( const scorum::chain::signed_block& block );
     scorum::chain::witness_schedule_object debug_get_witness_schedule();
@@ -68,7 +74,8 @@ public:
 };
 
 void debug_private_key_storage::maybe_get_private_key(fc::optional<fc::ecc::private_key>& result,
-    const scorum::chain::public_key_type& pubkey, const std::string& account_name)
+                                                      const scorum::chain::public_key_type& pubkey,
+                                                      const std::string& account_name)
 {
     auto it = key_table.find(pubkey);
     if (it != key_table.end())
@@ -113,8 +120,8 @@ void debug_node_api_impl::debug_get_dev_key(get_dev_key_result& result, const ge
     return;
 }
 
-uint32_t debug_node_api_impl::debug_push_blocks(
-    const std::string& src_filename, uint32_t count, bool skip_validate_invariants)
+uint32_t
+debug_node_api_impl::debug_push_blocks(const std::string& src_filename, uint32_t count, bool skip_validate_invariants)
 {
     if (count == 0)
         return 0;
@@ -140,7 +147,7 @@ uint32_t debug_node_api_impl::debug_push_blocks(
             if (block_pos == scorum::chain::block_log::npos)
             {
                 wlog("Block database ${fn} only contained ${i} of ${n} requested blocks",
-                    ("i", i)("n", count)("fn", src_filename));
+                     ("i", i)("n", count)("fn", src_filename));
                 return i;
             }
 
@@ -163,7 +170,7 @@ uint32_t debug_node_api_impl::debug_push_blocks(
             catch (const fc::exception& e)
             {
                 elog("Got exception pushing block ${bn} : ${bid} (${i} of ${n})",
-                    ("bn", result.first.block_num())("bid", result.first.id())("i", i)("n", count));
+                     ("bn", result.first.block_num())("bid", result.first.id())("i", i)("n", count));
                 elog("Exception backtrace: ${bt}", ("bt", e.to_detail_string()));
             }
         }
@@ -175,15 +182,16 @@ uint32_t debug_node_api_impl::debug_push_blocks(
 
 uint32_t debug_node_api_impl::debug_generate_blocks(const std::string& debug_key, uint32_t count)
 {
-    return get_plugin()->debug_generate_blocks(
-        debug_key, count, scorum::chain::database::skip_nothing, 0, &key_storage);
+    return get_plugin()->debug_generate_blocks(debug_key, count, scorum::chain::database::skip_nothing, 0,
+                                               &key_storage);
 }
 
-uint32_t debug_node_api_impl::debug_generate_blocks_until(
-    const std::string& debug_key, const fc::time_point_sec& head_block_time, bool generate_sparsely)
+uint32_t debug_node_api_impl::debug_generate_blocks_until(const std::string& debug_key,
+                                                          const fc::time_point_sec& head_block_time,
+                                                          bool generate_sparsely)
 {
-    return get_plugin()->debug_generate_blocks_until(
-        debug_key, head_block_time, generate_sparsely, scorum::chain::database::skip_nothing, &key_storage);
+    return get_plugin()->debug_generate_blocks_until(debug_key, head_block_time, generate_sparsely,
+                                                     scorum::chain::database::skip_nothing, &key_storage);
 }
 
 fc::optional<scorum::chain::signed_block> debug_node_api_impl::debug_pop_block()
@@ -266,7 +274,9 @@ debug_node_api::debug_node_api(const scorum::app::api_context& ctx)
     my = std::make_shared<detail::debug_node_api_impl>(ctx.app);
 }
 
-void debug_node_api::on_api_startup() {}
+void debug_node_api::on_api_startup()
+{
+}
 
 uint32_t debug_node_api::debug_push_blocks(std::string source_filename, uint32_t count, bool skip_validate_invariants)
 {
@@ -278,13 +288,17 @@ uint32_t debug_node_api::debug_generate_blocks(std::string debug_key, uint32_t c
     return my->debug_generate_blocks(debug_key, count);
 }
 
-uint32_t debug_node_api::debug_generate_blocks_until(
-    std::string debug_key, fc::time_point_sec head_block_time, bool generate_sparsely)
+uint32_t debug_node_api::debug_generate_blocks_until(std::string debug_key,
+                                                     fc::time_point_sec head_block_time,
+                                                     bool generate_sparsely)
 {
     return my->debug_generate_blocks_until(debug_key, head_block_time, generate_sparsely);
 }
 
-fc::optional<scorum::chain::signed_block> debug_node_api::debug_pop_block() { return my->debug_pop_block(); }
+fc::optional<scorum::chain::signed_block> debug_node_api::debug_pop_block()
+{
+    return my->debug_pop_block();
+}
 
 /*void debug_node_api::debug_push_block( scorum::chain::signed_block& block )
 {
@@ -322,7 +336,10 @@ void debug_node_api::debug_set_edits( fc::variant_object edits )
 }
 */
 
-void debug_node_api::debug_set_dev_key_prefix(std::string prefix) { my->debug_set_dev_key_prefix(prefix); }
+void debug_node_api::debug_set_dev_key_prefix(std::string prefix)
+{
+    my->debug_set_dev_key_prefix(prefix);
+}
 
 get_dev_key_result debug_node_api::debug_get_dev_key(get_dev_key_args args)
 {
@@ -343,9 +360,15 @@ void debug_node_api::debug_stream_json_objects_flush()
 }
 */
 
-void debug_node_api::debug_set_hardfork(uint32_t hardfork_id) { my->debug_set_hardfork(hardfork_id); }
+void debug_node_api::debug_set_hardfork(uint32_t hardfork_id)
+{
+    my->debug_set_hardfork(hardfork_id);
+}
 
-bool debug_node_api::debug_has_hardfork(uint32_t hardfork_id) { return my->debug_has_hardfork(hardfork_id); }
+bool debug_node_api::debug_has_hardfork(uint32_t hardfork_id)
+{
+    return my->debug_has_hardfork(hardfork_id);
+}
 
 std::string debug_node_api::debug_get_json_schema()
 {

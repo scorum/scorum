@@ -116,8 +116,8 @@ struct comment_options_extension_visitor
 
     void operator()(const comment_payout_beneficiaries& cpb) const
     {
-        SCORUM_ASSERT(
-            cpb.beneficiaries.size() <= 8, chain::plugin_exception, "Cannot specify more than 8 beneficiaries.");
+        SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
+                      "Cannot specify more than 8 beneficiaries.");
     }
 };
 
@@ -155,27 +155,27 @@ void check_memo(const string& memo, const account_object& account, const account
     {
         for (auto& key : keys)
             SCORUM_ASSERT(key_weight_pair.first != key, chain::plugin_exception,
-                "Detected private owner key in memo field. You should change your owner keys.");
+                          "Detected private owner key in memo field. You should change your owner keys.");
     }
 
     for (auto& key_weight_pair : auth.active.key_auths)
     {
         for (auto& key : keys)
             SCORUM_ASSERT(key_weight_pair.first != key, chain::plugin_exception,
-                "Detected private active key in memo field. You should change your active keys.");
+                          "Detected private active key in memo field. You should change your active keys.");
     }
 
     for (auto& key_weight_pair : auth.posting.key_auths)
     {
         for (auto& key : keys)
             SCORUM_ASSERT(key_weight_pair.first != key, chain::plugin_exception,
-                "Detected private posting key in memo field. You should change your posting keys.");
+                          "Detected private posting key in memo field. You should change your posting keys.");
     }
 
     const auto& memo_key = account.memo_key;
     for (auto& key : keys)
         SCORUM_ASSERT(memo_key != key, chain::plugin_exception,
-            "Detected private memo key in memo field. You should change your memo key.");
+                      "Detected private memo key in memo field. You should change your memo key.");
 }
 
 struct operation_visitor
@@ -189,7 +189,9 @@ struct operation_visitor
 
     typedef void result_type;
 
-    template <typename T> void operator()(const T&) const {}
+    template <typename T> void operator()(const T&) const
+    {
+    }
 
     void operator()(const comment_options_operation& o) const
     {
@@ -211,8 +213,8 @@ struct operation_visitor
 
             if (parent != nullptr)
                 SCORUM_ASSERT(parent->depth < SCORUM_SOFT_MAX_COMMENT_DEPTH, chain::plugin_exception,
-                    "Comment is nested ${x} posts deep, maximum depth is ${y}.",
-                    ("x", parent->depth)("y", SCORUM_SOFT_MAX_COMMENT_DEPTH));
+                              "Comment is nested ${x} posts deep, maximum depth is ${y}.",
+                              ("x", parent->depth)("y", SCORUM_SOFT_MAX_COMMENT_DEPTH));
         }
 
         auto itr = _db.find<comment_object, by_permlink>(boost::make_tuple(o.author, o.permlink));
@@ -222,7 +224,7 @@ struct operation_visitor
             auto edit_lock = _db.find<content_edit_lock_object, by_account>(o.author);
 
             SCORUM_ASSERT(edit_lock != nullptr && _db.head_block_time() < edit_lock->lock_time, chain::plugin_exception,
-                "The comment is archived");
+                          "The comment is archived");
         }
     }
 
@@ -230,7 +232,7 @@ struct operation_visitor
     {
         if (o.memo.length() > 0)
             check_memo(o.memo, _db.get<account_object, chain::by_name>(o.from),
-                _db.get<account_authority_object, chain::by_account>(o.from));
+                       _db.get<account_authority_object, chain::by_account>(o.from));
     }
 };
 
@@ -282,7 +284,7 @@ void witness_plugin_impl::on_block(const signed_block& b)
             r.average_block_size = 0;
             r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
             r.max_virtual_bandwidth = (uint128_t(SCORUM_MAX_BLOCK_SIZE) * SCORUM_MAX_RESERVE_RATIO
-                                          * SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+                                       * SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
                 / SCORUM_BLOCK_INTERVAL;
         });
     }
@@ -322,8 +324,9 @@ void witness_plugin_impl::on_block(const signed_block& b)
                 else
                 {
                     // By default, we should always slowly increase the reserve ratio.
-                    r.current_reserve_ratio += std::max(RESERVE_RATIO_MIN_INCREMENT,
-                        (r.current_reserve_ratio * distance) / (distance - DISTANCE_CALC_PRECISION));
+                    r.current_reserve_ratio
+                        += std::max(RESERVE_RATIO_MIN_INCREMENT,
+                                    (r.current_reserve_ratio * distance) / (distance - DISTANCE_CALC_PRECISION));
 
                     if (r.current_reserve_ratio > SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION)
                         r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
@@ -332,20 +335,21 @@ void witness_plugin_impl::on_block(const signed_block& b)
                 if (old_reserve_ratio != r.current_reserve_ratio)
                 {
                     ilog("Reserve ratio updated from ${old} to ${new}. Block: ${blocknum}",
-                        ("old", old_reserve_ratio)("new", r.current_reserve_ratio)("blocknum", db.head_block_num()));
+                         ("old", old_reserve_ratio)("new", r.current_reserve_ratio)("blocknum", db.head_block_num()));
                 }
 
                 r.max_virtual_bandwidth
                     = (uint128_t(max_block_size) * uint128_t(r.current_reserve_ratio)
-                          * uint128_t(SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS))
+                       * uint128_t(SCORUM_BANDWIDTH_PRECISION * SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS))
                     / (SCORUM_BLOCK_INTERVAL * RESERVE_RATIO_PRECISION);
             }
         });
     }
 }
 
-void witness_plugin_impl::update_account_bandwidth(
-    const account_object& a, uint32_t trx_size, const bandwidth_type type)
+void witness_plugin_impl::update_account_bandwidth(const account_object& a,
+                                                   uint32_t trx_size,
+                                                   const bandwidth_type type)
 {
     database& _db = _self.database();
     const auto& props = _db.get_dynamic_global_properties();
@@ -372,7 +376,7 @@ void witness_plugin_impl::update_account_bandwidth(
         else
             new_bandwidth
                 = (((SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time) * fc::uint128(band->average_bandwidth.value))
-                    / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+                   / SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
                       .to_uint64();
 
         new_bandwidth += trx_bandwidth;
@@ -392,10 +396,10 @@ void witness_plugin_impl::update_account_bandwidth(
 
         if (_db.is_producing())
             SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
-                "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
-                ("account", a.name)("account_vshares", account_vshares)(
-                    "account_average_bandwidth", account_average_bandwidth)(
-                    "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
+                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
+                          ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
+                                                                                  account_average_bandwidth)(
+                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
     }
 }
 }
@@ -424,23 +428,27 @@ witness_plugin::~witness_plugin()
 }
 
 void witness_plugin::plugin_set_program_options(boost::program_options::options_description& command_line_options,
-    boost::program_options::options_description& config_file_options)
+                                                boost::program_options::options_description& config_file_options)
 {
     string witness_id_example = "initwitness";
     command_line_options.add_options()("enable-stale-production",
-        bpo::bool_switch()->notifier([this](bool e) { _production_enabled = e; }),
-        "Enable block production, even if the chain is stale.")("required-participation",
-        bpo::bool_switch()->notifier(
-            [this](int e) { _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT); }),
-        "Percent of witnesses (0-99) that must be participating in order to produce blocks")("witness,w",
-        bpo::value<vector<string>>()->composing()->multitoken(),
-        ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())("private-key",
-        bpo::value<vector<string>>()->composing()->multitoken(),
+                                       bpo::bool_switch()->notifier([this](bool e) { _production_enabled = e; }),
+                                       "Enable block production, even if the chain is stale.")(
+        "required-participation", bpo::bool_switch()->notifier([this](int e) {
+            _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT);
+        }),
+        "Percent of witnesses (0-99) that must be participating in order to produce blocks")(
+        "witness,w", bpo::value<vector<string>>()->composing()->multitoken(),
+        ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())(
+        "private-key", bpo::value<vector<string>>()->composing()->multitoken(),
         "WIF PRIVATE KEY to be used by one or more witnesses or miners");
     config_file_options.add(command_line_options);
 }
 
-std::string witness_plugin::plugin_name() const { return "witness"; }
+std::string witness_plugin::plugin_name() const
+{
+    return "witness";
+}
 
 using std::vector;
 using std::pair;
@@ -506,7 +514,10 @@ void witness_plugin::plugin_startup()
     FC_CAPTURE_AND_RETHROW()
 }
 
-void witness_plugin::plugin_shutdown() { return; }
+void witness_plugin::plugin_shutdown()
+{
+    return;
+}
 
 void witness_plugin::schedule_production_loop()
 {
@@ -572,7 +583,7 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
         break;
     case block_production_condition::no_private_key:
         ilog("Not producing block for ${scheduled_witness} because I don't have the private key for ${scheduled_key}",
-            (capture));
+             (capture));
         break;
     case block_production_condition::low_participation:
         elog(
@@ -598,8 +609,8 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
     return result;
 }
 
-block_production_condition::block_production_condition_enum witness_plugin::maybe_produce_block(
-    fc::mutable_variant_object& capture)
+block_production_condition::block_production_condition_enum
+witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
 {
     chain::database& db = database();
     fc::time_point now_fine = fc::time_point::now();

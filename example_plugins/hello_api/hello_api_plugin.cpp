@@ -74,16 +74,24 @@ hello_api_plugin::hello_api_plugin(scorum::app::application* app)
     : scorum::app::plugin(app)
 {
 }
-hello_api_plugin::~hello_api_plugin() {}
+hello_api_plugin::~hello_api_plugin()
+{
+}
 
-std::string hello_api_plugin::plugin_name() const { return "hello_api"; }
+std::string hello_api_plugin::plugin_name() const
+{
+    return "hello_api";
+}
 
 void hello_api_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     _message = "hello world";
 }
 
-void hello_api_plugin::plugin_startup() { app().register_api_factory<hello_api_api>("hello_api_api"); }
+void hello_api_plugin::plugin_startup()
+{
+    app().register_api_factory<hello_api_api>("hello_api_api");
+}
 
 std::string hello_api_plugin::get_message()
 {
@@ -97,7 +105,9 @@ hello_api_api::hello_api_api(const scorum::app::api_context& ctx)
 {
 }
 
-void hello_api_api::on_api_startup() {}
+void hello_api_api::on_api_startup()
+{
+}
 
 std::string hello_api_api::get_message()
 {

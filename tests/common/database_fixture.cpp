@@ -68,7 +68,7 @@ clean_database_fixture::clean_database_fixture()
             account_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
             fund(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
             witness_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
-                init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
+                           init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
         }
 
         validate_database();
@@ -132,7 +132,7 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
         account_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
         fund(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
         witness_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
-            init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
+                       init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
     }
 
     validate_database();
@@ -200,7 +200,7 @@ void database_fixture::open_database()
         data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
         db._log_hardforks = false;
         db.open(data_dir->path(), data_dir->path(), 1024 * 1024 * 8,
-            chainbase::database::read_write); // 8 MB file for testing
+                chainbase::database::read_write); // 8 MB file for testing
     }
 }
 
@@ -222,9 +222,13 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
     BOOST_REQUIRE((db.head_block_time() - timestamp).to_seconds() < SCORUM_BLOCK_INTERVAL);
 }
 
-const account_object& database_fixture::account_create(const string& name, const string& creator,
-    const private_key_type& creator_key, const share_type& fee, const public_key_type& key,
-    const public_key_type& post_key, const string& json_metadata)
+const account_object& database_fixture::account_create(const string& name,
+                                                       const string& creator,
+                                                       const private_key_type& creator_key,
+                                                       const share_type& fee,
+                                                       const public_key_type& key,
+                                                       const public_key_type& post_key,
+                                                       const string& json_metadata)
 {
     try
     {
@@ -256,16 +260,16 @@ const account_object& database_fixture::account_create(const string& name, const
     FC_CAPTURE_AND_RETHROW((name)(creator))
 }
 
-const account_object& database_fixture::account_create(
-    const string& name, const public_key_type& key, const public_key_type& post_key)
+const account_object&
+database_fixture::account_create(const string& name, const public_key_type& key, const public_key_type& post_key)
 {
     try
     {
         return account_create(name, SCORUM_INIT_DELEGATE_NAME, init_account_priv_key,
-            std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                    * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                share_type(100)),
-            key, post_key, "");
+                              std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                                           * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
+                                       share_type(100)),
+                              key, post_key, "");
     }
     FC_CAPTURE_AND_RETHROW((name));
 }
@@ -275,8 +279,11 @@ const account_object& database_fixture::account_create(const string& name, const
     return account_create(name, key, key);
 }
 
-const witness_object& database_fixture::witness_create(const string& owner, const private_key_type& owner_key,
-    const string& url, const public_key_type& signing_key, const share_type& fee)
+const witness_object& database_fixture::witness_create(const string& owner,
+                                                       const private_key_type& owner_key,
+                                                       const string& url,
+                                                       const public_key_type& signing_key,
+                                                       const share_type& fee)
 {
     try
     {
@@ -373,7 +380,7 @@ void database_fixture::vest(const string& account, const asset& amount)
     db_plugin->debug_update(
         [=](database& db) {
             db.modify(db.get_dynamic_global_properties(),
-                [&](dynamic_global_property_object& gpo) { gpo.current_supply += amount; });
+                      [&](dynamic_global_property_object& gpo) { gpo.current_supply += amount; });
 
             db.create_vesting(db.get_account(account), amount);
 

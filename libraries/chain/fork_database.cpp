@@ -5,7 +5,9 @@
 namespace scorum {
 namespace chain {
 
-fork_database::fork_database() {}
+fork_database::fork_database()
+{
+}
 void fork_database::reset()
 {
     _head.reset();
@@ -53,8 +55,8 @@ void fork_database::_push_block(const item_ptr& item)
     if (_head) // make sure the block is within the range that we are caching
     {
         FC_ASSERT(item->num > std::max<int64_t>(0, int64_t(_head->num) - (_max_size)),
-            "attempting to push a block that is too old",
-            ("item->num", item->num)("head", _head->num)("max_size", _max_size));
+                  "attempting to push a block that is too old",
+                  ("item->num", item->num)("head", _head->num)("max_size", _max_size));
     }
 
     if (_head && item->previous_id() != block_id_type())
@@ -167,8 +169,8 @@ vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num) const
     FC_LOG_AND_RETHROW()
 }
 
-pair<fork_database::branch_type, fork_database::branch_type> fork_database::fetch_branch_from(
-    block_id_type first, block_id_type second) const
+pair<fork_database::branch_type, fork_database::branch_type>
+fork_database::fetch_branch_from(block_id_type first, block_id_type second) const
 {
     try
     {
@@ -235,8 +237,14 @@ shared_ptr<fork_item> fork_database::fetch_block_on_main_branch_by_number(uint32
     return walk_main_branch_to_num(block_num);
 }
 
-void fork_database::set_head(shared_ptr<fork_item> h) { _head = h; }
+void fork_database::set_head(shared_ptr<fork_item> h)
+{
+    _head = h;
+}
 
-void fork_database::remove(block_id_type id) { _index.get<block_id>().erase(id); }
+void fork_database::remove(block_id_type id)
+{
+    _index.get<block_id>().erase(id);
+}
 }
 } // scorum::chain

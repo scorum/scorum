@@ -61,8 +61,8 @@ public:
 
     // Authority / validation
     std::string get_transaction_hex(const signed_transaction& trx) const;
-    set<public_key_type> get_required_signatures(
-        const signed_transaction& trx, const flat_set<public_key_type>& available_keys) const;
+    set<public_key_type> get_required_signatures(const signed_transaction& trx,
+                                                 const flat_set<public_key_type>& available_keys) const;
     set<public_key_type> get_potential_signatures(const signed_transaction& trx) const;
     bool verify_authority(const signed_transaction& trx) const;
     bool verify_account_authority(const string& name_or_id, const flat_set<public_key_type>& signers) const;
@@ -80,7 +80,9 @@ public:
     bool _disable_get_block = false;
 };
 
-applied_operation::applied_operation() {}
+applied_operation::applied_operation()
+{
+}
 
 applied_operation::applied_operation(const operation_object& op_obj)
     : trx_id(op_obj.trx_id)
@@ -94,7 +96,10 @@ applied_operation::applied_operation(const operation_object& op_obj)
     op = fc::raw::unpack<operation>(op_obj.serialized_op);
 }
 
-void find_accounts(set<string>& accounts, const discussion& d) { accounts.insert(d.author); }
+void find_accounts(set<string>& accounts, const discussion& d)
+{
+    accounts.insert(d.author);
+}
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
@@ -136,7 +141,9 @@ database_api::database_api(const scorum::app::api_context& ctx)
 {
 }
 
-database_api::~database_api() {}
+database_api::~database_api()
+{
+}
 
 database_api_impl::database_api_impl(const scorum::app::api_context& ctx)
     : _db(*ctx.app.chain_database())
@@ -156,9 +163,14 @@ database_api_impl::database_api_impl(const scorum::app::api_context& ctx)
     }
 }
 
-database_api_impl::~database_api_impl() { elog("freeing database api ${x}", ("x", int64_t(this))); }
+database_api_impl::~database_api_impl()
+{
+    elog("freeing database api ${x}", ("x", int64_t(this)));
+}
 
-void database_api::on_api_startup() {}
+void database_api::on_api_startup()
+{
+}
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
@@ -225,7 +237,10 @@ fc::variant_object database_api::get_config() const
     return my->_db.with_read_lock([&]() { return my->get_config(); });
 }
 
-fc::variant_object database_api_impl::get_config() const { return scorum::protocol::get_config(); }
+fc::variant_object database_api_impl::get_config() const
+{
+    return scorum::protocol::get_config();
+}
 
 dynamic_global_property_api_obj database_api::get_dynamic_global_properties() const
 {
@@ -409,7 +424,10 @@ uint64_t database_api::get_account_count() const
     return my->_db.with_read_lock([&]() { return my->get_account_count(); });
 }
 
-uint64_t database_api_impl::get_account_count() const { return _db.get_index<account_index>().indices().size(); }
+uint64_t database_api_impl::get_account_count() const
+{
+    return _db.get_index<account_index>().indices().size();
+}
 
 vector<owner_authority_history_api_obj> database_api::get_owner_history(string account) const
 {
@@ -510,8 +528,8 @@ vector<withdraw_route> database_api::get_withdraw_routes(string account, withdra
     });
 }
 
-optional<account_bandwidth_api_obj> database_api::get_account_bandwidth(
-    string account, witness::bandwidth_type type) const
+optional<account_bandwidth_api_obj> database_api::get_account_bandwidth(string account,
+                                                                        witness::bandwidth_type type) const
 {
     optional<account_bandwidth_api_obj> result;
 
@@ -542,11 +560,11 @@ vector<optional<witness_api_obj>> database_api_impl::get_witnesses(const vector<
     vector<optional<witness_api_obj>> result;
     result.reserve(witness_ids.size());
     std::transform(witness_ids.begin(), witness_ids.end(), std::back_inserter(result),
-        [this](witness_id_type id) -> optional<witness_api_obj> {
-            if (auto o = _db.find(id))
-                return *o;
-            return {};
-        });
+                   [this](witness_id_type id) -> optional<witness_api_obj> {
+                       if (auto o = _db.find(id))
+                           return *o;
+                       return {};
+                   });
     return result;
 }
 
@@ -623,7 +641,10 @@ uint64_t database_api::get_witness_count() const
     return my->_db.with_read_lock([&]() { return my->get_witness_count(); });
 }
 
-uint64_t database_api_impl::get_witness_count() const { return _db.get_index<witness_index>().indices().size(); }
+uint64_t database_api_impl::get_witness_count() const
+{
+    return _db.get_index<witness_index>().indices().size();
+}
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
@@ -641,17 +662,18 @@ std::string database_api_impl::get_transaction_hex(const signed_transaction& trx
     return fc::to_hex(fc::raw::pack(trx));
 }
 
-set<public_key_type> database_api::get_required_signatures(
-    const signed_transaction& trx, const flat_set<public_key_type>& available_keys) const
+set<public_key_type> database_api::get_required_signatures(const signed_transaction& trx,
+                                                           const flat_set<public_key_type>& available_keys) const
 {
     return my->_db.with_read_lock([&]() { return my->get_required_signatures(trx, available_keys); });
 }
 
-set<public_key_type> database_api_impl::get_required_signatures(
-    const signed_transaction& trx, const flat_set<public_key_type>& available_keys) const
+set<public_key_type> database_api_impl::get_required_signatures(const signed_transaction& trx,
+                                                                const flat_set<public_key_type>& available_keys) const
 {
     //   wdump((trx)(available_keys));
-    auto result = trx.get_required_signatures(SCORUM_CHAIN_ID, available_keys,
+    auto result = trx.get_required_signatures(
+        SCORUM_CHAIN_ID, available_keys,
         [&](string account_name) {
             return authority(_db.get<account_authority_object, by_account>(account_name).active);
         },
@@ -675,7 +697,8 @@ set<public_key_type> database_api_impl::get_potential_signatures(const signed_tr
 {
     //   wdump((trx));
     set<public_key_type> result;
-    trx.get_required_signatures(SCORUM_CHAIN_ID, flat_set<public_key_type>(),
+    trx.get_required_signatures(
+        SCORUM_CHAIN_ID, flat_set<public_key_type>(),
         [&](account_name_type account_name) {
             const auto& auth = _db.get<account_authority_object, by_account>(account_name).active;
             for (const auto& k : auth.get_keys())
@@ -708,16 +731,16 @@ bool database_api::verify_authority(const signed_transaction& trx) const
 bool database_api_impl::verify_authority(const signed_transaction& trx) const
 {
     trx.verify_authority(SCORUM_CHAIN_ID,
-        [&](string account_name) {
-            return authority(_db.get<account_authority_object, by_account>(account_name).active);
-        },
-        [&](string account_name) {
-            return authority(_db.get<account_authority_object, by_account>(account_name).owner);
-        },
-        [&](string account_name) {
-            return authority(_db.get<account_authority_object, by_account>(account_name).posting);
-        },
-        SCORUM_MAX_SIG_CHECK_DEPTH);
+                         [&](string account_name) {
+                             return authority(_db.get<account_authority_object, by_account>(account_name).active);
+                         },
+                         [&](string account_name) {
+                             return authority(_db.get<account_authority_object, by_account>(account_name).owner);
+                         },
+                         [&](string account_name) {
+                             return authority(_db.get<account_authority_object, by_account>(account_name).posting);
+                         },
+                         SCORUM_MAX_SIG_CHECK_DEPTH);
     return true;
 }
 
@@ -881,8 +904,8 @@ vector<discussion> database_api::get_content_replies(string author, string perml
         const auto& by_permlink_idx = my->_db.get_index<comment_index>().indices().get<by_parent>();
         auto itr = by_permlink_idx.find(boost::make_tuple(acc_name, permlink));
         vector<discussion> result;
-        while (
-            itr != by_permlink_idx.end() && itr->parent_author == author && to_string(itr->parent_permlink) == permlink)
+        while (itr != by_permlink_idx.end() && itr->parent_author == author
+               && to_string(itr->parent_permlink) == permlink)
         {
             result.push_back(discussion(*itr));
             set_pending_payout(result.back());
@@ -898,8 +921,9 @@ vector<discussion> database_api::get_content_replies(string author, string perml
  *  The first call should be (account_to_retrieve replies, "", limit)
  *  Subsequent calls should be (last_author, last_permlink, limit)
  */
-vector<discussion> database_api::get_replies_by_last_update(
-    account_name_type start_parent_author, string start_permlink, uint32_t limit) const
+vector<discussion> database_api::get_replies_by_last_update(account_name_type start_parent_author,
+                                                            string start_permlink,
+                                                            uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         vector<discussion> result;
@@ -1022,10 +1046,16 @@ discussion database_api::get_discussion(comment_id_type id, uint32_t truncate_bo
 }
 
 template <typename Index, typename StartItr>
-vector<discussion> database_api::get_discussions(const discussion_query& query, const string& tag,
-    comment_id_type parent, const Index& tidx, StartItr tidx_itr, uint32_t truncate_body,
-    const std::function<bool(const comment_api_obj&)>& filter, const std::function<bool(const comment_api_obj&)>& exit,
-    const std::function<bool(const tags::tag_object&)>& tag_exit, bool ignore_parent) const
+vector<discussion> database_api::get_discussions(const discussion_query& query,
+                                                 const string& tag,
+                                                 comment_id_type parent,
+                                                 const Index& tidx,
+                                                 StartItr tidx_itr,
+                                                 uint32_t truncate_body,
+                                                 const std::function<bool(const comment_api_obj&)>& filter,
+                                                 const std::function<bool(const comment_api_obj&)>& exit,
+                                                 const std::function<bool(const tags::tag_object&)>& tag_exit,
+                                                 bool ignore_parent) const
 {
     // idump((query));
     vector<discussion> result;
@@ -1060,7 +1090,7 @@ vector<discussion> database_api::get_discussions(const discussion_query& query, 
         {
             wlog("Maximum iteration count exceeded serving query: ${q}", ("q", query));
             wlog("count=${count}   itr_count=${itr_count}   filter_count=${filter_count}   exc_count=${exc_count}",
-                ("count", count)("itr_count", itr_count)("filter_count", filter_count)("exc_count", exc_count));
+                 ("count", count)("itr_count", itr_count)("filter_count", filter_count)("exc_count", exc_count));
             break;
         }
         if (tidx_itr->tag != tag || (!ignore_parent && tidx_itr->parent != parent))
@@ -1116,7 +1146,8 @@ vector<discussion> database_api::get_discussions_by_payout(const discussion_quer
         auto tidx_itr = tidx.lower_bound(tag);
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-            [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default, tag_exit_default, true);
+                               [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default,
+                               tag_exit_default, true);
     });
 }
 
@@ -1131,7 +1162,8 @@ vector<discussion> database_api::get_post_discussions_by_payout(const discussion
         auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, true));
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-            [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default, tag_exit_default, true);
+                               [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default,
+                               tag_exit_default, true);
     });
 }
 
@@ -1146,7 +1178,8 @@ vector<discussion> database_api::get_comment_discussions_by_payout(const discuss
         auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, false));
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-            [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default, tag_exit_default, true);
+                               [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default,
+                               tag_exit_default, true);
     });
 }
 
@@ -1161,7 +1194,7 @@ vector<discussion> database_api::get_discussions_by_promoted(const discussion_qu
         auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, share_type(SCORUM_MAX_SHARE_SUPPLY)));
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body, filter_default, exit_default,
-            [](const tags::tag_object& t) { return t.promoted_balance == 0; });
+                               [](const tags::tag_object& t) { return t.promoted_balance == 0; });
     });
 }
 
@@ -1177,7 +1210,7 @@ vector<discussion> database_api::get_discussions_by_trending(const discussion_qu
         auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, std::numeric_limits<double>::max()));
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-            [](const comment_api_obj& c) { return c.net_rshares <= 0; });
+                               [](const comment_api_obj& c) { return c.net_rshares <= 0; });
     });
 }
 
@@ -1222,7 +1255,7 @@ vector<discussion> database_api::get_discussions_by_cashout(const discussion_que
         auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, fc::time_point::now() - fc::minutes(60)));
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-            [](const comment_api_obj& c) { return c.net_rshares < 0; });
+                               [](const comment_api_obj& c) { return c.net_rshares < 0; });
     });
 }
 
@@ -1266,7 +1299,7 @@ vector<discussion> database_api::get_discussions_by_hot(const discussion_query& 
         auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, std::numeric_limits<double>::max()));
 
         return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-            [](const comment_api_obj& c) { return c.net_rshares <= 0; });
+                               [](const comment_api_obj& c) { return c.net_rshares <= 0; });
     });
 }
 
@@ -1494,8 +1527,10 @@ vector<account_name_type> database_api::get_active_witnesses() const
     });
 }
 
-vector<discussion> database_api::get_discussions_by_author_before_date(
-    string author, string start_permlink, time_point_sec before_date, uint32_t limit) const
+vector<discussion> database_api::get_discussions_by_author_before_date(string author,
+                                                                       string start_permlink,
+                                                                       time_point_sec before_date,
+                                                                       uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         try
@@ -1537,8 +1572,8 @@ vector<discussion> database_api::get_discussions_by_author_before_date(
     });
 }
 
-vector<vesting_delegation_api_obj> database_api::get_vesting_delegations(
-    string account, string from, uint32_t limit) const
+vector<vesting_delegation_api_obj>
+database_api::get_vesting_delegations(string account, string from, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
 
@@ -1558,8 +1593,8 @@ vector<vesting_delegation_api_obj> database_api::get_vesting_delegations(
     });
 }
 
-vector<vesting_delegation_expiration_api_obj> database_api::get_expiring_vesting_delegations(
-    string account, time_point_sec from, uint32_t limit) const
+vector<vesting_delegation_expiration_api_obj>
+database_api::get_expiring_vesting_delegations(string account, time_point_sec from, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
 

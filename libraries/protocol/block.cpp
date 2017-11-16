@@ -5,9 +5,15 @@
 
 namespace scorum {
 namespace protocol {
-digest_type block_header::digest() const { return digest_type::hash(*this); }
+digest_type block_header::digest() const
+{
+    return digest_type::hash(*this);
+}
 
-uint32_t block_header::num_from_id(const block_id_type& id) { return fc::endian_reverse_u32(id._hash[0]); }
+uint32_t block_header::num_from_id(const block_id_type& id)
+{
+    return fc::endian_reverse_u32(id._hash[0]);
+}
 
 block_id_type signed_block_header::id() const
 {

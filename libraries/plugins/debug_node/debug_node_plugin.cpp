@@ -38,26 +38,37 @@ debug_node_plugin_impl::debug_node_plugin_impl(debug_node_plugin* self)
     : _self(self)
 {
 }
-debug_node_plugin_impl::~debug_node_plugin_impl() {}
+debug_node_plugin_impl::~debug_node_plugin_impl()
+{
+}
 }
 
-private_key_storage::private_key_storage() {}
-private_key_storage::~private_key_storage() {}
+private_key_storage::private_key_storage()
+{
+}
+private_key_storage::~private_key_storage()
+{
+}
 
 debug_node_plugin::debug_node_plugin(application* app)
     : plugin(app)
 {
     _my = std::make_shared<detail::debug_node_plugin_impl>(this);
 }
-debug_node_plugin::~debug_node_plugin() {}
+debug_node_plugin::~debug_node_plugin()
+{
+}
 
-std::string debug_node_plugin::plugin_name() const { return "debug_node"; }
+std::string debug_node_plugin::plugin_name() const
+{
+    return "debug_node";
+}
 
-void debug_node_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+void debug_node_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                                   boost::program_options::options_description& cfg)
 {
     cli.add_options()("edit-script,e", boost::program_options::value<std::vector<std::string>>()->composing(),
-        "Database edits to apply on startup (may specify multiple times)");
+                      "Database edits to apply on startup (may specify multiple times)");
     cfg.add(cli);
 }
 
@@ -225,7 +236,7 @@ uint32_t debug_node_plugin::debug_generate_blocks(
                 debug_update(
                     [=](chain::database& db) {
                         db.modify(db.get_witness(scheduled_witness_name),
-                            [&](chain::witness_object& w) { w.signing_key = debug_public_key; });
+                                  [&](chain::witness_object& w) { w.signing_key = debug_public_key; });
                     },
                     skip);
             }
@@ -252,7 +263,10 @@ uint32_t debug_node_plugin::debug_generate_blocks(
 }
 
 uint32_t debug_node_plugin::debug_generate_blocks_until(const std::string& debug_key,
-    const fc::time_point_sec& head_block_time, bool generate_sparsely, uint32_t skip, private_key_storage* key_storage)
+                                                        const fc::time_point_sec& head_block_time,
+                                                        bool generate_sparsely,
+                                                        uint32_t skip,
+                                                        private_key_storage* key_storage)
 {
     scorum::chain::database& db = database();
 

@@ -23,10 +23,10 @@ public:
     {
     }
 
-    vector<follow_api_obj> get_followers(
-        string following, string start_follower, follow_type type, uint16_t limit) const;
-    vector<follow_api_obj> get_following(
-        string follower, string start_following, follow_type type, uint16_t limit) const;
+    vector<follow_api_obj>
+    get_followers(string following, string start_follower, follow_type type, uint16_t limit) const;
+    vector<follow_api_obj>
+    get_following(string follower, string start_following, follow_type type, uint16_t limit) const;
 
     follow_count_api_obj get_follow_count(string& account) const;
 
@@ -41,8 +41,8 @@ public:
     scorum::app::application& app;
 };
 
-vector<follow_api_obj> follow_api_impl::get_followers(
-    string following, string start_follower, follow_type type, uint16_t limit) const
+vector<follow_api_obj>
+follow_api_impl::get_followers(string following, string start_follower, follow_type type, uint16_t limit) const
 {
     FC_ASSERT(limit <= 1000);
     vector<follow_api_obj> result;
@@ -68,8 +68,8 @@ vector<follow_api_obj> follow_api_impl::get_followers(
     return result;
 }
 
-vector<follow_api_obj> follow_api_impl::get_following(
-    string follower, string start_following, follow_type type, uint16_t limit) const
+vector<follow_api_obj>
+follow_api_impl::get_following(string follower, string start_following, follow_type type, uint16_t limit) const
 {
     FC_ASSERT(limit <= 100);
     vector<follow_api_obj> result;
@@ -276,19 +276,24 @@ vector<account_reputation> follow_api_impl::get_account_reputations(string lower
 
 } // detail
 
-follow_api::follow_api(const scorum::app::api_context& ctx) { my = std::make_shared<detail::follow_api_impl>(ctx.app); }
+follow_api::follow_api(const scorum::app::api_context& ctx)
+{
+    my = std::make_shared<detail::follow_api_impl>(ctx.app);
+}
 
-void follow_api::on_api_startup() {}
+void follow_api::on_api_startup()
+{
+}
 
-vector<follow_api_obj> follow_api::get_followers(
-    string following, string start_follower, follow_type type, uint16_t limit) const
+vector<follow_api_obj>
+follow_api::get_followers(string following, string start_follower, follow_type type, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock(
         [&]() { return my->get_followers(following, start_follower, type, limit); });
 }
 
-vector<follow_api_obj> follow_api::get_following(
-    string follower, string start_following, follow_type type, uint16_t limit) const
+vector<follow_api_obj>
+follow_api::get_following(string follower, string start_following, follow_type type, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock(
         [&]() { return my->get_following(follower, start_following, type, limit); });

@@ -6,7 +6,10 @@
 namespace scorum {
 namespace protocol {
 
-bool inline is_asset_type(asset asset, asset_symbol_type symbol) { return asset.symbol == symbol; }
+bool inline is_asset_type(asset asset, asset_symbol_type symbol)
+{
+    return asset.symbol == symbol;
+}
 
 void account_create_operation::validate() const
 {
@@ -82,11 +85,16 @@ void comment_operation::validate() const
 
 struct comment_options_extension_validate_visitor
 {
-    comment_options_extension_validate_visitor() {}
+    comment_options_extension_validate_visitor()
+    {
+    }
 
     typedef void result_type;
 
-    void operator()(const comment_payout_beneficiaries& cpb) const { cpb.validate(); }
+    void operator()(const comment_payout_beneficiaries& cpb) const
+    {
+        cpb.validate();
+    }
 };
 
 void comment_payout_beneficiaries::validate() const
@@ -95,25 +103,27 @@ void comment_payout_beneficiaries::validate() const
 
     FC_ASSERT(beneficiaries.size(), "Must specify at least one beneficiary");
     FC_ASSERT(beneficiaries.size() < 128,
-        "Cannot specify more than 127 beneficiaries."); // Require size serializtion fits in one byte.
+              "Cannot specify more than 127 beneficiaries."); // Require size serializtion fits in one byte.
 
     validate_account_name(beneficiaries[0].account);
-    FC_ASSERT(
-        beneficiaries[0].weight <= SCORUM_100_PERCENT, "Cannot allocate more than 100% of rewards to one account");
+    FC_ASSERT(beneficiaries[0].weight <= SCORUM_100_PERCENT,
+              "Cannot allocate more than 100% of rewards to one account");
     sum += beneficiaries[0].weight;
-    FC_ASSERT(sum <= SCORUM_100_PERCENT,
+    FC_ASSERT(
+        sum <= SCORUM_100_PERCENT,
         "Cannot allocate more than 100% of rewards to a comment"); // Have to check incrementally to avoid overflow
 
     for (size_t i = 1; i < beneficiaries.size(); i++)
     {
         validate_account_name(beneficiaries[i].account);
-        FC_ASSERT(
-            beneficiaries[i].weight <= SCORUM_100_PERCENT, "Cannot allocate more than 100% of rewards to one account");
+        FC_ASSERT(beneficiaries[i].weight <= SCORUM_100_PERCENT,
+                  "Cannot allocate more than 100% of rewards to one account");
         sum += beneficiaries[i].weight;
-        FC_ASSERT(sum <= SCORUM_100_PERCENT,
+        FC_ASSERT(
+            sum <= SCORUM_100_PERCENT,
             "Cannot allocate more than 100% of rewards to a comment"); // Have to check incrementally to avoid overflow
         FC_ASSERT(beneficiaries[i - 1] < beneficiaries[i],
-            "Benficiaries must be specified in sorted order (account ascending)");
+                  "Benficiaries must be specified in sorted order (account ascending)");
     }
 }
 
@@ -134,7 +144,10 @@ void delete_comment_operation::validate() const
     validate_account_name(author);
 }
 
-void prove_authority_operation::validate() const { validate_account_name(challenged); }
+void prove_authority_operation::validate() const
+{
+    validate_account_name(challenged);
+}
 
 void vote_operation::validate() const
 {
@@ -220,7 +233,7 @@ void custom_binary_operation::validate() const
 {
     /// required auth accounts are the ones whose bandwidth is consumed
     FC_ASSERT((required_owner_auths.size() + required_active_auths.size() + required_posting_auths.size()) > 0,
-        "at least on account must be specified");
+              "at least on account must be specified");
     FC_ASSERT(id.size() <= 32, "id is too long");
     for (const auto& a : required_auths)
         a.validate();
@@ -286,7 +299,7 @@ void recover_account_operation::validate() const
 {
     validate_account_name(account_to_recover);
     FC_ASSERT(!(new_owner_authority == recent_owner_authority),
-        "Cannot set new owner authority to the recent owner authority");
+              "Cannot set new owner authority to the recent owner authority");
     FC_ASSERT(!new_owner_authority.is_impossible(), "new owner authority cannot be impossible");
     FC_ASSERT(!recent_owner_authority.is_impossible(), "recent owner authority cannot be impossible");
     FC_ASSERT(new_owner_authority.weight_threshold, "new owner authority cannot be trivial");
@@ -300,7 +313,10 @@ void change_recovery_account_operation::validate() const
     validate_account_name(new_recovery_account);
 }
 
-void decline_voting_rights_operation::validate() const { validate_account_name(account); }
+void decline_voting_rights_operation::validate() const
+{
+    validate_account_name(account);
+}
 
 void claim_reward_balance_operation::validate() const
 {

@@ -20,7 +20,10 @@ std::wstring utf8_to_wstring(const std::string& str)
     return utf_to_utf<wchar_t>(str.c_str(), str.c_str() + str.size());
 }
 
-std::string wstring_to_utf8(const std::wstring& str) { return utf_to_utf<char>(str.c_str(), str.c_str() + str.size()); }
+std::string wstring_to_utf8(const std::wstring& str)
+{
+    return utf_to_utf<char>(str.c_str(), str.c_str() + str.size());
+}
 
 #endif
 
@@ -36,7 +39,7 @@ using fc::uint128_t;
 inline void validate_permlink_0_1(const string& permlink)
 {
     FC_ASSERT(permlink.size() > SCORUM_MIN_PERMLINK_LENGTH && permlink.size() < SCORUM_MAX_PERMLINK_LENGTH,
-        "Permlink is not a valid size.");
+              "Permlink is not a valid size.");
 
     for (auto c : permlink)
     {
@@ -104,16 +107,17 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
     // check creator balance
 
     FC_ASSERT(creator.balance >= o.fee, "Insufficient balance to create account.",
-        ("creator.balance", creator.balance)("required", o.fee));
+              ("creator.balance", creator.balance)("required", o.fee));
 
     // check fee
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
     FC_ASSERT(o.fee >= asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                           SCORUM_SYMBOL),
-        "Insufficient Fee: ${f} required, ${p} provided.",
-        ("f", wso.median_props.account_creation_fee * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))(
-            "p", o.fee));
+                             SCORUM_SYMBOL),
+              "Insufficient Fee: ${f} required, ${p} provided.",
+              ("f",
+               wso.median_props.account_creation_fee
+                   * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))("p", o.fee));
 
     // check accounts existence
 
@@ -142,21 +146,21 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     // check creator balance
 
     FC_ASSERT(creator.balance >= o.fee, "Insufficient balance to create account.",
-        ("creator.balance", creator.balance)("required", o.fee));
+              ("creator.balance", creator.balance)("required", o.fee));
 
     // check delegation fee
 
     FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares
-                - asset(creator.to_withdraw - creator.withdrawn, VESTS_SYMBOL)
-            >= o.delegation,
-        "Insufficient vesting shares to delegate to new account.",
-        ("creator.vesting_shares", creator.vesting_shares)(
-            "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
+                      - asset(creator.to_withdraw - creator.withdrawn, VESTS_SYMBOL)
+                  >= o.delegation,
+              "Insufficient vesting shares to delegate to new account.",
+              ("creator.vesting_shares", creator.vesting_shares)(
+                  "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
 
     auto target_delegation
         = asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
-                  * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-              SCORUM_SYMBOL)
+                    * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                SCORUM_SYMBOL)
         * props.get_vesting_share_price();
 
     auto current_delegation
@@ -164,11 +168,12 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
         + o.delegation;
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
-        ("f", target_delegation)("p", current_delegation)("account_creation_fee",
-            wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation", o.delegation));
+              ("f", target_delegation)("p", current_delegation)(
+                  "account_creation_fee", wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation",
+                                                                                                 o.delegation));
 
     FC_ASSERT(o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
-        ("f", wso.median_props.account_creation_fee)("p", o.fee));
+              ("f", wso.median_props.account_creation_fee)("p", o.fee));
 
     // check accounts existence
 
@@ -196,7 +201,7 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     {
 #ifndef IS_TEST_NET
         FC_ASSERT(_db.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
-            "Owner authority can only be updated once an hour.");
+                  "Owner authority can only be updated once an hour.");
 #endif
         accountService.check_account_existence(o.owner->account_auths);
 
@@ -251,7 +256,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
 
     const auto& auth = accountService.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
-        "Operation cannot be processed because account is currently challenged.");
+              "Operation cannot be processed because account is currently challenged.");
 
     const auto& comment = _db.get_comment(o.author, o.permlink);
     FC_ASSERT(comment.children == 0, "Cannot delete a comment with replies.");
@@ -332,12 +337,12 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
 
     const auto& auth = accountService.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
-        "Operation cannot be processed because account is currently challenged.");
+              "Operation cannot be processed because account is currently challenged.");
 
     const auto& comment = _db.get_comment(o.author, o.permlink);
     if (!o.allow_curation_rewards || !o.allow_votes || o.max_accepted_payout < comment.max_accepted_payout)
         FC_ASSERT(comment.abs_rshares == 0,
-            "One of the included comment options requires the comment to have no rshares allocated to it.");
+                  "One of the included comment options requires the comment to have no rshares allocated to it.");
 
     FC_ASSERT(comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled.");
     FC_ASSERT(comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled.");
@@ -365,7 +370,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
     {
 
         FC_ASSERT(o.title.size() + o.body.size() + o.json_metadata.size(),
-            "Cannot update comment because nothing appears to be changing.");
+                  "Cannot update comment because nothing appears to be changing.");
 
         const auto& by_permlink_idx
             = _db._temporary_public_impl().get_index<comment_index>().indices().get<by_permlink>();
@@ -374,7 +379,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
         const auto& auth = accountService.get_account(o.author); /// prove it exists
 
         FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
-            "Operation cannot be processed because account is currently challenged.");
+                  "Operation cannot be processed because account is currently challenged.");
 
         comment_id_type id;
 
@@ -383,8 +388,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
         {
             parent = &_db.get_comment(o.parent_author, o.parent_permlink);
             FC_ASSERT(parent->depth < SCORUM_MAX_COMMENT_DEPTH,
-                "Comment is nested ${x} posts deep, maximum depth is ${y}.",
-                ("x", parent->depth)("y", SCORUM_MAX_COMMENT_DEPTH));
+                      "Comment is nested ${x} posts deep, maximum depth is ${y}.",
+                      ("x", parent->depth)("y", SCORUM_MAX_COMMENT_DEPTH));
         }
 
         if (o.json_metadata.size())
@@ -402,10 +407,12 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
             if (o.parent_author == SCORUM_ROOT_POST_PARENT)
                 FC_ASSERT((now - auth.last_root_post) > SCORUM_MIN_ROOT_COMMENT_INTERVAL,
-                    "You may only post once every 5 minutes.", ("now", now)("last_root_post", auth.last_root_post));
+                          "You may only post once every 5 minutes.",
+                          ("now", now)("last_root_post", auth.last_root_post));
             else
                 FC_ASSERT((now - auth.last_post) > SCORUM_MIN_REPLY_INTERVAL,
-                    "You may only comment once every 20 seconds.", ("now", now)("auth.last_post", auth.last_post));
+                          "You may only comment once every 20 seconds.",
+                          ("now", now)("auth.last_post", auth.last_post));
 
             uint16_t reward_weight = SCORUM_100_PERCENT;
             uint64_t post_bandwidth = auth.post_bandwidth;
@@ -494,14 +501,14 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 if (!parent)
                 {
                     FC_ASSERT(com.parent_author == account_name_type(), "The parent of a comment cannot be changed.");
-                    FC_ASSERT(
-                        equal(com.parent_permlink, o.parent_permlink), "The permlink of a comment cannot change.");
+                    FC_ASSERT(equal(com.parent_permlink, o.parent_permlink),
+                              "The permlink of a comment cannot change.");
                 }
                 else
                 {
                     FC_ASSERT(com.parent_author == o.parent_author, "The parent of a comment cannot be changed.");
-                    FC_ASSERT(
-                        equal(com.parent_permlink, o.parent_permlink), "The permlink of a comment cannot change.");
+                    FC_ASSERT(equal(com.parent_permlink, o.parent_permlink),
+                              "The permlink of a comment cannot change.");
                 }
 
 #ifndef IS_LOW_MEM
@@ -565,7 +572,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
         accountService.check_account_existence(o.agent);
 
         FC_ASSERT(o.ratification_deadline > _db.head_block_time(),
-            "The escorw ratification deadline must be after head block time.");
+                  "The escorw ratification deadline must be after head block time.");
         FC_ASSERT(o.escrow_expiration > _db.head_block_time(), "The escrow expiration must be after head block time.");
 
         asset scorum_spent = o.scorum_amount;
@@ -573,8 +580,8 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
             scorum_spent += o.fee;
 
         FC_ASSERT(from_account.balance >= scorum_spent,
-            "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}",
-            ("r", scorum_spent)("a", from_account.balance));
+                  "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}",
+                  ("r", scorum_spent)("a", from_account.balance));
 
         _db.adjust_balance(from_account, -scorum_spent);
 
@@ -601,12 +608,12 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 
         const auto& escrow = _db.get_escrow(o.from, o.escrow_id);
 
-        FC_ASSERT(
-            escrow.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).", ("o", o.to)("e", escrow.to));
+        FC_ASSERT(escrow.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).",
+                  ("o", o.to)("e", escrow.to));
         FC_ASSERT(escrow.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).",
-            ("o", o.agent)("e", escrow.agent));
+                  ("o", o.agent)("e", escrow.agent));
         FC_ASSERT(escrow.ratification_deadline >= _db.head_block_time(),
-            "The escrow ratification deadline has passed. Escrow can no longer be ratified.");
+                  "The escrow ratification deadline has passed. Escrow can no longer be ratified.");
 
         bool reject_escrow = !o.approve;
 
@@ -621,8 +628,8 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
         }
         if (o.who == o.agent)
         {
-            FC_ASSERT(
-                !escrow.agent_approved, "Account 'agent' (${a}) has already approved the escrow.", ("a", o.agent));
+            FC_ASSERT(!escrow.agent_approved, "Account 'agent' (${a}) has already approved the escrow.",
+                      ("a", o.agent));
 
             if (!reject_escrow)
             {
@@ -660,11 +667,11 @@ void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
         const auto& e = _db.get_escrow(o.from, o.escrow_id);
         FC_ASSERT(_db.head_block_time() < e.escrow_expiration, "Disputing the escrow must happen before expiration.");
         FC_ASSERT(e.to_approved && e.agent_approved,
-            "The escrow must be approved by all parties before a dispute can be raised.");
+                  "The escrow must be approved by all parties before a dispute can be raised.");
         FC_ASSERT(!e.disputed, "The escrow is already under dispute.");
         FC_ASSERT(e.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).", ("o", o.to)("e", e.to));
         FC_ASSERT(e.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).",
-            ("o", o.agent)("e", e.agent));
+                  ("o", o.agent)("e", e.agent));
 
         _db._temporary_public_impl().modify(e, [&](escrow_object& esc) { esc.disputed = true; });
     }
@@ -682,13 +689,13 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 
         const auto& e = _db.get_escrow(o.from, o.escrow_id);
         FC_ASSERT(e.scorum_balance >= o.scorum_amount,
-            "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}",
-            ("a", o.scorum_amount)("b", e.scorum_balance));
+                  "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}",
+                  ("a", o.scorum_amount)("b", e.scorum_balance));
         FC_ASSERT(e.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).", ("o", o.to)("e", e.to));
         FC_ASSERT(e.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).",
-            ("o", o.agent)("e", e.agent));
+                  ("o", o.agent)("e", e.agent));
         FC_ASSERT(o.receiver == e.from || o.receiver == e.to, "Funds must be released to 'from' (${f}) or 'to' (${t})",
-            ("f", e.from)("t", e.to));
+                  ("f", e.from)("t", e.to));
         FC_ASSERT(e.to_approved && e.agent_approved, "Funds cannot be released prior to escrow approval.");
 
         // If there is a dispute regardless of expiration, the agent can release funds to either party
@@ -699,8 +706,8 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
         else
         {
             FC_ASSERT(o.who == e.from || o.who == e.to,
-                "Only 'from' (${f}) and 'to' (${t}) can release funds from a non-disputed escrow",
-                ("f", e.from)("t", e.to));
+                      "Only 'from' (${f}) and 'to' (${t}) can release funds from a non-disputed escrow",
+                      ("f", e.from)("t", e.to));
 
             if (e.escrow_expiration > _db.head_block_time())
             {
@@ -708,12 +715,12 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
                 if (o.who == e.from)
                 {
                     FC_ASSERT(o.receiver == e.to, "Only 'from' (${f}) can release funds to 'to' (${t}).",
-                        ("f", e.from)("t", e.to));
+                              ("f", e.from)("t", e.to));
                 }
                 else if (o.who == e.to)
                 {
                     FC_ASSERT(o.receiver == e.from, "Only 'to' (${t}) can release funds to 'from' (${t}).",
-                        ("f", e.from)("t", e.to));
+                              ("f", e.from)("t", e.to));
                 }
             }
         }
@@ -747,7 +754,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
     }
 
     FC_ASSERT(_db.get_balance(from_account, o.amount.symbol) >= o.amount,
-        "Account does not have sufficient funds for transfer.");
+              "Account does not have sufficient funds for transfer.");
     _db.adjust_balance(from_account, -o.amount);
     _db.adjust_balance(to_account, o.amount);
 }
@@ -760,7 +767,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     const auto& to_account = o.to.size() ? accountService.get_account(o.to) : from_account;
 
     FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
-        "Account does not have sufficient SCORUM for transfer.");
+              "Account does not have sufficient SCORUM for transfer.");
     _db.adjust_balance(from_account, -o.amount);
     _db.create_vesting(to_account, o.amount);
 }
@@ -772,9 +779,9 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     const auto& account = accountService.get_account(o.account);
 
     FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL),
-        "Account does not have sufficient Scorum Power for withdraw.");
+              "Account does not have sufficient Scorum Power for withdraw.");
     FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares,
-        "Account does not have sufficient Scorum Power for withdraw.");
+              "Account does not have sufficient Scorum Power for withdraw.");
 
     if (!account.mined)
     {
@@ -784,15 +791,16 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
         asset min_vests = wso.median_props.account_creation_fee * props.get_vesting_share_price();
         min_vests.amount.value *= 10;
 
-        FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
+        FC_ASSERT(
+            account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
             "Account registered by another account requires 10x account creation fee worth of Scorum Power before it "
             "can be powered down.");
     }
 
     if (o.vesting_shares.amount == 0)
     {
-        FC_ASSERT(
-            account.vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
+        FC_ASSERT(account.vesting_withdraw_rate.amount != 0,
+                  "This operation would not change the vesting withdraw rate.");
 
         _db._temporary_public_impl().modify(account, [&](account_object& a) {
             a.vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
@@ -814,7 +822,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
                 new_vesting_withdraw_rate.amount = 1;
 
             FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate,
-                "This operation would not change the vesting withdraw rate.");
+                      "This operation would not change the vesting withdraw rate.");
 
             a.vesting_withdraw_rate = new_vesting_withdraw_rate;
             a.next_vesting_withdrawal = _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
@@ -840,7 +848,7 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
         {
             FC_ASSERT(o.percent != 0, "Cannot create a 0% destination.");
             FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
-                "Account already has the maximum number of routes.");
+                      "Account already has the maximum number of routes.");
 
             _db._temporary_public_impl().create<withdraw_vesting_route_object>(
                 [&](withdraw_vesting_route_object& wvdo) {
@@ -877,8 +885,8 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
             ++itr;
         }
 
-        FC_ASSERT(
-            total_percent <= SCORUM_100_PERCENT, "More than 100% of vesting withdrawals allocated to destinations.");
+        FC_ASSERT(total_percent <= SCORUM_100_PERCENT,
+                  "More than 100% of vesting withdrawals allocated to destinations.");
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -952,7 +960,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
         FC_ASSERT(o.approve, "Vote doesn't exist, user must indicate a desire to approve witness.");
 
         FC_ASSERT(voter.witnesses_voted_for < SCORUM_MAX_ACCOUNT_WITNESS_VOTES,
-            "Account has voted for too many witnesses."); // TODO: Remove after hardfork 2
+                  "Account has voted for too many witnesses."); // TODO: Remove after hardfork 2
 
         _db._temporary_public_impl().create<witness_vote_object>([&](witness_vote_object& v) {
             v.witness = witness.id;
@@ -984,7 +992,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         const auto& voter = accountService.get_account(o.voter);
 
         FC_ASSERT(!(voter.owner_challenged || voter.active_challenged),
-            "Operation cannot be processed because the account is currently challenged.");
+                  "Operation cannot be processed because the account is currently challenged.");
 
         FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
@@ -1047,10 +1055,10 @@ void vote_evaluator::do_apply(const vote_operation& o)
                   .to_uint64();
 
         FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || o.weight == 0,
-            "Voting weight is too small, please accumulate more voting power or scorum power.");
+                  "Voting weight is too small, please accumulate more voting power or scorum power.");
 
-        FC_ASSERT(
-            itr == comment_vote_idx.end() || itr->num_changes != -1, "Cannot vote again on a comment after payout.");
+        FC_ASSERT(itr == comment_vote_idx.end() || itr->num_changes != -1,
+                  "Cannot vote again on a comment after payout.");
 
         if (itr == comment_vote_idx.end())
         {
@@ -1061,7 +1069,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
             if (rshares > 0)
             {
                 FC_ASSERT(_db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
-                    "Cannot increase payout within last twelve hours before payout.");
+                          "Cannot increase payout within last twelve hours before payout.");
             }
 
             // used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread
@@ -1148,7 +1156,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     /// discount weight by time
                     uint128_t w(max_vote_weight);
                     uint64_t delta_t = std::min(uint64_t((cv.last_update - comment.created).to_seconds()),
-                        uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS));
+                                                uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS));
 
                     w *= delta_t;
                     w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
@@ -1169,7 +1177,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         else
         {
             FC_ASSERT(itr->num_changes < SCORUM_MAX_VOTE_CHANGES,
-                "Voter has used the maximum number of vote changes on this comment.");
+                      "Voter has used the maximum number of vote changes on this comment.");
 
             FC_ASSERT(itr->vote_percent != o.weight, "You have already voted in a similar way.");
 
@@ -1179,7 +1187,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
             if (itr->rshares < rshares)
             {
                 FC_ASSERT(_db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
-                    "Cannot increase payout within last twelve hours before payout.");
+                          "Cannot increase payout within last twelve hours before payout.");
             }
 
             _db._temporary_public_impl().modify(voter, [&](account_object& a) {
@@ -1238,7 +1246,9 @@ void vote_evaluator::do_apply(const vote_operation& o)
     FC_CAPTURE_AND_RETHROW((o))
 }
 
-void custom_evaluator::do_apply(const custom_operation& o) {}
+void custom_evaluator::do_apply(const custom_operation& o)
+{
+}
 
 void custom_json_evaluator::do_apply(const custom_json_operation& o)
 {
@@ -1291,7 +1301,7 @@ void prove_authority_evaluator::do_apply(const prove_authority_operation& o)
 
     const auto& challenged = accountService.get_account(o.challenged);
     FC_ASSERT(challenged.owner_challenged || challenged.active_challenged,
-        "Account is not challeneged. No need to prove authority.");
+              "Account is not challeneged. No need to prove authority.");
 
     accountService.prove_authority(challenged, o.require_owner);
 }
@@ -1304,11 +1314,11 @@ void request_account_recovery_evaluator::do_apply(const request_account_recovery
 
     if (account_to_recover.recovery_account.length()) // Make sure recovery matches expected recovery account
         FC_ASSERT(account_to_recover.recovery_account == o.recovery_account,
-            "Cannot recover an account that does not have you as there recovery partner.");
+                  "Cannot recover an account that does not have you as there recovery partner.");
     else // Empty string recovery account defaults to top witness
         FC_ASSERT(_db._temporary_public_impl().get_index<witness_index>().indices().get<by_vote_name>().begin()->owner
                 == o.recovery_account,
-            "Top witness must recover an account with no recovery partner.");
+                  "Top witness must recover an account with no recovery partner.");
 
     const auto& recovery_request_idx
         = _db._temporary_public_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -1351,15 +1361,15 @@ void recover_account_evaluator::do_apply(const recover_account_operation& o)
     const auto& account = accountService.get_account(o.account_to_recover);
 
     FC_ASSERT(_db.head_block_time() - account.last_account_recovery > SCORUM_OWNER_UPDATE_LIMIT,
-        "Owner authority can only be updated once an hour.");
+              "Owner authority can only be updated once an hour.");
 
     const auto& recovery_request_idx
         = _db._temporary_public_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
     auto request = recovery_request_idx.find(o.account_to_recover);
 
     FC_ASSERT(request != recovery_request_idx.end(), "There are no active recovery requests for this account.");
-    FC_ASSERT(
-        request->new_owner_authority == o.new_owner_authority, "New owner authority does not match recovery request.");
+    FC_ASSERT(request->new_owner_authority == o.new_owner_authority,
+              "New owner authority does not match recovery request.");
 
     const auto& recent_auth_idx
         = _db._temporary_public_impl().get_index<owner_authority_history_index>().indices().get<by_account>();
@@ -1448,9 +1458,9 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
     const auto& acnt = accountService.get_account(op.account);
 
     FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCORUM. Claim: ${c} Actual: ${a}",
-        ("c", op.reward_scorum)("a", acnt.reward_scorum_balance));
+              ("c", op.reward_scorum)("a", acnt.reward_scorum_balance));
     FC_ASSERT(op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much VESTS. Claim: ${c} Actual: ${a}",
-        ("c", op.reward_vests)("a", acnt.reward_vesting_balance));
+              ("c", op.reward_vests)("a", acnt.reward_vesting_balance));
 
     asset reward_vesting_scorum_to_move = asset(0, SCORUM_SYMBOL);
     if (op.reward_vests == acnt.reward_vesting_balance)
@@ -1458,9 +1468,9 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
     else
         reward_vesting_scorum_to_move
             = asset(((uint128_t(op.reward_vests.amount.value) * uint128_t(acnt.reward_vesting_scorum.amount.value))
-                        / uint128_t(acnt.reward_vesting_balance.amount.value))
+                     / uint128_t(acnt.reward_vesting_balance.amount.value))
                         .to_uint64(),
-                SCORUM_SYMBOL);
+                    SCORUM_SYMBOL);
 
     _db.adjust_reward_balance(acnt, -op.reward_scorum);
     _db.adjust_balance(acnt, op.reward_scorum);
@@ -1504,8 +1514,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     if (delegation == nullptr)
     {
         FC_ASSERT(available_shares >= op.vesting_shares, "Account does not have enough vesting shares to delegate.");
-        FC_ASSERT(
-            op.vesting_shares >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation));
+        FC_ASSERT(op.vesting_shares >= min_delegation, "Account must delegate a minimum of ${v}",
+                  ("v", min_delegation));
 
         _db._temporary_public_impl().create<vesting_delegation_object>([&](vesting_delegation_object& obj) {
             obj.delegator = op.delegator;
@@ -1526,9 +1536,9 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         auto delta = op.vesting_shares - delegation->vesting_shares;
 
         FC_ASSERT(delta >= min_update, "Scorum Power increase is not enough of a difference. min_update: ${min}",
-            ("min", min_update));
+                  ("min", min_update));
         FC_ASSERT(available_shares >= op.vesting_shares - delegation->vesting_shares,
-            "Account does not have enough vesting shares to delegate.");
+                  "Account does not have enough vesting shares to delegate.");
 
         _db._temporary_public_impl().modify(delegator, [&](account_object& a) { a.delegated_vesting_shares += delta; });
 
@@ -1545,14 +1555,14 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         if (op.vesting_shares.amount > 0)
         {
             FC_ASSERT(delta >= min_update, "Scorum Power decrease is not enough of a difference. min_update: ${min}",
-                ("min", min_update));
+                      ("min", min_update));
             FC_ASSERT(op.vesting_shares >= min_delegation,
-                "Delegation must be removed or leave minimum delegation amount of ${v}", ("v", min_delegation));
+                      "Delegation must be removed or leave minimum delegation amount of ${v}", ("v", min_delegation));
         }
         else
         {
             FC_ASSERT(delegation->vesting_shares.amount > 0,
-                "Delegation would set vesting_shares to zero, but it is already zero");
+                      "Delegation would set vesting_shares to zero, but it is already zero");
         }
 
         _db._temporary_public_impl().create<vesting_delegation_expiration_object>(

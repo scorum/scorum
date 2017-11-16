@@ -4,9 +4,15 @@ namespace scorum {
 namespace protocol {
 
 // authority methods
-void authority::add_authority(const public_key_type& k, weight_type w) { key_auths[k] = w; }
+void authority::add_authority(const public_key_type& k, weight_type w)
+{
+    key_auths[k] = w;
+}
 
-void authority::add_authority(const account_name_type& k, weight_type w) { account_auths[k] = w; }
+void authority::add_authority(const account_name_type& k, weight_type w)
+{
+    account_auths[k] = w;
+}
 
 vector<public_key_type> authority::get_keys() const
 {
@@ -27,7 +33,10 @@ bool authority::is_impossible() const
     return auth_weights < weight_threshold;
 }
 
-uint32_t authority::num_auths() const { return account_auths.size() + key_auths.size(); }
+uint32_t authority::num_auths() const
+{
+    return account_auths.size() + key_auths.size();
+}
 
 void authority::clear()
 {
