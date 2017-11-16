@@ -205,5 +205,147 @@ void dbs_account::prove_authority(const account_object& challenged, bool require
         }
     });
 }
+
+void dbs_account::create_account_recovery(const account_name_type &account_to_recover,
+                                          const authority& new_owner_authority)
+{
+    const auto& recovery_request_idx
+        = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
+    auto request = recovery_request_idx.find(account_to_recover);
+
+    if (request == recovery_request_idx.end()) // New Request
+    {
+        FC_ASSERT(!new_owner_authority.is_impossible(), "Cannot recover using an impossible authority.");
+        FC_ASSERT(new_owner_authority.weight_threshold, "Cannot recover using an open authority.");
+
+        check_account_existence(new_owner_authority.account_auths);
+
+        db_impl().create<account_recovery_request_object>([&](account_recovery_request_object& req) {
+            req.account_to_recover = account_to_recover;
+            req.new_owner_authority = new_owner_authority;
+            req.expires = db_impl().head_block_time() + SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD;
+        });
+    }
+    else if (new_owner_authority.weight_threshold == 0) // Cancel Request if authority is open
+    {
+        db_impl().remove(*request);
+    }
+    else // Change Request
+    {
+        FC_ASSERT(!new_owner_authority.is_impossible(), "Cannot recover using an impossible authority.");
+
+        check_account_existence(new_owner_authority.account_auths);
+
+        db_impl().modify(*request, [&](account_recovery_request_object& req) {
+            req.new_owner_authority = new_owner_authority;
+            req.expires = db_impl().head_block_time() + SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD;
+        });
+    }
+}
+
+void dbs_account::submit_account_recovery(const account_object &account_to_recover,
+                             const authority& new_owner_authority,
+                             const authority& recent_owner_authority)
+{
+    const auto& recovery_request_idx
+        = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
+    auto request = recovery_request_idx.find(account_to_recover.name);
+
+    FC_ASSERT(request != recovery_request_idx.end(), "There are no active recovery requests for this account.");
+    FC_ASSERT(request->new_owner_authority == new_owner_authority,
+              "New owner authority does not match recovery request.");
+
+    const auto& recent_auth_idx
+        = db_impl().get_index<owner_authority_history_index>().indices().get<by_account>();
+    auto hist = recent_auth_idx.lower_bound(account_to_recover.name);
+    bool found = false;
+
+    while (hist != recent_auth_idx.end() && hist->account == account_to_recover.name && !found)
+    {
+        found = hist->previous_owner_authority == recent_owner_authority;
+        if (found)
+            break;
+        ++hist;
+    }
+
+    FC_ASSERT(found, "Recent authority not found in authority history.");
+
+    db_impl().remove(*request); // Remove first, update_owner_authority may invalidate iterator
+    update_owner_authority(account_to_recover, new_owner_authority);
+    db_impl().modify(account_to_recover,
+                [&](account_object& a) { a.last_account_recovery = db_impl().head_block_time(); });
+}
+
+void dbs_account::change_recovery_account(const account_object &account_to_recover,
+                             const account_name_type &new_recovery_account_name)
+{
+    const auto& change_recovery_idx
+        = db_impl().get_index<change_recovery_account_request_index>().indices().get<by_account>();
+    auto request = change_recovery_idx.find(account_to_recover.name);
+
+    if (request == change_recovery_idx.end()) // New request
+    {
+        db_impl().create<change_recovery_account_request_object>(
+            [&](change_recovery_account_request_object& req) {
+                req.account_to_recover = account_to_recover.name;
+                req.recovery_account = new_recovery_account_name;
+                req.effective_on = db_impl().head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
+            });
+    }
+    else if (account_to_recover.recovery_account != new_recovery_account_name) // Change existing request
+    {
+        db_impl().modify(*request, [&](change_recovery_account_request_object& req) {
+            req.recovery_account = new_recovery_account_name;
+            req.effective_on = db_impl().head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
+        });
+    }
+    else // Request exists and changing back to current recovery account
+    {
+        db_impl().remove(*request);
+    }
+}
+
+void dbs_account::update_voting_proxy(const account_object& account,
+                                      const optional<account_object> &proxy_account)
+{
+    /// remove all current votes
+    std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
+    delta[0] = -account.vesting_shares.amount;
+    for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
+        delta[i + 1] = -account.proxied_vsf_votes[i];
+
+    db_impl().adjust_proxied_witness_votes(account, delta);
+
+    if (proxy_account.valid())
+    {
+        flat_set<account_id_type> proxy_chain({ account.id, (*proxy_account).id });
+        proxy_chain.reserve(SCORUM_MAX_PROXY_RECURSION_DEPTH + 1);
+
+        /// check for proxy loops and fail to update the proxy if it would create a loop
+        auto cprox = &(*proxy_account);
+        while (cprox->proxy.size() != 0)
+        {
+            const auto next_proxy = get_account(cprox->proxy);
+            FC_ASSERT(proxy_chain.insert(next_proxy.id).second, "This proxy would create a proxy loop.");
+            cprox = &next_proxy;
+            FC_ASSERT(proxy_chain.size() <= SCORUM_MAX_PROXY_RECURSION_DEPTH, "Proxy chain is too long.");
+        }
+
+        /// clear all individual vote records
+        db_impl().clear_witness_votes(account);
+
+        db_impl().modify(account, [&](account_object& a) { a.proxy = (*proxy_account).name; });
+
+        /// add all new votes
+        for (int i = 0; i <= SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
+            delta[i] = -delta[i];
+        db_impl().adjust_proxied_witness_votes(account, delta);
+    }
+    else
+    { /// we are clearing the proxy which means we simply update the account
+        db_impl().modify(account, [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
+    }
+}
+
 }
 }

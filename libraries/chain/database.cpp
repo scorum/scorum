@@ -2153,6 +2153,9 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
 void database::show_free_memory(bool force)
 {
+#ifdef IS_TEST_NET
+    boost::ignore_unused(force);
+#else
     uint32_t free_gb = uint32_t(get_free_memory() / (1024 * 1024 * 1024));
     if (force || (free_gb < _last_free_gb_printed) || (free_gb > _last_free_gb_printed + 1))
     {
@@ -2167,6 +2170,7 @@ void database::show_free_memory(bool force)
         if (free_mb <= 100 && head_block_num() % 10 == 0)
             elog("Free memory is now ${n}M. Increase shared file size immediately!", ("n", free_mb));
     }
+#endif
 }
 
 void database::_apply_block(const signed_block& next_block)

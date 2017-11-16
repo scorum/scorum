@@ -7,13 +7,22 @@
 namespace scorum {
 namespace chain {
 
+class witness_object;
+class witness_schedule_object;
+
 class dbs_witness : public dbs_base
 {
 public:
     explicit dbs_witness(database& db);
 
 public:
-    // TODO
+
+    const witness_object& get_witness(const account_name_type& name) const;
+
+    const witness_schedule_object& get_witness_schedule_object() const;
+
+    const witness_object& get_top_witness() const;
+
 };
 }
 }

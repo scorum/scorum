@@ -57,7 +57,18 @@ public:
 
     void prove_authority(const account_object& challenged, bool require_owner);
 
+    void create_account_recovery(const account_name_type &account_to_recover_name,
+                                 const authority& new_owner_authority);
 
+    void submit_account_recovery(const account_object &account_to_recover,
+                                 const authority& new_owner_authority,
+                                 const authority& recent_owner_authority);
+
+    void change_recovery_account(const account_object &account_to_recover,
+                                 const account_name_type &new_recovery_account);
+
+    void update_voting_proxy(const account_object& account,
+                             const optional<account_object> &proxy_account);
 };
 }
 }
