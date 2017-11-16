@@ -35,6 +35,5 @@ const witness_object& dbs_witness::get_top_witness() const
     FC_ASSERT(idx.begin() != idx.end(), "Empty witness_index by_vote_name.");
     return (*idx.begin());
 }
-
 }
 }

@@ -126,12 +126,12 @@ const account_authority_object& dbs_account::get_account_authority(const account
 }
 
 void dbs_account::update_acount(const account_object& account,
-    const account_authority_object& account_authority,
-                   const public_key_type& memo_key,
-                   const string& json_metadata,
-                    const optional<authority> &owner,
-                    const optional<authority> &active,
-                    const optional<authority> &posting)
+                                const account_authority_object& account_authority,
+                                const public_key_type& memo_key,
+                                const string& json_metadata,
+                                const optional<authority>& owner,
+                                const optional<authority>& active,
+                                const optional<authority>& posting)
 {
     db_impl().modify(account, [&](account_object& acc) {
         if (memo_key != public_key_type())
@@ -206,7 +206,7 @@ void dbs_account::prove_authority(const account_object& challenged, bool require
     });
 }
 
-void dbs_account::create_account_recovery(const account_name_type &account_to_recover,
+void dbs_account::create_account_recovery(const account_name_type& account_to_recover,
                                           const authority& new_owner_authority)
 {
     const auto& recovery_request_idx
@@ -243,9 +243,9 @@ void dbs_account::create_account_recovery(const account_name_type &account_to_re
     }
 }
 
-void dbs_account::submit_account_recovery(const account_object &account_to_recover,
-                             const authority& new_owner_authority,
-                             const authority& recent_owner_authority)
+void dbs_account::submit_account_recovery(const account_object& account_to_recover,
+                                          const authority& new_owner_authority,
+                                          const authority& recent_owner_authority)
 {
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -255,8 +255,7 @@ void dbs_account::submit_account_recovery(const account_object &account_to_recov
     FC_ASSERT(request->new_owner_authority == new_owner_authority,
               "New owner authority does not match recovery request.");
 
-    const auto& recent_auth_idx
-        = db_impl().get_index<owner_authority_history_index>().indices().get<by_account>();
+    const auto& recent_auth_idx = db_impl().get_index<owner_authority_history_index>().indices().get<by_account>();
     auto hist = recent_auth_idx.lower_bound(account_to_recover.name);
     bool found = false;
 
@@ -273,11 +272,11 @@ void dbs_account::submit_account_recovery(const account_object &account_to_recov
     db_impl().remove(*request); // Remove first, update_owner_authority may invalidate iterator
     update_owner_authority(account_to_recover, new_owner_authority);
     db_impl().modify(account_to_recover,
-                [&](account_object& a) { a.last_account_recovery = db_impl().head_block_time(); });
+                     [&](account_object& a) { a.last_account_recovery = db_impl().head_block_time(); });
 }
 
-void dbs_account::change_recovery_account(const account_object &account_to_recover,
-                             const account_name_type &new_recovery_account_name)
+void dbs_account::change_recovery_account(const account_object& account_to_recover,
+                                          const account_name_type& new_recovery_account_name)
 {
     const auto& change_recovery_idx
         = db_impl().get_index<change_recovery_account_request_index>().indices().get<by_account>();
@@ -285,12 +284,11 @@ void dbs_account::change_recovery_account(const account_object &account_to_recov
 
     if (request == change_recovery_idx.end()) // New request
     {
-        db_impl().create<change_recovery_account_request_object>(
-            [&](change_recovery_account_request_object& req) {
-                req.account_to_recover = account_to_recover.name;
-                req.recovery_account = new_recovery_account_name;
-                req.effective_on = db_impl().head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
-            });
+        db_impl().create<change_recovery_account_request_object>([&](change_recovery_account_request_object& req) {
+            req.account_to_recover = account_to_recover.name;
+            req.recovery_account = new_recovery_account_name;
+            req.effective_on = db_impl().head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
+        });
     }
     else if (account_to_recover.recovery_account != new_recovery_account_name) // Change existing request
     {
@@ -305,8 +303,7 @@ void dbs_account::change_recovery_account(const account_object &account_to_recov
     }
 }
 
-void dbs_account::update_voting_proxy(const account_object& account,
-                                      const optional<account_object> &proxy_account)
+void dbs_account::update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account)
 {
     /// remove all current votes
     std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
@@ -343,9 +340,9 @@ void dbs_account::update_voting_proxy(const account_object& account,
     }
     else
     { /// we are clearing the proxy which means we simply update the account
-        db_impl().modify(account, [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
+        db_impl().modify(account,
+                         [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
     }
 }
-
 }
 }
