@@ -110,7 +110,7 @@ public:
      * Will close the database before wiping. Database will be closed when this function returns.
      */
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
-    void close(bool rewind = true);
+    void close();
 
     //////////////////// db_block.cpp ////////////////////
 
@@ -376,8 +376,6 @@ public:
     /**
      * @}
      */
-
-    const std::string& get_json_schema() const;
 
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
