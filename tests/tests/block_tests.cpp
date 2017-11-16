@@ -49,7 +49,10 @@ BOOST_AUTO_TEST_SUITE(block_tests)
 
 void db_setup_and_open(database& db, const fc::path& path)
 {
-    db.set_init_genesis_state(genesis_state_type(INITIAL_TEST_SUPPLY));
+    genesis_state_type genesis(INITIAL_TEST_SUPPLY);
+    create_initdelegate_for_genesis_state(genesis);
+
+    db.set_init_genesis_state(genesis);
     db._log_hardforks = false;
     db.open(path, path, TEST_SHARED_MEM_SIZE, chainbase::database::read_write);
 }

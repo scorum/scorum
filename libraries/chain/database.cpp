@@ -1948,36 +1948,9 @@ void database::init_genesis()
             uint32_t old_flags;
         } inhibitor(*this);
 
-        // Create initial delegate
-        public_key_type init_public_key(SCORUM_INIT_PUBLIC_KEY);
-
-        create<account_object>([&](account_object& a) {
-            a.name = SCORUM_INIT_DELEGATE_NAME;
-            a.memo_key = init_public_key;
-            a.balance = asset(_genesis_state.init_supply, SCORUM_SYMBOL);
-        });
-
-        create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = SCORUM_INIT_DELEGATE_NAME;
-            auth.owner.add_authority(init_public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
-
-        create<witness_object>([&](witness_object& w) {
-            w.owner = SCORUM_INIT_DELEGATE_NAME;
-            w.signing_key = init_public_key;
-            w.schedule = witness_object::top19;
-        });
-        // end create initial delegate
-
-        // Create witness scheduler
-        create<witness_schedule_object>(
-            [&](witness_schedule_object& wso) { wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME; });
-
         init_genesis_accounts(_genesis_state.accounts);
         init_genesis_witnesses(_genesis_state.witness_candidates);
+        init_witness_schedule(_genesis_state.witness_candidates);
 
         init_genesis_global_property_object(_genesis_state.init_supply);
     }
@@ -1989,6 +1962,16 @@ void database::set_init_genesis_state(const genesis_state_type& genesis_state)
     _genesis_state = genesis_state;
 }
 
+void database::init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates)
+{
+    create<witness_schedule_object>([&](witness_schedule_object& wso) {
+        for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
+        {
+            wso.current_shuffled_witnesses[i] = witness_candidates[i].owner_name;
+        }
+    });
+}
+
 void database::init_genesis_accounts(const vector<genesis_state_type::account_type>& accounts)
 {
     for (auto& account : accounts)
@@ -1998,7 +1981,7 @@ void database::init_genesis_accounts(const vector<genesis_state_type::account_ty
             a.memo_key = account.public_key;
             a.balance = asset(account.scr_amount, SCORUM_SYMBOL);
             a.json_metadata = "{created_at: 'GENESIS'}";
-            a.recovery_account = SCORUM_INIT_DELEGATE_NAME;
+            a.recovery_account = account.recovery_account;
         });
 
         create<account_authority_object>([&](account_authority_object& auth) {
@@ -2015,24 +1998,9 @@ void database::init_genesis_witnesses(const std::vector<genesis_state_type::witn
 {
     for (auto& witness : witnesses)
     {
-        create<account_object>([&](account_object& a) {
-            a.name = witness.name;
-            a.memo_key = witness.public_key;
-            a.balance = asset(witness.balance, SCORUM_SYMBOL);
-        });
-
-        create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = witness.name;
-            auth.owner.add_authority(witness.public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
-
         create<witness_object>([&](witness_object& w) {
-            w.owner = witness.name;
-            w.signing_key = witness.public_key;
-            ;
+            w.owner = witness.owner_name;
+            w.signing_key = witness.block_signing_key;
             w.schedule = witness_object::top19;
         });
     }
@@ -2041,7 +2009,6 @@ void database::init_genesis_witnesses(const std::vector<genesis_state_type::witn
 void database::init_genesis_global_property_object(uint64_t init_supply)
 {
     auto gpo = create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
-        p.current_witness = SCORUM_INIT_DELEGATE_NAME;
         p.time = SCORUM_GENESIS_TIME;
         p.recent_slots_filled = fc::uint128::max_value();
         p.participation_count = 128;
