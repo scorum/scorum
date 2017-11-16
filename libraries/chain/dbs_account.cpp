@@ -106,10 +106,7 @@ const account_object& dbs_account::get_account(const account_name_type& name) co
     FC_CAPTURE_AND_RETHROW((name))
 }
 
-void dbs_account::check_account_existence(const account_name_type& name) const
-{
-    get_account(name);
-}
+void dbs_account::check_account_existence(const account_name_type& name) const { get_account(name); }
 
 void dbs_account::update_owner_authority(const account_object& account, const authority& owner_authority)
 {
@@ -123,10 +120,10 @@ void dbs_account::update_owner_authority(const account_object& account, const au
     }
 
     db_impl().modify(
-    db_impl().get<account_authority_object, by_account>(account.name), [&](account_authority_object& auth) {
-        auth.owner = owner_authority;
-        auth.last_owner_update = db_impl().head_block_time();
-    });
+        db_impl().get<account_authority_object, by_account>(account.name), [&](account_authority_object& auth) {
+            auth.owner = owner_authority;
+            auth.last_owner_update = db_impl().head_block_time();
+        });
 }
 }
 }

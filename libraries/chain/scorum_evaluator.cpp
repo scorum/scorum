@@ -141,7 +141,7 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
                            SCORUM_SYMBOL),
         "Insufficient Fee: ${f} required, ${p} provided.",
         ("f", wso.median_props.account_creation_fee * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))(
-                  "p", o.fee));
+            "p", o.fee));
 
     // check accounts existence
 
@@ -188,7 +188,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
             >= o.delegation,
         "Insufficient vesting shares to delegate to new account.",
         ("creator.vesting_shares", creator.vesting_shares)(
-                  "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
+            "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
 
     auto target_delegation
         = asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
@@ -202,7 +202,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
         ("f", target_delegation)("p", current_delegation)("account_creation_fee",
-                  wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation", o.delegation));
+            wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation", o.delegation));
 
     FC_ASSERT(o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
         ("f", wso.median_props.account_creation_fee)("p", o.fee));

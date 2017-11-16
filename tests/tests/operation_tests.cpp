@@ -900,7 +900,7 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             auto sam_weight /*= ( ( uint128_t( new_sam.vesting_shares.amount.value ) ) / 400 + 1 ).to_uint64();*/
                 = ((uint128_t(new_sam.vesting_shares.amount.value)
                        * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
-                      / SCORUM_100_PERCENT)
+                    / SCORUM_100_PERCENT)
                       .to_uint64();
 
             BOOST_REQUIRE(new_sam.voting_power
@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             db.push_transaction(tx, 0);
 
             auto new_rshares = ((fc::uint128_t(db.get_account("alice").vesting_shares.amount.value) * used_power)
-                                   / SCORUM_100_PERCENT)
+                / SCORUM_100_PERCENT)
                                    .to_uint64();
 
             BOOST_REQUIRE(db.get_comment("alice", string("foo")).cashout_time

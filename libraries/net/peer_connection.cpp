@@ -512,8 +512,8 @@ void peer_connection::clear_old_inventory()
     dlog("Expiring old inventory for peer ${peer}: removing ${to_peer} items advertised to peer (${remain_to_peer} "
          "left), and ${to_us} advertised to us (${remain_to_us} left)",
         ("peer", get_remote_endpoint())("to_peer", number_of_elements_advertised_to_peer_to_discard)("remain_to_peer",
-             inventory_advertised_to_peer.size())("to_us", number_of_elements_peer_advertised_to_discard)(
-             "remain_to_us", inventory_peer_advertised_to_us.size()));
+            inventory_advertised_to_peer.size())("to_us", number_of_elements_peer_advertised_to_discard)(
+            "remain_to_us", inventory_peer_advertised_to_us.size()));
 }
 
 // we have a higher limit for blocks than transactions so we will still fetch blocks even when transactions are

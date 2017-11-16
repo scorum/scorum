@@ -187,7 +187,7 @@ uint64_t block_log::append(const signed_block& b)
                 == (std::fstream::streampos)sizeof(uint64_t) * ((uint64_t)b.block_num() - 1),
             "Append to index file occuring at wrong position.",
             ("position", (uint64_t)my->index_stream.tellp())(
-                      "expected", ((uint64_t)b.block_num() - 1) * sizeof(uint64_t)));
+                "expected", ((uint64_t)b.block_num() - 1) * sizeof(uint64_t)));
         auto data = fc::raw::pack(b);
         my->block_stream.write(data.data(), data.size());
         my->block_stream.write((char*)&pos, sizeof(pos));

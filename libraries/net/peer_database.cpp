@@ -49,14 +49,13 @@ public:
     struct endpoint_index
     {
     };
-    typedef boost::
-        multi_index_container<potential_peer_record,
-            indexed_by<ordered_non_unique<tag<last_seen_time_index>,
-                           member<potential_peer_record, fc::time_point_sec, &potential_peer_record::last_seen_time>>,
-                                  hashed_unique<tag<endpoint_index>,
-                                      member<potential_peer_record, fc::ip::endpoint, &potential_peer_record::endpoint>,
-                                      std::hash<fc::ip::endpoint>>>>
-            potential_peer_set;
+    typedef boost::multi_index_container<potential_peer_record,
+        indexed_by<ordered_non_unique<tag<last_seen_time_index>,
+                       member<potential_peer_record, fc::time_point_sec, &potential_peer_record::last_seen_time>>,
+            hashed_unique<tag<endpoint_index>,
+                member<potential_peer_record, fc::ip::endpoint, &potential_peer_record::endpoint>,
+                std::hash<fc::ip::endpoint>>>>
+        potential_peer_set;
 
 private:
     potential_peer_set _potential_peer_set;
