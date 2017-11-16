@@ -86,7 +86,10 @@ block_log::block_log()
     my->index_stream.exceptions(std::fstream::failbit | std::fstream::badbit);
 }
 
-block_log::~block_log() { flush(); }
+block_log::~block_log()
+{
+    flush();
+}
 
 void block_log::open(const fc::path& file)
 {
@@ -171,9 +174,15 @@ void block_log::open(const fc::path& file)
     }
 }
 
-void block_log::close() { my.reset(new detail::block_log_impl()); }
+void block_log::close()
+{
+    my.reset(new detail::block_log_impl());
+}
 
-bool block_log::is_open() const { return my->block_stream.is_open(); }
+bool block_log::is_open() const
+{
+    return my->block_stream.is_open();
+}
 
 uint64_t block_log::append(const signed_block& b)
 {
@@ -184,10 +193,10 @@ uint64_t block_log::append(const signed_block& b)
 
         uint64_t pos = my->block_stream.tellp();
         FC_ASSERT((uint64_t)my->index_stream.tellp()
-                == (std::fstream::streampos)sizeof(uint64_t) * ((uint64_t)b.block_num() - 1),
-            "Append to index file occuring at wrong position.",
-            ("position", (uint64_t)my->index_stream.tellp())(
-                "expected", ((uint64_t)b.block_num() - 1) * sizeof(uint64_t)));
+                      == (std::fstream::streampos)sizeof(uint64_t) * ((uint64_t)b.block_num() - 1),
+                  "Append to index file occuring at wrong position.",
+                  ("position", (uint64_t)my->index_stream.tellp())("expected",
+                                                                   ((uint64_t)b.block_num() - 1) * sizeof(uint64_t)));
         auto data = fc::raw::pack(b);
         my->block_stream.write(data.data(), data.size());
         my->block_stream.write((char*)&pos, sizeof(pos));
@@ -231,7 +240,7 @@ optional<signed_block> block_log::read_block_by_num(uint32_t block_num) const
         {
             b = read_block(pos).first;
             FC_ASSERT(b->block_num() == block_num, "Wrong block was read from block log.",
-                ("returned", b->block_num())("expected", block_num));
+                      ("returned", b->block_num())("expected", block_num));
         }
         return b;
     }
@@ -268,7 +277,10 @@ signed_block block_log::read_head() const
     FC_LOG_AND_RETHROW()
 }
 
-const optional<signed_block>& block_log::head() const { return my->head; }
+const optional<signed_block>& block_log::head() const
+{
+    return my->head;
+}
 
 void block_log::construct_index()
 {

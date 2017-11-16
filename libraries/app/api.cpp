@@ -51,9 +51,13 @@ login_api::login_api(const api_context& ctx)
 {
 }
 
-login_api::~login_api() {}
+login_api::~login_api()
+{
+}
 
-void login_api::on_api_startup() {}
+void login_api::on_api_startup()
+{
+}
 
 bool login_api::login(const string& user, const string& password)
 {
@@ -117,7 +121,7 @@ fc::api_ptr login_api::get_api_by_name(const string& api_name) const
 scorum_version_info login_api::get_version()
 {
     return scorum_version_info(fc::string(SCORUM_BLOCKCHAIN_VERSION), fc::string(graphene::utilities::git_revision_sha),
-        fc::string(fc::git_revision_sha));
+                               fc::string(fc::git_revision_sha));
 }
 
 network_broadcast_api::network_broadcast_api(const api_context& a)
@@ -149,7 +153,10 @@ bool network_broadcast_api::check_max_block_age(int32_t max_block_age)
     });
 }
 
-void network_broadcast_api::set_max_block_age(int32_t max_block_age) { _max_block_age = max_block_age; }
+void network_broadcast_api::set_max_block_age(int32_t max_block_age)
+{
+    _max_block_age = max_block_age;
+}
 
 void network_broadcast_api::on_applied_block(const signed_block& b)
 {
@@ -293,7 +300,9 @@ network_node_api::network_node_api(const api_context& a)
 {
 }
 
-void network_node_api::on_api_startup() {}
+void network_node_api::on_api_startup()
+{
+}
 
 fc::variant_object network_node_api::get_info() const
 {
@@ -302,7 +311,10 @@ fc::variant_object network_node_api::get_info() const
     return result;
 }
 
-void network_node_api::add_node(const fc::ip::endpoint& ep) { _app.p2p_node()->add_node(ep); }
+void network_node_api::add_node(const fc::ip::endpoint& ep)
+{
+    _app.p2p_node()->add_node(ep);
+}
 
 std::vector<graphene::net::peer_status> network_node_api::get_connected_peers() const
 {

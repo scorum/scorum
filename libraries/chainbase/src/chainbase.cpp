@@ -33,7 +33,9 @@ struct environment_check
     bool windows = false;
 };
 
-database::~database() {}
+database::~database()
+{
+}
 
 void database::open(const bfs::path& dir, uint32_t flags, uint64_t shared_file_size)
 {
@@ -60,8 +62,8 @@ void database::open(const bfs::path& dir, uint32_t flags, uint64_t shared_file_s
             auto existing_file_size = bfs::file_size(abs_path);
             if (shared_file_size > existing_file_size)
             {
-                if (!bip::managed_mapped_file::grow(
-                        abs_path.generic_string().c_str(), shared_file_size - existing_file_size))
+                if (!bip::managed_mapped_file::grow(abs_path.generic_string().c_str(),
+                                                    shared_file_size - existing_file_size))
                     BOOST_THROW_EXCEPTION(std::runtime_error("could not grow database file to requested size."));
             }
 
@@ -99,8 +101,8 @@ void database::open(const bfs::path& dir, uint32_t flags, uint64_t shared_file_s
     }
     else
     {
-        _meta.reset(new bip::managed_mapped_file(
-            bip::create_only, abs_path.generic_string().c_str(), sizeof(read_write_mutex_manager) * 2));
+        _meta.reset(new bip::managed_mapped_file(bip::create_only, abs_path.generic_string().c_str(),
+                                                 sizeof(read_write_mutex_manager) * 2));
 
         _rw_manager = _meta->find_or_construct<read_write_mutex_manager>("rw_manager")();
     }

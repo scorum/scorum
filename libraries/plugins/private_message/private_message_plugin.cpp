@@ -48,7 +48,10 @@ public:
     private_message_plugin_impl(private_message_plugin& _plugin);
     virtual ~private_message_plugin_impl();
 
-    scorum::chain::database& database() { return _self.database(); }
+    scorum::chain::database& database()
+    {
+        return _self.database();
+    }
 
     private_message_plugin& _self;
     std::shared_ptr<generic_custom_operation_interpreter<scorum::private_message::private_message_plugin_operation>>
@@ -69,7 +72,10 @@ private_message_plugin_impl::private_message_plugin_impl(private_message_plugin&
     return;
 }
 
-private_message_plugin_impl::~private_message_plugin_impl() { return; }
+private_message_plugin_impl::~private_message_plugin_impl()
+{
+    return;
+}
 
 } // end namespace detail
 
@@ -111,15 +117,20 @@ private_message_plugin::private_message_plugin(application* app)
 {
 }
 
-private_message_plugin::~private_message_plugin() {}
-
-std::string private_message_plugin::plugin_name() const { return "private_message"; }
-
-void private_message_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+private_message_plugin::~private_message_plugin()
 {
-    cli.add_options()("pm-account-range",
-        boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(),
+}
+
+std::string private_message_plugin::plugin_name() const
+{
+    return "private_message";
+}
+
+void private_message_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                                        boost::program_options::options_description& cfg)
+{
+    cli.add_options()(
+        "pm-account-range", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(),
         "Defines a range of accounts to private messages to/from as a json pair [\"from\",\"to\"] [from,to)");
     cfg.add(cli);
 }
@@ -168,9 +179,14 @@ vector<message_api_obj> private_message_api::get_outbox(string from, time_point 
     return result;
 }
 
-void private_message_plugin::plugin_startup() {}
+void private_message_plugin::plugin_startup()
+{
+}
 
-flat_map<string, string> private_message_plugin::tracked_accounts() const { return my->_tracked_accounts; }
+flat_map<string, string> private_message_plugin::tracked_accounts() const
+{
+    return my->_tracked_accounts;
+}
 }
 }
 

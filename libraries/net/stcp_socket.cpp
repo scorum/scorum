@@ -45,15 +45,17 @@ stcp_socket::stcp_socket()
 #endif
 {
 }
-stcp_socket::~stcp_socket() {}
+stcp_socket::~stcp_socket()
+{
+}
 
 void stcp_socket::do_key_exchange()
 {
     _priv_key = fc::ecc::private_key::generate();
     fc::ecc::public_key pub = _priv_key.get_public_key();
     fc::ecc::public_key_data s = pub.serialize();
-    std::shared_ptr<char> serialized_key_buffer(
-        new char[sizeof(fc::ecc::public_key_data)], [](char* p) { delete[] p; });
+    std::shared_ptr<char> serialized_key_buffer(new char[sizeof(fc::ecc::public_key_data)],
+                                                [](char* p) { delete[] p; });
     memcpy(serialized_key_buffer.get(), (char*)&s, sizeof(fc::ecc::public_key_data));
     _sock.write(serialized_key_buffer, sizeof(fc::ecc::public_key_data));
     _sock.read(serialized_key_buffer, sizeof(fc::ecc::public_key_data));
@@ -63,9 +65,9 @@ void stcp_socket::do_key_exchange()
     _shared_secret = _priv_key.get_shared_secret(rpub);
     //    ilog("shared secret ${s}", ("s", shared_secret) );
     _send_aes.init(fc::sha256::hash((char*)&_shared_secret, sizeof(_shared_secret)),
-        fc::city_hash_crc_128((char*)&_shared_secret, sizeof(_shared_secret)));
+                   fc::city_hash_crc_128((char*)&_shared_secret, sizeof(_shared_secret)));
     _recv_aes.init(fc::sha256::hash((char*)&_shared_secret, sizeof(_shared_secret)),
-        fc::city_hash_crc_128((char*)&_shared_secret, sizeof(_shared_secret)));
+                   fc::city_hash_crc_128((char*)&_shared_secret, sizeof(_shared_secret)));
 }
 
 void stcp_socket::connect_to(const fc::ip::endpoint& remote_endpoint)
@@ -74,7 +76,10 @@ void stcp_socket::connect_to(const fc::ip::endpoint& remote_endpoint)
     do_key_exchange();
 }
 
-void stcp_socket::bind(const fc::ip::endpoint& local_endpoint) { _sock.bind(local_endpoint); }
+void stcp_socket::bind(const fc::ip::endpoint& local_endpoint)
+{
+    _sock.bind(local_endpoint);
+}
 
 /**
  *   This method must read at least 16 bytes at a time from
@@ -131,7 +136,10 @@ size_t stcp_socket::readsome(const std::shared_ptr<char>& buf, size_t len, size_
     return readsome(buf.get() + offset, len);
 }
 
-bool stcp_socket::eof() const { return _sock.eof(); }
+bool stcp_socket::eof() const
+{
+    return _sock.eof();
+}
 
 size_t stcp_socket::writesome(const char* buffer, size_t len)
 {
@@ -184,7 +192,10 @@ size_t stcp_socket::writesome(const std::shared_ptr<const char>& buf, size_t len
     return writesome(buf.get() + offset, len);
 }
 
-void stcp_socket::flush() { _sock.flush(); }
+void stcp_socket::flush()
+{
+    _sock.flush();
+}
 
 void stcp_socket::close()
 {
@@ -195,6 +206,9 @@ void stcp_socket::close()
     FC_RETHROW_EXCEPTIONS(warn, "error closing stcp socket");
 }
 
-void stcp_socket::accept() { do_key_exchange(); }
+void stcp_socket::accept()
+{
+    do_key_exchange();
+}
 }
 } // namespace graphene::net

@@ -31,7 +31,10 @@ public:
     }
     virtual ~account_history_plugin_impl();
 
-    scorum::chain::database& database() { return _self.database(); }
+    scorum::chain::database& database()
+    {
+        return _self.database();
+    }
 
     void on_operation(const operation_notification& note);
 
@@ -42,7 +45,10 @@ public:
     flat_set<string> _op_list;
 };
 
-account_history_plugin_impl::~account_history_plugin_impl() { return; }
+account_history_plugin_impl::~account_history_plugin_impl()
+{
+    return;
+}
 
 struct operation_visitor
 {
@@ -96,8 +102,12 @@ struct operation_visitor
 
 struct operation_visitor_filter : operation_visitor
 {
-    operation_visitor_filter(database& db, const operation_notification& note, const operation_object*& n,
-        account_name_type i, const flat_set<string>& filter, bool blacklist)
+    operation_visitor_filter(database& db,
+                             const operation_notification& note,
+                             const operation_object*& n,
+                             account_name_type i,
+                             const flat_set<string>& filter,
+                             bool blacklist)
         : operation_visitor(db, note, n, i)
         , _filter(filter)
         , _blacklist(blacklist)
@@ -182,18 +192,24 @@ account_history_plugin::account_history_plugin(application* app)
     // ilog("Loading account history plugin" );
 }
 
-account_history_plugin::~account_history_plugin() {}
-
-std::string account_history_plugin::plugin_name() const { return "account_history"; }
-
-void account_history_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+account_history_plugin::~account_history_plugin()
 {
-    cli.add_options()("track-account-range", boost::program_options::value<vector<string>>()->composing()->multitoken(),
+}
+
+std::string account_history_plugin::plugin_name() const
+{
+    return "account_history";
+}
+
+void account_history_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                                        boost::program_options::options_description& cfg)
+{
+    cli.add_options()(
+        "track-account-range", boost::program_options::value<vector<string>>()->composing()->multitoken(),
         "Defines a range of accounts to track as a json pair [\"from\",\"to\"] [from,to] Can be specified multiple "
         "times")("history-whitelist-ops", boost::program_options::value<vector<string>>()->composing(),
-        "Defines a list of operations which will be explicitly logged.")("history-blacklist-ops",
-        boost::program_options::value<vector<string>>()->composing(),
+                 "Defines a list of operations which will be explicitly logged.")(
+        "history-blacklist-ops", boost::program_options::value<vector<string>>()->composing(),
         "Defines a list of operations which will be explicitly ignored.");
     cfg.add(cli);
 }

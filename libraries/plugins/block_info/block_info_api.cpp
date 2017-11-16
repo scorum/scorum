@@ -89,7 +89,9 @@ std::vector<block_with_info> block_info_api::get_blocks_with_info(get_block_info
     return result;
 }
 
-void block_info_api::on_api_startup() {}
+void block_info_api::on_api_startup()
+{
+}
 }
 }
 } // scorum::plugin::block_info

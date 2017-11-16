@@ -5,7 +5,10 @@
 namespace scorum {
 namespace witness {
 
-void enable_content_editing_operation::validate() const { chain::validate_account_name(account); }
+void enable_content_editing_operation::validate() const
+{
+    chain::validate_account_name(account);
+}
 }
 } // scorum::witness
 

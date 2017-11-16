@@ -25,8 +25,8 @@ class auth_util_api_impl
 {
 public:
     auth_util_api_impl(scorum::app::application& _app);
-    void check_authority_signature(
-        const check_authority_signature_params& args, check_authority_signature_result& result);
+    void check_authority_signature(const check_authority_signature_params& args,
+                                   check_authority_signature_result& result);
 
     std::shared_ptr<scorum::plugin::auth_util::auth_util_plugin> get_plugin();
 
@@ -43,8 +43,8 @@ std::shared_ptr<scorum::plugin::auth_util::auth_util_plugin> auth_util_api_impl:
     return app.get_plugin<auth_util_plugin>("auth_util");
 }
 
-void auth_util_api_impl::check_authority_signature(
-    const check_authority_signature_params& args, check_authority_signature_result& result)
+void auth_util_api_impl::check_authority_signature(const check_authority_signature_params& args,
+                                                   check_authority_signature_result& result)
 {
     std::shared_ptr<chain::database> db = app.chain_database();
     const chain::account_authority_object& acct
@@ -75,11 +75,11 @@ void auth_util_api_impl::check_authority_signature(
 
     flat_set<protocol::public_key_type> avail;
     protocol::sign_state ss(signing_keys,
-        [&db](const std::string& account_name) -> const protocol::authority {
-            return protocol::authority(
-                db->get<chain::account_authority_object, chain::by_account>(account_name).active);
-        },
-        avail);
+                            [&db](const std::string& account_name) -> const protocol::authority {
+                                return protocol::authority(
+                                    db->get<chain::account_authority_object, chain::by_account>(account_name).active);
+                            },
+                            avail);
 
     bool has_authority = ss.check_authority(auth);
     FC_ASSERT(has_authority);
@@ -94,7 +94,9 @@ auth_util_api::auth_util_api(const scorum::app::api_context& ctx)
     my = std::make_shared<detail::auth_util_api_impl>(ctx.app);
 }
 
-void auth_util_api::on_api_startup() {}
+void auth_util_api::on_api_startup()
+{
+}
 
 check_authority_signature_result auth_util_api::check_authority_signature(check_authority_signature_params args)
 {

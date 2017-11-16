@@ -50,11 +50,15 @@ public:
     {
     };
     typedef boost::multi_index_container<potential_peer_record,
-        indexed_by<ordered_non_unique<tag<last_seen_time_index>,
-                       member<potential_peer_record, fc::time_point_sec, &potential_peer_record::last_seen_time>>,
-            hashed_unique<tag<endpoint_index>,
-                member<potential_peer_record, fc::ip::endpoint, &potential_peer_record::endpoint>,
-                std::hash<fc::ip::endpoint>>>>
+                                         indexed_by<ordered_non_unique<tag<last_seen_time_index>,
+                                                                       member<potential_peer_record,
+                                                                              fc::time_point_sec,
+                                                                              &potential_peer_record::last_seen_time>>,
+                                                    hashed_unique<tag<endpoint_index>,
+                                                                  member<potential_peer_record,
+                                                                         fc::ip::endpoint,
+                                                                         &potential_peer_record::endpoint>,
+                                                                  std::hash<fc::ip::endpoint>>>>
         potential_peer_set;
 
 private:
@@ -101,7 +105,7 @@ void peer_database_impl::open(const fc::path& peer_database_filename)
             std::vector<potential_peer_record> peer_records
                 = fc::json::from_file(_peer_database_filename).as<std::vector<potential_peer_record>>();
             std::copy(peer_records.begin(), peer_records.end(),
-                std::inserter(_potential_peer_set, _potential_peer_set.end()));
+                      std::inserter(_potential_peer_set, _potential_peer_set.end()));
 #define MAXIMUM_PEERDB_SIZE 1000
             if (_potential_peer_set.size() > MAXIMUM_PEERDB_SIZE)
             {
@@ -114,7 +118,7 @@ void peer_database_impl::open(const fc::path& peer_database_filename)
         catch (const fc::exception& e)
         {
             elog("error opening peer database file ${peer_database_filename}, starting with a clean database",
-                ("peer_database_filename", _peer_database_filename));
+                 ("peer_database_filename", _peer_database_filename));
         }
     }
 }
@@ -135,12 +139,15 @@ void peer_database_impl::close()
     catch (const fc::exception& e)
     {
         elog("error saving peer database to file ${peer_database_filename}",
-            ("peer_database_filename", _peer_database_filename));
+             ("peer_database_filename", _peer_database_filename));
     }
     _potential_peer_set.clear();
 }
 
-void peer_database_impl::clear() { _potential_peer_set.clear(); }
+void peer_database_impl::clear()
+{
+    _potential_peer_set.clear();
+}
 
 void peer_database_impl::erase(const fc::ip::endpoint& endpointToErase)
 {
@@ -167,8 +174,8 @@ potential_peer_record peer_database_impl::lookup_or_create_entry_for_endpoint(co
     return potential_peer_record(endpointToLookup);
 }
 
-fc::optional<potential_peer_record> peer_database_impl::lookup_entry_for_endpoint(
-    const fc::ip::endpoint& endpointToLookup)
+fc::optional<potential_peer_record>
+peer_database_impl::lookup_entry_for_endpoint(const fc::ip::endpoint& endpointToLookup)
 {
     auto iter = _potential_peer_set.get<endpoint_index>().find(endpointToLookup);
     if (iter != _potential_peer_set.get<endpoint_index>().end())
@@ -188,25 +195,38 @@ peer_database::iterator peer_database_impl::end() const
         new peer_database_iterator_impl(_potential_peer_set.get<last_seen_time_index>().end()));
 }
 
-size_t peer_database_impl::size() const { return _potential_peer_set.size(); }
+size_t peer_database_impl::size() const
+{
+    return _potential_peer_set.size();
+}
 
-peer_database_iterator::peer_database_iterator() {}
+peer_database_iterator::peer_database_iterator()
+{
+}
 
-peer_database_iterator::~peer_database_iterator() {}
+peer_database_iterator::~peer_database_iterator()
+{
+}
 
 peer_database_iterator::peer_database_iterator(peer_database_iterator_impl* impl)
     : my(impl)
 {
 }
 
-void peer_database_iterator::increment() { ++my->_iterator; }
+void peer_database_iterator::increment()
+{
+    ++my->_iterator;
+}
 
 bool peer_database_iterator::equal(const peer_database_iterator& other) const
 {
     return my->_iterator == other.my->_iterator;
 }
 
-const potential_peer_record& peer_database_iterator::dereference() const { return *my->_iterator; }
+const potential_peer_record& peer_database_iterator::dereference() const
+{
+    return *my->_iterator;
+}
 
 } // end namespace detail
 
@@ -215,17 +235,34 @@ peer_database::peer_database()
 {
 }
 
-peer_database::~peer_database() {}
+peer_database::~peer_database()
+{
+}
 
-void peer_database::open(const fc::path& databaseFilename) { my->open(databaseFilename); }
+void peer_database::open(const fc::path& databaseFilename)
+{
+    my->open(databaseFilename);
+}
 
-void peer_database::close() { my->close(); }
+void peer_database::close()
+{
+    my->close();
+}
 
-void peer_database::clear() { my->clear(); }
+void peer_database::clear()
+{
+    my->clear();
+}
 
-void peer_database::erase(const fc::ip::endpoint& endpointToErase) { my->erase(endpointToErase); }
+void peer_database::erase(const fc::ip::endpoint& endpointToErase)
+{
+    my->erase(endpointToErase);
+}
 
-void peer_database::update_entry(const potential_peer_record& updatedRecord) { my->update_entry(updatedRecord); }
+void peer_database::update_entry(const potential_peer_record& updatedRecord)
+{
+    my->update_entry(updatedRecord);
+}
 
 potential_peer_record peer_database::lookup_or_create_entry_for_endpoint(const fc::ip::endpoint& endpointToLookup)
 {
@@ -237,10 +274,19 @@ fc::optional<potential_peer_record> peer_database::lookup_entry_for_endpoint(con
     return my->lookup_entry_for_endpoint(endpoint_to_lookup);
 }
 
-peer_database::iterator peer_database::begin() const { return my->begin(); }
+peer_database::iterator peer_database::begin() const
+{
+    return my->begin();
+}
 
-peer_database::iterator peer_database::end() const { return my->end(); }
+peer_database::iterator peer_database::end() const
+{
+    return my->end();
+}
 
-size_t peer_database::size() const { return my->size(); }
+size_t peer_database::size() const
+{
+    return my->size();
+}
 }
 } // end namespace graphene::net

@@ -44,7 +44,10 @@ template <typename First, typename... Args> struct types_to_string_list_helper<F
 
 template <> struct types_to_string_list_helper<>
 {
-    std::list<std::string> operator()() const { return std::list<std::string>(); }
+    std::list<std::string> operator()() const
+    {
+        return std::list<std::string>();
+    }
 };
 
 template <typename... Args> std::list<std::string> types_to_string_list()
@@ -77,7 +80,7 @@ api_documentation::api_documentation()
     detail::help_visitor visitor;
     tmp->visit(visitor);
     std::copy(visitor.method_descriptions.begin(), visitor.method_descriptions.end(),
-        std::inserter(method_descriptions, method_descriptions.end()));
+              std::inserter(method_descriptions, method_descriptions.end()));
 }
 }
 } // end namespace scorum::wallet

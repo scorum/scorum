@@ -21,6 +21,8 @@ account_statistics_api::account_statistics_api(const scorum::app::api_context& c
     _my = std::make_shared<detail::account_statistics_api_impl>(ctx.app);
 }
 
-void account_statistics_api::on_api_startup() {}
+void account_statistics_api::on_api_startup()
+{
+}
 }
 } // scorum::account_statistics

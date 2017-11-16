@@ -74,8 +74,9 @@ bool sign_state::remove_unused_signatures()
     return remove_sigs.size() != 0;
 }
 
-sign_state::sign_state(
-    const flat_set<public_key_type>& sigs, const authority_getter& a, const flat_set<public_key_type>& keys)
+sign_state::sign_state(const flat_set<public_key_type>& sigs,
+                       const authority_getter& a,
+                       const flat_set<public_key_type>& keys)
     : get_active(a)
     , available_keys(keys)
 {

@@ -50,7 +50,9 @@ account_by_key_api::account_by_key_api(const scorum::app::api_context& ctx)
     my = std::make_shared<detail::account_by_key_api_impl>(ctx.app);
 }
 
-void account_by_key_api::on_api_startup() {}
+void account_by_key_api::on_api_startup()
+{
+}
 
 vector<vector<account_name_type>> account_by_key_api::get_key_references(vector<public_key_type> keys) const
 {

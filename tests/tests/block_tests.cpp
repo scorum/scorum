@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
         {
             database db;
             db_setup_and_open(db, data_dir.path());
-            b = db.generate_block(
-                db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+            b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key,
+                                  database::skip_nothing);
 
             // TODO:  Change this test when we correct #406
             // n.b. we generate SCORUM_MIN_UNDO_HISTORY+1 extra blocks which will be discarded on save
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(undo_block)
             {
                 now = db.get_slot_time(1);
                 time_stack.push_back(now);
-                auto b = db.generate_block(
-                    now, db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+                auto b = db.generate_block(now, db.get_scheduled_witness(1), init_account_priv_key,
+                                           database::skip_nothing);
             }
             BOOST_CHECK(db.head_block_num() == 5);
             BOOST_CHECK(db.head_block_time() == now);
@@ -155,8 +155,8 @@ BOOST_AUTO_TEST_CASE(undo_block)
             {
                 now = db.get_slot_time(1);
                 time_stack.push_back(now);
-                auto b = db.generate_block(
-                    now, db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+                auto b = db.generate_block(now, db.get_scheduled_witness(1), init_account_priv_key,
+                                           database::skip_nothing);
             }
             BOOST_CHECK(db.head_block_num() == 7);
         }
@@ -185,8 +185,8 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")));
         for (uint32_t i = 0; i < 10; ++i)
         {
-            auto b = db1.generate_block(
-                db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+            auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                                        database::skip_nothing);
             try
             {
                 PUSH_BLOCK(db2, b);
@@ -195,15 +195,15 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
         }
         for (uint32_t i = 10; i < 13; ++i)
         {
-            auto b = db1.generate_block(
-                db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+            auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                                        database::skip_nothing);
         }
         string db1_tip = db1.head_block_id().str();
         uint32_t next_slot = 3;
         for (uint32_t i = 13; i < 16; ++i)
         {
             auto b = db2.generate_block(db2.get_slot_time(next_slot), db2.get_scheduled_witness(next_slot),
-                init_account_priv_key, database::skip_nothing);
+                                        init_account_priv_key, database::skip_nothing);
             next_slot = 1;
             // notify both databases of the new block.
             // only db2 should switch to the new fork, db1 should not
@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
         BOOST_CHECK_EQUAL(db1.head_block_num(), uint32_t(13));
         BOOST_CHECK_EQUAL(db2.head_block_num(), uint32_t(13));
         {
-            auto b = db2.generate_block(
-                db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+            auto b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key,
+                                        database::skip_nothing);
             good_block = b;
             b.transactions.emplace_back(signed_transaction());
             b.transactions.back().operations.emplace_back(transfer_operation());
@@ -275,17 +275,17 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         // db1 : A
         // db2 : B C D
 
-        auto b = db1.generate_block(
-            db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                                    database::skip_nothing);
 
         auto alice_id = db1.get_account("alice").id;
         BOOST_CHECK(db1.get(alice_id).name == "alice");
 
-        b = db2.generate_block(
-            db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key,
+                               database::skip_nothing);
         db1.push_block(b);
-        b = db2.generate_block(
-            db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key,
+                               database::skip_nothing);
         db1.push_block(b);
         SCORUM_REQUIRE_THROW(db2.get(alice_id), std::exception);
         db1.get(alice_id); /// it should be included in the pending state
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
 
         PUSH_TX(db2, trx);
 
-        b = db2.generate_block(
-            db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key,
+                               database::skip_nothing);
         db1.push_block(b);
 
         BOOST_CHECK(db1.get(alice_id).name == "alice");
@@ -378,8 +378,8 @@ BOOST_AUTO_TEST_CASE(tapos)
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
 
-        auto b = db1.generate_block(
-            db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                                    database::skip_nothing);
 
         BOOST_TEST_MESSAGE("Creating a transaction with reference block");
         idump((db1.head_block_id()));
@@ -400,8 +400,8 @@ BOOST_AUTO_TEST_CASE(tapos)
         idump((trx));
         db1.push_transaction(trx);
         BOOST_TEST_MESSAGE("Generating a block");
-        b = db1.generate_block(
-            db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                               database::skip_nothing);
         trx.clear();
 
         transfer_operation t;
@@ -412,11 +412,11 @@ BOOST_AUTO_TEST_CASE(tapos)
         trx.set_expiration(db1.head_block_time() + fc::seconds(2));
         trx.sign(init_account_priv_key, db1.get_chain_id());
         idump((trx)(db1.head_block_time()));
-        b = db1.generate_block(
-            db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                               database::skip_nothing);
         idump((b));
-        b = db1.generate_block(
-            db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+        b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
+                               database::skip_nothing);
         trx.signatures.clear();
         trx.sign(init_account_priv_key, db1.get_chain_id());
         BOOST_REQUIRE_THROW(
@@ -550,7 +550,7 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
     try
     {
         uint32_t skip_flags = (database::skip_witness_signature | database::skip_transaction_signatures
-            | database::skip_authority_check);
+                               | database::skip_authority_check);
 
         // Sam is the creator of accounts
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")));

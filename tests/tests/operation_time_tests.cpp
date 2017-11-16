@@ -33,8 +33,9 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
 
         struct author_actor
         {
-            author_actor(
-                const std::string& n, fc::ecc::private_key pk, fc::optional<asset> mpay = fc::optional<asset>())
+            author_actor(const std::string& n,
+                         fc::ecc::private_key pk,
+                         fc::optional<asset> mpay = fc::optional<asset>())
                 : name(n)
                 , private_key(pk)
                 , max_accepted_payout(mpay)
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
             db.push_transaction(tx, 0);
         }
 
-//        auto reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum;
+        //        auto reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum;
 
         // generate a few blocks to seed the reward fund
         generate_blocks(10);
@@ -149,15 +150,14 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
         */
 
         // SCORUM: rewrite to check SCR reward
-//        const account_object& alice_account = db.get_account("alice");
-//        const account_object& bob_account = db.get_account("bob");
-//        const account_object& dave_account = db.get_account("dave");
+        //        const account_object& alice_account = db.get_account("alice");
+        //        const account_object& bob_account = db.get_account("bob");
+        //        const account_object& dave_account = db.get_account("dave");
 
-//        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "14288.000 TBD" ) );
-//        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "13967.000 TBD" ) );
-//        BOOST_CHECK( bob_account.reward_sbd_balance == ASSET( "0.000 TBD" ) );
-//        BOOST_CHECK( dave_account.reward_sbd_balance == alice_account.reward_sbd_balance );
-
+        //        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "14288.000 TBD" ) );
+        //        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "13967.000 TBD" ) );
+        //        BOOST_CHECK( bob_account.reward_sbd_balance == ASSET( "0.000 TBD" ) );
+        //        BOOST_CHECK( dave_account.reward_sbd_balance == alice_account.reward_sbd_balance );
     }
     FC_LOG_AND_RETHROW()
 }
@@ -325,7 +325,8 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto alice_vshares = util::evaluate_reward_curve(db.get_comment("alice", string("test")).net_rshares.value,
+        auto alice_vshares = util::evaluate_reward_curve(
+            db.get_comment("alice", string("test")).net_rshares.value,
             db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME).author_reward_curve);
 
         generate_blocks(5);
@@ -349,7 +350,8 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         }
 
         auto bob_cashout_time = db.get_comment("bob", string("test")).cashout_time;
-        auto bob_vshares = util::evaluate_reward_curve(db.get_comment("bob", string("test")).net_rshares.value,
+        auto bob_vshares = util::evaluate_reward_curve(
+            db.get_comment("bob", string("test")).net_rshares.value,
             db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME).author_reward_curve);
 
         generate_block();
@@ -1311,16 +1313,16 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
         auto fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
         auto gpo = db.get_dynamic_global_properties();
 
-        BOOST_REQUIRE(
-            db.get_account("alice").vesting_shares.amount.value == (vesting_shares - withdraw_rate).amount.value);
-        BOOST_REQUIRE(
-            (withdraw_rate * gpo.get_vesting_share_price()).amount.value - db.get_account("alice").balance.amount.value
-            <= 1); // Check a range due to differences in the share price
+        BOOST_REQUIRE(db.get_account("alice").vesting_shares.amount.value
+                      == (vesting_shares - withdraw_rate).amount.value);
+        BOOST_REQUIRE((withdraw_rate * gpo.get_vesting_share_price()).amount.value
+                          - db.get_account("alice").balance.amount.value
+                      <= 1); // Check a range due to differences in the share price
         BOOST_REQUIRE(fill_op.from_account == "alice");
         BOOST_REQUIRE(fill_op.to_account == "alice");
         BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
-        BOOST_REQUIRE(
-            std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value) <= 1);
+        BOOST_REQUIRE(std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value)
+                      <= 1);
         validate_database();
 
         BOOST_TEST_MESSAGE("Generating the rest of the blocks in the withdrawal");
@@ -1340,19 +1342,19 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
 
             BOOST_REQUIRE(alice.vesting_shares.amount.value == (vesting_shares - withdraw_rate).amount.value);
             BOOST_REQUIRE(balance.amount.value + (withdraw_rate * gpo.get_vesting_share_price()).amount.value
-                    - alice.balance.amount.value
-                <= 1);
+                              - alice.balance.amount.value
+                          <= 1);
             BOOST_REQUIRE(fill_op.from_account == "alice");
             BOOST_REQUIRE(fill_op.to_account == "alice");
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
-            BOOST_REQUIRE(
-                std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value) <= 1);
+            BOOST_REQUIRE(std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value)
+                          <= 1);
 
             if (i == SCORUM_VESTING_WITHDRAW_INTERVALS - 1)
                 BOOST_REQUIRE(alice.next_vesting_withdrawal == fc::time_point_sec::maximum());
             else
                 BOOST_REQUIRE(alice.next_vesting_withdrawal.sec_since_epoch()
-                    == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
+                              == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
 
             validate_database();
 
@@ -1369,24 +1371,24 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             gpo = db.get_dynamic_global_properties();
 
             BOOST_REQUIRE(db.get_account("alice").next_vesting_withdrawal.sec_since_epoch()
-                == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
+                          == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
             BOOST_REQUIRE(fill_op.from_account == "alice");
             BOOST_REQUIRE(fill_op.to_account == "alice");
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
-            BOOST_REQUIRE(
-                std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value) <= 1);
+            BOOST_REQUIRE(std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value)
+                          <= 1);
 
             generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
             gpo = db.get_dynamic_global_properties();
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
 
             BOOST_REQUIRE(db.get_account("alice").next_vesting_withdrawal.sec_since_epoch()
-                == fc::time_point_sec::maximum().sec_since_epoch());
+                          == fc::time_point_sec::maximum().sec_since_epoch());
             BOOST_REQUIRE(fill_op.to_account == "alice");
             BOOST_REQUIRE(fill_op.from_account == "alice");
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == to_withdraw.amount.value % withdraw_rate.amount.value);
-            BOOST_REQUIRE(
-                std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value) <= 1);
+            BOOST_REQUIRE(std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value)
+                          <= 1);
 
             validate_database();
         }
@@ -1395,18 +1397,18 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
 
             BOOST_REQUIRE(db.get_account("alice").next_vesting_withdrawal.sec_since_epoch()
-                == fc::time_point_sec::maximum().sec_since_epoch());
+                          == fc::time_point_sec::maximum().sec_since_epoch());
 
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
             BOOST_REQUIRE(fill_op.from_account == "alice");
             BOOST_REQUIRE(fill_op.to_account == "alice");
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
-            BOOST_REQUIRE(
-                std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value) <= 1);
+            BOOST_REQUIRE(std::abs((fill_op.deposited - fill_op.withdrawn * gpo.get_vesting_share_price()).amount.value)
+                          <= 1);
         }
 
-        BOOST_REQUIRE(
-            db.get_account("alice").vesting_shares.amount.value == (original_vesting - op.vesting_shares).amount.value);
+        BOOST_REQUIRE(db.get_account("alice").vesting_shares.amount.value
+                      == (original_vesting - op.vesting_shares).amount.value);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -1471,16 +1473,19 @@ BOOST_AUTO_TEST_CASE(vesting_withdraw_route)
             const auto& sam = db.get_account("sam");
 
             BOOST_REQUIRE(alice.vesting_shares == old_alice_vesting - vesting_withdraw_rate);
-            BOOST_REQUIRE(alice.balance
+            BOOST_REQUIRE(
+                alice.balance
                 == old_alice_balance
                     + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 20) / SCORUM_100_PERCENT, VESTS_SYMBOL)
                         * db.get_dynamic_global_properties().get_vesting_share_price());
-            BOOST_REQUIRE(bob.vesting_shares
+            BOOST_REQUIRE(
+                bob.vesting_shares
                 == old_bob_vesting
                     + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT, VESTS_SYMBOL));
             BOOST_REQUIRE(bob.balance == old_bob_balance);
             BOOST_REQUIRE(sam.vesting_shares == old_sam_vesting);
-            BOOST_REQUIRE(sam.balance
+            BOOST_REQUIRE(
+                sam.balance
                 == old_sam_balance
                     + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 30) / SCORUM_100_PERCENT, VESTS_SYMBOL)
                         * db.get_dynamic_global_properties().get_vesting_share_price());
@@ -1524,12 +1529,14 @@ BOOST_AUTO_TEST_CASE(vesting_withdraw_route)
 
             BOOST_REQUIRE(alice.vesting_shares == old_alice_vesting - vesting_withdraw_rate);
             BOOST_REQUIRE(alice.balance == old_alice_balance);
-            BOOST_REQUIRE(bob.vesting_shares
+            BOOST_REQUIRE(
+                bob.vesting_shares
                 == old_bob_vesting
                     + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT, VESTS_SYMBOL));
             BOOST_REQUIRE(bob.balance == old_bob_balance);
             BOOST_REQUIRE(sam.vesting_shares == old_sam_vesting);
-            BOOST_REQUIRE(sam.balance
+            BOOST_REQUIRE(
+                sam.balance
                 == old_sam_balance
                     + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT, VESTS_SYMBOL)
                         * db.get_dynamic_global_properties().get_vesting_share_price());
@@ -1566,8 +1573,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.operations.clear();
         tx.signatures.clear();
 
-        generate_blocks(
-            db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL), true);
+        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
+                        true);
 
         op.permlink = "test2";
 
@@ -1577,8 +1584,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
 
         BOOST_REQUIRE(db.get_comment("alice", string("test2")).reward_weight == SCORUM_100_PERCENT);
 
-        generate_blocks(
-            db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL), true);
+        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
+                        true);
 
         tx.operations.clear();
         tx.signatures.clear();
@@ -1591,8 +1598,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
 
         BOOST_REQUIRE(db.get_comment("alice", string("test3")).reward_weight == SCORUM_100_PERCENT);
 
-        generate_blocks(
-            db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL), true);
+        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
+                        true);
 
         tx.operations.clear();
         tx.signatures.clear();
@@ -1605,8 +1612,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
 
         BOOST_REQUIRE(db.get_comment("alice", string("test4")).reward_weight == SCORUM_100_PERCENT);
 
-        generate_blocks(
-            db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL), true);
+        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
+                        true);
 
         tx.operations.clear();
         tx.signatures.clear();

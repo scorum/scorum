@@ -38,7 +38,10 @@ public:
 
     void plugin_initialize();
 
-    scorum::chain::database& database() { return _self.database(); }
+    scorum::chain::database& database()
+    {
+        return _self.database();
+    }
 
     void pre_operation(const operation_notification& op_obj);
     void post_operation(const operation_notification& op_obj);
@@ -73,7 +76,9 @@ struct pre_operation_visitor
 
     typedef void result_type;
 
-    template <typename T> void operator()(const T&) const {}
+    template <typename T> void operator()(const T&) const
+    {
+    }
 
     void operator()(const vote_operation& op) const
     {
@@ -153,7 +158,9 @@ struct post_operation_visitor
 
     typedef void result_type;
 
-    template <typename T> void operator()(const T&) const {}
+    template <typename T> void operator()(const T&) const
+    {
+    }
 
     void operator()(const custom_json_operation& op) const
     {
@@ -231,7 +238,7 @@ struct post_operation_visitor
                             auto old_feed = old_feed_idx.lower_bound(itr->follower);
 
                             while (old_feed->account == itr->follower
-                                && next_id - old_feed->account_feed_id > _plugin.max_feed_size)
+                                   && next_id - old_feed->account_feed_id > _plugin.max_feed_size)
                             {
                                 db.remove(*old_feed);
                                 old_feed = old_feed_idx.lower_bound(itr->follower);
@@ -359,12 +366,12 @@ follow_plugin::follow_plugin(application* app)
 {
 }
 
-void follow_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+void follow_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                               boost::program_options::options_description& cfg)
 {
     cli.add_options()("follow-max-feed-size", boost::program_options::value<uint32_t>()->default_value(500),
-        "Set the maximum size of cached feed for an account")("follow-start-feeds",
-        boost::program_options::value<uint32_t>()->default_value(0),
+                      "Set the maximum size of cached feed for an account")(
+        "follow-start-feeds", boost::program_options::value<uint32_t>()->default_value(0),
         "Block time (in epoch seconds) when to start calculating feeds");
     cfg.add(cli);
 }
@@ -400,7 +407,10 @@ void follow_plugin::plugin_initialize(const boost::program_options::variables_ma
     FC_CAPTURE_AND_RETHROW()
 }
 
-void follow_plugin::plugin_startup() { app().register_api_factory<follow_api>("follow_api"); }
+void follow_plugin::plugin_startup()
+{
+    app().register_api_factory<follow_api>("follow_api");
+}
 }
 } // scorum::follow
 

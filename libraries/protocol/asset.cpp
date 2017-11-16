@@ -40,8 +40,21 @@ std::string asset::symbol_name() const
 
 int64_t asset::precision() const
 {
-    static int64_t table[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000ll, 1000000000ll,
-        10000000000ll, 100000000000ll, 1000000000000ll, 10000000000000ll, 100000000000000ll };
+    static int64_t table[] = { 1,
+                               10,
+                               100,
+                               1000,
+                               10000,
+                               100000,
+                               1000000,
+                               10000000,
+                               100000000ll,
+                               1000000000ll,
+                               10000000000ll,
+                               100000000000ll,
+                               1000000000000ll,
+                               10000000000000ll,
+                               100000000000000ll };
     uint8_t d = decimals();
     return table[d];
 }
@@ -137,13 +150,25 @@ bool operator<(const price& a, const price& b)
     return amult < bmult;
 }
 
-bool operator<=(const price& a, const price& b) { return (a == b) || (a < b); }
+bool operator<=(const price& a, const price& b)
+{
+    return (a == b) || (a < b);
+}
 
-bool operator!=(const price& a, const price& b) { return !(a == b); }
+bool operator!=(const price& a, const price& b)
+{
+    return !(a == b);
+}
 
-bool operator>(const price& a, const price& b) { return !(a <= b); }
+bool operator>(const price& a, const price& b)
+{
+    return !(a <= b);
+}
 
-bool operator>=(const price& a, const price& b) { return !(a < b); }
+bool operator>=(const price& a, const price& b)
+{
+    return !(a < b);
+}
 
 asset operator*(const asset& a, const price& b)
 {
@@ -183,7 +208,10 @@ price price::min(asset_symbol_type base, asset_symbol_type quote)
     return asset(1, base) / asset(SCORUM_MAX_SHARE_SUPPLY, quote);
 }
 
-bool price::is_null() const { return *this == price(); }
+bool price::is_null() const
+{
+    return *this == price();
+}
 
 void price::validate() const
 {

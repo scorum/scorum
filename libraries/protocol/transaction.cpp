@@ -48,16 +48,16 @@ scorum::protocol::transaction_id_type scorum::protocol::transaction::id() const
     return result;
 }
 
-const signature_type& scorum::protocol::signed_transaction::sign(
-    const private_key_type& key, const chain_id_type& chain_id)
+const signature_type& scorum::protocol::signed_transaction::sign(const private_key_type& key,
+                                                                 const chain_id_type& chain_id)
 {
     digest_type h = sig_digest(chain_id);
     signatures.push_back(key.sign_compact(h));
     return signatures.back();
 }
 
-signature_type scorum::protocol::signed_transaction::sign(
-    const private_key_type& key, const chain_id_type& chain_id) const
+signature_type scorum::protocol::signed_transaction::sign(const private_key_type& key,
+                                                          const chain_id_type& chain_id) const
 {
     digest_type::encoder enc;
     fc::raw::pack(enc, chain_id);
@@ -65,7 +65,10 @@ signature_type scorum::protocol::signed_transaction::sign(
     return key.sign_compact(enc.result());
 }
 
-void transaction::set_expiration(fc::time_point_sec expiration_time) { expiration = expiration_time; }
+void transaction::set_expiration(fc::time_point_sec expiration_time)
+{
+    expiration = expiration_time;
+}
 
 void transaction::set_reference_block(const block_id_type& reference_block)
 {
@@ -73,17 +76,25 @@ void transaction::set_reference_block(const block_id_type& reference_block)
     ref_block_prefix = reference_block._hash[1];
 }
 
-void transaction::get_required_authorities(flat_set<account_name_type>& active, flat_set<account_name_type>& owner,
-    flat_set<account_name_type>& posting, vector<authority>& other) const
+void transaction::get_required_authorities(flat_set<account_name_type>& active,
+                                           flat_set<account_name_type>& owner,
+                                           flat_set<account_name_type>& posting,
+                                           vector<authority>& other) const
 {
     for (const auto& op : operations)
         operation_get_required_authorities(op, active, owner, posting, other);
 }
 
-void verify_authority(const vector<operation>& ops, const flat_set<public_key_type>& sigs,
-    const authority_getter& get_active, const authority_getter& get_owner, const authority_getter& get_posting,
-    uint32_t max_recursion_depth, bool allow_committe, const flat_set<account_name_type>& active_aprovals,
-    const flat_set<account_name_type>& owner_approvals, const flat_set<account_name_type>& posting_approvals)
+void verify_authority(const vector<operation>& ops,
+                      const flat_set<public_key_type>& sigs,
+                      const authority_getter& get_active,
+                      const authority_getter& get_owner,
+                      const authority_getter& get_posting,
+                      uint32_t max_recursion_depth,
+                      bool allow_committe,
+                      const flat_set<account_name_type>& active_aprovals,
+                      const flat_set<account_name_type>& owner_approvals,
+                      const flat_set<account_name_type>& posting_approvals)
 {
     try
     {
@@ -114,10 +125,10 @@ void verify_authority(const vector<operation>& ops, const flat_set<public_key_ty
                 s.approved_by.insert(id);
             for (auto id : required_posting)
             {
-                SCORUM_ASSERT(
-                    s.check_authority(id) || s.check_authority(get_active(id)) || s.check_authority(get_owner(id)),
-                    tx_missing_posting_auth, "Missing Posting Authority ${id}",
-                    ("id", id)("posting", get_posting(id))("active", get_active(id))("owner", get_owner(id)));
+                SCORUM_ASSERT(s.check_authority(id) || s.check_authority(get_active(id))
+                                  || s.check_authority(get_owner(id)),
+                              tx_missing_posting_auth, "Missing Posting Authority ${id}",
+                              ("id", id)("posting", get_posting(id))("active", get_active(id))("owner", get_owner(id)));
             }
             SCORUM_ASSERT(!s.remove_unused_signatures(), tx_irrelevant_sig, "Unnecessary signature(s) detected");
             return;
@@ -133,21 +144,21 @@ void verify_authority(const vector<operation>& ops, const flat_set<public_key_ty
 
         for (const auto& auth : other)
         {
-            SCORUM_ASSERT(
-                s.check_authority(auth), tx_missing_other_auth, "Missing Authority", ("auth", auth)("sigs", sigs));
+            SCORUM_ASSERT(s.check_authority(auth), tx_missing_other_auth, "Missing Authority",
+                          ("auth", auth)("sigs", sigs));
         }
 
         // fetch all of the top level authorities
         for (auto id : required_active)
         {
             SCORUM_ASSERT(s.check_authority(id) || s.check_authority(get_owner(id)), tx_missing_active_auth,
-                "Missing Active Authority ${id}", ("id", id)("auth", get_active(id))("owner", get_owner(id)));
+                          "Missing Active Authority ${id}", ("id", id)("auth", get_active(id))("owner", get_owner(id)));
         }
 
         for (auto id : required_owner)
         {
             SCORUM_ASSERT(owner_approvals.find(id) != owner_approvals.end() || s.check_authority(get_owner(id)),
-                tx_missing_owner_auth, "Missing Owner Authority ${id}", ("id", id)("auth", get_owner(id)));
+                          tx_missing_owner_auth, "Missing Owner Authority ${id}", ("id", id)("auth", get_owner(id)));
         }
 
         SCORUM_ASSERT(!s.remove_unused_signatures(), tx_irrelevant_sig, "Unnecessary signature(s) detected");
@@ -163,8 +174,8 @@ flat_set<public_key_type> signed_transaction::get_signature_keys(const chain_id_
         flat_set<public_key_type> result;
         for (const auto& sig : signatures)
         {
-            SCORUM_ASSERT(
-                result.insert(fc::ecc::public_key(sig, d)).second, tx_duplicate_sig, "Duplicate Signature detected");
+            SCORUM_ASSERT(result.insert(fc::ecc::public_key(sig, d)).second, tx_duplicate_sig,
+                          "Duplicate Signature detected");
         }
         return result;
     }
@@ -172,8 +183,11 @@ flat_set<public_key_type> signed_transaction::get_signature_keys(const chain_id_
 }
 
 set<public_key_type> signed_transaction::get_required_signatures(const chain_id_type& chain_id,
-    const flat_set<public_key_type>& available_keys, const authority_getter& get_active,
-    const authority_getter& get_owner, const authority_getter& get_posting, uint32_t max_recursion_depth) const
+                                                                 const flat_set<public_key_type>& available_keys,
+                                                                 const authority_getter& get_active,
+                                                                 const authority_getter& get_owner,
+                                                                 const authority_getter& get_posting,
+                                                                 uint32_t max_recursion_depth) const
 {
     flat_set<account_name_type> required_active;
     flat_set<account_name_type> required_owner;
@@ -225,8 +239,11 @@ set<public_key_type> signed_transaction::get_required_signatures(const chain_id_
 }
 
 set<public_key_type> signed_transaction::minimize_required_signatures(const chain_id_type& chain_id,
-    const flat_set<public_key_type>& available_keys, const authority_getter& get_active,
-    const authority_getter& get_owner, const authority_getter& get_posting, uint32_t max_recursion) const
+                                                                      const flat_set<public_key_type>& available_keys,
+                                                                      const authority_getter& get_active,
+                                                                      const authority_getter& get_owner,
+                                                                      const authority_getter& get_posting,
+                                                                      uint32_t max_recursion) const
 {
     set<public_key_type> s
         = get_required_signatures(chain_id, available_keys, get_active, get_owner, get_posting, max_recursion);
@@ -257,13 +274,16 @@ set<public_key_type> signed_transaction::minimize_required_signatures(const chai
     return set<public_key_type>(result.begin(), result.end());
 }
 
-void signed_transaction::verify_authority(const chain_id_type& chain_id, const authority_getter& get_active,
-    const authority_getter& get_owner, const authority_getter& get_posting, uint32_t max_recursion) const
+void signed_transaction::verify_authority(const chain_id_type& chain_id,
+                                          const authority_getter& get_active,
+                                          const authority_getter& get_owner,
+                                          const authority_getter& get_posting,
+                                          uint32_t max_recursion) const
 {
     try
     {
-        scorum::protocol::verify_authority(
-            operations, get_signature_keys(chain_id), get_active, get_owner, get_posting, max_recursion);
+        scorum::protocol::verify_authority(operations, get_signature_keys(chain_id), get_active, get_owner, get_posting,
+                                           max_recursion);
     }
     FC_CAPTURE_AND_RETHROW((*this))
 }

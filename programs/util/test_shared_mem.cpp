@@ -57,8 +57,14 @@ typedef bip::basic_string<char, std::char_traits<char>, bip::allocator<char, bip
 typedef bip::allocator<shared_string, bip::managed_mapped_file::segment_manager> basic_string_allocator;
 
 namespace fc {
-void to_variant(const shared_string& s, fc::variant& vo) { vo = std::string(s.c_str()); }
-void from_variant(const fc::variant& var, shared_string& vo) { vo = var.as_string().c_str(); }
+void to_variant(const shared_string& s, fc::variant& vo)
+{
+    vo = std::string(s.c_str());
+}
+void from_variant(const fc::variant& var, shared_string& vo)
+{
+    vo = var.as_string().c_str();
+}
 
 /*
 template<typename... T >
@@ -123,10 +129,10 @@ struct book
 };
 
 typedef multi_index_container<book,
-    indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, author)>,
-        ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, name)>,
-        ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
-    bip::allocator<book, bip::managed_mapped_file::segment_manager>>
+                              indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, author)>,
+                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, name)>,
+                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
+                              bip::allocator<book, bip::managed_mapped_file::segment_manager>>
     book_container;
 
 FC_REFLECT(book, (name)(author)(pages)(prize)(deq)(auth))

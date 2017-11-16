@@ -16,9 +16,14 @@ block_info_plugin::block_info_plugin(application* app)
     : plugin(app)
 {
 }
-block_info_plugin::~block_info_plugin() {}
+block_info_plugin::~block_info_plugin()
+{
+}
 
-std::string block_info_plugin::plugin_name() const { return "block_info"; }
+std::string block_info_plugin::plugin_name() const
+{
+    return "block_info";
+}
 
 void block_info_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
@@ -27,9 +32,14 @@ void block_info_plugin::plugin_initialize(const boost::program_options::variable
     _applied_block_conn = db.applied_block.connect([this](const chain::signed_block& b) { on_applied_block(b); });
 }
 
-void block_info_plugin::plugin_startup() { app().register_api_factory<block_info_api>("block_info_api"); }
+void block_info_plugin::plugin_startup()
+{
+    app().register_api_factory<block_info_api>("block_info_api");
+}
 
-void block_info_plugin::plugin_shutdown() {}
+void block_info_plugin::plugin_shutdown()
+{
+}
 
 void block_info_plugin::on_applied_block(const chain::signed_block& b)
 {

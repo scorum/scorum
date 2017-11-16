@@ -22,7 +22,10 @@ public:
     {
     }
 
-    scorum::chain::database& database() { return _self.database(); }
+    scorum::chain::database& database()
+    {
+        return _self.database();
+    }
 
     void pre_operation(const operation_notification& op_obj);
     void post_operation(const operation_notification& op_obj);
@@ -45,11 +48,19 @@ struct pre_operation_visitor
 
     typedef void result_type;
 
-    template <typename T> void operator()(const T&) const {}
+    template <typename T> void operator()(const T&) const
+    {
+    }
 
-    void operator()(const account_create_operation& op) const { _plugin.my->clear_cache(); }
+    void operator()(const account_create_operation& op) const
+    {
+        _plugin.my->clear_cache();
+    }
 
-    void operator()(const account_create_with_delegation_operation& op) const { _plugin.my->clear_cache(); }
+    void operator()(const account_create_with_delegation_operation& op) const
+    {
+        _plugin.my->clear_cache();
+    }
 
     void operator()(const account_update_operation& op) const
     {
@@ -89,7 +100,9 @@ struct post_operation_visitor
 
     typedef void result_type;
 
-    template <typename T> void operator()(const T&) const {}
+    template <typename T> void operator()(const T&) const
+    {
+    }
 
     void operator()(const account_create_operation& op) const
     {
@@ -125,7 +138,10 @@ struct post_operation_visitor
     }
 };
 
-void account_by_key_plugin_impl::clear_cache() { cached_keys.clear(); }
+void account_by_key_plugin_impl::clear_cache()
+{
+    cached_keys.clear();
+}
 
 void account_by_key_plugin_impl::cache_auths(const account_authority_object& a)
 {
@@ -205,8 +221,8 @@ account_by_key_plugin::account_by_key_plugin(scorum::app::application* app)
 {
 }
 
-void account_by_key_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+void account_by_key_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                                       boost::program_options::options_description& cfg)
 {
 }
 
@@ -225,7 +241,10 @@ void account_by_key_plugin::plugin_initialize(const boost::program_options::vari
     FC_CAPTURE_AND_RETHROW()
 }
 
-void account_by_key_plugin::plugin_startup() { app().register_api_factory<account_by_key_api>("account_by_key_api"); }
+void account_by_key_plugin::plugin_startup()
+{
+    app().register_api_factory<account_by_key_api>("account_by_key_api");
+}
 }
 } // scorum::account_by_key
 

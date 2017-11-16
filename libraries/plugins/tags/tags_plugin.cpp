@@ -35,14 +35,20 @@ public:
     }
     virtual ~tags_plugin_impl();
 
-    scorum::chain::database& database() { return _self.database(); }
+    scorum::chain::database& database()
+    {
+        return _self.database();
+    }
 
     void on_operation(const operation_notification& note);
 
     tags_plugin& _self;
 };
 
-tags_plugin_impl::~tags_plugin_impl() { return; }
+tags_plugin_impl::~tags_plugin_impl()
+{
+    return;
+}
 
 struct operation_visitor
 {
@@ -348,8 +354,10 @@ struct operation_visitor
         });
     }
 
-    void update_peer_stats(
-        const account_object& voter, const account_object& author, const comment_object& c, int vote) const
+    void update_peer_stats(const account_object& voter,
+                           const account_object& author,
+                           const comment_object& c,
+                           int vote) const
     {
         if (voter.id == author.id)
             return; /// ignore votes for yourself
@@ -372,7 +380,10 @@ struct operation_visitor
         }
     }
 
-    void operator()(const comment_operation& op) const { update_tags(_db.get_comment(op.author, op.permlink), true); }
+    void operator()(const comment_operation& op) const
+    {
+        update_tags(_db.get_comment(op.author, op.permlink), true);
+    }
 
     void operator()(const transfer_operation& op) const
     {
@@ -459,7 +470,9 @@ struct operation_visitor
         update_tags(c);
     }
 
-    template <typename Op> void operator()(Op&&) const {} /// ignore all other ops
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
 };
 
 void tags_plugin_impl::on_operation(const operation_notification& note)
@@ -492,10 +505,12 @@ tags_plugin::tags_plugin(application* app)
     db.i_index().add_plugin_index<author_tag_stats_index>();
 }
 
-tags_plugin::~tags_plugin() {}
+tags_plugin::~tags_plugin()
+{
+}
 
-void tags_plugin::plugin_set_program_options(
-    boost::program_options::options_description& cli, boost::program_options::options_description& cfg)
+void tags_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                             boost::program_options::options_description& cfg)
 {
 }
 
@@ -507,7 +522,9 @@ void tags_plugin::plugin_initialize(const boost::program_options::variables_map&
     app().register_api_factory<tag_api>("tag_api");
 }
 
-void tags_plugin::plugin_startup() {}
+void tags_plugin::plugin_startup()
+{
+}
 }
 } /// scorum::tags
 

@@ -33,9 +33,15 @@ public_key_type::public_key_type(const std::string& base58str)
     FC_ASSERT(fc::ripemd160::hash(key_data.data, key_data.size())._hash[0] == bin_key.check);
 };
 
-public_key_type::operator fc::ecc::public_key_data() const { return key_data; };
+public_key_type::operator fc::ecc::public_key_data() const
+{
+    return key_data;
+};
 
-public_key_type::operator fc::ecc::public_key() const { return fc::ecc::public_key(key_data); };
+public_key_type::operator fc::ecc::public_key() const
+{
+    return fc::ecc::public_key(key_data);
+};
 
 public_key_type::operator std::string() const
 {
@@ -46,11 +52,20 @@ public_key_type::operator std::string() const
     return SCORUM_ADDRESS_PREFIX + fc::to_base58(data.data(), data.size());
 }
 
-bool operator==(const public_key_type& p1, const fc::ecc::public_key& p2) { return p1.key_data == p2.serialize(); }
+bool operator==(const public_key_type& p1, const fc::ecc::public_key& p2)
+{
+    return p1.key_data == p2.serialize();
+}
 
-bool operator==(const public_key_type& p1, const public_key_type& p2) { return p1.key_data == p2.key_data; }
+bool operator==(const public_key_type& p1, const public_key_type& p2)
+{
+    return p1.key_data == p2.key_data;
+}
 
-bool operator!=(const public_key_type& p1, const public_key_type& p2) { return p1.key_data != p2.key_data; }
+bool operator!=(const public_key_type& p1, const public_key_type& p2)
+{
+    return p1.key_data != p2.key_data;
+}
 
 // extended_public_key_type
 
@@ -166,21 +181,30 @@ bool operator!=(const extended_private_key_type& p1, const extended_private_key_
 
 namespace fc {
 using namespace std;
-void to_variant(const scorum::protocol::public_key_type& var, fc::variant& vo) { vo = std::string(var); }
+void to_variant(const scorum::protocol::public_key_type& var, fc::variant& vo)
+{
+    vo = std::string(var);
+}
 
 void from_variant(const fc::variant& var, scorum::protocol::public_key_type& vo)
 {
     vo = scorum::protocol::public_key_type(var.as_string());
 }
 
-void to_variant(const scorum::protocol::extended_public_key_type& var, fc::variant& vo) { vo = std::string(var); }
+void to_variant(const scorum::protocol::extended_public_key_type& var, fc::variant& vo)
+{
+    vo = std::string(var);
+}
 
 void from_variant(const fc::variant& var, scorum::protocol::extended_public_key_type& vo)
 {
     vo = scorum::protocol::extended_public_key_type(var.as_string());
 }
 
-void to_variant(const scorum::protocol::extended_private_key_type& var, fc::variant& vo) { vo = std::string(var); }
+void to_variant(const scorum::protocol::extended_private_key_type& var, fc::variant& vo)
+{
+    vo = std::string(var);
+}
 
 void from_variant(const fc::variant& var, scorum::protocol::extended_private_key_type& vo)
 {

@@ -43,7 +43,10 @@ version::operator fc::string() const
 } // scorum::protocol
 
 namespace fc {
-void to_variant(const scorum::protocol::version& v, variant& var) { var = fc::string(v); }
+void to_variant(const scorum::protocol::version& v, variant& var)
+{
+    var = fc::string(v);
+}
 
 void from_variant(const variant& var, scorum::protocol::version& v)
 {
@@ -54,8 +57,8 @@ void from_variant(const variant& var, scorum::protocol::version& v)
     s >> major >> dot_a >> hardfork >> dot_b >> revision;
 
     // We'll accept either m.h.v or m_h_v as canonical version strings
-    FC_ASSERT(
-        (dot_a == '.' || dot_a == '_') && dot_a == dot_b, "Variant does not contain proper dotted decimal format");
+    FC_ASSERT((dot_a == '.' || dot_a == '_') && dot_a == dot_b,
+              "Variant does not contain proper dotted decimal format");
     FC_ASSERT(major <= 0xFF, "Major version is out of range");
     FC_ASSERT(hardfork <= 0xFF, "Hardfork version is out of range");
     FC_ASSERT(revision <= 0xFFFF, "Revision version is out of range");

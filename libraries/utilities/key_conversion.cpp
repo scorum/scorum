@@ -40,7 +40,10 @@ std::string key_to_wif(const fc::sha256& secret)
     memcpy(data + size_of_data_to_hash, (char*)&digest, size_of_hash_bytes);
     return fc::to_base58(data, sizeof(data));
 }
-std::string key_to_wif(const fc::ecc::private_key& key) { return key_to_wif(key.get_secret()); }
+std::string key_to_wif(const fc::ecc::private_key& key)
+{
+    return key_to_wif(key.get_secret());
+}
 
 fc::optional<fc::ecc::private_key> wif_to_key(const std::string& wif_key)
 {

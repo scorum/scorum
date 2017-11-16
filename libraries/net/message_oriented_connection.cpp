@@ -78,8 +78,8 @@ public:
     void connect_to(const fc::ip::endpoint& remote_endpoint);
     void bind(const fc::ip::endpoint& local_endpoint);
 
-    message_oriented_connection_impl(
-        message_oriented_connection* self, message_oriented_connection_delegate* delegate = nullptr);
+    message_oriented_connection_impl(message_oriented_connection* self,
+                                     message_oriented_connection_delegate* delegate = nullptr);
     ~message_oriented_connection_impl();
 
     void send_message(const message& message_to_send);
@@ -91,12 +91,15 @@ public:
 
     fc::time_point get_last_message_sent_time() const;
     fc::time_point get_last_message_received_time() const;
-    fc::time_point get_connection_time() const { return _connected_time; }
+    fc::time_point get_connection_time() const
+    {
+        return _connected_time;
+    }
     fc::sha512 get_shared_secret() const;
 };
 
-message_oriented_connection_impl::message_oriented_connection_impl(
-    message_oriented_connection* self, message_oriented_connection_delegate* delegate)
+message_oriented_connection_impl::message_oriented_connection_impl(message_oriented_connection* self,
+                                                                   message_oriented_connection_delegate* delegate)
     : _self(self)
     , _delegate(delegate)
     , _bytes_received(0)
@@ -204,7 +207,7 @@ void message_oriented_connection_impl::read_loop()
     {
         wlog("caught a canceled_exception in read_loop.  this should mean we're in the process of deleting this object "
              "already, so there's no need to notify the delegate: ${e}",
-            ("e", e.to_detail_string()));
+             ("e", e.to_detail_string()));
         throw;
     }
     catch (const fc::eof_exception& e)
@@ -266,7 +269,10 @@ void message_oriented_connection_impl::send_message(const message& message_to_se
             assert(!var);
             var = true;
         }
-        ~verify_no_send_in_progress() { var = false; }
+        ~verify_no_send_in_progress()
+        {
+            var = false;
+        }
     } _verify_no_send_in_progress(_send_message_in_progress);
 
     try
@@ -358,28 +364,54 @@ message_oriented_connection::message_oriented_connection(message_oriented_connec
 {
 }
 
-message_oriented_connection::~message_oriented_connection() {}
+message_oriented_connection::~message_oriented_connection()
+{
+}
 
-fc::tcp_socket& message_oriented_connection::get_socket() { return my->get_socket(); }
+fc::tcp_socket& message_oriented_connection::get_socket()
+{
+    return my->get_socket();
+}
 
-void message_oriented_connection::accept() { my->accept(); }
+void message_oriented_connection::accept()
+{
+    my->accept();
+}
 
 void message_oriented_connection::connect_to(const fc::ip::endpoint& remote_endpoint)
 {
     my->connect_to(remote_endpoint);
 }
 
-void message_oriented_connection::bind(const fc::ip::endpoint& local_endpoint) { my->bind(local_endpoint); }
+void message_oriented_connection::bind(const fc::ip::endpoint& local_endpoint)
+{
+    my->bind(local_endpoint);
+}
 
-void message_oriented_connection::send_message(const message& message_to_send) { my->send_message(message_to_send); }
+void message_oriented_connection::send_message(const message& message_to_send)
+{
+    my->send_message(message_to_send);
+}
 
-void message_oriented_connection::close_connection() { my->close_connection(); }
+void message_oriented_connection::close_connection()
+{
+    my->close_connection();
+}
 
-void message_oriented_connection::destroy_connection() { my->destroy_connection(); }
+void message_oriented_connection::destroy_connection()
+{
+    my->destroy_connection();
+}
 
-uint64_t message_oriented_connection::get_total_bytes_sent() const { return my->get_total_bytes_sent(); }
+uint64_t message_oriented_connection::get_total_bytes_sent() const
+{
+    return my->get_total_bytes_sent();
+}
 
-uint64_t message_oriented_connection::get_total_bytes_received() const { return my->get_total_bytes_received(); }
+uint64_t message_oriented_connection::get_total_bytes_received() const
+{
+    return my->get_total_bytes_received();
+}
 
 fc::time_point message_oriented_connection::get_last_message_sent_time() const
 {
@@ -390,7 +422,13 @@ fc::time_point message_oriented_connection::get_last_message_received_time() con
 {
     return my->get_last_message_received_time();
 }
-fc::time_point message_oriented_connection::get_connection_time() const { return my->get_connection_time(); }
-fc::sha512 message_oriented_connection::get_shared_secret() const { return my->get_shared_secret(); }
+fc::time_point message_oriented_connection::get_connection_time() const
+{
+    return my->get_connection_time();
+}
+fc::sha512 message_oriented_connection::get_shared_secret() const
+{
+    return my->get_shared_secret();
+}
 }
 } // end namespace graphene::net

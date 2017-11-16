@@ -5,9 +5,15 @@
 namespace scorum {
 namespace follow {
 
-void follow_operation::validate() const { FC_ASSERT(follower != following, "You cannot follow yourself"); }
+void follow_operation::validate() const
+{
+    FC_ASSERT(follower != following, "You cannot follow yourself");
+}
 
-void reblog_operation::validate() const { FC_ASSERT(account != author, "You cannot reblog your own content"); }
+void reblog_operation::validate() const
+{
+    FC_ASSERT(account != author, "You cannot reblog your own content");
+}
 }
 } // scorum::follow
 

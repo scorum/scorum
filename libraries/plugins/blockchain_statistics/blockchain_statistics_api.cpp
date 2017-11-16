@@ -31,8 +31,8 @@ statistics blockchain_statistics_api_impl::get_stats_for_time(fc::time_point_sec
     return result;
 }
 
-statistics blockchain_statistics_api_impl::get_stats_for_interval(
-    fc::time_point_sec start, fc::time_point_sec end) const
+statistics blockchain_statistics_api_impl::get_stats_for_interval(fc::time_point_sec start,
+                                                                  fc::time_point_sec end) const
 {
     statistics result;
     const auto& bucket_itr = _app.chain_database()->get_index<bucket_index>().indices().get<by_bucket>();
@@ -75,7 +75,9 @@ blockchain_statistics_api::blockchain_statistics_api(const scorum::app::api_cont
     my = std::make_shared<detail::blockchain_statistics_api_impl>(ctx.app);
 }
 
-void blockchain_statistics_api::on_api_startup() {}
+void blockchain_statistics_api::on_api_startup()
+{
+}
 
 statistics blockchain_statistics_api::get_stats_for_time(fc::time_point_sec open, uint32_t interval) const
 {
