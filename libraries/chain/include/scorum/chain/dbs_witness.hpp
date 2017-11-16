@@ -7,14 +7,13 @@
 namespace scorum {
 namespace chain {
 
-class dbs_witness: public dbs_base
+class dbs_witness : public dbs_base
 {
 public:
     explicit dbs_witness(database& db);
 
 public:
     // TODO
-
 };
 }
 }

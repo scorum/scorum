@@ -49,7 +49,10 @@ public:
     database();
     virtual ~database();
 
-    bool is_producing() const { return _is_producing; }
+    bool is_producing() const
+    {
+        return _is_producing;
+    }
 
     bool _log_hardforks = true;
 
@@ -84,8 +87,8 @@ public:
      *
      * @param data_dir Path to open or create database in
      */
-    void open(
-        const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags);
+    void
+    open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags);
 
     /**
      * @brief Rebuild object graph from block history and open detabase
@@ -93,8 +96,9 @@ public:
      * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
      * replaying blockchain history. When this method exits successfully, the database will be open.
      */
-    void reindex(const fc::path& data_dir, const fc::path& shared_mem_dir,
-        uint64_t shared_file_size = (1024l * 1024l * 1024l * 8l));
+    void reindex(const fc::path& data_dir,
+                 const fc::path& shared_mem_dir,
+                 uint64_t shared_file_size = (1024l * 1024l * 1024l * 8l));
 
     /**
      * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -159,7 +163,10 @@ public:
     uint32_t witness_participation_rate() const;
 
     void add_checkpoints(const flat_map<uint32_t, block_id_type>& checkpts);
-    const flat_map<uint32_t, block_id_type> get_checkpoints() const { return _checkpoints; }
+    const flat_map<uint32_t, block_id_type> get_checkpoints() const
+    {
+        return _checkpoints;
+    }
     bool before_last_checkpoint() const;
 
     bool push_block(const signed_block& b, uint32_t skip = skip_nothing);
@@ -168,10 +175,13 @@ public:
     bool _push_block(const signed_block& b);
     void _push_transaction(const signed_transaction& trx);
 
-    signed_block generate_block(const fc::time_point_sec when, const account_name_type& witness_owner,
-        const fc::ecc::private_key& block_signing_private_key, uint32_t skip);
-    signed_block _generate_block(const fc::time_point_sec when, const account_name_type& witness_owner,
-        const fc::ecc::private_key& block_signing_private_key);
+    signed_block generate_block(const fc::time_point_sec when,
+                                const account_name_type& witness_owner,
+                                const fc::ecc::private_key& block_signing_private_key,
+                                uint32_t skip);
+    signed_block _generate_block(const fc::time_point_sec when,
+                                 const account_name_type& witness_owner,
+                                 const fc::ecc::private_key& block_signing_private_key);
 
     void pop_block();
     void clear_pending();
@@ -184,8 +194,9 @@ public:
      */
     void notify_pre_apply_operation(operation_notification& note);
     void notify_post_apply_operation(const operation_notification& note);
-    inline const void push_virtual_operation(
-        const operation& op, bool force = false); // vops are not needed for low mem. Force will push them on low mem.
+    inline const void
+    push_virtual_operation(const operation& op,
+                           bool force = false); // vops are not needed for low mem. Force will push them on low mem.
     void notify_applied_block(const signed_block& block);
     void notify_on_pending_transaction(const signed_transaction& tx);
     void notify_on_pre_apply_transaction(const signed_transaction& tx);
@@ -276,8 +287,10 @@ public:
 
     /** @return the sbd created and deposited to_account, may return SCORUM if there is no median feed */
     asset create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance = false);
-    void adjust_total_payout(
-        const comment_object& a, const asset& sbd, const asset& curator_sbd_value, const asset& beneficiary_value);
+    void adjust_total_payout(const comment_object& a,
+                             const asset& sbd,
+                             const asset& curator_sbd_value,
+                             const asset& beneficiary_value);
 
     void adjust_balance(const account_object& a, const asset& delta);
     void adjust_reward_balance(const account_object& a, const asset& delta);
@@ -293,7 +306,8 @@ public:
 
     /** this updates the votes for witnesses as a result of account voting proxy changing */
     void adjust_proxied_witness_votes(const account_object& a,
-        const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta, int depth = 0);
+                                      const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,
+                                      int depth = 0);
 
     /** this updates the votes for all witnesses as a result of account VESTS changing */
     void adjust_proxied_witness_votes(const account_object& a, share_type delta, int depth = 0);
@@ -334,8 +348,8 @@ public:
     //////////////////// db_init.cpp ////////////////////
 
     void initialize_evaluators();
-    void set_custom_operation_interpreter(
-        const std::string& id, std::shared_ptr<custom_operation_interpreter> registry);
+    void set_custom_operation_interpreter(const std::string& id,
+                                          std::shared_ptr<custom_operation_interpreter> registry);
     std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const std::string& id);
 
     /// Reset the object graph in-memory
@@ -391,14 +405,20 @@ private:
 
     void _update_median_witness_props();
 
-    template <typename MultiIndexType> void _add_index_impl() { add_index<MultiIndexType>(); }
+    template <typename MultiIndexType> void _add_index_impl()
+    {
+        add_index<MultiIndexType>();
+    }
 
 protected:
     // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
     // void pop_undo() { object_database::pop_undo(); }
     void notify_changed_objects();
 
-    void set_producing(bool p) { _is_producing = p; }
+    void set_producing(bool p)
+    {
+        _is_producing = p;
+    }
 
     void apply_block(const signed_block& next_block, uint32_t skip = skip_nothing);
     void apply_transaction(const signed_transaction& trx, uint32_t skip = skip_nothing);

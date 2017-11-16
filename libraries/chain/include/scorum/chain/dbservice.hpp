@@ -11,17 +11,17 @@ class database; // for _temporary_public_imp only
 namespace scorum {
 namespace chain {
 
-class dbservice: public dbservice_dbs_factory
+class dbservice : public dbservice_dbs_factory
 {
 protected:
-    explicit dbservice(database &);
+    explicit dbservice(database&);
 
     typedef dbservice_dbs_factory _BaseClass;
 
 public:
     virtual ~dbservice();
 
-    //TODO: move most of the methods in dbs specific services
+    // TODO: move most of the methods in dbs specific services
 
     virtual bool is_producing() const = 0;
 
@@ -57,7 +57,8 @@ public:
 
     /** this updates the votes for witnesses as a result of account voting proxy changing */
     virtual void adjust_proxied_witness_votes(const account_object& a,
-        const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta, int depth = 0)
+                                              const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,
+                                              int depth = 0)
         = 0;
 
     /** this updates the votes for all witnesses as a result of account VESTS changing */

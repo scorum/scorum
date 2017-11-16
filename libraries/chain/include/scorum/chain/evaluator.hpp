@@ -38,7 +38,10 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    dbservice& db() { return _db; }
+    dbservice& db()
+    {
+        return _db;
+    }
 
 protected:
     dbservice& _db;

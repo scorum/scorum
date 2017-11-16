@@ -25,7 +25,9 @@ public:
         c(*this);
     }
 
-    escrow_object() {}
+    escrow_object()
+    {
+    }
 
     id_type id;
 
@@ -41,7 +43,10 @@ public:
     bool agent_approved = false;
     bool disputed = false;
 
-    bool is_approved() const { return to_approved && agent_approved; }
+    bool is_approved() const
+    {
+        return to_approved && agent_approved;
+    }
 };
 
 /**
@@ -56,7 +61,9 @@ public:
         c(*this);
     }
 
-    withdraw_vesting_route_object() {}
+    withdraw_vesting_route_object()
+    {
+    }
 
     id_type id;
 
@@ -76,7 +83,9 @@ public:
         c(*this);
     }
 
-    decline_voting_rights_request_object() {}
+    decline_voting_rights_request_object()
+    {
+    }
 
     id_type id;
 
@@ -100,7 +109,9 @@ public:
         c(*this);
     }
 
-    reward_fund_object() {}
+    reward_fund_object()
+    {
+    }
 
     reward_fund_id_type id;
     reward_fund_name_type name;
@@ -116,23 +127,32 @@ public:
 struct by_withdraw_route;
 struct by_destination;
 typedef multi_index_container<withdraw_vesting_route_object,
-    indexed_by<ordered_unique<tag<by_id>, member<withdraw_vesting_route_object, withdraw_vesting_route_id_type,
-                                              &withdraw_vesting_route_object::id>>,
-                                  ordered_unique<tag<by_withdraw_route>,
-                                      composite_key<withdraw_vesting_route_object,
-                                                     member<withdraw_vesting_route_object, account_id_type,
-                                                         &withdraw_vesting_route_object::from_account>,
-                                                     member<withdraw_vesting_route_object, account_id_type,
-                                                         &withdraw_vesting_route_object::to_account>>,
-                                      composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>,
-                                  ordered_unique<tag<by_destination>,
-                                      composite_key<withdraw_vesting_route_object,
-                                                     member<withdraw_vesting_route_object, account_id_type,
-                                                         &withdraw_vesting_route_object::to_account>,
-                                                     member<withdraw_vesting_route_object,
-                                                         withdraw_vesting_route_id_type,
-                                                         &withdraw_vesting_route_object::id>>>>,
-    allocator<withdraw_vesting_route_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<withdraw_vesting_route_object,
+                                                               withdraw_vesting_route_id_type,
+                                                               &withdraw_vesting_route_object::id>>,
+                                         ordered_unique<tag<by_withdraw_route>,
+                                                        composite_key<withdraw_vesting_route_object,
+                                                                      member<withdraw_vesting_route_object,
+                                                                             account_id_type,
+                                                                             &withdraw_vesting_route_object::
+                                                                                 from_account>,
+                                                                      member<withdraw_vesting_route_object,
+                                                                             account_id_type,
+                                                                             &withdraw_vesting_route_object::
+                                                                                 to_account>>,
+                                                        composite_key_compare<std::less<account_id_type>,
+                                                                              std::less<account_id_type>>>,
+                                         ordered_unique<tag<by_destination>,
+                                                        composite_key<withdraw_vesting_route_object,
+                                                                      member<withdraw_vesting_route_object,
+                                                                             account_id_type,
+                                                                             &withdraw_vesting_route_object::
+                                                                                 to_account>,
+                                                                      member<withdraw_vesting_route_object,
+                                                                             withdraw_vesting_route_id_type,
+                                                                             &withdraw_vesting_route_object::id>>>>,
+                              allocator<withdraw_vesting_route_object>>
     withdraw_vesting_route_index;
 
 struct by_from_id;
@@ -140,55 +160,86 @@ struct by_to;
 struct by_agent;
 struct by_ratification_deadline;
 typedef multi_index_container<escrow_object,
-    indexed_by<ordered_unique<tag<by_id>, member<escrow_object, escrow_id_type, &escrow_object::id>>,
-                                  ordered_unique<tag<by_from_id>,
-                                      composite_key<escrow_object,
-                                                     member<escrow_object, account_name_type, &escrow_object::from>,
-                                                     member<escrow_object, uint32_t, &escrow_object::escrow_id>>>,
-                                  ordered_unique<tag<by_to>,
-                                      composite_key<escrow_object,
-                                                     member<escrow_object, account_name_type, &escrow_object::to>,
-                                                     member<escrow_object, escrow_id_type, &escrow_object::id>>>,
-                                  ordered_unique<tag<by_agent>,
-                                      composite_key<escrow_object,
-                                                     member<escrow_object, account_name_type, &escrow_object::agent>,
-                                                     member<escrow_object, escrow_id_type, &escrow_object::id>>>,
-                                  ordered_unique<tag<by_ratification_deadline>,
-                                      composite_key<escrow_object,
-                                                     const_mem_fun<escrow_object, bool, &escrow_object::is_approved>,
-                                                     member<escrow_object, time_point_sec,
-                                                         &escrow_object::ratification_deadline>,
-                                                     member<escrow_object, escrow_id_type, &escrow_object::id>>,
-                                      composite_key_compare<std::less<bool>, std::less<time_point_sec>,
-                                                     std::less<escrow_id_type>>>>,
-    allocator<escrow_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<escrow_object, escrow_id_type, &escrow_object::id>>,
+                                         ordered_unique<tag<by_from_id>,
+                                                        composite_key<escrow_object,
+                                                                      member<escrow_object,
+                                                                             account_name_type,
+                                                                             &escrow_object::from>,
+                                                                      member<escrow_object,
+                                                                             uint32_t,
+                                                                             &escrow_object::escrow_id>>>,
+                                         ordered_unique<tag<by_to>,
+                                                        composite_key<escrow_object,
+                                                                      member<escrow_object,
+                                                                             account_name_type,
+                                                                             &escrow_object::to>,
+                                                                      member<escrow_object,
+                                                                             escrow_id_type,
+                                                                             &escrow_object::id>>>,
+                                         ordered_unique<tag<by_agent>,
+                                                        composite_key<escrow_object,
+                                                                      member<escrow_object,
+                                                                             account_name_type,
+                                                                             &escrow_object::agent>,
+                                                                      member<escrow_object,
+                                                                             escrow_id_type,
+                                                                             &escrow_object::id>>>,
+                                         ordered_unique<tag<by_ratification_deadline>,
+                                                        composite_key<escrow_object,
+                                                                      const_mem_fun<escrow_object,
+                                                                                    bool,
+                                                                                    &escrow_object::is_approved>,
+                                                                      member<escrow_object,
+                                                                             time_point_sec,
+                                                                             &escrow_object::ratification_deadline>,
+                                                                      member<escrow_object,
+                                                                             escrow_id_type,
+                                                                             &escrow_object::id>>,
+                                                        composite_key_compare<std::less<bool>,
+                                                                              std::less<time_point_sec>,
+                                                                              std::less<escrow_id_type>>>>,
+                              allocator<escrow_object>>
     escrow_index;
 
 struct by_account;
 struct by_effective_date;
 typedef multi_index_container<decline_voting_rights_request_object,
-    indexed_by<ordered_unique<tag<by_id>,
-                   member<decline_voting_rights_request_object, decline_voting_rights_request_id_type,
-                                  &decline_voting_rights_request_object::id>>,
-                                  ordered_unique<tag<by_account>,
-                                      member<decline_voting_rights_request_object, account_id_type,
-                                                     &decline_voting_rights_request_object::account>>,
-                                  ordered_unique<tag<by_effective_date>,
-                                      composite_key<decline_voting_rights_request_object,
-                                                     member<decline_voting_rights_request_object, time_point_sec,
-                                                         &decline_voting_rights_request_object::effective_date>,
-                                                     member<decline_voting_rights_request_object, account_id_type,
-                                                         &decline_voting_rights_request_object::account>>,
-                                      composite_key_compare<std::less<time_point_sec>, std::less<account_id_type>>>>,
-    allocator<decline_voting_rights_request_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<decline_voting_rights_request_object,
+                                                               decline_voting_rights_request_id_type,
+                                                               &decline_voting_rights_request_object::id>>,
+                                         ordered_unique<tag<by_account>,
+                                                        member<decline_voting_rights_request_object,
+                                                               account_id_type,
+                                                               &decline_voting_rights_request_object::account>>,
+                                         ordered_unique<tag<by_effective_date>,
+                                                        composite_key<decline_voting_rights_request_object,
+                                                                      member<decline_voting_rights_request_object,
+                                                                             time_point_sec,
+                                                                             &decline_voting_rights_request_object::
+                                                                                 effective_date>,
+                                                                      member<decline_voting_rights_request_object,
+                                                                             account_id_type,
+                                                                             &decline_voting_rights_request_object::
+                                                                                 account>>,
+                                                        composite_key_compare<std::less<time_point_sec>,
+                                                                              std::less<account_id_type>>>>,
+                              allocator<decline_voting_rights_request_object>>
     decline_voting_rights_request_index;
 
 struct by_name;
 typedef multi_index_container<reward_fund_object,
-    indexed_by<ordered_unique<tag<by_id>, member<reward_fund_object, reward_fund_id_type, &reward_fund_object::id>>,
-                                  ordered_unique<tag<by_name>,
-                                      member<reward_fund_object, reward_fund_name_type, &reward_fund_object::name>>>,
-    allocator<reward_fund_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<reward_fund_object,
+                                                               reward_fund_id_type,
+                                                               &reward_fund_object::id>>,
+                                         ordered_unique<tag<by_name>,
+                                                        member<reward_fund_object,
+                                                               reward_fund_name_type,
+                                                               &reward_fund_object::name>>>,
+                              allocator<reward_fund_object>>
     reward_fund_index;
 }
 } // scorum::chain

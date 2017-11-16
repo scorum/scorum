@@ -50,14 +50,26 @@ template <typename T> using shared_vector = std::vector<T, allocator<T>>;
 
 struct strcmp_less
 {
-    bool operator()(const shared_string& a, const shared_string& b) const { return less(a.c_str(), b.c_str()); }
+    bool operator()(const shared_string& a, const shared_string& b) const
+    {
+        return less(a.c_str(), b.c_str());
+    }
 
-    bool operator()(const shared_string& a, const std::string& b) const { return less(a.c_str(), b.c_str()); }
+    bool operator()(const shared_string& a, const std::string& b) const
+    {
+        return less(a.c_str(), b.c_str());
+    }
 
-    bool operator()(const std::string& a, const shared_string& b) const { return less(a.c_str(), b.c_str()); }
+    bool operator()(const std::string& a, const shared_string& b) const
+    {
+        return less(a.c_str(), b.c_str());
+    }
 
 private:
-    inline bool less(const char* a, const char* b) const { return std::strcmp(a, b) < 0; }
+    inline bool less(const char* a, const char* b) const
+    {
+        return std::strcmp(a, b) < 0;
+    }
 };
 
 typedef boost::interprocess::interprocess_sharable_mutex read_write_mutex;
@@ -81,10 +93,22 @@ public:
         return *this;
     }
 
-    friend bool operator<(const oid& a, const oid& b) { return a._id < b._id; }
-    friend bool operator>(const oid& a, const oid& b) { return a._id > b._id; }
-    friend bool operator==(const oid& a, const oid& b) { return a._id == b._id; }
-    friend bool operator!=(const oid& a, const oid& b) { return a._id != b._id; }
+    friend bool operator<(const oid& a, const oid& b)
+    {
+        return a._id < b._id;
+    }
+    friend bool operator>(const oid& a, const oid& b)
+    {
+        return a._id > b._id;
+    }
+    friend bool operator==(const oid& a, const oid& b)
+    {
+        return a._id == b._id;
+    }
+    friend bool operator!=(const oid& a, const oid& b)
+    {
+        return a._id != b._id;
+    }
     int64_t _id = 0;
 };
 
@@ -113,7 +137,10 @@ template <typename T> struct get_index_type
     }
 
 #define CHAINBASE_DEFAULT_CONSTRUCTOR(OBJECT_TYPE)                                                                     \
-    template <typename Constructor, typename Allocator> OBJECT_TYPE(Constructor&& c, Allocator&&) { c(*this); }
+    template <typename Constructor, typename Allocator> OBJECT_TYPE(Constructor&& c, Allocator&&)                      \
+    {                                                                                                                  \
+        c(*this);                                                                                                      \
+    }
 
 template <typename value_type> class undo_state
 {
@@ -157,9 +184,15 @@ public:
     {
         ++_target;
     }
-    ~int_incrementer() { --_target; }
+    ~int_incrementer()
+    {
+        --_target;
+    }
 
-    int32_t get() const { return _target; }
+    int32_t get() const
+    {
+        return _target;
+    }
 
 private:
     int32_t& _target;
@@ -251,7 +284,10 @@ public:
         return *ptr;
     }
 
-    const index_type& indices() const { return _indices; }
+    const index_type& indices() const
+    {
+        return _indices;
+    }
 
     class session
     {
@@ -272,7 +308,10 @@ public:
         }
 
         /** leaves the UNDO state on the stack when session goes out of scope */
-        void push() { _apply = false; }
+        void push()
+        {
+            _apply = false;
+        }
         /** combines this session with the prior session */
         void squash()
         {
@@ -298,7 +337,10 @@ public:
             return *this;
         }
 
-        int64_t revision() const { return _revision; }
+        int64_t revision() const
+        {
+            return _revision;
+        }
 
     private:
         friend class generic_index;
@@ -331,8 +373,14 @@ public:
         }
     }
 
-    const index_type& indicies() const { return _indices; }
-    int64_t revision() const { return _revision; }
+    const index_type& indicies() const
+    {
+        return _indices;
+    }
+    int64_t revision() const
+    {
+        return _revision;
+    }
 
     /**
      *  Restores the state to how it was prior to the current session discarding all changes
@@ -524,7 +572,10 @@ public:
     }
 
 private:
-    bool enabled() const { return _stack.size(); }
+    bool enabled() const
+    {
+        return _stack.size();
+    }
 
     void on_modify(const value_type& v)
     {
@@ -611,10 +662,22 @@ public:
     {
     }
 
-    virtual void push() override { _session.push(); }
-    virtual void squash() override { _session.squash(); }
-    virtual void undo() override { _session.undo(); }
-    virtual int64_t revision() const override { return _session.revision(); }
+    virtual void push() override
+    {
+        _session.push();
+    }
+    virtual void squash() override
+    {
+        _session.squash();
+    }
+    virtual void undo() override
+    {
+        _session.undo();
+    }
+    virtual int64_t revision() const override
+    {
+        return _session.revision();
+    }
 
 private:
     SessionType _session;
@@ -623,8 +686,12 @@ private:
 class index_extension
 {
 public:
-    index_extension() {}
-    virtual ~index_extension() {}
+    index_extension()
+    {
+    }
+    virtual ~index_extension()
+    {
+    }
 };
 
 typedef std::vector<std::shared_ptr<index_extension>> index_extensions;
@@ -636,7 +703,9 @@ public:
         : _idx_ptr(i)
     {
     }
-    virtual ~abstract_index() {}
+    virtual ~abstract_index()
+    {
+    }
     virtual void set_revision(int64_t revision) = 0;
     virtual unique_ptr<abstract_session> start_undo_session(bool enabled) = 0;
 
@@ -649,9 +718,18 @@ public:
 
     virtual void remove_object(int64_t id) = 0;
 
-    void add_index_extension(std::shared_ptr<index_extension> ext) { _extensions.push_back(ext); }
-    const index_extensions& get_index_extensions() const { return _extensions; }
-    void* get() const { return _idx_ptr; }
+    void add_index_extension(std::shared_ptr<index_extension> ext)
+    {
+        _extensions.push_back(ext);
+    }
+    const index_extensions& get_index_extensions() const
+    {
+        return _extensions;
+    }
+    void* get() const
+    {
+        return _idx_ptr;
+    }
 
 private:
     void* _idx_ptr;
@@ -673,15 +751,39 @@ public:
             new session_impl<typename BaseIndex::session>(_base.start_undo_session(enabled)));
     }
 
-    virtual void set_revision(int64_t revision) override { _base.set_revision(revision); }
-    virtual int64_t revision() const override { return _base.revision(); }
-    virtual void undo() const override { _base.undo(); }
-    virtual void squash() const override { _base.squash(); }
-    virtual void commit(int64_t revision) const override { _base.commit(revision); }
-    virtual void undo_all() const override { _base.undo_all(); }
-    virtual uint32_t type_id() const override { return BaseIndex::value_type::type_id; }
+    virtual void set_revision(int64_t revision) override
+    {
+        _base.set_revision(revision);
+    }
+    virtual int64_t revision() const override
+    {
+        return _base.revision();
+    }
+    virtual void undo() const override
+    {
+        _base.undo();
+    }
+    virtual void squash() const override
+    {
+        _base.squash();
+    }
+    virtual void commit(int64_t revision) const override
+    {
+        _base.commit(revision);
+    }
+    virtual void undo_all() const override
+    {
+        _base.undo_all();
+    }
+    virtual uint32_t type_id() const override
+    {
+        return BaseIndex::value_type::type_id;
+    }
 
-    virtual void remove_object(int64_t id) override { return _base.remove_object(id); }
+    virtual void remove_object(int64_t id) override
+    {
+        return _base.remove_object(id);
+    }
 
 private:
     BaseIndex& _base;
@@ -699,9 +801,14 @@ public:
 class read_write_mutex_manager
 {
 public:
-    read_write_mutex_manager() { _current_lock = 0; }
+    read_write_mutex_manager()
+    {
+        _current_lock = 0;
+    }
 
-    ~read_write_mutex_manager() {}
+    ~read_write_mutex_manager()
+    {
+    }
 
     void next_lock()
     {
@@ -709,9 +816,15 @@ public:
         new (&_locks[_current_lock % CHAINBASE_NUM_RW_LOCKS]) read_write_mutex();
     }
 
-    read_write_mutex& current_lock() { return _locks[_current_lock % CHAINBASE_NUM_RW_LOCKS]; }
+    read_write_mutex& current_lock()
+    {
+        return _locks[_current_lock % CHAINBASE_NUM_RW_LOCKS];
+    }
 
-    uint32_t current_lock_num() { return _current_lock; }
+    uint32_t current_lock_num()
+    {
+        return _current_lock;
+    }
 
 private:
     std::array<read_write_mutex, CHAINBASE_NUM_RW_LOCKS> _locks;
@@ -724,7 +837,9 @@ private:
 class database
 {
 protected:
-    database(){}
+    database()
+    {
+    }
 
 public:
     virtual ~database();
@@ -770,7 +885,10 @@ public:
                 _revision = _index_sessions[0]->revision();
         }
 
-        ~session() { undo(); }
+        ~session()
+        {
+            undo();
+        }
 
         void push()
         {
@@ -793,11 +911,16 @@ public:
             _index_sessions.clear();
         }
 
-        int64_t revision() const { return _revision; }
+        int64_t revision() const
+        {
+            return _revision;
+        }
 
     private:
         friend class database;
-        session() {}
+        session()
+        {
+        }
 
         vector<std::unique_ptr<abstract_session>> _index_sessions;
         int64_t _revision = -1;
@@ -866,7 +989,10 @@ public:
         return _segment->get_segment_manager();
     }
 
-    size_t get_free_memory() const { return _segment->get_segment_manager()->get_free_memory(); }
+    size_t get_free_memory() const
+    {
+        return _segment->get_segment_manager()->get_free_memory();
+    }
 
     template <typename MultiIndexType> bool has_index() const
     {
@@ -1010,8 +1136,8 @@ public:
         }
         else
         {
-            if (!lock.timed_lock(
-                    boost::posix_time::microsec_clock::universal_time() + boost::posix_time::microseconds(wait_micro)))
+            if (!lock.timed_lock(boost::posix_time::microsec_clock::universal_time()
+                                 + boost::posix_time::microseconds(wait_micro)))
                 BOOST_THROW_EXCEPTION(std::runtime_error("unable to acquire lock"));
         }
 
@@ -1034,8 +1160,8 @@ public:
         }
         else
         {
-            while (!lock.timed_lock(
-                boost::posix_time::microsec_clock::universal_time() + boost::posix_time::microseconds(wait_micro)))
+            while (!lock.timed_lock(boost::posix_time::microsec_clock::universal_time()
+                                    + boost::posix_time::microseconds(wait_micro)))
             {
                 _rw_manager->next_lock();
                 std::cerr << "Lock timeout, moving to lock " << _rw_manager->current_lock_num() << std::endl;

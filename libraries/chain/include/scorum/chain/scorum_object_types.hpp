@@ -29,8 +29,14 @@ using scorum::protocol::account_name_type;
 using scorum::protocol::share_type;
 
 typedef bip::basic_string<char, std::char_traits<char>, allocator<char>> shared_string;
-inline std::string to_string(const shared_string& str) { return std::string(str.begin(), str.end()); }
-inline void from_string(shared_string& out, const string& in) { out.assign(in.begin(), in.end()); }
+inline std::string to_string(const shared_string& str)
+{
+    return std::string(str.begin(), str.end());
+}
+inline void from_string(shared_string& out, const string& in)
+{
+    out.assign(in.begin(), in.end());
+}
 
 typedef bip::vector<char, allocator<char>> buffer_type;
 
@@ -133,8 +139,14 @@ inline void from_variant(const variant& var, scorum::chain::shared_string& s)
     s.assign(str.begin(), str.end());
 }
 
-template <typename T> void to_variant(const chainbase::oid<T>& var, variant& vo) { vo = var._id; }
-template <typename T> void from_variant(const variant& vo, chainbase::oid<T>& var) { var._id = vo.as_int64(); }
+template <typename T> void to_variant(const chainbase::oid<T>& var, variant& vo)
+{
+    vo = var._id;
+}
+template <typename T> void from_variant(const variant& vo, chainbase::oid<T>& var)
+{
+    var._id = vo.as_int64();
+}
 
 namespace raw {
 template <typename Stream, typename T> inline void pack(Stream& s, const chainbase::oid<T>& id)

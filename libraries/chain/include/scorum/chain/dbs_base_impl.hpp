@@ -20,24 +20,21 @@ struct dbs_base
 protected:
     dbs_base() = delete;
 
-    explicit dbs_base(database &);
+    explicit dbs_base(database&);
 
     typedef dbs_base _BaseClass;
 
 public:
-
     virtual ~dbs_base();
 
-    dbservice &db();
+    dbservice& db();
 
 protected:
-
-    database &db_impl();
-    const database &db_impl() const;
+    database& db_impl();
+    const database& db_impl() const;
 
 private:
-
-    database &_db_core;
+    database& _db_core;
 };
 
 class dbservice_dbs_factory
@@ -47,32 +44,28 @@ class dbservice_dbs_factory
 protected:
     dbservice_dbs_factory() = delete;
 
-    explicit dbservice_dbs_factory(database &);
+    explicit dbservice_dbs_factory(database&);
 
     virtual ~dbservice_dbs_factory();
 
 public:
-
-    template <typename ConcreteService>
-    ConcreteService &obtain_service()
+    template <typename ConcreteService> ConcreteService& obtain_service()
     {
         auto it = _dbs.find(typeid(ConcreteService).name());
         if (BOOST_UNLIKELY(it == _dbs.end()))
         {
-            it = _dbs.insert(std::pair<std::string, BaseServicePtr>(
-                                 typeid(ConcreteService).name(),
-                                 BaseServicePtr(new ConcreteService(_db_core)))).first;
+            it = _dbs.insert(std::pair<std::string, BaseServicePtr>(typeid(ConcreteService).name(),
+                                                                    BaseServicePtr(new ConcreteService(_db_core))))
+                     .first;
         }
 
-        BaseServicePtr &ret = it->second;
-        return static_cast<ConcreteService &>(*ret);
+        BaseServicePtr& ret = it->second;
+        return static_cast<ConcreteService&>(*ret);
     }
 
 private:
-
-    std::map<std::string, BaseServicePtr > _dbs;
-    database &_db_core;
+    std::map<std::string, BaseServicePtr> _dbs;
+    database& _db_core;
 };
-
 }
 }

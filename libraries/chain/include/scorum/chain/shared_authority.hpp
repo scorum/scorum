@@ -66,7 +66,10 @@ public:
     void add_authority(const public_key_type& k, weight_type w);
     void add_authority(const account_name_type& k, weight_type w);
 
-    template <typename AuthType> void add_authorities(AuthType k, weight_type w) { add_authority(k, w); }
+    template <typename AuthType> void add_authorities(AuthType k, weight_type w)
+    {
+        add_authority(k, w);
+    }
 
     template <typename AuthType, class... Args> void add_authorities(AuthType k, weight_type w, Args... auths)
     {

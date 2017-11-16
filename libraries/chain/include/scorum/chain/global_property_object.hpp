@@ -30,7 +30,9 @@ public:
         c(*this);
     }
 
-    dynamic_global_property_object() {}
+    dynamic_global_property_object()
+    {
+    }
 
     id_type id;
 
@@ -59,7 +61,7 @@ public:
     price get_reward_vesting_share_price() const
     {
         return price(total_vesting_shares + pending_rewarded_vesting_shares,
-            total_vesting_fund_scorum + pending_rewarded_vesting_scorum);
+                     total_vesting_fund_scorum + pending_rewarded_vesting_scorum);
     }
 
     /**
@@ -96,16 +98,17 @@ public:
 };
 
 typedef multi_index_container<dynamic_global_property_object,
-    indexed_by<ordered_unique<tag<by_id>,
-        member<dynamic_global_property_object, dynamic_global_property_object::id_type,
-                                  &dynamic_global_property_object::id>>>,
-    allocator<dynamic_global_property_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<dynamic_global_property_object,
+                                                               dynamic_global_property_object::id_type,
+                                                               &dynamic_global_property_object::id>>>,
+                              allocator<dynamic_global_property_object>>
     dynamic_global_property_index;
 }
 } // scorum::chain
 
 FC_REFLECT(scorum::chain::dynamic_global_property_object,
-    (id)(head_block_number)(head_block_id)(time)(current_witness)(current_supply)(confidential_supply)(
+           (id)(head_block_number)(head_block_id)(time)(current_witness)(current_supply)(confidential_supply)(
                total_vesting_fund_scorum)(total_vesting_shares)(total_reward_fund_scorum)(total_reward_shares2)(
                pending_rewarded_vesting_shares)(pending_rewarded_vesting_scorum)(maximum_block_size)(current_aslot)(
                recent_slots_filled)(participation_count)(last_irreversible_block_num)(vote_power_reserve_rate))
