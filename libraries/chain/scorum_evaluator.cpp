@@ -7,6 +7,7 @@
 #include <scorum/chain/util/reward.hpp>
 
 #include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
+#include <scorum/chain/dbs_account.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -95,7 +96,7 @@ struct strcmp_equal
 
 void witness_update_evaluator::do_apply(const witness_update_operation& o)
 {
-    _db.get_account(o.owner); // verify owner exists
+    _db.obtain_specific<dbs_account>().check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
     FC_ASSERT(o.props.account_creation_fee.symbol == SCORUM_SYMBOL);
@@ -124,7 +125,9 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
 
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
-    const auto& creator = _db.get_account(o.creator);
+    dbs_account& accountService = _db.obtain_specific<dbs_account>();
+
+    const auto& creator = accountService.get_account(o.creator);
 
     // check creator balance
 
@@ -144,23 +147,22 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     for (auto& a : o.owner.account_auths)
     {
-        _db.get_account(a.first);
+        accountService.check_account_existence(a.first);
     }
 
     for (auto& a : o.active.account_auths)
     {
-        _db.get_account(a.first);
+        accountService.check_account_existence(a.first);
     }
 
     for (auto& a : o.posting.account_auths)
     {
-        _db.get_account(a.first);
+        accountService.check_account_existence(a.first);
     }
 
     // write in to DB
 
-    dbs_account& db_account = _db.obtain_specific<dbs_account>();
-    db_account.write_account_creation_by_faucets(
+    accountService.create_account_by_faucets(
         o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active, o.posting, o.fee);
 }
 
@@ -168,7 +170,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     const auto& props = _db.get_dynamic_global_properties();
 
-    const auto& creator = _db.get_account(o.creator);
+    dbs_account& accountService = _db.obtain_specific<dbs_account>();
+
+    const auto& creator = accountService.get_account(o.creator);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
@@ -207,21 +211,20 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     for (auto& a : o.owner.account_auths)
     {
-        _db.get_account(a.first);
+        accountService.check_account_existence(a.first);
     }
 
     for (auto& a : o.active.account_auths)
     {
-        _db.get_account(a.first);
+        accountService.check_account_existence(a.first);
     }
 
     for (auto& a : o.posting.account_auths)
     {
-        _db.get_account(a.first);
+        accountService.check_account_existence(a.first);
     }
 
-    dbs_account& db_account = _db.obtain_specific<dbs_account>();
-    db_account.write_account_creation_with_delegation(
+    accountService.create_account_with_delegation(
         o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active, o.posting, o.fee, o.delegation);
 }
 

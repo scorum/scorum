@@ -2,25 +2,19 @@
 
 #include <memory>
 
-#include <scorum/chain/dbservice_common.hpp>
+#include <scorum/chain/dbs_base_impl.hpp>
 
 namespace scorum {
 namespace chain {
 
-class dbservice;
-
-class dbs_witness
+class dbs_witness: public dbs_base
 {
 public:
-    explicit dbs_witness(dbservice& db);
-
-    typedef std::unique_ptr<dbs_witness> ptr;
+    explicit dbs_witness(database& db);
 
 public:
     // TODO
 
-private:
-    dbservice& _db;
 };
 }
 }

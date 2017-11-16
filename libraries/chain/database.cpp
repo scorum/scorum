@@ -95,10 +95,11 @@ database_impl::database_impl(database& self)
 {
 }
 
-database::database()
-    : _my(new database_impl(*this))
-{
-}
+database::database():
+    chainbase::database(),
+    dbservice(*this),
+    _my(new database_impl(*this))
+{}
 
 database::~database() { clear_pending(); }
 

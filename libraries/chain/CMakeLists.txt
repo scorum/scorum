@@ -23,6 +23,7 @@ add_library( scorum_chain
 
              dbs_database_witness_schedule.cpp
 
+             dbs_base_impl.cpp
              dbservice.cpp
              dbs_account.cpp
              dbs_witness.cpp

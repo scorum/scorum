@@ -47,7 +47,7 @@ class database : public chainbase::database, public dbservice
 
 public:
     database();
-    ~database();
+    virtual ~database();
 
     bool is_producing() const { return _is_producing; }
 

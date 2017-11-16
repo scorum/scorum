@@ -1,18 +1,8 @@
 #pragma once
 
-#include <memory>
-#include <map>
-#include <string>
-#include <typeinfo>
-
-#include <boost/variant.hpp>
-
-#include <scorum/chain/dbservice_common.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
 
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_witness.hpp>
-// TODO: ...
+#include <scorum/chain/dbs_base_impl.hpp>
 
 namespace chainbase {
 class database; // for _temporary_public_imp only
@@ -21,16 +11,18 @@ class database; // for _temporary_public_imp only
 namespace scorum {
 namespace chain {
 
-class dbservice
+class dbservice: public dbservice_dbs_factory
 {
-
-    typedef boost::variant<dbs_account::ptr, dbs_witness::ptr> _dbs_type;
-
 protected:
-    virtual ~dbservice() = 0;
+    explicit dbservice(database &);
+
+    typedef dbservice_dbs_factory _BaseClass;
 
 public:
-    //
+    virtual ~dbservice();
+
+    //TODO: move most of the methods in dbs specific services
+
     virtual bool is_producing() const = 0;
 
     virtual const witness_object& get_witness(const account_name_type& name) const = 0;
@@ -86,26 +78,8 @@ public:
 
     virtual std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const string& id) = 0;
 
-public:
-    template <typename DBS> DBS& obtain_specific()
-    {
-        typedef std::unique_ptr<DBS> _DBS_ptr;
-        auto it = _dbs.find(typeid(DBS).name());
-        if (BOOST_UNLIKELY(it == _dbs.end()))
-        {
-            it = _dbs.insert(std::pair<string, _dbs_type>(typeid(DBS).name(), _dbs_type(_DBS_ptr(new DBS(*this)))))
-                     .first;
-        }
-
-        _DBS_ptr& ret = boost::get<_DBS_ptr>(it->second);
-        return (*ret);
-    }
-
     // for TODO only:
     chainbase::database& _temporary_public_impl();
-
-private:
-    std::map<string, _dbs_type> _dbs;
 };
 }
 }

@@ -724,9 +724,11 @@ private:
 class database
 {
 protected:
-    virtual ~database() = 0;
+    database(){}
 
 public:
+    virtual ~database();
+
     enum open_flags
     {
         read_only = 0,
