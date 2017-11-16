@@ -56,8 +56,8 @@ public:
     ~application();
 
     void set_program_options(boost::program_options::options_description& command_line_options,
-        boost::program_options::options_description& configuration_file_options) const;
-    void initialize(const fc::path& data_dir, const boost::program_options::variables_map& options);
+                             boost::program_options::options_description& configuration_file_options)const;
+    void initialize(const boost::program_options::variables_map&options);
     void initialize_plugins(const boost::program_options::variables_map& options);
     void startup();
     void shutdown();
@@ -133,6 +133,8 @@ public:
     fc::http::websocket_client _client;
 
 private:
+    const std::string print_config(const boost::program_options::variables_map& vm);
+
     std::shared_ptr<detail::application_impl> my;
 
     boost::program_options::options_description _cli_options;

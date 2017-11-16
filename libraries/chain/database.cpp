@@ -153,6 +153,9 @@ void database::open(
             if (!find<dynamic_global_property_object>())
                 with_write_lock([&]() { init_genesis(); });
 
+            if (!fc::exists(data_dir))
+                fc::create_directories(data_dir);
+
             _block_log.open(data_dir / "block_log");
 
             auto log_head = _block_log.head();

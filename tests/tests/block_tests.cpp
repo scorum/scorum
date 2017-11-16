@@ -216,8 +216,8 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
         // then
         // pass it to db1 and assert that db1 doesn't switch to the new fork.
         signed_block good_block;
-        BOOST_CHECK_EQUAL(db1.head_block_num(), 13);
-        BOOST_CHECK_EQUAL(db2.head_block_num(), 13);
+        BOOST_CHECK_EQUAL(db1.head_block_num(), uint32_t(13));
+        BOOST_CHECK_EQUAL(db2.head_block_num(), uint32_t(13));
         {
             auto b = db2.generate_block(
                 db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
@@ -225,14 +225,14 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
             b.transactions.emplace_back(signed_transaction());
             b.transactions.back().operations.emplace_back(transfer_operation());
             b.sign(init_account_priv_key);
-            BOOST_CHECK_EQUAL(b.block_num(), 14);
+            BOOST_CHECK_EQUAL(b.block_num(), uint32_t(14));
             SCORUM_CHECK_THROW(PUSH_BLOCK(db1, b), fc::exception);
         }
-        BOOST_CHECK_EQUAL(db1.head_block_num(), 13);
+        BOOST_CHECK_EQUAL(db1.head_block_num(), uint32_t(13));
         BOOST_CHECK_EQUAL(db1.head_block_id().str(), db1_tip);
 
         // assert that db1 switches to new fork with good block
-        BOOST_CHECK_EQUAL(db2.head_block_num(), 14);
+        BOOST_CHECK_EQUAL(db2.head_block_num(), uint32_t(14));
         PUSH_BLOCK(db1, good_block);
         BOOST_CHECK_EQUAL(db1.head_block_id().str(), db2.head_block_id().str());
     }
@@ -607,7 +607,7 @@ BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, clean_database_fixture)
         BOOST_TEST_MESSAGE("checking initial participation rate");
         BOOST_CHECK_EQUAL(rsf(), "1111111111111111111111111111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
-        BOOST_CHECK_EQUAL(db.witness_participation_rate(), SCORUM_100_PERCENT);
+        BOOST_CHECK_EQUAL(db.witness_participation_rate(), uint32_t(SCORUM_100_PERCENT));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 1");
         generate_block(~database::skip_fork_db, init_account_priv_key, 1);
@@ -699,13 +699,13 @@ BOOST_FIXTURE_TEST_CASE(skip_block, clean_database_fixture)
         auto block_time = db.get_slot_time(miss_blocks);
         db.generate_block(block_time, witness, init_account_priv_key, 0);
 
-        BOOST_CHECK_EQUAL(db.head_block_num(), init_block_num + 1);
+        BOOST_CHECK_EQUAL(db.head_block_num(), uint32_t(init_block_num + 1));
         BOOST_CHECK(db.head_block_time() == block_time);
 
         BOOST_TEST_MESSAGE("Generating a block through fixture");
         generate_block();
 
-        BOOST_CHECK_EQUAL(db.head_block_num(), init_block_num + 2);
+        BOOST_CHECK_EQUAL(db.head_block_num(), uint32_t(init_block_num + 2));
         BOOST_CHECK(db.head_block_time() == block_time + SCORUM_BLOCK_INTERVAL);
     }
     FC_LOG_AND_RETHROW();

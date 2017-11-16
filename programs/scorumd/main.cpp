@@ -33,6 +33,8 @@
 #endif
 #include <graphene/utilities/key_conversion.hpp>
 
+#define SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME "config.ini"
+
 using namespace scorum;
 using scorum::protocol::version;
 namespace bpo = boost::program_options;
@@ -70,9 +72,10 @@ int main(int argc, char** argv)
 
         bpo::options_description app_options("Scorum Daemon");
         bpo::options_description cfg_options("Scorum Daemon");
-        app_options.add_options()("help,h", "Print this help message and exit.")("data-dir,d",
-            bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"),
-            "Directory containing databases, configuration file, etc.")("version,v", "Print scorumd version and exit.");
+        app_options.add_options()
+            ("help,h", "Print this help message and exit.")
+            ("config-file", bpo::value<boost::filesystem::path>(), "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME)
+            ;
 
         bpo::variables_map options;
 
@@ -115,12 +118,18 @@ int main(int argc, char** argv)
                 data_dir = fc::current_path() / data_dir;
         }
 
-        fc::path config_ini_path = data_dir / "config.ini";
-        if (fc::exists(config_ini_path))
+        fc::path config_ini_path = data_dir / SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME;
+        if (options.count("config-file"))
         {
+            config_ini_path = options["config-file"].as<boost::filesystem::path>();
+        }
+
+        if( fc::exists(config_ini_path) )
+        {
+            ilog("Using config file ${path}", ("path", config_ini_path));
+
             // get the basic options
-            bpo::store(
-                bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
+            bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
 
             // try to get logging options from the config file.
             try
@@ -174,12 +183,12 @@ int main(int argc, char** argv)
                 fc::configure_logging(*logging_config);
         }
 
-        ilog("parsing options");
+        ilog("parsing options" );
         bpo::notify(options);
         ilog("initializing node");
-        node->initialize(data_dir, options);
+        node->initialize(options);
         ilog("initializing plugins");
-        node->initialize_plugins(options);
+        node->initialize_plugins( options );
 
         ilog("starting node");
         node->startup();
