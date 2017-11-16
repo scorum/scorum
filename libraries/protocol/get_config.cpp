@@ -56,12 +56,6 @@ fc::variant_object get_config()
     result["SCORUM_INFLATION_RATE_START_PERCENT"] = SCORUM_INFLATION_RATE_START_PERCENT;
     result["SCORUM_INFLATION_RATE_STOP_PERCENT"] = SCORUM_INFLATION_RATE_STOP_PERCENT;
     result["SCORUM_INIT_DELEGATE_NAME"] = SCORUM_INIT_DELEGATE_NAME;
-    result["SCORUM_INIT_PUBLIC_KEY_STR"] = SCORUM_INIT_PUBLIC_KEY_STR;
-#if 0
-   // do not expose private key, period.
-   // we need this line present but inactivated so CI check for all constants in config.hpp doesn't complain.
-   result["SCORUM_INIT_PRIVATE_KEY"] = SCORUM_INIT_PRIVATE_KEY;
-#endif
     result["SCORUM_INIT_TIME"] = SCORUM_INIT_TIME;
     result["SCORUM_IRREVERSIBLE_THRESHOLD"] = SCORUM_IRREVERSIBLE_THRESHOLD;
     result["SCORUM_MAX_ACCOUNT_NAME_LENGTH"] = SCORUM_MAX_ACCOUNT_NAME_LENGTH;

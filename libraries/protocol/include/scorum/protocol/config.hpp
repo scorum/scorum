@@ -10,11 +10,9 @@
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
 #ifdef IS_TEST_NET
-#define SCORUM_INIT_PRIVATE_KEY                (fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key"))))
-#define SCORUM_INIT_PUBLIC_KEY_STR             (std::string( scorum::protocol::public_key_type(SCORUM_INIT_PRIVATE_KEY.get_public_key()) ))
 #define SCORUM_CHAIN_ID                        (fc::sha256::hash("testnet"))
 
-#define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
+#define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('T') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< SCORUM with 3 digits of precision
 
 #define SCORUM_ADDRESS_PREFIX                  "TST"
@@ -23,7 +21,7 @@
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
 
-#define SCORUM_MIN_ACCOUNT_CREATION_FEE          0
+#define SCORUM_MIN_ACCOUNT_CREATION_FEE        0
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
@@ -32,7 +30,6 @@
 
 #else // IS LIVE SCORUM NETWORK
 
-#define SCORUM_INIT_PUBLIC_KEY_STR             "SCR5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
 #define SCORUM_CHAIN_ID                        (scorum::protocol::chain_id_type())
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
@@ -75,7 +72,7 @@
 #define SCORUM_VESTING_WITHDRAW_INTERVALS      13
 #define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS (60*60*24*7) /// 1 week per interval
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
-#define SCORUM_SAVINGS_WITHDRAW_TIME        	(fc::days(3))
+#define SCORUM_SAVINGS_WITHDRAW_TIME           (fc::days(3))
 #define SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT  100
 #define SCORUM_VOTE_REGENERATION_SECONDS       (5*60*60*24) // 5 day
 #define SCORUM_MAX_VOTE_CHANGES                5
@@ -99,15 +96,15 @@
 #define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT) //15% of inflation, 1.425% inflation
 
 #define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (60*60*24*7) ///< 1 week
-#define SCORUM_BANDWIDTH_PRECISION             (uint64_t(1000000)) ///< 1 million
-#define SCORUM_MAX_COMMENT_DEPTH               0xffff // 64k
-#define SCORUM_SOFT_MAX_COMMENT_DEPTH          0xff // 255
+#define SCORUM_BANDWIDTH_PRECISION              (uint64_t(1000000)) ///< 1 million
+#define SCORUM_MAX_COMMENT_DEPTH                0xffff // 64k
+#define SCORUM_SOFT_MAX_COMMENT_DEPTH           0xff // 255
 
-#define SCORUM_MAX_RESERVE_RATIO               (20000)
+#define SCORUM_MAX_RESERVE_RATIO                (20000)
 
 #define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER 30
-#define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO    5
-#define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME     fc::days(30)
+#define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
+#define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
 
 #define SCORUM_MINING_REWARD                   asset( 1000, SCORUM_SYMBOL )
 

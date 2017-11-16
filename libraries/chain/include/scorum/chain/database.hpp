@@ -60,10 +60,6 @@ public:
 
     bool _log_hardforks = true;
 
-#ifdef IS_TEST_NET
-    bool skip_transaction_delta_check = true;
-#endif
-
     enum validation_steps
     {
         skip_nothing = 0,

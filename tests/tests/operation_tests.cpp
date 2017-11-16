@@ -3910,7 +3910,6 @@ BOOST_AUTO_TEST_CASE(account_bandwidth)
         vest("bob", ASSET("10.000 TESTS"));
 
         generate_block();
-        db.skip_transaction_delta_check = false;
 
         BOOST_TEST_MESSAGE("--- Test first tx in block");
 
