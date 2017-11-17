@@ -391,7 +391,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
             uint16_t reward_weight = SCORUM_100_PERCENT;
 
-
             optional<account_name_type> parent_author;
             if (o.parent_author != SCORUM_ROOT_POST_PARENT)
             {

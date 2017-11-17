@@ -93,7 +93,7 @@ void dbs_account::create_account_with_delegation(const account_name_type& new_ac
                                                  const authority& posting,
                                                  const asset& fee,
                                                  const asset& delegation,
-                                                 const optional<time_point_sec> &now)
+                                                 const optional<time_point_sec>& now)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(delegation.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
@@ -208,13 +208,10 @@ void dbs_account::update_owner_authority(const account_object& account,
                      });
 }
 
-void dbs_account::increase_balance(const account_object& account,
-                                 const asset& scorums)
+void dbs_account::increase_balance(const account_object& account, const asset& scorums)
 {
     FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& acnt) {
-        acnt.balance += scorums;
-    });
+    db_impl().modify(account, [&](account_object& acnt) { acnt.balance += scorums; });
 }
 
 void dbs_account::decrease_balance(const account_object& account, const asset& scorums)
@@ -222,13 +219,10 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
     increase_balance(account, -scorums);
 }
 
-void dbs_account::increase_reward_balance(const account_object& account,
-                                        const asset& scorums)
+void dbs_account::increase_reward_balance(const account_object& account, const asset& scorums)
 {
     FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& acnt) {
-            acnt.reward_scorum_balance += scorums;
-    });
+    db_impl().modify(account, [&](account_object& acnt) { acnt.reward_scorum_balance += scorums; });
 }
 
 void dbs_account::decrease_reward_balance(const account_object& account, const asset& scorums)
@@ -236,9 +230,7 @@ void dbs_account::decrease_reward_balance(const account_object& account, const a
     increase_reward_balance(account, -scorums);
 }
 
-void dbs_account::increase_vesting_shares(const account_object& account,
-                            const asset& vesting,
-                            const asset& scorums)
+void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting, const asset& scorums)
 {
     FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
@@ -249,12 +241,10 @@ void dbs_account::increase_vesting_shares(const account_object& account,
     });
 }
 
-void dbs_account::increase_delegated_vesting_shares(const account_object& account,
-                                                    const asset& vesting)
+void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& vesting)
 {
     FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(
-        account, [&](account_object& a) { a.delegated_vesting_shares += vesting; });
+    db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += vesting; });
 }
 
 void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& vesting)
@@ -268,8 +258,7 @@ void dbs_account::decrease_received_vesting_shares(const account_object& account
     increase_received_vesting_shares(account, -vesting);
 }
 
-void dbs_account::drop_challenged(const account_object& account,
-                                  const optional<time_point_sec>& now)
+void dbs_account::drop_challenged(const account_object& account, const optional<time_point_sec>& now)
 {
     _time t = _get_now(now);
 
@@ -300,8 +289,8 @@ void dbs_account::prove_authority(const account_object& account,
 }
 
 void dbs_account::add_post(const account_object& author_account,
-              const optional<account_name_type>& parent_author_name,
-              const optional<time_point_sec>& now)
+                           const optional<account_name_type>& parent_author_name,
+                           const optional<time_point_sec>& now)
 {
     _time t = _get_now(now);
 
@@ -398,8 +387,7 @@ void dbs_account::submit_account_recovery(const account_object& account_to_recov
 
     db_impl().remove(*request); // Remove first, update_owner_authority may invalidate iterator
     update_owner_authority(account_to_recover, new_owner_authority);
-    db_impl().modify(account_to_recover,
-                     [&](account_object& a) { a.last_account_recovery = t; });
+    db_impl().modify(account_to_recover, [&](account_object& a) { a.last_account_recovery = t; });
 }
 
 void dbs_account::change_recovery_account(const account_object& account_to_recover,
@@ -488,6 +476,5 @@ time_point_sec dbs_account::_get_now(const optional<time_point_sec>& now)
     }
     return ret;
 }
-
 }
 }
