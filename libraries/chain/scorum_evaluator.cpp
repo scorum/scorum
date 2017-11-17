@@ -390,17 +390,15 @@ void comment_evaluator::do_apply(const comment_operation& o)
                           ("now", now)("auth.last_post", auth.last_post));
 
             uint16_t reward_weight = SCORUM_100_PERCENT;
-            uint64_t post_bandwidth = auth.post_bandwidth;
 
-            _db._temporary_public_impl().modify(auth, [&](account_object& a) {
-                if (o.parent_author == SCORUM_ROOT_POST_PARENT)
-                {
-                    a.last_root_post = now;
-                    a.post_bandwidth = uint32_t(post_bandwidth);
-                }
-                a.last_post = now;
-                a.post_count++;
-            });
+
+            optional<account_name_type> parent_author;
+            if (o.parent_author != SCORUM_ROOT_POST_PARENT)
+            {
+                parent_author = o.parent_author;
+            }
+
+            accountService.add_post(auth, parent_author, now);
 
             const auto& new_comment = _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
                 validate_permlink_0_1(o.parent_permlink);
@@ -558,7 +556,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
                   "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}",
                   ("r", scorum_spent)("a", from_account.balance));
 
-        _db.adjust_balance(from_account, -scorum_spent);
+        accountService.decrease_balance(from_account, scorum_spent);
 
         _db._temporary_public_impl().create<escrow_object>([&](escrow_object& esc) {
             esc.escrow_id = o.escrow_id;
@@ -615,15 +613,15 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
         if (reject_escrow)
         {
             const auto& from_account = accountService.get_account(o.from);
-            _db.adjust_balance(from_account, escrow.scorum_balance);
-            _db.adjust_balance(from_account, escrow.pending_fee);
+            accountService.increase_balance(from_account, escrow.scorum_balance);
+            accountService.increase_balance(from_account, escrow.pending_fee);
 
             _db._temporary_public_impl().remove(escrow);
         }
         else if (escrow.to_approved && escrow.agent_approved)
         {
             const auto& agent_account = accountService.get_account(o.agent);
-            _db.adjust_balance(agent_account, escrow.pending_fee);
+            accountService.increase_balance(agent_account, escrow.pending_fee);
 
             _db._temporary_public_impl().modify(escrow, [&](escrow_object& esc) { esc.pending_fee.amount = 0; });
         }
@@ -701,7 +699,7 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
         }
         // If escrow expires and there is no dispute, either party can release funds to either party.
 
-        _db.adjust_balance(receiver_account, o.scorum_amount);
+        accountService.increase_balance(receiver_account, o.scorum_amount);
 
         _db._temporary_public_impl().modify(e, [&](escrow_object& esc) { esc.scorum_balance -= o.scorum_amount; });
 
@@ -720,18 +718,12 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
     const auto& from_account = accountService.get_account(o.from);
     const auto& to_account = accountService.get_account(o.to);
 
-    if (from_account.active_challenged)
-    {
-        _db._temporary_public_impl().modify(from_account, [&](account_object& a) {
-            a.active_challenged = false;
-            a.last_active_proved = _db.head_block_time();
-        });
-    }
+    accountService.drop_challenged(from_account);
 
     FC_ASSERT(_db.get_balance(from_account, o.amount.symbol) >= o.amount,
               "Account does not have sufficient funds for transfer.");
-    _db.adjust_balance(from_account, -o.amount);
-    _db.adjust_balance(to_account, o.amount);
+    accountService.decrease_balance(from_account, o.amount);
+    accountService.increase_balance(to_account, o.amount);
 }
 
 void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation& o)
@@ -743,7 +735,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
 
     FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
               "Account does not have sufficient SCORUM for transfer.");
-    _db.adjust_balance(from_account, -o.amount);
+    accountService.decrease_balance(from_account, o.amount);
     _db.create_vesting(to_account, o.amount);
 }
 
@@ -1020,10 +1012,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
             // their votes around over 50+ posts day for a week
             // if( used_power == 0 ) used_power = 1;
 
-            _db._temporary_public_impl().modify(voter, [&](account_object& a) {
-                a.voting_power = current_power - used_power;
-                a.last_vote_time = _db.head_block_time();
-            });
+            accountService.update_voting_power(voter, current_power - used_power);
 
             /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
             /// total rshares^2
@@ -1134,10 +1123,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
-            _db._temporary_public_impl().modify(voter, [&](account_object& a) {
-                a.voting_power = current_power - used_power;
-                a.last_vote_time = _db.head_block_time();
-            });
+            accountService.update_voting_power(voter, current_power - used_power);
 
             /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
             /// total rshares^2
@@ -1336,14 +1322,9 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
                         .to_uint64(),
                     SCORUM_SYMBOL);
 
-    _db.adjust_reward_balance(acnt, -op.reward_scorum);
-    _db.adjust_balance(acnt, op.reward_scorum);
-
-    _db._temporary_public_impl().modify(acnt, [&](account_object& a) {
-        a.vesting_shares += op.reward_vests;
-        a.reward_vesting_balance -= op.reward_vests;
-        a.reward_vesting_scorum -= reward_vesting_scorum_to_move;
-    });
+    accountService.increase_balance(acnt, op.reward_scorum);
+    accountService.decrease_reward_balance(acnt, op.reward_scorum);
+    accountService.increase_vesting_shares(acnt, op.reward_vests, reward_vesting_scorum_to_move);
 
     _db._temporary_public_impl().modify(_db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
         gpo.total_vesting_shares += op.reward_vests;
@@ -1388,11 +1369,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
             obj.min_delegation_time = _db.head_block_time();
         });
 
-        _db._temporary_public_impl().modify(
-            delegator, [&](account_object& a) { a.delegated_vesting_shares += op.vesting_shares; });
-
-        _db._temporary_public_impl().modify(delegatee,
-                                            [&](account_object& a) { a.received_vesting_shares += op.vesting_shares; });
+        accountService.increase_delegated_vesting_shares(delegator, op.vesting_shares);
+        accountService.increase_received_vesting_shares(delegatee, op.vesting_shares);
     }
     // Else if the delegation is increasing
     else if (op.vesting_shares >= delegation->vesting_shares)
@@ -1404,9 +1382,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         FC_ASSERT(available_shares >= op.vesting_shares - delegation->vesting_shares,
                   "Account does not have enough vesting shares to delegate.");
 
-        _db._temporary_public_impl().modify(delegator, [&](account_object& a) { a.delegated_vesting_shares += delta; });
-
-        _db._temporary_public_impl().modify(delegatee, [&](account_object& a) { a.received_vesting_shares += delta; });
+        accountService.increase_delegated_vesting_shares(delegator, delta);
+        accountService.increase_received_vesting_shares(delegatee, delta);
 
         _db._temporary_public_impl().modify(
             *delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
@@ -1437,7 +1414,7 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
                     = std::max(_db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time);
             });
 
-        _db._temporary_public_impl().modify(delegatee, [&](account_object& a) { a.received_vesting_shares -= delta; });
+        accountService.decrease_received_vesting_shares(delegatee, delta);
 
         if (op.vesting_shares.amount > 0)
         {

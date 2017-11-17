@@ -12,7 +12,9 @@ class witness_schedule_object;
 
 class dbs_witness : public dbs_base
 {
-public:
+    friend class dbservice_dbs_factory;
+
+protected:
     explicit dbs_witness(database& db);
 
 public:
