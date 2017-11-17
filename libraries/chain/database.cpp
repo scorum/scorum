@@ -1151,23 +1151,6 @@ void database::adjust_rshares2(const comment_object& c, fc::uint128_t old_rshare
     });
 }
 
-void database::update_owner_authority(const account_object& account, const authority& owner_authority)
-{
-    if (head_block_num() >= SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM)
-    {
-        create<owner_authority_history_object>([&](owner_authority_history_object& hist) {
-            hist.account = account.name;
-            hist.previous_owner_authority = get<account_authority_object, by_account>(account.name).owner;
-            hist.last_valid_time = head_block_time();
-        });
-    }
-
-    modify(get<account_authority_object, by_account>(account.name), [&](account_authority_object& auth) {
-        auth.owner = owner_authority;
-        auth.last_owner_update = head_block_time();
-    });
-}
-
 void database::process_vesting_withdrawals()
 {
     const auto& widx = get_index<account_index>().indices().get<by_next_vesting_withdrawal>();

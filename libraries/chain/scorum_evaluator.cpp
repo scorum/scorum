@@ -282,6 +282,7 @@ struct comment_options_extension_visitor
     comment_options_extension_visitor(const comment_object& c, dbservice& db)
         : _c(c)
         , _db(db)
+        , _accountService(_db.obtain_service<dbs_account>())
     {
     }
 
@@ -289,6 +290,7 @@ struct comment_options_extension_visitor
 
     const comment_object& _c;
     dbservice& _db;
+    dbs_account& _accountService;
 
     void operator()(const comment_payout_beneficiaries& cpb) const
     {
@@ -298,8 +300,7 @@ struct comment_options_extension_visitor
         _db._temporary_public_impl().modify(_c, [&](comment_object& c) {
             for (auto& b : cpb.beneficiaries)
             {
-                auto acc = _db._temporary_public_impl().find<account_object, by_name>(b.account);
-                FC_ASSERT(acc != nullptr, "Beneficiary \"${a}\" must exist.", ("a", b.account));
+                _accountService.check_account_existence(b.account, "Beneficiary");
                 c.beneficiaries.push_back(b);
             }
         });
@@ -768,12 +769,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
         FC_ASSERT(account.vesting_withdraw_rate.amount != 0,
                   "This operation would not change the vesting withdraw rate.");
 
-        _db._temporary_public_impl().modify(account, [&](account_object& a) {
-            a.vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
-            a.next_vesting_withdrawal = time_point_sec::maximum();
-            a.to_withdraw = 0;
-            a.withdrawn = 0;
-        });
+        accountService.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), 0);
     }
     else
     {
@@ -781,20 +777,17 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
         // SCORUM: We have to decide wether we use 13 weeks vesting period or low it down
         int vesting_withdraw_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
 
-        _db._temporary_public_impl().modify(account, [&](account_object& a) {
-            auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / vesting_withdraw_intervals, VESTS_SYMBOL);
+        auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / vesting_withdraw_intervals, VESTS_SYMBOL);
 
-            if (new_vesting_withdraw_rate.amount == 0)
-                new_vesting_withdraw_rate.amount = 1;
+        if (new_vesting_withdraw_rate.amount == 0)
+            new_vesting_withdraw_rate.amount = 1;
 
-            FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate,
-                      "This operation would not change the vesting withdraw rate.");
+        FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate,
+                  "This operation would not change the vesting withdraw rate.");
 
-            a.vesting_withdraw_rate = new_vesting_withdraw_rate;
-            a.next_vesting_withdrawal = _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-            a.to_withdraw = o.vesting_shares.amount;
-            a.withdrawn = 0;
-        });
+        accountService.update_withdraw(account, new_vesting_withdraw_rate,
+                                       _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
+                                       o.vesting_shares.amount);
     }
 }
 
@@ -824,13 +817,13 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
                     wvdo.auto_vest = o.auto_vest;
                 });
 
-            _db._temporary_public_impl().modify(from_account, [&](account_object& a) { a.withdraw_routes++; });
+            accountService.increase_withdraw_routes(from_account);
         }
         else if (o.percent == 0)
         {
             _db._temporary_public_impl().remove(*itr);
 
-            _db._temporary_public_impl().modify(from_account, [&](account_object& a) { a.withdraw_routes--; });
+            accountService.decrease_withdraw_routes(from_account);
         }
         else
         {
@@ -904,7 +897,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
         _db.adjust_witness_vote(witness, voter.witness_vote_weight());
 
-        _db._temporary_public_impl().modify(voter, [&](account_object& a) { a.witnesses_voted_for++; });
+        accountService.increase_witnesses_voted_for(voter);
     }
     else
     {
@@ -912,7 +905,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
         _db.adjust_witness_vote(witness, -voter.witness_vote_weight());
 
-        _db._temporary_public_impl().modify(voter, [&](account_object& a) { a.witnesses_voted_for--; });
+        accountService.decrease_witnesses_voted_for(voter);
         _db._temporary_public_impl().remove(*itr);
     }
 }

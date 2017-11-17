@@ -292,11 +292,9 @@ public:
                              const asset& curator_sbd_value,
                              const asset& beneficiary_value);
 
-    void adjust_balance(const account_object& a, const asset& delta);
     void adjust_reward_balance(const account_object& a, const asset& delta);
     void adjust_supply(const asset& delta, bool adjust_vesting = false);
     void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
-    void update_owner_authority(const account_object& account, const authority& owner_authority);
 
     asset get_balance(const account_object& a, asset_symbol_type symbol) const;
     asset get_balance(const string& aname, asset_symbol_type symbol) const
@@ -401,6 +399,8 @@ public:
     }
 
 private:
+    void adjust_balance(const account_object& a, const asset& delta);
+
     void _reset_virtual_schedule_time();
 
     void _update_median_witness_props();

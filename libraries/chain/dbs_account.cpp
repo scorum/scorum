@@ -29,16 +29,24 @@ const account_authority_object& dbs_account::get_account_authority(const account
     FC_CAPTURE_AND_RETHROW((name))
 }
 
-void dbs_account::check_account_existence(const account_name_type& name) const
+void dbs_account::check_account_existence(const account_name_type& name, const char* pAccountContextTypeName) const
 {
-    get_account(name);
+    auto acc = db_impl().find<account_object, by_name>(name);
+    if (pAccountContextTypeName)
+    {
+        FC_ASSERT(acc != nullptr, "\"${b}\" \"${b}\" must exist.", ("a", pAccountContextTypeName)("b", name));
+    }
+    else
+    {
+        FC_ASSERT(acc != nullptr, "Account \"${a}\" must exist.", ("a", name));
+    }
 }
 
-void dbs_account::check_account_existence(const account_authority_map& names) const
+void dbs_account::check_account_existence(const account_authority_map& names, const char* pAccountContextTypeName) const
 {
     for (const auto& a : names)
     {
-        check_account_existence(a.first);
+        check_account_existence(a.first, pAccountContextTypeName);
     }
 }
 
@@ -286,6 +294,40 @@ void dbs_account::prove_authority(const account_object& account,
             a.last_owner_proved = t;
         }
     });
+}
+
+void dbs_account::update_withdraw(const account_object& account,
+                                  const asset& vesting,
+                                  const time_point_sec& next_vesting_withdrawal,
+                                  const share_type& to_withdrawn,
+                                  const share_type& withdrawn)
+{
+    db_impl()._temporary_public_impl().modify(account, [&](account_object& a) {
+        a.vesting_withdraw_rate = vesting;
+        a.next_vesting_withdrawal = next_vesting_withdrawal;
+        a.to_withdraw = to_withdrawn;
+        a.withdrawn = withdrawn;
+    });
+}
+
+void dbs_account::increase_withdraw_routes(const account_object& account)
+{
+    db_impl().modify(account, [&](account_object& a) { a.withdraw_routes++; });
+}
+
+void dbs_account::decrease_withdraw_routes(const account_object& account)
+{
+    db_impl().modify(account, [&](account_object& a) { a.withdraw_routes--; });
+}
+
+void dbs_account::increase_witnesses_voted_for(const account_object& account)
+{
+    db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for++; });
+}
+
+void dbs_account::decrease_witnesses_voted_for(const account_object& account)
+{
+    db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for--; });
 }
 
 void dbs_account::add_post(const account_object& author_account,

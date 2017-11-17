@@ -51,10 +51,6 @@ public:
 
     virtual asset create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance = false) = 0;
 
-    virtual void update_owner_authority(const account_object& account, const authority& owner_authority) = 0;
-
-    virtual void adjust_balance(const account_object& a, const asset& delta) = 0;
-
     /** this updates the votes for witnesses as a result of account voting proxy changing */
     virtual void adjust_proxied_witness_votes(const account_object& a,
                                               const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,

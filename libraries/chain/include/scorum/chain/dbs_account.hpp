@@ -25,9 +25,11 @@ public:
 
     const account_authority_object& get_account_authority(const account_name_type&) const;
 
-    void check_account_existence(const account_name_type&) const;
+    void check_account_existence(const account_name_type&,
+                                 const char *pAccountContextTypeName = nullptr) const;
 
-    void check_account_existence(const account_authority_map&) const;
+    void check_account_existence(const account_authority_map&,
+                                 const char *pAccountContextTypeName = nullptr) const;
 
     void create_account_by_faucets(const account_name_type& new_account_name,
                                    const account_name_type& creator_name,
@@ -77,6 +79,18 @@ public:
     void prove_authority(const account_object& account,
                          bool require_owner,
                          const optional<time_point_sec>& now = optional<time_point_sec>());
+
+    void update_withdraw(const account_object& account,
+                         const asset& vesting,
+                         const time_point_sec &next_vesting_withdrawal,
+                         const share_type &to_withdrawn,
+                         const share_type &withdrawn = 0);
+
+    void increase_withdraw_routes(const account_object& account);
+    void decrease_withdraw_routes(const account_object& account);
+
+    void increase_witnesses_voted_for(const account_object& account);
+    void decrease_witnesses_voted_for(const account_object& account);
 
     void add_post(const account_object& author_account,
                   const optional<account_name_type>& parent_author_name,
