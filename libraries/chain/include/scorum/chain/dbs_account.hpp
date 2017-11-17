@@ -26,10 +26,10 @@ public:
     const account_authority_object& get_account_authority(const account_name_type&) const;
 
     void check_account_existence(const account_name_type&,
-                                 const char *pAccountContextTypeName = nullptr) const;
+                                 const optional<const char *> &context_type_name = optional<const char *>()) const;
 
     void check_account_existence(const account_authority_map&,
-                                 const char *pAccountContextTypeName = nullptr) const;
+                                 const optional<const char *> &context_type_name = optional<const char *>()) const;
 
     void create_account_by_faucets(const account_name_type& new_account_name,
                                    const account_name_type& creator_name,
@@ -84,7 +84,7 @@ public:
                          const asset& vesting,
                          const time_point_sec &next_vesting_withdrawal,
                          const share_type &to_withdrawn,
-                         const share_type &withdrawn = 0);
+                         const optional<share_type> &withdrawn = optional<share_type>());
 
     void increase_withdraw_routes(const account_object& account);
     void decrease_withdraw_routes(const account_object& account);

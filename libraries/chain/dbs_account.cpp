@@ -29,12 +29,13 @@ const account_authority_object& dbs_account::get_account_authority(const account
     FC_CAPTURE_AND_RETHROW((name))
 }
 
-void dbs_account::check_account_existence(const account_name_type& name, const char* pAccountContextTypeName) const
+void dbs_account::check_account_existence(const account_name_type& name,
+                                          const optional<const char*>& context_type_name) const
 {
     auto acc = db_impl().find<account_object, by_name>(name);
-    if (pAccountContextTypeName)
+    if (context_type_name.valid())
     {
-        FC_ASSERT(acc != nullptr, "\"${b}\" \"${b}\" must exist.", ("a", pAccountContextTypeName)("b", name));
+        FC_ASSERT(acc != nullptr, "\"${b}\" \"${b}\" must exist.", ("a", *context_type_name)("b", name));
     }
     else
     {
@@ -42,11 +43,12 @@ void dbs_account::check_account_existence(const account_name_type& name, const c
     }
 }
 
-void dbs_account::check_account_existence(const account_authority_map& names, const char* pAccountContextTypeName) const
+void dbs_account::check_account_existence(const account_authority_map& names,
+                                          const optional<const char*>& context_type_name) const
 {
     for (const auto& a : names)
     {
-        check_account_existence(a.first, pAccountContextTypeName);
+        check_account_existence(a.first, context_type_name);
     }
 }
 
@@ -300,13 +302,13 @@ void dbs_account::update_withdraw(const account_object& account,
                                   const asset& vesting,
                                   const time_point_sec& next_vesting_withdrawal,
                                   const share_type& to_withdrawn,
-                                  const share_type& withdrawn)
+                                  const optional<share_type>& withdrawn)
 {
     db_impl()._temporary_public_impl().modify(account, [&](account_object& a) {
         a.vesting_withdraw_rate = vesting;
         a.next_vesting_withdrawal = next_vesting_withdrawal;
         a.to_withdraw = to_withdrawn;
-        a.withdrawn = withdrawn;
+        a.withdrawn = (withdrawn.valid()) ? (*withdrawn) : 0;
     });
 }
 
