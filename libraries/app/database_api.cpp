@@ -42,6 +42,7 @@ public:
     // Globals
     fc::variant_object get_config() const;
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
+    chain_id_type get_chain_id() const;
 
     // Keys
     vector<set<string>> get_key_references(vector<public_key_type> key) const;

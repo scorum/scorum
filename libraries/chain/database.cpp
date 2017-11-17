@@ -2255,7 +2255,6 @@ void database::_apply_transaction(const signed_transaction& trx)
             trx.validate();
 
         auto& trx_idx = get_index<transaction_index>();
-        const chain_id_type& chain_id = SCORUM_CHAIN_ID;
         auto trx_id = trx.id();
         // idump((trx_id)(skip&skip_transaction_dupe_check));
         FC_ASSERT((skip & skip_transaction_dupe_check)
@@ -2274,7 +2273,7 @@ void database::_apply_transaction(const signed_transaction& trx)
 
             try
             {
-                trx.verify_authority(chain_id, get_active, get_owner, get_posting, SCORUM_MAX_SIG_CHECK_DEPTH);
+                trx.verify_authority(get_chain_id(), get_active, get_owner, get_posting, SCORUM_MAX_SIG_CHECK_DEPTH);
             }
             catch (protocol::tx_missing_active_auth& e)
             {

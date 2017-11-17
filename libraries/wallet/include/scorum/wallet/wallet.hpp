@@ -72,6 +72,8 @@ struct wallet_data
     string ws_server = "ws://localhost:8090";
     string ws_user;
     string ws_password;
+
+    chain_id_type chain_id;
 };
 
 enum authority_type
@@ -345,8 +347,8 @@ public:
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account(
-        string creator, string new_account_name, string json_meta, bool broadcast);
+    annotated_signed_transaction
+    create_account(string creator, string new_account_name, string json_meta, bool broadcast);
 
     /**
      * This method is used by faucets to create new accounts for other users which must
@@ -363,9 +365,14 @@ public:
      * @param memo public memo key of the new account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_with_keys(string creator, string newname, string json_meta,
-        public_key_type owner, public_key_type active, public_key_type posting, public_key_type memo,
-        bool broadcast) const;
+    annotated_signed_transaction create_account_with_keys(string creator,
+                                                          string newname,
+                                                          string json_meta,
+                                                          public_key_type owner,
+                                                          public_key_type active,
+                                                          public_key_type posting,
+                                                          public_key_type memo,
+                                                          bool broadcast) const;
 
     /**
      *  This method will genrate new owner, active, and memo keys for the new account which
@@ -382,8 +389,12 @@ public:
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_delegated(string creator, asset scorum_fee, asset delegated_vests,
-        string new_account_name, string json_meta, bool broadcast);
+    annotated_signed_transaction create_account_delegated(string creator,
+                                                          asset scorum_fee,
+                                                          asset delegated_vests,
+                                                          string new_account_name,
+                                                          string json_meta,
+                                                          bool broadcast);
 
     /**
      * This method is used by faucets to create new accounts for other users which must
@@ -404,9 +415,16 @@ public:
      * @param memo public memo key of the new account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_with_keys_delegated(string creator, asset scorum_fee,
-        asset delegated_vests, string newname, string json_meta, public_key_type owner, public_key_type active,
-        public_key_type posting, public_key_type memo, bool broadcast) const;
+    annotated_signed_transaction create_account_with_keys_delegated(string creator,
+                                                                    asset scorum_fee,
+                                                                    asset delegated_vests,
+                                                                    string newname,
+                                                                    string json_meta,
+                                                                    public_key_type owner,
+                                                                    public_key_type active,
+                                                                    public_key_type posting,
+                                                                    public_key_type memo,
+                                                                    bool broadcast) const;
 
     /**
      * This method updates the keys of an existing account.
@@ -419,8 +437,13 @@ public:
      * @param memo New public memo key for the account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction update_account(string accountname, string json_meta, public_key_type owner,
-        public_key_type active, public_key_type posting, public_key_type memo, bool broadcast) const;
+    annotated_signed_transaction update_account(string accountname,
+                                                string json_meta,
+                                                public_key_type owner,
+                                                public_key_type active,
+                                                public_key_type posting,
+                                                public_key_type memo,
+                                                bool broadcast) const;
 
     /**
      * This method updates the key of an authority for an exisiting account.
@@ -465,8 +488,8 @@ public:
      * @param threshold The weight threshold required for the authority to be met
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction update_account_auth_threshold(
-        string account_name, authority_type type, uint32_t threshold, bool broadcast);
+    annotated_signed_transaction
+    update_account_auth_threshold(string account_name, authority_type type, uint32_t threshold, bool broadcast);
 
     /**
      * This method updates the account JSON metadata
@@ -494,13 +517,16 @@ public:
      * @param vesting_shares The amount of VESTS to delegate
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction delegate_vesting_shares(
-        string delegator, string delegatee, asset vesting_shares, bool broadcast);
+    annotated_signed_transaction
+    delegate_vesting_shares(string delegator, string delegatee, asset vesting_shares, bool broadcast);
 
     /**
      *  This method is used to convert a JSON transaction to its transaction ID.
      */
-    transaction_id_type get_transaction_id(const signed_transaction& trx) const { return trx.id(); }
+    transaction_id_type get_transaction_id(const signed_transaction& trx) const
+    {
+        return trx.id();
+    }
 
     /** Lists all witnesses registered in the blockchain.
      * This returns a list of all account names that own witnesses, and the associated witness id,
@@ -532,8 +558,11 @@ public:
      * @param props The chain properties the witness is voting on.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction update_witness(string witness_name, string url, public_key_type block_signing_key,
-        const chain_properties& props, bool broadcast = false);
+    annotated_signed_transaction update_witness(string witness_name,
+                                                string url,
+                                                public_key_type block_signing_key,
+                                                const chain_properties& props,
+                                                bool broadcast = false);
 
     /** Set the voting proxy for an account.
      *
@@ -563,8 +592,10 @@ public:
      * @param approve true if the account is voting for the account to be able to be a block produce
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction vote_for_witness(
-        string account_to_vote_with, string witness_to_vote_for, bool approve = true, bool broadcast = false);
+    annotated_signed_transaction vote_for_witness(string account_to_vote_with,
+                                                  string witness_to_vote_for,
+                                                  bool approve = true,
+                                                  bool broadcast = false);
 
     /**
      * Transfer funds from one account to another. SCORUM and SBD can be transferred.
@@ -591,9 +622,16 @@ public:
      * @param json_meta JSON encoded meta data
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_transfer(string from, string to, string agent, uint32_t escrow_id,
-        asset scorum_amount, asset fee, time_point_sec ratification_deadline, time_point_sec escrow_expiration,
-        string json_meta, bool broadcast = false);
+    annotated_signed_transaction escrow_transfer(string from,
+                                                 string to,
+                                                 string agent,
+                                                 uint32_t escrow_id,
+                                                 asset scorum_amount,
+                                                 asset fee,
+                                                 time_point_sec ratification_deadline,
+                                                 time_point_sec escrow_expiration,
+                                                 string json_meta,
+                                                 bool broadcast = false);
 
     /**
      * Approve a proposed escrow transfer. Funds cannot be released until after approval. This is in lieu of requiring
@@ -620,8 +658,8 @@ public:
      * @param escrow_id A unique id for the escrow transfer
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_dispute(
-        string from, string to, string agent, string who, uint32_t escrow_id, bool broadcast = false);
+    annotated_signed_transaction
+    escrow_dispute(string from, string to, string agent, string who, uint32_t escrow_id, bool broadcast = false);
 
     /**
      * Release funds help in escrow
@@ -635,8 +673,14 @@ public:
      * @param scorum_amount The amount of SCORUM that will be released
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_release(string from, string to, string agent, string who, string receiver,
-        uint32_t escrow_id, asset scorum_amount, bool broadcast = false);
+    annotated_signed_transaction escrow_release(string from,
+                                                string to,
+                                                string agent,
+                                                string who,
+                                                string receiver,
+                                                uint32_t escrow_id,
+                                                asset scorum_amount,
+                                                bool broadcast = false);
 
     /**
      * Transfer SCORUM into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
@@ -672,8 +716,8 @@ public:
      *    them as SCORUM.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction set_withdraw_vesting_route(
-        string from, string to, uint16_t percent, bool auto_vest, bool broadcast = false);
+    annotated_signed_transaction
+    set_withdraw_vesting_route(string from, string to, uint16_t percent, bool auto_vest, bool broadcast = false);
 
     /** Signs a transaction.
      *
@@ -718,11 +762,17 @@ public:
      *  @param json the json metadata of the comment
      *  @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction post_comment(string author, string permlink, string parent_author,
-        string parent_permlink, string title, string body, string json, bool broadcast);
+    annotated_signed_transaction post_comment(string author,
+                                              string permlink,
+                                              string parent_author,
+                                              string parent_permlink,
+                                              string title,
+                                              string body,
+                                              string json,
+                                              bool broadcast);
 
-    annotated_signed_transaction send_private_message(
-        string from, string to, string subject, string body, bool broadcast);
+    annotated_signed_transaction
+    send_private_message(string from, string to, string subject, string body, bool broadcast);
     vector<extended_message_object> get_inbox(string account, fc::time_point newest, uint32_t limit);
     vector<extended_message_object> get_outbox(string account, fc::time_point newest, uint32_t limit);
     message_body try_decrypt_message(const message_api_obj& mo);
@@ -767,8 +817,10 @@ public:
      * of the compromised or lost account.
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction request_account_recovery(
-        string recovery_account, string account_to_recover, authority new_authority, bool broadcast);
+    annotated_signed_transaction request_account_recovery(string recovery_account,
+                                                          string account_to_recover,
+                                                          authority new_authority,
+                                                          bool broadcast);
 
     /**
      * Recover your account using a recovery request created by your recovery account. The syntax for this commain
@@ -783,8 +835,8 @@ public:
      * @param new_authority The new authority that your recovery account used in the account recover request.
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction recover_account(
-        string account_to_recover, authority recent_authority, authority new_authority, bool broadcast);
+    annotated_signed_transaction
+    recover_account(string account_to_recover, authority recent_authority, authority new_authority, bool broadcast);
 
     /**
      * Change your recovery account after a 30 day delay.
@@ -846,8 +898,8 @@ public:
 
     annotated_signed_transaction decline_voting_rights(string account, bool decline, bool broadcast);
 
-    annotated_signed_transaction claim_reward_balance(
-        string account, asset reward_scorum, asset reward_vests, bool broadcast);
+    annotated_signed_transaction
+    claim_reward_balance(string account, asset reward_scorum, asset reward_vests, bool broadcast);
 };
 
 struct plain_keys
@@ -860,12 +912,12 @@ struct plain_keys
 
 // clang-format off
 
-FC_REFLECT( scorum::wallet::wallet_data,
-            (cipher_keys)
-            (ws_server)
-            (ws_user)
-            (ws_password)
-          )
+FC_REFLECT(scorum::wallet::wallet_data,
+           (cipher_keys)
+           (ws_server)
+           (ws_user)
+           (ws_password)
+           (chain_id))
 
 FC_REFLECT( scorum::wallet::brain_key_info, (brain_priv_key)(wif_priv_key) (pub_key))
 
