@@ -2982,31 +2982,5 @@ void database::retally_witness_votes()
         }
     }
 }
-
-void database::retally_witness_vote_counts(bool force)
-{
-    const auto& account_idx = get_index<account_index>().indices();
-
-    // Check all existing votes by account
-    for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
-    {
-        const auto& a = *itr;
-        uint16_t witnesses_voted_for = 0;
-        if (force || (a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT))
-        {
-            const auto& vidx = get_index<witness_vote_index>().indices().get<by_account_witness>();
-            auto wit_itr = vidx.lower_bound(boost::make_tuple(a.id, witness_id_type()));
-            while (wit_itr != vidx.end() && wit_itr->account == a.id)
-            {
-                ++witnesses_voted_for;
-                ++wit_itr;
-            }
-        }
-        if (a.witnesses_voted_for != witnesses_voted_for)
-        {
-            modify(a, [&](account_object& account) { account.witnesses_voted_for = witnesses_voted_for; });
-        }
-    }
-}
 }
 } // scorum::chain
