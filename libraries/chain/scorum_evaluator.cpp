@@ -42,20 +42,11 @@ inline void validate_permlink_0_1(const string& permlink)
     FC_ASSERT(permlink.size() > SCORUM_MIN_PERMLINK_LENGTH && permlink.size() < SCORUM_MAX_PERMLINK_LENGTH,
               "Permlink is not a valid size.");
 
-    for (auto c : permlink)
+    for (auto ch : permlink)
     {
-        switch (c)
+        if (!std::islower(ch) && !std::isdigit(ch) && !(ch == '-'))
         {
-        // clang-format off
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i':
-        case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r':
-        case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': case '0':
-        case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-        case '-':
-            // clang-format on
-            break;
-        default:
-            FC_ASSERT(false, "Invalid permlink character: ${s}", ("s", std::string() + c));
+            FC_ASSERT(false, "Invalid permlink character: ${ch}", ("ch", std::string(1, ch)));
         }
     }
 }

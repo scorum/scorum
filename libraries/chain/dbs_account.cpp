@@ -35,11 +35,11 @@ void dbs_account::check_account_existence(const account_name_type& name,
     auto acc = db_impl().find<account_object, by_name>(name);
     if (context_type_name.valid())
     {
-        FC_ASSERT(acc != nullptr, "\"${b}\" \"${b}\" must exist.", ("a", *context_type_name)("b", name));
+        FC_ASSERT(acc != nullptr, "\"${1}\" \"${2}\" must exist.", ("1", *context_type_name)("2", name));
     }
     else
     {
-        FC_ASSERT(acc != nullptr, "Account \"${a}\" must exist.", ("a", name));
+        FC_ASSERT(acc != nullptr, "Account \"${1}\" must exist.", ("1", name));
     }
 }
 

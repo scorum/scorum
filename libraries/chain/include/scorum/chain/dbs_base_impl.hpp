@@ -52,7 +52,7 @@ public:
     template <typename ConcreteService> ConcreteService& obtain_service()
     {
         auto it = _dbs.find(typeid(ConcreteService).name());
-        if (BOOST_UNLIKELY(it == _dbs.end()))
+        if (it == _dbs.end())
         {
             it = _dbs.insert(std::pair<std::string, BaseServicePtr>(typeid(ConcreteService).name(),
                                                                     BaseServicePtr(new ConcreteService(_db_core))))
