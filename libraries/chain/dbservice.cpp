@@ -5,7 +5,7 @@ namespace scorum {
 namespace chain {
 
 dbservice::dbservice(database& db)
-    : _BaseClass(db)
+    : _base_type(db)
 {
 }
 

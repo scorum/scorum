@@ -22,7 +22,7 @@ protected:
 
     explicit dbs_base(database&);
 
-    typedef dbs_base _BaseClass;
+    typedef dbs_base _base_type;
 
 public:
     virtual ~dbs_base();

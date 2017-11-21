@@ -13,7 +13,7 @@ namespace chain {
 
 class dbservice : public dbservice_dbs_factory
 {
-    typedef dbservice_dbs_factory _BaseClass;
+    typedef dbservice_dbs_factory _base_type;
 
 protected:
     explicit dbservice(database&);

@@ -7,7 +7,7 @@ namespace scorum {
 namespace chain {
 
 dbs_account::dbs_account(database& db)
-    : _BaseClass(db)
+    : _base_type(db)
 {
 }
 

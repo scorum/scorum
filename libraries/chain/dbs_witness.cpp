@@ -7,7 +7,7 @@ namespace scorum {
 namespace chain {
 
 dbs_witness::dbs_witness(database& db)
-    : _BaseClass(db)
+    : _base_type(db)
 {
 }
 
