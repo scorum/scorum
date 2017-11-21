@@ -325,8 +325,6 @@ BOOST_AUTO_TEST_CASE(merkle_root)
 
 BOOST_AUTO_TEST_CASE(format_string)
 {
-    BOOST_MESSAGE("Check formating");
-
     const fc::string etalon("'ABC' [101 = 101, 102 = 102]");
     fc::string fmt("'${first}' [101 = ${1}, 102 = ${2}]");
     fc::string out(fc::format_string(fmt, fc::mutable_variant_object()("first", "ABC")("1", 101)("2", 102)));
