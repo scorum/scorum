@@ -32,6 +32,7 @@
 #include <fc/crypto/digest.hpp>
 #include <fc/crypto/hex.hpp>
 #include "../common/database_fixture.hpp"
+#include <fc/string.hpp>
 
 #include <algorithm>
 #include <random>
@@ -322,11 +323,15 @@ BOOST_AUTO_TEST_CASE(merkle_root)
     BOOST_CHECK(block.calculate_merkle_root() == c(dO));
 }
 
-BOOST_AUTO_TEST_CASE(log_format)
+BOOST_AUTO_TEST_CASE(format_string)
 {
     BOOST_MESSAGE("Check formating");
-    ilog("first = '${first}', other digits = [101 = ${1}, 102 = ${2}]",
-         ("first", "The First String")("1", 101)("2", 102));
+
+    const fc::string etalon("'ABC' [101 = 101, 102 = 102]");
+    fc::string fmt("'${first}' [101 = ${1}, 102 = ${2}]");
+    fc::string out(fc::format_string(fmt, fc::mutable_variant_object()("first", "ABC")("1", 101)("2", 102)));
+
+    BOOST_CHECK(!out.compare(etalon));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
