@@ -19,9 +19,13 @@ add_library( scorum_chain
 
              # As database takes the longest to compile, start it first
              database.cpp
-             database_witness_schedule.cpp
-             dbservice.cpp
              fork_database.cpp
+             database_witness_schedule.cpp
+
+             dbs_base_impl.cpp
+             dbservice.cpp
+             dbs_account.cpp
+             dbs_witness.cpp
 
              scorum_evaluator.cpp
 

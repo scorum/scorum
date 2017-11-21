@@ -1700,7 +1700,6 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         BOOST_REQUIRE(alice_witness.total_missed == 0);
         BOOST_REQUIRE(alice_witness.last_aslot == 0);
         BOOST_REQUIRE(alice_witness.last_confirmed_block_num == 0);
-        BOOST_REQUIRE(alice_witness.pow_worker == 0);
         BOOST_REQUIRE(alice_witness.votes.value == 0);
         BOOST_REQUIRE(alice_witness.virtual_last_update == 0);
         BOOST_REQUIRE(alice_witness.virtual_position == 0);
@@ -1727,7 +1726,6 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         BOOST_REQUIRE(alice_witness.total_missed == 0);
         BOOST_REQUIRE(alice_witness.last_aslot == 0);
         BOOST_REQUIRE(alice_witness.last_confirmed_block_num == 0);
-        BOOST_REQUIRE(alice_witness.pow_worker == 0);
         BOOST_REQUIRE(alice_witness.votes.value == 0);
         BOOST_REQUIRE(alice_witness.virtual_last_update == 0);
         BOOST_REQUIRE(alice_witness.virtual_position == 0);

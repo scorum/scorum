@@ -17,9 +17,9 @@ share_type calc_percent_reward(share_type current_supply)
     static_assert(shift_constant < 128, "shift constant is implausibly large, re-check your arguments");
     static_assert(multiply_constant > 256, "multiply constant is implausibly small, re-check your arguments");
     static_assert(multiply_constant < UINT64_MAX / (10 * uint64_t(SCORUM_100_PERCENT)),
-        "multiply constant is too large, we may be in danger of overflow");
-    static_assert(
-        (percent == 0) || (percent > SCORUM_1_PERCENT), "percent is smaller than 1%, re-check your arguments");
+                  "multiply constant is too large, we may be in danger of overflow");
+    static_assert((percent == 0) || (percent > SCORUM_1_PERCENT),
+                  "percent is smaller than 1%, re-check your arguments");
     static_assert(percent <= SCORUM_100_PERCENT, "percent is implausibly large, re-check your arguments (if you really "
                                                  "mean to do this, you should revise the overflow check above "
                                                  "accordingly)");

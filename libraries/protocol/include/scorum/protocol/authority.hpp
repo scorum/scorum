@@ -5,6 +5,8 @@
 namespace scorum {
 namespace protocol {
 
+typedef flat_map<account_name_type, weight_type> account_authority_map;
+
 struct authority
 {
     authority() {}
@@ -42,7 +44,6 @@ struct authority
     void clear();
     void validate() const;
 
-    typedef flat_map<account_name_type, weight_type> account_authority_map;
     typedef flat_map<public_key_type, weight_type> key_authority_map;
 
     uint32_t weight_threshold = 0;
@@ -93,7 +94,7 @@ bool operator==(const authority& a, const authority& b);
 }
 } // namespace scorum::protocol
 
-FC_REFLECT_TYPENAME(scorum::protocol::authority::account_authority_map)
+FC_REFLECT_TYPENAME(scorum::protocol::account_authority_map)
 FC_REFLECT_TYPENAME(scorum::protocol::authority::key_authority_map)
 FC_REFLECT(scorum::protocol::authority, (weight_threshold)(account_auths)(key_auths))
 FC_REFLECT_ENUM(scorum::protocol::authority::classification, (owner)(active)(key)(posting))

@@ -38,10 +38,6 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <scorum/chain/genesis_state.hpp>
 
-#include <scorum/chain/dbservice.hpp>
-#include <scorum/chain/database_index.hpp>
-#include <scorum/chain/database_witness_schedule.hpp>
-
 namespace scorum {
 namespace chain {
 
@@ -101,44 +97,15 @@ database_impl::database_impl(database& self)
 }
 
 database::database()
-    : _my(new database_impl(*this))
+    : chainbase::database()
+    , dbservice(*this)
+    , _my(new database_impl(*this))
 {
 }
 
 database::~database()
 {
     clear_pending();
-}
-
-i_dbservice& database::i_service()
-{
-    if (!_i_service)
-    {
-        // TODO (replace to make_unique if C++14 will be supported)
-        _i_service = std::unique_ptr<i_dbservice>(new i_dbservice(*this));
-    }
-    return (*_i_service);
-}
-
-i_database_index& database::i_index()
-{
-    if (!_i_index)
-    {
-        // TODO (replace to make_unique if C++14 will be supported)
-        _i_index = std::unique_ptr<i_database_index>(new i_database_index(*this));
-    }
-    return (*_i_index);
-}
-
-i_database_witness_schedule& database::i_witness_schedule()
-{
-    if (!_i_database_witness_schedule)
-    {
-        // TODO (replace to make_unique if C++14 will be supported)
-        _i_database_witness_schedule
-            = std::unique_ptr<i_database_witness_schedule>(new i_database_witness_schedule(*this));
-    }
-    return (*_i_database_witness_schedule);
 }
 
 void database::open(const fc::path& data_dir,
@@ -1188,23 +1155,6 @@ void database::adjust_rshares2(const comment_object& c, fc::uint128_t old_rshare
     });
 }
 
-void database::update_owner_authority(const account_object& account, const authority& owner_authority)
-{
-    if (head_block_num() >= SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM)
-    {
-        create<owner_authority_history_object>([&](owner_authority_history_object& hist) {
-            hist.account = account.name;
-            hist.previous_owner_authority = get<account_authority_object, by_account>(account.name).owner;
-            hist.last_valid_time = head_block_time();
-        });
-    }
-
-    modify(get<account_authority_object, by_account>(account.name), [&](account_authority_object& auth) {
-        auth.owner = owner_authority;
-        auth.last_owner_update = head_block_time();
-    });
-}
-
 void database::process_vesting_withdrawals()
 {
     const auto& widx = get_index<account_index>().indices().get<by_next_vesting_withdrawal>();
@@ -1835,29 +1785,29 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 
 void database::initialize_indexes()
 {
-    i_index().add_core_index<dynamic_global_property_index>();
-    i_index().add_core_index<chain_property_index>();
-    i_index().add_core_index<account_index>();
-    i_index().add_core_index<account_authority_index>();
-    i_index().add_core_index<witness_index>();
-    i_index().add_core_index<transaction_index>();
-    i_index().add_core_index<block_summary_index>();
-    i_index().add_core_index<witness_schedule_index>();
-    i_index().add_core_index<comment_index>();
-    i_index().add_core_index<comment_vote_index>();
-    i_index().add_core_index<witness_vote_index>();
-    i_index().add_core_index<operation_index>();
-    i_index().add_core_index<account_history_index>();
-    i_index().add_core_index<hardfork_property_index>();
-    i_index().add_core_index<withdraw_vesting_route_index>();
-    i_index().add_core_index<owner_authority_history_index>();
-    i_index().add_core_index<account_recovery_request_index>();
-    i_index().add_core_index<change_recovery_account_request_index>();
-    i_index().add_core_index<escrow_index>();
-    i_index().add_core_index<decline_voting_rights_request_index>();
-    i_index().add_core_index<reward_fund_index>();
-    i_index().add_core_index<vesting_delegation_index>();
-    i_index().add_core_index<vesting_delegation_expiration_index>();
+    _add_index_impl<dynamic_global_property_index>();
+    _add_index_impl<chain_property_index>();
+    _add_index_impl<account_index>();
+    _add_index_impl<account_authority_index>();
+    _add_index_impl<witness_index>();
+    _add_index_impl<transaction_index>();
+    _add_index_impl<block_summary_index>();
+    _add_index_impl<witness_schedule_index>();
+    _add_index_impl<comment_index>();
+    _add_index_impl<comment_vote_index>();
+    _add_index_impl<witness_vote_index>();
+    _add_index_impl<operation_index>();
+    _add_index_impl<account_history_index>();
+    _add_index_impl<hardfork_property_index>();
+    _add_index_impl<withdraw_vesting_route_index>();
+    _add_index_impl<owner_authority_history_index>();
+    _add_index_impl<account_recovery_request_index>();
+    _add_index_impl<change_recovery_account_request_index>();
+    _add_index_impl<escrow_index>();
+    _add_index_impl<decline_voting_rights_request_index>();
+    _add_index_impl<reward_fund_index>();
+    _add_index_impl<vesting_delegation_index>();
+    _add_index_impl<vesting_delegation_expiration_index>();
 
     _plugin_index_signal();
 }
@@ -2088,6 +2038,9 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
 void database::show_free_memory(bool force)
 {
+#ifdef IS_TEST_NET
+    boost::ignore_unused(force);
+#else
     uint32_t free_gb = uint32_t(get_free_memory() / (1024 * 1024 * 1024));
     if (force || (free_gb < _last_free_gb_printed) || (free_gb > _last_free_gb_printed + 1))
     {
@@ -2102,6 +2055,7 @@ void database::show_free_memory(bool force)
         if (free_mb <= 100 && head_block_num() % 10 == 0)
             elog("Free memory is now ${n}M. Increase shared file size immediately!", ("n", free_mb));
     }
+#endif
 }
 
 void database::_apply_block(const signed_block& next_block)
@@ -2176,7 +2130,9 @@ void database::_apply_block(const signed_block& next_block)
         create_block_summary(next_block);
         clear_expired_transactions();
         clear_expired_delegations();
-        i_witness_schedule().update_witness_schedule();
+
+        // in dbs_database_witness_schedule.cpp
+        update_witness_schedule();
 
         process_funds();
 
@@ -2924,32 +2880,6 @@ void database::retally_witness_votes()
         {
             adjust_witness_vote(get(wit_itr->witness), a.witness_vote_weight());
             ++wit_itr;
-        }
-    }
-}
-
-void database::retally_witness_vote_counts(bool force)
-{
-    const auto& account_idx = get_index<account_index>().indices();
-
-    // Check all existing votes by account
-    for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
-    {
-        const auto& a = *itr;
-        uint16_t witnesses_voted_for = 0;
-        if (force || (a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT))
-        {
-            const auto& vidx = get_index<witness_vote_index>().indices().get<by_account_witness>();
-            auto wit_itr = vidx.lower_bound(boost::make_tuple(a.id, witness_id_type()));
-            while (wit_itr != vidx.end() && wit_itr->account == a.id)
-            {
-                ++witnesses_voted_for;
-                ++wit_itr;
-            }
-        }
-        if (a.witnesses_voted_for != witnesses_voted_for)
-        {
-            modify(a, [&](account_object& account) { account.witnesses_voted_for = witnesses_voted_for; });
         }
     }
 }
