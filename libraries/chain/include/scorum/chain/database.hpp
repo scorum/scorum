@@ -352,7 +352,6 @@ public:
 
     /// Reset the object graph in-memory
     void initialize_indexes();
-    void init_schema();
     void init_genesis();
     void set_init_genesis_state(const genesis_state_type& genesis_state);
 
