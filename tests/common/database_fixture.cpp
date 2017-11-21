@@ -38,12 +38,8 @@ database_fixture::database_fixture()
     : app()
     , db(*app.chain_database())
 {
-    genesis_state_type genesis_state;
     genesis_state.init_supply = INITIAL_TEST_SUPPLY;
-
     create_initdelegate_for_genesis_state(genesis_state);
-
-    db.set_init_genesis_state(genesis_state);
 }
 
 database_fixture::~database_fixture()
@@ -140,7 +136,7 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
     }
     init_account_pub_key = init_account_priv_key.get_public_key();
 
-    db.open(data_dir->path(), data_dir->path(), size, chainbase::database::read_write);
+    db.open(data_dir->path(), data_dir->path(), size, chainbase::database::read_write, genesis_state);
 
     boost::program_options::variables_map options;
 
@@ -173,7 +169,7 @@ live_database_fixture::live_database_fixture()
         auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
         ahplugin->plugin_initialize(boost::program_options::variables_map());
 
-        db.open(_chain_dir, _chain_dir, 0, 0);
+        db.open(_chain_dir, _chain_dir, 0, 0, genesis_state);
 
         validate_database();
         generate_block();
@@ -222,8 +218,8 @@ void database_fixture::open_database()
     {
         data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
         db._log_hardforks = false;
-        db.open(data_dir->path(), data_dir->path(), 1024 * 1024 * 8,
-                chainbase::database::read_write); // 8 MB file for testing
+        db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_8MB, chainbase::database::read_write,
+                genesis_state);
     }
 }
 

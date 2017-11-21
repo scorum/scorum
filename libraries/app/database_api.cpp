@@ -258,6 +258,11 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
     return dynamic_global_property_api_obj(_db.get(dynamic_global_property_id_type()), _db);
 }
 
+chain_id_type database_api_impl::get_chain_id() const
+{
+    return _db.get_chain_id();
+}
+
 witness_schedule_api_obj database_api::get_witness_schedule() const
 {
     return my->_db.with_read_lock([&]() { return my->_db.get(witness_schedule_id_type()); });
@@ -674,7 +679,7 @@ set<public_key_type> database_api_impl::get_required_signatures(const signed_tra
 {
     //   wdump((trx)(available_keys));
     auto result = trx.get_required_signatures(
-        SCORUM_CHAIN_ID, available_keys,
+        get_chain_id(), available_keys,
         [&](string account_name) {
             return authority(_db.get<account_authority_object, by_account>(account_name).active);
         },
@@ -699,7 +704,7 @@ set<public_key_type> database_api_impl::get_potential_signatures(const signed_tr
     //   wdump((trx));
     set<public_key_type> result;
     trx.get_required_signatures(
-        SCORUM_CHAIN_ID, flat_set<public_key_type>(),
+        get_chain_id(), flat_set<public_key_type>(),
         [&](account_name_type account_name) {
             const auto& auth = _db.get<account_authority_object, by_account>(account_name).active;
             for (const auto& k : auth.get_keys())
@@ -731,7 +736,7 @@ bool database_api::verify_authority(const signed_transaction& trx) const
 
 bool database_api_impl::verify_authority(const signed_transaction& trx) const
 {
-    trx.verify_authority(SCORUM_CHAIN_ID,
+    trx.verify_authority(get_chain_id(),
                          [&](string account_name) {
                              return authority(_db.get<account_authority_object, by_account>(account_name).active);
                          },

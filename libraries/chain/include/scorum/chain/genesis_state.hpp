@@ -43,7 +43,7 @@ struct genesis_state_type
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
 
-    sp::public_key_type init_delegate_pub_key;
+    sp::chain_id_type initial_chain_id;
 };
 } // namespace chain
 } // namespace scorum
@@ -64,5 +64,5 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (init_supply)
            (accounts)
            (witness_candidates)
-           (init_delegate_pub_key))
+           (initial_chain_id))
 // clang-format on

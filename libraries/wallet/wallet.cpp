@@ -278,6 +278,7 @@ public:
     wallet_api& self;
     wallet_api_impl(wallet_api& s, const wallet_data& initial_data, fc::api<login_api> rapi)
         : self(s)
+        , _chain_id(initial_data.chain_id)
         , _remote_api(rapi)
         , _remote_db(rapi->get_api_by_name("database_api")->as<database_api>())
         , _remote_net_broadcast(rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>())
@@ -741,7 +742,7 @@ public:
         }
 
         auto minimal_signing_keys = tx.minimize_required_signatures(
-            SCORUM_CHAIN_ID, available_keys,
+            _chain_id, available_keys,
             [&](const string& account_name) -> const authority& { return (get_account_from_lut(account_name).active); },
             [&](const string& account_name) -> const authority& { return (get_account_from_lut(account_name).owner); },
             [&](const string& account_name) -> const authority& {
@@ -753,7 +754,7 @@ public:
         {
             auto it = available_private_keys.find(k);
             FC_ASSERT(it != available_private_keys.end());
-            tx.sign(it->second, SCORUM_CHAIN_ID);
+            tx.sign(it->second, _chain_id);
         }
 
         if (broadcast)
@@ -955,6 +956,9 @@ public:
 
     map<public_key_type, string> _keys;
     fc::sha512 _checksum;
+
+    chain_id_type _chain_id;
+
     fc::api<login_api> _remote_api;
     fc::api<database_api> _remote_db;
     fc::api<network_broadcast_api> _remote_net_broadcast;

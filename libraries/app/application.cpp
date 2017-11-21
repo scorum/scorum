@@ -334,15 +334,14 @@ public:
                 if (_options->count("replay-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size);
+                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, genesis_state, _shared_file_size);
                 }
                 else
                 {
                     try
                     {
-                        _chain_db->set_init_genesis_state(genesis_state);
                         _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                        chainbase::database::read_write);
+                                        chainbase::database::read_write, genesis_state);
                     }
                     catch (fc::assert_exception&)
                     {
@@ -350,13 +349,13 @@ public:
 
                         try
                         {
-                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size);
+                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, genesis_state, _shared_file_size);
                         }
                         catch (chain::block_log_exception&)
                         {
                             wlog("Error opening block log. Having to resync from network...");
                             _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                            chainbase::database::read_write);
+                                            chainbase::database::read_write, genesis_state);
                         }
                     }
                 }
@@ -371,7 +370,7 @@ public:
             {
                 ilog("Starting Scorum node in read mode.");
                 _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                chainbase::database::read_only);
+                                chainbase::database::read_only, genesis_state);
 
                 if (_options->count("read-forward-rpc"))
                 {
@@ -519,6 +518,7 @@ public:
                     fc_ilog(fc::logger::get("sync"), "chain pushing block #${block_num} ${block_hash}, head is ${head}",
                             ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)("head",
                                                                                                      head_block_num));
+
                 if (sync_mode && blk_msg.block.block_num() % 10000 == 0)
                 {
                     ilog("Syncing Blockchain --- Got block: #${n} time: ${t}",
@@ -693,6 +693,11 @@ public:
                 [&]() { return trx_message(_chain_db->get_recent_transaction(id.item_hash)); });
         }
         FC_CAPTURE_AND_RETHROW((id))
+    }
+
+    virtual chain_id_type get_chain_id() const override
+    {
+        return _chain_db->get_chain_id();
     }
 
     /**

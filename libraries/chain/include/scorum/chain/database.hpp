@@ -87,8 +87,11 @@ public:
      *
      * @param data_dir Path to open or create database in
      */
-    void open(
-        const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags);
+    void open(const fc::path& data_dir,
+              const fc::path& shared_mem_dir,
+              uint64_t shared_file_size,
+              uint32_t chainbase_flags,
+              const genesis_state_type& genesis_state);
 
     /**
      * @brief Rebuild object graph from block history and open detabase
@@ -96,8 +99,10 @@ public:
      * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
      * replaying blockchain history. When this method exits successfully, the database will be open.
      */
-    void reindex(const fc::path& data_dir, const fc::path& shared_mem_dir,
-        uint64_t shared_file_size = (1024l * 1024l * 1024l * 8l));
+    void reindex(const fc::path& data_dir,
+                 const fc::path& shared_mem_dir,
+                 const genesis_state_type& genesis_state,
+                 uint64_t shared_file_size);
 
     /**
      * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -343,9 +348,8 @@ public:
 
     /// Reset the object graph in-memory
     void initialize_indexes();
-    void init_schema();
-    void init_genesis();
-    void set_init_genesis_state(const genesis_state_type& genesis_state);
+
+    void init_genesis(const genesis_state_type& genesis_state);
 
     /**
      *  This method validates transactions without adding it to the pending state.
@@ -451,8 +455,6 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     flat_map<std::string, std::shared_ptr<custom_operation_interpreter>> _custom_operation_interpreters;
-    std::string _json_schema;
-    genesis_state_type _genesis_state;
 };
 }
 }

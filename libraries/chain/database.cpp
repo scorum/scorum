@@ -8,6 +8,7 @@
 #include <scorum/chain/db_with.hpp>
 #include <scorum/chain/evaluator_registry.hpp>
 #include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/chain_property_object.hpp>
 #include <scorum/chain/history_object.hpp>
 #include <scorum/chain/scorum_evaluator.hpp>
 #include <scorum/chain/scorum_objects.hpp>
@@ -143,7 +144,8 @@ i_database_witness_schedule& database::i_witness_schedule()
 void database::open(const fc::path& data_dir,
                     const fc::path& shared_mem_dir,
                     uint64_t shared_file_size,
-                    uint32_t chainbase_flags)
+                    uint32_t chainbase_flags,
+                    const genesis_state_type& genesis_state)
 {
     try
     {
@@ -155,7 +157,7 @@ void database::open(const fc::path& data_dir,
         if (chainbase_flags & chainbase::database::read_write)
         {
             if (!find<dynamic_global_property_object>())
-                with_write_lock([&]() { init_genesis(); });
+                with_write_lock([&]() { init_genesis(genesis_state); });
 
             if (!fc::exists(data_dir))
                 fc::create_directories(data_dir);
@@ -190,13 +192,16 @@ void database::open(const fc::path& data_dir,
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
 
-void database::reindex(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size)
+void database::reindex(const fc::path& data_dir,
+                       const fc::path& shared_mem_dir,
+                       const genesis_state_type& genesis_state,
+                       uint64_t shared_file_size)
 {
     try
     {
         ilog("Reindexing Blockchain");
         wipe(data_dir, shared_mem_dir, false);
-        open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write);
+        open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write, genesis_state);
         _fork_db.reset(); // override effect of _fork_db.start_block() call in open()
 
         auto start = fc::time_point::now();
@@ -405,7 +410,7 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
 
 chain_id_type database::get_chain_id() const
 {
-    return SCORUM_CHAIN_ID;
+    return get<chain_property_object>().chain_id;
 }
 
 const witness_object& database::get_witness(const account_name_type& name) const
@@ -1831,6 +1836,7 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 void database::initialize_indexes()
 {
     i_index().add_core_index<dynamic_global_property_index>();
+    i_index().add_core_index<chain_property_index>();
     i_index().add_core_index<account_index>();
     i_index().add_core_index<account_authority_index>();
     i_index().add_core_index<witness_index>();
@@ -1856,7 +1862,7 @@ void database::initialize_indexes()
     _plugin_index_signal();
 }
 
-void database::init_genesis()
+void database::init_genesis(const genesis_state_type& genesis_state)
 {
     try
     {
@@ -1879,18 +1885,15 @@ void database::init_genesis()
             uint32_t old_flags;
         } inhibitor(*this);
 
-        init_genesis_accounts(_genesis_state.accounts);
-        init_genesis_witnesses(_genesis_state.witness_candidates);
-        init_witness_schedule(_genesis_state.witness_candidates);
+        init_genesis_accounts(genesis_state.accounts);
+        init_genesis_witnesses(genesis_state.witness_candidates);
+        init_witness_schedule(genesis_state.witness_candidates);
 
-        init_genesis_global_property_object(_genesis_state.init_supply);
+        create<chain_property_object>([&](chain_property_object& p) { p.chain_id = genesis_state.initial_chain_id; });
+
+        init_genesis_global_property_object(genesis_state.init_supply);
     }
     FC_CAPTURE_AND_RETHROW()
-}
-
-void database::set_init_genesis_state(const genesis_state_type& genesis_state)
-{
-    _genesis_state = genesis_state;
 }
 
 void database::init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates)
@@ -1953,6 +1956,7 @@ void database::init_genesis_global_property_object(uint64_t init_supply)
     // Nothing to do
     for (int i = 0; i < 0x10000; i++)
         create<block_summary_object>([&](block_summary_object&) {});
+
     create<hardfork_property_object>(
         [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(SCORUM_GENESIS_TIME); });
 

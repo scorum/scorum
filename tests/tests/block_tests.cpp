@@ -43,8 +43,6 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-#define TEST_SHARED_MEM_SIZE (1024 * 1024 * 8)
-
 BOOST_AUTO_TEST_SUITE(block_tests)
 
 void db_setup_and_open(database& db, const fc::path& path)
@@ -52,9 +50,8 @@ void db_setup_and_open(database& db, const fc::path& path)
     genesis_state_type genesis(INITIAL_TEST_SUPPLY);
     create_initdelegate_for_genesis_state(genesis);
 
-    db.set_init_genesis_state(genesis);
     db._log_hardforks = false;
-    db.open(path, path, TEST_SHARED_MEM_SIZE, chainbase::database::read_write);
+    db.open(path, path, TEST_SHARED_MEM_SIZE_8MB, chainbase::database::read_write, genesis);
 }
 
 BOOST_AUTO_TEST_CASE(generate_empty_blocks)

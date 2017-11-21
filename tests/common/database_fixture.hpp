@@ -11,7 +11,9 @@
 
 #include <iostream>
 
+#define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
 #define INITIAL_TEST_SUPPLY (10000000000ll)
+
 using namespace graphene::db;
 
 extern uint32_t(SCORUM_TESTING_GENESIS_TIMESTAMP);
@@ -134,6 +136,7 @@ struct database_fixture
     //   plugins
     scorum::app::application app;
     chain::database& db;
+    genesis_state_type genesis_state;
     signed_transaction trx;
     public_key_type committee_key;
     account_id_type committee_account;
