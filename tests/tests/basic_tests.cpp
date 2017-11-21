@@ -322,4 +322,11 @@ BOOST_AUTO_TEST_CASE(merkle_root)
     BOOST_CHECK(block.calculate_merkle_root() == c(dO));
 }
 
+BOOST_AUTO_TEST_CASE(log_format)
+{
+    BOOST_MESSAGE("Check formating");
+    ilog("first = '${first}', other digits = [101 = ${1}, 102 = ${2}]",
+         ("first", "The First String")("1", 101)("2", 102));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

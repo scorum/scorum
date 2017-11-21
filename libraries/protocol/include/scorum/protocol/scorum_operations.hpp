@@ -610,7 +610,7 @@ struct recover_account_operation : public base_operation
     authority new_owner_authority; ///< The new owner authority as specified in the request account recovery operation.
 
     authority recent_owner_authority; ///< A previous owner authority that the account holder will use to prove past
-                                      ///ownership of the account to be recovered.
+    /// ownership of the account to be recovered.
 
     extensions_type extensions; ///< Extensions. Not currently used.
 

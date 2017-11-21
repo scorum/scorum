@@ -1,15 +1,15 @@
-
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/witness_objects.hpp>
-#include <scorum/chain/database_witness_schedule.hpp>
 
 #include <scorum/protocol/config.hpp>
 
 namespace scorum {
 namespace chain {
 
-void i_database_witness_schedule::_reset_virtual_schedule_time()
+void database::_reset_virtual_schedule_time()
 {
+    database& _db = (*this);
+
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
     _db.modify(wso, [&](witness_schedule_object& o) {
         o.current_virtual_time = fc::uint128(); // reset it 0
@@ -26,8 +26,10 @@ void i_database_witness_schedule::_reset_virtual_schedule_time()
     }
 }
 
-void i_database_witness_schedule::_update_median_witness_props()
+void database::_update_median_witness_props()
 {
+    database& _db = (*this);
+
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
     /// fetch all witness objects
@@ -63,8 +65,10 @@ void i_database_witness_schedule::_update_median_witness_props()
  *
  *  See @ref witness_object::virtual_last_update
  */
-void i_database_witness_schedule::update_witness_schedule()
+void database::update_witness_schedule()
 {
+    database& _db = (*this);
+
     //    const witness_schedule_object& wso = _db.get_witness_schedule_object();
     //
     //    if( _db.head_block_num() == wso.next_shuffle_block_num )

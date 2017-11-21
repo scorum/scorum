@@ -24,7 +24,10 @@ struct fork_item
     {
     }
 
-    block_id_type previous_id() const { return data.previous; }
+    block_id_type previous_id() const
+    {
+        return data.previous;
+    }
 
     weak_ptr<fork_item> prev;
     uint32_t num; // initialized in ctor
@@ -69,7 +72,10 @@ public:
      *  @return the new head block ( the longest fork )
      */
     shared_ptr<fork_item> push_block(const signed_block& b);
-    shared_ptr<fork_item> head() const { return _head; }
+    shared_ptr<fork_item> head() const
+    {
+        return _head;
+    }
     void pop_block();
 
     /**
@@ -84,11 +90,16 @@ public:
     struct block_num;
     struct by_previous;
     typedef multi_index_container<item_ptr,
-        indexed_by<hashed_unique<tag<block_id>, member<fork_item, block_id_type, &fork_item::id>,
-                       std::hash<fc::ripemd160>>,
-            hashed_non_unique<tag<by_previous>, const_mem_fun<fork_item, block_id_type, &fork_item::previous_id>,
-                std::hash<fc::ripemd160>>,
-            ordered_non_unique<tag<block_num>, member<fork_item, uint32_t, &fork_item::num>>>>
+                                  indexed_by<hashed_unique<tag<block_id>,
+                                                           member<fork_item, block_id_type, &fork_item::id>,
+                                                           std::hash<fc::ripemd160>>,
+                                             hashed_non_unique<tag<by_previous>,
+                                                               const_mem_fun<fork_item,
+                                                                             block_id_type,
+                                                                             &fork_item::previous_id>,
+                                                               std::hash<fc::ripemd160>>,
+                                             ordered_non_unique<tag<block_num>,
+                                                                member<fork_item, uint32_t, &fork_item::num>>>>
         fork_multi_index_type;
 
     void set_max_size(uint32_t s);

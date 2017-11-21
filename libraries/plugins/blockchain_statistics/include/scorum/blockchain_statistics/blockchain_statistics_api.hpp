@@ -110,15 +110,15 @@ private:
 
 FC_REFLECT(scorum::blockchain_statistics::statistics,
     (blocks)(bandwidth)(operations)(transactions)(transfers)(scorum_transferred)(sbd_transferred)(sbd_paid_as_interest)(
-        accounts_created)(paid_accounts_created)(mined_accounts_created)(total_comments)(total_comment_edits)(
-        total_comments_deleted)(root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(
-        replies_deleted)(total_votes)(new_votes)(changed_votes)(total_root_votes)(new_root_votes)(changed_root_votes)(
-        total_reply_votes)(new_reply_votes)(changed_reply_votes)(payouts)(scr_paid_to_authors)(vests_paid_to_authors)(
-        vests_paid_to_curators)(transfers_to_vesting)(scorum_vested)(new_vesting_withdrawal_requests)(
-        modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(
-        finished_vesting_withdrawals)(vests_withdrawn)(vests_transferred)(sbd_conversion_requests_created)(
-        sbd_to_be_converted)(sbd_conversion_requests_filled)(scorum_converted)(limit_orders_created)(
-        limit_orders_filled)(limit_orders_cancelled)(total_pow)(estimated_hashpower))
+               accounts_created)(paid_accounts_created)(mined_accounts_created)(total_comments)(total_comment_edits)(
+               total_comments_deleted)(root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(
+               replies_deleted)(total_votes)(new_votes)(changed_votes)(total_root_votes)(new_root_votes)(
+               changed_root_votes)(total_reply_votes)(new_reply_votes)(changed_reply_votes)(payouts)(
+               scr_paid_to_authors)(vests_paid_to_authors)(vests_paid_to_curators)(transfers_to_vesting)(scorum_vested)(
+               new_vesting_withdrawal_requests)(modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(
+               vesting_withdrawals_processed)(finished_vesting_withdrawals)(vests_withdrawn)(vests_transferred)(
+               sbd_conversion_requests_created)(sbd_to_be_converted)(sbd_conversion_requests_filled)(scorum_converted)(
+               limit_orders_created)(limit_orders_filled)(limit_orders_cancelled)(total_pow)(estimated_hashpower))
 
 FC_API(scorum::blockchain_statistics::blockchain_statistics_api,
     (get_stats_for_time)(get_stats_for_interval)(get_lifetime_stats))

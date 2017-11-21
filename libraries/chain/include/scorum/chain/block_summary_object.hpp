@@ -30,9 +30,11 @@ public:
 };
 
 typedef multi_index_container<block_summary_object,
-    indexed_by<ordered_unique<tag<by_id>,
-        member<block_summary_object, block_summary_object::id_type, &block_summary_object::id>>>,
-    allocator<block_summary_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<block_summary_object,
+                                                               block_summary_object::id_type,
+                                                               &block_summary_object::id>>>,
+                              allocator<block_summary_object>>
     block_summary_index;
 }
 } // scorum::chain

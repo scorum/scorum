@@ -7,7 +7,6 @@
 #include <scorum/protocol/config.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/database_index.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/account_object.hpp>
@@ -386,12 +385,13 @@ void follow_plugin::plugin_initialize(const boost::program_options::variables_ma
 
         db.pre_apply_operation.connect([&](const operation_notification& o) { my->pre_operation(o); });
         db.post_apply_operation.connect([&](const operation_notification& o) { my->post_operation(o); });
-        db.i_index().add_plugin_index<follow_index>();
-        db.i_index().add_plugin_index<feed_index>();
-        db.i_index().add_plugin_index<blog_index>();
-        db.i_index().add_plugin_index<reputation_index>();
-        db.i_index().add_plugin_index<follow_count_index>();
-        db.i_index().add_plugin_index<blog_author_stats_index>();
+
+        db.add_plugin_index<follow_index>();
+        db.add_plugin_index<feed_index>();
+        db.add_plugin_index<blog_index>();
+        db.add_plugin_index<reputation_index>();
+        db.add_plugin_index<follow_count_index>();
+        db.add_plugin_index<blog_author_stats_index>();
 
         if (options.count("follow-max-feed-size"))
         {

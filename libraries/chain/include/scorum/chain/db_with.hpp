@@ -31,7 +31,10 @@ struct skip_flags_restorer
     {
     }
 
-    ~skip_flags_restorer() { _npo.skip_flags = _old_skip_flags; }
+    ~skip_flags_restorer()
+    {
+        _npo.skip_flags = _old_skip_flags;
+    }
 
     node_property_object& _npo;
     uint32_t _old_skip_flags; // initialized in ctor
@@ -85,7 +88,7 @@ struct pending_transactions_restorer
             catch (const transaction_exception& e)
             {
                 dlog("Pending transaction became invalid after switching to block ${b} ${n} ${t}",
-                    ("b", _db.head_block_id())("n", _db.head_block_num())("t", _db.head_block_time()));
+                     ("b", _db.head_block_id())("n", _db.head_block_num())("t", _db.head_block_time()));
                 dlog("The invalid transaction caused exception ${e}", ("e", e.to_detail_string()));
                 dlog("${t}", ("t", tx));
             }

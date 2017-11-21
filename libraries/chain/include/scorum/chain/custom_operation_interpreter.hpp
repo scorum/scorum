@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include <scorum/protocol/scorum_operations.hpp>
+
 namespace graphene {
 namespace schema {
 struct abstract_schema;
