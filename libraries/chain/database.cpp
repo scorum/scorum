@@ -114,7 +114,6 @@ void database::open(const fc::path& data_dir,
 {
     try
     {
-        init_schema();
         chainbase::database::open(shared_mem_dir, chainbase_flags, shared_file_size);
 
         initialize_indexes();
@@ -1810,69 +1809,6 @@ void database::initialize_indexes()
 const std::string& database::get_json_schema() const
 {
     return _json_schema;
-}
-
-void database::init_schema()
-{
-    /*done_adding_indexes();
-
-    db_schema ds;
-
-    std::vector< std::shared_ptr< abstract_schema > > schema_list;
-
-    std::vector< object_schema > object_schemas;
-    get_object_schemas( object_schemas );
-
-    for( const object_schema& oschema : object_schemas )
-    {
-       ds.object_types.emplace_back();
-       ds.object_types.back().space_type.first = oschema.space_id;
-       ds.object_types.back().space_type.second = oschema.type_id;
-       oschema.schema->get_name( ds.object_types.back().type );
-       schema_list.push_back( oschema.schema );
-    }
-
-    std::shared_ptr< abstract_schema > operation_schema = get_schema_for_type< operation >();
-    operation_schema->get_name( ds.operation_type );
-    schema_list.push_back( operation_schema );
-
-    for( const std::pair< std::string, std::shared_ptr< custom_operation_interpreter > >& p :
-    _custom_operation_interpreters )
-    {
-       ds.custom_operation_types.emplace_back();
-       ds.custom_operation_types.back().id = p.first;
-       schema_list.push_back( p.second->get_operation_schema() );
-       schema_list.back()->get_name( ds.custom_operation_types.back().type );
-    }
-
-    graphene::db::add_dependent_schemas( schema_list );
-    std::sort( schema_list.begin(), schema_list.end(),
-       []( const std::shared_ptr< abstract_schema >& a,
-           const std::shared_ptr< abstract_schema >& b )
-       {
-          return a->id < b->id;
-       } );
-    auto new_end = std::unique( schema_list.begin(), schema_list.end(),
-       []( const std::shared_ptr< abstract_schema >& a,
-           const std::shared_ptr< abstract_schema >& b )
-       {
-          return a->id == b->id;
-       } );
-    schema_list.erase( new_end, schema_list.end() );
-
-    for( std::shared_ptr< abstract_schema >& s : schema_list )
-    {
-       std::string tname;
-       s->get_name( tname );
-       FC_ASSERT( ds.types.find( tname ) == ds.types.end(), "types with different ID's found for name ${tname}",
-    ("tname", tname) );
-       std::string ss;
-       s->get_str_schema( ss );
-       ds.types.emplace( tname, ss );
-    }
-
-    _json_schema = fc::json::to_string( ds );
-    return;*/
 }
 
 void database::init_genesis()
