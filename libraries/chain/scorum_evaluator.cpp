@@ -61,9 +61,9 @@ struct strcmp_equal
 
 void witness_update_evaluator::do_apply(const witness_update_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    accountService.check_account_existence(o.owner);
+    account_service.check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
     FC_ASSERT(o.props.account_creation_fee.symbol == SCORUM_SYMBOL);
@@ -92,9 +92,9 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
 
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& creator = accountService.get_account(o.creator);
+    const auto& creator = account_service.get_account(o.creator);
 
     // check creator balance
 
@@ -113,15 +113,15 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     // check accounts existence
 
-    accountService.check_account_existence(o.owner.account_auths);
+    account_service.check_account_existence(o.owner.account_auths);
 
-    accountService.check_account_existence(o.active.account_auths);
+    account_service.check_account_existence(o.active.account_auths);
 
-    accountService.check_account_existence(o.posting.account_auths);
+    account_service.check_account_existence(o.posting.account_auths);
 
     // write in to DB
 
-    accountService.create_account_by_faucets(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+    account_service.create_account_by_faucets(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                              o.active, o.posting, o.fee);
 }
 
@@ -129,9 +129,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     const auto& props = _db.get_dynamic_global_properties();
 
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& creator = accountService.get_account(o.creator);
+    const auto& creator = account_service.get_account(o.creator);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
@@ -169,13 +169,13 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     // check accounts existence
 
-    accountService.check_account_existence(o.owner.account_auths);
+    account_service.check_account_existence(o.owner.account_auths);
 
-    accountService.check_account_existence(o.active.account_auths);
+    account_service.check_account_existence(o.active.account_auths);
 
-    accountService.check_account_existence(o.posting.account_auths);
+    account_service.check_account_existence(o.posting.account_auths);
 
-    accountService.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+    account_service.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                                   o.active, o.posting, o.fee, o.delegation);
 }
 
@@ -184,10 +184,10 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     if (o.posting)
         o.posting->validate();
 
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& account = accountService.get_account(o.account);
-    const auto& account_auth = accountService.get_account_authority(o.account);
+    const auto& account = account_service.get_account(o.account);
+    const auto& account_auth = account_service.get_account_authority(o.account);
 
     if (o.owner)
     {
@@ -195,22 +195,22 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
         FC_ASSERT(_db.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
 #endif
-        accountService.check_account_existence(o.owner->account_auths);
+        account_service.check_account_existence(o.owner->account_auths);
 
-        accountService.update_owner_authority(account, *o.owner);
+        account_service.update_owner_authority(account, *o.owner);
     }
 
     if (o.active)
     {
-        accountService.check_account_existence(o.active->account_auths);
+        account_service.check_account_existence(o.active->account_auths);
     }
 
     if (o.posting)
     {
-        accountService.check_account_existence(o.posting->account_auths);
+        account_service.check_account_existence(o.posting->account_auths);
     }
 
-    accountService.update_acount(account, account_auth, o.memo_key, o.json_metadata, o.owner, o.active, o.posting);
+    account_service.update_acount(account, account_auth, o.memo_key, o.json_metadata, o.owner, o.active, o.posting);
 }
 
 /**
@@ -218,9 +218,9 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
  */
 void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& auth = accountService.get_account(o.author);
+    const auto& auth = account_service.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
               "Operation cannot be processed because account is currently challenged.");
 
@@ -273,7 +273,7 @@ struct comment_options_extension_visitor
     comment_options_extension_visitor(const comment_object& c, dbservice& db)
         : _c(c)
         , _db(db)
-        , _accountService(_db.obtain_service<dbs_account>())
+        , _account_service(_db.obtain_service<dbs_account>())
     {
     }
 
@@ -281,7 +281,7 @@ struct comment_options_extension_visitor
 
     const comment_object& _c;
     dbservice& _db;
-    dbs_account& _accountService;
+    dbs_account& _account_service;
 
     void operator()(const comment_payout_beneficiaries& cpb) const
     {
@@ -291,7 +291,7 @@ struct comment_options_extension_visitor
         _db._temporary_public_impl().modify(_c, [&](comment_object& c) {
             for (auto& b : cpb.beneficiaries)
             {
-                _accountService.check_account_existence(b.account, "Beneficiary");
+                _account_service.check_account_existence(b.account, "Beneficiary");
                 c.beneficiaries.push_back(b);
             }
         });
@@ -300,9 +300,9 @@ struct comment_options_extension_visitor
 
 void comment_options_evaluator::do_apply(const comment_options_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& auth = accountService.get_account(o.author);
+    const auto& auth = account_service.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
               "Operation cannot be processed because account is currently challenged.");
 
@@ -331,7 +331,7 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
 
 void comment_evaluator::do_apply(const comment_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
@@ -343,7 +343,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
             = _db._temporary_public_impl().get_index<comment_index>().indices().get<by_permlink>();
         auto itr = by_permlink_idx.find(boost::make_tuple(o.author, o.permlink));
 
-        const auto& auth = accountService.get_account(o.author); /// prove it exists
+        const auto& auth = account_service.get_account(o.author); /// prove it exists
 
         FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
                   "Operation cannot be processed because account is currently challenged.");
@@ -389,7 +389,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 parent_author = o.parent_author;
             }
 
-            accountService.add_post(auth, parent_author, now);
+            account_service.add_post(auth, parent_author, now);
 
             const auto& new_comment = _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
                 validate_permlink_0_1(o.parent_permlink);
@@ -527,13 +527,13 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
 void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
-        const auto& from_account = accountService.get_account(o.from);
-        accountService.check_account_existence(o.to);
-        accountService.check_account_existence(o.agent);
+        const auto& from_account = account_service.get_account(o.from);
+        account_service.check_account_existence(o.to);
+        account_service.check_account_existence(o.agent);
 
         FC_ASSERT(o.ratification_deadline > _db.head_block_time(),
                   "The escorw ratification deadline must be after head block time.");
@@ -547,7 +547,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
                   "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}",
                   ("r", scorum_spent)("a", from_account.balance));
 
-        accountService.decrease_balance(from_account, scorum_spent);
+        account_service.decrease_balance(from_account, scorum_spent);
 
         _db._temporary_public_impl().create<escrow_object>([&](escrow_object& esc) {
             esc.escrow_id = o.escrow_id;
@@ -565,7 +565,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 
 void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
@@ -603,16 +603,16 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 
         if (reject_escrow)
         {
-            const auto& from_account = accountService.get_account(o.from);
-            accountService.increase_balance(from_account, escrow.scorum_balance);
-            accountService.increase_balance(from_account, escrow.pending_fee);
+            const auto& from_account = account_service.get_account(o.from);
+            account_service.increase_balance(from_account, escrow.scorum_balance);
+            account_service.increase_balance(from_account, escrow.pending_fee);
 
             _db._temporary_public_impl().remove(escrow);
         }
         else if (escrow.to_approved && escrow.agent_approved)
         {
-            const auto& agent_account = accountService.get_account(o.agent);
-            accountService.increase_balance(agent_account, escrow.pending_fee);
+            const auto& agent_account = account_service.get_account(o.agent);
+            account_service.increase_balance(agent_account, escrow.pending_fee);
 
             _db._temporary_public_impl().modify(escrow, [&](escrow_object& esc) { esc.pending_fee.amount = 0; });
         }
@@ -622,11 +622,11 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 
 void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
-        accountService.check_account_existence(o.from);
+        account_service.check_account_existence(o.from);
 
         const auto& e = _db.get_escrow(o.from, o.escrow_id);
         FC_ASSERT(_db.head_block_time() < e.escrow_expiration, "Disputing the escrow must happen before expiration.");
@@ -644,12 +644,12 @@ void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 
 void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
-        accountService.check_account_existence(o.from);
-        const auto& receiver_account = accountService.get_account(o.receiver);
+        account_service.check_account_existence(o.from);
+        const auto& receiver_account = account_service.get_account(o.receiver);
 
         const auto& e = _db.get_escrow(o.from, o.escrow_id);
         FC_ASSERT(e.scorum_balance >= o.scorum_amount,
@@ -690,7 +690,7 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
         }
         // If escrow expires and there is no dispute, either party can release funds to either party.
 
-        accountService.increase_balance(receiver_account, o.scorum_amount);
+        account_service.increase_balance(receiver_account, o.scorum_amount);
 
         _db._temporary_public_impl().modify(e, [&](escrow_object& esc) { esc.scorum_balance -= o.scorum_amount; });
 
@@ -704,37 +704,37 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 
 void transfer_evaluator::do_apply(const transfer_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& from_account = accountService.get_account(o.from);
-    const auto& to_account = accountService.get_account(o.to);
+    const auto& from_account = account_service.get_account(o.from);
+    const auto& to_account = account_service.get_account(o.to);
 
-    accountService.drop_challenged(from_account);
+    account_service.drop_challenged(from_account);
 
     FC_ASSERT(_db.get_balance(from_account, o.amount.symbol) >= o.amount,
               "Account does not have sufficient funds for transfer.");
-    accountService.decrease_balance(from_account, o.amount);
-    accountService.increase_balance(to_account, o.amount);
+    account_service.decrease_balance(from_account, o.amount);
+    account_service.increase_balance(to_account, o.amount);
 }
 
 void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& from_account = accountService.get_account(o.from);
-    const auto& to_account = o.to.size() ? accountService.get_account(o.to) : from_account;
+    const auto& from_account = account_service.get_account(o.from);
+    const auto& to_account = o.to.size() ? account_service.get_account(o.to) : from_account;
 
     FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
               "Account does not have sufficient SCORUM for transfer.");
-    accountService.decrease_balance(from_account, o.amount);
+    account_service.decrease_balance(from_account, o.amount);
     _db.create_vesting(to_account, o.amount);
 }
 
 void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& account = accountService.get_account(o.account);
+    const auto& account = account_service.get_account(o.account);
 
     FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL),
               "Account does not have sufficient Scorum Power for withdraw.");
@@ -760,7 +760,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
         FC_ASSERT(account.vesting_withdraw_rate.amount != 0,
                   "This operation would not change the vesting withdraw rate.");
 
-        accountService.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), 0);
+        account_service.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), 0);
     }
     else
     {
@@ -776,7 +776,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
         FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate,
                   "This operation would not change the vesting withdraw rate.");
 
-        accountService.update_withdraw(account, new_vesting_withdraw_rate,
+        account_service.update_withdraw(account, new_vesting_withdraw_rate,
                                        _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
                                        o.vesting_shares.amount);
     }
@@ -784,12 +784,12 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
 void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_route_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
-        const auto& from_account = accountService.get_account(o.from_account);
-        const auto& to_account = accountService.get_account(o.to_account);
+        const auto& from_account = account_service.get_account(o.from_account);
+        const auto& to_account = account_service.get_account(o.to_account);
         const auto& wd_idx
             = _db._temporary_public_impl().get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
         auto itr = wd_idx.find(boost::make_tuple(from_account.id, to_account.id));
@@ -808,13 +808,13 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
                     wvdo.auto_vest = o.auto_vest;
                 });
 
-            accountService.increase_withdraw_routes(from_account);
+            account_service.increase_withdraw_routes(from_account);
         }
         else if (o.percent == 0)
         {
             _db._temporary_public_impl().remove(*itr);
 
-            accountService.decrease_withdraw_routes(from_account);
+            account_service.decrease_withdraw_routes(from_account);
         }
         else
         {
@@ -843,9 +843,9 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
 
 void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& account = accountService.get_account(o.account);
+    const auto& account = account_service.get_account(o.account);
     FC_ASSERT(account.proxy != o.proxy, "Proxy must change.");
 
     FC_ASSERT(account.can_vote, "Account has declined the ability to vote and cannot proxy votes.");
@@ -853,16 +853,16 @@ void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_opera
     optional<account_object> proxy;
     if (o.proxy.size())
     {
-        proxy = accountService.get_account(o.proxy);
+        proxy = account_service.get_account(o.proxy);
     }
-    accountService.update_voting_proxy(account, proxy);
+    account_service.update_voting_proxy(account, proxy);
 }
 
 void account_witness_vote_evaluator::do_apply(const account_witness_vote_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& voter = accountService.get_account(o.account);
+    const auto& voter = account_service.get_account(o.account);
     FC_ASSERT(voter.proxy.size() == 0, "A proxy is currently set, please clear the proxy before voting for a witness.");
 
     if (o.approve)
@@ -888,7 +888,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
         _db.adjust_witness_vote(witness, voter.witness_vote_weight());
 
-        accountService.increase_witnesses_voted_for(voter);
+        account_service.increase_witnesses_voted_for(voter);
     }
     else
     {
@@ -896,19 +896,19 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
         _db.adjust_witness_vote(witness, -voter.witness_vote_weight());
 
-        accountService.decrease_witnesses_voted_for(voter);
+        account_service.decrease_witnesses_voted_for(voter);
         _db._temporary_public_impl().remove(*itr);
     }
 }
 
 void vote_evaluator::do_apply(const vote_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
     try
     {
         const auto& comment = _db.get_comment(o.author, o.permlink);
-        const auto& voter = accountService.get_account(o.voter);
+        const auto& voter = account_service.get_account(o.voter);
 
         FC_ASSERT(!(voter.owner_challenged || voter.active_challenged),
                   "Operation cannot be processed because the account is currently challenged.");
@@ -995,7 +995,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
             // their votes around over 50+ posts day for a week
             // if( used_power == 0 ) used_power = 1;
 
-            accountService.update_voting_power(voter, current_power - used_power);
+            account_service.update_voting_power(voter, current_power - used_power);
 
             /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
             /// total rshares^2
@@ -1106,7 +1106,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
-            accountService.update_voting_power(voter, current_power - used_power);
+            account_service.update_voting_power(voter, current_power - used_power);
 
             /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
             /// total rshares^2
@@ -1210,59 +1210,59 @@ void custom_binary_evaluator::do_apply(const custom_binary_operation& o)
 
 void prove_authority_evaluator::do_apply(const prove_authority_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& challenged = accountService.get_account(o.challenged);
+    const auto& challenged = account_service.get_account(o.challenged);
     FC_ASSERT(challenged.owner_challenged || challenged.active_challenged,
               "Account is not challeneged. No need to prove authority.");
 
-    accountService.prove_authority(challenged, o.require_owner);
+    account_service.prove_authority(challenged, o.require_owner);
 }
 
 void request_account_recovery_evaluator::do_apply(const request_account_recovery_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
-    dbs_witness& witnessService = _db.obtain_service<dbs_witness>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
 
-    const auto& account_to_recover = accountService.get_account(o.account_to_recover);
+    const auto& account_to_recover = account_service.get_account(o.account_to_recover);
 
     if (account_to_recover.recovery_account.length()) // Make sure recovery matches expected recovery account
         FC_ASSERT(account_to_recover.recovery_account == o.recovery_account,
                   "Cannot recover an account that does not have you as there recovery partner.");
     else // Empty string recovery account defaults to top witness
-        FC_ASSERT(witnessService.get_top_witness().owner == o.recovery_account,
+        FC_ASSERT(witness_service.get_top_witness().owner == o.recovery_account,
                   "Top witness must recover an account with no recovery partner.");
 
-    accountService.create_account_recovery(o.account_to_recover, o.new_owner_authority);
+    account_service.create_account_recovery(o.account_to_recover, o.new_owner_authority);
 }
 
 void recover_account_evaluator::do_apply(const recover_account_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& account_to_recover = accountService.get_account(o.account_to_recover);
+    const auto& account_to_recover = account_service.get_account(o.account_to_recover);
 
     FC_ASSERT(_db.head_block_time() - account_to_recover.last_account_recovery > SCORUM_OWNER_UPDATE_LIMIT,
               "Owner authority can only be updated once an hour.");
 
-    accountService.submit_account_recovery(account_to_recover, o.new_owner_authority, o.recent_owner_authority);
+    account_service.submit_account_recovery(account_to_recover, o.new_owner_authority, o.recent_owner_authority);
 }
 
 void change_recovery_account_evaluator::do_apply(const change_recovery_account_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    accountService.check_account_existence(o.new_recovery_account); // Simply validate account exists
-    const auto& account_to_recover = accountService.get_account(o.account_to_recover);
+    account_service.check_account_existence(o.new_recovery_account); // Simply validate account exists
+    const auto& account_to_recover = account_service.get_account(o.account_to_recover);
 
-    accountService.change_recovery_account(account_to_recover, o.new_recovery_account);
+    account_service.change_recovery_account(account_to_recover, o.new_recovery_account);
 }
 
 void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_operation& o)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& account = accountService.get_account(o.account);
+    const auto& account = account_service.get_account(o.account);
     const auto& request_idx
         = _db._temporary_public_impl().get_index<decline_voting_rights_request_index>().indices().get<by_account>();
     auto itr = request_idx.find(account.id);
@@ -1286,9 +1286,9 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 
 void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operation& op)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& acnt = accountService.get_account(op.account);
+    const auto& acnt = account_service.get_account(op.account);
 
     FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCORUM. Claim: ${c} Actual: ${a}",
               ("c", op.reward_scorum)("a", acnt.reward_scorum_balance));
@@ -1305,9 +1305,9 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
                         .to_uint64(),
                     SCORUM_SYMBOL);
 
-    accountService.increase_balance(acnt, op.reward_scorum);
-    accountService.decrease_reward_balance(acnt, op.reward_scorum);
-    accountService.increase_vesting_shares(acnt, op.reward_vests, reward_vesting_scorum_to_move);
+    account_service.increase_balance(acnt, op.reward_scorum);
+    account_service.decrease_reward_balance(acnt, op.reward_scorum);
+    account_service.increase_vesting_shares(acnt, op.reward_vests, reward_vesting_scorum_to_move);
 
     _db._temporary_public_impl().modify(_db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
         gpo.total_vesting_shares += op.reward_vests;
@@ -1322,10 +1322,10 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
 
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
 {
-    dbs_account& accountService = _db.obtain_service<dbs_account>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    const auto& delegator = accountService.get_account(op.delegator);
-    const auto& delegatee = accountService.get_account(op.delegatee);
+    const auto& delegator = account_service.get_account(op.delegator);
+    const auto& delegatee = account_service.get_account(op.delegatee);
     auto delegation = _db._temporary_public_impl().find<vesting_delegation_object, by_delegation>(
         boost::make_tuple(op.delegator, op.delegatee));
 
@@ -1352,8 +1352,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
             obj.min_delegation_time = _db.head_block_time();
         });
 
-        accountService.increase_delegated_vesting_shares(delegator, op.vesting_shares);
-        accountService.increase_received_vesting_shares(delegatee, op.vesting_shares);
+        account_service.increase_delegated_vesting_shares(delegator, op.vesting_shares);
+        account_service.increase_received_vesting_shares(delegatee, op.vesting_shares);
     }
     // Else if the delegation is increasing
     else if (op.vesting_shares >= delegation->vesting_shares)
@@ -1365,8 +1365,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         FC_ASSERT(available_shares >= op.vesting_shares - delegation->vesting_shares,
                   "Account does not have enough vesting shares to delegate.");
 
-        accountService.increase_delegated_vesting_shares(delegator, delta);
-        accountService.increase_received_vesting_shares(delegatee, delta);
+        account_service.increase_delegated_vesting_shares(delegator, delta);
+        account_service.increase_received_vesting_shares(delegatee, delta);
 
         _db._temporary_public_impl().modify(
             *delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
@@ -1397,7 +1397,7 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
                     = std::max(_db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time);
             });
 
-        accountService.decrease_received_vesting_shares(delegatee, delta);
+        account_service.decrease_received_vesting_shares(delegatee, delta);
 
         if (op.vesting_shares.amount > 0)
         {
