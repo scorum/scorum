@@ -305,6 +305,8 @@ public:
                 fc::read_file_contents(genesis_json_filename, genesis_str);
 
                 genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
+                genesis_state.initial_chain_id = fc::sha256::hash(genesis_str);
+                genesis_state.initial_timestamp = SCORUM_GENESIS_TIME;
             }
 
             if (!read_only)

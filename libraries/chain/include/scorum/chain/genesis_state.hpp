@@ -40,6 +40,7 @@ struct genesis_state_type
     }
 
     uint64_t init_supply;
+    time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
 
@@ -62,6 +63,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
 
 FC_REFLECT(scorum::chain::genesis_state_type,
            (init_supply)
+           (initial_timestamp)
            (accounts)
            (witness_candidates)
            (initial_chain_id))

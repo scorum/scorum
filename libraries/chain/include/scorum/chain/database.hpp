@@ -435,7 +435,7 @@ protected:
     void clear_expired_delegations();
     void process_header_extensions(const signed_block& next_block);
 
-    void init_hardforks();
+    void init_hardforks(fc::time_point_sec genesis_time);
     void process_hardforks();
     void apply_hardfork(uint32_t hardfork);
     ///@}
@@ -443,7 +443,7 @@ protected:
     void init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates);
     void init_genesis_accounts(const std::vector<genesis_state_type::account_type>& accounts);
     void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
-    void init_genesis_global_property_object(uint64_t init_supply);
+    void init_genesis_global_property_object(uint64_t init_supply, fc::time_point_sec genesis_time);
 
 private:
     std::unique_ptr<database_impl> _my;

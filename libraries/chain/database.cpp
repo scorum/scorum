@@ -153,7 +153,7 @@ void database::open(const fc::path& data_dir,
         }
 
         with_read_lock([&]() {
-            init_hardforks(); // Writes to local state, but reads from db
+            init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
     }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
@@ -1841,7 +1841,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
         create<chain_property_object>([&](chain_property_object& p) { p.chain_id = genesis_state.initial_chain_id; });
 
-        init_genesis_global_property_object(genesis_state.init_supply);
+        init_genesis_global_property_object(genesis_state.init_supply, genesis_state.initial_timestamp);
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -1890,10 +1890,10 @@ void database::init_genesis_witnesses(const std::vector<genesis_state_type::witn
     }
 }
 
-void database::init_genesis_global_property_object(uint64_t init_supply)
+void database::init_genesis_global_property_object(uint64_t init_supply, time_point_sec genesis_time)
 {
     auto gpo = create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
-        p.time = SCORUM_GENESIS_TIME;
+        p.time = genesis_time;
         p.recent_slots_filled = fc::uint128::max_value();
         p.participation_count = 128;
         p.current_supply = asset(init_supply, SCORUM_SYMBOL);
@@ -1908,7 +1908,7 @@ void database::init_genesis_global_property_object(uint64_t init_supply)
         create<block_summary_object>([&](block_summary_object&) {});
 
     create<hardfork_property_object>(
-        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(SCORUM_GENESIS_TIME); });
+        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(genesis_time); });
 
     auto post_rf = create<reward_fund_object>([&](reward_fund_object& rfo) {
         rfo.name = SCORUM_POST_REWARD_FUND_NAME;
@@ -2589,9 +2589,9 @@ asset database::get_balance(const account_object& a, asset_symbol_type symbol) c
     }
 }
 
-void database::init_hardforks()
+void database::init_hardforks(time_point_sec genesis_time)
 {
-    _hardfork_times[0] = fc::time_point_sec(SCORUM_GENESIS_TIME);
+    _hardfork_times[0] = genesis_time;
     _hardfork_versions[0] = hardfork_version(0, 0);
 
     // SCORUM: structure to initialize hardofrks
