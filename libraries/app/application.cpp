@@ -306,7 +306,10 @@ public:
 
                 genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
                 genesis_state.initial_chain_id = fc::sha256::hash(genesis_str);
-                genesis_state.initial_timestamp = SCORUM_GENESIS_TIME;
+            }
+            else
+            {
+                utils::generate_default_genesis_state(genesis_state);
             }
 
             if (!read_only)

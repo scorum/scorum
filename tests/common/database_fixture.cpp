@@ -32,6 +32,8 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
         { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
 
     genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(SCORUM_TESTING_GENESIS_TIMESTAMP);
 }
 
 database_fixture::database_fixture()

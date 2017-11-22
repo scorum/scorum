@@ -48,6 +48,8 @@ BOOST_AUTO_TEST_SUITE(block_tests)
 void db_setup_and_open(database& db, const fc::path& path)
 {
     genesis_state_type genesis(INITIAL_TEST_SUPPLY);
+    genesis.initial_chain_id = TEST_CHAIN_ID;
+
     create_initdelegate_for_genesis_state(genesis);
 
     db._log_hardforks = false;

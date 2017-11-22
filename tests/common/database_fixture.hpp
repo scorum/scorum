@@ -11,6 +11,7 @@
 
 #include <iostream>
 
+#define TEST_CHAIN_ID fc::sha256::hash("testnet")
 #define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
 #define INITIAL_TEST_SUPPLY (10000000000ll)
 

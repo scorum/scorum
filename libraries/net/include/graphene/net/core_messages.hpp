@@ -220,7 +220,6 @@ struct hello_message
         , outbound_port(outbound_port)
         , node_public_key(node_public_key)
         , signed_shared_secret(signed_shared_secret)
-        //        , chain_id(chain_id_arg)
         , user_data(user_data)
     {
     }

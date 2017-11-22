@@ -148,10 +148,10 @@ int main(int argc, char** argv)
             }
             else
             {
-                //               wdata.chain_id = graphene::egenesis::get_egenesis_chain_id();
-                //                std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from
-                //                egenesis)\n";
-                wdata.chain_id = SCORUM_CHAIN_ID;
+                genesis_state_type genesis_state;
+                utils::generate_default_genesis_state(genesis_state);
+
+                wdata.chain_id = genesis_state.initial_chain_id;
                 std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from egenesis)\n";
             }
         }
