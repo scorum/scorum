@@ -1816,6 +1816,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 {
     try
     {
+        FC_ASSERT(genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp.");
+        FC_ASSERT(genesis_state.witness_candidates.size() > 0, "Cannot start a chain with zero witnesses.");
+
         struct auth_inhibitor
         {
             auth_inhibitor(database& db)
@@ -1860,6 +1863,8 @@ void database::init_genesis_accounts(const vector<genesis_state_type::account_ty
 {
     for (auto& account : accounts)
     {
+        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
+
         create<account_object>([&](account_object& a) {
             a.name = account.name;
             a.memo_key = account.public_key;
@@ -1882,6 +1887,8 @@ void database::init_genesis_witnesses(const std::vector<genesis_state_type::witn
 {
     for (auto& witness : witnesses)
     {
+        FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
+
         create<witness_object>([&](witness_object& w) {
             w.owner = witness.owner_name;
             w.signing_key = witness.block_signing_key;
