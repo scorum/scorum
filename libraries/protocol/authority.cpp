@@ -1,4 +1,5 @@
 #include <scorum/protocol/authority.hpp>
+#include <cctype>
 
 namespace scorum {
 namespace protocol {
@@ -73,125 +74,17 @@ bool is_valid_account_name(const string& name)
             end = len;
         if (end - begin < 3)
             return false;
-        switch (name[begin])
-        {
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h':
-        case 'i':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'm':
-        case 'n':
-        case 'o':
-        case 'p':
-        case 'q':
-        case 'r':
-        case 's':
-        case 't':
-        case 'u':
-        case 'v':
-        case 'w':
-        case 'x':
-        case 'y':
-        case 'z':
-            break;
-        default:
+
+        if (!std::islower(name[begin]))
             return false;
-        }
-        switch (name[end - 1])
-        {
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h':
-        case 'i':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'm':
-        case 'n':
-        case 'o':
-        case 'p':
-        case 'q':
-        case 'r':
-        case 's':
-        case 't':
-        case 'u':
-        case 'v':
-        case 'w':
-        case 'x':
-        case 'y':
-        case 'z':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            break;
-        default:
+
+        if (!std::islower(name[end - 1]) && !std::isdigit(name[end - 1]))
             return false;
-        }
-        for (size_t i = begin + 1; i < end - 1; i++)
+
+        for (size_t i = begin + 1; i < end - 1; ++i)
         {
-            switch (name[i])
-            {
-            case 'a':
-            case 'b':
-            case 'c':
-            case 'd':
-            case 'e':
-            case 'f':
-            case 'g':
-            case 'h':
-            case 'i':
-            case 'j':
-            case 'k':
-            case 'l':
-            case 'm':
-            case 'n':
-            case 'o':
-            case 'p':
-            case 'q':
-            case 'r':
-            case 's':
-            case 't':
-            case 'u':
-            case 'v':
-            case 'w':
-            case 'x':
-            case 'y':
-            case 'z':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case '-':
-                break;
-            default:
+            if (!std::islower(name[i]) && !std::isdigit(name[i]) && !(name[i] == '-'))
                 return false;
-            }
         }
         if (end == len)
             break;
@@ -205,5 +98,6 @@ bool operator==(const authority& a, const authority& b)
     return (a.weight_threshold == b.weight_threshold) && (a.account_auths == b.account_auths)
         && (a.key_auths == b.key_auths);
 }
-}
-} // scorum::protocol
+
+} // namespace protocol
+} // namespace scorum
