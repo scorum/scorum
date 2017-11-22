@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include <scorum/chain/dbs_base_impl.hpp>
 
 namespace scorum {
@@ -31,7 +29,7 @@ public:
     void check_account_existence(const account_authority_map&,
                                  const optional<const char *> &context_type_name = optional<const char *>()) const;
 
-    void create_account_by_faucets(const account_name_type& new_account_name,
+    const account_object& create_account_by_faucets(const account_name_type& new_account_name,
                                    const account_name_type& creator_name,
                                    const public_key_type& memo_key,
                                    const string& json_metadata,
@@ -40,7 +38,7 @@ public:
                                    const authority& posting,
                                    const asset& fee_in_scorums);
 
-    void create_account_with_delegation(const account_name_type& new_account_name,
+    const account_object& create_account_with_delegation(const account_name_type& new_account_name,
                                         const account_name_type& creator_name,
                                         const public_key_type& memo_key,
                                         const string& json_metadata,
@@ -119,12 +117,6 @@ public:
 
     void update_voting_proxy(const account_object& account,
                              const optional<account_object> &proxy_account);
-
-protected:
-
-    time_point_sec _get_now(const optional<time_point_sec>& = optional<time_point_sec>());
-
-    typedef time_point_sec _time;
 };
 }
 }

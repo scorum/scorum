@@ -52,7 +52,7 @@ void dbs_account::check_account_existence(const account_authority_map& names,
     }
 }
 
-void dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
+const account_object& dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
                                             const account_name_type& creator_name,
                                             const public_key_type& memo_key,
                                             const string& json_metadata,
@@ -92,9 +92,11 @@ void dbs_account::create_account_by_faucets(const account_name_type& new_account
 
     if (fee.amount > 0)
         db_impl().create_vesting(new_account, fee);
+
+    return new_account;
 }
 
-void dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
+const account_object& dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
                                                  const account_name_type& creator_name,
                                                  const public_key_type& memo_key,
                                                  const string& json_metadata,
@@ -154,6 +156,8 @@ void dbs_account::create_account_with_delegation(const account_name_type& new_ac
 
     if (fee.amount > 0)
         db_impl().create_vesting(new_account, fee);
+
+    return new_account;
 }
 
 void dbs_account::update_acount(const account_object& account,
@@ -507,18 +511,5 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-time_point_sec dbs_account::_get_now(const optional<time_point_sec>& now)
-{
-    time_point_sec ret;
-    if (now.valid())
-    {
-        ret = (*now);
-    }
-    else
-    {
-        ret = db_impl().head_block_time();
-    }
-    return ret;
-}
 }
 }

@@ -33,6 +33,10 @@ protected:
     database& db_impl();
     const database& db_impl() const;
 
+    time_point_sec _get_now(const optional<time_point_sec>& = optional<time_point_sec>());
+
+    typedef time_point_sec _time;
+
 private:
     database& _db_core;
 };

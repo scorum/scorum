@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include <scorum/chain/dbs_base_impl.hpp>
 
 namespace scorum {
