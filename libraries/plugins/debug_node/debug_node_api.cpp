@@ -364,7 +364,6 @@ bool debug_node_api::debug_has_hardfork(uint32_t hardfork_id)
 {
     return my->debug_has_hardfork(hardfork_id);
 }
-
 }
 }
 } // scorum::plugin::debug_node

@@ -122,7 +122,7 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
     // write in to DB
 
     account_service.create_account_by_faucets(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                             o.active, o.posting, o.fee);
+                                              o.active, o.posting, o.fee);
 }
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
@@ -176,7 +176,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     account_service.check_account_existence(o.posting.account_auths);
 
     account_service.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                                  o.active, o.posting, o.fee, o.delegation);
+                                                   o.active, o.posting, o.fee, o.delegation);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -777,8 +777,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
                   "This operation would not change the vesting withdraw rate.");
 
         account_service.update_withdraw(account, new_vesting_withdraw_rate,
-                                       _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
-                                       o.vesting_shares.amount);
+                                        _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
+                                        o.vesting_shares.amount);
     }
 }
 
