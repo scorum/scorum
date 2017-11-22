@@ -1,7 +1,7 @@
 #include <scorum/chain/genesis_state.hpp>
 #include <fc/io/json.hpp>
 
-#define SCORUM_DEFAULT_INIT_PUBLIC_KEY "SCR5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
+#define SCORUM_DEFAULT_INIT_PUBLIC_KEY "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
 #define SCORUM_DEFAULT_GENESIS_TIME fc::time_point_sec(1508331600);
 #define SCORUM_DEFAULT_INIT_SUPPLY (1000000u)
 
