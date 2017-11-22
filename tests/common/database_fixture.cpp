@@ -18,8 +18,6 @@
 
 #include "database_fixture.hpp"
 
-uint32_t SCORUM_TESTING_GENESIS_TIMESTAMP = 1431700000;
-
 namespace scorum {
 namespace chain {
 
@@ -32,15 +30,16 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
         { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
 
     genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
-    genesis_state.initial_chain_id = TEST_CHAIN_ID;
-    genesis_state.initial_timestamp = fc::time_point_sec(SCORUM_TESTING_GENESIS_TIMESTAMP);
 }
 
 database_fixture::database_fixture()
     : app()
     , db(*app.chain_database())
 {
-    genesis_state.init_supply = INITIAL_TEST_SUPPLY;
+    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
     create_initdelegate_for_genesis_state(genesis_state);
 }
 

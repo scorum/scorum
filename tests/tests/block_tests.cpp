@@ -47,8 +47,11 @@ BOOST_AUTO_TEST_SUITE(block_tests)
 
 void db_setup_and_open(database& db, const fc::path& path)
 {
-    genesis_state_type genesis(INITIAL_TEST_SUPPLY);
+    genesis_state_type genesis;
+
+    genesis.init_supply = TEST_INITIAL_SUPPLY;
     genesis.initial_chain_id = TEST_CHAIN_ID;
+    genesis.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
 
     create_initdelegate_for_genesis_state(genesis);
 
@@ -60,7 +63,7 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
 {
     try
     {
-        fc::time_point_sec now(SCORUM_TESTING_GENESIS_TIMESTAMP);
+        fc::time_point_sec now(TEST_GENESIS_TIMESTAMP);
         fc::temp_directory data_dir(graphene::utilities::temp_directory_path());
         signed_block b;
 
@@ -125,7 +128,7 @@ BOOST_AUTO_TEST_CASE(undo_block)
         {
             database db;
             db_setup_and_open(db, data_dir.path());
-            fc::time_point_sec now(SCORUM_TESTING_GENESIS_TIMESTAMP);
+            fc::time_point_sec now(TEST_GENESIS_TIMESTAMP);
             std::vector<time_point_sec> time_stack;
 
             auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")));

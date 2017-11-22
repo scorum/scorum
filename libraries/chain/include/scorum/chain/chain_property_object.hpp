@@ -10,8 +10,7 @@ class chain_property_object;
 class chain_property_object : public object<chain_property_object_type, chain_property_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    chain_property_object(Constructor&& c, allocator<Allocator> a)
+    template <typename Constructor, typename Allocator> chain_property_object(Constructor&& c, allocator<Allocator> a)
     {
         c(*this);
     }
@@ -21,9 +20,11 @@ public:
 };
 
 typedef multi_index_container<chain_property_object,
-    indexed_by<ordered_unique<tag<by_id>,
-        member<chain_property_object, chain_property_object::id_type, &chain_property_object::id>>>,
-    allocator<chain_property_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<chain_property_object,
+                                                               chain_property_object::id_type,
+                                                               &chain_property_object::id>>>,
+                              allocator<chain_property_object>>
     chain_property_index;
 
 } // namespace chain

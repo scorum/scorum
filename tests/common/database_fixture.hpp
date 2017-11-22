@@ -13,11 +13,10 @@
 
 #define TEST_CHAIN_ID fc::sha256::hash("testnet")
 #define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
-#define INITIAL_TEST_SUPPLY (10000000000ll)
+#define TEST_INITIAL_SUPPLY (10000000000ll)
+#define TEST_GENESIS_TIMESTAMP (1431700000)
 
 using namespace graphene::db;
-
-extern uint32_t(SCORUM_TESTING_GENESIS_TIMESTAMP);
 
 #define PUSH_TX scorum::chain::test::_push_transaction
 
