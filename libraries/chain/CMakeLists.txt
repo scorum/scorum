@@ -20,7 +20,12 @@ add_library( scorum_chain
              # As database takes the longest to compile, start it first
              database.cpp
              fork_database.cpp
-             witness_schedule.cpp
+             database_witness_schedule.cpp
+
+             dbs_base_impl.cpp
+             dbservice.cpp
+             dbs_account.cpp
+             dbs_witness.cpp
 
              scorum_evaluator.cpp
 
@@ -45,7 +50,7 @@ if(MSVC)
 endif(MSVC)
 
 if(UNIX)
-  set_source_files_properties( scorum_evaluator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare" )
+  set_source_files_properties( scorum_evaluator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
 endif(UNIX)
 
 INSTALL( TARGETS

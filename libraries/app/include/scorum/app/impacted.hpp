@@ -30,17 +30,15 @@
 
 #include <fc/string.hpp>
 
-namespace scorum { namespace app {
+namespace scorum {
+namespace app {
 
 using namespace fc;
 
 void operation_get_impacted_accounts(
-   const scorum::protocol::operation& op,
-   fc::flat_set<protocol::account_name_type>& result );
+    const scorum::protocol::operation& op, fc::flat_set<protocol::account_name_type>& result);
 
 void transaction_get_impacted_accounts(
-   const scorum::protocol::transaction& tx,
-   fc::flat_set<protocol::account_name_type>& result
-   );
-
-} } // scorum::app
+    const scorum::protocol::transaction& tx, fc::flat_set<protocol::account_name_type>& result);
+}
+} // scorum::app

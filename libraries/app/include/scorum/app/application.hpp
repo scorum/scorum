@@ -35,124 +35,125 @@
 
 #include <boost/program_options.hpp>
 
-namespace scorum { namespace app {
-   namespace detail { class application_impl; }
-   using std::string;
+namespace scorum {
+namespace app {
 
-   class abstract_plugin;
-   class plugin;
-   class application;
+namespace detail {
+class application_impl;
+}
 
-   class network_broadcast_api;
-   class login_api;
+class abstract_plugin;
+class plugin;
+class application;
 
-   class application
-   {
-      public:
-         application();
-         ~application();
+class network_broadcast_api;
+class login_api;
 
-         void set_program_options( boost::program_options::options_description& command_line_options,
-                                   boost::program_options::options_description& configuration_file_options )const;
-         void initialize(const fc::path& data_dir, const boost::program_options::variables_map&options);
-         void initialize_plugins( const boost::program_options::variables_map& options );
-         void startup();
-         void shutdown();
-         void startup_plugins();
-         void shutdown_plugins();
+class application
+{
+public:
+    application();
+    ~application();
 
-         template<typename PluginType>
-         std::shared_ptr<PluginType> register_plugin()
-         {
-            auto plug = std::make_shared<PluginType>( this );
-            register_abstract_plugin( plug );
-            return plug;
-         }
+    void set_program_options(boost::program_options::options_description& command_line_options,
+                             boost::program_options::options_description& configuration_file_options)const;
+    void initialize(const boost::program_options::variables_map&options);
+    void initialize_plugins(const boost::program_options::variables_map& options);
+    void startup();
+    void shutdown();
+    void startup_plugins();
+    void shutdown_plugins();
 
-         void register_abstract_plugin( std::shared_ptr< abstract_plugin > plug );
-         void enable_plugin( const std::string& name );
-         std::shared_ptr<abstract_plugin> get_plugin( const string& name )const;
+    template <typename PluginType> std::shared_ptr<PluginType> register_plugin()
+    {
+        auto plug = std::make_shared<PluginType>(this);
+        register_abstract_plugin(plug);
+        return plug;
+    }
 
-         template<typename PluginType>
-         std::shared_ptr<PluginType> get_plugin( const string& name ) const
-         {
-            std::shared_ptr<abstract_plugin> abs_plugin = get_plugin( name );
-            std::shared_ptr<PluginType> result = std::dynamic_pointer_cast<PluginType>( abs_plugin );
-            FC_ASSERT( result != std::shared_ptr<PluginType>() );
-            return result;
-         }
+    void register_abstract_plugin(std::shared_ptr<abstract_plugin> plug);
+    void enable_plugin(const std::string& name);
+    std::shared_ptr<abstract_plugin> get_plugin(const std::string& name) const;
 
-         graphene::net::node_ptr                    p2p_node();
-         std::shared_ptr<chain::database> chain_database()const;
-         //std::shared_ptr<graphene::db::object_database> pending_trx_database() const;
+    template <typename PluginType> std::shared_ptr<PluginType> get_plugin(const std::string& name) const
+    {
+        std::shared_ptr<abstract_plugin> abs_plugin = get_plugin(name);
+        std::shared_ptr<PluginType> result = std::dynamic_pointer_cast<PluginType>(abs_plugin);
+        FC_ASSERT(result != std::shared_ptr<PluginType>());
+        return result;
+    }
 
-         void set_block_production(bool producing_blocks);
-         fc::optional< api_access_info > get_api_access_info( const string& username )const;
-         void set_api_access_info(const string& username, api_access_info&& permissions);
+    graphene::net::node_ptr p2p_node();
+    std::shared_ptr<chain::database> chain_database() const;
+    // std::shared_ptr<graphene::db::object_database> pending_trx_database() const;
 
-         /**
-          * Register a way to instantiate the named API with the application.
-          */
-         void register_api_factory( const string& name, std::function< fc::api_ptr( const api_context& ) > factory );
+    void set_block_production(bool producing_blocks);
+    fc::optional<api_access_info> get_api_access_info(const std::string& username) const;
+    void set_api_access_info(const std::string& username, api_access_info&& permissions);
 
-         /**
-          * Convenience method to build an API factory from a type which only requires a reference to the application.
-          */
-         template< typename Api >
-         void register_api_factory( const string& name )
-         {
+    /**
+     * Register a way to instantiate the named API with the application.
+     */
+    void register_api_factory(const std::string& name, std::function<fc::api_ptr(const api_context&)> factory);
+
+    /**
+     * Convenience method to build an API factory from a type which only requires a reference to the application.
+     */
+    template <typename Api> void register_api_factory(const std::string& name)
+    {
 #ifndef IS_TEST_NET
-            idump((name));
+        idump((name));
 #endif
-            register_api_factory( name, []( const api_context& ctx ) -> fc::api_ptr
-            {
-               // apparently the compiler is smart enough to downcast shared_ptr< api<Api> > to shared_ptr< api_base > automatically
-               // see http://en.cppreference.com/w/cpp/memory/shared_ptr/pointer_cast for example
-               std::shared_ptr< Api > api = std::make_shared< Api >( ctx );
-               api->on_api_startup();
-               return std::make_shared< fc::api< Api > >( api );
-            } );
-         }
+        register_api_factory(name, [](const api_context& ctx) -> fc::api_ptr {
+            // apparently the compiler is smart enough to downcast shared_ptr< api<Api> > to shared_ptr< api_base >
+            // automatically
+            // see http://en.cppreference.com/w/cpp/memory/shared_ptr/pointer_cast for example
+            std::shared_ptr<Api> api = std::make_shared<Api>(ctx);
+            api->on_api_startup();
+            return std::make_shared<fc::api<Api>>(api);
+        });
+    }
 
-         /**
-          * Instantiate the named API.  Currently this simply calls the previously registered factory method.
-          */
-         fc::api_ptr create_api_by_name( const api_context& ctx );
+    /**
+     * Instantiate the named API.  Currently this simply calls the previously registered factory method.
+     */
+    fc::api_ptr create_api_by_name(const api_context& ctx);
 
-         void get_max_block_age( int32_t& result );
+    void get_max_block_age(int32_t& result);
 
-         void connect_to_write_node();
+    void connect_to_write_node();
 
-         bool _read_only = true;
-         bool _disable_get_block = false;
-         fc::optional< string > _remote_endpoint;
-         fc::optional< fc::api< network_broadcast_api > > _remote_net_api;
-         fc::optional< fc::api< login_api > > _remote_login;
-         fc::http::websocket_connection_ptr _ws_ptr;
-         std::shared_ptr< fc::rpc::websocket_api_connection > _ws_apic;
-         fc::http::websocket_client _client;
+    bool _read_only = true;
+    bool _disable_get_block = false;
+    fc::optional<std::string> _remote_endpoint;
+    fc::optional<fc::api<network_broadcast_api>> _remote_net_api;
+    fc::optional<fc::api<login_api>> _remote_login;
+    fc::http::websocket_connection_ptr _ws_ptr;
+    std::shared_ptr<fc::rpc::websocket_api_connection> _ws_apic;
+    fc::http::websocket_client _client;
 
-      private:
-         std::shared_ptr<detail::application_impl> my;
+private:
+    const std::string print_config(const boost::program_options::variables_map& vm);
 
-         boost::program_options::options_description _cli_options;
-         boost::program_options::options_description _cfg_options;
+    std::shared_ptr<detail::application_impl> my;
 
-         const std::shared_ptr< plugin > null_plugin;
-   };
+    boost::program_options::options_description _cli_options;
+    boost::program_options::options_description _cfg_options;
 
-   template< class C, typename... Args >
-   boost::signals2::scoped_connection connect_signal( boost::signals2::signal< void(Args...) >& sig, C& c, void(C::* f)(Args...) )
-   {
-      std::weak_ptr<C> weak_c = c.shared_from_this();
-      return sig.connect(
-         [weak_c,f](Args... args)
-         {
-            std::shared_ptr<C> shared_c = weak_c.lock();
-            if( !shared_c )
-               return;
-            ((*shared_c).*f)(args...);
-      } );
-   }
+    const std::shared_ptr<plugin> null_plugin;
+};
 
-} } // scorum::app
+template <class C, typename... Args>
+boost::signals2::scoped_connection connect_signal(
+    boost::signals2::signal<void(Args...)>& sig, C& c, void (C::*f)(Args...))
+{
+    std::weak_ptr<C> weak_c = c.shared_from_this();
+    return sig.connect([weak_c, f](Args... args) {
+        std::shared_ptr<C> shared_c = weak_c.lock();
+        if (!shared_c)
+            return;
+        ((*shared_c).*f)(args...);
+    });
+}
+}
+} // scorum::app

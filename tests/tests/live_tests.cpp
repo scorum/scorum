@@ -18,7 +18,7 @@ using namespace scorum::protocol;
 
 #ifndef IS_TEST_NET
 
-BOOST_FIXTURE_TEST_SUITE( live_tests, live_database_fixture )
+BOOST_FIXTURE_TEST_SUITE(live_tests, live_database_fixture)
 
 /*
 BOOST_AUTO_TEST_CASE( vests_stock_split )
@@ -71,7 +71,8 @@ BOOST_AUTO_TEST_CASE( vests_stock_split )
 
          if( com_itr->net_rshares.value > 0 )
          {
-            total_rshares2 += com_itr->net_rshares.value > 0 ? fc::uint128_t( com_itr->net_rshares.value ) * com_itr->net_rshares.value * magnitude * magnitude : 0;
+            total_rshares2 += com_itr->net_rshares.value > 0 ? fc::uint128_t( com_itr->net_rshares.value ) *
+com_itr->net_rshares.value * magnitude * magnitude : 0;
             u256 rs( com_itr->net_rshares.value );
             u256 rf( gpo.total_reward_fund_scorum.amount.value );
             auto rs2 = rs * rs;
@@ -104,7 +105,8 @@ BOOST_AUTO_TEST_CASE( vests_stock_split )
       BOOST_REQUIRE( db.get_dynamic_global_properties().current_supply == old_current_supply );
       BOOST_REQUIRE( db.get_dynamic_global_properties().virtual_supply == old_virtual_supply );
       BOOST_REQUIRE( db.get_dynamic_global_properties().total_vesting_fund_scorum == old_vesting_fund );
-      BOOST_REQUIRE( db.get_dynamic_global_properties().total_vesting_shares.amount == old_vesting_shares.amount * magnitude );
+      BOOST_REQUIRE( db.get_dynamic_global_properties().total_vesting_shares.amount == old_vesting_shares.amount *
+magnitude );
       BOOST_REQUIRE( db.get_dynamic_global_properties().total_reward_shares2 == total_rshares2 );
       BOOST_REQUIRE( db.get_dynamic_global_properties().total_reward_fund_scorum == old_reward_fund );
 
@@ -122,8 +124,10 @@ BOOST_AUTO_TEST_CASE( vests_stock_split )
       com_itr = com_idx.begin();
       while( com_itr != com_idx.end() )
       {
-         BOOST_REQUIRE( com_itr->net_rshares == comment_net_rshares[ std::make_tuple( com_itr->author, com_itr->permlink ) ] * magnitude );
-         BOOST_REQUIRE( com_itr->abs_rshares == comment_abs_rshares[ std::make_tuple( com_itr->author, com_itr->permlink ) ] * magnitude );
+         BOOST_REQUIRE( com_itr->net_rshares == comment_net_rshares[ std::make_tuple( com_itr->author, com_itr->permlink
+) ] * magnitude );
+         BOOST_REQUIRE( com_itr->abs_rshares == comment_abs_rshares[ std::make_tuple( com_itr->author, com_itr->permlink
+) ] * magnitude );
          BOOST_REQUIRE( com_itr->total_vote_weight == total_vote_weights[ com_itr->id ] );
 
          if( com_itr->net_rshares.value > 0 )
@@ -149,32 +153,32 @@ BOOST_AUTO_TEST_CASE( vests_stock_split )
    FC_LOG_AND_RETHROW()
 }*/
 
-BOOST_AUTO_TEST_CASE( retally_votes )
+BOOST_AUTO_TEST_CASE(retally_votes)
 {
-   try
-   {
-      flat_map< witness_id_type, share_type > expected_votes;
+    try
+    {
+        flat_map<witness_id_type, share_type> expected_votes;
 
-      const auto& by_account_witness_idx = db.get_index< witness_vote_index >().indices();
+        const auto& by_account_witness_idx = db.get_index<witness_vote_index>().indices();
 
-      for( auto vote: by_account_witness_idx )
-      {
-         if( expected_votes.find( vote.witness ) == expected_votes.end() )
-            expected_votes[ vote.witness ] = db.get( vote.account ).witness_vote_weight();
-         else
-            expected_votes[ vote.witness ] += db.get( vote.account ).witness_vote_weight();
-      }
+        for (auto vote : by_account_witness_idx)
+        {
+            if (expected_votes.find(vote.witness) == expected_votes.end())
+                expected_votes[vote.witness] = db.get(vote.account).witness_vote_weight();
+            else
+                expected_votes[vote.witness] += db.get(vote.account).witness_vote_weight();
+        }
 
-      db.retally_witness_votes();
+        db.retally_witness_votes();
 
-      const auto& witness_idx = db.get_index< witness_index >().indices();
+        const auto& witness_idx = db.get_index<witness_index>().indices();
 
-      for( auto witness: witness_idx )
-      {
-         BOOST_REQUIRE_EQUAL( witness.votes.value, expected_votes[ witness.id ].value );
-      }
-   }
-   FC_LOG_AND_RETHROW()
+        for (auto witness : witness_idx)
+        {
+            BOOST_REQUIRE_EQUAL(witness.votes.value, expected_votes[witness.id].value);
+        }
+    }
+    FC_LOG_AND_RETHROW()
 }
 
 BOOST_AUTO_TEST_SUITE_END()
