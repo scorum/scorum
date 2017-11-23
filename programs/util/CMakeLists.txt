@@ -30,18 +30,18 @@ install( TARGETS
    ARCHIVE DESTINATION lib
 )
 
-add_executable( sign_transaction sign_transaction.cpp )
+#add_executable( sign_transaction sign_transaction.cpp )
 
-target_link_libraries( sign_transaction
-                       PRIVATE scorum_app scorum_chain scorum_protocol graphene_utilities fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+#target_link_libraries( sign_transaction
+#                       PRIVATE scorum_app scorum_chain scorum_protocol graphene_utilities fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 
-install( TARGETS
-   sign_transaction
+#install( TARGETS
+#   sign_transaction
 
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
+#   RUNTIME DESTINATION bin
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#)
 
 #add_executable( schema_test schema_test.cpp )
 #target_link_libraries( schema_test

@@ -116,6 +116,11 @@ public:
     virtual message get_item(const item_id& id) = 0;
 
     /**
+     * Returns a chain_id
+     */
+    virtual chain_id_type get_chain_id() const = 0;
+
+    /**
      * Returns a synopsis of the blockchain used for syncing.
      * This consists of a list of selected item hashes from our current preferred
      * blockchain, exponentially falling off into the past.  Horrible explanation.

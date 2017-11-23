@@ -8,6 +8,7 @@
 #include <scorum/chain/db_with.hpp>
 #include <scorum/chain/evaluator_registry.hpp>
 #include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/chain_property_object.hpp>
 #include <scorum/chain/history_object.hpp>
 #include <scorum/chain/scorum_evaluator.hpp>
 #include <scorum/chain/scorum_objects.hpp>
@@ -110,7 +111,8 @@ database::~database()
 void database::open(const fc::path& data_dir,
                     const fc::path& shared_mem_dir,
                     uint64_t shared_file_size,
-                    uint32_t chainbase_flags)
+                    uint32_t chainbase_flags,
+                    const genesis_state_type& genesis_state)
 {
     try
     {
@@ -122,7 +124,7 @@ void database::open(const fc::path& data_dir,
         if (chainbase_flags & chainbase::database::read_write)
         {
             if (!find<dynamic_global_property_object>())
-                with_write_lock([&]() { init_genesis(); });
+                with_write_lock([&]() { init_genesis(genesis_state); });
 
             if (!fc::exists(data_dir))
                 fc::create_directories(data_dir);
@@ -151,19 +153,22 @@ void database::open(const fc::path& data_dir,
         }
 
         with_read_lock([&]() {
-            init_hardforks(); // Writes to local state, but reads from db
+            init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
     }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
 
-void database::reindex(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size)
+void database::reindex(const fc::path& data_dir,
+                       const fc::path& shared_mem_dir,
+                       uint64_t shared_file_size,
+                       const genesis_state_type& genesis_state)
 {
     try
     {
         ilog("Reindexing Blockchain");
         wipe(data_dir, shared_mem_dir, false);
-        open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write);
+        open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write, genesis_state);
         _fork_db.reset(); // override effect of _fork_db.start_block() call in open()
 
         auto start = fc::time_point::now();
@@ -215,7 +220,7 @@ void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bo
     }
 }
 
-void database::close(bool rewind)
+void database::close()
 {
     try
     {
@@ -372,7 +377,7 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
 
 chain_id_type database::get_chain_id() const
 {
-    return SCORUM_CHAIN_ID;
+    return get<chain_property_object>().chain_id;
 }
 
 const witness_object& database::get_witness(const account_name_type& name) const
@@ -1781,6 +1786,7 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 void database::initialize_indexes()
 {
     _add_index_impl<dynamic_global_property_index>();
+    _add_index_impl<chain_property_index>();
     _add_index_impl<account_index>();
     _add_index_impl<account_authority_index>();
     _add_index_impl<witness_index>();
@@ -1806,15 +1812,13 @@ void database::initialize_indexes()
     _plugin_index_signal();
 }
 
-const std::string& database::get_json_schema() const
-{
-    return _json_schema;
-}
-
-void database::init_genesis()
+void database::init_genesis(const genesis_state_type& genesis_state)
 {
     try
     {
+        FC_ASSERT(genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp.");
+        FC_ASSERT(genesis_state.witness_candidates.size() > 0, "Cannot start a chain with zero witnesses.");
+
         struct auth_inhibitor
         {
             auth_inhibitor(database& db)
@@ -1834,57 +1838,39 @@ void database::init_genesis()
             uint32_t old_flags;
         } inhibitor(*this);
 
-        // Create initial delegate
-        public_key_type init_public_key(SCORUM_INIT_PUBLIC_KEY);
+        init_genesis_accounts(genesis_state.accounts);
+        init_genesis_witnesses(genesis_state.witness_candidates);
+        init_witness_schedule(genesis_state.witness_candidates);
 
-        create<account_object>([&](account_object& a) {
-            a.name = SCORUM_INIT_DELEGATE_NAME;
-            a.memo_key = init_public_key;
-            a.balance = asset(_genesis_state.init_supply, SCORUM_SYMBOL);
-        });
+        create<chain_property_object>([&](chain_property_object& p) { p.chain_id = genesis_state.initial_chain_id; });
 
-        create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = SCORUM_INIT_DELEGATE_NAME;
-            auth.owner.add_authority(init_public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
-
-        create<witness_object>([&](witness_object& w) {
-            w.owner = SCORUM_INIT_DELEGATE_NAME;
-            w.signing_key = init_public_key;
-            w.schedule = witness_object::top19;
-        });
-        // end create initial delegate
-
-        // Create witness scheduler
-        create<witness_schedule_object>(
-            [&](witness_schedule_object& wso) { wso.current_shuffled_witnesses[0] = SCORUM_INIT_DELEGATE_NAME; });
-
-        init_genesis_accounts(_genesis_state.accounts);
-        init_genesis_witnesses(_genesis_state.witness_candidates);
-
-        init_genesis_global_property_object(_genesis_state.init_supply);
+        init_genesis_global_property_object(genesis_state.init_supply, genesis_state.initial_timestamp);
     }
     FC_CAPTURE_AND_RETHROW()
 }
 
-void database::set_init_genesis_state(const genesis_state_type& genesis_state)
+void database::init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates)
 {
-    _genesis_state = genesis_state;
+    create<witness_schedule_object>([&](witness_schedule_object& wso) {
+        for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
+        {
+            wso.current_shuffled_witnesses[i] = witness_candidates[i].owner_name;
+        }
+    });
 }
 
 void database::init_genesis_accounts(const vector<genesis_state_type::account_type>& accounts)
 {
     for (auto& account : accounts)
     {
+        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
+
         create<account_object>([&](account_object& a) {
             a.name = account.name;
             a.memo_key = account.public_key;
             a.balance = asset(account.scr_amount, SCORUM_SYMBOL);
             a.json_metadata = "{created_at: 'GENESIS'}";
-            a.recovery_account = SCORUM_INIT_DELEGATE_NAME;
+            a.recovery_account = account.recovery_account;
         });
 
         create<account_authority_object>([&](account_authority_object& auth) {
@@ -1901,34 +1887,20 @@ void database::init_genesis_witnesses(const std::vector<genesis_state_type::witn
 {
     for (auto& witness : witnesses)
     {
-        create<account_object>([&](account_object& a) {
-            a.name = witness.name;
-            a.memo_key = witness.public_key;
-            a.balance = asset(witness.balance, SCORUM_SYMBOL);
-        });
-
-        create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = witness.name;
-            auth.owner.add_authority(witness.public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
+        FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
 
         create<witness_object>([&](witness_object& w) {
-            w.owner = witness.name;
-            w.signing_key = witness.public_key;
-            ;
+            w.owner = witness.owner_name;
+            w.signing_key = witness.block_signing_key;
             w.schedule = witness_object::top19;
         });
     }
 }
 
-void database::init_genesis_global_property_object(uint64_t init_supply)
+void database::init_genesis_global_property_object(uint64_t init_supply, time_point_sec genesis_time)
 {
     auto gpo = create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
-        p.current_witness = SCORUM_INIT_DELEGATE_NAME;
-        p.time = SCORUM_GENESIS_TIME;
+        p.time = genesis_time;
         p.recent_slots_filled = fc::uint128::max_value();
         p.participation_count = 128;
         p.current_supply = asset(init_supply, SCORUM_SYMBOL);
@@ -1941,8 +1913,9 @@ void database::init_genesis_global_property_object(uint64_t init_supply)
     // Nothing to do
     for (int i = 0; i < 0x10000; i++)
         create<block_summary_object>([&](block_summary_object&) {});
+
     create<hardfork_property_object>(
-        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(SCORUM_GENESIS_TIME); });
+        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(genesis_time); });
 
     auto post_rf = create<reward_fund_object>([&](reward_fund_object& rfo) {
         rfo.name = SCORUM_POST_REWARD_FUND_NAME;
@@ -2249,7 +2222,6 @@ void database::_apply_transaction(const signed_transaction& trx)
             trx.validate();
 
         auto& trx_idx = get_index<transaction_index>();
-        const chain_id_type& chain_id = SCORUM_CHAIN_ID;
         auto trx_id = trx.id();
         // idump((trx_id)(skip&skip_transaction_dupe_check));
         FC_ASSERT((skip & skip_transaction_dupe_check)
@@ -2268,7 +2240,7 @@ void database::_apply_transaction(const signed_transaction& trx)
 
             try
             {
-                trx.verify_authority(chain_id, get_active, get_owner, get_posting, SCORUM_MAX_SIG_CHECK_DEPTH);
+                trx.verify_authority(get_chain_id(), get_active, get_owner, get_posting, SCORUM_MAX_SIG_CHECK_DEPTH);
             }
             catch (protocol::tx_missing_active_auth& e)
             {
@@ -2624,9 +2596,9 @@ asset database::get_balance(const account_object& a, asset_symbol_type symbol) c
     }
 }
 
-void database::init_hardforks()
+void database::init_hardforks(time_point_sec genesis_time)
 {
-    _hardfork_times[0] = fc::time_point_sec(SCORUM_GENESIS_TIME);
+    _hardfork_times[0] = genesis_time;
     _hardfork_versions[0] = hardfork_version(0, 0);
 
     // SCORUM: structure to initialize hardofrks

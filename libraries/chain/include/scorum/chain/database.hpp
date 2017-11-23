@@ -56,10 +56,6 @@ public:
 
     bool _log_hardforks = true;
 
-#ifdef IS_TEST_NET
-    bool skip_transaction_delta_check = true;
-#endif
-
     enum validation_steps
     {
         skip_nothing = 0,
@@ -87,8 +83,11 @@ public:
      *
      * @param data_dir Path to open or create database in
      */
-    void
-    open(const fc::path& data_dir, const fc::path& shared_mem_dir, uint64_t shared_file_size, uint32_t chainbase_flags);
+    void open(const fc::path& data_dir,
+              const fc::path& shared_mem_dir,
+              uint64_t shared_file_size,
+              uint32_t chainbase_flags,
+              const genesis_state_type& genesis_state);
 
     /**
      * @brief Rebuild object graph from block history and open detabase
@@ -98,7 +97,8 @@ public:
      */
     void reindex(const fc::path& data_dir,
                  const fc::path& shared_mem_dir,
-                 uint64_t shared_file_size = (1024l * 1024l * 1024l * 8l));
+                 uint64_t shared_file_size,
+                 const genesis_state_type& genesis_state);
 
     /**
      * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -107,7 +107,7 @@ public:
      * Will close the database before wiping. Database will be closed when this function returns.
      */
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
-    void close(bool rewind = true);
+    void close();
 
     //////////////////// db_block.cpp ////////////////////
 
@@ -352,8 +352,8 @@ public:
 
     /// Reset the object graph in-memory
     void initialize_indexes();
-    void init_genesis();
-    void set_init_genesis_state(const genesis_state_type& genesis_state);
+
+    void init_genesis(const genesis_state_type& genesis_state);
 
     /**
      *  This method validates transactions without adding it to the pending state.
@@ -379,8 +379,6 @@ public:
     /**
      * @}
      */
-
-    const std::string& get_json_schema() const;
 
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
@@ -437,15 +435,15 @@ protected:
     void clear_expired_delegations();
     void process_header_extensions(const signed_block& next_block);
 
-    void init_hardforks();
+    void init_hardforks(fc::time_point_sec genesis_time);
     void process_hardforks();
     void apply_hardfork(uint32_t hardfork);
-
-    void init_genesis_accounts(const vector<genesis_state_type::account_type>& accounts);
-    void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
-    void init_genesis_global_property_object(uint64_t init_supply);
-
     ///@}
+
+    void init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates);
+    void init_genesis_accounts(const std::vector<genesis_state_type::account_type>& accounts);
+    void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
+    void init_genesis_global_property_object(uint64_t init_supply, fc::time_point_sec genesis_time);
 
 private:
     std::unique_ptr<database_impl> _my;
@@ -478,8 +476,6 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     flat_map<std::string, std::shared_ptr<custom_operation_interpreter>> _custom_operation_interpreters;
-    std::string _json_schema;
-    genesis_state_type _genesis_state;
 };
 }
 }

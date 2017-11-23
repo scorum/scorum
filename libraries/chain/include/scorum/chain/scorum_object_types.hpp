@@ -45,6 +45,7 @@ struct by_id;
 enum object_type
 {
     dynamic_global_property_object_type,
+    chain_property_object_type,
     account_object_type,
     account_authority_object_type,
     witness_object_type,
@@ -73,6 +74,7 @@ enum object_type
 };
 
 class dynamic_global_property_object;
+class chain_property_object;
 class account_object;
 class account_authority_object;
 class witness_object;
@@ -100,6 +102,7 @@ class budget_with_schedule_object;
 class budget_schedule_object;
 
 typedef oid<dynamic_global_property_object> dynamic_global_property_id_type;
+typedef oid<chain_property_object> chain_property_id_type;
 typedef oid<account_object> account_id_type;
 typedef oid<account_authority_object> account_authority_id_type;
 typedef oid<witness_object> witness_id_type;
@@ -203,6 +206,7 @@ namespace fc {
 
 FC_REFLECT_ENUM( scorum::chain::object_type,
                  (dynamic_global_property_object_type)
+                 (chain_property_object_type)
                  (account_object_type)
                  (account_authority_object_type)
                  (witness_object_type)

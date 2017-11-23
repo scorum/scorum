@@ -11,4 +11,4 @@ dependencies:
 
 test:
     override:
-        - time docker build --rm=false -t scoruminc/scorum-test -f Dockerfile.test .
+        - time docker build --rm=false -t scorum/scorum-test -f Dockerfile.test .
