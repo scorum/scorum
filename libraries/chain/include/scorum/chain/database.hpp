@@ -97,8 +97,8 @@ public:
      */
     void reindex(const fc::path& data_dir,
                  const fc::path& shared_mem_dir,
-                 const genesis_state_type& genesis_state,
-                 uint64_t shared_file_size);
+                 uint64_t shared_file_size,
+                 const genesis_state_type& genesis_state);
 
     /**
      * @brief wipe Delete database from disk, and potentially the raw chain as well.

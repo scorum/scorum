@@ -161,8 +161,8 @@ void database::open(const fc::path& data_dir,
 
 void database::reindex(const fc::path& data_dir,
                        const fc::path& shared_mem_dir,
-                       const genesis_state_type& genesis_state,
-                       uint64_t shared_file_size)
+                       uint64_t shared_file_size,
+                       const genesis_state_type& genesis_state)
 {
     try
     {
