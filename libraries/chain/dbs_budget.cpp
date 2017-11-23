@@ -176,6 +176,8 @@ void dbs_budget::decrease_balance(const budget_object& budget, const asset& scor
     {
         db_impl().modify(budget, [&](budget_object& b) { b.balance -= scorums; });
     }
+
+    _check_autoclose(budget);
 }
 
 void dbs_budget::update_budget(const budget_object& budget, bool auto_close)
@@ -388,9 +390,22 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
         FC_ASSERT(budget.per_block > 0, "invalid per_block");
         ret = asset(budget.per_block, SCORUM_SYMBOL);
         decrease_balance(budget, ret);
+        _check_autoclose(budget);
     }
 
     return ret;
+}
+
+void dbs_budget::_check_autoclose(const budget_object& budget)
+{
+    if (budget.auto_close)
+    {
+        const budget_object& modified_budget = get_budget(budget.id);
+        if (modified_budget.balance.amount <= 0)
+        {
+            close_budget(modified_budget);
+        }
+    }
 }
 
 uint16_t dbs_budget::_validate_schedule_input(const optional<uint16_t>& schedule_alg,

@@ -251,6 +251,7 @@ private:
                           const optional<time_point_sec>& end_date,
                           const optional<uint32_t>& period,
                           const optional<time_point_sec>& now);
+    void _check_autoclose(const budget_object&);
 };
 }
 }
