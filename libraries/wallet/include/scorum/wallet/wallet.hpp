@@ -201,7 +201,9 @@ public:
     string get_private_key(const public_key_type& pubkey) const;
 
     /**
+     *  @param account
      *  @param role - active | owner | posting | memo
+     *  @param password
      */
     pair<public_key_type, string> get_private_key_from_password(const std::string& account,
                                                                 const std::string& role,
@@ -915,7 +917,10 @@ public:
     /**
      *  Marks one account as following another account.  Requires the posting authority of the follower.
      *
+     *  @param follower
+     *  @param following
      *  @param what - a set of things to follow: posts, comments, votes, ignore
+     *  @param broadcast
      */
     annotated_signed_transaction
     follow(const std::string& follower, const std::string& following, set<string> what, bool broadcast);
