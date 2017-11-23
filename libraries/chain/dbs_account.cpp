@@ -53,13 +53,13 @@ void dbs_account::check_account_existence(const account_authority_map& names,
 }
 
 const account_object& dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
-                                            const account_name_type& creator_name,
-                                            const public_key_type& memo_key,
-                                            const string& json_metadata,
-                                            const authority& owner,
-                                            const authority& active,
-                                            const authority& posting,
-                                            const asset& fee)
+                                                             const account_name_type& creator_name,
+                                                             const public_key_type& memo_key,
+                                                             const string& json_metadata,
+                                                             const authority& owner,
+                                                             const authority& active,
+                                                             const authority& posting,
+                                                             const asset& fee)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
@@ -97,15 +97,15 @@ const account_object& dbs_account::create_account_by_faucets(const account_name_
 }
 
 const account_object& dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
-                                                 const account_name_type& creator_name,
-                                                 const public_key_type& memo_key,
-                                                 const string& json_metadata,
-                                                 const authority& owner,
-                                                 const authority& active,
-                                                 const authority& posting,
-                                                 const asset& fee,
-                                                 const asset& delegation,
-                                                 const optional<time_point_sec>& now)
+                                                                  const account_name_type& creator_name,
+                                                                  const public_key_type& memo_key,
+                                                                  const string& json_metadata,
+                                                                  const authority& owner,
+                                                                  const authority& active,
+                                                                  const authority& posting,
+                                                                  const asset& fee,
+                                                                  const asset& delegation,
+                                                                  const optional<time_point_sec>& now)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(delegation.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
@@ -510,6 +510,5 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
                          [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
     }
 }
-
 }
 }

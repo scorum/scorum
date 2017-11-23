@@ -68,9 +68,9 @@ class budget_schedule_object : public object<budget_schedule_object_type, budget
 public:
     enum budget_schedule_type
     {
-        unconditional,
-        by_time_range,
-        by_period,
+        unconditional, /**< _Unconditional schedule. If it is unlocked, it works (time parameters are ignored)_ */
+        by_time_range, /**< _Conditional schedule: [start_date, end_date]_ */
+        by_period,     /**< _Conditional schedule: [start_date, start_date + period]_ */
     };
 
     template <typename Constructor, typename Allocator>
@@ -85,8 +85,9 @@ public:
 
     time_point_sec start_date = time_point_sec::min();
     time_point_sec end_date = time_point_sec::maximum();
-    time_point_sec period = time_point_sec::maximum();
+    uint32_t period = time_point_sec::maximum().sec_since_epoch();
 
+    bool locked = false;
 };
 
 struct by_owner_name;
@@ -146,6 +147,6 @@ CHAINBASE_SET_INDEX_TYPE( scorum::chain::budget_with_schedule_object, scorum::ch
 FC_REFLECT_ENUM( scorum::chain::budget_schedule_object::budget_schedule_type, (unconditional)(by_time_range)(by_period) )
 
 FC_REFLECT( scorum::chain::budget_schedule_object,
-             (id)(schedule_alg)(start_date)(end_date)(period)
+             (id)(schedule_alg)(start_date)(end_date)(period)(locked)
 )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::budget_schedule_object, scorum::chain::budget_schedule_index )
