@@ -198,7 +198,7 @@ public:
      * Get the WIF private key corresponding to a public key.  The
      * private key must already be in the wallet.
      */
-    string get_private_key(public_key_type pubkey) const;
+    string get_private_key(const public_key_type& pubkey) const;
 
     /**
      *  @param role - active | owner | posting | memo
@@ -318,7 +318,7 @@ public:
      *          this returns a raw string that may have null characters embedded
      *          in it
      */
-    string serialize_transaction(signed_transaction tx) const;
+    string serialize_transaction(const signed_transaction& tx) const;
 
     /** Imports a WIF Private Key into the wallet to be used to sign transactions by an account.
      *
@@ -372,10 +372,10 @@ public:
     annotated_signed_transaction create_account_with_keys(const std::string& creator,
                                                           const std::string& newname,
                                                           const std::string& json_meta,
-                                                          public_key_type owner,
-                                                          public_key_type active,
-                                                          public_key_type posting,
-                                                          public_key_type memo,
+                                                          const public_key_type& owner,
+                                                          const public_key_type& active,
+                                                          const public_key_type& posting,
+                                                          const public_key_type& memo,
                                                           bool broadcast) const;
 
     /**
@@ -394,8 +394,8 @@ public:
      *  @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_account_delegated(const std::string& creator,
-                                                          asset scorum_fee,
-                                                          asset delegated_vests,
+                                                          const asset& scorum_fee,
+                                                          const asset& delegated_vests,
                                                           const std::string& new_account_name,
                                                           const std::string& json_meta,
                                                           bool broadcast);
@@ -420,14 +420,14 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_account_with_keys_delegated(const std::string& creator,
-                                                                    asset scorum_fee,
-                                                                    asset delegated_vests,
+                                                                    const asset& scorum_fee,
+                                                                    const asset& delegated_vests,
                                                                     const std::string& newname,
                                                                     const std::string& json_meta,
-                                                                    public_key_type owner,
-                                                                    public_key_type active,
-                                                                    public_key_type posting,
-                                                                    public_key_type memo,
+                                                                    const public_key_type& owner,
+                                                                    const public_key_type& active,
+                                                                    const public_key_type& posting,
+                                                                    const public_key_type& memo,
                                                                     bool broadcast) const;
 
     /**
@@ -443,10 +443,10 @@ public:
      */
     annotated_signed_transaction update_account(const std::string& accountname,
                                                 const std::string& json_meta,
-                                                public_key_type owner,
-                                                public_key_type active,
-                                                public_key_type posting,
-                                                public_key_type memo,
+                                                const public_key_type& owner,
+                                                const public_key_type& active,
+                                                const public_key_type& posting,
+                                                const public_key_type& memo,
                                                 bool broadcast) const;
 
     /**
@@ -461,8 +461,11 @@ public:
      * @param weight The weight the key should have in the authority. A weight of 0 indicates the removal of the key.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction update_account_auth_key(
-        const std::string& account_name, authority_type type, public_key_type key, weight_type weight, bool broadcast);
+    annotated_signed_transaction update_account_auth_key(const std::string& account_name,
+                                                         const authority_type& type,
+                                                         const public_key_type& key,
+                                                         weight_type weight,
+                                                         bool broadcast);
 
     /**
      * This method updates the account of an authority for an exisiting account.
@@ -518,7 +521,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
-    update_account_memo_key(const std::string& account_name, public_key_type key, bool broadcast);
+    update_account_memo_key(const std::string& account_name, const public_key_type& key, bool broadcast);
 
     /**
      * This method delegates VESTS from one account to another.
@@ -530,7 +533,7 @@ public:
      */
     annotated_signed_transaction delegate_vesting_shares(const std::string& delegator,
                                                          const std::string& delegatee,
-                                                         asset vesting_shares,
+                                                         const asset& vesting_shares,
                                                          bool broadcast);
 
     /**
@@ -573,7 +576,7 @@ public:
      */
     annotated_signed_transaction update_witness(const std::string& witness_name,
                                                 const std::string& url,
-                                                public_key_type block_signing_key,
+                                                const public_key_type& block_signing_key,
                                                 const chain_properties& props,
                                                 bool broadcast = false);
 
@@ -620,8 +623,11 @@ public:
      * @param memo A memo for the transactionm, encrypted with the to account's public memo key
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction transfer(
-        const std::string& from, const std::string& to, asset amount, const std::string& memo, bool broadcast = false);
+    annotated_signed_transaction transfer(const std::string& from,
+                                          const std::string& to,
+                                          const asset& amount,
+                                          const std::string& memo,
+                                          bool broadcast = false);
 
     /**
      * Transfer funds from one account to another using escrow. SCORUM and SBD can be transferred.
@@ -641,8 +647,8 @@ public:
                                                  const std::string& to,
                                                  const std::string& agent,
                                                  uint32_t escrow_id,
-                                                 asset scorum_amount,
-                                                 asset fee,
+                                                 const asset& scorum_amount,
+                                                 const asset& fee,
                                                  time_point_sec ratification_deadline,
                                                  time_point_sec escrow_expiration,
                                                  const std::string& json_meta,
@@ -703,7 +709,7 @@ public:
                                                 const std::string& who,
                                                 const std::string& receiver,
                                                 uint32_t escrow_id,
-                                                asset scorum_amount,
+                                                const asset& scorum_amount,
                                                 bool broadcast = false);
 
     /**
@@ -717,7 +723,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
-    transfer_to_vesting(const std::string& from, const std::string& to, asset amount, bool broadcast = false);
+    transfer_to_vesting(const std::string& from, const std::string& to, const asset& amount, bool broadcast = false);
 
     /**
      * Set up a vesting withdraw request. The request is fulfilled once a week over the next two year (104 weeks).
@@ -728,7 +734,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
-    withdraw_vesting(const std::string& from, asset vesting_shares, bool broadcast = false);
+    withdraw_vesting(const std::string& from, const asset& vesting_shares, bool broadcast = false);
 
     /**
      * Set up a vesting withdraw route. When vesting shares are withdrawn, they will be routed to these accounts
@@ -753,7 +759,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      * @return the signed version of the transaction
      */
-    annotated_signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false);
+    annotated_signed_transaction sign_transaction(const signed_transaction& tx, bool broadcast = false);
 
     /** Returns an uninitialized object representing a given blockchain operation.
      *
@@ -802,7 +808,7 @@ public:
                                                       const std::string& subject,
                                                       const std::string& body,
                                                       bool broadcast);
-    
+
     vector<extended_message_object> get_inbox(const std::string& account, fc::time_point newest, uint32_t limit);
     vector<extended_message_object> get_outbox(const std::string& account, fc::time_point newest, uint32_t limit);
     message_body try_decrypt_message(const message_api_obj& mo);
@@ -854,7 +860,7 @@ public:
      */
     annotated_signed_transaction request_account_recovery(const std::string& recovery_account,
                                                           const std::string& account_to_recover,
-                                                          authority new_authority,
+                                                          const authority& new_authority,
                                                           bool broadcast);
 
     /**
@@ -871,8 +877,8 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction recover_account(const std::string& account_to_recover,
-                                                 authority recent_authority,
-                                                 authority new_authority,
+                                                 const authority& recent_authority,
+                                                 const authority& new_authority,
                                                  bool broadcast);
 
     /**
@@ -937,8 +943,10 @@ public:
 
     annotated_signed_transaction decline_voting_rights(const std::string& account, bool decline, bool broadcast);
 
-    annotated_signed_transaction
-    claim_reward_balance(const std::string& account, asset reward_scorum, asset reward_vests, bool broadcast);
+    annotated_signed_transaction claim_reward_balance(const std::string& account,
+                                                      const asset& reward_scorum,
+                                                      const asset& reward_vests,
+                                                      bool broadcast);
 };
 
 struct plain_keys
