@@ -205,9 +205,14 @@ struct hello_message
     fc::variant_object user_data;
 
     hello_message() {}
-    hello_message(const std::string& user_agent, uint32_t core_protocol_version, const fc::ip::address& inbound_address,
-        uint16_t inbound_port, uint16_t outbound_port, const node_id_t& node_public_key,
-        const fc::ecc::compact_signature& signed_shared_secret, const fc::variant_object& user_data)
+    hello_message(const std::string& user_agent,
+                  uint32_t core_protocol_version,
+                  const fc::ip::address& inbound_address,
+                  uint16_t inbound_port,
+                  uint16_t outbound_port,
+                  const node_id_t& node_public_key,
+                  const fc::ecc::compact_signature& signed_shared_secret,
+                  const fc::variant_object& user_data)
         : user_agent(user_agent)
         , core_protocol_version(core_protocol_version)
         , inbound_address(inbound_address)
@@ -417,27 +422,53 @@ struct get_current_connections_reply_message
 // clang-format off
 
 FC_REFLECT_ENUM(
-    graphene::net::core_message_type_enum,
-    (trx_message_type)(block_message_type)(core_message_type_first)(item_ids_inventory_message_type)(
-        blockchain_item_ids_inventory_message_type)(fetch_blockchain_item_ids_message_type)(fetch_items_message_type)(
-        item_not_available_message_type)(hello_message_type)(connection_accepted_message_type)(
-        connection_rejected_message_type)(address_request_message_type)(address_message_type)(
-        closing_connection_message_type)(current_time_request_message_type)(current_time_reply_message_type)(
-        check_firewall_message_type)(check_firewall_reply_message_type)(get_current_connections_request_message_type)(
-        get_current_connections_reply_message_type)(core_message_type_last))
+        graphene::net::core_message_type_enum,
+        (trx_message_type)
+        (block_message_type)
+        (core_message_type_first)
+        (item_ids_inventory_message_type)
+        (blockchain_item_ids_inventory_message_type)
+        (fetch_blockchain_item_ids_message_type)
+        (fetch_items_message_type)
+        (item_not_available_message_type)
+        (hello_message_type)
+        (connection_accepted_message_type)
+        (connection_rejected_message_type)
+        (address_request_message_type)
+        (address_message_type)
+        (closing_connection_message_type)
+        (current_time_request_message_type)
+        (current_time_reply_message_type)
+        (check_firewall_message_type)
+        (check_firewall_reply_message_type)
+        (get_current_connections_request_message_type)
+        (get_current_connections_reply_message_type)
+        (core_message_type_last))
 
 FC_REFLECT(graphene::net::trx_message, (trx))
 FC_REFLECT(graphene::net::block_message, (block)(block_id))
 
 FC_REFLECT(graphene::net::item_id, (item_type)(item_hash))
 FC_REFLECT(graphene::net::item_ids_inventory_message, (item_type)(item_hashes_available))
+
 FC_REFLECT(graphene::net::blockchain_item_ids_inventory_message,
-    (total_remaining_item_count)(item_type)(item_hashes_available))
+           (total_remaining_item_count)
+           (item_type)
+           (item_hashes_available))
+
 FC_REFLECT(graphene::net::fetch_blockchain_item_ids_message, (item_type)(blockchain_synopsis))
 FC_REFLECT(graphene::net::fetch_items_message, (item_type)(items_to_fetch))
 FC_REFLECT(graphene::net::item_not_available_message, (requested_item))
-FC_REFLECT(graphene::net::hello_message, (user_agent)(core_protocol_version)(inbound_address)(inbound_port)(
-                                             outbound_port)(node_public_key)(signed_shared_secret)(user_data))
+
+FC_REFLECT(graphene::net::hello_message,
+           (user_agent)
+           (core_protocol_version)
+           (inbound_address)
+           (inbound_port)
+           (outbound_port)
+           (node_public_key)
+           (signed_shared_secret)
+           (user_data))
 
 FC_REFLECT_EMPTY(graphene::net::connection_accepted_message)
 FC_REFLECT_ENUM(graphene::net::rejection_reason_code,

@@ -50,25 +50,25 @@ int main(int argc, char** argv)
     try
     {
 
-#ifdef IS_TEST_NET
-        std::cerr << "------------------------------------------------------\n\n";
-        std::cerr << "            STARTING TEST NETWORK\n\n";
-        std::cerr << "------------------------------------------------------\n";
-        auto initdelegate_private_key = graphene::utilities::key_to_wif(SCORUM_INIT_PRIVATE_KEY);
-        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        std::cerr << "initdelegate private key: " << initdelegate_private_key << "\n";
-        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
-        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-        std::cerr << "------------------------------------------------------\n";
-#else
+        //#ifdef IS_TEST_NET
+        //        std::cerr << "------------------------------------------------------\n\n";
+        //        std::cerr << "            STARTING TEST NETWORK\n\n";
+        //        std::cerr << "------------------------------------------------------\n";
+        //        auto initdelegate_private_key = graphene::utilities::key_to_wif(SCORUM_INIT_PRIVATE_KEY);
+        //        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
+        //        std::cerr << "initdelegate private key: " << initdelegate_private_key << "\n";
+        //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
+        //        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
+        //        std::cerr << "------------------------------------------------------\n";
+        //#else
         std::cerr << "------------------------------------------------------\n\n";
         std::cerr << "            STARTING SCORUM NETWORK\n\n";
         std::cerr << "------------------------------------------------------\n";
-        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
+        //        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
+        //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
         std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
         std::cerr << "------------------------------------------------------\n";
-#endif
+        //#endif
 
         bpo::options_description app_options("Scorum Daemon");
         bpo::options_description cfg_options("Scorum Daemon");
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         {
             std::cout << "scorum_blockchain_version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
             std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
-            std::cout << "fc_git_revision:          " << fc::string(fc::git_revision_sha) << "\n";
+            std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
             return 0;
         }
 

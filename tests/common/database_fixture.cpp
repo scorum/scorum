@@ -18,13 +18,34 @@
 
 #include "database_fixture.hpp"
 
-uint32_t SCORUM_TESTING_GENESIS_TIMESTAMP = 1431700000;
-
 namespace scorum {
 namespace chain {
 
-using std::cout;
-using std::cerr;
+void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
+{
+    private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
+    public_key_type init_public_key = init_delegate_priv_key.get_public_key();
+
+    genesis_state.accounts.push_back(
+        { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
+
+    genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
+}
+
+database_fixture::database_fixture()
+    : app()
+    , db(*app.chain_database())
+{
+    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
+    create_initdelegate_for_genesis_state(genesis_state);
+}
+
+database_fixture::~database_fixture()
+{
+}
 
 clean_database_fixture::clean_database_fixture()
 {
@@ -116,7 +137,7 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
     }
     init_account_pub_key = init_account_priv_key.get_public_key();
 
-    db.open(data_dir->path(), data_dir->path(), size, chainbase::database::read_write);
+    db.open(data_dir->path(), data_dir->path(), size, chainbase::database::read_write, genesis_state);
 
     boost::program_options::variables_map options;
 
@@ -149,7 +170,7 @@ live_database_fixture::live_database_fixture()
         auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
         ahplugin->plugin_initialize(boost::program_options::variables_map());
 
-        db.open(_chain_dir, _chain_dir, 0, 0);
+        db.open(_chain_dir, _chain_dir, 0, 0, genesis_state);
 
         validate_database();
         generate_block();
@@ -177,10 +198,9 @@ live_database_fixture::~live_database_fixture()
     FC_LOG_AND_RETHROW()
 }
 
-fc::ecc::private_key database_fixture::generate_private_key(string seed)
+private_key_type database_fixture::generate_private_key(string seed)
 {
-    static const fc::ecc::private_key committee
-        = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")));
+    static const private_key_type committee = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
     if (seed == "init_key")
         return committee;
     return fc::ecc::private_key::regenerate(fc::sha256::hash(seed));
@@ -199,8 +219,8 @@ void database_fixture::open_database()
     {
         data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
         db._log_hardforks = false;
-        db.open(data_dir->path(), data_dir->path(), 1024 * 1024 * 8,
-                chainbase::database::read_write); // 8 MB file for testing
+        db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_8MB, chainbase::database::read_write,
+                genesis_state);
     }
 }
 
