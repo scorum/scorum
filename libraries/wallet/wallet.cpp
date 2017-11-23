@@ -106,7 +106,7 @@ fc::ecc::private_key derive_private_key(const std::string& prefix_string, int se
     return derived_key;
 }
 
-string normalize_brain_key(string s)
+string normalize_brain_key(const std::string& s)
 {
     size_t i = 0, n = s.length();
     std::string result;
@@ -305,7 +305,7 @@ public:
         }
     }
 
-    bool copy_wallet_file(string destination_filename)
+    bool copy_wallet_file(const std::string& destination_filename)
     {
         fc::path src_path = get_wallet_filename();
         if (!fc::exists(src_path))
@@ -405,7 +405,7 @@ public:
         return result;
     }
 
-    account_api_obj get_account(string account_name) const
+    account_api_obj get_account(const std::string& account_name) const
     {
         auto accounts = _remote_db->get_accounts({ account_name });
         FC_ASSERT(!accounts.empty(), "Unknown account");
@@ -444,7 +444,7 @@ public:
     // given account name.
     // @returns true if the key matches a current active/owner/memo key for the named
     //          account, false otherwise (but it is stored either way)
-    bool import_key(string wif_key)
+    bool import_key(const std::string& wif_key)
     {
         fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
         if (!optional_private_key)
@@ -455,6 +455,7 @@ public:
         return true;
     }
 
+    // TODO: Needs refactoring
     bool load_wallet_file(string wallet_filename = "")
     {
         // TODO:  Merge imported wallet with existing wallet,
@@ -470,6 +471,7 @@ public:
         return true;
     }
 
+    // TODO: Needs refactoring
     void save_wallet_file(string wallet_filename = "")
     {
         //
@@ -545,8 +547,8 @@ public:
     }
 
     signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
-                                                       string account_name,
-                                                       string creator_account_name,
+                                                       const std::string& account_name,
+                                                       const std::string& creator_account_name,
                                                        bool broadcast = false,
                                                        bool save_wallet = true)
     {
@@ -588,7 +590,8 @@ public:
         FC_CAPTURE_AND_RETHROW((account_name)(creator_account_name)(broadcast))
     }
 
-    signed_transaction set_voting_proxy(string account_to_modify, string proxy, bool broadcast /* = false */)
+    signed_transaction
+    set_voting_proxy(const std::string& account_to_modify, const std::string& proxy, bool broadcast /* = false */)
     {
         try
         {
@@ -605,7 +608,7 @@ public:
         FC_CAPTURE_AND_RETHROW((account_to_modify)(proxy)(broadcast))
     }
 
-    optional<witness_api_obj> get_witness(string owner_account)
+    optional<witness_api_obj> get_witness(const std::string& owner_account)
     {
         return _remote_db->get_witness_by_account(owner_account);
     }
@@ -943,7 +946,7 @@ public:
         return result;
     }
 
-    operation get_prototype_operation(string operation_name)
+    operation get_prototype_operation(const std::string& operation_name)
     {
         auto it = _prototype_ops.find(operation_name);
         if (it == _prototype_ops.end())
@@ -993,7 +996,7 @@ wallet_api::~wallet_api()
 {
 }
 
-bool wallet_api::copy_wallet_file(string destination_filename)
+bool wallet_api::copy_wallet_file(const string& destination_filename)
 {
     return my->copy_wallet_file(destination_filename);
 }
@@ -1092,12 +1095,12 @@ string wallet_api::get_wallet_filename() const
     return my->get_wallet_filename();
 }
 
-account_api_obj wallet_api::get_account(string account_name) const
+account_api_obj wallet_api::get_account(const std::string& account_name) const
 {
     return my->get_account(account_name);
 }
 
-bool wallet_api::import_key(string wif_key)
+bool wallet_api::import_key(const std::string& wif_key)
 {
     FC_ASSERT(!is_locked());
     // backup wallet
@@ -1116,7 +1119,7 @@ bool wallet_api::import_key(string wif_key)
     return false;
 }
 
-string wallet_api::normalize_brain_key(string s) const
+string wallet_api::normalize_brain_key(const std::string& s) const
 {
     return detail::normalize_brain_key(s);
 }
@@ -1143,18 +1146,19 @@ set<account_name_type> wallet_api::list_witnesses(const string& lowerbound, uint
     return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
 }
 
-optional<witness_api_obj> wallet_api::get_witness(string owner_account)
+optional<witness_api_obj> wallet_api::get_witness(const std::string& owner_account)
 {
     return my->get_witness(owner_account);
 }
 
-annotated_signed_transaction
-wallet_api::set_voting_proxy(string account_to_modify, string voting_account, bool broadcast /* = false */)
+annotated_signed_transaction wallet_api::set_voting_proxy(const std::string& account_to_modify,
+                                                          const std::string& voting_account,
+                                                          bool broadcast /* = false */)
 {
     return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
-void wallet_api::set_wallet_filename(string wallet_filename)
+void wallet_api::set_wallet_filename(const std::string& wallet_filename)
 {
     my->_wallet_filename = wallet_filename;
 }
@@ -1168,7 +1172,7 @@ annotated_signed_transaction wallet_api::sign_transaction(signed_transaction tx,
     FC_CAPTURE_AND_RETHROW((tx))
 }
 
-operation wallet_api::get_prototype_operation(string operation_name)
+operation wallet_api::get_prototype_operation(const std::string& operation_name)
 {
     return my->get_prototype_operation(operation_name);
 }
@@ -1201,7 +1205,7 @@ string wallet_api::help() const
     return ss.str();
 }
 
-string wallet_api::gethelp(const string& method) const
+string wallet_api::gethelp(const std::string& method) const
 {
     fc::api<wallet_api> tmp;
     std::stringstream ss;
@@ -1216,12 +1220,12 @@ string wallet_api::gethelp(const string& method) const
     return ss.str();
 }
 
-bool wallet_api::load_wallet_file(string wallet_filename)
+bool wallet_api::load_wallet_file(const std::string& wallet_filename)
 {
     return my->load_wallet_file(wallet_filename);
 }
 
-void wallet_api::save_wallet_file(string wallet_filename)
+void wallet_api::save_wallet_file(const std::string& wallet_filename)
 {
     my->save_wallet_file(wallet_filename);
 }
@@ -1260,7 +1264,7 @@ void wallet_api::lock()
     FC_CAPTURE_AND_RETHROW()
 }
 
-void wallet_api::unlock(string password)
+void wallet_api::unlock(const string& password)
 {
     try
     {
@@ -1276,7 +1280,7 @@ void wallet_api::unlock(string password)
     FC_CAPTURE_AND_RETHROW()
 }
 
-void wallet_api::set_password(string password)
+void wallet_api::set_password(const std::string& password)
 {
     if (!is_new())
         FC_ASSERT(!is_locked(), "The wallet must be unlocked before the password can be set");
@@ -1295,8 +1299,9 @@ string wallet_api::get_private_key(public_key_type pubkey) const
     return key_to_wif(my->get_private_key(pubkey));
 }
 
-pair<public_key_type, string>
-wallet_api::get_private_key_from_password(string account, string role, string password) const
+pair<public_key_type, string> wallet_api::get_private_key_from_password(const std::string& account,
+                                                                        const std::string& role,
+                                                                        const std::string& password) const
 {
     auto seed = account + role + password;
     FC_ASSERT(seed.size());
@@ -1310,9 +1315,9 @@ wallet_api::get_private_key_from_password(string account, string role, string pa
  * provide their desired keys. The resulting account may not be controllable by this
  * wallet.
  */
-annotated_signed_transaction wallet_api::create_account_with_keys(string creator,
-                                                                  string new_account_name,
-                                                                  string json_meta,
+annotated_signed_transaction wallet_api::create_account_with_keys(const std::string& creator,
+                                                                  const std::string& new_account_name,
+                                                                  const std::string& json_meta,
                                                                   public_key_type owner,
                                                                   public_key_type active,
                                                                   public_key_type posting,
@@ -1347,11 +1352,11 @@ annotated_signed_transaction wallet_api::create_account_with_keys(string creator
  * provide their desired keys. The resulting account may not be controllable by this
  * wallet.
  */
-annotated_signed_transaction wallet_api::create_account_with_keys_delegated(string creator,
+annotated_signed_transaction wallet_api::create_account_with_keys_delegated(const std::string& creator,
                                                                             asset scorum_fee,
                                                                             asset delegated_vests,
-                                                                            string new_account_name,
-                                                                            string json_meta,
+                                                                            const string& new_account_name,
+                                                                            const string& json_meta,
                                                                             public_key_type owner,
                                                                             public_key_type active,
                                                                             public_key_type posting,
@@ -1381,8 +1386,8 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(stri
     FC_CAPTURE_AND_RETHROW((creator)(new_account_name)(json_meta)(owner)(active)(memo)(broadcast))
 }
 
-annotated_signed_transaction wallet_api::request_account_recovery(string recovery_account,
-                                                                  string account_to_recover,
+annotated_signed_transaction wallet_api::request_account_recovery(const std::string& recovery_account,
+                                                                  const std::string& account_to_recover,
                                                                   authority new_authority,
                                                                   bool broadcast)
 {
@@ -1399,7 +1404,7 @@ annotated_signed_transaction wallet_api::request_account_recovery(string recover
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::recover_account(string account_to_recover,
+annotated_signed_transaction wallet_api::recover_account(const std::string& account_to_recover,
                                                          authority recent_authority,
                                                          authority new_authority,
                                                          bool broadcast)
@@ -1419,7 +1424,7 @@ annotated_signed_transaction wallet_api::recover_account(string account_to_recov
 }
 
 annotated_signed_transaction
-wallet_api::change_recovery_account(string owner, string new_recovery_account, bool broadcast)
+wallet_api::change_recovery_account(const std::string& owner, const std::string& new_recovery_account, bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1434,13 +1439,13 @@ wallet_api::change_recovery_account(string owner, string new_recovery_account, b
     return my->sign_transaction(tx, broadcast);
 }
 
-vector<owner_authority_history_api_obj> wallet_api::get_owner_history(string account) const
+vector<owner_authority_history_api_obj> wallet_api::get_owner_history(const std::string& account) const
 {
     return my->_remote_db->get_owner_history(account);
 }
 
-annotated_signed_transaction wallet_api::update_account(string account_name,
-                                                        string json_meta,
+annotated_signed_transaction wallet_api::update_account(const std::string& account_name,
+                                                        const std::string& json_meta,
                                                         public_key_type owner,
                                                         public_key_type active,
                                                         public_key_type posting,
@@ -1469,7 +1474,7 @@ annotated_signed_transaction wallet_api::update_account(string account_name,
 }
 
 annotated_signed_transaction wallet_api::update_account_auth_key(
-    string account_name, authority_type type, public_key_type key, weight_type weight, bool broadcast)
+    const std::string& account_name, authority_type type, public_key_type key, weight_type weight, bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1536,8 +1541,11 @@ annotated_signed_transaction wallet_api::update_account_auth_key(
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::update_account_auth_account(
-    string account_name, authority_type type, string auth_account, weight_type weight, bool broadcast)
+annotated_signed_transaction wallet_api::update_account_auth_account(const std::string& account_name,
+                                                                     authority_type type,
+                                                                     const std::string& auth_account,
+                                                                     weight_type weight,
+                                                                     bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1604,8 +1612,10 @@ annotated_signed_transaction wallet_api::update_account_auth_account(
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::update_account_auth_threshold(string account_name, authority_type type, uint32_t threshold, bool broadcast)
+annotated_signed_transaction wallet_api::update_account_auth_threshold(const std::string& account_name,
+                                                                       authority_type type,
+                                                                       uint32_t threshold,
+                                                                       bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1666,7 +1676,8 @@ wallet_api::update_account_auth_threshold(string account_name, authority_type ty
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::update_account_meta(string account_name, string json_meta, bool broadcast)
+annotated_signed_transaction
+wallet_api::update_account_meta(const std::string& account_name, const std::string& json_meta, bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1687,7 +1698,7 @@ annotated_signed_transaction wallet_api::update_account_meta(string account_name
 }
 
 annotated_signed_transaction
-wallet_api::update_account_memo_key(string account_name, public_key_type key, bool broadcast)
+wallet_api::update_account_memo_key(const std::string& account_name, public_key_type key, bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1707,8 +1718,10 @@ wallet_api::update_account_memo_key(string account_name, public_key_type key, bo
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::delegate_vesting_shares(string delegator, string delegatee, asset vesting_shares, bool broadcast)
+annotated_signed_transaction wallet_api::delegate_vesting_shares(const std::string& delegator,
+                                                                 const std::string& delegatee,
+                                                                 asset vesting_shares,
+                                                                 bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1733,8 +1746,10 @@ wallet_api::delegate_vesting_shares(string delegator, string delegatee, asset ve
  *  This method will genrate new owner, active, and memo keys for the new account which
  *  will be controlable by this wallet.
  */
-annotated_signed_transaction
-wallet_api::create_account(string creator, string new_account_name, string json_meta, bool broadcast)
+annotated_signed_transaction wallet_api::create_account(const std::string& creator,
+                                                        const std::string& new_account_name,
+                                                        const std::string& json_meta,
+                                                        bool broadcast)
 {
     try
     {
@@ -1757,8 +1772,12 @@ wallet_api::create_account(string creator, string new_account_name, string json_
  *  This method will genrate new owner, active, and memo keys for the new account which
  *  will be controlable by this wallet.
  */
-annotated_signed_transaction wallet_api::create_account_delegated(
-    string creator, asset scorum_fee, asset delegated_vests, string new_account_name, string json_meta, bool broadcast)
+annotated_signed_transaction wallet_api::create_account_delegated(const std::string& creator,
+                                                                  asset scorum_fee,
+                                                                  asset delegated_vests,
+                                                                  const std::string& new_account_name,
+                                                                  const std::string& json_meta,
+                                                                  bool broadcast)
 {
     try
     {
@@ -1778,8 +1797,8 @@ annotated_signed_transaction wallet_api::create_account_delegated(
     FC_CAPTURE_AND_RETHROW((creator)(new_account_name)(json_meta))
 }
 
-annotated_signed_transaction wallet_api::update_witness(string witness_account_name,
-                                                        string url,
+annotated_signed_transaction wallet_api::update_witness(const std::string& witness_account_name,
+                                                        const std::string& url,
                                                         public_key_type block_signing_key,
                                                         const chain_properties& props,
                                                         bool broadcast)
@@ -1812,8 +1831,10 @@ annotated_signed_transaction wallet_api::update_witness(string witness_account_n
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::vote_for_witness(string voting_account, string witness_to_vote_for, bool approve, bool broadcast)
+annotated_signed_transaction wallet_api::vote_for_witness(const std::string& voting_account,
+                                                          const std::string& witness_to_vote_for,
+                                                          bool approve,
+                                                          bool broadcast)
 {
     try
     {
@@ -1895,7 +1916,7 @@ void wallet_api::check_memo(const string& memo, const account_api_obj& account) 
     }
 }
 
-string wallet_api::get_encrypted_memo(string from, string to, string memo)
+string wallet_api::get_encrypted_memo(const std::string& from, const std::string& to, const std::string& memo)
 {
 
     if (memo.size() > 0 && memo[0] == '#')
@@ -1927,7 +1948,8 @@ string wallet_api::get_encrypted_memo(string from, string to, string memo)
     }
 }
 
-annotated_signed_transaction wallet_api::transfer(string from, string to, asset amount, string memo, bool broadcast)
+annotated_signed_transaction wallet_api::transfer(
+    const std::string& from, const std::string& to, asset amount, const std::string& memo, bool broadcast)
 {
     try
     {
@@ -1949,15 +1971,15 @@ annotated_signed_transaction wallet_api::transfer(string from, string to, asset 
     FC_CAPTURE_AND_RETHROW((from)(to)(amount)(memo)(broadcast))
 }
 
-annotated_signed_transaction wallet_api::escrow_transfer(string from,
-                                                         string to,
-                                                         string agent,
+annotated_signed_transaction wallet_api::escrow_transfer(const std::string& from,
+                                                         const std::string& to,
+                                                         const std::string& agent,
                                                          uint32_t escrow_id,
                                                          asset scorum_amount,
                                                          asset fee,
                                                          time_point_sec ratification_deadline,
                                                          time_point_sec escrow_expiration,
-                                                         string json_meta,
+                                                         const std::string& json_meta,
                                                          bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -1979,8 +2001,13 @@ annotated_signed_transaction wallet_api::escrow_transfer(string from,
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::escrow_approve(
-    string from, string to, string agent, string who, uint32_t escrow_id, bool approve, bool broadcast)
+annotated_signed_transaction wallet_api::escrow_approve(const std::string& from,
+                                                        const std::string& to,
+                                                        const std::string& agent,
+                                                        const std::string& who,
+                                                        uint32_t escrow_id,
+                                                        bool approve,
+                                                        bool broadcast)
 {
     FC_ASSERT(!is_locked());
     escrow_approve_operation op;
@@ -1997,8 +2024,12 @@ annotated_signed_transaction wallet_api::escrow_approve(
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::escrow_dispute(string from, string to, string agent, string who, uint32_t escrow_id, bool broadcast)
+annotated_signed_transaction wallet_api::escrow_dispute(const std::string& from,
+                                                        const std::string& to,
+                                                        const std::string& agent,
+                                                        const std::string& who,
+                                                        uint32_t escrow_id,
+                                                        bool broadcast)
 {
     FC_ASSERT(!is_locked());
     escrow_dispute_operation op;
@@ -2015,11 +2046,11 @@ wallet_api::escrow_dispute(string from, string to, string agent, string who, uin
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::escrow_release(string from,
-                                                        string to,
-                                                        string agent,
-                                                        string who,
-                                                        string receiver,
+annotated_signed_transaction wallet_api::escrow_release(const std::string& from,
+                                                        const std::string& to,
+                                                        const std::string& agent,
+                                                        const std::string& who,
+                                                        const std::string& receiver,
                                                         uint32_t escrow_id,
                                                         asset scorum_amount,
                                                         bool broadcast)
@@ -2040,7 +2071,8 @@ annotated_signed_transaction wallet_api::escrow_release(string from,
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::transfer_to_vesting(string from, string to, asset amount, bool broadcast)
+annotated_signed_transaction
+wallet_api::transfer_to_vesting(const std::string& from, const std::string& to, asset amount, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     transfer_to_vesting_operation op;
@@ -2055,7 +2087,7 @@ annotated_signed_transaction wallet_api::transfer_to_vesting(string from, string
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::withdraw_vesting(string from, asset vesting_shares, bool broadcast)
+annotated_signed_transaction wallet_api::withdraw_vesting(const std::string& from, asset vesting_shares, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     withdraw_vesting_operation op;
@@ -2069,8 +2101,8 @@ annotated_signed_transaction wallet_api::withdraw_vesting(string from, asset ves
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::set_withdraw_vesting_route(string from, string to, uint16_t percent, bool auto_vest, bool broadcast)
+annotated_signed_transaction wallet_api::set_withdraw_vesting_route(
+    const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     set_withdraw_vesting_route_operation op;
@@ -2086,7 +2118,7 @@ wallet_api::set_withdraw_vesting_route(string from, string to, uint16_t percent,
     return my->sign_transaction(tx, broadcast);
 }
 
-string wallet_api::decrypt_memo(string encrypted_memo)
+string wallet_api::decrypt_memo(const std::string& encrypted_memo)
 {
     if (is_locked())
         return encrypted_memo;
@@ -2131,7 +2163,7 @@ string wallet_api::decrypt_memo(string encrypted_memo)
     return encrypted_memo;
 }
 
-annotated_signed_transaction wallet_api::decline_voting_rights(string account, bool decline, bool broadcast)
+annotated_signed_transaction wallet_api::decline_voting_rights(const std::string& account, bool decline, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     decline_voting_rights_operation op;
@@ -2146,7 +2178,7 @@ annotated_signed_transaction wallet_api::decline_voting_rights(string account, b
 }
 
 annotated_signed_transaction
-wallet_api::claim_reward_balance(string account, asset reward_scorum, asset reward_vests, bool broadcast)
+wallet_api::claim_reward_balance(const std::string& account, asset reward_scorum, asset reward_vests, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     claim_reward_balance_operation op;
@@ -2161,7 +2193,8 @@ wallet_api::claim_reward_balance(string account, asset reward_scorum, asset rewa
     return my->sign_transaction(tx, broadcast);
 }
 
-map<uint32_t, applied_operation> wallet_api::get_account_history(string account, uint32_t from, uint32_t limit)
+map<uint32_t, applied_operation>
+wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
 {
     auto result = my->_remote_db->get_account_history(account, from, limit);
     if (!is_locked())
@@ -2178,23 +2211,23 @@ map<uint32_t, applied_operation> wallet_api::get_account_history(string account,
     return result;
 }
 
-app::state wallet_api::get_state(string url)
+app::state wallet_api::get_state(const std::string& url)
 {
     return my->_remote_db->get_state(url);
 }
 
-vector<withdraw_route> wallet_api::get_withdraw_routes(string account, withdraw_route_type type) const
+vector<withdraw_route> wallet_api::get_withdraw_routes(const std::string& account, withdraw_route_type type) const
 {
     return my->_remote_db->get_withdraw_routes(account, type);
 }
 
-annotated_signed_transaction wallet_api::post_comment(string author,
-                                                      string permlink,
-                                                      string parent_author,
-                                                      string parent_permlink,
-                                                      string title,
-                                                      string body,
-                                                      string json,
+annotated_signed_transaction wallet_api::post_comment(const std::string& author,
+                                                      const std::string& permlink,
+                                                      const std::string& parent_author,
+                                                      const std::string& parent_permlink,
+                                                      const std::string& title,
+                                                      const std::string& body,
+                                                      const std::string& json,
                                                       bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -2214,8 +2247,8 @@ annotated_signed_transaction wallet_api::post_comment(string author,
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::vote(string voter, string author, string permlink, int16_t weight, bool broadcast)
+annotated_signed_transaction wallet_api::vote(
+    const std::string& voter, const std::string& author, const std::string& permlink, int16_t weight, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     FC_ASSERT(abs(weight) <= 100, "Weight must be between -100 and 100 and not 0");
@@ -2238,7 +2271,8 @@ void wallet_api::set_transaction_expiration(uint32_t seconds)
     my->set_transaction_expiration(seconds);
 }
 
-annotated_signed_transaction wallet_api::challenge(string challenger, string challenged, bool broadcast)
+annotated_signed_transaction
+wallet_api::challenge(const std::string& challenger, const std::string& challenged, bool broadcast)
 {
     // SCORUM: TODO: remove whole method
     FC_ASSERT(false, "Challenge is disabled");
@@ -2258,7 +2292,7 @@ annotated_signed_transaction wallet_api::challenge(string challenger, string cha
     */
 }
 
-annotated_signed_transaction wallet_api::prove(string challenged, bool broadcast)
+annotated_signed_transaction wallet_api::prove(const std::string& challenged, bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -2278,23 +2312,26 @@ annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id)
     return my->_remote_db->get_transaction(id);
 }
 
-annotated_signed_transaction wallet_api::follow(string follower, string following, set<string> what, bool broadcast)
+annotated_signed_transaction
+wallet_api::follow(const std::string& follower, const std::string& following, set<string> what, bool broadcast)
 {
+    std::string following_str = following;
+
     auto follwer_account = get_account(follower);
-    FC_ASSERT(following.size());
-    if (following[0] != '@' || following[0] != '#')
+    FC_ASSERT(following_str.size());
+    if (following_str[0] != '@' || following_str[0] != '#')
     {
-        following = '@' + following;
+        following_str = '@' + following_str;
     }
-    if (following[0] == '@')
+    if (following_str[0] == '@')
     {
-        get_account(following.substr(1));
+        get_account(following_str.substr(1));
     }
-    FC_ASSERT(following.size() > 1);
+    FC_ASSERT(following_str.size() > 1);
 
     follow::follow_operation fop;
     fop.follower = follower;
-    fop.following = following;
+    fop.following = following_str;
     fop.what = what;
     follow::follow_plugin_operation op = fop;
 
@@ -2310,8 +2347,8 @@ annotated_signed_transaction wallet_api::follow(string follower, string followin
     return my->sign_transaction(trx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::send_private_message(string from, string to, string subject, string body, bool broadcast)
+annotated_signed_transaction wallet_api::send_private_message(
+    const std::string& from, const std::string& to, const std::string& subject, const std::string& body, bool broadcast)
 {
     FC_ASSERT(!is_locked(), "wallet must be unlocked to send a private message");
     auto from_account = get_account(from);
@@ -2410,7 +2447,7 @@ message_body wallet_api::try_decrypt_message(const message_api_obj& mo)
     }
 }
 
-vector<extended_message_object> wallet_api::get_inbox(string account, fc::time_point newest, uint32_t limit)
+vector<extended_message_object> wallet_api::get_inbox(const std::string& account, fc::time_point newest, uint32_t limit)
 {
     FC_ASSERT(!is_locked());
     vector<extended_message_object> result;
@@ -2423,7 +2460,8 @@ vector<extended_message_object> wallet_api::get_inbox(string account, fc::time_p
     return result;
 }
 
-vector<extended_message_object> wallet_api::get_outbox(string account, fc::time_point newest, uint32_t limit)
+vector<extended_message_object>
+wallet_api::get_outbox(const std::string& account, fc::time_point newest, uint32_t limit)
 {
     FC_ASSERT(!is_locked());
     vector<extended_message_object> result;
