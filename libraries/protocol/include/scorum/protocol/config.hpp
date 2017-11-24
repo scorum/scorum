@@ -15,7 +15,6 @@
 #define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('T') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< SCORUM with 3 digits of precision
 
-#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1451606400))
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
 
@@ -29,8 +28,6 @@
 #else // IS LIVE SCORUM NETWORK
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
-
-#define SCORUM_GENESIS_TIME                    (fc::time_point_sec(1508331600))
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60*24*7)  /// 7 days
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
@@ -50,7 +47,6 @@
 #define SCORUM_START_VESTING_BLOCK             (SCORUM_BLOCKS_PER_DAY * 7)
 #define SCORUM_START_MINER_VOTING_BLOCK        (SCORUM_BLOCKS_PER_DAY * 30)
 
-#define SCORUM_INIT_DELEGATE_NAME              "initdelegate"
 #define SCORUM_NUM_INIT_DELEGATES              1
 #define SCORUM_INIT_TIME                       (fc::time_point_sec());
 

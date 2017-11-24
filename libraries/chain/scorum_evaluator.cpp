@@ -86,6 +86,7 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
             w.signing_key = o.block_signing_key;
             w.created = _db.head_block_time();
             w.props = o.props;
+            w.hardfork_time_vote = _db.get_genesis_time();
         });
     }
 }

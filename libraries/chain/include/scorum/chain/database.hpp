@@ -109,6 +109,8 @@ public:
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
     void close();
 
+    time_point_sec get_genesis_time() const override;
+
     //////////////////// db_block.cpp ////////////////////
 
     /**
@@ -443,7 +445,7 @@ protected:
     void init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates);
     void init_genesis_accounts(const std::vector<genesis_state_type::account_type>& accounts);
     void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
-    void init_genesis_global_property_object(uint64_t init_supply, fc::time_point_sec genesis_time);
+    void init_genesis_global_property_object(uint64_t init_supply);
 
 private:
     std::unique_ptr<database_impl> _my;
@@ -476,6 +478,8 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     flat_map<std::string, std::shared_ptr<custom_operation_interpreter>> _custom_operation_interpreters;
+
+    fc::time_point_sec _const_genesis_time; // should be const
 };
-}
-}
+} // namespace chain
+} // namespace scorum

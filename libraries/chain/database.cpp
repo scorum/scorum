@@ -1838,13 +1838,15 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             uint32_t old_flags;
         } inhibitor(*this);
 
+        _const_genesis_time = genesis_state.initial_timestamp;
+
         init_genesis_accounts(genesis_state.accounts);
         init_genesis_witnesses(genesis_state.witness_candidates);
         init_witness_schedule(genesis_state.witness_candidates);
 
         create<chain_property_object>([&](chain_property_object& p) { p.chain_id = genesis_state.initial_chain_id; });
 
-        init_genesis_global_property_object(genesis_state.init_supply, genesis_state.initial_timestamp);
+        init_genesis_global_property_object(genesis_state.init_supply);
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -1893,14 +1895,15 @@ void database::init_genesis_witnesses(const std::vector<genesis_state_type::witn
             w.owner = witness.owner_name;
             w.signing_key = witness.block_signing_key;
             w.schedule = witness_object::top19;
+            w.hardfork_time_vote = get_genesis_time();
         });
     }
 }
 
-void database::init_genesis_global_property_object(uint64_t init_supply, time_point_sec genesis_time)
+void database::init_genesis_global_property_object(uint64_t init_supply)
 {
     auto gpo = create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
-        p.time = genesis_time;
+        p.time = get_genesis_time();
         p.recent_slots_filled = fc::uint128::max_value();
         p.participation_count = 128;
         p.current_supply = asset(init_supply, SCORUM_SYMBOL);
@@ -1915,7 +1918,7 @@ void database::init_genesis_global_property_object(uint64_t init_supply, time_po
         create<block_summary_object>([&](block_summary_object&) {});
 
     create<hardfork_property_object>(
-        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(genesis_time); });
+        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(get_genesis_time()); });
 
     auto post_rf = create<reward_fund_object>([&](reward_fund_object& rfo) {
         rfo.name = SCORUM_POST_REWARD_FUND_NAME;
@@ -1930,6 +1933,11 @@ void database::init_genesis_global_property_object(uint64_t init_supply, time_po
     // As a shortcut in payout processing, we use the id as an array index.
     // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
     FC_ASSERT(post_rf.id._id == 0);
+}
+
+fc::time_point_sec database::get_genesis_time() const
+{
+    return _const_genesis_time;
 }
 
 void database::validate_transaction(const signed_transaction& trx)
@@ -2666,19 +2674,6 @@ void database::apply_hardfork(uint32_t hardfork)
     {
     case SCORUM_HARDFORK_0_1:
         perform_vesting_share_split(1000000);
-#ifdef IS_TEST_NET
-        {
-            custom_operation test_op;
-            string op_msg = "Testnet: Hardfork applied";
-            test_op.data = vector<char>(op_msg.begin(), op_msg.end());
-            test_op.required_auths.insert(SCORUM_INIT_DELEGATE_NAME);
-            operation op = test_op; // we need the operation object to live to the end of this scope
-            operation_notification note(op);
-            notify_pre_apply_operation(note);
-            notify_post_apply_operation(note);
-        }
-        break;
-#endif
         break;
     default:
         break;

@@ -107,7 +107,7 @@ public:
     version running_version;
 
     hardfork_version hardfork_version_vote;
-    time_point_sec hardfork_time_vote = SCORUM_GENESIS_TIME;
+    time_point_sec hardfork_time_vote;
 };
 
 class witness_vote_object : public object<witness_vote_object_type, witness_vote_object>
