@@ -140,6 +140,10 @@ public:
     /** this updates the votes for all witnesses as a result of account VESTS changing */
     void adjust_proxied_witness_votes(const account_object& account, share_type delta, int depth = 0);
 
+private:
+
+    const account_object& get_account(const account_id_type &) const;
+
 };
 }
 }

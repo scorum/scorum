@@ -68,9 +68,7 @@ enum object_type
     reward_fund_object_type,
     vesting_delegation_object_type,
     vesting_delegation_expiration_object_type,
-    budget_object_type,
-    budget_with_schedule_object_type,
-    budget_schedule_object_type
+    budget_object_type
 };
 
 class dynamic_global_property_object;
@@ -98,8 +96,6 @@ class reward_fund_object;
 class vesting_delegation_object;
 class vesting_delegation_expiration_object;
 class budget_object;
-class budget_with_schedule_object;
-class budget_schedule_object;
 
 typedef oid<dynamic_global_property_object> dynamic_global_property_id_type;
 typedef oid<chain_property_object> chain_property_id_type;
@@ -126,8 +122,6 @@ typedef oid<reward_fund_object> reward_fund_id_type;
 typedef oid<vesting_delegation_object> vesting_delegation_id_type;
 typedef oid<vesting_delegation_expiration_object> vesting_delegation_expiration_id_type;
 typedef oid<budget_object> budget_id_type;
-typedef oid<budget_with_schedule_object> budget_with_schedule_id_type;
-typedef oid<budget_schedule_object> budget_schedule_id_type;
 
 enum bandwidth_type
 {
@@ -230,8 +224,6 @@ FC_REFLECT_ENUM( scorum::chain::object_type,
                  (vesting_delegation_object_type)
                  (vesting_delegation_expiration_object_type)
                  (budget_object_type)
-                 (budget_with_schedule_object_type)
-                 (budget_schedule_object_type)
                  )
 
 FC_REFLECT_TYPENAME( scorum::chain::shared_string )
