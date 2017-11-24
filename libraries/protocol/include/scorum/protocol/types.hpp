@@ -101,8 +101,6 @@ struct public_key_type
     friend bool operator!=(const public_key_type& p1, const public_key_type& p2);
 };
 
-#define SCORUM_INIT_PUBLIC_KEY (scorum::protocol::public_key_type(SCORUM_INIT_PUBLIC_KEY_STR))
-
 struct extended_public_key_type
 {
     struct binary_key

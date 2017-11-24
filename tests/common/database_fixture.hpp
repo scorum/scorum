@@ -11,10 +11,12 @@
 
 #include <iostream>
 
-#define INITIAL_TEST_SUPPLY (10000000000ll)
-using namespace graphene::db;
+#define TEST_CHAIN_ID fc::sha256::hash("testnet")
+#define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
+#define TEST_INITIAL_SUPPLY (10000000000ll)
+#define TEST_GENESIS_TIMESTAMP (1431700000)
 
-extern uint32_t(SCORUM_TESTING_GENESIS_TIMESTAMP);
+using namespace graphene::db;
 
 #define PUSH_TX scorum::chain::test::_push_transaction
 
@@ -126,44 +128,42 @@ namespace chain {
 
 using namespace scorum::protocol;
 
+void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state);
+
 struct database_fixture
 {
     // the reason we use an app is to exercise the indexes of built-in
     //   plugins
     scorum::app::application app;
     chain::database& db;
+    genesis_state_type genesis_state;
     signed_transaction trx;
     public_key_type committee_key;
     account_id_type committee_account;
-    fc::ecc::private_key private_key = fc::ecc::private_key::generate();
-    fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("init_key")));
+
+    private_key_type private_key = private_key_type::generate();
+    private_key_type init_account_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
+
     string debug_key = graphene::utilities::key_to_wif(init_account_priv_key);
     public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
+
     uint32_t default_skip = 0 | database::skip_undo_history_check | database::skip_authority_check;
 
     std::shared_ptr<scorum::plugin::debug_node::debug_node_plugin> db_plugin;
 
     optional<fc::temp_directory> data_dir;
-    bool skip_key_index_test = false;
     uint32_t anon_acct_count;
 
-    database_fixture()
-        : app()
-        , db(*app.chain_database())
-    {
-        genesis_state_type genesis_state;
-        genesis_state.init_supply = INITIAL_TEST_SUPPLY;
-
-        db.set_init_genesis_state(genesis_state);
-    }
-
-    ~database_fixture() {}
+    database_fixture();
+    ~database_fixture();
 
     static fc::ecc::private_key generate_private_key(string seed = "init_key");
     string generate_anon_acct_name();
     void open_database();
-    void generate_block(
-        uint32_t skip = 0, const fc::ecc::private_key& key = generate_private_key("init_key"), int miss_blocks = 0);
+
+    void generate_block(uint32_t skip = 0,
+                        const private_key_type& key = generate_private_key("init_key"),
+                        int miss_blocks = 0);
 
     /**
      * @brief Generates block_count blocks
@@ -177,17 +177,24 @@ struct database_fixture
      */
     void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true);
 
-    const account_object& account_create(const string& name, const string& creator, const private_key_type& creator_key,
-        const share_type& fee, const public_key_type& key, const public_key_type& post_key,
-        const string& json_metadata);
+    const account_object& account_create(const string& name,
+                                         const string& creator,
+                                         const private_key_type& creator_key,
+                                         const share_type& fee,
+                                         const public_key_type& key,
+                                         const public_key_type& post_key,
+                                         const string& json_metadata);
 
-    const account_object& account_create(
-        const string& name, const public_key_type& key, const public_key_type& post_key);
+    const account_object&
+    account_create(const string& name, const public_key_type& key, const public_key_type& post_key);
 
     const account_object& account_create(const string& name, const public_key_type& key);
 
-    const witness_object& witness_create(const string& owner, const private_key_type& owner_key, const string& url,
-        const public_key_type& signing_key, const share_type& fee);
+    const witness_object& witness_create(const string& owner,
+                                         const private_key_type& owner_key,
+                                         const string& url,
+                                         const public_key_type& signing_key,
+                                         const share_type& fee);
 
     void fund(const string& account_name, const share_type& amount = 500000);
     void fund(const string& account_name, const asset& amount);

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(deserialize_genesis_state)
 {
     std::string genesis_str = "{\"accounts\":[{"
                               "\"name\":\"sasha\","
-                              "\"public_key\":\"TST1111111111111111111111111111111114T1Anm\","
+                              "\"public_key\":\"STM1111111111111111111111111111111114T1Anm\","
                               "\"scr_amount\":100,"
                               "\"sp_amount\":100}]}";
 

@@ -122,7 +122,7 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
     // write in to DB
 
     account_service.create_account_by_faucets(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                             o.active, o.posting, o.fee);
+                                              o.active, o.posting, o.fee);
 }
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
@@ -176,7 +176,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     account_service.check_account_existence(o.posting.account_auths);
 
     account_service.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                                  o.active, o.posting, o.fee, o.delegation);
+                                                   o.active, o.posting, o.fee, o.delegation);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -348,8 +348,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
         FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
                   "Operation cannot be processed because account is currently challenged.");
 
-        comment_id_type id;
-
         const comment_object* parent = nullptr;
         if (o.parent_author != SCORUM_ROOT_POST_PARENT)
         {
@@ -391,7 +389,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
             account_service.add_post(auth, parent_author, now);
 
-            const auto& new_comment = _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
+            _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
                 validate_permlink_0_1(o.parent_permlink);
                 validate_permlink_0_1(o.permlink);
 
@@ -434,8 +432,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                     wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
 #endif
             });
-
-            id = new_comment.id;
 
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indicies
             auto now = _db.head_block_time();
@@ -777,8 +773,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
                   "This operation would not change the vesting withdraw rate.");
 
         account_service.update_withdraw(account, new_vesting_withdraw_rate,
-                                       _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
-                                       o.vesting_shares.amount);
+                                        _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
+                                        o.vesting_shares.amount);
     }
 }
 

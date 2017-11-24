@@ -321,10 +321,24 @@ private:
                                                                             boost::accumulators::tag::sum,
                                                                             boost::accumulators::tag::count>>
         call_stats_accumulator;
-#define NODE_DELEGATE_METHOD_NAMES                                                                                     \
-    (has_item)(handle_message)(handle_block)(handle_transaction)(get_block_ids)(get_item)(get_blockchain_synopsis)(    \
-        sync_status)(connection_count_changed)(get_block_number)(get_block_time)(get_head_block_id)(                   \
-        estimate_last_known_fork_from_git_revision_timestamp)(error_encountered)
+
+// clang-format off
+#define NODE_DELEGATE_METHOD_NAMES (has_item) \
+                                   (handle_message) \
+                                   (handle_block) \
+                                   (handle_transaction) \
+                                   (get_block_ids) \
+                                   (get_item) \
+                                   (get_chain_id) \
+                                   (get_blockchain_synopsis) \
+                                   (sync_status) \
+                                   (connection_count_changed) \
+                                   (get_block_number) \
+                                   (get_block_time) \
+                                   (get_head_block_id) \
+                                   (estimate_last_known_fork_from_git_revision_timestamp) \
+                                   (error_encountered)
+// clang-format on
 
 #define DECLARE_ACCUMULATOR(r, data, method_name)                                                                      \
     mutable call_stats_accumulator BOOST_PP_CAT(_, BOOST_PP_CAT(method_name, _execution_accumulator));                 \
@@ -419,6 +433,7 @@ public:
                                            uint32_t& remaining_item_count,
                                            uint32_t limit = 2000) override;
     message get_item(const item_id& id) override;
+    chain_id_type get_chain_id() const override;
     std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point,
                                                      uint32_t number_of_blocks_after_reference_point) override;
     void sync_status(uint32_t item_type, uint32_t item_count) override;
@@ -440,6 +455,7 @@ public:
     std::shared_ptr<fc::thread> _thread;
 #endif // P2P_IN_DEDICATED_THREAD
     std::unique_ptr<statistics_gathering_node_delegate_wrapper> _delegate;
+    fc::sha256 _chain_id;
 
 #define NODE_CONFIGURATION_FILENAME "node_config.json"
 #define POTENTIAL_PEER_DATABASE_FILENAME "peers.json"
@@ -497,6 +513,7 @@ public:
     struct item_id_index
     {
     };
+
     typedef boost::
         multi_index_container<prioritized_item_id,
                               boost::multi_index::
@@ -2042,10 +2059,11 @@ fc::variant_object node_impl::generate_hello_user_data()
     if (!_hard_fork_block_numbers.empty())
         user_data["last_known_fork_block_number"] = _hard_fork_block_numbers.back();
 
-    user_data["chain_id"] = SCORUM_CHAIN_ID;
+    user_data["chain_id"] = _chain_id;
 
     return user_data;
 }
+
 void node_impl::parse_hello_user_data_for_peer(peer_connection* originating_peer, const fc::variant_object& user_data)
 {
     VERIFY_CORRECT_THREAD();
@@ -2168,10 +2186,10 @@ void node_impl::on_hello_message(peer_connection* originating_peer, const hello_
                 }
             }
         }
-        if (!originating_peer->chain_id || *originating_peer->chain_id != SCORUM_CHAIN_ID)
+        if (!originating_peer->chain_id || *originating_peer->chain_id != _chain_id)
         {
             wlog("Received hello message from peer running a node for different blockchain.",
-                 ("my_chain_id", SCORUM_CHAIN_ID)("their_chain_id", originating_peer->chain_id));
+                 ("my_chain_id", _chain_id)("their_chain_id", originating_peer->chain_id));
 
             std::ostringstream rejection_message;
             rejection_message << "Your client is running a different chain id";
@@ -4758,6 +4776,8 @@ void node_impl::set_node_delegate(node_delegate* del, fc::thread* thread_for_del
     _delegate.reset();
     if (del)
         _delegate.reset(new statistics_gathering_node_delegate_wrapper(del, thread_for_delegate_calls));
+    if (_delegate)
+        _chain_id = del->get_chain_id();
 }
 
 void node_impl::load_configuration(const fc::path& configuration_directory)
@@ -5873,6 +5893,11 @@ std::vector<item_hash_t> statistics_gathering_node_delegate_wrapper::get_block_i
 message statistics_gathering_node_delegate_wrapper::get_item(const item_id& id)
 {
     INVOKE_AND_COLLECT_STATISTICS(get_item, id);
+}
+
+chain_id_type statistics_gathering_node_delegate_wrapper::get_chain_id() const
+{
+    INVOKE_AND_COLLECT_STATISTICS(get_chain_id);
 }
 
 std::vector<item_hash_t>
