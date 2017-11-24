@@ -459,8 +459,8 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         const comment_object& alice_comment = db.get_comment("alice", string("lorem"));
 
         BOOST_REQUIRE(alice_comment.author == op.author);
-        BOOST_REQUIRE(to_string(alice_comment.permlink) == op.permlink);
-        BOOST_REQUIRE(to_string(alice_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(alice_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(alice_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(alice_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(alice_comment.created == db.head_block_time());
         BOOST_REQUIRE(alice_comment.net_rshares.value == 0);
@@ -469,12 +469,12 @@ BOOST_AUTO_TEST_CASE(comment_apply)
                       == fc::time_point_sec(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)));
 
 #ifndef IS_LOW_MEM
-        BOOST_REQUIRE(to_string(alice_comment.title) == op.title);
-        BOOST_REQUIRE(to_string(alice_comment.body) == op.body);
+        BOOST_REQUIRE(fc::to_string(alice_comment.title) == op.title);
+        BOOST_REQUIRE(fc::to_string(alice_comment.body) == op.body);
 // BOOST_REQUIRE( alice_comment.json_metadata == op.json_metadata );
 #else
-        BOOST_REQUIRE(to_string(alice_comment.title) == "");
-        BOOST_REQUIRE(to_string(alice_comment.body) == "");
+        BOOST_REQUIRE(fc::to_string(alice_comment.title) == "");
+        BOOST_REQUIRE(fc::to_string(alice_comment.body) == "");
 // BOOST_REQUIRE( alice_comment.json_metadata == "" );
 #endif
 
@@ -504,9 +504,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         const comment_object& bob_comment = db.get_comment("bob", string("ipsum"));
 
         BOOST_REQUIRE(bob_comment.author == op.author);
-        BOOST_REQUIRE(to_string(bob_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(bob_comment.permlink) == op.permlink);
         BOOST_REQUIRE(bob_comment.parent_author == op.parent_author);
-        BOOST_REQUIRE(to_string(bob_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(bob_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(bob_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(bob_comment.created == db.head_block_time());
         BOOST_REQUIRE(bob_comment.net_rshares.value == 0);
@@ -531,9 +531,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         const comment_object& sam_comment = db.get_comment("sam", string("dolor"));
 
         BOOST_REQUIRE(sam_comment.author == op.author);
-        BOOST_REQUIRE(to_string(sam_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(sam_comment.permlink) == op.permlink);
         BOOST_REQUIRE(sam_comment.parent_author == op.parent_author);
-        BOOST_REQUIRE(to_string(sam_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(sam_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(sam_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(sam_comment.created == db.head_block_time());
         BOOST_REQUIRE(sam_comment.net_rshares.value == 0);
@@ -570,9 +570,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         db.push_transaction(tx, 0);
 
         BOOST_REQUIRE(mod_sam_comment.author == op.author);
-        BOOST_REQUIRE(to_string(mod_sam_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(mod_sam_comment.permlink) == op.permlink);
         BOOST_REQUIRE(mod_sam_comment.parent_author == op.parent_author);
-        BOOST_REQUIRE(to_string(mod_sam_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(mod_sam_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(mod_sam_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(mod_sam_comment.created == created);
         BOOST_REQUIRE(mod_sam_comment.cashout_time == mod_sam_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
@@ -1693,7 +1693,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
 
         BOOST_REQUIRE(alice_witness.owner == "alice");
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
-        BOOST_REQUIRE(to_string(alice_witness.url) == op.url);
+        BOOST_REQUIRE(fc::to_string(alice_witness.url) == op.url);
         BOOST_REQUIRE(alice_witness.signing_key == op.block_signing_key);
         BOOST_REQUIRE(alice_witness.props.account_creation_fee == op.props.account_creation_fee);
         BOOST_REQUIRE(alice_witness.props.maximum_block_size == op.props.maximum_block_size);
@@ -1719,7 +1719,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
 
         BOOST_REQUIRE(alice_witness.owner == "alice");
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
-        BOOST_REQUIRE(to_string(alice_witness.url) == "bar.foo");
+        BOOST_REQUIRE(fc::to_string(alice_witness.url) == "bar.foo");
         BOOST_REQUIRE(alice_witness.signing_key == op.block_signing_key);
         BOOST_REQUIRE(alice_witness.props.account_creation_fee == op.props.account_creation_fee);
         BOOST_REQUIRE(alice_witness.props.maximum_block_size == op.props.maximum_block_size);

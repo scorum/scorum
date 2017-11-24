@@ -30,6 +30,7 @@
 
 #include <fc/thread/future.hpp>
 #include <fc/api.hpp>
+#include <fc/shared_buffer.hpp>
 
 namespace scorum {
 namespace private_message {
@@ -89,7 +90,7 @@ public:
     uint64_t sent_time = 0; /// used as seed to secret generation
     time_point_sec receive_time; /// time received by blockchain
     uint32_t checksum = 0;
-    buffer_type encrypted_message;
+    fc::shared_buffer encrypted_message;
 };
 
 typedef message_object::id_type message_id_type;

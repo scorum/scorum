@@ -190,7 +190,7 @@ database::session database::start_undo_session(bool enabled)
 {
     if (enabled)
     {
-        vector<std::unique_ptr<abstract_session>> _sub_sessions;
+        std::vector<std::unique_ptr<abstract_session>> _sub_sessions;
         _sub_sessions.reserve(_index_list.size());
         for (auto& item : _index_list)
         {

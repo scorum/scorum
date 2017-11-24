@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fc/shared_buffer.hpp>
+
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/operations.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -32,7 +34,7 @@ public:
     uint16_t op_in_trx = 0;
     uint64_t virtual_op = 0;
     time_point_sec timestamp;
-    buffer_type serialized_op;
+    fc::shared_buffer serialized_op;
 };
 
 struct by_location;

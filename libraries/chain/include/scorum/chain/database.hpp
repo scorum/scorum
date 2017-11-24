@@ -16,6 +16,7 @@
 #include <scorum/chain/dbservice.hpp>
 
 #include <fc/signals.hpp>
+#include <fc/shared_string.hpp>
 #include <fc/log/logger.hpp>
 
 #include <map>
@@ -24,12 +25,12 @@
 namespace scorum {
 namespace chain {
 
-using scorum::protocol::signed_transaction;
-using scorum::protocol::operation;
-using scorum::protocol::authority;
 using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
+using scorum::protocol::authority;
+using scorum::protocol::operation;
 using scorum::protocol::price;
+using scorum::protocol::signed_transaction;
 
 class database_impl;
 class custom_operation_interpreter;
@@ -134,8 +135,8 @@ public:
     const account_object& get_account(const account_name_type& name) const;
     const account_object* find_account(const account_name_type& name) const;
 
-    const comment_object& get_comment(const account_name_type& author, const shared_string& permlink) const;
-    const comment_object* find_comment(const account_name_type& author, const shared_string& permlink) const;
+    const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
+    const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
     const comment_object& get_comment(const account_name_type& author, const string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const string& permlink) const;
@@ -481,5 +482,5 @@ private:
     std::string _json_schema;
     genesis_state_type _genesis_state;
 };
-}
-}
+} // namespace chain
+} // namespace scorum

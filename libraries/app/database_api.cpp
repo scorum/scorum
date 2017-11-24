@@ -47,7 +47,7 @@ public:
     vector<set<string>> get_key_references(vector<public_key_type> key) const;
 
     // Accounts
-    vector<extended_account> get_accounts(vector<string> names) const;
+    vector<extended_account> get_accounts(const vector<string>& names) const;
     vector<account_id_type> get_account_references(account_id_type account_id) const;
     vector<optional<account_api_obj>> lookup_account_names(const vector<string>& account_names) const;
     set<string> lookup_accounts(const string& lower_bound_name, uint32_t limit) const;
@@ -55,7 +55,7 @@ public:
 
     // Witnesses
     vector<optional<witness_api_obj>> get_witnesses(const vector<witness_id_type>& witness_ids) const;
-    fc::optional<witness_api_obj> get_witness_by_account(string account_name) const;
+    fc::optional<witness_api_obj> get_witness_by_account(const string& account_name) const;
     set<account_name_type> lookup_witness_accounts(const string& lower_bound_name, uint32_t limit) const;
     uint64_t get_witness_count() const;
 
@@ -278,7 +278,7 @@ scheduled_hardfork database_api::get_next_scheduled_hardfork() const
     });
 }
 
-reward_fund_api_obj database_api::get_reward_fund(string name) const
+reward_fund_api_obj database_api::get_reward_fund(const string& name) const
 {
     return my->_db.with_read_lock([&]() {
         auto fund = my->_db.find<reward_fund_object, by_name>(name);
@@ -316,12 +316,12 @@ vector<set<string>> database_api_impl::get_key_references(vector<public_key_type
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<extended_account> database_api::get_accounts(vector<string> names) const
+vector<extended_account> database_api::get_accounts(const vector<string>& names) const
 {
     return my->_db.with_read_lock([&]() { return my->get_accounts(names); });
 }
 
-vector<extended_account> database_api_impl::get_accounts(vector<string> names) const
+vector<extended_account> database_api_impl::get_accounts(const vector<string>& names) const
 {
     const auto& idx = _db.get_index<account_index>().indices().get<by_name>();
     const auto& vidx = _db.get_index<witness_vote_index>().indices().get<by_account_witness>();
@@ -602,7 +602,7 @@ vector<witness_api_obj> database_api::get_witnesses_by_vote(string from, uint32_
     });
 }
 
-fc::optional<witness_api_obj> database_api_impl::get_witness_by_account(string account_name) const
+fc::optional<witness_api_obj> database_api_impl::get_witness_by_account(const string& account_name) const
 {
     const auto& idx = _db.get_index<witness_index>().indices().get<by_name>();
     auto itr = idx.find(account_name);
@@ -827,7 +827,7 @@ vector<account_vote> database_api::get_account_votes(string voter) const
         {
             const auto& vo = my->_db.get(itr->comment);
             account_vote avote;
-            avote.authorperm = vo.author + "/" + to_string(vo.permlink);
+            avote.authorperm = vo.author + "/" + fc::to_string(vo.permlink);
             avote.weight = itr->weight;
             avote.rshares = itr->rshares;
             avote.percent = itr->vote_percent;
@@ -905,7 +905,7 @@ vector<discussion> database_api::get_content_replies(string author, string perml
         auto itr = by_permlink_idx.find(boost::make_tuple(acc_name, permlink));
         vector<discussion> result;
         while (itr != by_permlink_idx.end() && itr->parent_author == author
-               && to_string(itr->parent_permlink) == permlink)
+               && fc::to_string(itr->parent_permlink) == permlink)
         {
             result.push_back(discussion(*itr));
             set_pending_payout(result.back());
@@ -951,7 +951,7 @@ vector<discussion> database_api::get_replies_by_last_update(account_name_type st
         {
             result.push_back(*itr);
             set_pending_payout(result.back());
-            result.back().active_votes = get_active_votes(itr->author, to_string(itr->permlink));
+            result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
             ++itr;
         }
 
@@ -1559,7 +1559,7 @@ vector<discussion> database_api::get_discussions_by_author_before_date(string au
                 {
                     result.push_back(*itr);
                     set_pending_payout(result.back());
-                    result.back().active_votes = get_active_votes(itr->author, to_string(itr->permlink));
+                    result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
                     ++count;
                 }
                 ++itr;
@@ -1723,7 +1723,7 @@ state database_api::get_state(string path) const
                     {
                         if (itr->parent_author.size())
                         {
-                            const auto link = acnt + "/" + to_string(itr->permlink);
+                            const auto link = acnt + "/" + fc::to_string(itr->permlink);
                             eacnt.comments->push_back(link);
                             _state.content[link] = *itr;
                             set_pending_payout(_state.content[link]);
