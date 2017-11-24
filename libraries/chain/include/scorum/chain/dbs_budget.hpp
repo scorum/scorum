@@ -38,8 +38,8 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
-    typedef std::vector<budget_id_type> budget_ids_type;
-    typedef std::vector<budget_schedule_id_type> budget_schedule_ids_type;
+    using budget_ids_type = std::vector<budget_id_type>;
+    using budget_schedule_ids_type = std::vector<budget_schedule_id_type>;
 
     /** Lists all budgets registered for owner.
      *
@@ -229,7 +229,7 @@ public:
      *
      * @param budget the budget to modify
      */
-    void crear_schedules(const budget_object& budget);
+    void clear_schedules(const budget_object& budget);
     /** Distribute asset from budget.
      *  This operation takes into account the schedules and last block number
      *
@@ -252,6 +252,8 @@ private:
                           const optional<uint32_t>& period,
                           const optional<time_point_sec>& now);
     void _check_autoclose(const budget_object&);
+
+    using budget_with_schedule_ids_type = std::vector<budget_with_schedule_id_type>;
 };
 }
 }

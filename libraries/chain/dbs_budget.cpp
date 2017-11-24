@@ -9,8 +9,6 @@
 namespace scorum {
 namespace chain {
 
-typedef std::vector<budget_with_schedule_id_type> _budget_with_schedule_ids_type;
-
 dbs_budget::dbs_budget(database& db)
     : _base_type(db)
 {
@@ -137,7 +135,7 @@ void dbs_budget::close_budget(const budget_object& budget)
     // delete all budget schedules
     //
 
-    _budget_with_schedule_ids_type schedule_links;
+    budget_with_schedule_ids_type schedule_links;
     auto it_pair
         = db_impl().get_index<budget_with_schedule_index>().indicies().get<by_budget_id>().equal_range(budget.id);
     auto it = it_pair.first;
@@ -287,7 +285,7 @@ void dbs_budget::unlock_schedule(const budget_schedule_object& schedule)
 
 void dbs_budget::remove_schedule(const budget_schedule_object& schedule)
 {
-    _budget_with_schedule_ids_type schedule_links;
+    budget_with_schedule_ids_type schedule_links;
     auto it_pair
         = db_impl().get_index<budget_with_schedule_index>().indicies().get<by_schedule_id>().equal_range(schedule.id);
     auto it = it_pair.first;
@@ -319,7 +317,7 @@ void dbs_budget::remove_schedule(const budget_schedule_object& schedule)
     }
 }
 
-void dbs_budget::crear_schedules(const budget_object& budget)
+void dbs_budget::clear_schedules(const budget_object& budget)
 {
     FC_ASSERT(budget.owner == SCORUM_ROOT_POST_PARENT, "not allowed for genesis budget");
 
