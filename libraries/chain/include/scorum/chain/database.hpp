@@ -292,7 +292,6 @@ public:
                              const asset& curator_sbd_value,
                              const asset& beneficiary_value);
 
-    void adjust_reward_balance(const account_object& a, const asset& delta);
     void adjust_supply(const asset& delta, bool adjust_vesting = false);
     void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
@@ -301,20 +300,6 @@ public:
     {
         return get_balance(get_account(aname), symbol);
     }
-
-    /** this updates the votes for witnesses as a result of account voting proxy changing */
-    void adjust_proxied_witness_votes(const account_object& a,
-                                      const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,
-                                      int depth = 0);
-
-    /** this updates the votes for all witnesses as a result of account VESTS changing */
-    void adjust_proxied_witness_votes(const account_object& a, share_type delta, int depth = 0);
-
-    /** this is called by `adjust_proxied_witness_votes` when account proxy to self */
-    void adjust_witness_votes(const account_object& a, share_type delta);
-
-    /** this updates the vote of a single witness as a result of a vote being added or removed*/
-    void adjust_witness_vote(const witness_object& obj, share_type delta);
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to

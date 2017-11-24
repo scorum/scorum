@@ -8,6 +8,7 @@
 #include <scorum/account_history/account_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/dbs_account.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -402,7 +403,8 @@ void database_fixture::vest(const string& account, const asset& amount)
             db.modify(db.get_dynamic_global_properties(),
                       [&](dynamic_global_property_object& gpo) { gpo.current_supply += amount; });
 
-            db.create_vesting(db.get_account(account), amount);
+            dbs_account& account_service = db.obtain_service<dbs_account>();
+            account_service.create_vesting(db.get_account(account), amount);
 
         },
         default_skip);

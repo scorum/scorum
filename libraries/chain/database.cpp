@@ -38,6 +38,9 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <scorum/chain/genesis_state.hpp>
 
+#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/dbs_witness.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -985,160 +988,6 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when) const
 }
 
 /**
- * @param to_account - the account to receive the new vesting shares
- * @param SCORUM - SCORUM to be converted to vesting shares
- */
-asset database::create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance)
-{
-    try
-    {
-        const auto& cprops = get_dynamic_global_properties();
-
-        /**
-         *  The ratio of total_vesting_shares / total_vesting_fund_scorum should not
-         *  change as the result of the user adding funds
-         *
-         *  V / C  = (V+Vn) / (C+Cn)
-         *
-         *  Simplifies to Vn = (V * Cn ) / C
-         *
-         *  If Cn equals o.amount, then we must solve for Vn to know how many new vesting shares
-         *  the user should receive.
-         *
-         *  128 bit math is requred due to multiplying of 64 bit numbers. This is done in asset and price.
-         */
-        asset new_vesting
-            = scorum * (to_reward_balance ? cprops.get_reward_vesting_share_price() : cprops.get_vesting_share_price());
-
-        modify(to_account, [&](account_object& to) {
-            if (to_reward_balance)
-            {
-                to.reward_vesting_balance += new_vesting;
-                to.reward_vesting_scorum += scorum;
-            }
-            else
-                to.vesting_shares += new_vesting;
-        });
-
-        modify(cprops, [&](dynamic_global_property_object& props) {
-            if (to_reward_balance)
-            {
-                props.pending_rewarded_vesting_shares += new_vesting;
-                props.pending_rewarded_vesting_scorum += scorum;
-            }
-            else
-            {
-                props.total_vesting_fund_scorum += scorum;
-                props.total_vesting_shares += new_vesting;
-            }
-        });
-
-        if (!to_reward_balance)
-            adjust_proxied_witness_votes(to_account, new_vesting.amount);
-
-        return new_vesting;
-    }
-    FC_CAPTURE_AND_RETHROW((to_account.name)(scorum))
-}
-
-void database::adjust_proxied_witness_votes(const account_object& a,
-                                            const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,
-                                            int depth)
-{
-    if (a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
-    {
-        /// nested proxies are not supported, vote will not propagate
-        if (depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH)
-            return;
-
-        const auto& proxy = get_account(a.proxy);
-
-        modify(proxy, [&](account_object& a) {
-            for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth - 1; i >= 0; --i)
-            {
-                a.proxied_vsf_votes[i + depth] += delta[i];
-            }
-        });
-
-        adjust_proxied_witness_votes(proxy, delta, depth + 1);
-    }
-    else
-    {
-        share_type total_delta = 0;
-        for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth; i >= 0; --i)
-            total_delta += delta[i];
-        adjust_witness_votes(a, total_delta);
-    }
-}
-
-void database::adjust_proxied_witness_votes(const account_object& a, share_type delta, int depth)
-{
-    if (a.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
-    {
-        /// nested proxies are not supported, vote will not propagate
-        if (depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH)
-            return;
-
-        const auto& proxy = get_account(a.proxy);
-
-        modify(proxy, [&](account_object& a) { a.proxied_vsf_votes[depth] += delta; });
-
-        adjust_proxied_witness_votes(proxy, delta, depth + 1);
-    }
-    else
-    {
-        adjust_witness_votes(a, delta);
-    }
-}
-
-void database::adjust_witness_votes(const account_object& a, share_type delta)
-{
-    const auto& vidx = get_index<witness_vote_index>().indices().get<by_account_witness>();
-    auto itr = vidx.lower_bound(boost::make_tuple(a.id, witness_id_type()));
-    while (itr != vidx.end() && itr->account == a.id)
-    {
-        adjust_witness_vote(get(itr->witness), delta);
-        ++itr;
-    }
-}
-
-void database::adjust_witness_vote(const witness_object& witness, share_type delta)
-{
-    const witness_schedule_object& wso = get_witness_schedule_object();
-    modify(witness, [&](witness_object& w) {
-        auto delta_pos = w.votes.value * (wso.current_virtual_time - w.virtual_last_update);
-        w.virtual_position += delta_pos;
-
-        w.virtual_last_update = wso.current_virtual_time;
-        w.votes += delta;
-        FC_ASSERT(w.votes <= get_dynamic_global_properties().total_vesting_shares.amount, "",
-                  ("w.votes", w.votes)("props", get_dynamic_global_properties().total_vesting_shares));
-
-        w.virtual_scheduled_time
-            = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH2 - w.virtual_position) / (w.votes.value + 1);
-
-        /** witnesses with a low number of votes could overflow the time field and end up with a scheduled time in the
-         * past */
-        if (w.virtual_scheduled_time < wso.current_virtual_time)
-            w.virtual_scheduled_time = fc::uint128::max_value();
-    });
-}
-
-void database::clear_witness_votes(const account_object& a)
-{
-    const auto& vidx = get_index<witness_vote_index>().indices().get<by_account_witness>();
-    auto itr = vidx.lower_bound(boost::make_tuple(a.id, witness_id_type()));
-    while (itr != vidx.end() && itr->account == a.id)
-    {
-        const auto& current = *itr;
-        ++itr;
-        remove(current);
-    }
-
-    modify(a, [&](account_object& acc) { acc.witnesses_voted_for = 0; });
-}
-
-/**
  * This method updates total_reward_shares2 on DGPO, and children_rshares2 on comments, when a comment's rshares2
  * changes
  * from old_rshares2 to new_rshares2.  Maintaining invariants that children_rshares2 is the sum of all descendants'
@@ -1157,6 +1006,8 @@ void database::adjust_rshares2(const comment_object& c, fc::uint128_t old_rshare
 
 void database::process_vesting_withdrawals()
 {
+    dbs_account& account_service = obtain_service<dbs_account>();
+
     const auto& widx = get_index<account_index>().indices().get<by_next_vesting_withdrawal>();
     const auto& didx = get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
     auto current = widx.begin();
@@ -1204,7 +1055,7 @@ void database::process_vesting_withdrawals()
 
                     modify(to_account, [&](account_object& a) { a.vesting_shares.amount += to_deposit; });
 
-                    adjust_proxied_witness_votes(to_account, to_deposit);
+                    account_service.adjust_proxied_witness_votes(to_account, to_deposit);
 
                     push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name,
                                                                            asset(to_deposit, VESTS_SYMBOL),
@@ -1268,7 +1119,7 @@ void database::process_vesting_withdrawals()
         });
 
         if (to_withdraw > 0)
-            adjust_proxied_witness_votes(from_account, -to_withdraw);
+            account_service.adjust_proxied_witness_votes(from_account, -to_withdraw);
 
         push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, from_account.name,
                                                                asset(to_withdraw, VESTS_SYMBOL), converted_scorum));
@@ -1297,6 +1148,7 @@ void database::adjust_total_payout(const comment_object& cur,
  */
 share_type database::pay_curators(const comment_object& c, share_type& max_rewards)
 {
+    dbs_account& account_service = obtain_service<dbs_account>();
     try
     {
         uint128_t total_weight(c.total_vote_weight);
@@ -1320,7 +1172,7 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
                 {
                     unclaimed_rewards -= claim;
                     const auto& voter = get(itr->voter);
-                    auto reward = create_vesting(voter, asset(claim, SCORUM_SYMBOL), true);
+                    auto reward = account_service.create_vesting(voter, asset(claim, SCORUM_SYMBOL), true);
 
                     push_virtual_operation(
                         curation_reward_operation(voter.name, reward, c.author, to_string(c.permlink)));
@@ -1348,6 +1200,7 @@ void fill_comment_reward_context_local_state(util::comment_reward_context& ctx, 
 
 share_type database::cashout_comment_helper(util::comment_reward_context& ctx, const comment_object& comment)
 {
+    dbs_account& account_service = obtain_service<dbs_account>();
     try
     {
         share_type claimed_reward = 0;
@@ -1375,7 +1228,7 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
                 for (auto& b : comment.beneficiaries)
                 {
                     auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                    auto vest_created = create_vesting(get_account(b.account), benefactor_tokens, true);
+                    auto vest_created = account_service.create_vesting(get_account(b.account), benefactor_tokens, true);
                     push_virtual_operation(comment_benefactor_reward_operation(
                         b.account, comment.author, to_string(comment.permlink), vest_created));
                     total_beneficiary += benefactor_tokens;
@@ -1387,10 +1240,10 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
                 auto vesting_scorum = author_tokens - scorum;
 
                 const auto& author = get_account(comment.author);
-                auto vest_created = create_vesting(author, vesting_scorum, true);
+                auto vest_created = account_service.create_vesting(author, vesting_scorum, true);
                 auto scr_payout = asset(scorum, SCORUM_SYMBOL);
 
-                adjust_reward_balance(author, scr_payout);
+                account_service.increase_reward_balance(author, scr_payout);
 
                 adjust_total_payout(comment, scr_payout + asset(vesting_scorum, SCORUM_SYMBOL),
                                     asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
@@ -1552,6 +1405,8 @@ void database::process_comment_cashout()
  */
 void database::process_funds()
 {
+    dbs_account& account_service = obtain_service<dbs_account>();
+
     const auto& props = get_dynamic_global_properties();
     const auto& wso = get_witness_schedule_object();
 
@@ -1596,7 +1451,8 @@ void database::process_funds()
         p.current_supply += asset(new_scorum, SCORUM_SYMBOL);
     });
 
-    const auto& producer_reward = create_vesting(get_account(cwit.owner), asset(witness_reward, SCORUM_SYMBOL));
+    const auto& producer_reward
+        = account_service.create_vesting(get_account(cwit.owner), asset(witness_reward, SCORUM_SYMBOL));
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 
@@ -1687,6 +1543,8 @@ void database::process_decline_voting_rights()
     const auto& request_idx = get_index<decline_voting_rights_request_index>().indices().get<by_effective_date>();
     auto itr = request_idx.begin();
 
+    dbs_account& account_service = obtain_service<dbs_account>();
+
     while (itr != request_idx.end() && itr->effective_date <= head_block_time())
     {
         const auto& account = get(itr->account);
@@ -1696,9 +1554,9 @@ void database::process_decline_voting_rights()
         delta[0] = -account.vesting_shares.amount;
         for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
             delta[i + 1] = -account.proxied_vsf_votes[i];
-        adjust_proxied_witness_votes(account, delta);
+        account_service.adjust_proxied_witness_votes(account, delta);
 
-        clear_witness_votes(account);
+        account_service.clear_witness_votes(account);
 
         modify(get(itr->account), [&](account_object& a) {
             a.can_vote = false;
@@ -2547,20 +2405,6 @@ void database::adjust_balance(const account_object& a, const asset& delta)
     });
 }
 
-void database::adjust_reward_balance(const account_object& a, const asset& delta)
-{
-    modify(a, [&](account_object& acnt) {
-        switch (delta.symbol)
-        {
-        case SCORUM_SYMBOL:
-            acnt.reward_scorum_balance += delta;
-            break;
-        default:
-            FC_ASSERT(false, "invalid symbol");
-        }
-    });
-}
-
 void database::adjust_supply(const asset& delta, bool adjust_vesting)
 {
 
@@ -2860,6 +2704,8 @@ void database::retally_comment_children()
 
 void database::retally_witness_votes()
 {
+    dbs_witness& witness_service = obtain_service<dbs_witness>();
+
     const auto& witness_idx = get_index<witness_index>().indices();
 
     // Clear all witness votes
@@ -2885,7 +2731,7 @@ void database::retally_witness_votes()
         auto wit_itr = vidx.lower_bound(boost::make_tuple(a.id, witness_id_type()));
         while (wit_itr != vidx.end() && wit_itr->account == a.id)
         {
-            adjust_witness_vote(get(wit_itr->witness), a.witness_vote_weight());
+            witness_service.adjust_witness_vote(get(wit_itr->witness), a.witness_vote_weight());
             ++wit_itr;
         }
     }

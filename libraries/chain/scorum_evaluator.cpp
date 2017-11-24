@@ -723,7 +723,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
               "Account does not have sufficient SCORUM for transfer.");
     account_service.decrease_balance(from_account, o.amount);
-    _db.create_vesting(to_account, o.amount);
+    account_service.create_vesting(to_account, o.amount);
 }
 
 void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
@@ -857,6 +857,7 @@ void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_opera
 void account_witness_vote_evaluator::do_apply(const account_witness_vote_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
 
     const auto& voter = account_service.get_account(o.account);
     FC_ASSERT(voter.proxy.size() == 0, "A proxy is currently set, please clear the proxy before voting for a witness.");
@@ -882,7 +883,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
             v.account = voter.id;
         });
 
-        _db.adjust_witness_vote(witness, voter.witness_vote_weight());
+        witness_service.adjust_witness_vote(witness, voter.witness_vote_weight());
 
         account_service.increase_witnesses_voted_for(voter);
     }
@@ -890,7 +891,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
     {
         FC_ASSERT(!o.approve, "Vote currently exists, user must indicate a desire to reject witness.");
 
-        _db.adjust_witness_vote(witness, -voter.witness_vote_weight());
+        witness_service.adjust_witness_vote(witness, -voter.witness_vote_weight());
 
         account_service.decrease_witnesses_voted_for(voter);
         _db._temporary_public_impl().remove(*itr);
@@ -1313,7 +1314,7 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
         gpo.pending_rewarded_vesting_scorum -= reward_vesting_scorum_to_move;
     });
 
-    _db.adjust_proxied_witness_votes(acnt, op.reward_vests.amount);
+    account_service.adjust_proxied_witness_votes(acnt, op.reward_vests.amount);
 }
 
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
