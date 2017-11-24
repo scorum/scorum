@@ -70,11 +70,14 @@ int main(int argc, char** argv)
         std::cerr << "------------------------------------------------------\n";
         //#endif
 
+        // clang-format off
         bpo::options_description app_options("Scorum Daemon");
         bpo::options_description cfg_options("Scorum Daemon");
-        app_options.add_options()("help,h", "Print this help message and exit.")(
-            "config-file", bpo::value<boost::filesystem::path>(),
-            "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
+        app_options.add_options()
+                ("help,h", "Print this help message and exit.")
+                ("config-file", bpo::value<boost::filesystem::path>(),
+                 "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
+        // clang-format on
 
         bpo::variables_map options;
 

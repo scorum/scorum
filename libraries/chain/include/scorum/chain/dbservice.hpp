@@ -75,6 +75,8 @@ public:
 
     virtual std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const string& id) = 0;
 
+    virtual fc::time_point_sec get_genesis_time() const = 0;
+
     // for TODO only:
     chainbase::database& _temporary_public_impl();
 };
