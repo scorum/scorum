@@ -1,8 +1,10 @@
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/budget_objects.hpp>
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/account_object.hpp>
+
+#include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/database.hpp>
 
 #include <tuple>
 
@@ -51,7 +53,7 @@ const budget_object& dbs_budget::get_any_budget(const account_name_type& owner) 
     return *it_begin;
 }
 
-const budget_object& dbs_budget::create_genesis_budget(const asset& balance_in_scorum,
+const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scorum,
                                                        const share_type& per_block,
                                                        const time_point_sec& deadline)
 {
@@ -62,7 +64,6 @@ const budget_object& dbs_budget::create_genesis_budget(const asset& balance_in_s
     auto head_block_num = db_impl().head_block_num();
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
-        budget.created = SCORUM_GENESIS_TIME;
         budget.owner = SCORUM_ROOT_POST_PARENT;
         budget.balance = balance_in_scorum;
         budget.per_block = per_block;
@@ -134,13 +135,12 @@ void dbs_budget::close_budget(const budget_object& budget)
 
 asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time_point_sec>& now)
 {
-    _time t = _get_now(now);
-
     asset ret(0, SCORUM_SYMBOL);
 
-    auto head_block_num = db_impl().head_block_num();
-
     const budget_object& actual_budget = get_budget(budget.id);
+
+    dbs_budget::_time t = _get_now(now);
+    auto head_block_num = db_impl().head_block_num();
 
     if (actual_budget.last_allocated_block >= head_block_num)
     {
@@ -161,7 +161,6 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
             db_impl().modify(actual_budget, [&](budget_object& b) { b.last_allocated_block = head_block_num; });
         }
     }
-
     return ret;
 }
 
@@ -190,11 +189,9 @@ asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& ba
 
 bool dbs_budget::_check_autoclose(const budget_object& budget)
 {
-    const budget_object& actual_budget = get_budget(budget.id);
-
-    if (actual_budget.balance.amount <= 0)
+    if (budget.balance.amount <= 0)
     {
-        close_budget(actual_budget);
+        close_budget(budget);
         return true;
     }
     else
@@ -202,5 +199,6 @@ bool dbs_budget::_check_autoclose(const budget_object& budget)
         return false;
     }
 }
+
 }
 }

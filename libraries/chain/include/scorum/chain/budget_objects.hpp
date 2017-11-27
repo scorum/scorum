@@ -32,9 +32,10 @@ public:
 
     id_type id;
 
-    time_point_sec created = time_point_sec::min();
     account_name_type owner;
     shared_string content_permlink;
+
+    time_point_sec created = time_point_sec::min();
 
     asset balance = asset(0, SCORUM_SYMBOL);
     share_type per_block = 0;
@@ -62,6 +63,8 @@ typedef multi_index_container<budget_object,
 }
 
 FC_REFLECT( scorum::chain::budget_object,
-             (id)(created)(owner)(content_permlink)(balance)(per_block)(last_allocated_block)(deadline)
+             (id)(owner)(content_permlink)(created)(balance)(per_block)(last_allocated_block)(deadline)
 )
+
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::budget_object, scorum::chain::budget_index )
+

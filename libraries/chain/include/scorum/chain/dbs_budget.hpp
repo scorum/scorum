@@ -6,10 +6,6 @@
 namespace scorum {
 namespace chain {
 
-class budget_object;
-class budget_schedule_object;
-class account_object;
-
 /** DB service for operations with budget_object
  *  --------------------------------------------
 */
@@ -26,8 +22,7 @@ public:
     /** Lists all budgets registered for owner.
      *
      * @param owner the name of the owner
-     *                   (use \c SCORUM_ROOT_POST_PARENT to get genesis budget)
-     * @returns a list of budgets ids to get the single budget (et_budget)
+     * @returns a list of budgets ids to get the single budget (get_budget)
      */
     budget_ids_type get_budgets(const account_name_type& owner) const;
 
@@ -43,24 +38,19 @@ public:
      *  to simplify calling (you don' need in budgets list enumeration)
      *
      * @param owner the name of the owner
-     *                   (use \c SCORUM_ROOT_POST_PARENT to get genesis budget)
      * @returns a budget object
      */
     const budget_object& get_any_budget(const account_name_type& owner) const;
 
-    /** Create genesis budget.
-     *
-     *  @warning The genesis budget has no owner (to be precise, it has fake owner \c SCORUM_ROOT_POST_PARENT).
-     *  @warning The genesis budget has some restrictions (for update, close and schedule operations).
-     *  @warning There are not schedules for genesis budget (it is analogous to one unconditional schedule).
+    /** Create fund budget (non any owner).
      *
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
      * @param per_block the amount for asset distribution
      *                  (the distribution is allowed one time per block)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
-     * @returns genesis budget object
+     * @returns fund budget object
      */
-    const budget_object& create_genesis_budget(const asset& balance_in_scorum,
+    const budget_object& create_fund_budget(const asset& balance_in_scorum,
                                                const share_type& per_block,
                                                const time_point_sec& deadline);
 
