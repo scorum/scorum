@@ -2,6 +2,7 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 #include <vector>
+#include <functional>
 
 namespace scorum {
 namespace chain {
@@ -17,21 +18,20 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
-    using budget_ids_type = std::vector<budget_id_type>;
+    using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
+
+    /** Lists all budgets.
+     *
+     * @returns a list of budget objects
+     */
+    budget_refs_type get_budgets() const;
 
     /** Lists all budgets registered for owner.
      *
      * @param owner the name of the owner
-     * @returns a list of budgets ids to get the single budget (get_budget)
+     * @returns a list of budget objects
      */
-    budget_ids_type get_budgets(const account_name_type& owner) const;
-
-    /** To get the single budget.
-     *
-     * @param id the budget id
-     * @returns a budget object
-     */
-    const budget_object& get_budget(budget_id_type id) const;
+    budget_refs_type get_budgets(const account_name_type& owner) const;
 
     /** To get the single budget by owner.
      *  Use if you know exactly that there is only one budget for owner
@@ -91,6 +91,7 @@ public:
 
 private:
 
+    const budget_object& _get_budget(budget_id_type id) const;
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
 };

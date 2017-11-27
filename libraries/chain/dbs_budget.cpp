@@ -17,9 +17,26 @@ dbs_budget::dbs_budget(database& db)
     db_impl().get_index<budget_index>().indicies().get<by_owner_name>();
 }
 
-dbs_budget::budget_ids_type dbs_budget::get_budgets(const account_name_type& owner) const
+dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 {
-    budget_ids_type ret;
+    budget_refs_type ret;
+
+    auto idx = db_impl().get_index<budget_index>().indicies();
+    auto it = idx.begin();
+    auto it_end = idx.end();
+    FC_ASSERT(it != it_end, "non any budget");
+    while (it != it_end)
+    {
+        ret.push_back(std::cref(*it));
+        it++;
+    }
+
+    return ret;
+}
+
+dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& owner) const
+{
+    budget_refs_type ret;
 
     auto it_pair = db_impl().get_index<budget_index>().indicies().get<by_owner_name>().equal_range(owner);
     auto it = it_pair.first;
@@ -27,20 +44,11 @@ dbs_budget::budget_ids_type dbs_budget::get_budgets(const account_name_type& own
     FC_ASSERT(it != it_end, "budget not found");
     while (it != it_end)
     {
-        ret.push_back(it->id);
+        ret.push_back(std::cref(*it));
         it++;
     }
 
     return ret;
-}
-
-const budget_object& dbs_budget::get_budget(budget_id_type id) const
-{
-    try
-    {
-        return db_impl().get<budget_object, by_id>(id);
-    }
-    FC_CAPTURE_AND_RETHROW() // to write __FILE__, __LINE__ from here
 }
 
 const budget_object& dbs_budget::get_any_budget(const account_name_type& owner) const
@@ -112,7 +120,7 @@ void dbs_budget::close_budget(const budget_object& budget)
 {
     FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT, "not allowed for genesis budget");
 
-    const budget_object& actual_budget = get_budget(budget.id);
+    const budget_object& actual_budget = _get_budget(budget.id);
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -137,7 +145,7 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
 {
     asset ret(0, SCORUM_SYMBOL);
 
-    const budget_object& actual_budget = get_budget(budget.id);
+    const budget_object& actual_budget = _get_budget(budget.id);
 
     dbs_budget::_time t = _get_now(now);
     auto head_block_num = db_impl().head_block_num();
@@ -162,6 +170,15 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
         }
     }
     return ret;
+}
+
+const budget_object& dbs_budget::_get_budget(budget_id_type id) const
+{
+    try
+    {
+        return db_impl().get<budget_object, by_id>(id);
+    }
+    FC_CAPTURE_AND_RETHROW() // to write __FILE__, __LINE__ from here
 }
 
 asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& balance_in_scorum)

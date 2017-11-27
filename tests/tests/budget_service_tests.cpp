@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(genesis_budget_creation)
 
         BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
-        auto budget_ids = budget_service.get_budgets(SCORUM_ROOT_POST_PARENT);
-        BOOST_REQUIRE(budget_ids.size() == 1);
+        auto budgets = budget_service.get_budgets(SCORUM_ROOT_POST_PARENT);
+        BOOST_REQUIRE(budgets.size() == 1);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -96,7 +96,8 @@ BOOST_AUTO_TEST_CASE(second_owned_budget_creation)
 
         auto reqired_alice_balance = alice.balance.amount;
 
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
 
         reqired_alice_balance -= BUDGET_BALANCE_DEFAULT;
 
@@ -114,6 +115,25 @@ BOOST_AUTO_TEST_CASE(second_owned_budget_creation)
     FC_LOG_AND_RETHROW()
 }
 
+BOOST_AUTO_TEST_CASE(get_all_budgets)
+{
+    try
+    {
+        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+        time_point_sec deadline(time_point_sec::maximum());
+
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+
+        auto budgets = budget_service.get_budgets();
+        BOOST_REQUIRE(budgets.size() == 3);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
 BOOST_AUTO_TEST_CASE(get_budgets)
 {
     try
@@ -123,34 +143,21 @@ BOOST_AUTO_TEST_CASE(get_budgets)
 
         BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
 
-        auto budget_ids = budget_service.get_budgets("alice");
-        BOOST_REQUIRE(budget_ids.size() == 1);
-
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
-
-        budget_ids = budget_service.get_budgets("alice");
-        BOOST_REQUIRE(budget_ids.size() == 2);
-    }
-    FC_LOG_AND_RETHROW()
-}
-
-BOOST_AUTO_TEST_CASE(get_budget)
-{
-    try
-    {
-        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        auto budgets = budget_service.get_budgets("alice");
+        BOOST_REQUIRE(budgets.size() == 1);
 
         budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
 
-        auto budget_ids = budget_service.get_budgets("alice");
-        BOOST_REQUIRE(budget_ids.size() == 2);
+        budgets = budget_service.get_budgets("alice");
+        BOOST_REQUIRE(budgets.size() == 2);
 
-        budget_service.get_budget(budget_ids[0]);
-        budget_service.get_budget(budget_ids[1]);
+        for (const budget_object& budget : budgets)
+        {
+            BOOST_REQUIRE(budget.owner == account_name_type("alice"));
+        }
     }
     FC_LOG_AND_RETHROW()
 }
@@ -164,10 +171,12 @@ BOOST_AUTO_TEST_CASE(get_any_budget)
 
         BOOST_CHECK_THROW(budget_service.get_any_budget("alice"), fc::assert_exception);
 
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
 
-        budget_service.get_any_budget("alice");
+        BOOST_CHECK_NO_THROW(budget_service.get_any_budget("alice"));
     }
     FC_LOG_AND_RETHROW()
 }
@@ -188,8 +197,8 @@ BOOST_AUTO_TEST_CASE(close_budget)
 
         reqired_alice_balance -= BUDGET_BALANCE_DEFAULT;
 
-        auto budget_ids = budget_service.get_budgets("alice");
-        BOOST_REQUIRE(!budget_ids.empty());
+        auto budgets = budget_service.get_budgets("alice");
+        BOOST_REQUIRE(!budgets.empty());
 
         budget_service.close_budget(budget);
 
@@ -225,7 +234,31 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
 {
     try
     {
-        // TODO
+        db_plugin->debug_update(
+            [=](database&) {
+                asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+                time_point_sec deadline(time_point_sec::maximum());
+
+                budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+
+            },
+            default_skip);
+
+        generate_block();
+
+        {
+            const auto& budget = budget_service.get_any_budget(SCORUM_ROOT_POST_PARENT);
+
+            auto cash = budget_service.allocate_cash(budget);
+
+            BOOST_REQUIRE(cash.amount == BUDGET_PER_BLOCK_DEFAULT);
+        }
+
+        {
+            const auto& budget = budget_service.get_any_budget(SCORUM_ROOT_POST_PARENT);
+
+            BOOST_REQUIRE(budget.balance.amount == (BUDGET_BALANCE_DEFAULT - BUDGET_PER_BLOCK_DEFAULT));
+        }
     }
     FC_LOG_AND_RETHROW()
 }
