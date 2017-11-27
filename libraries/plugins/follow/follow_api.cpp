@@ -125,7 +125,7 @@ vector<feed_entry> follow_api_impl::get_feed_entries(string account, uint32_t en
         const auto& comment = db.get(itr->comment);
         feed_entry entry;
         entry.author = comment.author;
-        entry.permlink = to_string(comment.permlink);
+        entry.permlink = fc::to_string(comment.permlink);
         entry.entry_id = itr->account_feed_id;
         if (itr->first_reblogged_by != account_name_type())
         {
@@ -202,7 +202,7 @@ vector<blog_entry> follow_api_impl::get_blog_entries(string account, uint32_t en
         const auto& comment = db.get(itr->comment);
         blog_entry entry;
         entry.author = comment.author;
-        entry.permlink = to_string(comment.permlink);
+        entry.permlink = fc::to_string(comment.permlink);
         entry.blog = account;
         entry.reblog_on = itr->reblogged_on;
         entry.entry_id = itr->blog_feed_id;

@@ -62,8 +62,8 @@ struct db_schema
     std::string operation_type;
     std::vector<operation_schema_repr> custom_operation_types;
 };
-}
-}
+} // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::object_schema_repr, (space_type)(type))
 FC_REFLECT(scorum::chain::operation_schema_repr, (id)(type))
@@ -408,7 +408,7 @@ const account_object* database::find_account(const account_name_type& name) cons
     return find<account_object, by_name>(name);
 }
 
-const comment_object& database::get_comment(const account_name_type& author, const shared_string& permlink) const
+const comment_object& database::get_comment(const account_name_type& author, const fc::shared_string& permlink) const
 {
     try
     {
@@ -417,7 +417,7 @@ const comment_object& database::get_comment(const account_name_type& author, con
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
-const comment_object* database::find_comment(const account_name_type& author, const shared_string& permlink) const
+const comment_object* database::find_comment(const account_name_type& author, const fc::shared_string& permlink) const
 {
     return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
 }
@@ -631,7 +631,7 @@ bool database::_push_block(const signed_block& new_block)
                                 apply_block((*ritr)->data, skip);
                                 session.push();
                             }
-                            throw * except;
+                            throw *except;
                         }
                     }
                     return true;
@@ -717,7 +717,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-                                      )
+)
 {
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
@@ -1169,12 +1169,12 @@ void database::process_vesting_withdrawals()
         ++current;
 
         /**
-        *  Let T = total tokens in vesting fund
-        *  Let V = total vesting shares
-        *  Let v = total vesting shares being cashed out
-        *
-        *  The user may withdraw  vT / V tokens
-        */
+         *  Let T = total tokens in vesting fund
+         *  Let V = total vesting shares
+         *  Let v = total vesting shares being cashed out
+         *
+         *  The user may withdraw  vT / V tokens
+         */
         share_type to_withdraw;
         if (from_account.to_withdraw - from_account.withdrawn < from_account.vesting_withdraw_rate.amount)
             to_withdraw = std::min(from_account.vesting_shares.amount,
@@ -1323,7 +1323,7 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
                     auto reward = create_vesting(voter, asset(claim, SCORUM_SYMBOL), true);
 
                     push_virtual_operation(
-                        curation_reward_operation(voter.name, reward, c.author, to_string(c.permlink)));
+                        curation_reward_operation(voter.name, reward, c.author, fc::to_string(c.permlink)));
 
 #ifndef IS_LOW_MEM
                     modify(voter, [&](account_object& a) { a.curation_rewards += claim; });
@@ -1377,7 +1377,7 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
                     auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
                     auto vest_created = create_vesting(get_account(b.account), benefactor_tokens, true);
                     push_virtual_operation(comment_benefactor_reward_operation(
-                        b.account, comment.author, to_string(comment.permlink), vest_created));
+                        b.account, comment.author, fc::to_string(comment.permlink), vest_created));
                     total_beneficiary += benefactor_tokens;
                 }
 
@@ -1396,8 +1396,8 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
                                     asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
 
                 push_virtual_operation(
-                    author_reward_operation(comment.author, to_string(comment.permlink), scr_payout, vest_created));
-                push_virtual_operation(comment_reward_operation(comment.author, to_string(comment.permlink),
+                    author_reward_operation(comment.author, fc::to_string(comment.permlink), scr_payout, vest_created));
+                push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink),
                                                                 asset(claimed_reward, SCORUM_SYMBOL)));
 
 #ifndef IS_LOW_MEM
@@ -1410,9 +1410,9 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
 
         modify(comment, [&](comment_object& c) {
             /**
-            * A payout is only made for positive rshares, negative rshares hang around
-            * for the next time this post might get an upvote.
-            */
+             * A payout is only made for positive rshares, negative rshares hang around
+             * for the next time this post might get an upvote.
+             */
             if (c.net_rshares > 0)
                 c.net_rshares = 0;
             c.children_abs_rshares = 0;
@@ -1424,7 +1424,7 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
             c.last_payout = head_block_time();
         });
 
-        push_virtual_operation(comment_payout_update_operation(comment.author, to_string(comment.permlink)));
+        push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
 
         const auto& vote_idx = get_index<comment_vote_index>().indices().get<by_comment_voter>();
         auto vote_itr = vote_idx.lower_bound(comment.id);
@@ -2001,7 +2001,8 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check
+                    | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;
@@ -2383,7 +2384,6 @@ void database::update_global_dynamic_data(const signed_block& b)
                             w.signing_key = public_key_type();
                             push_virtual_operation(shutdown_witness_operation(w.owner));
                         }
-
                     });
                 }
             }
@@ -2885,5 +2885,5 @@ void database::retally_witness_votes()
         }
     }
 }
-}
-} // scorum::chain
+} // namespace chain
+} // namespace scorum

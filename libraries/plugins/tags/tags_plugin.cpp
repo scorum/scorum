@@ -120,7 +120,7 @@ struct operation_visitor
         {
             try
             {
-                meta = fc::json::from_string(to_string(c.json_metadata)).as<comment_metadata>();
+                meta = fc::json::from_string(fc::to_string(c.json_metadata)).as<comment_metadata>();
             }
             catch (const fc::exception& e)
             {

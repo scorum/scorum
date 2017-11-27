@@ -28,6 +28,8 @@
 #include <typeindex>
 #include <typeinfo>
 
+#include <chainbase/chain_object.hpp>
+
 #ifndef CHAINBASE_NUM_RW_LOCKS
 #define CHAINBASE_NUM_RW_LOCKS 10
 #endif
@@ -39,84 +41,12 @@ namespace chainbase {
 
 namespace bip = boost::interprocess;
 namespace bfs = boost::filesystem;
-using std::unique_ptr;
-using std::vector;
 
 template <typename T> using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
-
-typedef bip::basic_string<char, std::char_traits<char>, allocator<char>> shared_string;
-
-template <typename T> using shared_vector = std::vector<T, allocator<T>>;
-
-struct strcmp_less
-{
-    bool operator()(const shared_string& a, const shared_string& b) const
-    {
-        return less(a.c_str(), b.c_str());
-    }
-
-    bool operator()(const shared_string& a, const std::string& b) const
-    {
-        return less(a.c_str(), b.c_str());
-    }
-
-    bool operator()(const std::string& a, const shared_string& b) const
-    {
-        return less(a.c_str(), b.c_str());
-    }
-
-private:
-    inline bool less(const char* a, const char* b) const
-    {
-        return std::strcmp(a, b) < 0;
-    }
-};
 
 typedef boost::interprocess::interprocess_sharable_mutex read_write_mutex;
 typedef boost::interprocess::sharable_lock<read_write_mutex> read_lock;
 typedef boost::unique_lock<read_write_mutex> write_lock;
-
-/**
- *  Object ID type that includes the type of the object it references
- */
-template <typename T> class oid
-{
-public:
-    oid(int64_t i = 0)
-        : _id(i)
-    {
-    }
-
-    oid& operator++()
-    {
-        ++_id;
-        return *this;
-    }
-
-    friend bool operator<(const oid& a, const oid& b)
-    {
-        return a._id < b._id;
-    }
-    friend bool operator>(const oid& a, const oid& b)
-    {
-        return a._id > b._id;
-    }
-    friend bool operator==(const oid& a, const oid& b)
-    {
-        return a._id == b._id;
-    }
-    friend bool operator!=(const oid& a, const oid& b)
-    {
-        return a._id != b._id;
-    }
-    int64_t _id = 0;
-};
-
-template <uint16_t TypeNumber, typename Derived> struct object
-{
-    typedef oid<Derived> id_type;
-    static const uint16_t type_id = TypeNumber;
-};
 
 /** this class is ment to be specified to enable lookup of index type by object type using
  * the SET_INDEX_TYPE macro.
@@ -707,7 +637,7 @@ public:
     {
     }
     virtual void set_revision(int64_t revision) = 0;
-    virtual unique_ptr<abstract_session> start_undo_session(bool enabled) = 0;
+    virtual std::unique_ptr<abstract_session> start_undo_session(bool enabled) = 0;
 
     virtual int64_t revision() const = 0;
     virtual void undo() const = 0;
@@ -745,9 +675,9 @@ public:
     {
     }
 
-    virtual unique_ptr<abstract_session> start_undo_session(bool enabled) override
+    virtual std::unique_ptr<abstract_session> start_undo_session(bool enabled) override
     {
-        return unique_ptr<abstract_session>(
+        return std::unique_ptr<abstract_session>(
             new session_impl<typename BaseIndex::session>(_base.start_undo_session(enabled)));
     }
 
@@ -878,7 +808,7 @@ public:
             , _revision(s._revision)
         {
         }
-        session(vector<std::unique_ptr<abstract_session>>&& s)
+        session(std::vector<std::unique_ptr<abstract_session>>&& s)
             : _index_sessions(std::move(s))
         {
             if (_index_sessions.size())
@@ -922,7 +852,7 @@ public:
         {
         }
 
-        vector<std::unique_ptr<abstract_session>> _index_sessions;
+        std::vector<std::unique_ptr<abstract_session>> _index_sessions;
         int64_t _revision = -1;
     };
 
@@ -1187,8 +1117,8 @@ public:
     }
 
 private:
-    unique_ptr<bip::managed_mapped_file> _segment;
-    unique_ptr<bip::managed_mapped_file> _meta;
+    std::unique_ptr<bip::managed_mapped_file> _segment;
+    std::unique_ptr<bip::managed_mapped_file> _meta;
     read_write_mutex_manager* _rw_manager = nullptr;
     bool _read_only = false;
     bip::file_lock _flock;
@@ -1196,12 +1126,12 @@ private:
     /**
      * This is a sparse list of known indicies kept to accelerate creation of undo sessions
      */
-    vector<abstract_index*> _index_list;
+    std::vector<abstract_index*> _index_list;
 
     /**
      * This is a full map (size 2^16) of all possible index designed for constant time lookup
      */
-    vector<unique_ptr<abstract_index>> _index_map;
+    std::vector<std::unique_ptr<abstract_index>> _index_map;
 
     bfs::path _data_dir;
 
@@ -1212,4 +1142,4 @@ private:
 
 template <typename Object, typename... Args>
 using shared_multi_index_container = boost::multi_index_container<Object, Args..., chainbase::allocator<Object>>;
-} // namepsace chainbase
+} // namespace chainbase

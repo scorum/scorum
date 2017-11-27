@@ -157,7 +157,7 @@ public:
     witness_schedule_api_obj get_witness_schedule() const;
     hardfork_version get_hardfork_version() const;
     scheduled_hardfork get_next_scheduled_hardfork() const;
-    reward_fund_api_obj get_reward_fund(string name) const;
+    reward_fund_api_obj get_reward_fund(const string& name) const;
 
     //////////
     // Keys //
@@ -169,7 +169,7 @@ public:
     // Accounts //
     //////////////
 
-    vector<extended_account> get_accounts(vector<string> names) const;
+    vector<extended_account> get_accounts(const vector<string>& names) const;
 
     /**
      *  @return all accounts that referr to the key or account id in their owner or active authorities.
