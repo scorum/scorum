@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fc/shared_string.hpp>
+
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
 
@@ -12,30 +14,6 @@ namespace scorum {
 namespace chain {
 
 using protocol::beneficiary_route_type;
-
-struct strcmp_less
-{
-    bool operator()(const shared_string& a, const shared_string& b) const
-    {
-        return less(a.c_str(), b.c_str());
-    }
-
-    bool operator()(const shared_string& a, const string& b) const
-    {
-        return less(a.c_str(), b.c_str());
-    }
-
-    bool operator()(const string& a, const shared_string& b) const
-    {
-        return less(a.c_str(), b.c_str());
-    }
-
-private:
-    inline bool less(const char* a, const char* b) const
-    {
-        return std::strcmp(a, b) < 0;
-    }
-};
 
 class comment_object : public object<comment_object_type, comment_object>
 {
@@ -57,15 +35,15 @@ public:
 
     id_type id;
 
-    shared_string category;
+    fc::shared_string category;
     account_name_type parent_author;
-    shared_string parent_permlink;
+    fc::shared_string parent_permlink;
     account_name_type author;
-    shared_string permlink;
+    fc::shared_string permlink;
 
-    shared_string title;
-    shared_string body;
-    shared_string json_metadata;
+    fc::shared_string title;
+    fc::shared_string body;
+    fc::shared_string json_metadata;
     time_point_sec last_update;
     time_point_sec created;
     time_point_sec active; ///< the last time this post was "touched" by voting or reply
@@ -135,6 +113,8 @@ public:
     time_point_sec last_update; ///< The time of the last update of the vote
     int8_t num_changes = 0;
 };
+
+// clang-format off
 
 struct by_comment_voter;
 struct by_voter_comment;
@@ -229,9 +209,9 @@ typedef multi_index_container<comment_object,
                                                                       account_name_type,
                                                                       &comment_object::author>,
                                                                member<comment_object,
-                                                                      shared_string,
+                                                                      fc::shared_string,
                                                                       &comment_object::permlink>>,
-                                                 composite_key_compare<std::less<account_name_type>, strcmp_less>>,
+                                                 composite_key_compare<std::less<account_name_type>, fc::strcmp_less>>,
                                   ordered_unique<tag<by_root>,
                                                  composite_key<comment_object,
                                                                member<comment_object,
@@ -246,13 +226,13 @@ typedef multi_index_container<comment_object,
                                                                       account_name_type,
                                                                       &comment_object::parent_author>,
                                                                member<comment_object,
-                                                                      shared_string,
+                                                                      fc::shared_string,
                                                                       &comment_object::parent_permlink>,
                                                                member<comment_object,
                                                                       comment_id_type,
                                                                       &comment_object::id>>,
                                                  composite_key_compare<std::less<account_name_type>,
-                                                                       strcmp_less,
+                                                                       fc::strcmp_less,
                                                                        std::less<comment_id_type>>>
 /// NON_CONSENSUS INDICIES - used by APIs
 #ifndef IS_LOW_MEM
@@ -289,8 +269,10 @@ typedef multi_index_container<comment_object,
                                   >,
                               allocator<comment_object>>
     comment_index;
-}
-} // scorum::chain
+
+// clang-format on
+} // namespace chain
+} // namespace scorum
 
 // clang-format off
 

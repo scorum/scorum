@@ -54,8 +54,8 @@ const budget_object& dbs_budget::get_any_budget(const account_name_type& owner) 
 }
 
 const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scorum,
-                                                       const share_type& per_block,
-                                                       const time_point_sec& deadline)
+                                                    const share_type& per_block,
+                                                    const time_point_sec& deadline)
 {
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
@@ -199,6 +199,5 @@ bool dbs_budget::_check_autoclose(const budget_object& budget)
         return false;
     }
 }
-
 }
 }

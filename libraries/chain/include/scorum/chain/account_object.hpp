@@ -1,5 +1,6 @@
 #pragma once
 #include <fc/fixed_string.hpp>
+#include <fc/shared_string.hpp>
 
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -33,7 +34,7 @@ public:
 
     account_name_type name;
     public_key_type memo_key;
-    shared_string json_metadata;
+    fc::shared_string json_metadata;
     account_name_type proxy;
 
     time_point_sec last_account_update;

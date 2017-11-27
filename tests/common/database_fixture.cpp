@@ -82,14 +82,14 @@ clean_database_fixture::clean_database_fixture()
 
         // ahplugin->plugin_startup();
         db_plugin->plugin_startup();
-        vest(SCORUM_INIT_DELEGATE_NAME, 10000);
+        vest(TEST_INIT_DELEGATE_NAME, 10000);
 
         // Fill up the rest of the required miners
         for (int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
         {
-            account_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
-            fund(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
-            witness_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
+            account_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
+            fund(TEST_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
+            witness_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
                            init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
         }
 
@@ -146,14 +146,14 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
     db.set_hardfork(SCORUM_NUM_HARDFORKS);
     generate_block();
 
-    vest(SCORUM_INIT_DELEGATE_NAME, 10000);
+    vest(TEST_INIT_DELEGATE_NAME, 10000);
 
     // Fill up the rest of the required miners
     for (int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
     {
-        account_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
-        fund(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
-        witness_create(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
+        account_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
+        fund(TEST_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
+        witness_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
                        init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
     }
 
@@ -286,7 +286,7 @@ database_fixture::account_create(const string& name, const public_key_type& key,
 {
     try
     {
-        return account_create(name, SCORUM_INIT_DELEGATE_NAME, init_account_priv_key,
+        return account_create(name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
                               std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
                                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
                                        share_type(100)),
@@ -331,7 +331,7 @@ void database_fixture::fund(const string& account_name, const share_type& amount
 {
     try
     {
-        transfer(SCORUM_INIT_DELEGATE_NAME, account_name, amount);
+        transfer(TEST_INIT_DELEGATE_NAME, account_name, amount);
     }
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }

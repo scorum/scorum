@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         signed_transaction trx;
         account_create_operation cop;
         cop.new_account_name = "alice";
-        cop.creator = SCORUM_INIT_DELEGATE_NAME;
+        cop.creator = TEST_INIT_DELEGATE_NAME;
         cop.owner = authority(1, init_account_pub_key, 1);
         cop.active = cop.owner;
         trx.operations.push_back(cop);
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
         signed_transaction trx;
         account_create_operation cop;
         cop.new_account_name = "alice";
-        cop.creator = SCORUM_INIT_DELEGATE_NAME;
+        cop.creator = TEST_INIT_DELEGATE_NAME;
         cop.owner = authority(1, init_account_pub_key, 1);
         cop.active = cop.owner;
         trx.operations.push_back(cop);
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
 
         trx = decltype(trx)();
         transfer_operation t;
-        t.from = SCORUM_INIT_DELEGATE_NAME;
+        t.from = TEST_INIT_DELEGATE_NAME;
         t.to = "alice";
         t.amount = asset(500, SCORUM_SYMBOL);
         trx.operations.push_back(t);
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(tapos)
 
         account_create_operation cop;
         cop.new_account_name = "alice";
-        cop.creator = SCORUM_INIT_DELEGATE_NAME;
+        cop.creator = TEST_INIT_DELEGATE_NAME;
         cop.owner = authority(1, init_account_pub_key, 1);
         cop.active = cop.owner;
         trx.operations.push_back(cop);
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(tapos)
         trx.clear();
 
         transfer_operation t;
-        t.from = SCORUM_INIT_DELEGATE_NAME;
+        t.from = TEST_INIT_DELEGATE_NAME;
         t.to = "alice";
         t.amount = asset(50, SCORUM_SYMBOL);
         trx.operations.push_back(t);
@@ -439,14 +439,14 @@ BOOST_FIXTURE_TEST_CASE(optional_tapos, clean_database_fixture)
 {
     try
     {
-        idump((db.get_account(SCORUM_INIT_DELEGATE_NAME)));
+        idump((db.get_account(TEST_INIT_DELEGATE_NAME)));
         ACTORS((alice)(bob));
 
         generate_block();
 
         BOOST_TEST_MESSAGE("Create transaction");
 
-        transfer(SCORUM_INIT_DELEGATE_NAME, "alice", 1000000);
+        transfer(TEST_INIT_DELEGATE_NAME, "alice", 1000000);
         transfer_operation op;
         op.from = "alice";
         op.to = "bob";
@@ -513,7 +513,7 @@ BOOST_FIXTURE_TEST_CASE(double_sign_check, clean_database_fixture)
         share_type amount = 1000;
 
         transfer_operation t;
-        t.from = SCORUM_INIT_DELEGATE_NAME;
+        t.from = TEST_INIT_DELEGATE_NAME;
         t.to = "bob";
         t.amount = asset(amount, SCORUM_SYMBOL);
         trx.operations.push_back(t);
@@ -524,7 +524,7 @@ BOOST_FIXTURE_TEST_CASE(double_sign_check, clean_database_fixture)
 
         trx.operations.clear();
         t.from = "bob";
-        t.to = SCORUM_INIT_DELEGATE_NAME;
+        t.to = TEST_INIT_DELEGATE_NAME;
         t.amount = asset(amount, SCORUM_SYMBOL);
         trx.operations.push_back(t);
         trx.validate();
@@ -568,9 +568,9 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
         transaction tx;
         signed_transaction ptx;
 
-        db.get_account(SCORUM_INIT_DELEGATE_NAME);
+        db.get_account(TEST_INIT_DELEGATE_NAME);
         // transfer from committee account to Sam account
-        transfer(SCORUM_INIT_DELEGATE_NAME, "sam", 100000);
+        transfer(TEST_INIT_DELEGATE_NAME, "sam", 100000);
 
         generate_block(skip_flags);
 

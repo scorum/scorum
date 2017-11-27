@@ -42,48 +42,34 @@
 #include <string>
 
 #include <fc/fixed_string.hpp>
+#include <fc/shared_string.hpp>
 
 using boost::multi_index_container;
 using namespace boost::multi_index;
 namespace bip = boost::interprocess;
 
-/* shared_string is a string type placeable in shared memory,
- *  * courtesy of Boost.Interprocess.
- *   */
-
-typedef bip::basic_string<char, std::char_traits<char>, bip::allocator<char, bip::managed_mapped_file::segment_manager>>
-    shared_string;
-
-typedef bip::allocator<shared_string, bip::managed_mapped_file::segment_manager> basic_string_allocator;
+typedef bip::allocator<fc::shared_string, bip::managed_mapped_file::segment_manager> basic_string_allocator;
 
 namespace fc {
-void to_variant(const shared_string& s, fc::variant& vo)
-{
-    vo = std::string(s.c_str());
-}
-void from_variant(const fc::variant& var, shared_string& vo)
-{
-    vo = var.as_string().c_str();
-}
 
 /*
 template<typename... T >
 void to_variant( const bip::deque< T... >& t, fc::variant& v ) {
-  std::vector<variant> vars(t.size());
-  for( size_t i = 0; i < t.size(); ++i ) {
-     vars[i] = t[i];
-  }
-  v = std::move(vars);
+std::vector<variant> vars(t.size());
+for( size_t i = 0; i < t.size(); ++i ) {
+ vars[i] = t[i];
+}
+v = std::move(vars);
 }
 
 template<typename T, typename... A>
 void from_variant( const fc::variant& v, bip::deque< T, A... >& d ) {
-  const variants& vars = v.get_array();
-  d.clear();
-  d.resize( vars.size() );
-  for( uint32_t i = 0; i < vars.size(); ++i ) {
-     from_variant( vars[i], d[i] );
-  }
+const variants& vars = v.get_array();
+d.clear();
+d.resize( vars.size() );
+for( uint32_t i = 0; i < vars.size(); ++i ) {
+ from_variant( vars[i], d[i] );
+}
 }
 */
 }
@@ -109,14 +95,14 @@ struct book
         c(*this);
     }
 
-    shared_string name;
-    shared_string author;
+    fc::shared_string name;
+    fc::shared_string author;
     int32_t pages;
     int32_t prize;
     scorum::chain::shared_authority auth;
-    bip::deque<shared_string, basic_string_allocator> deq;
+    bip::deque<fc::shared_string, basic_string_allocator> deq;
 
-    book(const shared_string::allocator_type& al)
+    book(const fc::shared_string::allocator_type& al)
         : name(al)
         , author(al)
         , pages(0)
@@ -129,8 +115,8 @@ struct book
 };
 
 typedef multi_index_container<book,
-                              indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, author)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, shared_string, name)>,
+                              indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, author)>,
+                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, name)>,
                                          ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
                               bip::allocator<book, bip::managed_mapped_file::segment_manager>>
     book_container;
@@ -164,7 +150,7 @@ int main(int argc, char** argv, char** envp)
         book b( book::allocator_type( seg.get_segment_manager() ) );
         b.name = "test name";
         b.author = "test author";
-        b.deq.push_back( shared_string( "hello world", basic_string_allocator( seg.get_segment_manager() )  ) );
+        b.deq.push_back( fc::shared_string( "hello world", basic_string_allocator( seg.get_segment_manager() )  ) );
         idump((b));
         */
         book_container* pbc = seg.find_or_construct<book_container>("book container")(

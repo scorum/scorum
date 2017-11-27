@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fc/shared_string.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
 
 #include <scorum/chain/dbs_base_impl.hpp>
@@ -30,7 +31,7 @@ public:
 
     virtual const account_object& get_account(const account_name_type& name) const = 0;
 
-    virtual const comment_object& get_comment(const account_name_type& author, const shared_string& permlink) const = 0;
+    virtual const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const = 0;
 
     virtual const comment_object& get_comment(const account_name_type& author, const string& permlink) const = 0;
 
@@ -53,6 +54,8 @@ public:
     virtual const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const = 0;
 
     virtual std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const string& id) = 0;
+
+    virtual fc::time_point_sec get_genesis_time() const = 0;
 
     // for TODO only:
     chainbase::database& _temporary_public_impl();

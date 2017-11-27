@@ -16,6 +16,7 @@
 #include <scorum/chain/dbservice.hpp>
 
 #include <fc/signals.hpp>
+#include <fc/shared_string.hpp>
 #include <fc/log/logger.hpp>
 
 #include <map>
@@ -24,12 +25,12 @@
 namespace scorum {
 namespace chain {
 
-using scorum::protocol::signed_transaction;
-using scorum::protocol::operation;
-using scorum::protocol::authority;
 using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
+using scorum::protocol::authority;
+using scorum::protocol::operation;
 using scorum::protocol::price;
+using scorum::protocol::signed_transaction;
 
 class database_impl;
 class custom_operation_interpreter;
@@ -109,6 +110,8 @@ public:
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
     void close();
 
+    time_point_sec get_genesis_time() const override;
+
     //////////////////// db_block.cpp ////////////////////
 
     /**
@@ -134,8 +137,8 @@ public:
     const account_object& get_account(const account_name_type& name) const;
     const account_object* find_account(const account_name_type& name) const;
 
-    const comment_object& get_comment(const account_name_type& author, const shared_string& permlink) const;
-    const comment_object* find_comment(const account_name_type& author, const shared_string& permlink) const;
+    const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
+    const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
     const comment_object& get_comment(const account_name_type& author, const string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const string& permlink) const;
@@ -428,7 +431,7 @@ protected:
     void init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates);
     void init_genesis_accounts(const std::vector<genesis_state_type::account_type>& accounts);
     void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
-    void init_genesis_global_property_object(uint64_t init_supply, fc::time_point_sec genesis_time);
+    void init_genesis_global_property_object(uint64_t init_supply);
 
 private:
     std::unique_ptr<database_impl> _my;
@@ -461,6 +464,8 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     flat_map<std::string, std::shared_ptr<custom_operation_interpreter>> _custom_operation_interpreters;
+
+    fc::time_point_sec _const_genesis_time; // should be const
 };
-}
-}
+} // namespace chain
+} // namespace scorum

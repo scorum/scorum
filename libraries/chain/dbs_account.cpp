@@ -80,7 +80,7 @@ const account_object& dbs_account::create_account_by_faucets(const account_name_
         acc.recovery_account = creator_name;
 
 #ifndef IS_LOW_MEM
-        from_string(acc.json_metadata, json_metadata);
+        fc::from_string(acc.json_metadata, json_metadata);
 #endif
     });
 
@@ -132,7 +132,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
         acc.received_vesting_shares = delegation;
 
 #ifndef IS_LOW_MEM
-        from_string(acc.json_metadata, json_metadata);
+        fc::from_string(acc.json_metadata, json_metadata);
 #endif
     });
 
@@ -187,7 +187,7 @@ void dbs_account::update_acount(const account_object& account,
 
 #ifndef IS_LOW_MEM
         if (json_metadata.size() > 0)
-            from_string(acc.json_metadata, json_metadata);
+            fc::from_string(acc.json_metadata, json_metadata);
 #endif
     });
 

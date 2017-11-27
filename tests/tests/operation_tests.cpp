@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
 
         private_key_type priv_key = generate_private_key("alice");
 
-        const account_object& init = db.get_account(SCORUM_INIT_DELEGATE_NAME);
+        const account_object& init = db.get_account(TEST_INIT_DELEGATE_NAME);
         asset init_starting_balance = init.balance;
 
         const auto& gpo = db.get_dynamic_global_properties();
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
 
         op.fee = asset(100, SCORUM_SYMBOL);
         op.new_account_name = "alice";
-        op.creator = SCORUM_INIT_DELEGATE_NAME;
+        op.creator = TEST_INIT_DELEGATE_NAME;
         op.owner = authority(1, priv_key.get_public_key(), 1);
         op.active = authority(2, priv_key.get_public_key(), 2);
         op.memo_key = priv_key.get_public_key();
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_TEST_MESSAGE("--- Test failure when creator cannot cover fee");
         tx.signatures.clear();
         tx.operations.clear();
-        op.fee = asset(db.get_account(SCORUM_INIT_DELEGATE_NAME).balance.amount + 1, SCORUM_SYMBOL);
+        op.fee = asset(db.get_account(TEST_INIT_DELEGATE_NAME).balance.amount + 1, SCORUM_SYMBOL);
         op.new_account_name = "bob";
         tx.operations.push_back(op);
         tx.sign(init_account_priv_key, db.get_chain_id());
@@ -459,8 +459,8 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         const comment_object& alice_comment = db.get_comment("alice", string("lorem"));
 
         BOOST_REQUIRE(alice_comment.author == op.author);
-        BOOST_REQUIRE(to_string(alice_comment.permlink) == op.permlink);
-        BOOST_REQUIRE(to_string(alice_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(alice_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(alice_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(alice_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(alice_comment.created == db.head_block_time());
         BOOST_REQUIRE(alice_comment.net_rshares.value == 0);
@@ -469,12 +469,12 @@ BOOST_AUTO_TEST_CASE(comment_apply)
                       == fc::time_point_sec(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)));
 
 #ifndef IS_LOW_MEM
-        BOOST_REQUIRE(to_string(alice_comment.title) == op.title);
-        BOOST_REQUIRE(to_string(alice_comment.body) == op.body);
+        BOOST_REQUIRE(fc::to_string(alice_comment.title) == op.title);
+        BOOST_REQUIRE(fc::to_string(alice_comment.body) == op.body);
 // BOOST_REQUIRE( alice_comment.json_metadata == op.json_metadata );
 #else
-        BOOST_REQUIRE(to_string(alice_comment.title) == "");
-        BOOST_REQUIRE(to_string(alice_comment.body) == "");
+        BOOST_REQUIRE(fc::to_string(alice_comment.title) == "");
+        BOOST_REQUIRE(fc::to_string(alice_comment.body) == "");
 // BOOST_REQUIRE( alice_comment.json_metadata == "" );
 #endif
 
@@ -504,9 +504,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         const comment_object& bob_comment = db.get_comment("bob", string("ipsum"));
 
         BOOST_REQUIRE(bob_comment.author == op.author);
-        BOOST_REQUIRE(to_string(bob_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(bob_comment.permlink) == op.permlink);
         BOOST_REQUIRE(bob_comment.parent_author == op.parent_author);
-        BOOST_REQUIRE(to_string(bob_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(bob_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(bob_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(bob_comment.created == db.head_block_time());
         BOOST_REQUIRE(bob_comment.net_rshares.value == 0);
@@ -531,9 +531,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         const comment_object& sam_comment = db.get_comment("sam", string("dolor"));
 
         BOOST_REQUIRE(sam_comment.author == op.author);
-        BOOST_REQUIRE(to_string(sam_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(sam_comment.permlink) == op.permlink);
         BOOST_REQUIRE(sam_comment.parent_author == op.parent_author);
-        BOOST_REQUIRE(to_string(sam_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(sam_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(sam_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(sam_comment.created == db.head_block_time());
         BOOST_REQUIRE(sam_comment.net_rshares.value == 0);
@@ -570,9 +570,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         db.push_transaction(tx, 0);
 
         BOOST_REQUIRE(mod_sam_comment.author == op.author);
-        BOOST_REQUIRE(to_string(mod_sam_comment.permlink) == op.permlink);
+        BOOST_REQUIRE(fc::to_string(mod_sam_comment.permlink) == op.permlink);
         BOOST_REQUIRE(mod_sam_comment.parent_author == op.parent_author);
-        BOOST_REQUIRE(to_string(mod_sam_comment.parent_permlink) == op.parent_permlink);
+        BOOST_REQUIRE(fc::to_string(mod_sam_comment.parent_permlink) == op.parent_permlink);
         BOOST_REQUIRE(mod_sam_comment.last_update == db.head_block_time());
         BOOST_REQUIRE(mod_sam_comment.created == created);
         BOOST_REQUIRE(mod_sam_comment.cashout_time == mod_sam_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
@@ -1693,7 +1693,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
 
         BOOST_REQUIRE(alice_witness.owner == "alice");
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
-        BOOST_REQUIRE(to_string(alice_witness.url) == op.url);
+        BOOST_REQUIRE(fc::to_string(alice_witness.url) == op.url);
         BOOST_REQUIRE(alice_witness.signing_key == op.block_signing_key);
         BOOST_REQUIRE(alice_witness.props.account_creation_fee == op.props.account_creation_fee);
         BOOST_REQUIRE(alice_witness.props.maximum_block_size == op.props.maximum_block_size);
@@ -1719,7 +1719,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
 
         BOOST_REQUIRE(alice_witness.owner == "alice");
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
-        BOOST_REQUIRE(to_string(alice_witness.url) == "bar.foo");
+        BOOST_REQUIRE(fc::to_string(alice_witness.url) == "bar.foo");
         BOOST_REQUIRE(alice_witness.signing_key == op.block_signing_key);
         BOOST_REQUIRE(alice_witness.props.account_creation_fee == op.props.account_creation_fee);
         BOOST_REQUIRE(alice_witness.props.maximum_block_size == op.props.maximum_block_size);
@@ -2122,7 +2122,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
         BOOST_TEST_MESSAGE("--- Test votes are transferred when a proxy is added");
         account_witness_vote_operation vote;
         vote.account = "bob";
-        vote.witness = SCORUM_INIT_DELEGATE_NAME;
+        vote.witness = TEST_INIT_DELEGATE_NAME;
         tx.operations.clear();
         tx.signatures.clear();
         tx.operations.push_back(vote);
@@ -2139,7 +2139,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(SCORUM_INIT_DELEGATE_NAME).votes
+        BOOST_REQUIRE(db.get_witness(TEST_INIT_DELEGATE_NAME).votes
                       == (alice.vesting_shares + bob.vesting_shares).amount);
         validate_database();
 
@@ -2152,7 +2152,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(SCORUM_INIT_DELEGATE_NAME).votes == bob.vesting_shares.amount);
+        BOOST_REQUIRE(db.get_witness(TEST_INIT_DELEGATE_NAME).votes == bob.vesting_shares.amount);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -4689,7 +4689,7 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
         for (size_t i = 0; i < 8; i++)
         {
             b.beneficiaries.push_back(beneficiary_route_type(
-                account_name_type(SCORUM_INIT_DELEGATE_NAME + fc::to_string(i)), SCORUM_1_PERCENT));
+                account_name_type(TEST_INIT_DELEGATE_NAME + fc::to_string(i)), SCORUM_1_PERCENT));
         }
 
         op.author = "alice";

@@ -536,9 +536,11 @@ void witness_plugin::schedule_production_loop()
 
 block_production_condition::block_production_condition_enum witness_plugin::block_production_loop()
 {
-    if (fc::time_point::now() < fc::time_point(SCORUM_GENESIS_TIME))
+    const fc::time_point genesis_time = database().get_genesis_time();
+
+    if (fc::time_point::now() < genesis_time)
     {
-        wlog("waiting until genesis time to produce block: ${t}", ("t", SCORUM_GENESIS_TIME));
+        wlog("waiting until genesis time to produce block: ${t}", ("t", genesis_time));
         schedule_production_loop();
         return block_production_condition::wait_for_genesis;
     }

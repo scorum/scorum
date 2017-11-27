@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fc/shared_buffer.hpp>
+
 #include <scorum/follow/follow_plugin.hpp>
 
 #include <scorum/chain/scorum_object_types.hpp>
@@ -9,7 +11,6 @@ namespace follow {
 
 using namespace std;
 using namespace scorum::chain;
-using chainbase::shared_vector;
 
 #ifndef FOLLOW_SPACE_ID
 #define FOLLOW_SPACE_ID 8
@@ -66,7 +67,7 @@ public:
     id_type id;
 
     account_name_type account;
-    shared_vector<account_name_type> reblogged_by;
+    fc::shared_vector<account_name_type> reblogged_by;
     account_name_type first_reblogged_by;
     time_point_sec first_reblogged_on;
     comment_id_type comment;

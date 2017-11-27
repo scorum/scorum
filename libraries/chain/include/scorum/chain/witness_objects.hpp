@@ -49,7 +49,7 @@ public:
     /** the account that has authority over this witness */
     account_name_type owner;
     time_point_sec created;
-    shared_string url;
+    fc::shared_string url;
     uint32_t total_missed = 0;
     uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
@@ -107,7 +107,7 @@ public:
     version running_version;
 
     hardfork_version hardfork_version_vote;
-    time_point_sec hardfork_time_vote = SCORUM_GENESIS_TIME;
+    time_point_sec hardfork_time_vote;
 };
 
 class witness_vote_object : public object<witness_vote_object_type, witness_vote_object>

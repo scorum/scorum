@@ -1,10 +1,11 @@
 #pragma once
+
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/mem_fun.hpp>
 
-//#include <graphene/db2/database.hpp>
+#include <fc/shared_string.hpp>
 #include <chainbase/chainbase.hpp>
 
 #include <scorum/protocol/types.hpp>
@@ -18,27 +19,15 @@ using namespace boost::multi_index;
 
 using boost::multi_index_container;
 
+using chainbase::allocator;
 using chainbase::object;
 using chainbase::oid;
-using chainbase::allocator;
 
-using scorum::protocol::block_id_type;
-using scorum::protocol::transaction_id_type;
-using scorum::protocol::chain_id_type;
 using scorum::protocol::account_name_type;
+using scorum::protocol::block_id_type;
+using scorum::protocol::chain_id_type;
 using scorum::protocol::share_type;
-
-typedef bip::basic_string<char, std::char_traits<char>, allocator<char>> shared_string;
-inline std::string to_string(const shared_string& str)
-{
-    return std::string(str.begin(), str.end());
-}
-inline void from_string(shared_string& out, const string& in)
-{
-    out.assign(in.begin(), in.end());
-}
-
-typedef bip::vector<char, allocator<char>> buffer_type;
+using scorum::protocol::transaction_id_type;
 
 struct by_id;
 
@@ -126,75 +115,11 @@ typedef oid<budget_object> budget_id_type;
 enum bandwidth_type
 {
     post, ///< Rate limiting posting reward eligibility over time
-    forum, ///< Rate limiting for all forum related actins
+    forum, ///< Rate limiting for all forum related actions
     market ///< Rate limiting for all other actions
 };
-}
-} // scorum::chain
-
-namespace fc {
-class variant;
-inline void to_variant(const scorum::chain::shared_string& s, variant& var)
-{
-    var = fc::string(scorum::chain::to_string(s));
-}
-
-inline void from_variant(const variant& var, scorum::chain::shared_string& s)
-{
-    auto str = var.as_string();
-    s.assign(str.begin(), str.end());
-}
-
-template <typename T> void to_variant(const chainbase::oid<T>& var, variant& vo)
-{
-    vo = var._id;
-}
-template <typename T> void from_variant(const variant& vo, chainbase::oid<T>& var)
-{
-    var._id = vo.as_int64();
-}
-
-namespace raw {
-template <typename Stream, typename T> inline void pack(Stream& s, const chainbase::oid<T>& id)
-{
-    s.write((const char*)&id._id, sizeof(id._id));
-}
-template <typename Stream, typename T> inline void unpack(Stream& s, chainbase::oid<T>& id)
-{
-    s.read((char*)&id._id, sizeof(id._id));
-}
-}
-
-namespace raw {
-namespace bip = chainbase::bip;
-using chainbase::allocator;
-
-template <typename T> inline void pack(scorum::chain::buffer_type& raw, const T& v)
-{
-    auto size = pack_size(v);
-    raw.resize(size);
-    datastream<char*> ds(raw.data(), size);
-    pack(ds, v);
-}
-
-template <typename T> inline void unpack(const scorum::chain::buffer_type& raw, T& v)
-{
-    datastream<const char*> ds(raw.data(), raw.size());
-    unpack(ds, v);
-}
-
-template <typename T> inline T unpack(const scorum::chain::buffer_type& raw)
-{
-    T v;
-    datastream<const char*> ds(raw.data(), raw.size());
-    unpack(ds, v);
-    return v;
-}
-}
-}
-
-namespace fc {
-}
+} // namespace chain
+} // namespace scorum
 
 // clang-format off
 
@@ -225,9 +150,6 @@ FC_REFLECT_ENUM( scorum::chain::object_type,
                  (vesting_delegation_expiration_object_type)
                  (budget_object_type)
                  )
-
-FC_REFLECT_TYPENAME( scorum::chain::shared_string )
-FC_REFLECT_TYPENAME( scorum::chain::buffer_type )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )
 

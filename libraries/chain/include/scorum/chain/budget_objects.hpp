@@ -33,7 +33,7 @@ public:
     id_type id;
 
     account_name_type owner;
-    shared_string content_permlink;
+    fc::shared_string content_permlink;
 
     time_point_sec created = time_point_sec::min();
 
