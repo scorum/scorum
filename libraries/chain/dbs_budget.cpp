@@ -120,53 +120,49 @@ void dbs_budget::close_budget(const budget_object& budget)
 {
     FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT, "not allowed for genesis budget");
 
-    const budget_object& actual_budget = _get_budget(budget.id);
-
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
-    const auto& owner = account_service.get_account(actual_budget.owner);
+    const auto& owner = account_service.get_account(budget.owner);
 
     // withdraw all balance rest asset back to owner
     //
-    asset repayable = actual_budget.balance;
+    asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
         // check if input budget state != budget in DB
-        repayable = _decrease_balance(actual_budget, repayable);
+        repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
     }
 
     // delete budget
     //
-    db_impl().remove(actual_budget);
+    db_impl().remove(budget);
 }
 
 asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time_point_sec>& now)
 {
     asset ret(0, SCORUM_SYMBOL);
 
-    const budget_object& actual_budget = _get_budget(budget.id);
-
     dbs_budget::_time t = _get_now(now);
     auto head_block_num = db_impl().head_block_num();
 
-    if (actual_budget.last_allocated_block >= head_block_num)
+    if (budget.last_allocated_block >= head_block_num)
     {
         return ret; // empty (allocation waits new block)
     }
 
-    FC_ASSERT(actual_budget.per_block > 0, "invalid per_block");
-    ret = _decrease_balance(actual_budget, asset(actual_budget.per_block, SCORUM_SYMBOL));
+    FC_ASSERT(budget.per_block > 0, "invalid per_block");
+    ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
 
-    if (actual_budget.deadline <= t)
+    if (budget.deadline <= t)
     {
-        close_budget(actual_budget);
+        close_budget(budget);
     }
     else
     {
-        if (!_check_autoclose(actual_budget))
+        if (!_check_autoclose(budget))
         {
-            db_impl().modify(actual_budget, [&](budget_object& b) { b.last_allocated_block = head_block_num; });
+            db_impl().modify(budget, [&](budget_object& b) { b.last_allocated_block = head_block_num; });
         }
     }
     return ret;

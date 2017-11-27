@@ -263,6 +263,23 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
     FC_LOG_AND_RETHROW()
 }
 
+BOOST_AUTO_TEST_CASE(is_const_ref_to_same_memory)
+{
+    try
+    {
+        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+        time_point_sec deadline(time_point_sec::maximum());
+
+        const auto& budget
+            = budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+
+        db.modify(budget, [&](budget_object& b) { b.balance.amount -= 1; });
+
+        BOOST_REQUIRE(budget.balance.amount == (BUDGET_BALANCE_DEFAULT - 1));
+    }
+    FC_LOG_AND_RETHROW()
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif

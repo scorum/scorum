@@ -278,11 +278,9 @@ void dbs_account::drop_challenged(const account_object& account, const optional<
 {
     _time t = _get_now(now);
 
-    const account_object& actual_account = get_account(account.id);
-
-    if (actual_account.active_challenged)
+    if (account.active_challenged)
     {
-        db_impl().modify(actual_account, [&](account_object& a) {
+        db_impl().modify(account, [&](account_object& a) {
             a.active_challenged = false;
             a.last_active_proved = t;
         });
@@ -346,13 +344,10 @@ void dbs_account::add_post(const account_object& author_account,
 {
     _time t = _get_now(now);
 
-    const account_object& actual_author_account = get_account(author_account.id);
-
     db_impl().modify(author_account, [&](account_object& a) {
         if (!parent_author_name.valid())
         {
             a.last_root_post = t;
-            a.post_bandwidth = uint32_t(actual_author_account.post_bandwidth);
         }
         a.last_post = t;
         a.post_count++;
@@ -477,19 +472,17 @@ void dbs_account::change_recovery_account(const account_object& account_to_recov
 
 void dbs_account::update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account)
 {
-    const account_object& actual_account = get_account(account.id);
-
     /// remove all current votes
     std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
-    delta[0] = -actual_account.vesting_shares.amount;
+    delta[0] = -account.vesting_shares.amount;
     for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
-        delta[i + 1] = -actual_account.proxied_vsf_votes[i];
+        delta[i + 1] = -account.proxied_vsf_votes[i];
 
-    adjust_proxied_witness_votes(actual_account, delta);
+    adjust_proxied_witness_votes(account, delta);
 
     if (proxy_account.valid())
     {
-        flat_set<account_id_type> proxy_chain({ actual_account.id, (*proxy_account).id });
+        flat_set<account_id_type> proxy_chain({ account.id, (*proxy_account).id });
         proxy_chain.reserve(SCORUM_MAX_PROXY_RECURSION_DEPTH + 1);
 
         /// check for proxy loops and fail to update the proxy if it would create a loop
@@ -503,18 +496,18 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
         }
 
         /// clear all individual vote records
-        clear_witness_votes(actual_account);
+        clear_witness_votes(account);
 
-        db_impl().modify(actual_account, [&](account_object& a) { a.proxy = (*proxy_account).name; });
+        db_impl().modify(account, [&](account_object& a) { a.proxy = (*proxy_account).name; });
 
         /// add all new votes
         for (int i = 0; i <= SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
             delta[i] = -delta[i];
-        adjust_proxied_witness_votes(actual_account, delta);
+        adjust_proxied_witness_votes(account, delta);
     }
     else
     { /// we are clearing the proxy which means we simply update the account
-        db_impl().modify(actual_account,
+        db_impl().modify(account,
                          [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
     }
 }
@@ -591,15 +584,13 @@ void dbs_account::adjust_proxied_witness_votes(
 {
     dbs_witness& witness_service = db().obtain_service<dbs_witness>();
 
-    const account_object& actual_account = get_account(account.id);
-
-    if (actual_account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
+    if (account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
     {
         /// nested proxies are not supported, vote will not propagate
         if (depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH)
             return;
 
-        const auto& proxy = get_account(actual_account.proxy);
+        const auto& proxy = get_account(account.proxy);
 
         db_impl().modify(proxy, [&](account_object& a) {
             for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth - 1; i >= 0; --i)
@@ -615,7 +606,7 @@ void dbs_account::adjust_proxied_witness_votes(
         share_type total_delta = 0;
         for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth; i >= 0; --i)
             total_delta += delta[i];
-        witness_service.adjust_witness_votes(actual_account, total_delta);
+        witness_service.adjust_witness_votes(account, total_delta);
     }
 }
 
@@ -623,15 +614,13 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, sh
 {
     dbs_witness& witness_service = db().obtain_service<dbs_witness>();
 
-    const account_object& actual_account = get_account(account.id);
-
-    if (actual_account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
+    if (account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
     {
         /// nested proxies are not supported, vote will not propagate
         if (depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH)
             return;
 
-        const auto& proxy = get_account(actual_account.proxy);
+        const auto& proxy = get_account(account.proxy);
 
         db_impl().modify(proxy, [&](account_object& a) { a.proxied_vsf_votes[depth] += delta; });
 
@@ -639,7 +628,7 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, sh
     }
     else
     {
-        witness_service.adjust_witness_votes(actual_account, delta);
+        witness_service.adjust_witness_votes(account, delta);
     }
 }
 const account_object& dbs_account::get_account(const account_id_type& account_id) const
