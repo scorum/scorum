@@ -49,7 +49,7 @@ public:
     /** the account that has authority over this witness */
     account_name_type owner;
     time_point_sec created;
-    shared_string url;
+    fc::shared_string url;
     uint32_t total_missed = 0;
     uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;

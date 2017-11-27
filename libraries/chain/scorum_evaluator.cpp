@@ -53,7 +53,7 @@ inline void validate_permlink_0_1(const string& permlink)
 
 struct strcmp_equal
 {
-    bool operator()(const shared_string& a, const string& b)
+    bool operator()(const fc::shared_string& a, const string& b)
     {
         return a.size() == b.size() || std::strcmp(a.c_str(), b.c_str()) == 0;
     }
@@ -73,7 +73,7 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
     if (wit_itr != by_witness_name_idx.end())
     {
         _db._temporary_public_impl().modify(*wit_itr, [&](witness_object& w) {
-            from_string(w.url, o.url);
+            fc::from_string(w.url, o.url);
             w.signing_key = o.block_signing_key;
             w.props = o.props;
         });
@@ -82,7 +82,7 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
     {
         _db._temporary_public_impl().create<witness_object>([&](witness_object& w) {
             w.owner = o.owner;
-            from_string(w.url, o.url);
+            fc::from_string(w.url, o.url);
             w.signing_key = o.block_signing_key;
             w.created = _db.head_block_time();
             w.props = o.props;
@@ -395,7 +395,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 validate_permlink_0_1(o.permlink);
 
                 com.author = o.author;
-                from_string(com.permlink, o.permlink);
+                fc::from_string(com.permlink, o.permlink);
                 com.last_update = _db.head_block_time();
                 com.created = com.last_update;
                 com.active = com.last_update;
@@ -406,8 +406,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 if (o.parent_author == SCORUM_ROOT_POST_PARENT)
                 {
                     com.parent_author = "";
-                    from_string(com.parent_permlink, o.parent_permlink);
-                    from_string(com.category, o.parent_permlink);
+                    fc::from_string(com.parent_permlink, o.parent_permlink);
+                    fc::from_string(com.category, o.parent_permlink);
                     com.root_comment = com.id;
                 }
                 else
@@ -422,13 +422,13 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.cashout_time = com.created + SCORUM_CASHOUT_WINDOW_SECONDS;
 
 #ifndef IS_LOW_MEM
-                from_string(com.title, o.title);
+                fc::from_string(com.title, o.title);
                 if (o.body.size() < 1024 * 1024 * 128)
                 {
-                    from_string(com.body, o.body);
+                    fc::from_string(com.body, o.body);
                 }
                 if (fc::is_utf8(o.json_metadata))
-                    from_string(com.json_metadata, o.json_metadata);
+                    fc::from_string(com.json_metadata, o.json_metadata);
                 else
                     wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
 #endif
@@ -474,11 +474,11 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
 #ifndef IS_LOW_MEM
                 if (o.title.size())
-                    from_string(com.title, o.title);
+                    fc::from_string(com.title, o.title);
                 if (o.json_metadata.size())
                 {
                     if (fc::is_utf8(o.json_metadata))
-                        from_string(com.json_metadata, o.json_metadata);
+                        fc::from_string(com.json_metadata, o.json_metadata);
                     else
                         wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
                 }
@@ -491,26 +491,26 @@ void comment_evaluator::do_apply(const comment_operation& o)
                         auto patch = dmp.patch_fromText(utf8_to_wstring(o.body));
                         if (patch.size())
                         {
-                            auto result = dmp.patch_apply(patch, utf8_to_wstring(to_string(com.body)));
+                            auto result = dmp.patch_apply(patch, utf8_to_wstring(fc::to_string(com.body)));
                             auto patched_body = wstring_to_utf8(result.first);
                             if (!fc::is_utf8(patched_body))
                             {
                                 idump(("invalid utf8")(patched_body));
-                                from_string(com.body, fc::prune_invalid_utf8(patched_body));
+                                fc::from_string(com.body, fc::prune_invalid_utf8(patched_body));
                             }
                             else
                             {
-                                from_string(com.body, patched_body);
+                                fc::from_string(com.body, patched_body);
                             }
                         }
                         else
                         { // replace
-                            from_string(com.body, o.body);
+                            fc::from_string(com.body, o.body);
                         }
                     }
                     catch (...)
                     {
-                        from_string(com.body, o.body);
+                        fc::from_string(com.body, o.body);
                     }
                 }
 #endif
@@ -1045,7 +1045,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
              *  Since W(R_0) = 0, c.total_vote_weight is also bounded above by B and will always fit in a 64 bit
              *integer.
              *
-            **/
+             **/
             _db._temporary_public_impl().create<comment_vote_object>([&](comment_vote_object& cv) {
                 cv.voter = voter.id;
                 cv.comment = comment.id;
@@ -1407,5 +1407,5 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         }
     }
 }
-}
-} // scorum::chain
+} // namespace chain
+} // namespace scorum

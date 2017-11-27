@@ -1,7 +1,7 @@
 #pragma once
 
+#include <fc/shared_string.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
-
 #include <scorum/chain/dbs_base_impl.hpp>
 
 namespace chainbase {
@@ -29,7 +29,8 @@ public:
 
     virtual const account_object& get_account(const account_name_type& name) const = 0;
 
-    virtual const comment_object& get_comment(const account_name_type& author, const shared_string& permlink) const = 0;
+    virtual const comment_object& get_comment(const account_name_type& author,
+                                              const fc::shared_string& permlink) const = 0;
 
     virtual const comment_object& get_comment(const account_name_type& author, const string& permlink) const = 0;
 
@@ -61,9 +62,9 @@ public:
     virtual void adjust_proxied_witness_votes(const account_object& a, share_type delta, int depth = 0) = 0;
 
     /** clears all vote records for a particular account but does not update the
-    * witness vote totals.  Vote totals should be updated first via a call to
-    * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
-    */
+     * witness vote totals.  Vote totals should be updated first via a call to
+     * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
+     */
     virtual void clear_witness_votes(const account_object& a) = 0;
 
     /** this updates the vote of a single witness as a result of a vote being added or removed*/
@@ -80,5 +81,5 @@ public:
     // for TODO only:
     chainbase::database& _temporary_public_impl();
 };
-}
-}
+} // namespace chain
+} // namespace scorum
