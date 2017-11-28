@@ -91,7 +91,6 @@ public:
 
 private:
 
-    const budget_object& _get_budget(budget_id_type id) const;
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
 };

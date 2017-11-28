@@ -168,15 +168,6 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
     return ret;
 }
 
-const budget_object& dbs_budget::_get_budget(budget_id_type id) const
-{
-    try
-    {
-        return db_impl().get<budget_object, by_id>(id);
-    }
-    FC_CAPTURE_AND_RETHROW() // to write __FILE__, __LINE__ from here
-}
-
 asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& balance_in_scorum)
 {
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
