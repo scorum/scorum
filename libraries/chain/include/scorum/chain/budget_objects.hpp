@@ -36,13 +36,12 @@ public:
     fc::shared_string content_permlink;
 
     time_point_sec created = time_point_sec::min();
+    time_point_sec deadline = time_point_sec::maximum();
 
     asset balance = asset(0, SCORUM_SYMBOL);
     share_type per_block = 0;
 
     uint32_t last_allocated_block = 0;
-
-    time_point_sec deadline = time_point_sec::maximum();
 };
 
 struct by_owner_name;
@@ -63,7 +62,7 @@ typedef multi_index_container<budget_object,
 }
 
 FC_REFLECT( scorum::chain::budget_object,
-             (id)(owner)(content_permlink)(created)(balance)(per_block)(last_allocated_block)(deadline)
+             (id)(owner)(content_permlink)(created)(deadline)(balance)(per_block)(last_allocated_block)
 )
 
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::budget_object, scorum::chain::budget_index )
