@@ -69,10 +69,14 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scor
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
     FC_ASSERT(per_block > 0, "invalid per_block");
 
+    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+
     auto head_block_num = db_impl().head_block_num();
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
         budget.owner = SCORUM_ROOT_POST_PARENT;
+        budget.created = props.time;
+        budget.deadline = deadline;
         budget.balance = balance_in_scorum;
         budget.per_block = per_block;
         // allocate cash only after next block generation
@@ -105,8 +109,13 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     auto head_block_num = db_impl().head_block_num();
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
-        budget.created = props.time;
         budget.owner = owner.name;
+        if (content_permlink.valid())
+        {
+            fc::from_string(budget.content_permlink, *content_permlink);
+        }
+        budget.created = props.time;
+        budget.deadline = deadline;
         budget.balance = balance_in_scorum;
         budget.per_block = per_block;
         // allocate cash only after next block generation
