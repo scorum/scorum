@@ -2,7 +2,10 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 #include <vector>
+#include <set>
 #include <functional>
+
+#include <scorum/chain/budget_objects.hpp>
 
 namespace scorum {
 namespace chain {
@@ -26,6 +29,20 @@ public:
      */
     budget_refs_type get_budgets() const;
 
+    /** Count of all budgets registered for owner.
+     *
+     * @param owner the name of the owner
+     * @returns a list of budget objects
+     */
+    uint64_t get_budget_count() const;
+
+    /** Lists all budget owners.
+     *
+     *  @warning limit must be less or equal than SCORUM_LIMIT_BUDGETS_LIST_SIZE.
+     *
+     */
+    std::set<string> lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const;
+
     /** Lists all budgets registered for owner.
      *
      * @param owner the name of the owner
@@ -33,16 +50,24 @@ public:
      */
     budget_refs_type get_budgets(const account_name_type& owner) const;
 
-    /** To get the single budget by owner.
-     *  Use if you know exactly that there is only one budget for owner
-     *  to simplify calling (you don' need in budgets list enumeration)
+    /** Count of all budgets registered for owner.
      *
      * @param owner the name of the owner
-     * @returns a budget object
+     * @returns a list of budget objects
      */
-    const budget_object& get_any_budget(const account_name_type& owner) const;
+    uint64_t get_budget_count(const account_name_type& owner) const;
+
+    /** Lists all fund budgets
+     */
+    budget_refs_type get_fund_budgets() const;
+
+    /** Count of all fund budgets
+     */
+    uint64_t get_fund_budget_count() const;
 
     /** Create fund budget (non any owner).
+     *
+     * @warning count of fund budgets must be less or equal than SCORUM_LIMIT_BUDGETS_PER_OWNER.
      *
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
      * @param per_block the amount for asset distribution

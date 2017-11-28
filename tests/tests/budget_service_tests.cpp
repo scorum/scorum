@@ -9,6 +9,8 @@
 
 #include "../common/database_fixture.hpp"
 
+#include <limits>
+
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -43,11 +45,12 @@ public:
 
     const int BUDGET_PER_BLOCK_DEFAULT = 50;
     const int BUDGET_BALANCE_DEFAULT = 200;
+    const int ITEMS_PAGE_SIZE = 100;
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_service, dbs_budget_fixture)
 
-BOOST_AUTO_TEST_CASE(genesis_budget_creation)
+BOOST_AUTO_TEST_CASE(fund_budget_creation)
 {
     try
     {
@@ -58,7 +61,7 @@ BOOST_AUTO_TEST_CASE(genesis_budget_creation)
 
         BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
-        auto budgets = budget_service.get_budgets(SCORUM_ROOT_POST_PARENT);
+        auto budgets = budget_service.get_fund_budgets();
         BOOST_REQUIRE(budgets.size() == 1);
     }
     FC_LOG_AND_RETHROW()
@@ -115,6 +118,34 @@ BOOST_AUTO_TEST_CASE(second_owned_budget_creation)
     FC_LOG_AND_RETHROW()
 }
 
+BOOST_AUTO_TEST_CASE(second_fund_budget_creation)
+{
+    try
+    {
+        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+        time_point_sec deadline(time_point_sec::maximum());
+
+        {
+            const auto& budget = budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+
+            BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
+
+            auto budgets = budget_service.get_fund_budgets();
+            BOOST_REQUIRE(budgets.size() == 1);
+        }
+
+        {
+            const auto& budget = budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+
+            BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
+
+            auto budgets = budget_service.get_fund_budgets();
+            BOOST_REQUIRE(budgets.size() == 2);
+        }
+    }
+    FC_LOG_AND_RETHROW()
+}
+
 BOOST_AUTO_TEST_CASE(get_all_budgets)
 {
     try
@@ -130,6 +161,67 @@ BOOST_AUTO_TEST_CASE(get_all_budgets)
 
         auto budgets = budget_service.get_budgets();
         BOOST_REQUIRE(budgets.size() == 3);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(get_all_budget_count)
+{
+    try
+    {
+        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+        time_point_sec deadline(time_point_sec::maximum());
+
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+
+        BOOST_REQUIRE(budget_service.get_budget_count() == 3);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(lookup_budget_owners)
+{
+    try
+    {
+        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+        time_point_sec deadline(time_point_sec::maximum());
+
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+
+        BOOST_REQUIRE(budget_service.get_budget_count() == 4);
+
+        BOOST_CHECK_THROW(budget_service.lookup_budget_owners("alice", std::numeric_limits<uint32_t>::max()),
+                          fc::assert_exception);
+
+        {
+            auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, ITEMS_PAGE_SIZE);
+            BOOST_REQUIRE(owners.size() == 3);
+        }
+
+        {
+            auto owners = budget_service.lookup_budget_owners("alice", ITEMS_PAGE_SIZE);
+            BOOST_REQUIRE(owners.size() == 2);
+        }
+
+        {
+            auto owners = budget_service.lookup_budget_owners("bob", ITEMS_PAGE_SIZE);
+            BOOST_REQUIRE(owners.size() == 1);
+        }
+
+        {
+            auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, 2);
+            BOOST_REQUIRE(owners.size() == 2);
+        }
     }
     FC_LOG_AND_RETHROW()
 }
@@ -162,21 +254,41 @@ BOOST_AUTO_TEST_CASE(get_budgets)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(get_any_budget)
+BOOST_AUTO_TEST_CASE(get_budget_count)
 {
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
         time_point_sec deadline(time_point_sec::maximum());
 
-        BOOST_CHECK_THROW(budget_service.get_any_budget("alice"), fc::assert_exception);
+        BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
         BOOST_CHECK_NO_THROW(
             budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
         BOOST_CHECK_NO_THROW(
             budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(
+            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
 
-        BOOST_CHECK_NO_THROW(budget_service.get_any_budget("alice"));
+        BOOST_REQUIRE(budget_service.get_budget_count("alice") == 2);
+        BOOST_REQUIRE(budget_service.get_budget_count("bob") == 1);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(get_fund_budget_count)
+{
+    try
+    {
+        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+        time_point_sec deadline(time_point_sec::maximum());
+
+        BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
+
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+
+        BOOST_REQUIRE(budget_service.get_fund_budget_count() == 2);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -188,7 +300,7 @@ BOOST_AUTO_TEST_CASE(close_budget)
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
         time_point_sec deadline(time_point_sec::maximum());
 
-        BOOST_CHECK_THROW(budget_service.get_any_budget("alice"), fc::assert_exception);
+        BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
         auto reqired_alice_balance = alice.balance.amount;
 
@@ -247,7 +359,11 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
         generate_block();
 
         {
-            const auto& budget = budget_service.get_any_budget(SCORUM_ROOT_POST_PARENT);
+            auto budgets = budget_service.get_fund_budgets();
+
+            BOOST_REQUIRE(!budgets.empty());
+
+            const budget_object& budget = budgets[0];
 
             auto cash = budget_service.allocate_cash(budget);
 
@@ -255,7 +371,11 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
         }
 
         {
-            const auto& budget = budget_service.get_any_budget(SCORUM_ROOT_POST_PARENT);
+            auto budgets = budget_service.get_fund_budgets();
+
+            BOOST_REQUIRE(!budgets.empty());
+
+            const budget_object& budget = budgets[0];
 
             BOOST_REQUIRE(budget.balance.amount == (BUDGET_BALANCE_DEFAULT - BUDGET_PER_BLOCK_DEFAULT));
         }

@@ -2321,6 +2321,8 @@ annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id)
 annotated_signed_transaction
 wallet_api::follow(const std::string& follower, const std::string& following, set<string> what, bool broadcast)
 {
+    FC_ASSERT(!is_locked());
+
     std::string following_str = following;
 
     auto follwer_account = get_account(follower);
@@ -2478,6 +2480,80 @@ wallet_api::get_outbox(const std::string& account, fc::time_point newest, uint32
         result.back().message = try_decrypt_message(item);
     }
     return result;
+}
+
+vector<budget_api_obj> wallet_api::list_my_budgets()
+{
+    FC_ASSERT(!is_locked());
+
+    try
+    {
+        my->use_remote_account_by_key_api();
+    }
+    catch (fc::exception& e)
+    {
+        elog("Connected node needs to enable account_by_key_api");
+        return {};
+    }
+
+    vector<public_key_type> pub_keys;
+    pub_keys.reserve(my->_keys.size());
+
+    for (const auto& item : my->_keys)
+        pub_keys.push_back(item.first);
+
+    auto refs = (*my->_remote_account_by_key_api)->get_key_references(pub_keys);
+    set<string> names;
+    for (const auto& item : refs)
+        for (const auto& name : item)
+            names.insert(name);
+
+    return my->_remote_db->get_budgets(names);
+}
+
+set<string> wallet_api::list_budget_owners(const string& lowerbound, uint32_t limit)
+{
+    return my->_remote_db->lookup_budget_owners(lowerbound, limit);
+}
+
+vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
+{
+    vector<budget_api_obj> result;
+
+    result = my->_remote_db->get_budgets({ account_name });
+
+    return result;
+}
+
+annotated_signed_transaction wallet_api::create_budget(
+    const std::string&, const std::string&, const asset&, const asset&, const time_point_sec, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    custom_operation op;
+
+    // TODO
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::close_budget(const chain::budget_id_type, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    custom_operation op;
+
+    // TODO
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 }
 } // scorum::wallet

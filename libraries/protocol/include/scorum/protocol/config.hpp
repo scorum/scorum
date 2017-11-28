@@ -191,6 +191,11 @@
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           ""
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT                (account_name_type())
+
+#define SCORUM_LIMIT_BUDGETS_PER_OWNER          1000
+#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          1000
+#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      1000
+
 ///@}
 
 // clang-format on

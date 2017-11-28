@@ -3,7 +3,6 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/account_object.hpp>
 
-#include <scorum/chain/budget_objects.hpp>
 #include <scorum/chain/database.hpp>
 
 #include <tuple>
@@ -23,7 +22,7 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 
     auto idx = db_impl().get_index<budget_index>().indicies();
     auto it = idx.cbegin();
-    auto it_end = idx.cend();
+    const auto it_end = idx.cend();
     FC_ASSERT(it != it_end, "non any budget");
     while (it != it_end)
     {
@@ -34,13 +33,34 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
     return ret;
 }
 
+uint64_t dbs_budget::get_budget_count() const
+{
+    return db_impl().get_index<budget_index>().indicies().size();
+}
+
+std::set<string> dbs_budget::lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const
+{
+    FC_ASSERT(limit <= SCORUM_LIMIT_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
+              ("1", SCORUM_LIMIT_BUDGETS_LIST_SIZE));
+    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
+    set<string> result;
+
+    for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
+         limit-- && itr != budgets_by_owner_name.end(); ++itr)
+    {
+        result.insert(itr->owner);
+    }
+
+    return result;
+}
+
 dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& owner) const
 {
     budget_refs_type ret;
 
     auto it_pair = db_impl().get_index<budget_index>().indicies().get<by_owner_name>().equal_range(owner);
     auto it = it_pair.first;
-    auto it_end = it_pair.second;
+    const auto it_end = it_pair.second;
     FC_ASSERT(it != it_end, "budget not found");
     while (it != it_end)
     {
@@ -51,14 +71,19 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& ow
     return ret;
 }
 
-const budget_object& dbs_budget::get_any_budget(const account_name_type& owner) const
+uint64_t dbs_budget::get_budget_count(const account_name_type& owner) const
 {
-    auto it_pair = db_impl().get_index<budget_index>().indicies().get<by_owner_name>().equal_range(owner);
-    auto it_begin = it_pair.first;
-    auto it_end = it_pair.second;
-    FC_ASSERT(it_begin != it_end, "budget not found");
+    return db_impl().get_index<budget_index>().indicies().get<by_owner_name>().count(owner);
+}
 
-    return *it_begin;
+dbs_budget::budget_refs_type dbs_budget::get_fund_budgets() const
+{
+    return get_budgets(SCORUM_ROOT_POST_PARENT);
+}
+
+uint64_t dbs_budget::get_fund_budget_count() const
+{
+    return get_budget_count(SCORUM_ROOT_POST_PARENT);
 }
 
 const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scorum,
@@ -68,6 +93,8 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scor
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
     FC_ASSERT(per_block > 0, "invalid per_block");
+    FC_ASSERT(get_fund_budget_count() <= SCORUM_LIMIT_BUDGETS_PER_OWNER, "can't created more then ${1} fund budgets",
+              ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
@@ -97,6 +124,8 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
     FC_ASSERT(per_block > 0, "invalid per_block");
+    FC_ASSERT(get_budget_count(owner.name) <= SCORUM_LIMIT_BUDGETS_PER_OWNER,
+              "can't created more then ${1} budgets per owner", ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 

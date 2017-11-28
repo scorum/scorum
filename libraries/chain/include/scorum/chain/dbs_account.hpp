@@ -2,11 +2,10 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 
+#include <scorum/chain/account_object.hpp>
+
 namespace scorum {
 namespace chain {
-
-class account_object;
-class account_authority_object;
 
 // DB operations with account_*** objects
 //

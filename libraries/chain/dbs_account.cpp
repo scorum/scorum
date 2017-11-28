@@ -1,8 +1,6 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/database.hpp>
 
-#include <scorum/chain/account_object.hpp>
-
 #include <scorum/chain/dbs_witness.hpp>
 
 namespace scorum {
