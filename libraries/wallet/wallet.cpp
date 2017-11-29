@@ -2530,6 +2530,8 @@ annotated_signed_transaction wallet_api::create_budget(
 {
     FC_ASSERT(!is_locked());
 
+    FC_ASSERT(false, "not implemented");
+
     custom_operation op;
 
     // TODO
@@ -2544,6 +2546,8 @@ annotated_signed_transaction wallet_api::create_budget(
 annotated_signed_transaction wallet_api::close_budget(const chain::budget_id_type, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
+
+    FC_ASSERT(false, "not implemented");
 
     custom_operation op;
 
