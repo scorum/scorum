@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(check_initial_timestamp)
 
 BOOST_AUTO_TEST_CASE(check_initial_supply)
 {
-    std::string genesis_str = "{\"initial_supply\": 1000000}";
+    std::string genesis_str = "{\"init_supply\": 1000000}";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
