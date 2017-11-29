@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(check_initial_supply)
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
-    BOOST_CHECK(genesis_state.init_supply == 1000);
+    BOOST_CHECK(genesis_state.init_supply == 1000000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

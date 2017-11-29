@@ -2,6 +2,7 @@
 
 #include <fc/shared_string.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
+
 #include <scorum/chain/dbs_base_impl.hpp>
 
 namespace chainbase {
@@ -21,7 +22,8 @@ protected:
 public:
     virtual ~dbservice();
 
-    // TODO: move most of the methods in dbs specific services
+    // TODO: These methods have copied from database public methods.
+    //       Most of these methods will be moved to dbs specific services
 
     virtual bool is_producing() const = 0;
 
@@ -29,8 +31,7 @@ public:
 
     virtual const account_object& get_account(const account_name_type& name) const = 0;
 
-    virtual const comment_object& get_comment(const account_name_type& author,
-                                              const fc::shared_string& permlink) const = 0;
+    virtual const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const = 0;
 
     virtual const comment_object& get_comment(const account_name_type& author, const string& permlink) const = 0;
 
@@ -50,29 +51,7 @@ public:
 
     virtual time_point_sec head_block_time() const = 0;
 
-    virtual asset create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance = false) = 0;
-
-    /** this updates the votes for witnesses as a result of account voting proxy changing */
-    virtual void adjust_proxied_witness_votes(const account_object& a,
-                                              const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,
-                                              int depth = 0)
-        = 0;
-
-    /** this updates the votes for all witnesses as a result of account VESTS changing */
-    virtual void adjust_proxied_witness_votes(const account_object& a, share_type delta, int depth = 0) = 0;
-
-    /** clears all vote records for a particular account but does not update the
-     * witness vote totals.  Vote totals should be updated first via a call to
-     * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
-     */
-    virtual void clear_witness_votes(const account_object& a) = 0;
-
-    /** this updates the vote of a single witness as a result of a vote being added or removed*/
-    virtual void adjust_witness_vote(const witness_object& obj, share_type delta) = 0;
-
     virtual const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const = 0;
-
-    virtual void adjust_reward_balance(const account_object& a, const asset& delta) = 0;
 
     virtual std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const string& id) = 0;
 
@@ -81,5 +60,5 @@ public:
     // for TODO only:
     chainbase::database& _temporary_public_impl();
 };
-} // namespace chain
-} // namespace scorum
+}
+}

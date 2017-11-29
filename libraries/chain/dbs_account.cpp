@@ -3,6 +3,8 @@
 
 #include <scorum/chain/account_object.hpp>
 
+#include <scorum/chain/dbs_witness.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -52,19 +54,19 @@ void dbs_account::check_account_existence(const account_authority_map& names,
     }
 }
 
-void dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
-                                            const account_name_type& creator_name,
-                                            const public_key_type& memo_key,
-                                            const string& json_metadata,
-                                            const authority& owner,
-                                            const authority& active,
-                                            const authority& posting,
-                                            const asset& fee)
+const account_object& dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
+                                                             const account_name_type& creator_name,
+                                                             const public_key_type& memo_key,
+                                                             const string& json_metadata,
+                                                             const authority& owner,
+                                                             const authority& active,
+                                                             const authority& posting,
+                                                             const asset& fee)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
     const auto& props = db_impl().get_dynamic_global_properties();
-    const auto& creator = db_impl().get_account(creator_name);
+    const auto& creator = get_account(creator_name);
 
     db_impl().modify(creator, [&](account_object& c) { c.balance -= fee; });
 
@@ -91,25 +93,27 @@ void dbs_account::create_account_by_faucets(const account_name_type& new_account
     });
 
     if (fee.amount > 0)
-        db_impl().create_vesting(new_account, fee);
+        create_vesting(new_account, fee);
+
+    return new_account;
 }
 
-void dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
-                                                 const account_name_type& creator_name,
-                                                 const public_key_type& memo_key,
-                                                 const string& json_metadata,
-                                                 const authority& owner,
-                                                 const authority& active,
-                                                 const authority& posting,
-                                                 const asset& fee,
-                                                 const asset& delegation,
-                                                 const optional<time_point_sec>& now)
+const account_object& dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
+                                                                  const account_name_type& creator_name,
+                                                                  const public_key_type& memo_key,
+                                                                  const string& json_metadata,
+                                                                  const authority& owner,
+                                                                  const authority& active,
+                                                                  const authority& posting,
+                                                                  const asset& fee,
+                                                                  const asset& delegation,
+                                                                  const optional<time_point_sec>& now)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(delegation.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
 
     const auto& props = db_impl().get_dynamic_global_properties();
-    const auto& creator = db_impl().get_account(creator_name);
+    const auto& creator = get_account(creator_name);
 
     db_impl().modify(creator, [&](account_object& c) {
         c.balance -= fee;
@@ -153,7 +157,9 @@ void dbs_account::create_account_with_delegation(const account_name_type& new_ac
     }
 
     if (fee.amount > 0)
-        db_impl().create_vesting(new_account, fee);
+        create_vesting(new_account, fee);
+
+    return new_account;
 }
 
 void dbs_account::update_acount(const account_object& account,
@@ -304,7 +310,7 @@ void dbs_account::update_withdraw(const account_object& account,
                                   const share_type& to_withdrawn,
                                   const optional<share_type>& withdrawn)
 {
-    db_impl()._temporary_public_impl().modify(account, [&](account_object& a) {
+    db_impl().modify(account, [&](account_object& a) {
         a.vesting_withdraw_rate = vesting;
         a.next_vesting_withdrawal = next_vesting_withdrawal;
         a.to_withdraw = to_withdrawn;
@@ -342,7 +348,6 @@ void dbs_account::add_post(const account_object& author_account,
         if (!parent_author_name.valid())
         {
             a.last_root_post = t;
-            a.post_bandwidth = uint32_t(author_account.post_bandwidth);
         }
         a.last_post = t;
         a.post_count++;
@@ -473,7 +478,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
         delta[i + 1] = -account.proxied_vsf_votes[i];
 
-    db_impl().adjust_proxied_witness_votes(account, delta);
+    adjust_proxied_witness_votes(account, delta);
 
     if (proxy_account.valid())
     {
@@ -491,14 +496,14 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
         }
 
         /// clear all individual vote records
-        db_impl().clear_witness_votes(account);
+        clear_witness_votes(account);
 
         db_impl().modify(account, [&](account_object& a) { a.proxy = (*proxy_account).name; });
 
         /// add all new votes
         for (int i = 0; i <= SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
             delta[i] = -delta[i];
-        db_impl().adjust_proxied_witness_votes(account, delta);
+        adjust_proxied_witness_votes(account, delta);
     }
     else
     { /// we are clearing the proxy which means we simply update the account
@@ -507,18 +512,128 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-time_point_sec dbs_account::_get_now(const optional<time_point_sec>& now)
+asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance)
 {
-    time_point_sec ret;
-    if (now.valid())
+    try
     {
-        ret = (*now);
+        const auto& cprops = db_impl().get_dynamic_global_properties();
+
+        /**
+         *  The ratio of total_vesting_shares / total_vesting_fund_scorum should not
+         *  change as the result of the user adding funds
+         *
+         *  V / C  = (V+Vn) / (C+Cn)
+         *
+         *  Simplifies to Vn = (V * Cn ) / C
+         *
+         *  If Cn equals o.amount, then we must solve for Vn to know how many new vesting shares
+         *  the user should receive.
+         *
+         *  128 bit math is requred due to multiplying of 64 bit numbers. This is done in asset and price.
+         */
+        asset new_vesting
+            = scorum * (to_reward_balance ? cprops.get_reward_vesting_share_price() : cprops.get_vesting_share_price());
+
+        db_impl().modify(to_account, [&](account_object& to) {
+            if (to_reward_balance)
+            {
+                to.reward_vesting_balance += new_vesting;
+                to.reward_vesting_scorum += scorum;
+            }
+            else
+                to.vesting_shares += new_vesting;
+        });
+
+        db_impl().modify(cprops, [&](dynamic_global_property_object& props) {
+            if (to_reward_balance)
+            {
+                props.pending_rewarded_vesting_shares += new_vesting;
+                props.pending_rewarded_vesting_scorum += scorum;
+            }
+            else
+            {
+                props.total_vesting_fund_scorum += scorum;
+                props.total_vesting_shares += new_vesting;
+            }
+        });
+
+        if (!to_reward_balance)
+            adjust_proxied_witness_votes(to_account, new_vesting.amount);
+
+        return new_vesting;
+    }
+    FC_CAPTURE_AND_RETHROW((to_account.name)(scorum))
+}
+
+void dbs_account::clear_witness_votes(const account_object& account)
+{
+    const auto& vidx = db_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
+    auto itr = vidx.lower_bound(boost::make_tuple(account.id, witness_id_type()));
+    while (itr != vidx.end() && itr->account == account.id)
+    {
+        const auto& current = *itr;
+        ++itr;
+        db_impl().remove(current);
+    }
+
+    db_impl().modify(account, [&](account_object& acc) { acc.witnesses_voted_for = 0; });
+}
+
+void dbs_account::adjust_proxied_witness_votes(
+    const account_object& account, const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta, int depth)
+{
+    dbs_witness& witness_service = db().obtain_service<dbs_witness>();
+
+    if (account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
+    {
+        /// nested proxies are not supported, vote will not propagate
+        if (depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH)
+            return;
+
+        const auto& proxy = get_account(account.proxy);
+
+        db_impl().modify(proxy, [&](account_object& a) {
+            for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth - 1; i >= 0; --i)
+            {
+                a.proxied_vsf_votes[i + depth] += delta[i];
+            }
+        });
+
+        adjust_proxied_witness_votes(proxy, delta, depth + 1);
     }
     else
     {
-        ret = db_impl().head_block_time();
+        share_type total_delta = 0;
+        for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth; i >= 0; --i)
+            total_delta += delta[i];
+        witness_service.adjust_witness_votes(account, total_delta);
     }
-    return ret;
+}
+
+void dbs_account::adjust_proxied_witness_votes(const account_object& account, share_type delta, int depth)
+{
+    dbs_witness& witness_service = db().obtain_service<dbs_witness>();
+
+    if (account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
+    {
+        /// nested proxies are not supported, vote will not propagate
+        if (depth >= SCORUM_MAX_PROXY_RECURSION_DEPTH)
+            return;
+
+        const auto& proxy = get_account(account.proxy);
+
+        db_impl().modify(proxy, [&](account_object& a) { a.proxied_vsf_votes[depth] += delta; });
+
+        adjust_proxied_witness_votes(proxy, delta, depth + 1);
+    }
+    else
+    {
+        witness_service.adjust_witness_votes(account, delta);
+    }
+}
+const account_object& dbs_account::get_account(const account_id_type& account_id) const
+{
+    return db_impl().get<account_object, by_id>(account_id);
 }
 }
 }
