@@ -10,6 +10,18 @@ dbs_reward::dbs_reward(database& db)
 {
 }
 
+const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
+{
+    FC_ASSERT(db_impl().find<reward_pool_object>() == nullptr, "recreation of reward_pool_object is not allowed");
+
+    return db_impl().create<reward_pool_object>([&](reward_pool_object& rp) {
+        // clang-format off
+        rp.balance = initial_supply;
+        rp.current_per_block_reward = asset(rp.balance.amount / (SCORUM_BLOCKS_PER_DAY * (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS + 1)));
+        // clang-format on
+    });
+}
+
 const asset& dbs_reward::increase_pool_ballance(reward_pool_object& pool, const asset& delta)
 {
     db_impl().modify(pool, [&](reward_pool_object& pool) {

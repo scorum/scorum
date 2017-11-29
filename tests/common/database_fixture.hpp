@@ -2,6 +2,7 @@
 
 #include <scorum/app/application.hpp>
 #include <scorum/chain/database.hpp>
+#include <scorum/chain/genesis_state.hpp>
 #include <fc/io/json.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -231,6 +232,6 @@ struct live_database_fixture : public database_fixture
 namespace test {
 bool _push_block(database& db, const signed_block& b, uint32_t skip_flags = 0);
 void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip_flags = 0);
-}
-}
-}
+} // namespace test
+} // namespace chain
+} // namespace scorum

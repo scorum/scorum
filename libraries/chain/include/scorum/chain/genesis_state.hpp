@@ -4,6 +4,7 @@
 #include <string>
 
 #include <scorum/protocol/types.hpp>
+#include <scorum/protocol/asset.hpp>
 
 #include <fc/reflect/reflect.hpp>
 
@@ -19,8 +20,8 @@ struct genesis_state_type
         std::string name;
         std::string recovery_account;
         sp::public_key_type public_key;
-        uint64_t scr_amount;
-        uint64_t sp_amount;
+        sp::share_type scr_amount;
+        sp::share_type sp_amount;
     };
 
     struct witness_type
@@ -34,12 +35,13 @@ struct genesis_state_type
     {
     }
 
-    genesis_state_type(uint64_t supply)
+    genesis_state_type(const sp::share_type& supply)
         : init_supply(supply)
     {
     }
 
-    uint64_t init_supply;
+    sp::share_type init_supply;
+    sp::asset init_rewards_supply;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;

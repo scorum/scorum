@@ -17,6 +17,8 @@ protected:
     explicit dbs_reward(database& db);
 
 public:
+    const reward_pool_object& create_pool(const asset& initial_supply);
+
     // return actual balance after increasing
     const asset& increase_pool_ballance(reward_pool_object& pool, const asset& delta);
 

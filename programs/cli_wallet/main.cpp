@@ -41,6 +41,7 @@
 #include <scorum/app/api.hpp>
 #include <scorum/protocol/protocol.hpp>
 #include <scorum/wallet/wallet.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>

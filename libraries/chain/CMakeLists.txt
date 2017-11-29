@@ -35,7 +35,7 @@ add_library( scorum_chain
              shared_authority.cpp
              block_log.cpp
 
-             genesis_state.cpp
+             genesis.cpp
 
              util/reward.cpp
 
