@@ -94,7 +94,7 @@ public:
     /** Close budget.
      *  Delete the budget, cash back from budget to owner account.
      *
-     * @warning It is not allowed for genesis budget.
+     * @warning It is not allowed for fund budget.
      *
      * @param budget the budget to close
      */
@@ -116,6 +116,10 @@ private:
             share_type balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
+    bool _is_fund_budget(const budget_object&) const;
+    void _close_budget(const budget_object&);
+    void _close_owned_budget(const budget_object&);
+    void _close_fund_budget(const budget_object&);
 };
 }
 }

@@ -161,25 +161,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 
 void dbs_budget::close_budget(const budget_object& budget)
 {
-    FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT, "not allowed for genesis budget");
-
-    dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    const auto& owner = account_service.get_account(budget.owner);
-
-    // withdraw all balance rest asset back to owner
-    //
-    asset repayable = budget.balance;
-    if (repayable.amount > 0)
-    {
-        // check if input budget state != budget in DB
-        repayable = _decrease_balance(budget, repayable);
-        account_service.increase_balance(owner, repayable);
-    }
-
-    // delete budget
-    //
-    db_impl().remove(budget);
+    _close_owned_budget(budget);
 }
 
 asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time_point_sec>& now)
@@ -199,7 +181,13 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
 
     if (budget.deadline <= t)
     {
-        close_budget(budget);
+        if (_is_fund_budget(budget))
+        {
+            // cash back from budget to requesting beneficiary
+            // to save from burning (no owner for fund budget)
+            ret.amount += budget.balance.amount;
+        }
+        _close_budget(budget);
     }
     else
     {
@@ -268,13 +256,62 @@ bool dbs_budget::_check_autoclose(const budget_object& budget)
 {
     if (budget.balance.amount <= 0)
     {
-        close_budget(budget);
+        _close_budget(budget);
         return true;
     }
     else
     {
         return false;
     }
+}
+
+bool dbs_budget::_is_fund_budget(const budget_object& budget) const
+{
+    return budget.owner == SCORUM_ROOT_POST_PARENT;
+}
+
+void dbs_budget::_close_budget(const budget_object& budget)
+{
+    if (_is_fund_budget(budget))
+    {
+        _close_fund_budget(budget);
+    }
+    else
+    {
+        _close_owned_budget(budget);
+    }
+}
+
+void dbs_budget::_close_owned_budget(const budget_object& budget)
+{
+    FC_ASSERT(!_is_fund_budget(budget), "not allowed for fund budget");
+
+    dbs_account& account_service = db().obtain_service<dbs_account>();
+
+    const auto& owner = account_service.get_account(budget.owner);
+
+    // withdraw all balance rest asset back to owner
+    //
+    asset repayable = budget.balance;
+    if (repayable.amount > 0)
+    {
+        // check if input budget state != budget in DB
+        repayable = _decrease_balance(budget, repayable);
+        account_service.increase_balance(owner, repayable);
+    }
+
+    // delete budget
+    //
+    db_impl().remove(budget);
+}
+
+void dbs_budget::_close_fund_budget(const budget_object& budget)
+{
+    FC_ASSERT(_is_fund_budget(budget), "not allowed for ordinary budget");
+
+    // delete budget
+    //
+    db_impl().remove(budget);
 }
 }
 }
