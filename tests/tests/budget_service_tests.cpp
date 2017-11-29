@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
 
             auto cash = budget_service.allocate_cash(budget);
 
-            BOOST_REQUIRE(cash.amount > 0);
+            BOOST_REQUIRE(cash.amount == BUDGET_PER_BLOCK_DEFAULT);
         }
 
         {
