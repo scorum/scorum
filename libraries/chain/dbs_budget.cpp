@@ -86,6 +86,11 @@ uint64_t dbs_budget::get_fund_budget_count() const
     return get_budget_count(SCORUM_ROOT_POST_PARENT);
 }
 
+const budget_object& dbs_budget::get_budget(budget_id_type id) const
+{
+    return db_impl().get<budget_object>(id);
+}
+
 const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scorum, const time_point_sec& deadline)
 {
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");

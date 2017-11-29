@@ -65,6 +65,10 @@ public:
      */
     uint64_t get_fund_budget_count() const;
 
+    /** Get budget by id
+     */
+    const budget_object& get_budget(budget_id_type id) const;
+
     /** Create fund budget (non any owner).
      *
      * @warning count of fund budgets must be less or equal than SCORUM_LIMIT_BUDGETS_PER_OWNER.

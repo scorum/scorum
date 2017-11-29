@@ -974,23 +974,20 @@ public:
      *
      *  @param account_owner the owner account
      *  @param content_permlink the budget target identity (post or other)
-     *  @param budget
-     *  @param spend_per_block the amount for asset distribution
-     *                  (the distribution is allowed one time per block)
+     *  @param balance
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
     annotated_signed_transaction create_budget(const std::string& account_owner,
                                                 const std::string& content_permlink,
-                                                const asset& budget,
-                                                const asset& spend_per_block,
+                                                const asset& balance,
                                                 const time_point_sec deadline,
                                                 const bool broadcast);
 
     /**
      *  Close the budget. The budget rest is returned to the owner's account
      */
-    annotated_signed_transaction close_budget(const chain::budget_id_type id,
+    annotated_signed_transaction close_budget(const int64_t id,
                                               const bool broadcast);
 
 public:

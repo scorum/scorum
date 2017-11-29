@@ -30,6 +30,8 @@ typedef fc::static_variant<vote_operation, comment_operation,
     custom_binary_operation, decline_voting_rights_operation, claim_reward_balance_operation,
     delegate_vesting_shares_operation, account_create_with_delegation_operation,
 
+    create_budget_operation, close_budget_operation,
+
     /// virtual operations
     author_reward_operation, curation_reward_operation, comment_reward_operation, fill_vesting_withdraw_operation,
     shutdown_witness_operation, hardfork_operation, comment_payout_update_operation,

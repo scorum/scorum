@@ -1316,7 +1316,7 @@ pair<public_key_type, string> wallet_api::get_private_key_from_password(const st
  * wallet.
  */
 annotated_signed_transaction wallet_api::create_account_with_keys(const std::string& creator,
-                                                                  const std::string& new_account_name,
+                                                                  const std::string& newname,
                                                                   const std::string& json_meta,
                                                                   const public_key_type& owner,
                                                                   const public_key_type& active,
@@ -1329,7 +1329,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
         FC_ASSERT(!is_locked());
         account_create_operation op;
         op.creator = creator;
-        op.new_account_name = new_account_name;
+        op.new_account_name = newname;
         op.owner = authority(1, owner, 1);
         op.active = authority(1, active, 1);
         op.posting = authority(1, posting, 1);
@@ -1344,7 +1344,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
 
         return my->sign_transaction(tx, broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((creator)(new_account_name)(json_meta)(owner)(active)(memo)(broadcast))
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(memo)(broadcast))
 }
 
 /**
@@ -2525,16 +2525,20 @@ vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
     return result;
 }
 
-annotated_signed_transaction wallet_api::create_budget(
-    const std::string&, const std::string&, const asset&, const asset&, const time_point_sec, const bool broadcast)
+annotated_signed_transaction wallet_api::create_budget(const std::string& account_owner,
+                                                       const std::string& content_permlink,
+                                                       const asset& balance,
+                                                       const time_point_sec deadline,
+                                                       const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
-    FC_ASSERT(false, "not implemented");
+    create_budget_operation op;
 
-    custom_operation op;
-
-    // TODO
+    op.owner = account_owner;
+    op.content_permlink = content_permlink;
+    op.balance = balance;
+    op.deadline = deadline;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2543,15 +2547,13 @@ annotated_signed_transaction wallet_api::create_budget(
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::close_budget(const chain::budget_id_type, const bool broadcast)
+annotated_signed_transaction wallet_api::close_budget(const int64_t id, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
-    FC_ASSERT(false, "not implemented");
+    close_budget_operation op;
 
-    custom_operation op;
-
-    // TODO
+    op.budget_id = id;
 
     signed_transaction tx;
     tx.operations.push_back(op);

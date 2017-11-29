@@ -688,6 +688,23 @@ struct delegate_vesting_shares_operation : public base_operation
     void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(delegator); }
     void validate() const;
 };
+
+struct create_budget_operation : public base_operation
+{
+    account_name_type owner;
+    string content_permlink;
+
+    asset balance;
+    time_point_sec deadline;
+
+    void validate() const;
+};
+
+struct close_budget_operation : public base_operation
+{
+    int64_t budget_id;
+};
+
 }
 } // scorum::protocol
 
@@ -756,5 +773,8 @@ FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_rec
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) );
 FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_vests) )
 FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
+
+FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) );
+FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id) );
 
 // clang-format on

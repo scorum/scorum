@@ -336,5 +336,13 @@ void delegate_vesting_shares_operation::validate() const
     FC_ASSERT(is_asset_type(vesting_shares, VESTS_SYMBOL), "Delegation must be VESTS");
     FC_ASSERT(vesting_shares >= asset(0, VESTS_SYMBOL), "Delegation cannot be negative");
 }
+
+void create_budget_operation::validate() const
+{
+    validate_account_name(owner);
+    validate_account_name(content_permlink);
+    FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCORUM");
+    FC_ASSERT(balance >= asset(0, SCORUM_SYMBOL), "Balance cannot be negative");
+}
 }
 } // scorum::protocol
