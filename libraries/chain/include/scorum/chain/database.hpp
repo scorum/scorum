@@ -198,9 +198,11 @@ public:
      */
     void notify_pre_apply_operation(operation_notification& note);
     void notify_post_apply_operation(const operation_notification& note);
-    inline const void
-    push_virtual_operation(const operation& op,
-                           bool force = false); // vops are not needed for low mem. Force will push them on low mem.
+
+    // vops are not needed for low mem. Force will push them on low mem.
+    inline void push_virtual_operation(const operation& op);
+    inline void push_hf_operation(const operation& op);
+
     void notify_applied_block(const signed_block& block);
     void notify_on_pending_transaction(const signed_transaction& tx);
     void notify_on_pre_apply_transaction(const signed_transaction& tx);
