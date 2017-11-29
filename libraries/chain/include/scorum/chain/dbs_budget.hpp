@@ -80,15 +80,15 @@ public:
      *  The owner has abilities for all operations (for update, close and schedule operations).
      *
      * @param owner the name of the owner
-     * @param content_permlink the budget target identity (post or other)
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
+     * @param content_permlink the budget target identity (post or other)
      * @returns a budget object
      */
     const budget_object& create_budget(const account_object& owner,
-                                       const optional<string>& content_permlink,
                                        const asset& balance_in_scorum,
-                                       const time_point_sec& deadline
+                                       const time_point_sec& deadline,
+                                       const optional<string>& content_permlink = optional<string>()
                                        );
 
     /** Close budget.
