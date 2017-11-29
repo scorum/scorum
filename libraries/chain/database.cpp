@@ -16,36 +16,34 @@
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
 #include <scorum/chain/util/uint256.hpp>
-#include <scorum/chain/util/reward.hpp>
+
+#include <scorum/chain/pool/reward_pool.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
-
 #include <fc/container/deque.hpp>
-
 #include <fc/io/fstream.hpp>
+#include <fc/io/json.hpp>
 
 #include <cstdint>
 #include <deque>
 #include <fstream>
 #include <functional>
 
-#include <fc/io/json.hpp>
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_budget.hpp>
 
 namespace scorum {
 namespace chain {
-
-// namespace db2 = graphene::db2;
 
 struct object_schema_repr
 {
@@ -635,7 +633,7 @@ bool database::_push_block(const signed_block& new_block)
                                 apply_block((*ritr)->data, skip);
                                 session.push();
                             }
-                            throw * except;
+                            throw *except;
                         }
                     }
                     return true;
@@ -721,7 +719,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-                                      )
+)
 {
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
@@ -1665,6 +1663,7 @@ void database::initialize_indexes()
     _add_index_impl<escrow_index>();
     _add_index_impl<decline_voting_rights_request_index>();
     _add_index_impl<reward_fund_index>();
+    _add_index_impl<reward_pool_index>();
     _add_index_impl<vesting_delegation_index>();
     _add_index_impl<vesting_delegation_expiration_index>();
     _add_index_impl<budget_index>();
@@ -1793,6 +1792,18 @@ void database::init_genesis_global_property_object(uint64_t init_supply)
     // As a shortcut in payout processing, we use the id as an array index.
     // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
     FC_ASSERT(post_rf.id._id == 0);
+
+    create<reward_pool_object>([&](reward_pool_object& rp) {
+        rp.balance = asset(SCORUM_REWARDS_INITIAL_SUPPLY.amount * (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS + 1)
+                           / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+        rp.current_per_block_reward
+            = asset(rp.balance.amount / (SCORUM_BLOCKS_PER_DAY * (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS + 1)));
+
+        dbs_budget& budget_service = obtain_service<dbs_budget>();
+        fc::time_point deadline = get_genesis_time();
+        deadline += fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+        budget_service.create_fund_budget(SCORUM_REWARDS_INITIAL_SUPPLY - rp.balance, deadline);
+    });
 }
 
 fc::time_point_sec database::get_genesis_time() const
@@ -1861,7 +1872,8 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check
+                    | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;
