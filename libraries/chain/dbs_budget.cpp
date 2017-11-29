@@ -86,23 +86,25 @@ uint64_t dbs_budget::get_fund_budget_count() const
     return get_budget_count(SCORUM_ROOT_POST_PARENT);
 }
 
-const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scorum,
-                                                    const share_type& per_block,
-                                                    const time_point_sec& deadline)
+const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scorum, const time_point_sec& deadline)
 {
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
-    FC_ASSERT(per_block > 0, "invalid per_block");
     FC_ASSERT(get_fund_budget_count() <= SCORUM_LIMIT_BUDGETS_PER_OWNER, "can't created more then ${1} fund budgets",
               ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
+    time_point_sec start_date = props.time;
+    FC_ASSERT(start_date < deadline, "invalid deadline");
+
     auto head_block_num = db_impl().head_block_num();
+
+    share_type per_block = _calculate_per_block(start_date, deadline, balance_in_scorum.amount);
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
         budget.owner = SCORUM_ROOT_POST_PARENT;
-        budget.created = props.time;
+        budget.created = start_date;
         budget.deadline = deadline;
         budget.balance = balance_in_scorum;
         budget.per_block = per_block;
@@ -117,17 +119,18 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scor
 const budget_object& dbs_budget::create_budget(const account_object& owner,
                                                const optional<string>& content_permlink,
                                                const asset& balance_in_scorum,
-                                               const share_type& per_block,
                                                const time_point_sec& deadline)
 {
     FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "not allowed for ordinary budget");
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
-    FC_ASSERT(per_block > 0, "invalid per_block");
     FC_ASSERT(get_budget_count(owner.name) <= SCORUM_LIMIT_BUDGETS_PER_OWNER,
               "can't created more then ${1} budgets per owner", ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+
+    time_point_sec start_date = props.time;
+    FC_ASSERT(start_date < deadline, "invalid deadline");
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -137,13 +140,15 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 
     auto head_block_num = db_impl().head_block_num();
 
+    share_type per_block = _calculate_per_block(start_date, deadline, balance_in_scorum.amount);
+
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
         budget.owner = owner.name;
         if (content_permlink.valid())
         {
             fc::from_string(budget.content_permlink, *content_permlink);
         }
-        budget.created = props.time;
+        budget.created = start_date;
         budget.deadline = deadline;
         budget.balance = balance_in_scorum;
         budget.per_block = per_block;
@@ -203,6 +208,36 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
             db_impl().modify(budget, [&](budget_object& b) { b.last_allocated_block = head_block_num; });
         }
     }
+    return ret;
+}
+
+share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
+                                            const time_point_sec& end_date,
+                                            share_type balance_amount)
+{
+    FC_ASSERT(start_date < end_date, "invalid date interval");
+
+    share_type ret(balance_amount);
+
+    fc::microseconds per_block_time = fc::seconds(SCORUM_BLOCK_INTERVAL);
+    fc::microseconds delta = end_date - start_date;
+
+    if (ret > delta.count())
+    {
+        ret /= delta.count();
+        ret *= per_block_time.count();
+    }
+    else
+    {
+        ret *= per_block_time.count();
+        ret /= delta.count();
+    }
+
+    if (ret < 1)
+    {
+        ret = 1;
+    }
+
     return ret;
 }
 

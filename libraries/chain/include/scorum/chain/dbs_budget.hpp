@@ -70,13 +70,10 @@ public:
      * @warning count of fund budgets must be less or equal than SCORUM_LIMIT_BUDGETS_PER_OWNER.
      *
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
-     * @param per_block the amount for asset distribution
-     *                  (the distribution is allowed one time per block)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
     const budget_object& create_fund_budget(const asset& balance_in_scorum,
-                                               const share_type& per_block,
                                                const time_point_sec& deadline);
 
     /** Create budget.
@@ -85,15 +82,12 @@ public:
      * @param owner the name of the owner
      * @param content_permlink the budget target identity (post or other)
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
-     * @param per_block the amount for asset distribution
-     *                  (the distribution is allowed one time per block)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns a budget object
      */
     const budget_object& create_budget(const account_object& owner,
                                        const optional<string>& content_permlink,
                                        const asset& balance_in_scorum,
-                                       const share_type& per_block,
                                        const time_point_sec& deadline
                                        );
 
@@ -116,6 +110,10 @@ public:
 
 private:
 
+    share_type _calculate_per_block(
+            const time_point_sec& start_date,
+            const time_point_sec& end_date,
+            share_type balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
 };

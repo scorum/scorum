@@ -35,6 +35,18 @@ public:
     {
         account_service.increase_balance(alice, asset(500, SCORUM_SYMBOL));
         account_service.increase_balance(bob, asset(500, SCORUM_SYMBOL));
+
+        if (!m_time_printed)
+        {
+            std::cout << "head_block_time = " << db.head_block_time().to_iso_string() << std::endl;
+            for (int slot = 1; slot <= BLOCKS_LIMIT_DEFAULT; ++slot)
+            {
+                std::cout << "block " << slot << ": slot_time = " << db.get_slot_time(slot).to_iso_string()
+                          << std::endl;
+            }
+            m_time_printed = true;
+        }
+        default_deadline = db.get_slot_time(BLOCKS_LIMIT_DEFAULT);
     }
 
     dbs_budget& budget_service;
@@ -42,11 +54,16 @@ public:
     const public_key_type public_key;
     const account_object& alice;
     const account_object& bob;
+    fc::time_point_sec default_deadline;
+    static bool m_time_printed;
 
-    const int BUDGET_PER_BLOCK_DEFAULT = 50;
+    const int BLOCKS_LIMIT_DEFAULT = 5;
+    const int BUDGET_PER_BLOCK_DEFAULT = 40;
     const int BUDGET_BALANCE_DEFAULT = 200;
     const int ITEMS_PAGE_SIZE = 100;
 };
+
+bool dbs_budget_fixture::m_time_printed = false;
 
 BOOST_FIXTURE_TEST_SUITE(budget_service, dbs_budget_fixture)
 
@@ -55,9 +72,9 @@ BOOST_AUTO_TEST_CASE(fund_budget_creation)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
-        const auto& budget = budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        const auto& budget = budget_service.create_fund_budget(balance, deadline);
 
         BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
@@ -72,12 +89,11 @@ BOOST_AUTO_TEST_CASE(owned_budget_creation)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         auto reqired_alice_balance = alice.balance.amount;
 
-        const auto& budget
-            = budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        const auto& budget = budget_service.create_budget(alice, optional<string>(), balance, deadline);
 
         BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
@@ -95,17 +111,15 @@ BOOST_AUTO_TEST_CASE(second_owned_budget_creation)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         auto reqired_alice_balance = alice.balance.amount;
 
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
 
         reqired_alice_balance -= BUDGET_BALANCE_DEFAULT;
 
-        const auto& budget
-            = budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        const auto& budget = budget_service.create_budget(alice, optional<string>(), balance, deadline);
 
         BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
@@ -123,10 +137,10 @@ BOOST_AUTO_TEST_CASE(second_fund_budget_creation)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         {
-            const auto& budget = budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+            const auto& budget = budget_service.create_fund_budget(balance, deadline);
 
             BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
@@ -135,7 +149,7 @@ BOOST_AUTO_TEST_CASE(second_fund_budget_creation)
         }
 
         {
-            const auto& budget = budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+            const auto& budget = budget_service.create_fund_budget(balance, deadline);
 
             BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
 
@@ -151,13 +165,11 @@ BOOST_AUTO_TEST_CASE(get_all_budgets)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
 
         auto budgets = budget_service.get_budgets();
         BOOST_REQUIRE(budgets.size() == 3);
@@ -170,13 +182,11 @@ BOOST_AUTO_TEST_CASE(get_all_budget_count)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
 
         BOOST_REQUIRE(budget_service.get_budget_count() == 3);
     }
@@ -188,15 +198,12 @@ BOOST_AUTO_TEST_CASE(lookup_budget_owners)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
 
         BOOST_REQUIRE(budget_service.get_budget_count() == 4);
 
@@ -231,17 +238,16 @@ BOOST_AUTO_TEST_CASE(get_budgets)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
 
         auto budgets = budget_service.get_budgets("alice");
         BOOST_REQUIRE(budgets.size() == 1);
 
-        budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        budget_service.create_budget(alice, optional<string>(), balance, deadline);
 
         budgets = budget_service.get_budgets("alice");
         BOOST_REQUIRE(budgets.size() == 2);
@@ -259,16 +265,13 @@ BOOST_AUTO_TEST_CASE(get_budget_count)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(
-            budget_service.create_budget(bob, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
 
         BOOST_REQUIRE(budget_service.get_budget_count("alice") == 2);
         BOOST_REQUIRE(budget_service.get_budget_count("bob") == 1);
@@ -281,12 +284,12 @@ BOOST_AUTO_TEST_CASE(get_fund_budget_count)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
 
         BOOST_REQUIRE(budget_service.get_fund_budget_count() == 2);
     }
@@ -298,14 +301,13 @@ BOOST_AUTO_TEST_CASE(close_budget)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
         BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
 
         auto reqired_alice_balance = alice.balance.amount;
 
-        const auto& budget
-            = budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        const auto& budget = budget_service.create_budget(alice, optional<string>(), balance, deadline);
 
         reqired_alice_balance -= BUDGET_BALANCE_DEFAULT;
 
@@ -330,10 +332,9 @@ BOOST_AUTO_TEST_CASE(allocate_cash_no_block)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
-        const auto& budget
-            = budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        const auto& budget = budget_service.create_budget(alice, optional<string>(), balance, deadline);
 
         auto cash = budget_service.allocate_cash(budget);
 
@@ -349,9 +350,9 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
         db_plugin->debug_update(
             [=](database&) {
                 asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-                time_point_sec deadline(time_point_sec::maximum());
+                time_point_sec deadline(default_deadline);
 
-                budget_service.create_fund_budget(balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+                budget_service.create_fund_budget(balance, deadline);
 
             },
             default_skip);
@@ -367,7 +368,7 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
 
             auto cash = budget_service.allocate_cash(budget);
 
-            BOOST_REQUIRE(cash.amount == BUDGET_PER_BLOCK_DEFAULT);
+            BOOST_REQUIRE(cash.amount > 0);
         }
 
         {
@@ -388,10 +389,9 @@ BOOST_AUTO_TEST_CASE(is_const_ref_to_same_memory)
     try
     {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(time_point_sec::maximum());
+        time_point_sec deadline(default_deadline);
 
-        const auto& budget
-            = budget_service.create_budget(alice, optional<string>(), balance, BUDGET_PER_BLOCK_DEFAULT, deadline);
+        const auto& budget = budget_service.create_budget(alice, optional<string>(), balance, deadline);
 
         db.modify(budget, [&](budget_object& b) { b.balance.amount -= 1; });
 
