@@ -45,10 +45,6 @@ public:
         account_service.increase_balance(bob, asset(BOB_ACCOUNT_BUDGET, SCORUM_SYMBOL));
 
         default_deadline = db.get_slot_time(BLOCK_LIMIT_DEFAULT);
-        //        less_then_block_limit_deadline = db.get_slot_time(BLOCK_LIMIT_DEFAULT - 1);
-        //        less_then_block_limit_deadline -= SCORUM_BLOCK_INTERVAL / 2;
-        //        greater_then_block_limit_deadline = db.get_slot_time(BLOCK_LIMIT_DEFAULT + 1);
-        //        greater_then_block_limit_deadline += SCORUM_BLOCK_INTERVAL / 2;
 
         if (!m_time_printed)
         {
@@ -61,12 +57,6 @@ public:
                 std::cout << std::setw(w) << title.str() << db.get_slot_time(slot).to_iso_string() << std::endl;
             }
             std::cout << std::setw(w) << "default_deadline = " << default_deadline.to_iso_string() << std::endl;
-            //            std::cout << std::setw(w) << "less_then_block_limit_deadline = "
-            //                      << less_then_block_limit_deadline.to_iso_string()
-            //                      << std::endl;
-            //            std::cout << std::setw(w) << "greater_then_block_limit_deadline = "
-            //                      << greater_then_block_limit_deadline.to_iso_string()
-            //                      << std::endl;
             m_time_printed = true;
         }
     }
@@ -78,8 +68,6 @@ public:
     const account_object& alice;
     const account_object& bob;
     fc::time_point_sec default_deadline;
-    //    fc::time_point_sec less_then_block_limit_deadline;
-    //    fc::time_point_sec greater_then_block_limit_deadline;
     static bool m_time_printed;
 
     const int FAKE_ACCOUNT_BUDGET = 0;
@@ -643,7 +631,7 @@ BOOST_AUTO_TEST_CASE(try_close_fund_budget)
 
         BOOST_REQUIRE_NO_THROW(budget_service.get_fund_budgets());
 
-        BOOST_REQUIRE_THROW(budget_service.close_budget(budget);, fc::assert_exception);
+        BOOST_REQUIRE_THROW(budget_service.close_budget(budget), fc::assert_exception);
     }
     FC_LOG_AND_RETHROW()
 }
