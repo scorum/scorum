@@ -129,14 +129,14 @@ struct astr
     fc::fixed_string<> str1;
     fc::fixed_string<> str2;
 };
-FC_REFLECT(astr, (str)(str1)(str2));
+FC_REFLECT(astr, (str)(str1)(str2))
 struct bstr
 {
     std::string str;
     std::string str1;
     std::string str2;
 };
-FC_REFLECT(bstr, (str)(str1)(str2));
+FC_REFLECT(bstr, (str)(str1)(str2))
 
 int main(int argc, char** argv, char** envp)
 {

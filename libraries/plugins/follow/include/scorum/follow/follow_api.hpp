@@ -116,13 +116,13 @@ private:
 }
 } // scorum::follow
 
-FC_REFLECT(scorum::follow::feed_entry, (author)(permlink)(reblog_by)(reblog_on)(entry_id));
-FC_REFLECT(scorum::follow::comment_feed_entry, (comment)(reblog_by)(reblog_on)(entry_id));
-FC_REFLECT(scorum::follow::blog_entry, (author)(permlink)(blog)(reblog_on)(entry_id));
-FC_REFLECT(scorum::follow::comment_blog_entry, (comment)(blog)(reblog_on)(entry_id));
-FC_REFLECT(scorum::follow::account_reputation, (account)(reputation));
-FC_REFLECT(scorum::follow::follow_api_obj, (follower)(following)(what));
-FC_REFLECT(scorum::follow::follow_count_api_obj, (account)(follower_count)(following_count));
+FC_REFLECT(scorum::follow::feed_entry, (author)(permlink)(reblog_by)(reblog_on)(entry_id))
+FC_REFLECT(scorum::follow::comment_feed_entry, (comment)(reblog_by)(reblog_on)(entry_id))
+FC_REFLECT(scorum::follow::blog_entry, (author)(permlink)(blog)(reblog_on)(entry_id))
+FC_REFLECT(scorum::follow::comment_blog_entry, (comment)(blog)(reblog_on)(entry_id))
+FC_REFLECT(scorum::follow::account_reputation, (account)(reputation))
+FC_REFLECT(scorum::follow::follow_api_obj, (follower)(following)(what))
+FC_REFLECT(scorum::follow::follow_count_api_obj, (account)(follower_count)(following_count))
 
 FC_API(scorum::follow::follow_api,
     (get_followers)(get_following)(get_follow_count)(get_feed_entries)(get_feed)(get_blog_entries)(get_blog)(

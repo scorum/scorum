@@ -403,12 +403,12 @@ private:
 
 // clang-format off
 
-FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) );
-FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) );
+FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) )
+FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 
-FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) );
+FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) )
 
-FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) );
+FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) )
 
 FC_API(scorum::app::database_api,
    // Subscriptions

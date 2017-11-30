@@ -710,7 +710,7 @@ struct close_budget_operation : public base_operation
 
 // clang-format off
 
-FC_REFLECT( scorum::protocol::chain_properties, (account_creation_fee)(maximum_block_size) );
+FC_REFLECT( scorum::protocol::chain_properties, (account_creation_fee)(maximum_block_size) )
 
 FC_REFLECT( scorum::protocol::account_create_operation,
             (fee)
@@ -755,26 +755,26 @@ FC_REFLECT( scorum::protocol::custom_operation, (required_auths)(id)(data) )
 FC_REFLECT( scorum::protocol::custom_json_operation, (required_auths)(required_posting_auths)(id)(json) )
 FC_REFLECT( scorum::protocol::custom_binary_operation, (required_owner_auths)(required_active_auths)(required_posting_auths)(required_auths)(id)(data) )
 
-FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) );
+FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) )
 
 FC_REFLECT( scorum::protocol::beneficiary_route_type, (account)(weight) )
 FC_REFLECT( scorum::protocol::comment_payout_beneficiaries, (beneficiaries) )
 FC_REFLECT_TYPENAME( scorum::protocol::comment_options_extension )
 FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_scrs)(allow_votes)(allow_curation_rewards)(extensions) )
 
-FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) );
-FC_REFLECT( scorum::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) );
-FC_REFLECT( scorum::protocol::escrow_dispute_operation, (from)(to)(agent)(who)(escrow_id) );
-FC_REFLECT( scorum::protocol::escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(scorum_amount) );
-FC_REFLECT( scorum::protocol::prove_authority_operation, (challenged)(require_owner) );
-FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_account)(account_to_recover)(new_owner_authority)(extensions) );
-FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) );
-FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
-FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) );
+FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) )
+FC_REFLECT( scorum::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) )
+FC_REFLECT( scorum::protocol::escrow_dispute_operation, (from)(to)(agent)(who)(escrow_id) )
+FC_REFLECT( scorum::protocol::escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(scorum_amount) )
+FC_REFLECT( scorum::protocol::prove_authority_operation, (challenged)(require_owner) )
+FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_account)(account_to_recover)(new_owner_authority)(extensions) )
+FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) )
+FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
+FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_vests) )
-FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
+FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) )
 
-FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) );
-FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id) );
+FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id) )
 
 // clang-format on
