@@ -19,10 +19,12 @@ protected:
 public:
     const reward_pool_object& create_pool(const asset& initial_supply);
 
-    // return actual balance after increasing
-    const asset& increase_pool_ballance(reward_pool_object& pool, const asset& delta);
+    const reward_pool_object& get_pool() const;
 
-    const asset& take_block_reward(reward_pool_object& pool);
+    // return actual balance after increasing
+    const asset& increase_pool_ballance(const asset& delta);
+
+    const asset& take_block_reward();
 };
 
 } // namespace chain

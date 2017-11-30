@@ -2,10 +2,12 @@
 #include <scorum/chain/genesis_state.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_reward.hpp>
+
 #include <scorum/chain/account_object.hpp>
 #include <scorum/chain/block_summary_object.hpp>
 #include <scorum/chain/chain_property_object.hpp>
 #include <scorum/chain/scorum_objects.hpp>
+
 #include <scorum/chain/pool/reward_pool.hpp>
 
 #include <fc/io/json.hpp>
@@ -175,15 +177,17 @@ void database::init_genesis_rewards(const genesis_state_type& genesis_state)
     // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
     FC_ASSERT(post_rf.id._id == 0);
 
-    // clang-format off
-    asset initial_pool_supply(genesis_state.init_rewards_supply.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
-    // clang-format on
+    // We share initial fund between raward_pool and fund budget
     dbs_reward& reward_service = obtain_service<dbs_reward>();
-    reward_service.create_pool(initial_pool_supply);
-
     dbs_budget& budget_service = obtain_service<dbs_budget>();
+
+    asset initial_reward_pool_supply(genesis_state.init_rewards_supply.amount
+                                     * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
+                                     / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
     fc::time_point deadline = get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
-    budget_service.create_fund_budget(genesis_state.init_rewards_supply - initial_pool_supply, deadline);
+
+    reward_service.create_pool(initial_reward_pool_supply);
+    budget_service.create_fund_budget(genesis_state.init_rewards_supply - initial_reward_pool_supply, deadline);
 }
 
 } // namespace chain

@@ -38,6 +38,7 @@ database_fixture::database_fixture()
     , db(*app.chain_database())
 {
     genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
 

@@ -22,8 +22,15 @@ const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
     });
 }
 
-const asset& dbs_reward::increase_pool_ballance(reward_pool_object& pool, const asset& delta)
+const reward_pool_object& dbs_reward::get_pool() const
 {
+    return db_impl().get<reward_pool_object>();
+}
+
+const asset& dbs_reward::increase_pool_ballance(const asset& delta)
+{
+    const auto& pool = get_pool();
+
     db_impl().modify(pool, [&](reward_pool_object& pool) {
         switch (delta.symbol)
         {
@@ -40,19 +47,25 @@ const asset& dbs_reward::increase_pool_ballance(reward_pool_object& pool, const 
 }
 
 // clang-format off
-const asset& dbs_reward::take_block_reward(reward_pool_object& pool)
+const asset& dbs_reward::take_block_reward()
 {
+    const auto& pool = get_pool();
+
     FC_ASSERT(pool.current_per_block_reward > asset(0));
 
     if (pool.balance > asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS))
     {
         // recalculate
-        pool.current_per_block_reward += asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100);
+        db_impl().modify(pool, [&](reward_pool_object& pool) { 
+            pool.current_per_block_reward += asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100);
+        });
     }
     else if (pool.balance < asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS))
     {
         // recalculate
-        pool.current_per_block_reward -= asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100);
+        db_impl().modify(pool, [&](reward_pool_object& pool) {
+            pool.current_per_block_reward -= asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100);
+        });
     }
     else
     {
