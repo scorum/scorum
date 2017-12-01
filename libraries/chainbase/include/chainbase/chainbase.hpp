@@ -877,6 +877,16 @@ public:
             i->set_revision(revision);
     }
 
+    auto get_segment_manager() -> decltype(((bip::managed_mapped_file*)nullptr)->get_segment_manager())
+    {
+        return _segment->get_segment_manager();
+    }
+
+    size_t get_free_memory() const
+    {
+        return _segment->get_segment_manager()->get_free_memory();
+    }
+
     template <typename MultiIndexType> void add_index()
     {
         const uint16_t type_id = generic_index<MultiIndexType>::value_type::type_id;
@@ -912,16 +922,6 @@ public:
         auto new_index = new index<index_type>(*idx_ptr);
         _index_map[type_id].reset(new_index);
         _index_list.push_back(new_index);
-    }
-
-    auto get_segment_manager() -> decltype(((bip::managed_mapped_file*)nullptr)->get_segment_manager())
-    {
-        return _segment->get_segment_manager();
-    }
-
-    size_t get_free_memory() const
-    {
-        return _segment->get_segment_manager()->get_free_memory();
     }
 
     template <typename MultiIndexType> bool has_index() const

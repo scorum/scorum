@@ -1641,31 +1641,31 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 
 void database::initialize_indexes()
 {
-    _add_index_impl<dynamic_global_property_index>();
-    _add_index_impl<chain_property_index>();
-    _add_index_impl<account_index>();
-    _add_index_impl<account_authority_index>();
-    _add_index_impl<witness_index>();
-    _add_index_impl<transaction_index>();
-    _add_index_impl<block_summary_index>();
-    _add_index_impl<witness_schedule_index>();
-    _add_index_impl<comment_index>();
-    _add_index_impl<comment_vote_index>();
-    _add_index_impl<witness_vote_index>();
-    _add_index_impl<operation_index>();
-    _add_index_impl<account_history_index>();
-    _add_index_impl<hardfork_property_index>();
-    _add_index_impl<withdraw_vesting_route_index>();
-    _add_index_impl<owner_authority_history_index>();
-    _add_index_impl<account_recovery_request_index>();
-    _add_index_impl<change_recovery_account_request_index>();
-    _add_index_impl<escrow_index>();
-    _add_index_impl<decline_voting_rights_request_index>();
-    _add_index_impl<reward_fund_index>();
-    _add_index_impl<reward_pool_index>();
-    _add_index_impl<vesting_delegation_index>();
-    _add_index_impl<vesting_delegation_expiration_index>();
-    _add_index_impl<budget_index>();
+    add_index<dynamic_global_property_index>();
+    add_index<chain_property_index>();
+    add_index<account_index>();
+    add_index<account_authority_index>();
+    add_index<witness_index>();
+    add_index<transaction_index>();
+    add_index<block_summary_index>();
+    add_index<witness_schedule_index>();
+    add_index<comment_index>();
+    add_index<comment_vote_index>();
+    add_index<witness_vote_index>();
+    add_index<operation_index>();
+    add_index<account_history_index>();
+    add_index<hardfork_property_index>();
+    add_index<withdraw_vesting_route_index>();
+    add_index<owner_authority_history_index>();
+    add_index<account_recovery_request_index>();
+    add_index<change_recovery_account_request_index>();
+    add_index<escrow_index>();
+    add_index<decline_voting_rights_request_index>();
+    add_index<reward_fund_index>();
+    add_index<reward_pool_index>();
+    add_index<vesting_delegation_index>();
+    add_index<vesting_delegation_expiration_index>();
+    add_index<budget_index>();
 
     _plugin_index_signal();
 }

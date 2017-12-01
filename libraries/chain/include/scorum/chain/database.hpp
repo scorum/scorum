@@ -379,7 +379,7 @@ public:
 
     template <typename MultiIndexType> void add_plugin_index()
     {
-        _plugin_index_signal.connect([this]() { this->_add_index_impl<MultiIndexType>(); });
+        _plugin_index_signal.connect([this]() { this->add_index<MultiIndexType>(); });
     }
 
 private:
@@ -388,11 +388,6 @@ private:
     void _reset_virtual_schedule_time();
 
     void _update_median_witness_props();
-
-    template <typename MultiIndexType> void _add_index_impl()
-    {
-        add_index<MultiIndexType>();
-    }
 
 protected:
     // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
