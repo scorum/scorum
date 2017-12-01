@@ -4,11 +4,12 @@ if( GPERFTOOLS_FOUND )
     list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
 endif()
 
+file(GLOB HEADERS "common/*.hpp")
 file(GLOB COMMON_SOURCES "common/*.cpp")
 file(GLOB UNIT_TESTS "tests/*.cpp")
 file(GLOB UNIT_BUDGET_TESTS "tests/budget_check/*.cpp")
 
-add_executable( chain_test ${COMMON_SOURCES} ${UNIT_TESTS} ${UNIT_BUDGET_TESTS} )
+add_executable( chain_test ${COMMON_SOURCES} ${UNIT_TESTS} ${UNIT_BUDGET_TESTS} ${HEADERS} )
 target_link_libraries( chain_test chainbase scorum_chain scorum_protocol scorum_app scorum_account_history scorum_witness scorum_debug_node fc ${PLATFORM_SPECIFIC_LIBS} )
 
 file(GLOB PLUGIN_TESTS "plugin_tests/*.cpp")

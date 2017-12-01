@@ -45,7 +45,6 @@ SCORUM_TEST_CASE(create_budget_operation_check)
 {
     BOOST_REQUIRE_NO_THROW(create_budget_op.validate());
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_amount)
 {
@@ -57,7 +56,6 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_amount)
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_currency)
 {
@@ -65,7 +63,6 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_currency)
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(create_budget_operation_check_invalid_owner_name)
 {
@@ -77,7 +74,6 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_owner_name)
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(create_budget_operation_check_invalid_content_permlink)
 {
@@ -85,13 +81,11 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_content_permlink)
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(close_budget_operation_check)
 {
     BOOST_REQUIRE_NO_THROW(close_budget_op.validate());
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(close_budget_operation_check_invalid_owner_name)
 {
@@ -103,7 +97,6 @@ SCORUM_TEST_CASE(close_budget_operation_check_invalid_owner_name)
 
     BOOST_REQUIRE_THROW(close_budget_op.validate(), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -170,7 +163,6 @@ SCORUM_TEST_CASE(create_budget_check)
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(close_budget_check)
 {
@@ -198,7 +190,6 @@ SCORUM_TEST_CASE(close_budget_check)
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 }
-SCORUM_TEST_CASE_END
 
 BOOST_AUTO_TEST_SUITE_END()
 

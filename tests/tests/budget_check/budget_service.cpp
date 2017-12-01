@@ -100,7 +100,6 @@ SCORUM_TEST_CASE(is_const_ref_to_same_memory)
 
     BOOST_REQUIRE(budget.balance.amount == (BUDGET_BALANCE_DEFAULT - 1));
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(fund_budget_creation)
 {
@@ -115,7 +114,6 @@ SCORUM_TEST_CASE(fund_budget_creation)
     auto budgets = budget_service.get_fund_budgets();
     BOOST_REQUIRE(budgets.size() == 1);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(owned_budget_creation)
 {
@@ -135,7 +133,6 @@ SCORUM_TEST_CASE(owned_budget_creation)
 
     BOOST_REQUIRE(actual_account.balance.amount == reqired_alice_balance);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(second_owned_budget_creation)
 {
@@ -159,7 +156,6 @@ SCORUM_TEST_CASE(second_owned_budget_creation)
 
     BOOST_REQUIRE(actual_account.balance.amount == reqired_alice_balance);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(second_fund_budget_creation)
 {
@@ -186,7 +182,6 @@ SCORUM_TEST_CASE(second_fund_budget_creation)
         BOOST_REQUIRE(budgets.size() == 2);
     }
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(fund_budget_creation_asserts)
 {
@@ -213,7 +208,6 @@ SCORUM_TEST_CASE(fund_budget_creation_asserts)
 
     BOOST_CHECK_THROW(budget_service.create_fund_budget(balance, invalid_deadline), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(owned_budget_creation_asserts)
 {
@@ -246,7 +240,6 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, too_large_balance, deadline), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(fund_budget_creation_limit)
 {
@@ -260,7 +253,6 @@ SCORUM_TEST_CASE(fund_budget_creation_limit)
 
     BOOST_REQUIRE_THROW(budget_service.create_fund_budget(balance, deadline), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(budget_creation_limit)
 {
@@ -279,7 +271,6 @@ SCORUM_TEST_CASE(budget_creation_limit)
 
     BOOST_REQUIRE_THROW(budget_service.create_budget(bob, balance, deadline), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(get_all_budgets)
 {
@@ -293,7 +284,6 @@ SCORUM_TEST_CASE(get_all_budgets)
     auto budgets = budget_service.get_budgets();
     BOOST_REQUIRE(budgets.size() == 3);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(get_all_budget_count)
 {
@@ -306,7 +296,6 @@ SCORUM_TEST_CASE(get_all_budget_count)
 
     BOOST_REQUIRE(budget_service.get_budget_count() == 3);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(lookup_budget_owners)
 {
@@ -343,7 +332,6 @@ SCORUM_TEST_CASE(lookup_budget_owners)
         BOOST_REQUIRE(owners.size() == 2);
     }
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(get_budgets)
 {
@@ -367,7 +355,6 @@ SCORUM_TEST_CASE(get_budgets)
         BOOST_REQUIRE(budget.owner == account_name_type("alice"));
     }
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(get_budget_count)
 {
@@ -383,7 +370,6 @@ SCORUM_TEST_CASE(get_budget_count)
     BOOST_REQUIRE(budget_service.get_budget_count("alice") == 2);
     BOOST_REQUIRE(budget_service.get_budget_count("bob") == 1);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(get_fund_budget_count)
 {
@@ -397,7 +383,6 @@ SCORUM_TEST_CASE(get_fund_budget_count)
 
     BOOST_REQUIRE(budget_service.get_fund_budget_count() == 2);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(close_budget)
 {
@@ -425,7 +410,6 @@ SCORUM_TEST_CASE(close_budget)
 
     BOOST_REQUIRE(reqired_alice_balance == actual_account.balance.amount);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(allocate_cash_no_block)
 {
@@ -438,7 +422,6 @@ SCORUM_TEST_CASE(allocate_cash_no_block)
 
     BOOST_REQUIRE(cash.amount == 0); // wait next block
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(allocate_cash_next_block)
 {
@@ -476,7 +459,6 @@ SCORUM_TEST_CASE(allocate_cash_next_block)
         BOOST_REQUIRE(budget.balance.amount == (BUDGET_BALANCE_DEFAULT - BUDGET_PER_BLOCK_DEFAULT));
     }
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
 {
@@ -501,7 +483,6 @@ SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
 
     BOOST_REQUIRE(total_cash.amount == BUDGET_BALANCE_DEFAULT);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(auto_close_fund_budget_by_balance)
 {
@@ -529,7 +510,6 @@ SCORUM_TEST_CASE(auto_close_fund_budget_by_balance)
 
     BOOST_REQUIRE(total_cash.amount == BUDGET_BALANCE_DEFAULT);
 }
-SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(try_close_fund_budget)
 {
@@ -542,7 +522,6 @@ SCORUM_TEST_CASE(try_close_fund_budget)
 
     BOOST_REQUIRE_THROW(budget_service.close_budget(budget), fc::assert_exception);
 }
-SCORUM_TEST_CASE_END
 
 BOOST_AUTO_TEST_SUITE_END()
 
