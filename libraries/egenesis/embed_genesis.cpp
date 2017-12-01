@@ -29,6 +29,10 @@
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <boost/filesystem/fstream.hpp>
+
+#include <boost/filesystem/fstream.hpp>
+
 #include <fc/filesystem.hpp>
 #include <fc/smart_ref_impl.hpp> // required for gcc in release mode
 #include <fc/string.hpp>
@@ -152,7 +156,7 @@ struct egenesis_info
         else
         {
             // Neither genesis nor genesis_json exists, crippled
-            std::cerr << "embed_genesis:  Need genesis or genesis_json\n";
+            std::cerr << "embed_genesis: Need genesis or genesis_json\n";
             exit(1);
         }
 
@@ -181,7 +185,7 @@ void load_genesis(const boost::program_options::variables_map& options, egenesis
     if (options.count("genesis-json"))
     {
         fc::path genesis_json_filename = get_path(options, "genesis-json");
-        std::cout << "embed_genesis:  Reading genesis from file " << genesis_json_filename.preferred_string() << "\n";
+        std::cout << "embed_genesis: Reading genesis from file " << genesis_json_filename.preferred_string() << "\n";
         info.genesis_json = std::string();
         fc::read_file_contents(genesis_json_filename, *info.genesis_json);
     }
@@ -193,16 +197,43 @@ void load_genesis(const boost::program_options::variables_map& options, egenesis
     }
 }
 
-void write_to_file(const fc::path& path, const std::string& content)
+bool write_to_file(const boost::filesystem::path& path, const std::string& content)
 {
-    fc::ofstream outfile(path);
-    outfile.write(content.c_str(), content.size());
+    if (!boost::filesystem::exists(path.parent_path()))
+    {
+        std::cerr << "embed_genesis: path don't exist " << path.parent_path() << std::endl;
+        std::cerr << "embed_genesis: failure opening " << path << std::endl;
+        return false;
+    }
+
+    boost::filesystem::ofstream outfile(path);
+
+    if (!outfile)
+    {
+        std::cerr << "embed_genesis: failure opening " << path << std::endl;
+        return false;
+    }
+
+    outfile << content;
     outfile.close();
+
+    return true;
 }
 
-void read_template_file(const fc::path& path, std::string& template_content)
+bool read_from_file(const boost::filesystem::path& path, std::string& template_content)
 {
-    fc::read_file_contents(path, template_content);
+    if (!boost::filesystem::exists(path))
+    {
+        std::cerr << "embed_genesis: file does not exists " << path.c_str() << std::endl;
+        return false;
+    }
+
+    boost::filesystem::ifstream f(path, std::ios::in | std::ios::binary);
+    std::stringstream ss;
+    ss << f.rdbuf();
+    template_content = ss.str();
+
+    return true;
 }
 
 std::string process_template(const std::string& tmpl_content, const fc::variant_object& context)
@@ -235,7 +266,7 @@ int main(int argc, char** argv)
     }
     catch (const bpo::error& e)
     {
-        std::cerr << "embed_genesis:  error parsing command line: " << e.what() << "\n";
+        std::cerr << "embed_genesis: error parsing command line: " << e.what() << "\n";
         return 1;
     }
 
@@ -265,23 +296,36 @@ int main(int argc, char** argv)
 
     for (const std::string& src_dest : options["tmplsub"].as<std::vector<std::string>>())
     {
-        std::cout << "embed_genesis:  parsing tmplsub parameter \"" << src_dest << "\"\n";
+        std::cout << "embed_genesis: parsing tmplsub parameter \"" << src_dest << "\"\n";
         const size_t pos = src_dest.find("---");
 
         if (pos == std::string::npos)
         {
-            std::cerr << "embed_genesis:  could not parse tmplsub parameter:  '---' not found\n";
+            std::cerr << "embed_genesis: could not parse tmplsub parameter:  '---' not found\n";
             main_return = 1;
             continue;
         }
 
-        const fc::path src_path = src_dest.substr(0, pos);
-        const fc::path dst_path = src_dest.substr(pos + 3);
+        try
+        {
+            const boost::filesystem::path src_path = src_dest.substr(0, pos);
+            const boost::filesystem::path dst_path = src_dest.substr(pos + 3);
 
-        std::string template_content;
+            std::string template_content;
 
-        read_template_file(src_path, template_content);
-        write_to_file(dst_path, process_template(template_content, template_context));
+            if (!read_from_file(src_path, template_content))
+            {
+                main_return = 1;
+                continue;
+            }
+
+            if (!write_to_file(dst_path, process_template(template_content, template_context)))
+            {
+                main_return = 1;
+                continue;
+            }
+        }
+        FC_LOG_AND_RETHROW()
     }
 
     return main_return;
