@@ -41,6 +41,9 @@ public:
         account_service.increase_balance(bob, asset(BOB_ACCOUNT_BUDGET, SCORUM_SYMBOL));
     }
 
+    void create_fund_budget_in_block(const asset& balance, const time_point_sec& deadline);
+    asset allocate_cash_from_fund_budget_in_block();
+
     dbs_budget& budget_service;
     dbs_account& account_service;
     const public_key_type public_key;
@@ -57,6 +60,29 @@ public:
 
     const int ITEMS_PAGE_SIZE = 100;
 };
+
+void budget_service_check_fixture::create_fund_budget_in_block(const asset& balance, const time_point_sec& deadline)
+{
+    db_plugin->debug_update(
+        [=](database&) {
+            BOOST_REQUIRE_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        },
+        default_skip);
+}
+
+asset budget_service_check_fixture::allocate_cash_from_fund_budget_in_block()
+{
+    asset result;
+    BOOST_REQUIRE(budget_service.get_fund_budget_count() > 0);
+
+    db_plugin->debug_update(
+        [&](database&) {
+            const budget_object& budget = budget_service.get_fund_budgets()[0];
+            result = budget_service.allocate_cash(budget);
+        },
+        default_skip);
+    return result;
+}
 
 //
 // usage for all budget tests 'chain_test  -t budget_*'
@@ -454,17 +480,7 @@ SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
 {
-    db_plugin->debug_update(
-        [=](database&) {
-            asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-            time_point_sec deadline(default_deadline);
-
-            budget_service.create_fund_budget(balance, deadline);
-
-        },
-        default_skip);
-
-    BOOST_REQUIRE_NO_THROW(budget_service.get_fund_budgets());
+    BOOST_REQUIRE_NO_THROW(create_fund_budget_in_block(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL), default_deadline));
 
     asset total_cash(0, SCORUM_SYMBOL);
 
@@ -473,13 +489,7 @@ SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
         generate_block();
         generate_block();
 
-        db_plugin->debug_update(
-            [&](database&) {
-                const budget_object& budget = budget_service.get_fund_budgets()[0];
-                asset cash = budget_service.allocate_cash(budget);
-                total_cash += cash;
-            },
-            default_skip);
+        total_cash += allocate_cash_from_fund_budget_in_block();
 
         if (!budget_service.get_fund_budget_count())
         {
@@ -495,18 +505,8 @@ SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(auto_close_fund_budget_by_balance)
 {
-    db_plugin->debug_update(
-        [=](database&) {
-            asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-            time_point_sec deadline(time_point_sec::maximum());
-
-            const budget_object& budget = budget_service.create_fund_budget(balance, deadline);
-
-            BOOST_REQUIRE(budget.per_block == 1);
-        },
-        default_skip);
-
-    BOOST_REQUIRE_NO_THROW(budget_service.get_fund_budgets());
+    BOOST_REQUIRE_NO_THROW(
+        create_fund_budget_in_block(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL), time_point_sec::maximum()));
 
     asset total_cash(0, SCORUM_SYMBOL);
 
@@ -517,13 +517,7 @@ SCORUM_TEST_CASE(auto_close_fund_budget_by_balance)
         generate_block();
         generate_block();
 
-        db_plugin->debug_update(
-            [&](database&) {
-                const budget_object& budget = budget_service.get_fund_budgets()[0];
-                asset cash = budget_service.allocate_cash(budget);
-                total_cash += cash;
-            },
-            default_skip);
+        total_cash += allocate_cash_from_fund_budget_in_block();
 
         if (!budget_service.get_fund_budget_count())
         {

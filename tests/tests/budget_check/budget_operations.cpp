@@ -118,19 +118,17 @@ public:
 
     dbs_budget& budget_service;
     dbs_account& account_service;
+
+    private_key_type alice_create_budget(const asset& balance);
 };
 
-BOOST_FIXTURE_TEST_SUITE(budget_transaction_check, budget_transaction_check_fixture)
-
-SCORUM_TEST_CASE(create_budget_check)
+private_key_type budget_transaction_check_fixture::alice_create_budget(const asset& balance)
 {
     BOOST_REQUIRE(BLOCK_LIMIT_DEFAULT > 0);
 
     ACTORS((alice))
 
     fund("alice", BUDGET_BALANCE_DEFAULT);
-
-    asset balance = asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
 
     create_budget_operation op;
     op.owner = "alice";
@@ -152,6 +150,17 @@ SCORUM_TEST_CASE(create_budget_check)
 
     BOOST_REQUIRE(budget_service.get_budget_count("alice") == 1);
 
+    return alice_private_key;
+}
+
+BOOST_FIXTURE_TEST_SUITE(budget_transaction_check, budget_transaction_check_fixture)
+
+SCORUM_TEST_CASE(create_budget_check)
+{
+    asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+
+    BOOST_REQUIRE_NO_THROW(alice_create_budget(balance));
+
     const budget_object& budget = (*budget_service.get_budgets("alice").cbegin());
 
     BOOST_REQUIRE(budget.owner == "alice");
@@ -165,33 +174,7 @@ SCORUM_TEST_CASE_END
 
 SCORUM_TEST_CASE(close_budget_check)
 {
-    BOOST_REQUIRE(BLOCK_LIMIT_DEFAULT > 0);
-
-    ACTORS((alice))
-
-    fund("alice", BUDGET_BALANCE_DEFAULT);
-
-    asset balance = asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-
-    create_budget_operation create_op;
-    create_op.owner = "alice";
-    create_op.content_permlink = BUDGET_CONTENT_PERMLINK;
-    create_op.balance = balance;
-    create_op.deadline = default_deadline;
-
-    BOOST_REQUIRE_NO_THROW(create_op.validate());
-
-    signed_transaction tx;
-
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-    tx.operations.push_back(create_op);
-
-    BOOST_REQUIRE_NO_THROW(tx.sign(alice_private_key, db.get_chain_id()));
-    BOOST_REQUIRE_NO_THROW(tx.validate());
-
-    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
-
-    BOOST_REQUIRE(budget_service.get_budget_count("alice") == 1);
+    private_key_type alice_private_key = alice_create_budget(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL));
 
     const budget_object& budget = (*budget_service.get_budgets("alice").cbegin());
 
@@ -201,7 +184,7 @@ SCORUM_TEST_CASE(close_budget_check)
 
     BOOST_REQUIRE_NO_THROW(close_op.validate());
 
-    tx.clear();
+    signed_transaction tx;
 
     tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.operations.push_back(close_op);
