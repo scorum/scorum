@@ -6,18 +6,19 @@
 		"recovery_account": "",
 		"public_key": "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs",
 		"scr_amount": 1000,
-		"sp_ammount": 0
+		"sp_amount": 0
 	}, {
 		"name": "alice",
 		"recovery_account": "",
 		"public_key": "STM5Sg79ehsR4W4XWAbuNkFgmjzWAZQsvgUaP9i1EKVdC6uVbpXTK",
 		"scr_amount": 0,
-		"sp_ammount": 0
+		"sp_amount": 0
 	}, {
 		"name": "bob",
+		"recovery_account": "",
 		"public_key": "STM61EJLQzASMXkZxrNpWB1yhNrCa2T7nUAnFVufoobwvEkNKH798",
-		"votes": 0,
-		"balance": 0
+		"scr_amount": 0,
+		"sp_amount": 0
 	}],
 
 	"witness_candidates": [{
