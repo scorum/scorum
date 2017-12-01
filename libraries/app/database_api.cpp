@@ -944,7 +944,7 @@ vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) 
 
     vector<budget_api_obj> results;
 
-    chain::dbs_budget budget_service = _db.obtain_service<chain::dbs_budget>();
+    chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
     for (const auto& name : names)
     {
@@ -979,7 +979,7 @@ set<string> database_api_impl::lookup_budget_owners(const string& lower_bound_na
     FC_ASSERT(limit <= SCORUM_LIMIT_API_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
               ("1", SCORUM_LIMIT_API_BUDGETS_LIST_SIZE));
 
-    chain::dbs_budget budget_service = _db.obtain_service<chain::dbs_budget>();
+    chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
     return budget_service.lookup_budget_owners(lower_bound_name, limit);
 }

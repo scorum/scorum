@@ -2525,7 +2525,7 @@ vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
     return result;
 }
 
-annotated_signed_transaction wallet_api::create_budget(const std::string& account_owner,
+annotated_signed_transaction wallet_api::create_budget(const std::string& budget_owner,
                                                        const std::string& content_permlink,
                                                        const asset& balance,
                                                        const time_point_sec deadline,
@@ -2535,7 +2535,7 @@ annotated_signed_transaction wallet_api::create_budget(const std::string& accoun
 
     create_budget_operation op;
 
-    op.owner = account_owner;
+    op.owner = budget_owner;
     op.content_permlink = content_permlink;
     op.balance = balance;
     op.deadline = deadline;
@@ -2547,13 +2547,15 @@ annotated_signed_transaction wallet_api::create_budget(const std::string& accoun
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::close_budget(const int64_t id, const bool broadcast)
+annotated_signed_transaction
+wallet_api::close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_operation op;
 
     op.budget_id = id;
+    op.owner = budget_owner;
 
     signed_transaction tx;
     tx.operations.push_back(op);

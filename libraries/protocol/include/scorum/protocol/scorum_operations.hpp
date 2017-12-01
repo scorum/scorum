@@ -698,11 +698,22 @@ struct create_budget_operation : public base_operation
     time_point_sec deadline;
 
     void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
 };
 
 struct close_budget_operation : public base_operation
 {
     int64_t budget_id;
+    account_name_type owner;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
 };
 
 }
@@ -775,6 +786,6 @@ FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_s
 FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
-FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 // clang-format on

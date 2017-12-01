@@ -340,9 +340,14 @@ void delegate_vesting_shares_operation::validate() const
 void create_budget_operation::validate() const
 {
     validate_account_name(owner);
-    validate_account_name(content_permlink);
+    validate_permlink(content_permlink);
     FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCORUM");
-    FC_ASSERT(balance >= asset(0, SCORUM_SYMBOL), "Balance cannot be negative");
+    FC_ASSERT(balance > asset(0, SCORUM_SYMBOL), "Balance must be positive");
+}
+
+void close_budget_operation::validate() const
+{
+    validate_account_name(owner);
 }
 }
 } // scorum::protocol

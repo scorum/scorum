@@ -17,6 +17,8 @@ class dbs_budget : public dbs_base
 {
     friend class dbservice_dbs_factory;
 
+    dbs_budget() = delete;
+
 protected:
     explicit dbs_budget(database& db);
 

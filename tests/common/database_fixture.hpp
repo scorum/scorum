@@ -124,6 +124,15 @@ using namespace graphene::db;
 
 #define ASSET(s) asset::from_string(s)
 
+#define SCORUM_TEST_CASE(case_name)                                                                                    \
+    BOOST_AUTO_TEST_CASE(case_name)                                                                                    \
+    {                                                                                                                  \
+        try                                                                                                            \
+
+#define SCORUM_TEST_CASE_END                                                                                           \
+        FC_LOG_AND_RETHROW()                                                                                           \
+    }
+
 namespace scorum {
 namespace chain {
 
@@ -226,6 +235,18 @@ struct live_database_fixture : public database_fixture
     ~live_database_fixture();
 
     fc::path _chain_dir;
+};
+
+struct timed_blocks_database_fixture : public clean_database_fixture
+{
+    timed_blocks_database_fixture();
+
+    fc::time_point_sec default_deadline;
+
+    const int BLOCK_LIMIT_DEFAULT = 5;
+
+private:
+    static bool _time_printed;
 };
 
 namespace test {

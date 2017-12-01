@@ -19,6 +19,7 @@ struct dbs_base
 {
 protected:
     dbs_base() = delete;
+    dbs_base(dbs_base &&) = delete;
 
     explicit dbs_base(database&);
 
@@ -53,7 +54,7 @@ protected:
     virtual ~dbservice_dbs_factory();
 
 public:
-    template <typename ConcreteService> ConcreteService& obtain_service()
+    template <typename ConcreteService> ConcreteService& obtain_service() const
     {
         auto it = _dbs.find(typeid(ConcreteService).name());
         if (it == _dbs.end())
@@ -68,7 +69,7 @@ public:
     }
 
 private:
-    std::map<std::string, BaseServicePtr> _dbs;
+    mutable std::map<std::string, BaseServicePtr> _dbs;
     database& _db_core;
 };
 }

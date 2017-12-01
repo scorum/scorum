@@ -1,13 +1,14 @@
-file(GLOB COMMON_SOURCES "common/*.cpp")
-
 find_package( Gperftools QUIET )
 if( GPERFTOOLS_FOUND )
     message( STATUS "Found gperftools; compiling tests with TCMalloc")
     list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
 endif()
 
+file(GLOB COMMON_SOURCES "common/*.cpp")
 file(GLOB UNIT_TESTS "tests/*.cpp")
-add_executable( chain_test ${UNIT_TESTS} ${COMMON_SOURCES} )
+file(GLOB UNIT_BUDGET_TESTS "tests/budget_check/*.cpp")
+
+add_executable( chain_test ${COMMON_SOURCES} ${UNIT_TESTS} ${UNIT_BUDGET_TESTS} )
 target_link_libraries( chain_test chainbase scorum_chain scorum_protocol scorum_app scorum_account_history scorum_witness scorum_debug_node fc ${PLATFORM_SPECIFIC_LIBS} )
 
 file(GLOB PLUGIN_TESTS "plugin_tests/*.cpp")

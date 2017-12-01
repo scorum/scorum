@@ -425,7 +425,7 @@ struct dynamic_global_property_api_obj : public dynamic_global_property_object
 struct budget_api_obj
 {
     budget_api_obj(const chain::budget_object& b):
-        id(b.id),
+        id(b.id._id),
         owner(b.owner),
         content_permlink(fc::to_string(b.content_permlink)),
         created(b.created),
@@ -439,7 +439,7 @@ struct budget_api_obj
     //because fc::variant require for temporary object
     budget_api_obj() {}
 
-    chain::budget_id_type id;
+    int64_t id;
 
     account_name_type owner;
     string content_permlink;

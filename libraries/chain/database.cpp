@@ -2418,7 +2418,6 @@ void database::adjust_balance(const account_object& a, const asset& delta)
 
 void database::adjust_supply(const asset& delta, bool adjust_vesting)
 {
-
     const auto& props = get_dynamic_global_properties();
     if (props.head_block_number < SCORUM_BLOCKS_PER_DAY * 7)
         adjust_vesting = false;
