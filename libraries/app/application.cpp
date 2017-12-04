@@ -30,6 +30,7 @@
 #include <scorum/chain/scorum_object_types.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/genesis_state.hpp>
+#include <scorum/egenesis/egenesis.hpp>
 
 #include <fc/time.hpp>
 
@@ -272,10 +273,36 @@ public:
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }
 
+    void compute_genesis_state(scorum::chain::genesis_state_type& genesis_state)
+    {
+        std::string genesis_str;
+
+        if (_options->count("genesis-json"))
+        {
+            fc::path genesis_json_filename = _options->at("genesis-json").as<boost::filesystem::path>();
+
+            fc::read_file_contents(genesis_json_filename, genesis_str);
+        }
+        else
+        {
+            scorum::egenesis::compute_egenesis_json(genesis_str);
+        }
+
+        FC_ASSERT(!genesis_str.empty());
+
+        genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
+        genesis_state.initial_chain_id = fc::sha256::hash(genesis_str);
+    }
+
     void startup()
     {
         try
         {
+            genesis_state_type genesis_state;
+            compute_genesis_state(genesis_state);
+
+            ilog("node chain ID: ${chain_id}", ("chain_id", genesis_state.initial_chain_id));
+
             if (_options->count("data-dir"))
                 _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
 
@@ -294,23 +321,6 @@ public:
 
             if (_options->count("disable_get_block"))
                 _self->_disable_get_block = true;
-
-            genesis_state_type genesis_state;
-
-            if (_options->count("genesis-json"))
-            {
-                fc::path genesis_json_filename = _options->at("genesis-json").as<boost::filesystem::path>();
-
-                std::string genesis_str;
-                fc::read_file_contents(genesis_json_filename, genesis_str);
-
-                genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
-                genesis_state.initial_chain_id = fc::sha256::hash(genesis_str);
-            }
-            else
-            {
-                utils::generate_default_genesis_state(genesis_state);
-            }
 
             if (!read_only)
             {
@@ -1339,6 +1349,5 @@ void application::startup_plugins()
     return;
 }
 
-// namespace detail
-}
-}
+} // namespace app
+} // namespace scorum

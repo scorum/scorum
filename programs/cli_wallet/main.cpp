@@ -42,6 +42,7 @@
 #include <scorum/protocol/protocol.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/chain/genesis_state.hpp>
+#include <scorum/egenesis/egenesis.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -149,10 +150,7 @@ int main(int argc, char** argv)
             }
             else
             {
-                genesis_state_type genesis_state;
-                utils::generate_default_genesis_state(genesis_state);
-
-                wdata.chain_id = genesis_state.initial_chain_id;
+                wdata.chain_id = scorum::egenesis::get_egenesis_chain_id();
                 std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from egenesis)\n";
             }
         }

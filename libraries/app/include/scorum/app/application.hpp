@@ -36,6 +36,12 @@
 #include <boost/program_options.hpp>
 
 namespace scorum {
+namespace chain {
+struct genesis_state_type;
+}
+} // namespace scorum
+
+namespace scorum {
 namespace app {
 
 namespace detail {
@@ -56,8 +62,8 @@ public:
     ~application();
 
     void set_program_options(boost::program_options::options_description& command_line_options,
-                             boost::program_options::options_description& configuration_file_options)const;
-    void initialize(const boost::program_options::variables_map&options);
+                             boost::program_options::options_description& configuration_file_options) const;
+    void initialize(const boost::program_options::variables_map& options);
     void initialize_plugins(const boost::program_options::variables_map& options);
     void startup();
     void shutdown();
@@ -144,8 +150,8 @@ private:
 };
 
 template <class C, typename... Args>
-boost::signals2::scoped_connection connect_signal(
-    boost::signals2::signal<void(Args...)>& sig, C& c, void (C::*f)(Args...))
+boost::signals2::scoped_connection
+connect_signal(boost::signals2::signal<void(Args...)>& sig, C& c, void (C::*f)(Args...))
 {
     std::weak_ptr<C> weak_c = c.shared_from_this();
     return sig.connect([weak_c, f](Args... args) {
@@ -155,5 +161,6 @@ boost::signals2::scoped_connection connect_signal(
         ((*shared_c).*f)(args...);
     });
 }
-}
-} // scorum::app
+
+} // namespace app
+} // namespace scorum

@@ -8,11 +8,11 @@ endif()
 
 file(GLOB UNIT_TESTS "tests/*.cpp")
 add_executable( chain_test ${UNIT_TESTS} ${COMMON_SOURCES} )
-target_link_libraries( chain_test chainbase scorum_chain scorum_protocol scorum_app scorum_account_history scorum_witness scorum_debug_node fc ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( chain_test chainbase scorum_chain scorum_protocol scorum_app scorum_account_history scorum_witness scorum_debug_node scorum_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
 
 file(GLOB PLUGIN_TESTS "plugin_tests/*.cpp")
 add_executable( plugin_test ${PLUGIN_TESTS} ${COMMON_SOURCES} )
-target_link_libraries( plugin_test scorum_chain scorum_protocol scorum_app scorum_account_history scorum_witness scorum_debug_node fc ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( plugin_test scorum_chain scorum_protocol scorum_app scorum_account_history scorum_witness scorum_debug_node scorum_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
 
 if(MSVC)
   set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

@@ -911,15 +911,20 @@ void database::notify_post_apply_operation(const operation_notification& note)
     SCORUM_TRY_NOTIFY(post_apply_operation, note)
 }
 
-inline const void database::push_virtual_operation(const operation& op, bool force)
+inline void database::push_virtual_operation(const operation& op)
 {
-    if (!force)
-    {
 #if defined(IS_LOW_MEM) && !defined(IS_TEST_NET)
-        return;
+    return;
 #endif
-    }
 
+    FC_ASSERT(is_virtual_operation(op));
+    operation_notification note(op);
+    notify_pre_apply_operation(note);
+    notify_post_apply_operation(note);
+}
+
+inline void database::push_hf_operation(const operation& op)
+{
     FC_ASSERT(is_virtual_operation(op));
     operation_notification note(op);
     notify_pre_apply_operation(note);
@@ -941,8 +946,10 @@ void database::notify_on_pre_apply_transaction(const signed_transaction& tx)
     SCORUM_TRY_NOTIFY(on_pre_apply_transaction, tx)
 }
 
-void database::notify_on_applied_transaction(const signed_transaction& tx){ SCORUM_TRY_NOTIFY(on_applied_transaction,
-                                                                                              tx) }
+void database::notify_on_applied_transaction(const signed_transaction& tx)
+{
+    SCORUM_TRY_NOTIFY(on_applied_transaction, tx);
+}
 
 account_name_type database::get_scheduled_witness(uint32_t slot_num) const
 {
@@ -2406,7 +2413,7 @@ void database::apply_hardfork(uint32_t hardfork)
                   "Hardfork processing failed sanity check...");
     });
 
-    push_virtual_operation(hardfork_operation(hardfork), true);
+    push_hf_operation(hardfork_operation(hardfork));
 }
 
 /**

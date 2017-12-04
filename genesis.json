@@ -1,0 +1,35 @@
+{
+	"initial_timestamp" : "2017-11-29T10:03:00",
+	"init_supply": 1000,
+	"accounts": [{
+		"name": "initdelegate",
+		"recovery_account": "",
+		"public_key": "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs",
+		"scr_amount": 1000,
+		"sp_amount": 0
+	}, {
+		"name": "alice",
+		"recovery_account": "",
+		"public_key": "STM5Sg79ehsR4W4XWAbuNkFgmjzWAZQsvgUaP9i1EKVdC6uVbpXTK",
+		"scr_amount": 0,
+		"sp_amount": 0
+	}, {
+		"name": "bob",
+		"recovery_account": "",
+		"public_key": "STM61EJLQzASMXkZxrNpWB1yhNrCa2T7nUAnFVufoobwvEkNKH798",
+		"scr_amount": 0,
+		"sp_amount": 0
+	}],
+
+	"witness_candidates": [{
+		"owner_name": "initdelegate",
+		"block_signing_key": "STM5omawYzkrPdcEEcFiwLdEu7a3znoJDSmerNgf96J2zaHZMTpWs"
+	}, {
+		"owner_name": "alice",
+		"block_signing_key": "STM5Sg79ehsR4W4XWAbuNkFgmjzWAZQsvgUaP9i1EKVdC6uVbpXTK"
+	}, {
+		"owner_name": "bob",
+		"block_signing_key": "STM61EJLQzASMXkZxrNpWB1yhNrCa2T7nUAnFVufoobwvEkNKH798"
+	}]
+}
+
