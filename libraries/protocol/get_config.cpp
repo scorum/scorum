@@ -11,7 +11,7 @@ fc::variant_object get_config()
 {
     fc::mutable_variant_object result;
 
-// clang-format off
+    // clang-format off
 
 #ifdef IS_TEST_NET
     result[ "IS_TEST_NET" ] = true;
@@ -123,8 +123,13 @@ fc::variant_object get_config()
     result["VESTS_SYMBOL"] = VESTS_SYMBOL;
     result["VIRTUAL_SCHEDULE_LAP_LENGTH"] = VIRTUAL_SCHEDULE_LAP_LENGTH;
     result["VIRTUAL_SCHEDULE_LAP_LENGTH2"] = VIRTUAL_SCHEDULE_LAP_LENGTH2;
+    result["SCORUM_REWARDS_INITIAL_SUPPLY"] = SCORUM_REWARDS_INITIAL_SUPPLY;
+    result["SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS"] = SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS;
+    result["SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS"] = SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS;
+    result["SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS"] = SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS;
+    result["SCORUM_ADJUST_REWARD_PERCENT"] = SCORUM_ADJUST_REWARD_PERCENT;
 
     return result;
 }
-}
-} // scorum::protocol
+} // namespace protocol
+} // namespace scorum
