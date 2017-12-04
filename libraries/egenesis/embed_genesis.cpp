@@ -206,16 +206,22 @@ bool write_to_file(const boost::filesystem::path& path, const std::string& conte
         return false;
     }
 
-    boost::filesystem::ofstream outfile(path);
+    boost::filesystem::ofstream outfile;
+    outfile.exceptions(std::fstream::failbit | std::fstream::badbit);
 
-    if (!outfile)
+    try
     {
-        std::cerr << "embed_genesis: failure opening " << path << std::endl;
-        return false;
-    }
+        outfile.open(path);
+        if (!outfile)
+        {
+            std::cerr << "embed_genesis: failure opening " << path << std::endl;
+            return false;
+        }
 
-    outfile << content;
-    outfile.close();
+        outfile << content;
+        outfile.close();
+    }
+    FC_LOG_AND_RETHROW()
 
     return true;
 }
@@ -228,10 +234,18 @@ bool read_from_file(const boost::filesystem::path& path, std::string& template_c
         return false;
     }
 
-    boost::filesystem::ifstream f(path, std::ios::in | std::ios::binary);
-    std::stringstream ss;
-    ss << f.rdbuf();
-    template_content = ss.str();
+    boost::filesystem::ifstream file_stream;
+    file_stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try
+    {
+        file_stream.open(path, std::ios::in | std::ios::binary);
+        std::stringstream ss;
+        ss << file_stream.rdbuf();
+        template_content = ss.str();
+
+        file_stream.close();
+    }
+    FC_LOG_AND_RETHROW()
 
     return true;
 }
