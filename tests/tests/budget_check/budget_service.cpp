@@ -4,7 +4,7 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 
-#include "../../common/database_fixture.hpp"
+#include "database_fixture.hpp"
 
 #include <limits>
 
@@ -64,10 +64,7 @@ public:
 void budget_service_check_fixture::create_fund_budget_in_block(const asset& balance, const time_point_sec& deadline)
 {
     db_plugin->debug_update(
-        [=](database&) {
-            BOOST_REQUIRE_NO_THROW(budget_service.create_fund_budget(balance, deadline));
-        },
-        default_skip);
+        [=](database&) { BOOST_REQUIRE_NO_THROW(budget_service.create_fund_budget(balance, deadline)); }, default_skip);
 }
 
 asset budget_service_check_fixture::allocate_cash_from_fund_budget_in_block()

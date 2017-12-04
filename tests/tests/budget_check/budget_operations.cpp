@@ -6,7 +6,7 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 
-#include "../../common/database_fixture.hpp"
+#include "database_fixture.hpp"
 
 #include <limits>
 

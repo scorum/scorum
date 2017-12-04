@@ -665,11 +665,6 @@ public:
             approving_account_lut[approving_acct->name] = *approving_acct;
             i++;
         }
-        auto get_account_from_lut = [&](const std::string& name) -> const account_api_obj& {
-            auto it = approving_account_lut.find(name);
-            FC_ASSERT(it != approving_account_lut.end());
-            return it->second;
-        };
 
         flat_set<public_key_type> approving_key_set;
         for (account_name_type& acct_name : req_active_approvals)
@@ -743,6 +738,12 @@ public:
                 available_private_keys[key] = *privkey;
             }
         }
+
+        auto get_account_from_lut = [&](const std::string& name) -> const account_api_obj& {
+            auto it = approving_account_lut.find(name);
+            FC_ASSERT(it != approving_account_lut.end());
+            return it->second;
+        };
 
         auto minimal_signing_keys = tx.minimize_required_signatures(
             _chain_id, available_keys,
