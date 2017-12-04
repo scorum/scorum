@@ -50,7 +50,7 @@ public:
     database();
     virtual ~database();
 
-    bool is_producing() const
+    bool is_producing() const override
     {
         return _is_producing;
     }
@@ -131,28 +131,29 @@ public:
 
     chain_id_type get_chain_id() const;
 
-    const witness_object& get_witness(const account_name_type& name) const;
+    const witness_object& get_witness(const account_name_type& name) const override;
     const witness_object* find_witness(const account_name_type& name) const;
 
-    const account_object& get_account(const account_name_type& name) const;
+    const account_object& get_account(const account_name_type& name) const override;
     const account_object* find_account(const account_name_type& name) const;
 
-    const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
+    const comment_object& get_comment(const account_name_type& author,
+                                      const fc::shared_string& permlink) const override;
     const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
-    const comment_object& get_comment(const account_name_type& author, const string& permlink) const;
+    const comment_object& get_comment(const account_name_type& author, const string& permlink) const override;
     const comment_object* find_comment(const account_name_type& author, const string& permlink) const;
 
-    const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const;
+    const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const override;
     const escrow_object* find_escrow(const account_name_type& name, uint32_t escrow_id) const;
 
-    const dynamic_global_property_object& get_dynamic_global_properties() const;
+    const dynamic_global_property_object& get_dynamic_global_properties() const override;
     const node_property_object& get_node_properties() const;
-    const witness_schedule_object& get_witness_schedule_object() const;
+    const witness_schedule_object& get_witness_schedule_object() const override;
     const hardfork_property_object& get_hardfork_property_object() const;
 
-    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const;
-    const reward_fund_object& get_reward_fund(const comment_object& c) const;
+    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const override;
+    const reward_fund_object& get_reward_fund(const comment_object& c) const override;
 
     /**
      *  Deducts fee from the account and the share supply
@@ -197,9 +198,11 @@ public:
      */
     void notify_pre_apply_operation(operation_notification& note);
     void notify_post_apply_operation(const operation_notification& note);
-    inline const void
-    push_virtual_operation(const operation& op,
-                           bool force = false); // vops are not needed for low mem. Force will push them on low mem.
+
+    // vops are not needed for low mem. Force will push them on low mem.
+    inline void push_virtual_operation(const operation& op);
+    inline void push_hf_operation(const operation& op);
+
     void notify_applied_block(const signed_block& block);
     void notify_on_pending_transaction(const signed_transaction& tx);
     void notify_on_pre_apply_transaction(const signed_transaction& tx);
@@ -298,8 +301,8 @@ public:
     void adjust_supply(const asset& delta, bool adjust_vesting = false);
     void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
-    asset get_balance(const account_object& a, asset_symbol_type symbol) const;
-    asset get_balance(const string& aname, asset_symbol_type symbol) const
+    asset get_balance(const account_object& a, asset_symbol_type symbol) const override;
+    asset get_balance(const string& aname, asset_symbol_type symbol) const override
     {
         return get_balance(get_account(aname), symbol);
     }
@@ -320,11 +323,11 @@ public:
     void process_decline_voting_rights();
     void update_median_feed();
 
-    uint16_t get_curation_rewards_percent(const comment_object& c) const;
+    uint16_t get_curation_rewards_percent(const comment_object& c) const override;
 
     share_type pay_reward_funds(share_type reward);
 
-    time_point_sec head_block_time() const;
+    time_point_sec head_block_time() const override;
     uint32_t head_block_num() const;
     block_id_type head_block_id() const;
 
@@ -336,7 +339,7 @@ public:
     void initialize_evaluators();
     void set_custom_operation_interpreter(const std::string& id,
                                           std::shared_ptr<custom_operation_interpreter> registry);
-    std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const std::string& id);
+    std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const std::string& id) override;
 
     /// Reset the object graph in-memory
     void initialize_indexes();
