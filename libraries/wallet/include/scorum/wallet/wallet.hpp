@@ -347,12 +347,12 @@ public:
      *  'info' wallet command.
      *
      *  @param creator The account creating the new account
-     *  @param new_account_name The name of the new account
+     *  @param newname The name of the new account
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_account(const std::string& creator,
-                                                const std::string& new_account_name,
+                                                const std::string& newname,
                                                 const std::string& json_meta,
                                                 bool broadcast);
 

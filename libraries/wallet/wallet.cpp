@@ -1356,7 +1356,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
 annotated_signed_transaction wallet_api::create_account_with_keys_delegated(const std::string& creator,
                                                                             const asset& scorum_fee,
                                                                             const asset& delegated_vests,
-                                                                            const string& new_account_name,
+                                                                            const string& newname,
                                                                             const string& json_meta,
                                                                             const public_key_type& owner,
                                                                             const public_key_type& active,
@@ -1369,7 +1369,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(cons
         FC_ASSERT(!is_locked());
         account_create_with_delegation_operation op;
         op.creator = creator;
-        op.new_account_name = new_account_name;
+        op.new_account_name = newname;
         op.owner = authority(1, owner, 1);
         op.active = authority(1, active, 1);
         op.posting = authority(1, posting, 1);
@@ -1384,7 +1384,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(cons
 
         return my->sign_transaction(tx, broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((creator)(new_account_name)(json_meta)(owner)(active)(memo)(broadcast))
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(memo)(broadcast))
 }
 
 annotated_signed_transaction wallet_api::request_account_recovery(const std::string& recovery_account,
@@ -1751,7 +1751,7 @@ annotated_signed_transaction wallet_api::delegate_vesting_shares(const std::stri
  *  will be controlable by this wallet.
  */
 annotated_signed_transaction wallet_api::create_account(const std::string& creator,
-                                                        const std::string& new_account_name,
+                                                        const std::string& newname,
                                                         const std::string& json_meta,
                                                         bool broadcast)
 {
@@ -1766,10 +1766,10 @@ annotated_signed_transaction wallet_api::create_account(const std::string& creat
         import_key(active.wif_priv_key);
         import_key(posting.wif_priv_key);
         import_key(memo.wif_priv_key);
-        return create_account_with_keys(creator, new_account_name, json_meta, owner.pub_key, active.pub_key,
-                                        posting.pub_key, memo.pub_key, broadcast);
+        return create_account_with_keys(creator, newname, json_meta, owner.pub_key, active.pub_key, posting.pub_key,
+                                        memo.pub_key, broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((creator)(new_account_name)(json_meta))
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta))
 }
 
 /**
@@ -1779,7 +1779,7 @@ annotated_signed_transaction wallet_api::create_account(const std::string& creat
 annotated_signed_transaction wallet_api::create_account_delegated(const std::string& creator,
                                                                   const asset& scorum_fee,
                                                                   const asset& delegated_vests,
-                                                                  const std::string& new_account_name,
+                                                                  const std::string& newname,
                                                                   const std::string& json_meta,
                                                                   bool broadcast)
 {
@@ -1794,11 +1794,11 @@ annotated_signed_transaction wallet_api::create_account_delegated(const std::str
         import_key(active.wif_priv_key);
         import_key(posting.wif_priv_key);
         import_key(memo.wif_priv_key);
-        return create_account_with_keys_delegated(creator, scorum_fee, delegated_vests, new_account_name, json_meta,
+        return create_account_with_keys_delegated(creator, scorum_fee, delegated_vests, newname, json_meta,
                                                   owner.pub_key, active.pub_key, posting.pub_key, memo.pub_key,
                                                   broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((creator)(new_account_name)(json_meta))
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta))
 }
 
 annotated_signed_transaction wallet_api::update_witness(const std::string& witness_account_name,

@@ -341,7 +341,7 @@ void create_budget_operation::validate() const
 {
     validate_account_name(owner);
     validate_permlink(content_permlink);
-    FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCORUM");
+    FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCR");
     FC_ASSERT(balance > asset(0, SCORUM_SYMBOL), "Balance must be positive");
 }
 

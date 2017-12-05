@@ -95,7 +95,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance_in_scor
 {
     FC_ASSERT(balance_in_scorum.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
-    FC_ASSERT(get_fund_budget_count() < SCORUM_LIMIT_FUND_BUDGETS, "can't created more then ${1} fund budgets",
+    FC_ASSERT(get_fund_budget_count() < SCORUM_LIMIT_FUND_BUDGETS, "can't create more then ${1} fund budgets",
               ("1", SCORUM_LIMIT_FUND_BUDGETS));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
@@ -133,7 +133,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     FC_ASSERT(balance_in_scorum.amount > 0, "invalid balance_in_scorum");
     FC_ASSERT(owner.balance >= balance_in_scorum, "insufficient funds");
     FC_ASSERT(get_budget_count(owner.name) < SCORUM_LIMIT_BUDGETS_PER_OWNER,
-              "can't created more then ${1} budgets per owner", ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
+              "can't create more then ${1} budgets per owner", ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
