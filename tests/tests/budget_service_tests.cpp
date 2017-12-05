@@ -71,15 +71,48 @@ BOOST_AUTO_TEST_CASE(fund_budget_creation)
 {
     try
     {
+        // fund budget is created within database(in database::init_genesis_rewards())
+        BOOST_REQUIRE_NO_THROW(budget_service.get_fund_budget());
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(fund_budget_initial_supply)
+{
+    try
+    {
+        const asset fund_budget_initial_supply(
+            TEST_REWARD_INITIAL_SUPPLY.amount
+            * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
+            / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+
+        auto budget = budget_service.get_fund_budget();
+
+        BOOST_REQUIRE(budget.get().balance == fund_budget_initial_supply);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(fund_budget_initial_deadline)
+{
+    try
+    {
+        auto budget = budget_service.get_fund_budget();
+
+        BOOST_REQUIRE(budget.get().deadline
+                      == db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS));
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(second_fund_budget_creation)
+{
+    try
+    {
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
         time_point_sec deadline(default_deadline);
 
-        const auto& budget = budget_service.create_fund_budget(balance, deadline);
-
-        BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
-
-        auto budgets = budget_service.get_fund_budgets();
-        BOOST_REQUIRE(budgets.size() == 1);
+        BOOST_REQUIRE_THROW(budget_service.create_fund_budget(balance, deadline), fc::assert_exception);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -132,34 +165,6 @@ BOOST_AUTO_TEST_CASE(second_owned_budget_creation)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(second_fund_budget_creation)
-{
-    try
-    {
-        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(default_deadline);
-
-        {
-            const auto& budget = budget_service.create_fund_budget(balance, deadline);
-
-            BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
-
-            auto budgets = budget_service.get_fund_budgets();
-            BOOST_REQUIRE(budgets.size() == 1);
-        }
-
-        {
-            const auto& budget = budget_service.create_fund_budget(balance, deadline);
-
-            BOOST_REQUIRE(budget.balance.amount == BUDGET_BALANCE_DEFAULT);
-
-            auto budgets = budget_service.get_fund_budgets();
-            BOOST_REQUIRE(budgets.size() == 2);
-        }
-    }
-    FC_LOG_AND_RETHROW()
-}
-
 BOOST_AUTO_TEST_CASE(get_all_budgets)
 {
     try
@@ -167,7 +172,7 @@ BOOST_AUTO_TEST_CASE(get_all_budgets)
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
         time_point_sec deadline(default_deadline);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
         BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
         BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
 
@@ -184,7 +189,7 @@ BOOST_AUTO_TEST_CASE(get_all_budget_count)
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
         time_point_sec deadline(default_deadline);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
         BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
         BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
 
@@ -200,7 +205,7 @@ BOOST_AUTO_TEST_CASE(lookup_budget_owners)
         asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
         time_point_sec deadline(default_deadline);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
+        BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
         BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, optional<string>(), balance, deadline));
         BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
         BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, optional<string>(), balance, deadline));
@@ -279,23 +284,6 @@ BOOST_AUTO_TEST_CASE(get_budget_count)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(get_fund_budget_count)
-{
-    try
-    {
-        asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-        time_point_sec deadline(default_deadline);
-
-        BOOST_CHECK_THROW(budget_service.get_budgets("alice"), fc::assert_exception);
-
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
-        BOOST_CHECK_NO_THROW(budget_service.create_fund_budget(balance, deadline));
-
-        BOOST_REQUIRE(budget_service.get_fund_budget_count() == 2);
-    }
-    FC_LOG_AND_RETHROW()
-}
-
 BOOST_AUTO_TEST_CASE(close_budget)
 {
     try
@@ -349,36 +337,30 @@ BOOST_AUTO_TEST_CASE(allocate_cash_next_block)
     {
         db_plugin->debug_update(
             [=](database&) {
-                asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-                time_point_sec deadline(default_deadline);
+                // asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+                // time_point_sec deadline(default_deadline);
 
-                budget_service.create_fund_budget(balance, deadline);
-
+                // budget_service.create_fund_budget(balance, deadline);
             },
             default_skip);
 
         generate_block();
 
+        const asset fund_budget_initial_supply(
+            TEST_REWARD_INITIAL_SUPPLY.amount
+            * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
+            / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+
         {
-            auto budgets = budget_service.get_fund_budgets();
-
-            BOOST_REQUIRE(!budgets.empty());
-
-            const budget_object& budget = budgets[0];
+            auto budget = budget_service.get_fund_budget();
 
             auto cash = budget_service.allocate_cash(budget);
 
-            BOOST_REQUIRE(cash.amount == BUDGET_PER_BLOCK_DEFAULT);
-        }
+            BOOST_REQUIRE_EQUAL(cash.amount.value,
+                                fund_budget_initial_supply.amount.value
+                                    / (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY));
 
-        {
-            auto budgets = budget_service.get_fund_budgets();
-
-            BOOST_REQUIRE(!budgets.empty());
-
-            const budget_object& budget = budgets[0];
-
-            BOOST_REQUIRE(budget.balance.amount == (BUDGET_BALANCE_DEFAULT - BUDGET_PER_BLOCK_DEFAULT));
+            BOOST_REQUIRE_EQUAL(budget.get().balance.amount.value, (fund_budget_initial_supply - cash).amount.value);
         }
     }
     FC_LOG_AND_RETHROW()

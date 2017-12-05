@@ -59,12 +59,9 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_supply_distribution)
         const reward_pool_object& pool = reward_service.get_pool();
 
         asset total_reward_supply = pool.balance;
-        for (const auto& bugget : budget_service.get_fund_budgets())
-        {
-            total_reward_supply += bugget.get().balance;
-        }
+        total_reward_supply += budget_service.get_fund_budget().get().balance;
 
-        BOOST_REQUIRE(total_reward_supply == TEST_REWARD_INITIAL_SUPPLY);
+        BOOST_REQUIRE_EQUAL(total_reward_supply, TEST_REWARD_INITIAL_SUPPLY);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -162,16 +159,16 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_automatic_reward_decreasing)
         asset threshold_balance(pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                 * SCORUM_BLOCKS_PER_DAY);
 
-        asset current_per_block_reward = NULL_BALANCE;
-        while (pool.balance > threshold_balance)
+        while (pool.balance >= threshold_balance)
         {
-            current_per_block_reward = reward_service.take_block_reward();
+            reward_service.take_block_reward();
         }
 
-        current_per_block_reward = reward_service.take_block_reward();
+        asset current_per_block_reward = reward_service.take_block_reward();
 
-        BOOST_REQUIRE(current_per_block_reward.amount
-                      == initial_per_block_reward.amount * (100 - SCORUM_ADJUST_REWARD_PERCENT) / 100);
+        BOOST_REQUIRE_EQUAL(current_per_block_reward.amount.value,
+                            initial_per_block_reward.amount.value
+                                - (initial_per_block_reward.amount.value * SCORUM_ADJUST_REWARD_PERCENT) / 100);
     }
     FC_LOG_AND_RETHROW()
 }

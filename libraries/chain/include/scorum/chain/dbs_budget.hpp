@@ -12,7 +12,7 @@ namespace chain {
 
 /** DB service for operations with budget_object
  *  --------------------------------------------
-*/
+ */
 class dbs_budget : public dbs_base
 {
     friend class dbservice_dbs_factory;
@@ -21,7 +21,8 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
-    using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
+    using budget_ref_type = std::reference_wrapper<const budget_object>;
+    using budget_refs_type = std::vector<budget_ref_type>;
 
     /** Lists all budgets.
      *
@@ -59,11 +60,7 @@ public:
 
     /** Lists all fund budgets
      */
-    budget_refs_type get_fund_budgets() const;
-
-    /** Count of all fund budgets
-     */
-    uint64_t get_fund_budget_count() const;
+    budget_ref_type get_fund_budget() const;
 
     /** Create fund budget (non any owner).
      *
@@ -73,8 +70,7 @@ public:
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
-    const budget_object& create_fund_budget(const asset& balance_in_scorum,
-                                               const time_point_sec& deadline);
+    const budget_object& create_fund_budget(const asset& balance_in_scorum, const time_point_sec& deadline);
 
     /** Create budget.
      *  The owner has abilities for all operations (for update, close and schedule operations).
@@ -88,8 +84,7 @@ public:
     const budget_object& create_budget(const account_object& owner,
                                        const optional<string>& content_permlink,
                                        const asset& balance_in_scorum,
-                                       const time_point_sec& deadline
-                                       );
+                                       const time_point_sec& deadline);
 
     /** Close budget.
      *  Delete the budget, cash back from budget to owner account.
@@ -109,13 +104,10 @@ public:
     asset allocate_cash(const budget_object& budget, const optional<time_point_sec>& now = optional<time_point_sec>());
 
 private:
-
-    share_type _calculate_per_block(
-            const time_point_sec& start_date,
-            const time_point_sec& end_date,
-            share_type balance_amount);
+    share_type
+    _calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, share_type balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
 };
-}
-}
+} // namespace chain
+} // namespace scorum

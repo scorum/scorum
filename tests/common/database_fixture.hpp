@@ -15,7 +15,7 @@
 #define TEST_CHAIN_ID fc::sha256::hash("testnet")
 #define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
 #define TEST_INITIAL_SUPPLY (10000000000ll)
-#define TEST_REWARD_INITIAL_SUPPLY asset(10000000000ll)
+#define TEST_REWARD_INITIAL_SUPPLY asset(13870000000ll) // Least Common Multiple of 13870 (365*2 days) and 95 (%) * 10^6
 #define TEST_GENESIS_TIMESTAMP (1431700000)
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
 
