@@ -211,24 +211,19 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
                                             const time_point_sec& end_date,
                                             share_type balance_amount)
 {
-    FC_ASSERT(start_date < end_date, "invalid date interval");
+    FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(), "invalid date interval");
 
     share_type ret(balance_amount);
 
-    fc::microseconds per_block_time = fc::seconds(SCORUM_BLOCK_INTERVAL);
-    fc::microseconds delta = end_date - start_date;
+    // calculate time interval in seconds.
+    // SCORUM_BLOCK_INTERVAL must be in seconds!
+    uint32_t delta_in_sec = end_date.sec_since_epoch() - start_date.sec_since_epoch();
 
-    if (ret > delta.count())
-    {
-        ret /= delta.count();
-        ret *= per_block_time.count();
-    }
-    else
-    {
-        ret *= per_block_time.count();
-        ret /= delta.count();
-    }
+    // multiply before division to prevent integer clipping to zero
+    ret *= SCORUM_BLOCK_INTERVAL;
+    ret /= delta_in_sec;
 
+    // non zero budget must return at least one satoshi
     if (ret < 1)
     {
         ret = 1;

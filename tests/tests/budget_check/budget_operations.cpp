@@ -70,7 +70,7 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_owner_name)
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 
-    create_budget_op.owner = "dskf;k30kfl;kvfakg'04i\'j'[IGRIREW40KIA'AKG'K'RK-]]4-4AP[GIRAIORPIGOPRG";
+    create_budget_op.owner = "wrong;\n'j'";
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }
