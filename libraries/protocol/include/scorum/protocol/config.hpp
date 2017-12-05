@@ -9,7 +9,7 @@
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 1) )
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
-#define SCORUM_ADDRESS_PREFIX                  "STM"
+#define SCORUM_ADDRESS_PREFIX                  "SCR"
 
 #ifdef IS_TEST_NET
 #define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision

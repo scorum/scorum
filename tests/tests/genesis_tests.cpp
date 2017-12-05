@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
     const std::string genesis_str = "{\"accounts\":[{"
                                     "\"name\":\"user\","
                                     "\"recovery_account\":\"admin\","
-                                    "\"public_key\":\"STM1111111111111111111111111111111114T1Anm\","
+                                    "\"public_key\":\"SCR1111111111111111111111111111111114T1Anm\","
                                     "\"scr_amount\":1000,"
                                     "\"sp_amount\":1000000"
                                     "}]}";
@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
     sc::genesis_state_type::account_type account = genesis_state.accounts.front();
 
     BOOST_CHECK(account.name == "user");
-    BOOST_CHECK(account.public_key == sp::public_key_type("STM1111111111111111111111111111111114T1Anm"));
+    BOOST_CHECK(account.public_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
     BOOST_CHECK(account.scr_amount == 1000);
     BOOST_CHECK(account.sp_amount == 1000000);
     BOOST_CHECK(account.recovery_account == "admin");
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(check_witness_fields)
 {
     const std::string genesis_str = "{\"witness_candidates\":[{"
                                     "\"owner_name\":\"user\","
-                                    "\"block_signing_key\":\"STM1111111111111111111111111111111114T1Anm\""
+                                    "\"block_signing_key\":\"SCR1111111111111111111111111111111114T1Anm\""
                                     "}]}";
 
     const sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(check_witness_fields)
     sc::genesis_state_type::witness_type w = genesis_state.witness_candidates.front();
 
     BOOST_CHECK(w.owner_name == "user");
-    BOOST_CHECK(w.block_signing_key == sp::public_key_type("STM1111111111111111111111111111111114T1Anm"));
+    BOOST_CHECK(w.block_signing_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
 }
 
 BOOST_AUTO_TEST_CASE(check_initial_timestamp)
