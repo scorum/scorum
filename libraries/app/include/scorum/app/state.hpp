@@ -146,8 +146,8 @@ FC_REFLECT_DERIVED( scorum::app::extended_account,
                    (transfer_history)(post_history)(vote_history)(other_history)(witness_votes)(tags_usage)(guest_bloggers)(comments)(feed)(blog)(recent_replies)(recommended) )
 
 
-FC_REFLECT( scorum::app::vote_state, (voter)(weight)(rshares)(percent)(reputation)(time) );
-FC_REFLECT( scorum::app::account_vote, (authorperm)(weight)(rshares)(percent)(time) );
+FC_REFLECT( scorum::app::vote_state, (voter)(weight)(rshares)(percent)(reputation)(time) )
+FC_REFLECT( scorum::app::account_vote, (authorperm)(weight)(rshares)(percent)(time) )
 
 FC_REFLECT( scorum::app::discussion_index, (category)(trending)(payout)(payout_comments)(trending30)(updated)(created)(responses)(active)(votes)(maturing)(best)(hot)(promoted)(cashout) )
 FC_REFLECT( scorum::app::tag_index, (trending) )

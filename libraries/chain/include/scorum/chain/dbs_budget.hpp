@@ -2,7 +2,10 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 #include <vector>
+#include <set>
 #include <functional>
+
+#include <scorum/chain/budget_objects.hpp>
 
 namespace scorum {
 namespace chain {
@@ -13,6 +16,8 @@ namespace chain {
 class dbs_budget : public dbs_base
 {
     friend class dbservice_dbs_factory;
+
+    dbs_budget() = delete;
 
 protected:
     explicit dbs_budget(database& db);
@@ -26,6 +31,20 @@ public:
      */
     budget_refs_type get_budgets() const;
 
+    /** Count of all budgets registered for owner.
+     *
+     * @param owner the name of the owner
+     * @returns a list of budget objects
+     */
+    uint64_t get_budget_count() const;
+
+    /** Lists all budget owners.
+     *
+     *  @warning limit must be less or equal than SCORUM_LIMIT_BUDGETS_LIST_SIZE.
+     *
+     */
+    std::set<string> lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const;
+
     /** Lists all budgets registered for owner.
      *
      * @param owner the name of the owner
@@ -33,49 +52,55 @@ public:
      */
     budget_refs_type get_budgets(const account_name_type& owner) const;
 
-    /** To get the single budget by owner.
-     *  Use if you know exactly that there is only one budget for owner
-     *  to simplify calling (you don' need in budgets list enumeration)
+    /** Count of all budgets registered for owner.
      *
      * @param owner the name of the owner
-     * @returns a budget object
+     * @returns a list of budget objects
      */
-    const budget_object& get_any_budget(const account_name_type& owner) const;
+    uint64_t get_budget_count(const account_name_type& owner) const;
+
+    /** Lists all fund budgets
+     */
+    budget_refs_type get_fund_budgets() const;
+
+    /** Count of all fund budgets
+     */
+    uint64_t get_fund_budget_count() const;
+
+    /** Get budget by id
+     */
+    const budget_object& get_budget(budget_id_type id) const;
 
     /** Create fund budget (non any owner).
      *
+     * @warning count of fund budgets must be less or equal than SCORUM_LIMIT_BUDGETS_PER_OWNER.
+     *
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
-     * @param per_block the amount for asset distribution
-     *                  (the distribution is allowed one time per block)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
     const budget_object& create_fund_budget(const asset& balance_in_scorum,
-                                               const share_type& per_block,
                                                const time_point_sec& deadline);
 
     /** Create budget.
      *  The owner has abilities for all operations (for update, close and schedule operations).
      *
      * @param owner the name of the owner
-     * @param content_permlink the budget target identity (post or other)
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
-     * @param per_block the amount for asset distribution
-     *                  (the distribution is allowed one time per block)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
+     * @param content_permlink the budget target identity (post or other)
      * @returns a budget object
      */
     const budget_object& create_budget(const account_object& owner,
-                                       const optional<string>& content_permlink,
                                        const asset& balance_in_scorum,
-                                       const share_type& per_block,
-                                       const time_point_sec& deadline
+                                       const time_point_sec& deadline,
+                                       const optional<string>& content_permlink = optional<string>()
                                        );
 
     /** Close budget.
      *  Delete the budget, cash back from budget to owner account.
      *
-     * @warning It is not allowed for genesis budget.
+     * @warning It is not allowed for fund budget.
      *
      * @param budget the budget to close
      */
@@ -91,8 +116,16 @@ public:
 
 private:
 
+    share_type _calculate_per_block(
+            const time_point_sec& start_date,
+            const time_point_sec& end_date,
+            share_type balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
+    bool _is_fund_budget(const budget_object&) const;
+    void _close_budget(const budget_object&);
+    void _close_owned_budget(const budget_object&);
+    void _close_fund_budget(const budget_object&);
 };
 }
 }

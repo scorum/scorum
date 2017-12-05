@@ -199,6 +199,26 @@ live_database_fixture::~live_database_fixture()
     FC_LOG_AND_RETHROW()
 }
 
+timed_blocks_database_fixture::timed_blocks_database_fixture()
+{
+    default_deadline = db.get_slot_time(BLOCK_LIMIT_DEFAULT);
+    if (!_time_printed)
+    {
+        const size_t w = 20;
+        std::cout << std::setw(w) << "head_block_time = " << db.head_block_time().to_iso_string() << std::endl;
+        for (int slot = 1; slot <= BLOCK_LIMIT_DEFAULT; ++slot)
+        {
+            std::stringstream title;
+            title << "slot_time(" << slot << ") = ";
+            std::cout << std::setw(w) << title.str() << db.get_slot_time(slot).to_iso_string() << std::endl;
+        }
+        std::cout << std::setw(w) << "default_deadline = " << default_deadline.to_iso_string() << std::endl;
+        _time_printed = true;
+    }
+}
+
+bool timed_blocks_database_fixture::_time_printed = false;
+
 private_key_type database_fixture::generate_private_key(string seed)
 {
     static const private_key_type committee = private_key_type::regenerate(fc::sha256::hash(string("init_key")));

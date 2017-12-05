@@ -31,11 +31,12 @@
 
 #include <fc/crypto/digest.hpp>
 #include <fc/crypto/hex.hpp>
-#include "../common/database_fixture.hpp"
 #include <fc/string.hpp>
 
 #include <algorithm>
 #include <random>
+
+#include "database_fixture.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;

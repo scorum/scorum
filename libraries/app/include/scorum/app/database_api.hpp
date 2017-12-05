@@ -198,6 +198,10 @@ public:
      */
     uint64_t get_account_count() const;
 
+    vector<budget_api_obj> get_budgets(const set<string>& account_names) const;
+
+    set<string> lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const;
+
     vector<owner_authority_history_api_obj> get_owner_history(string account) const;
 
     optional<account_recovery_request_api_obj> get_recovery_request(string account) const;
@@ -399,12 +403,12 @@ private:
 
 // clang-format off
 
-FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) );
-FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) );
+FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) )
+FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 
-FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) );
+FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) )
 
-FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) );
+FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) )
 
 FC_API(scorum::app::database_api,
    // Subscriptions
@@ -479,7 +483,6 @@ FC_API(scorum::app::database_api,
    (get_discussions_by_author_before_date)
    (get_replies_by_last_update)
 
-
    // Witnesses
    (get_witnesses)
    (get_witness_by_account)
@@ -487,6 +490,10 @@ FC_API(scorum::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
    (get_active_witnesses)
+
+    // Budget
+   (get_budgets)
+   (lookup_budget_owners)
 )
 
 // clang-format on

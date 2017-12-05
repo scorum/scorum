@@ -7,6 +7,7 @@
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/transaction_object.hpp>
 #include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/budget_objects.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -420,6 +421,38 @@ struct dynamic_global_property_api_obj : public dynamic_global_property_object
     uint64_t average_block_size = 0;
     uint128_t max_virtual_bandwidth = 0;
 };
+
+struct budget_api_obj
+{
+    budget_api_obj(const chain::budget_object& b):
+        id(b.id._id),
+        owner(b.owner),
+        content_permlink(fc::to_string(b.content_permlink)),
+        created(b.created),
+        deadline(b.deadline),
+        balance(b.balance),
+        per_block(b.per_block),
+        last_allocated_block(b.last_allocated_block)
+    {
+    }
+
+    //because fc::variant require for temporary object
+    budget_api_obj() {}
+
+    int64_t id;
+
+    account_name_type owner;
+    string content_permlink;
+
+    time_point_sec created;
+    time_point_sec deadline;
+
+    asset balance;
+    share_type per_block;
+
+    uint32_t last_allocated_block;
+};
+
 }
 } // scorum::app
 
@@ -500,5 +533,16 @@ FC_REFLECT_DERIVED( scorum::app::dynamic_global_property_api_obj, (scorum::chain
                      (average_block_size)
                      (max_virtual_bandwidth)
                   )
+
+FC_REFLECT( scorum::app::budget_api_obj,
+             (id)
+            (owner)
+            (content_permlink)
+            (created)
+            (deadline)
+            (balance)
+            (per_block)
+            (last_allocated_block)
+          )
 
 // clang-format on

@@ -161,6 +161,16 @@ struct get_impacted_account_visitor
         _impacted.insert(op.delegatee);
     }
 
+    void operator()(const create_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+    void operator()(const close_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
     // virtual operations
 
     void operator()(const author_reward_operation& op)
@@ -199,8 +209,6 @@ struct get_impacted_account_visitor
     {
         _impacted.insert(op.producer);
     }
-
-    // void operator()( const operation& op ){}
 };
 
 void operation_get_impacted_accounts(const operation& op, flat_set<account_name_type>& result)

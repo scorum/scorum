@@ -18,6 +18,8 @@
 #include <cfenv>
 #include <iostream>
 
+#include <scorum/chain/dbs_budget.hpp>
+
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace scorum {
@@ -53,6 +55,10 @@ public:
     vector<optional<account_api_obj>> lookup_account_names(const vector<string>& account_names) const;
     set<string> lookup_accounts(const string& lower_bound_name, uint32_t limit) const;
     uint64_t get_account_count() const;
+
+    // Budgets
+    vector<budget_api_obj> get_budgets(const set<string>& names) const;
+    set<string> lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const;
 
     // Witnesses
     vector<optional<witness_api_obj>> get_witnesses(const vector<witness_id_type>& witness_ids) const;
@@ -919,6 +925,63 @@ vector<discussion> database_api::get_content_replies(string author, string perml
         }
         return result;
     });
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// Budgets                                                          //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+vector<budget_api_obj> database_api::get_budgets(const set<string>& names) const
+{
+    return my->_db.with_read_lock([&]() { return my->get_budgets(names); });
+}
+
+vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) const
+{
+    FC_ASSERT(names.size() <= SCORUM_LIMIT_API_BUDGETS_LIST_SIZE, "names size must be less or equal than ${1}",
+              ("1", SCORUM_LIMIT_API_BUDGETS_LIST_SIZE));
+
+    vector<budget_api_obj> results;
+
+    chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
+
+    for (const auto& name : names)
+    {
+        size_t budget_count = budget_service.get_budget_count(name);
+        if (results.size() + budget_count > SCORUM_LIMIT_API_BUDGETS_LIST_SIZE)
+        {
+            break;
+        }
+
+        if (!budget_count)
+        {
+            continue;
+        }
+
+        auto budgets = budget_service.get_budgets(name);
+        for (const chain::budget_object& budget : budgets)
+        {
+            results.push_back(budget_api_obj(budget));
+        }
+    }
+
+    return results;
+}
+
+set<string> database_api::lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const
+{
+    return my->_db.with_read_lock([&]() { return my->lookup_budget_owners(lower_bound_name, limit); });
+}
+
+set<string> database_api_impl::lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const
+{
+    FC_ASSERT(limit <= SCORUM_LIMIT_API_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
+              ("1", SCORUM_LIMIT_API_BUDGETS_LIST_SIZE));
+
+    chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
+
+    return budget_service.lookup_budget_owners(lower_bound_name, limit);
 }
 
 /**

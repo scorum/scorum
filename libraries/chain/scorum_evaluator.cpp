@@ -9,6 +9,7 @@
 #include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_budget.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -1408,5 +1409,33 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         }
     }
 }
+
+void create_budget_evaluator::do_apply(const create_budget_operation& op)
+{
+    dbs_budget& budget_service = _db.obtain_service<dbs_budget>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.owner);
+
+    optional<string> content_permlink;
+    if (!op.content_permlink.empty())
+    {
+        content_permlink = op.content_permlink;
+    }
+
+    const auto& owner = account_service.get_account(op.owner);
+
+    budget_service.create_budget(owner, op.balance, op.deadline, content_permlink);
+}
+
+void close_budget_evaluator::do_apply(const close_budget_operation& op)
+{
+    dbs_budget& budget_service = _db.obtain_service<dbs_budget>();
+
+    const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
+
+    budget_service.close_budget(budget);
+}
+
 } // namespace chain
 } // namespace scorum

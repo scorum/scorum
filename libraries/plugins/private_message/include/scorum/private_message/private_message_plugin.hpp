@@ -208,18 +208,18 @@ private:
 
 // clang-format off
 
-FC_API(scorum::private_message::private_message_api, (get_inbox)(get_outbox));
+FC_API(scorum::private_message::private_message_api, (get_inbox)(get_outbox))
 
-FC_REFLECT(scorum::private_message::message_body, (thread_start)(subject)(body)(json_meta)(cc));
+FC_REFLECT(scorum::private_message::message_body, (thread_start)(subject)(body)(json_meta)(cc))
 
 FC_REFLECT(scorum::private_message::message_object,
-    (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message));
-CHAINBASE_SET_INDEX_TYPE(scorum::private_message::message_object, scorum::private_message::message_index);
+    (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message))
+CHAINBASE_SET_INDEX_TYPE(scorum::private_message::message_object, scorum::private_message::message_index)
 
 FC_REFLECT(scorum::private_message::message_api_obj,
-    (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message));
+    (id)(from)(to)(from_memo_key)(to_memo_key)(sent_time)(receive_time)(checksum)(encrypted_message))
 
 FC_REFLECT_DERIVED(
-    scorum::private_message::extended_message_object, (scorum::private_message::message_api_obj), (message));
+    scorum::private_message::extended_message_object, (scorum::private_message::message_api_obj), (message))
 
 // clang-format on

@@ -347,12 +347,12 @@ public:
      *  'info' wallet command.
      *
      *  @param creator The account creating the new account
-     *  @param new_account_name The name of the new account
+     *  @param newname The name of the new account
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_account(const std::string& creator,
-                                                const std::string& new_account_name,
+                                                const std::string& newname,
                                                 const std::string& json_meta,
                                                 bool broadcast);
 
@@ -927,8 +927,6 @@ public:
 
     std::map<string, std::function<string(fc::variant, const fc::variants&)>> get_result_formatters() const;
 
-    fc::signal<void(bool)> lock_changed;
-    std::shared_ptr<detail::wallet_api_impl> my;
     void encrypt_keys();
 
     /**
@@ -952,6 +950,54 @@ public:
                                                       const asset& reward_scorum,
                                                       const asset& reward_vests,
                                                       bool broadcast);
+
+    /**
+     *  Gets the budget information for all my budgets (list_my_accounts)
+     */
+    vector<budget_api_obj> list_my_budgets();
+
+    /**
+     *  Gets the list of all budget owners (look list_accounts to understand input parameters)
+     */
+    set<string> list_budget_owners(const std::string &lowerbound, uint32_t limit);
+
+    /**
+     *  Gets the budget information for certain account
+     */
+    vector<budget_api_obj> get_budgets(const std::string &account_name);
+
+    /**
+     *  This method will create new budget linked to owner account. The current account creation fee can be found with the
+     *  'info' wallet command.
+     *
+     *  @warning The owner account must have sufficient balance for budget
+     *
+     *  @param budget_owner the future owner of creating budget
+     *  @param content_permlink the budget target identity (post or other)
+     *  @param balance
+     *  @param deadline the deadline time to close budget (even if there is rest of balance)
+     *  @param broadcast
+     */
+    annotated_signed_transaction create_budget(const std::string& budget_owner,
+                                                const std::string& content_permlink,
+                                                const asset& balance,
+                                                const time_point_sec deadline,
+                                                const bool broadcast);
+
+    /**
+     *  Close the budget. The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction close_budget(const int64_t id,
+                                              const std::string& budget_owner,
+                                              const bool broadcast);
+
+public:
+
+    fc::signal<void(bool)> lock_changed;
+
+private:
+
+    std::shared_ptr<detail::wallet_api_impl> my;
 };
 
 struct plain_keys
@@ -1003,6 +1049,9 @@ FC_API( scorum::wallet::wallet_api,
         (get_account_history)
         (get_state)
         (get_withdraw_routes)
+        (list_my_budgets)
+        (list_budget_owners)
+        (get_budgets)
 
         /// transaction api
         (create_account)
@@ -1041,6 +1090,8 @@ FC_API( scorum::wallet::wallet_api,
         (decrypt_memo)
         (decline_voting_rights)
         (claim_reward_balance)
+        (create_budget)
+        (close_budget)
 
         // private message api
         (send_private_message)

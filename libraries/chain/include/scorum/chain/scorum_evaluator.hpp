@@ -37,5 +37,7 @@ DEFINE_EVALUATOR(change_recovery_account)
 DEFINE_EVALUATOR(decline_voting_rights)
 DEFINE_EVALUATOR(claim_reward_balance)
 DEFINE_EVALUATOR(delegate_vesting_shares)
+DEFINE_EVALUATOR(create_budget)
+DEFINE_EVALUATOR(close_budget)
 }
 } // scorum::chain
