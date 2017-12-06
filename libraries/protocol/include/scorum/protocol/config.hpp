@@ -185,17 +185,25 @@
 /**
  *  Reserved Account IDs with special meaning
  */
-///@{
-
 /// Represents the canonical account for specifying you will vote for directly (as opposed to a proxy)
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           ""
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT                (account_name_type())
 
-#define SCORUM_LIMIT_BUDGETS_PER_OWNER          1000
-#define SCORUM_LIMIT_FUND_BUDGETS               100
-#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          1000
-#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      1000
+/**
+ * Budget limits
+ */
+#define SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER       1000
+#define SCORUM_BUDGET_LIMIT_COUNT_FUND_BUDGETS    1
+#define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          1000
+#define SCORUM_BUDGET_LIMIT_API_LIST_SIZE         1000
+
+/**
+ * Registration bonus limits
+ */
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK        2
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT    1000
+
 
 ///@}
 

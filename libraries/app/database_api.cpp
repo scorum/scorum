@@ -939,8 +939,8 @@ vector<budget_api_obj> database_api::get_budgets(const set<string>& names) const
 
 vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) const
 {
-    FC_ASSERT(names.size() <= SCORUM_LIMIT_API_BUDGETS_LIST_SIZE, "names size must be less or equal than ${1}",
-              ("1", SCORUM_LIMIT_API_BUDGETS_LIST_SIZE));
+    FC_ASSERT(names.size() <= SCORUM_BUDGET_LIMIT_API_LIST_SIZE, "names size must be less or equal than ${1}",
+              ("1", SCORUM_BUDGET_LIMIT_API_LIST_SIZE));
 
     vector<budget_api_obj> results;
 
@@ -949,7 +949,7 @@ vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) 
     for (const auto& name : names)
     {
         size_t budget_count = budget_service.get_budget_count(name);
-        if (results.size() + budget_count > SCORUM_LIMIT_API_BUDGETS_LIST_SIZE)
+        if (results.size() + budget_count > SCORUM_BUDGET_LIMIT_API_LIST_SIZE)
         {
             break;
         }
@@ -976,8 +976,8 @@ set<string> database_api::lookup_budget_owners(const string& lower_bound_name, u
 
 set<string> database_api_impl::lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= SCORUM_LIMIT_API_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
-              ("1", SCORUM_LIMIT_API_BUDGETS_LIST_SIZE));
+    FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_API_LIST_SIZE, "limit must be less or equal than ${1}",
+              ("1", SCORUM_BUDGET_LIMIT_API_LIST_SIZE));
 
     chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 

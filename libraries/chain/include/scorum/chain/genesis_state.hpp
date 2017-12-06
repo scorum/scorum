@@ -29,6 +29,13 @@ struct genesis_state_type
         sp::public_key_type block_signing_key;
     };
 
+    struct registration_schedule_item
+    {
+        uint8_t stage;
+        uint16_t users_thousands;
+        uint16_t bonus_percent;
+    };
+
     genesis_state_type()
         : init_supply(0)
     {
@@ -39,10 +46,13 @@ struct genesis_state_type
     {
     }
 
+    uint64_t registration_supply;
+    uint64_t registration_maximum_bonus;
     uint64_t init_supply;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
+    std::vector<registration_schedule_item> registration_schedule;
 
     sp::chain_id_type initial_chain_id;
 };
@@ -67,10 +77,18 @@ FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
            (owner_name)
            (block_signing_key))
 
+FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
+           (stage)
+           (users_thousands)
+           (bonus_percent))
+
 FC_REFLECT(scorum::chain::genesis_state_type,
+           (registration_supply)
+           (registration_maximum_bonus)
            (init_supply)
            (initial_timestamp)
            (accounts)
            (witness_candidates)
+           (registration_schedule)
            (initial_chain_id))
 // clang-format on

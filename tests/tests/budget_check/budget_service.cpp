@@ -243,7 +243,7 @@ SCORUM_TEST_CASE(fund_budget_creation_limit)
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
     time_point_sec deadline(default_deadline);
 
-    for (int ci = 0; ci < SCORUM_LIMIT_FUND_BUDGETS; ++ci)
+    for (int ci = 0; ci < SCORUM_BUDGET_LIMIT_COUNT_FUND_BUDGETS; ++ci)
     {
         BOOST_REQUIRE_NO_THROW(budget_service.create_fund_budget(balance, deadline));
     }
@@ -253,18 +253,18 @@ SCORUM_TEST_CASE(fund_budget_creation_limit)
 
 SCORUM_TEST_CASE(budget_creation_limit)
 {
-    share_type bp = SCORUM_LIMIT_BUDGETS_PER_OWNER + 1;
+    share_type bp = SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER + 1;
     BOOST_REQUIRE(BOB_ACCOUNT_BUDGET >= bp);
 
     asset balance(BOB_ACCOUNT_BUDGET / bp, SCORUM_SYMBOL);
     time_point_sec deadline(default_deadline);
 
-    for (int ci = 0; ci < SCORUM_LIMIT_BUDGETS_PER_OWNER; ++ci)
+    for (int ci = 0; ci < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER; ++ci)
     {
         BOOST_REQUIRE_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     }
 
-    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_LIMIT_BUDGETS_PER_OWNER * balance.amount));
+    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER * balance.amount));
 
     BOOST_REQUIRE_THROW(budget_service.create_budget(bob, balance, deadline), fc::assert_exception);
 }

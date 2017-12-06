@@ -31,7 +31,8 @@ public:
 
     virtual const account_object& get_account(const account_name_type& name) const = 0;
 
-    virtual const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const = 0;
+    virtual const comment_object& get_comment(const account_name_type& author,
+                                              const fc::shared_string& permlink) const = 0;
 
     virtual const comment_object& get_comment(const account_name_type& author, const string& permlink) const = 0;
 

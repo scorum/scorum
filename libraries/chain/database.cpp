@@ -16,6 +16,7 @@
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/registration_objects.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
@@ -1677,6 +1678,7 @@ void database::initialize_indexes()
     _add_index_impl<vesting_delegation_index>();
     _add_index_impl<vesting_delegation_expiration_index>();
     _add_index_impl<budget_index>();
+    _add_index_impl<registration_pool_index>();
 
     _plugin_index_signal();
 }

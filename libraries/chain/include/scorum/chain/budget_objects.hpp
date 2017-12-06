@@ -23,9 +23,9 @@ class budget_object : public object<budget_object_type, budget_object>
     budget_object() = delete;
 
 public:
-
     template <typename Constructor, typename Allocator>
-    budget_object(Constructor&& c, allocator<Allocator> a): content_permlink(a)
+    budget_object(Constructor&& c, allocator<Allocator> a)
+        : content_permlink(a)
     {
         c(*this);
     }
@@ -48,22 +48,17 @@ struct by_owner_name;
 
 typedef multi_index_container<budget_object,
                               indexed_by<ordered_unique<tag<by_id>,
-                                                        member<budget_object,
-                                                               budget_id_type,
-                                                               &budget_object::id>>,
+                                                        member<budget_object, budget_id_type, &budget_object::id>>,
                                          ordered_non_unique<tag<by_owner_name>,
-                                                        member<budget_object,
-                                                               account_name_type,
-                                                               &budget_object::owner>>>,
+                                                            member<budget_object,
+                                                                   account_name_type,
+                                                                   &budget_object::owner>>>,
                               allocator<budget_object>>
     budget_index;
-
 }
 }
 
-FC_REFLECT( scorum::chain::budget_object,
-             (id)(owner)(content_permlink)(created)(deadline)(balance)(per_block)(last_allocated_block)
-)
+FC_REFLECT(scorum::chain::budget_object,
+           (id)(owner)(content_permlink)(created)(deadline)(balance)(per_block)(last_allocated_block))
 
-CHAINBASE_SET_INDEX_TYPE( scorum::chain::budget_object, scorum::chain::budget_index )
-
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::budget_object, scorum::chain::budget_index)

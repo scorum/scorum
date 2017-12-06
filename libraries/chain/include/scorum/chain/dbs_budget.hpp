@@ -17,8 +17,6 @@ class dbs_budget : public dbs_base
 {
     friend class dbservice_dbs_factory;
 
-    dbs_budget() = delete;
-
 protected:
     explicit dbs_budget(database& db);
 
@@ -40,7 +38,7 @@ public:
 
     /** Lists all budget owners.
      *
-     *  @warning limit must be less or equal than SCORUM_LIMIT_BUDGETS_LIST_SIZE.
+     *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.
      *
      */
     std::set<string> lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const;
@@ -73,14 +71,13 @@ public:
 
     /** Create fund budget (non any owner).
      *
-     * @warning count of fund budgets must be less or equal than SCORUM_LIMIT_BUDGETS_PER_OWNER.
+     * @warning count of fund budgets must be less or equal than SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER.
      *
      * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
-    const budget_object& create_fund_budget(const asset& balance_in_scorum,
-                                               const time_point_sec& deadline);
+    const budget_object& create_fund_budget(const asset& balance_in_scorum, const time_point_sec& deadline);
 
     /** Create budget.
      *  The owner has abilities for all operations (for update, close and schedule operations).
@@ -94,8 +91,7 @@ public:
     const budget_object& create_budget(const account_object& owner,
                                        const asset& balance_in_scorum,
                                        const time_point_sec& deadline,
-                                       const optional<string>& content_permlink = optional<string>()
-                                       );
+                                       const optional<string>& content_permlink = optional<string>());
 
     /** Close budget.
      *  Delete the budget, cash back from budget to owner account.
@@ -115,11 +111,8 @@ public:
     asset allocate_cash(const budget_object& budget, const optional<time_point_sec>& now = optional<time_point_sec>());
 
 private:
-
-    share_type _calculate_per_block(
-            const time_point_sec& start_date,
-            const time_point_sec& end_date,
-            share_type balance_amount);
+    share_type
+    _calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, share_type balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
     bool _check_autoclose(const budget_object&);
     bool _is_fund_budget(const budget_object&) const;
