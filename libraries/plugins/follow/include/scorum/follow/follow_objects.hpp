@@ -312,6 +312,6 @@ FC_REFLECT(scorum::follow::follow_count_object, (id)(account)(follower_count)(fo
 CHAINBASE_SET_INDEX_TYPE(scorum::follow::follow_count_object, scorum::follow::follow_count_index)
 
 FC_REFLECT(scorum::follow::blog_author_stats_object, (id)(blogger)(guest)(count))
-CHAINBASE_SET_INDEX_TYPE(scorum::follow::blog_author_stats_object, scorum::follow::blog_author_stats_index);
+CHAINBASE_SET_INDEX_TYPE(scorum::follow::blog_author_stats_object, scorum::follow::blog_author_stats_index)
 
 // clang-format on

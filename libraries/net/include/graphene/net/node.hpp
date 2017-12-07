@@ -333,5 +333,5 @@ typedef std::shared_ptr<simulated_network> simulated_network_ptr;
 }
 } // graphene::net
 
-FC_REFLECT(graphene::net::message_propagation_data, (received_time)(validated_time)(originating_peer));
-FC_REFLECT(graphene::net::peer_status, (version)(host)(info));
+FC_REFLECT(graphene::net::message_propagation_data, (received_time)(validated_time)(originating_peer))
+FC_REFLECT(graphene::net::peer_status, (version)(host)(info))

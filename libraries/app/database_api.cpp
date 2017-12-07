@@ -316,8 +316,9 @@ vector<set<string>> database_api::get_key_references(vector<public_key_type> key
  */
 vector<set<string>> database_api_impl::get_key_references(vector<public_key_type> keys) const
 {
-    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
-                     "account_by_key_api::get_key_references instead.");
+    FC_ASSERT(false,
+              "database_api::get_key_references has been deprecated. Please use "
+              "account_by_key_api::get_key_references instead.");
     vector<set<string>> final_result;
     return final_result;
 }
@@ -944,22 +945,16 @@ vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) 
 
     vector<budget_api_obj> results;
 
-    chain::dbs_budget budget_service = _db.obtain_service<chain::dbs_budget>();
+    chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
     for (const auto& name : names)
     {
-        size_t budget_count = budget_service.get_budget_count(name);
-        if (results.size() + budget_count > SCORUM_LIMIT_API_BUDGETS_LIST_SIZE)
+        auto budgets = budget_service.get_budgets(name);
+        if (results.size() + budgets.size() > SCORUM_LIMIT_API_BUDGETS_LIST_SIZE)
         {
             break;
         }
 
-        if (!budget_count)
-        {
-            continue;
-        }
-
-        auto budgets = budget_service.get_budgets(name);
         for (const chain::budget_object& budget : budgets)
         {
             results.push_back(budget_api_obj(budget));
@@ -979,7 +974,7 @@ set<string> database_api_impl::lookup_budget_owners(const string& lower_bound_na
     FC_ASSERT(limit <= SCORUM_LIMIT_API_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
               ("1", SCORUM_LIMIT_API_BUDGETS_LIST_SIZE));
 
-    chain::dbs_budget budget_service = _db.obtain_service<chain::dbs_budget>();
+    chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
     return budget_service.lookup_budget_owners(lower_bound_name, limit);
 }
@@ -2146,5 +2141,5 @@ annotated_signed_transaction database_api::get_transaction(transaction_id_type i
     });
 #endif
 }
-}
-} // scorum::app
+} // namespace app
+} // namespace scorum

@@ -20,6 +20,7 @@ struct dbs_base
 {
 protected:
     dbs_base() = delete;
+    dbs_base(dbs_base&&) = delete;
 
     explicit dbs_base(database&);
 
@@ -54,7 +55,7 @@ protected:
     virtual ~dbservice_dbs_factory();
 
 public:
-    template <typename ConcreteService> ConcreteService& obtain_service()
+    template <typename ConcreteService> ConcreteService& obtain_service() const
     {
         auto it = _dbs.find(boost::typeindex::type_id<ConcreteService>());
         if (it == _dbs.end())
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    std::map<boost::typeindex::type_index, BaseServicePtr> _dbs;
+    mutable std::map<boost::typeindex::type_index, BaseServicePtr> _dbs;
     database& _db_core;
 };
 } // namespace chain

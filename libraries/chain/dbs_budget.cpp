@@ -13,7 +13,6 @@ namespace chain {
 dbs_budget::dbs_budget(database& db)
     : _base_type(db)
 {
-    db_impl().get_index<budget_index>().indicies().get<by_owner_name>();
 }
 
 dbs_budget::budget_refs_type dbs_budget::get_budgets() const
@@ -23,25 +22,20 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
     auto idx = db_impl().get_index<budget_index>().indicies();
     auto it = idx.cbegin();
     const auto it_end = idx.cend();
-    FC_ASSERT(it != it_end, "non any budget");
     while (it != it_end)
     {
         ret.push_back(std::cref(*it));
-        it++;
+        ++it;
     }
 
     return ret;
 }
 
-uint64_t dbs_budget::get_budget_count() const
-{
-    return db_impl().get_index<budget_index>().indicies().size();
-}
-
 std::set<string> dbs_budget::lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= SCORUM_LIMIT_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
-              ("1", SCORUM_LIMIT_BUDGETS_LIST_SIZE));
+    FC_ASSERT(limit <= SCORUM_LIMIT_BUDGETS_LIST_SIZE,
+              "limit must be less or equal than ${1}, actual limit value == ${2}",
+              ("1", SCORUM_LIMIT_BUDGETS_LIST_SIZE)("2", limit));
     const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
     set<string> result;
 
@@ -61,28 +55,27 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& ow
     auto it_pair = db_impl().get_index<budget_index>().indicies().get<by_owner_name>().equal_range(owner);
     auto it = it_pair.first;
     const auto it_end = it_pair.second;
-    FC_ASSERT(it != it_end, "budget not found");
     while (it != it_end)
     {
         ret.push_back(std::cref(*it));
-        it++;
+        ++it;
     }
 
     return ret;
 }
 
-uint64_t dbs_budget::get_budget_count(const account_name_type& owner) const
-{
-    return db_impl().get_index<budget_index>().indicies().get<by_owner_name>().count(owner);
-}
-
-dbs_budget::budget_ref_type dbs_budget::get_fund_budget() const
+const budget_object& dbs_budget::get_fund_budget() const
 {
     budget_refs_type fund_budget = get_budgets(SCORUM_ROOT_POST_PARENT);
 
     FC_ASSERT(!fund_budget.empty(), "fund_budget_object is not created");
 
     return fund_budget[0];
+}
+
+const budget_object& dbs_budget::get_budget(budget_id_type id) const
+{
+    return db_impl().get<budget_object>(id);
 }
 
 const budget_object& dbs_budget::create_fund_budget(const asset& balance, const time_point_sec& deadline)
@@ -117,15 +110,16 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
 }
 
 const budget_object& dbs_budget::create_budget(const account_object& owner,
-                                               const optional<string>& content_permlink,
                                                const asset& balance,
-                                               const time_point_sec& deadline)
+                                               const time_point_sec& deadline,
+                                               const optional<string>& content_permlink)
 {
     FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "SCORUM_ROOT_POST_PARENT name is not allowed for ordinary budget");
     FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(balance.amount > 0, "invalid balance");
-    FC_ASSERT(get_budget_count(owner.name) <= SCORUM_LIMIT_BUDGETS_PER_OWNER,
-              "can't created more then ${1} budgets per owner", ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
+    FC_ASSERT(owner.balance >= balance, "insufficient funds");
+    FC_ASSERT(_get_budget_count(owner.name) < SCORUM_LIMIT_BUDGETS_PER_OWNER,
+              "can't create more then ${1} budgets per owner", ("1", SCORUM_LIMIT_BUDGETS_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
@@ -133,8 +127,6 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     FC_ASSERT(start_date < deadline, "invalid deadline");
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    FC_ASSERT(owner.balance >= balance, "insufficient funds");
 
     account_service.decrease_balance(owner, balance);
 
@@ -156,30 +148,14 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
         budget.last_allocated_block = head_block_num;
     });
 
+    db_impl().modify(props, [&](dynamic_global_property_object& ps) { ps.current_supply -= balance; });
+
     return new_budget;
 }
 
 void dbs_budget::close_budget(const budget_object& budget)
 {
-    FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT, "not allowed for genesis budget");
-
-    dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    const auto& owner = account_service.get_account(budget.owner);
-
-    // withdraw all balance rest asset back to owner
-    //
-    asset repayable = budget.balance;
-    if (repayable.amount > 0)
-    {
-        // check if input budget state != budget in DB
-        repayable = _decrease_balance(budget, repayable);
-        account_service.increase_balance(owner, repayable);
-    }
-
-    // delete budget
-    //
-    db_impl().remove(budget);
+    _close_owned_budget(budget);
 }
 
 asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time_point_sec>& now)
@@ -199,7 +175,13 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
 
     if (budget.deadline <= t)
     {
-        close_budget(budget);
+        if (_is_fund_budget(budget))
+        {
+            // cash back from budget to requesting beneficiary
+            // to save from burning (no owner for fund budget)
+            ret.amount += budget.balance.amount;
+        }
+        _close_budget(budget);
     }
     else
     {
@@ -215,24 +197,19 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
                                             const time_point_sec& end_date,
                                             share_type balance_amount)
 {
-    FC_ASSERT(start_date < end_date, "invalid date interval");
+    FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(), "invalid date interval");
 
     share_type ret(balance_amount);
 
-    fc::microseconds per_block_time = fc::seconds(SCORUM_BLOCK_INTERVAL);
-    fc::microseconds delta = end_date - start_date;
+    // calculate time interval in seconds.
+    // SCORUM_BLOCK_INTERVAL must be in seconds!
+    uint32_t delta_in_sec = end_date.sec_since_epoch() - start_date.sec_since_epoch();
 
-    if (ret > delta.count())
-    {
-        ret /= delta.count();
-        ret *= per_block_time.count();
-    }
-    else
-    {
-        ret *= per_block_time.count();
-        ret /= delta.count();
-    }
+    // multiply before division to prevent integer clipping to zero
+    ret *= SCORUM_BLOCK_INTERVAL;
+    ret /= delta_in_sec;
 
+    // non zero budget must return at least one satoshi
     if (ret < 1)
     {
         ret = 1;
@@ -268,7 +245,7 @@ bool dbs_budget::_check_autoclose(const budget_object& budget)
 {
     if (budget.balance.amount <= 0)
     {
-        close_budget(budget);
+        _close_budget(budget);
         return true;
     }
     else
@@ -276,5 +253,63 @@ bool dbs_budget::_check_autoclose(const budget_object& budget)
         return false;
     }
 }
+
+bool dbs_budget::_is_fund_budget(const budget_object& budget) const
+{
+    return budget.owner == SCORUM_ROOT_POST_PARENT;
+}
+
+void dbs_budget::_close_budget(const budget_object& budget)
+{
+    if (_is_fund_budget(budget))
+    {
+        _close_fund_budget(budget);
+    }
+    else
+    {
+        _close_owned_budget(budget);
+    }
+}
+
+void dbs_budget::_close_owned_budget(const budget_object& budget)
+{
+    FC_ASSERT(!_is_fund_budget(budget), "not allowed for fund budget");
+
+    dbs_account& account_service = db().obtain_service<dbs_account>();
+
+    const auto& owner = account_service.get_account(budget.owner);
+
+    // withdraw all balance rest asset back to owner
+    //
+    asset repayable = budget.balance;
+    if (repayable.amount > 0)
+    {
+        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+
+        repayable = _decrease_balance(budget, repayable);
+        account_service.increase_balance(owner, repayable);
+
+        db_impl().modify(props, [&](dynamic_global_property_object& ps) { ps.current_supply += repayable; });
+    }
+
+    // delete budget
+    //
+    db_impl().remove(budget);
+}
+
+void dbs_budget::_close_fund_budget(const budget_object& budget)
+{
+    FC_ASSERT(_is_fund_budget(budget), "not allowed for ordinary budget");
+
+    // delete budget
+    //
+    db_impl().remove(budget);
+}
+
+uint64_t dbs_budget::_get_budget_count(const account_name_type& owner) const
+{
+    return db_impl().get_index<budget_index>().indicies().get<by_owner_name>().count(owner);
+}
+
 } // namespace chain
 } // namespace scorum

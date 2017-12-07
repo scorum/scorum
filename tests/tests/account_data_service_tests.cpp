@@ -4,7 +4,7 @@
 #include <scorum/chain/account_object.hpp>
 #include <scorum/chain/dbs_account.hpp>
 
-#include "../common/database_fixture.hpp"
+#include "database_fixture.hpp"
 
 namespace scorum {
 namespace chain {

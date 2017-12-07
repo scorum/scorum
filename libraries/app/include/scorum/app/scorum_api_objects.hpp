@@ -74,7 +74,9 @@ struct comment_api_obj
         }
     }
 
-    comment_api_obj() {}
+    comment_api_obj()
+    {
+    }
 
     comment_id_type id;
     string category;
@@ -134,7 +136,9 @@ struct tag_api_obj
     {
     }
 
-    tag_api_obj() {}
+    tag_api_obj()
+    {
+    }
 
     string name;
     asset total_payouts;
@@ -220,7 +224,9 @@ struct account_api_obj
         }
     }
 
-    account_api_obj() {}
+    account_api_obj()
+    {
+    }
 
     account_id_type id;
 
@@ -295,7 +301,9 @@ struct owner_authority_history_api_obj
     {
     }
 
-    owner_authority_history_api_obj() {}
+    owner_authority_history_api_obj()
+    {
+    }
 
     owner_authority_history_id_type id;
 
@@ -314,7 +322,9 @@ struct account_recovery_request_api_obj
     {
     }
 
-    account_recovery_request_api_obj() {}
+    account_recovery_request_api_obj()
+    {
+    }
 
     account_recovery_request_id_type id;
     account_name_type account_to_recover;
@@ -351,7 +361,9 @@ struct witness_api_obj
     {
     }
 
-    witness_api_obj() {}
+    witness_api_obj()
+    {
+    }
 
     witness_id_type id;
     account_name_type owner;
@@ -385,7 +397,9 @@ struct signed_block_api_obj : public signed_block
         for (const signed_transaction& tx : transactions)
             transaction_ids.push_back(tx.id());
     }
-    signed_block_api_obj() {}
+    signed_block_api_obj()
+    {
+    }
 
     block_id_type block_id;
     public_key_type signing_key;
@@ -415,7 +429,9 @@ struct dynamic_global_property_api_obj : public dynamic_global_property_object
     {
     }
 
-    dynamic_global_property_api_obj() {}
+    dynamic_global_property_api_obj()
+    {
+    }
 
     uint32_t current_reserve_ratio = 0;
     uint64_t average_block_size = 0;
@@ -424,22 +440,24 @@ struct dynamic_global_property_api_obj : public dynamic_global_property_object
 
 struct budget_api_obj
 {
-    budget_api_obj(const chain::budget_object& b):
-        id(b.id),
-        owner(b.owner),
-        content_permlink(fc::to_string(b.content_permlink)),
-        created(b.created),
-        deadline(b.deadline),
-        balance(b.balance),
-        per_block(b.per_block),
-        last_allocated_block(b.last_allocated_block)
+    budget_api_obj(const chain::budget_object& b)
+        : id(b.id._id)
+        , owner(b.owner)
+        , content_permlink(fc::to_string(b.content_permlink))
+        , created(b.created)
+        , deadline(b.deadline)
+        , balance(b.balance)
+        , per_block(b.per_block)
+        , last_allocated_block(b.last_allocated_block)
     {
     }
 
-    //because fc::variant require for temporary object
-    budget_api_obj() {}
+    // because fc::variant require for temporary object
+    budget_api_obj()
+    {
+    }
 
-    chain::budget_id_type id;
+    int64_t id;
 
     account_name_type owner;
     string content_permlink;
@@ -453,8 +471,8 @@ struct budget_api_obj
     uint32_t last_allocated_block;
 };
 
-}
-} // scorum::app
+} // namespace app
+} // namespace scorum
 
 // clang-format off
 
