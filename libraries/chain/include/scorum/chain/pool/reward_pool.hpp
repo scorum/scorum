@@ -19,28 +19,25 @@ public:
 
 public:
     reward_pool_id_type id;
-    reward_pool_name_type name = reward_pool_name_type("reward_pool");
 
     asset balance;
     asset current_per_block_reward;
 };
 
-struct by_name;
-typedef multi_index_container<
-    reward_pool_object,
-    indexed_by<
-        ordered_unique<tag<by_id>, member<reward_pool_object, reward_pool_id_type, &reward_pool_object::id>>,
-        ordered_unique<tag<by_name>, member<reward_pool_object, reward_pool_name_type, &reward_pool_object::name>>>,
-    allocator<reward_pool_object>>
-    reward_pool_index;
+// clang-format off
+using reward_pool_index = multi_index_container<reward_pool_object,
+                                                indexed_by<ordered_unique<tag<by_id>, 
+                                                                          member<reward_pool_object, 
+                                                                                 reward_pool_id_type, 
+                                                                                 &reward_pool_object::id>>>,
+                                                allocator<reward_pool_object>>;
 
 } // namespace chain
 } // namespace scorum
 
-// clang-format off
+
 FC_REFLECT( scorum::chain::reward_pool_object,
             (id)
-            (name)
             (balance)
             (current_per_block_reward)
            )

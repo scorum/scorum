@@ -37,8 +37,6 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_creation)
     try
     {
         BOOST_REQUIRE_NO_THROW(reward_service.get_pool());
-
-        BOOST_CHECK(reward_service.get_pool().name == reward_pool_name_type("reward_pool"));
     }
     FC_LOG_AND_RETHROW()
 }

@@ -182,8 +182,9 @@ void database::init_genesis_rewards(const genesis_state_type& genesis_state)
     dbs_budget& budget_service = obtain_service<dbs_budget>();
 
     asset initial_reward_pool_supply(genesis_state.init_rewards_supply.amount
-                                     * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                                     / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+                                         * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
+                                         / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
+                                     genesis_state.init_rewards_supply.symbol);
     fc::time_point deadline = get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     reward_service.create_pool(initial_reward_pool_supply);

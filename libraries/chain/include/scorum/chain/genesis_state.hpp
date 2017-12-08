@@ -71,6 +71,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
 
 FC_REFLECT(scorum::chain::genesis_state_type,
            (init_supply)
+           (init_rewards_supply)
            (initial_timestamp)
            (accounts)
            (witness_candidates)
