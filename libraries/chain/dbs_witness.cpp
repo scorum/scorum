@@ -63,7 +63,7 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, share_type 
                   ("w.votes", w.votes)("props", props.total_vesting_shares));
 
         w.virtual_scheduled_time
-            = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH2 - w.virtual_position) / (w.votes.value + 1);
+            = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH - w.virtual_position) / (w.votes.value + 1);
 
         /** witnesses with a low number of votes could overflow the time field and end up with a scheduled time in the
          * past */
@@ -71,5 +71,5 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, share_type 
             w.virtual_scheduled_time = fc::uint128::max_value();
     });
 }
-}
-}
+} // namespace chain
+} // namespace scorum
