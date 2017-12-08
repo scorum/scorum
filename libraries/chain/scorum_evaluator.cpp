@@ -123,8 +123,8 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     // write in to DB
 
-    account_service.create_account_by_faucets(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                              o.active, o.posting, o.fee);
+    account_service.create_account(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner, o.active,
+                                   o.posting, o.fee);
 }
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)

@@ -36,23 +36,14 @@ struct genesis_state_type
         uint16_t bonus_percent;
     };
 
-    genesis_state_type()
-        : init_supply(0)
-    {
-    }
-
-    genesis_state_type(uint64_t supply)
-        : init_supply(supply)
-    {
-    }
-
-    uint64_t registration_supply;
-    uint64_t registration_maximum_bonus;
-    uint64_t init_supply;
+    uint64_t registration_supply = 0;
+    uint64_t registration_maximum_bonus = 0;
+    uint64_t init_supply = 0;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
     std::vector<registration_schedule_item> registration_schedule;
+    std::vector<std::string> registration_committee;
 
     sp::chain_id_type initial_chain_id;
 };

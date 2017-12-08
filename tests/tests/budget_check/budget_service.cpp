@@ -24,17 +24,17 @@ public:
         : budget_service(db.obtain_service<dbs_budget>())
         , account_service(db.obtain_service<dbs_account>())
         , public_key(database_fixture::generate_private_key("user private key").get_public_key())
-        , fake(account_service.create_account_by_faucets(SCORUM_ROOT_POST_PARENT,
-                                                         "initdelegate",
-                                                         public_key,
-                                                         "",
-                                                         authority(),
-                                                         authority(),
-                                                         authority(),
-                                                         asset(0, SCORUM_SYMBOL)))
-        , alice(account_service.create_account_by_faucets(
+        , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
+                                              "initdelegate",
+                                              public_key,
+                                              "",
+                                              authority(),
+                                              authority(),
+                                              authority(),
+                                              asset(0, SCORUM_SYMBOL)))
+        , alice(account_service.create_account(
               "alice", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
-        , bob(account_service.create_account_by_faucets(
+        , bob(account_service.create_account(
               "bob", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
     {
         account_service.increase_balance(alice, asset(ALICE_ACCOUNT_BUDGET, SCORUM_SYMBOL));

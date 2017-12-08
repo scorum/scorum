@@ -52,14 +52,42 @@ void dbs_account::check_account_existence(const account_authority_map& names,
     }
 }
 
-const account_object& dbs_account::create_account_by_faucets(const account_name_type& new_account_name,
-                                                             const account_name_type& creator_name,
-                                                             const public_key_type& memo_key,
-                                                             const string& json_metadata,
-                                                             const authority& owner,
-                                                             const authority& active,
-                                                             const authority& posting,
-                                                             const asset& fee)
+const account_object& dbs_account::create_initial_account(const account_name_type& new_account_name,
+                                                          const public_key_type& memo_key,
+                                                          const asset& balance,
+                                                          const account_name_type& recovery_account,
+                                                          const string& json_metadata)
+{
+    FC_ASSERT(new_account_name.size() > 0, "Account 'name' should not be empty.");
+    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
+
+    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
+        acc.name = new_account_name;
+        acc.memo_key = memo_key;
+        acc.balance = balance;
+        fc::from_string(acc.json_metadata, json_metadata);
+        acc.recovery_account = recovery_account;
+    });
+
+    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
+        auth.account = new_account_name;
+        auth.owner.add_authority(memo_key, 1);
+        auth.owner.weight_threshold = 1;
+        auth.active = auth.owner;
+        auth.posting = auth.active;
+    });
+
+    return new_account;
+}
+
+const account_object& dbs_account::create_account(const account_name_type& new_account_name,
+                                                  const account_name_type& creator_name,
+                                                  const public_key_type& memo_key,
+                                                  const string& json_metadata,
+                                                  const authority& owner,
+                                                  const authority& active,
+                                                  const authority& posting,
+                                                  const asset& fee)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
 

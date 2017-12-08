@@ -1678,7 +1678,6 @@ void database::initialize_indexes()
     _add_index_impl<vesting_delegation_index>();
     _add_index_impl<vesting_delegation_expiration_index>();
     _add_index_impl<budget_index>();
-    _add_index_impl<registration_pool_index>();
 
     _plugin_index_signal();
 }
@@ -1738,21 +1737,10 @@ void database::init_genesis_accounts(const vector<genesis_state_type::account_ty
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
-        create<account_object>([&](account_object& a) {
-            a.name = account.name;
-            a.memo_key = account.public_key;
-            a.balance = asset(account.scr_amount, SCORUM_SYMBOL);
-            a.json_metadata = "{created_at: 'GENESIS'}";
-            a.recovery_account = account.recovery_account;
-        });
-
-        create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = account.name;
-            auth.owner.add_authority(account.public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
+        dbs_account& account_service = obtain_service<dbs_account>();
+        account_service.create_initial_account(account.name, account.public_key,
+                                               asset(account.scr_amount, SCORUM_SYMBOL), account.recovery_account,
+                                               "{created_at: 'GENESIS'}");
     }
 }
 

@@ -28,7 +28,13 @@ public:
     void check_account_existence(const account_authority_map&,
                                  const optional<const char *> &context_type_name = optional<const char *>()) const;
 
-    const account_object& create_account_by_faucets(const account_name_type& new_account_name,
+    const account_object& create_initial_account(const account_name_type& new_account_name,
+                                   const public_key_type& memo_key,
+                                   const asset& balance_in_scorums,
+                                   const account_name_type& recovery_account,
+                                   const string& json_metadata);
+
+    const account_object& create_account(const account_name_type& new_account_name,
                                    const account_name_type& creator_name,
                                    const public_key_type& memo_key,
                                    const string& json_metadata,
