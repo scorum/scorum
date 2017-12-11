@@ -36,11 +36,6 @@ if [[ ! -z "$SCORUMD_WITNESS_NAME" ]]; then
     ARGS+=" --witness=\"$SCORUMD_WITNESS_NAME\""
 fi
 
-if [[ ! -z "$SCORUMD_MINER_NAME" ]]; then
-    ARGS+=" --miner=[\"$SCORUMD_MINER_NAME\",\"$SCORUMD_PRIVATE_KEY\"]"
-    ARGS+=" --mining-threads=$(nproc)"
-fi
-
 if [[ ! -z "$SCORUMD_PRIVATE_KEY" ]]; then
     ARGS+=" --private-key=$SCORUMD_PRIVATE_KEY"
 fi
