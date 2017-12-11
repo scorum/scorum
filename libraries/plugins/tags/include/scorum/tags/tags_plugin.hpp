@@ -16,9 +16,9 @@ using namespace boost::multi_index;
 
 using scorum::app::application;
 
+using chainbase::allocator;
 using chainbase::object;
 using chainbase::oid;
-using chainbase::allocator;
 
 //
 // Plugins should #define their SPACE_ID's so plugins with
@@ -36,7 +36,7 @@ using chainbase::allocator;
 
 #define TAGS_PLUGIN_NAME "tags"
 
-typedef protocol::fixed_string_32 tag_name_type;
+typedef fc::fixed_string_32 tag_name_type;
 
 // Plugins need to define object type IDs such that they do not conflict
 // globally. If each plugin uses the upper 8 bits as a space identifier,
@@ -73,7 +73,9 @@ public:
         c(*this);
     }
 
-    tag_object() {}
+    tag_object()
+    {
+    }
 
     id_type id;
 
@@ -92,7 +94,10 @@ public:
     comment_id_type parent;
     comment_id_type comment;
 
-    bool is_post() const { return parent == comment_id_type(); }
+    bool is_post() const
+    {
+        return parent == comment_id_type();
+    }
 };
 
 typedef oid<tag_object> tag_id_type;
@@ -113,102 +118,135 @@ struct by_reward_fund_net_rshares;
 struct by_comment;
 struct by_tag;
 
-typedef multi_index_container<tag_object,
-    indexed_by<ordered_unique<tag<by_id>, member<tag_object, tag_id_type, &tag_object::id>>,
-                                  ordered_unique<tag<by_comment>,
-                                      composite_key<tag_object,
-                                                     member<tag_object, comment_id_type, &tag_object::comment>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<comment_id_type>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_author_comment>,
-                                      composite_key<tag_object,
-                                                     member<tag_object, account_id_type, &tag_object::author>,
-                                                     member<tag_object, comment_id_type, &tag_object::comment>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<account_id_type>, std::less<comment_id_type>,
-                                                     std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_created>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, time_point_sec, &tag_object::created>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<time_point_sec>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_active>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, time_point_sec, &tag_object::active>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<time_point_sec>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_promoted>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, share_type, &tag_object::promoted_balance>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<share_type>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_net_rshares>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, int64_t, &tag_object::net_rshares>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<int64_t>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_net_votes>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, int32_t, &tag_object::net_votes>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<int32_t>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_children>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, int32_t, &tag_object::children>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<int32_t>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_hot>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, double, &tag_object::hot>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<double>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_parent_trending>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, comment_id_type, &tag_object::parent>,
-                                                     member<tag_object, double, &tag_object::trending>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<comment_id_type>,
-                                                     std::greater<double>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_cashout>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, time_point_sec, &tag_object::cashout>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<time_point_sec>,
-                                                     std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_net_rshares>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, int64_t, &tag_object::net_rshares>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::greater<int64_t>,
-                                                     std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_author_parent_created>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     member<tag_object, account_id_type, &tag_object::author>,
-                                                     member<tag_object, time_point_sec, &tag_object::created>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<account_id_type>,
-                                                     std::greater<time_point_sec>, std::less<tag_id_type>>>,
-                                  ordered_unique<tag<by_reward_fund_net_rshares>,
-                                      composite_key<tag_object, member<tag_object, tag_name_type, &tag_object::tag>,
-                                                     const_mem_fun<tag_object, bool, &tag_object::is_post>,
-                                                     member<tag_object, int64_t, &tag_object::net_rshares>,
-                                                     member<tag_object, tag_id_type, &tag_object::id>>,
-                                      composite_key_compare<std::less<tag_name_type>, std::less<bool>,
-                                                     std::greater<int64_t>, std::less<tag_id_type>>>>,
+typedef multi_index_container<
+    tag_object,
+    indexed_by<
+        ordered_unique<tag<by_id>, member<tag_object, tag_id_type, &tag_object::id>>,
+        ordered_unique<tag<by_comment>,
+                       composite_key<tag_object,
+                                     member<tag_object, comment_id_type, &tag_object::comment>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<comment_id_type>, std::less<tag_id_type>>>,
+        ordered_unique<
+            tag<by_author_comment>,
+            composite_key<tag_object,
+                          member<tag_object, account_id_type, &tag_object::author>,
+                          member<tag_object, comment_id_type, &tag_object::comment>,
+                          member<tag_object, tag_id_type, &tag_object::id>>,
+            composite_key_compare<std::less<account_id_type>, std::less<comment_id_type>, std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_created>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, time_point_sec, &tag_object::created>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<time_point_sec>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_active>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, time_point_sec, &tag_object::active>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<time_point_sec>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_promoted>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, share_type, &tag_object::promoted_balance>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<share_type>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_net_rshares>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, int64_t, &tag_object::net_rshares>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<int64_t>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_net_votes>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, int32_t, &tag_object::net_votes>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<int32_t>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_children>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, int32_t, &tag_object::children>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<int32_t>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_hot>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, double, &tag_object::hot>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<double>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_parent_trending>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, comment_id_type, &tag_object::parent>,
+                                     member<tag_object, double, &tag_object::trending>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<comment_id_type>,
+                                             std::greater<double>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<
+            tag<by_cashout>,
+            composite_key<tag_object,
+                          member<tag_object, tag_name_type, &tag_object::tag>,
+                          member<tag_object, time_point_sec, &tag_object::cashout>,
+                          member<tag_object, tag_id_type, &tag_object::id>>,
+            composite_key_compare<std::less<tag_name_type>, std::less<time_point_sec>, std::less<tag_id_type>>>,
+        ordered_unique<tag<by_net_rshares>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, int64_t, &tag_object::net_rshares>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>, std::greater<int64_t>, std::less<tag_id_type>>>,
+        ordered_unique<tag<by_author_parent_created>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     member<tag_object, account_id_type, &tag_object::author>,
+                                     member<tag_object, time_point_sec, &tag_object::created>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<account_id_type>,
+                                             std::greater<time_point_sec>,
+                                             std::less<tag_id_type>>>,
+        ordered_unique<tag<by_reward_fund_net_rshares>,
+                       composite_key<tag_object,
+                                     member<tag_object, tag_name_type, &tag_object::tag>,
+                                     const_mem_fun<tag_object, bool, &tag_object::is_post>,
+                                     member<tag_object, int64_t, &tag_object::net_rshares>,
+                                     member<tag_object, tag_id_type, &tag_object::id>>,
+                       composite_key_compare<std::less<tag_name_type>,
+                                             std::less<bool>,
+                                             std::greater<int64_t>,
+                                             std::less<tag_id_type>>>>,
     allocator<tag_object>>
     tag_index;
 
@@ -224,7 +262,9 @@ public:
         c(*this);
     }
 
-    tag_stats_object() {}
+    tag_stats_object()
+    {
+    }
 
     id_type id;
 
@@ -242,32 +282,32 @@ struct by_comments;
 struct by_top_posts;
 struct by_trending;
 
-typedef multi_index_container<tag_stats_object,
-    indexed_by<ordered_unique<tag<by_id>, member<tag_stats_object, tag_stats_id_type, &tag_stats_object::id>>,
-                                  ordered_unique<tag<by_tag>,
-                                      member<tag_stats_object, tag_name_type, &tag_stats_object::tag>>,
-                                  /*
-                                  ordered_non_unique< tag< by_comments >,
-                                     composite_key< tag_stats_object,
-                                        member< tag_stats_object, uint32_t, &tag_stats_object::comments >,
-                                        member< tag_stats_object, tag_name_type, &tag_stats_object::tag >
-                                     >,
-                                     composite_key_compare< std::less< tag_name_type >, std::greater< uint32_t > >
-                                  >,
-                                  ordered_non_unique< tag< by_top_posts >,
-                                     composite_key< tag_stats_object,
-                                        member< tag_stats_object, uint32_t, &tag_stats_object::top_posts >,
-                                        member< tag_stats_object, tag_name_type, &tag_stats_object::tag >
-                                     >,
-                                     composite_key_compare< std::less< tag_name_type >, std::greater< uint32_t > >
-                                  >,
-                                  */
-                                  ordered_non_unique<tag<by_trending>,
-                                      composite_key<tag_stats_object, member<tag_stats_object, fc::uint128,
-                                                                          &tag_stats_object::total_trending>,
-                                                         member<tag_stats_object, tag_name_type,
-                                                             &tag_stats_object::tag>>,
-                                      composite_key_compare<std::greater<fc::uint128>, std::less<tag_name_type>>>>,
+typedef multi_index_container<
+    tag_stats_object,
+    indexed_by<
+        ordered_unique<tag<by_id>, member<tag_stats_object, tag_stats_id_type, &tag_stats_object::id>>,
+        ordered_unique<tag<by_tag>, member<tag_stats_object, tag_name_type, &tag_stats_object::tag>>,
+        /*
+        ordered_non_unique< tag< by_comments >,
+           composite_key< tag_stats_object,
+              member< tag_stats_object, uint32_t, &tag_stats_object::comments >,
+              member< tag_stats_object, tag_name_type, &tag_stats_object::tag >
+           >,
+           composite_key_compare< std::less< tag_name_type >, std::greater< uint32_t > >
+        >,
+        ordered_non_unique< tag< by_top_posts >,
+           composite_key< tag_stats_object,
+              member< tag_stats_object, uint32_t, &tag_stats_object::top_posts >,
+              member< tag_stats_object, tag_name_type, &tag_stats_object::tag >
+           >,
+           composite_key_compare< std::less< tag_name_type >, std::greater< uint32_t > >
+        >,
+        */
+        ordered_non_unique<tag<by_trending>,
+                           composite_key<tag_stats_object,
+                                         member<tag_stats_object, fc::uint128, &tag_stats_object::total_trending>,
+                                         member<tag_stats_object, tag_name_type, &tag_stats_object::tag>>,
+                           composite_key_compare<std::greater<fc::uint128>, std::less<tag_name_type>>>>,
     allocator<tag_stats_object>>
     tag_stats_index;
 
@@ -283,7 +323,9 @@ public:
         c(*this);
     }
 
-    peer_stats_object() {}
+    peer_stats_object()
+    {
+    }
 
     id_type id;
 
@@ -324,22 +366,21 @@ typedef oid<peer_stats_object> peer_stats_id_type;
 
 struct by_rank;
 struct by_voter_peer;
-typedef multi_index_container<peer_stats_object,
+typedef multi_index_container<
+    peer_stats_object,
     indexed_by<ordered_unique<tag<by_id>, member<peer_stats_object, peer_stats_id_type, &peer_stats_object::id>>,
-                                  ordered_unique<tag<by_rank>,
-                                      composite_key<peer_stats_object, member<peer_stats_object, account_id_type,
-                                                                           &peer_stats_object::voter>,
-                                                     member<peer_stats_object, float, &peer_stats_object::rank>,
-                                                     member<peer_stats_object, account_id_type,
-                                                         &peer_stats_object::peer>>,
-                                      composite_key_compare<std::less<account_id_type>, std::greater<float>,
-                                                     std::less<account_id_type>>>,
-                                  ordered_unique<tag<by_voter_peer>,
-                                      composite_key<peer_stats_object, member<peer_stats_object, account_id_type,
-                                                                           &peer_stats_object::voter>,
-                                                     member<peer_stats_object, account_id_type,
-                                                         &peer_stats_object::peer>>,
-                                      composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>>,
+               ordered_unique<
+                   tag<by_rank>,
+                   composite_key<peer_stats_object,
+                                 member<peer_stats_object, account_id_type, &peer_stats_object::voter>,
+                                 member<peer_stats_object, float, &peer_stats_object::rank>,
+                                 member<peer_stats_object, account_id_type, &peer_stats_object::peer>>,
+                   composite_key_compare<std::less<account_id_type>, std::greater<float>, std::less<account_id_type>>>,
+               ordered_unique<tag<by_voter_peer>,
+                              composite_key<peer_stats_object,
+                                            member<peer_stats_object, account_id_type, &peer_stats_object::voter>,
+                                            member<peer_stats_object, account_id_type, &peer_stats_object::peer>>,
+                              composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>>,
     allocator<peer_stats_object>>
     peer_stats_index;
 
@@ -369,52 +410,39 @@ struct by_author_tag_posts;
 struct by_author_posts_tag;
 struct by_author_tag_rewards;
 struct by_tag_rewards_author;
-using std::less;
 using std::greater;
+using std::less;
 
-typedef chainbase::shared_multi_index_container<author_tag_stats_object,
-    indexed_by<ordered_unique<tag<by_id>,
-                   member<author_tag_stats_object, author_tag_stats_id_type, &author_tag_stats_object::id>>,
-                                                    ordered_unique<tag<by_author_posts_tag>,
-                                                        composite_key<author_tag_stats_object,
-                                                                       member<author_tag_stats_object, account_id_type,
-                                                                           &author_tag_stats_object::author>,
-                                                                       member<author_tag_stats_object, uint32_t,
-                                                                           &author_tag_stats_object::total_posts>,
-                                                                       member<author_tag_stats_object, tag_name_type,
-                                                                           &author_tag_stats_object::tag>>,
-                                                        composite_key_compare<less<account_id_type>, greater<uint32_t>,
-                                                                       less<tag_name_type>>>,
-                                                    ordered_unique<tag<by_author_tag_posts>,
-                                                        composite_key<author_tag_stats_object,
-                                                                       member<author_tag_stats_object, account_id_type,
-                                                                           &author_tag_stats_object::author>,
-                                                                       member<author_tag_stats_object, tag_name_type,
-                                                                           &author_tag_stats_object::tag>,
-                                                                       member<author_tag_stats_object, uint32_t,
-                                                                           &author_tag_stats_object::total_posts>>,
-                                                        composite_key_compare<less<account_id_type>,
-                                                                       less<tag_name_type>, greater<uint32_t>>>,
-                                                    ordered_unique<tag<by_author_tag_rewards>,
-                                                        composite_key<author_tag_stats_object,
-                                                                       member<author_tag_stats_object, account_id_type,
-                                                                           &author_tag_stats_object::author>,
-                                                                       member<author_tag_stats_object, tag_name_type,
-                                                                           &author_tag_stats_object::tag>,
-                                                                       member<author_tag_stats_object, asset,
-                                                                           &author_tag_stats_object::total_rewards>>,
-                                                        composite_key_compare<less<account_id_type>,
-                                                                       less<tag_name_type>, greater<asset>>>,
-                                                    ordered_unique<tag<by_tag_rewards_author>,
-                                                        composite_key<author_tag_stats_object,
-                                                                       member<author_tag_stats_object, tag_name_type,
-                                                                           &author_tag_stats_object::tag>,
-                                                                       member<author_tag_stats_object, asset,
-                                                                           &author_tag_stats_object::total_rewards>,
-                                                                       member<author_tag_stats_object, account_id_type,
-                                                                           &author_tag_stats_object::author>>,
-                                                        composite_key_compare<less<tag_name_type>, greater<asset>,
-                                                                       less<account_id_type>>>>>
+typedef chainbase::shared_multi_index_container<
+    author_tag_stats_object,
+    indexed_by<
+        ordered_unique<tag<by_id>,
+                       member<author_tag_stats_object, author_tag_stats_id_type, &author_tag_stats_object::id>>,
+        ordered_unique<tag<by_author_posts_tag>,
+                       composite_key<author_tag_stats_object,
+                                     member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>,
+                                     member<author_tag_stats_object, uint32_t, &author_tag_stats_object::total_posts>,
+                                     member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>>,
+                       composite_key_compare<less<account_id_type>, greater<uint32_t>, less<tag_name_type>>>,
+        ordered_unique<tag<by_author_tag_posts>,
+                       composite_key<author_tag_stats_object,
+                                     member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>,
+                                     member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>,
+                                     member<author_tag_stats_object, uint32_t, &author_tag_stats_object::total_posts>>,
+                       composite_key_compare<less<account_id_type>, less<tag_name_type>, greater<uint32_t>>>,
+        ordered_unique<tag<by_author_tag_rewards>,
+                       composite_key<author_tag_stats_object,
+                                     member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>,
+                                     member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>,
+                                     member<author_tag_stats_object, asset, &author_tag_stats_object::total_rewards>>,
+                       composite_key_compare<less<account_id_type>, less<tag_name_type>, greater<asset>>>,
+        ordered_unique<
+            tag<by_tag_rewards_author>,
+            composite_key<author_tag_stats_object,
+                          member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>,
+                          member<author_tag_stats_object, asset, &author_tag_stats_object::total_rewards>,
+                          member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>>,
+            composite_key_compare<less<tag_name_type>, greater<asset>, less<account_id_type>>>>>
     author_tag_stats_index;
 
 /**
@@ -435,9 +463,12 @@ public:
     tags_plugin(application* app);
     virtual ~tags_plugin();
 
-    std::string plugin_name() const override { return TAGS_PLUGIN_NAME; }
-    virtual void plugin_set_program_options(
-        boost::program_options::options_description& cli, boost::program_options::options_description& cfg) override;
+    std::string plugin_name() const override
+    {
+        return TAGS_PLUGIN_NAME;
+    }
+    virtual void plugin_set_program_options(boost::program_options::options_description& cli,
+                                            boost::program_options::options_description& cfg) override;
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
 
@@ -452,17 +483,24 @@ class tag_api : public std::enable_shared_from_this<tag_api>
 {
 public:
     tag_api(){};
-    tag_api(const app::api_context& ctx) {} //:_app(&ctx.app){}
+    tag_api(const app::api_context& ctx)
+    {
+    } //:_app(&ctx.app){}
 
-    void on_api_startup() {}
+    void on_api_startup()
+    {
+    }
 
-    vector<tag_stats_object> get_tags() const { return vector<tag_stats_object>(); }
+    vector<tag_stats_object> get_tags() const
+    {
+        return vector<tag_stats_object>();
+    }
 
 private:
     // app::application* _app = nullptr;
 };
-}
-} // scorum::tag
+} // namespace tags
+} // namespace scorum
 
 // clang-format off
 

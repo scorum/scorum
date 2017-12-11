@@ -1,5 +1,5 @@
 
-#include <scorum/protocol/fixed_string.hpp>
+#include <fc/fixed_string.hpp>
 
 #include <fc/io/raw.hpp>
 
@@ -30,7 +30,7 @@ void check(const std::string& s, const std::string& t, bool cond)
     }
 }
 
-template <typename Storage> void check_variant(const std::string& s, const scorum::protocol::fixed_string<Storage>& fs)
+template <typename Storage> void check_variant(const std::string& s, const fc::fixed_string<Storage>& fs)
 {
     fc::variant vs, vfs;
     fc::to_variant(s, vs);
@@ -42,7 +42,7 @@ template <typename Storage> void check_variant(const std::string& s, const scoru
     }
 
     std::string s2;
-    scorum::protocol::fixed_string<Storage> fs2;
+    fc::fixed_string<Storage> fs2;
     fc::from_variant(vs, s2);
     fc::from_variant(vfs, fs2);
     if (s2 != s)
@@ -58,7 +58,7 @@ template <typename Storage> void check_variant(const std::string& s, const scoru
     }
 }
 
-template <typename Storage> void check_pack(const std::string& s, const scorum::protocol::fixed_string<Storage>& fs)
+template <typename Storage> void check_pack(const std::string& s, const fc::fixed_string<Storage>& fs)
 {
     std::stringstream ss, sfs;
     fc::raw::pack(ss, s);
@@ -71,7 +71,7 @@ template <typename Storage> void check_pack(const std::string& s, const scorum::
     }
 
     ss.seekg(0);
-    scorum::protocol::fixed_string<Storage> unpacked;
+    fc::fixed_string<Storage> unpacked;
     fc::raw::unpack(ss, unpacked);
     if (unpacked != fs)
     {
@@ -83,7 +83,7 @@ template <typename Storage> void check_pack(const std::string& s, const scorum::
 int main(int argc, char** argv, char** envp)
 {
     std::vector<std::string> all_strings;
-    std::vector<scorum::protocol::fixed_string_16> all_fixed_string_16s;
+    std::vector<fc::fixed_string_16> all_fixed_string_16s;
     std::vector<std::vector<uint32_t>> sim_index;
 
     std::cout << "setting up LUT's" << std::endl;
@@ -130,7 +130,7 @@ int main(int argc, char** argv, char** envp)
     for (size_t i = 0; i < all_strings.size(); i++)
     {
         const std::string& s = all_strings[i];
-        scorum::protocol::fixed_string_16 fs(s);
+        fc::fixed_string_16 fs(s);
         std::string sfs = fs;
         if (s != fs)
         {
@@ -149,7 +149,7 @@ int main(int argc, char** argv, char** envp)
         for (const uint32_t& j : sim_index[i])
         {
             const std::string& t = all_strings[j];
-            scorum::protocol::fixed_string_16 ft(t);
+            fc::fixed_string_16 ft(t);
             check(s, t, (s < t) == (fs < ft));
             check(s, t, (s <= t) == (fs <= ft));
             check(s, t, (s > t) == (fs > ft));
@@ -165,7 +165,7 @@ int main(int argc, char** argv, char** envp)
 
     errors = 0;
     all_strings = std::vector<std::string>();
-    std::vector<scorum::protocol::fixed_string_24> all_fixed_string_24s;
+    std::vector<fc::fixed_string_24> all_fixed_string_24s;
     sim_index = std::vector<std::vector<uint32_t>>();
 
     std::cout << "setting up LUT's" << std::endl;
@@ -203,7 +203,7 @@ int main(int argc, char** argv, char** envp)
     for (size_t i = 0; i < all_strings.size(); i++)
     {
         const std::string& s = all_strings[i];
-        scorum::protocol::fixed_string_24 fs(s);
+        fc::fixed_string_24 fs(s);
         std::string sfs = fs;
         if (s != fs)
         {
@@ -222,7 +222,7 @@ int main(int argc, char** argv, char** envp)
         for (const uint32_t& j : sim_index[i])
         {
             const std::string& t = all_strings[j];
-            scorum::protocol::fixed_string_24 ft(t);
+            fc::fixed_string_24 ft(t);
             check(s, t, (s < t) == (fs < ft));
             check(s, t, (s <= t) == (fs <= ft));
             check(s, t, (s > t) == (fs > ft));
@@ -238,7 +238,7 @@ int main(int argc, char** argv, char** envp)
 
     errors = 0;
     all_strings = std::vector<std::string>();
-    std::vector<scorum::protocol::fixed_string_32> all_fixed_string_32s;
+    std::vector<fc::fixed_string_32> all_fixed_string_32s;
     sim_index = std::vector<std::vector<uint32_t>>();
 
     std::cout << "setting up LUT's" << std::endl;
@@ -276,7 +276,7 @@ int main(int argc, char** argv, char** envp)
     for (size_t i = 0; i < all_strings.size(); i++)
     {
         const std::string& s = all_strings[i];
-        scorum::protocol::fixed_string_32 fs(s);
+        fc::fixed_string_32 fs(s);
         std::string sfs = fs;
         if (s != fs)
         {
@@ -295,7 +295,7 @@ int main(int argc, char** argv, char** envp)
         for (const uint32_t& j : sim_index[i])
         {
             const std::string& t = all_strings[j];
-            scorum::protocol::fixed_string_32 ft(t);
+            fc::fixed_string_32 ft(t);
             check(s, t, (s < t) == (fs < ft));
             check(s, t, (s <= t) == (fs <= ft));
             check(s, t, (s > t) == (fs > ft));
