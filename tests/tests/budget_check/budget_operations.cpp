@@ -141,7 +141,7 @@ private_key_type budget_transaction_check_fixture::alice_create_budget(const ass
 
     BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-    BOOST_REQUIRE(budget_service.get_budget_count("alice") == 1);
+    BOOST_REQUIRE(budget_service.get_budgets("alice").size() == 1);
 
     return alice_private_key;
 }
@@ -186,7 +186,7 @@ SCORUM_TEST_CASE(close_budget_check)
 
     BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-    BOOST_REQUIRE(budget_service.get_budget_count("alice") == 0);
+    BOOST_REQUIRE(budget_service.get_budgets("alice").size() == 0);
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 }

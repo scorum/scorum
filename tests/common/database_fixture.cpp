@@ -42,6 +42,7 @@ database_fixture::database_fixture()
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
 {
     genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
 
@@ -420,7 +421,6 @@ void database_fixture::vest(const string& account, const asset& amount)
 
             dbs_account& account_service = db.obtain_service<dbs_account>();
             account_service.create_vesting(db.get_account(account), amount);
-
         },
         default_skip);
 }
@@ -489,6 +489,6 @@ void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip
     FC_CAPTURE_AND_RETHROW((tx))
 }
 
-} // scorum::chain::test
-}
-} // scorum::chain
+} // namespace test
+} // namespace chain
+} // namespace scorum

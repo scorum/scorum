@@ -16,36 +16,33 @@
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
 #include <scorum/chain/util/uint256.hpp>
-#include <scorum/chain/util/reward.hpp>
+
+#include <scorum/chain/pool/reward_pool.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
-
 #include <fc/container/deque.hpp>
-
 #include <fc/io/fstream.hpp>
+#include <fc/io/json.hpp>
 
 #include <cstdint>
 #include <deque>
 #include <fstream>
 #include <functional>
 
-#include <fc/io/json.hpp>
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 
 namespace scorum {
 namespace chain {
-
-// namespace db2 = graphene::db2;
 
 struct object_schema_repr
 {
@@ -635,7 +632,7 @@ bool database::_push_block(const signed_block& new_block)
                                 apply_block((*ritr)->data, skip);
                                 session.push();
                             }
-                            throw * except;
+                            throw *except;
                         }
                     }
                     return true;
@@ -721,7 +718,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-                                      )
+)
 {
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
@@ -1653,160 +1650,33 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 
 void database::initialize_indexes()
 {
-    _add_index_impl<dynamic_global_property_index>();
-    _add_index_impl<chain_property_index>();
-    _add_index_impl<account_index>();
-    _add_index_impl<account_authority_index>();
-    _add_index_impl<witness_index>();
-    _add_index_impl<transaction_index>();
-    _add_index_impl<block_summary_index>();
-    _add_index_impl<witness_schedule_index>();
-    _add_index_impl<comment_index>();
-    _add_index_impl<comment_vote_index>();
-    _add_index_impl<witness_vote_index>();
-    _add_index_impl<operation_index>();
-    _add_index_impl<account_history_index>();
-    _add_index_impl<hardfork_property_index>();
-    _add_index_impl<withdraw_vesting_route_index>();
-    _add_index_impl<owner_authority_history_index>();
-    _add_index_impl<account_recovery_request_index>();
-    _add_index_impl<change_recovery_account_request_index>();
-    _add_index_impl<escrow_index>();
-    _add_index_impl<decline_voting_rights_request_index>();
-    _add_index_impl<reward_fund_index>();
-    _add_index_impl<vesting_delegation_index>();
-    _add_index_impl<vesting_delegation_expiration_index>();
-    _add_index_impl<budget_index>();
+    add_index<dynamic_global_property_index>();
+    add_index<chain_property_index>();
+    add_index<account_index>();
+    add_index<account_authority_index>();
+    add_index<witness_index>();
+    add_index<transaction_index>();
+    add_index<block_summary_index>();
+    add_index<witness_schedule_index>();
+    add_index<comment_index>();
+    add_index<comment_vote_index>();
+    add_index<witness_vote_index>();
+    add_index<operation_index>();
+    add_index<account_history_index>();
+    add_index<hardfork_property_index>();
+    add_index<withdraw_vesting_route_index>();
+    add_index<owner_authority_history_index>();
+    add_index<account_recovery_request_index>();
+    add_index<change_recovery_account_request_index>();
+    add_index<escrow_index>();
+    add_index<decline_voting_rights_request_index>();
+    add_index<reward_fund_index>();
+    add_index<reward_pool_index>();
+    add_index<vesting_delegation_index>();
+    add_index<vesting_delegation_expiration_index>();
+    add_index<budget_index>();
 
     _plugin_index_signal();
-}
-
-void database::init_genesis(const genesis_state_type& genesis_state)
-{
-    try
-    {
-        FC_ASSERT(genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp.");
-        FC_ASSERT(genesis_state.witness_candidates.size() > 0, "Cannot start a chain with zero witnesses.");
-
-        struct auth_inhibitor
-        {
-            auth_inhibitor(database& db)
-                : db(db)
-                , old_flags(db.node_properties().skip_flags)
-            {
-                db.node_properties().skip_flags |= skip_authority_check;
-            }
-
-            ~auth_inhibitor()
-            {
-                db.node_properties().skip_flags = old_flags;
-            }
-
-        private:
-            database& db;
-            uint32_t old_flags;
-        } inhibitor(*this);
-
-        _const_genesis_time = genesis_state.initial_timestamp;
-
-        init_genesis_accounts(genesis_state.accounts);
-        init_genesis_witnesses(genesis_state.witness_candidates);
-        init_witness_schedule(genesis_state.witness_candidates);
-
-        create<chain_property_object>([&](chain_property_object& p) { p.chain_id = genesis_state.initial_chain_id; });
-
-        init_genesis_global_property_object(genesis_state.init_supply);
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
-void database::init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates)
-{
-    create<witness_schedule_object>([&](witness_schedule_object& wso) {
-        for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
-        {
-            wso.current_shuffled_witnesses[i] = witness_candidates[i].owner_name;
-        }
-    });
-}
-
-void database::init_genesis_accounts(const vector<genesis_state_type::account_type>& accounts)
-{
-    for (auto& account : accounts)
-    {
-        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
-
-        create<account_object>([&](account_object& a) {
-            a.name = account.name;
-            a.memo_key = account.public_key;
-            a.balance = asset(account.scr_amount, SCORUM_SYMBOL);
-            a.json_metadata = "{created_at: 'GENESIS'}";
-            a.recovery_account = account.recovery_account;
-        });
-
-        create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = account.name;
-            auth.owner.add_authority(account.public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
-    }
-}
-
-void database::init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses)
-{
-    for (auto& witness : witnesses)
-    {
-        FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
-
-        create<witness_object>([&](witness_object& w) {
-            w.owner = witness.owner_name;
-            w.signing_key = witness.block_signing_key;
-            w.schedule = witness_object::top19;
-            w.hardfork_time_vote = get_genesis_time();
-        });
-    }
-}
-
-void database::init_genesis_global_property_object(uint64_t init_supply)
-{
-    auto gpo = create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
-        p.time = get_genesis_time();
-        p.recent_slots_filled = fc::uint128::max_value();
-        p.participation_count = 128;
-        p.current_supply = asset(init_supply, SCORUM_SYMBOL);
-        p.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
-
-        p.total_reward_fund_scorum = asset(0, SCORUM_SYMBOL);
-        p.total_reward_shares2 = 0;
-    });
-
-    // Nothing to do
-    for (int i = 0; i < 0x10000; i++)
-        create<block_summary_object>([&](block_summary_object&) {});
-
-    create<hardfork_property_object>(
-        [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(get_genesis_time()); });
-
-    auto post_rf = create<reward_fund_object>([&](reward_fund_object& rfo) {
-        rfo.name = SCORUM_POST_REWARD_FUND_NAME;
-        rfo.last_update = head_block_time();
-        rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
-        rfo.percent_content_rewards = SCORUM_100_PERCENT;
-        rfo.reward_balance = gpo.total_reward_fund_scorum;
-        rfo.author_reward_curve = curve_id::linear;
-        rfo.curation_reward_curve = curve_id::square_root;
-    });
-
-    // As a shortcut in payout processing, we use the id as an array index.
-    // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
-    FC_ASSERT(post_rf.id._id == 0);
-}
-
-fc::time_point_sec database::get_genesis_time() const
-{
-    return _const_genesis_time;
 }
 
 void database::validate_transaction(const signed_transaction& trx)
@@ -1870,7 +1740,8 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check
+                    | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;
@@ -2247,7 +2118,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
 
-                        if (head_block_num() - w.last_confirmed_block_num > SCORUM_BLOCKS_PER_DAY)
+                        if (head_block_num() - w.last_confirmed_block_num > SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD)
                         {
                             w.signing_key = public_key_type();
                             push_virtual_operation(shutdown_witness_operation(w.owner));

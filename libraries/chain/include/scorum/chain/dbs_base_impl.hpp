@@ -6,6 +6,7 @@
 #include <typeinfo>
 
 #include <boost/config.hpp>
+#include <boost/type_index.hpp>
 
 #include <scorum/chain/dbservice_common.hpp>
 
@@ -19,7 +20,7 @@ struct dbs_base
 {
 protected:
     dbs_base() = delete;
-    dbs_base(dbs_base &&) = delete;
+    dbs_base(dbs_base&&) = delete;
 
     explicit dbs_base(database&);
 
@@ -44,7 +45,7 @@ private:
 
 class dbservice_dbs_factory
 {
-    typedef std::unique_ptr<dbs_base> BaseServicePtr;
+    using BaseServicePtr = std::unique_ptr<dbs_base>;
 
 protected:
     dbservice_dbs_factory() = delete;
@@ -56,11 +57,11 @@ protected:
 public:
     template <typename ConcreteService> ConcreteService& obtain_service() const
     {
-        auto it = _dbs.find(typeid(ConcreteService).name());
+        auto it = _dbs.find(boost::typeindex::type_id<ConcreteService>());
         if (it == _dbs.end())
         {
-            it = _dbs.insert(std::pair<std::string, BaseServicePtr>(typeid(ConcreteService).name(),
-                                                                    BaseServicePtr(new ConcreteService(_db_core))))
+            it = _dbs.insert(std::make_pair(boost::typeindex::type_id<ConcreteService>(),
+                                            BaseServicePtr(new ConcreteService(_db_core))))
                      .first;
         }
 
@@ -69,8 +70,8 @@ public:
     }
 
 private:
-    mutable std::map<std::string, BaseServicePtr> _dbs;
+    mutable std::map<boost::typeindex::type_index, BaseServicePtr> _dbs;
     database& _db_core;
 };
-}
-}
+} // namespace chain
+} // namespace scorum

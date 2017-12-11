@@ -959,16 +959,16 @@ public:
     /**
      *  Gets the list of all budget owners (look list_accounts to understand input parameters)
      */
-    set<string> list_budget_owners(const std::string &lowerbound, uint32_t limit);
+    set<string> list_budget_owners(const std::string& lowerbound, uint32_t limit);
 
     /**
      *  Gets the budget information for certain account
      */
-    vector<budget_api_obj> get_budgets(const std::string &account_name);
+    vector<budget_api_obj> get_budgets(const std::string& account_name);
 
     /**
-     *  This method will create new budget linked to owner account. The current account creation fee can be found with the
-     *  'info' wallet command.
+     *  This method will create new budget linked to owner account. The current account creation fee can be found with
+     * the 'info' wallet command.
      *
      *  @warning The owner account must have sufficient balance for budget
      *
@@ -979,24 +979,20 @@ public:
      *  @param broadcast
      */
     annotated_signed_transaction create_budget(const std::string& budget_owner,
-                                                const std::string& content_permlink,
-                                                const asset& balance,
-                                                const time_point_sec deadline,
-                                                const bool broadcast);
+                                               const std::string& content_permlink,
+                                               const asset& balance,
+                                               const time_point_sec deadline,
+                                               const bool broadcast);
 
     /**
      *  Close the budget. The budget rest is returned to the owner's account
      */
-    annotated_signed_transaction close_budget(const int64_t id,
-                                              const std::string& budget_owner,
-                                              const bool broadcast);
+    annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
 public:
-
     fc::signal<void(bool)> lock_changed;
 
 private:
-
     std::shared_ptr<detail::wallet_api_impl> my;
 };
 
@@ -1005,8 +1001,8 @@ struct plain_keys
     fc::sha512 checksum;
     map<public_key_type, string> keys;
 };
-}
-}
+} // namespace wallet
+} // namespace scorum
 
 // clang-format off
 

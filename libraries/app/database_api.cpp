@@ -316,8 +316,9 @@ vector<set<string>> database_api::get_key_references(vector<public_key_type> key
  */
 vector<set<string>> database_api_impl::get_key_references(vector<public_key_type> keys) const
 {
-    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
-                     "account_by_key_api::get_key_references instead.");
+    FC_ASSERT(false,
+              "database_api::get_key_references has been deprecated. Please use "
+              "account_by_key_api::get_key_references instead.");
     vector<set<string>> final_result;
     return final_result;
 }
@@ -948,18 +949,12 @@ vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) 
 
     for (const auto& name : names)
     {
-        size_t budget_count = budget_service.get_budget_count(name);
-        if (results.size() + budget_count > SCORUM_LIMIT_API_BUDGETS_LIST_SIZE)
+        auto budgets = budget_service.get_budgets(name);
+        if (results.size() + budgets.size() > SCORUM_LIMIT_API_BUDGETS_LIST_SIZE)
         {
             break;
         }
 
-        if (!budget_count)
-        {
-            continue;
-        }
-
-        auto budgets = budget_service.get_budgets(name);
         for (const chain::budget_object& budget : budgets)
         {
             results.push_back(budget_api_obj(budget));
@@ -2146,5 +2141,5 @@ annotated_signed_transaction database_api::get_transaction(transaction_id_type i
     });
 #endif
 }
-}
-} // scorum::app
+} // namespace app
+} // namespace scorum
