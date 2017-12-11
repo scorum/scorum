@@ -635,7 +635,7 @@ bool database::_push_block(const signed_block& new_block)
                                 apply_block((*ritr)->data, skip);
                                 session.push();
                             }
-                            throw * except;
+                            throw *except;
                         }
                     }
                     return true;
@@ -721,7 +721,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-                                      )
+)
 {
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
@@ -1870,7 +1870,8 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check
+                    | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;
@@ -2247,7 +2248,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
 
-                        if (head_block_num() - w.last_confirmed_block_num > SCORUM_BLOCKS_PER_DAY)
+                        if (head_block_num() - w.last_confirmed_block_num > SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD)
                         {
                             w.signing_key = public_key_type();
                             push_virtual_operation(shutdown_witness_operation(w.owner));

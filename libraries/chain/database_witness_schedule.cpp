@@ -21,7 +21,7 @@ void database::_reset_virtual_schedule_time()
         _db.modify(witness, [&](witness_object& wobj) {
             wobj.virtual_position = fc::uint128();
             wobj.virtual_last_update = wso.current_virtual_time;
-            wobj.virtual_scheduled_time = VIRTUAL_SCHEDULE_LAP_LENGTH2 / (wobj.votes.value + 1);
+            wobj.virtual_scheduled_time = VIRTUAL_SCHEDULE_LAP_LENGTH / (wobj.votes.value + 1);
         });
     }
 }
@@ -125,7 +125,7 @@ void database::update_witness_schedule()
         for (auto itr = processed_witnesses.begin(); itr != processed_witnesses.end(); ++itr)
         {
             auto new_virtual_scheduled_time
-                = new_virtual_time + VIRTUAL_SCHEDULE_LAP_LENGTH2 / ((*itr)->votes.value + 1);
+                = new_virtual_time + VIRTUAL_SCHEDULE_LAP_LENGTH / ((*itr)->votes.value + 1);
             if (new_virtual_scheduled_time < new_virtual_time)
             {
                 reset_virtual_time = true; /// overflow
