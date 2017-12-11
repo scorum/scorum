@@ -39,7 +39,7 @@ namespace scorum {
 namespace chain {
 struct genesis_state_type;
 }
-}
+} // namespace scorum
 
 namespace scorum {
 namespace app {

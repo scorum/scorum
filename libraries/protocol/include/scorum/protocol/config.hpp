@@ -25,6 +25,17 @@
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::seconds(0)
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 
+#define SCORUM_REWARDS_INITIAL_SUPPLY                   asset( 1000000, SCORUM_SYMBOL )
+#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS    5
+
+#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   2
+#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        3
+#define SCORUM_ADJUST_REWARD_PERCENT                    5
+
+#define SCORUM_LIMIT_BUDGETS_PER_OWNER          5
+#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          SCORUM_LIMIT_BUDGETS_PER_OWNER
+#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      SCORUM_LIMIT_BUDGETS_PER_OWNER
+
 #else // IS LIVE SCORUM NETWORK
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
@@ -38,6 +49,17 @@
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::minutes(60)
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 3186477
+
+#define SCORUM_REWARDS_INITIAL_SUPPLY                   asset( 2300000000, SCORUM_SYMBOL )
+#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS    (2 * 365)
+
+#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   30
+#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        100
+#define SCORUM_ADJUST_REWARD_PERCENT                    5
+
+#define SCORUM_LIMIT_BUDGETS_PER_OWNER          1000
+#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          1000
+#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      1000
 
 #endif
 
@@ -178,11 +200,6 @@
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           ""
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT                (account_name_type())
-
-#define SCORUM_LIMIT_BUDGETS_PER_OWNER          1000
-#define SCORUM_LIMIT_FUND_BUDGETS               100
-#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          1000
-#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      1000
 
 ///@}
 

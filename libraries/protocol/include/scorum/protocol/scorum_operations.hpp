@@ -32,7 +32,10 @@ struct account_create_operation : public base_operation
     string json_metadata;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(creator); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
 };
 
 struct account_create_with_delegation_operation : public base_operation
@@ -50,7 +53,10 @@ struct account_create_with_delegation_operation : public base_operation
     extensions_type extensions;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(creator); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
 };
 
 struct account_update_operation : public base_operation
@@ -90,12 +96,17 @@ struct comment_operation : public base_operation
     string json_metadata;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(author); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(author);
+    }
 };
 
 struct beneficiary_route_type
 {
-    beneficiary_route_type() {}
+    beneficiary_route_type()
+    {
+    }
     beneficiary_route_type(const account_name_type& a, const uint16_t& w)
         : account(a)
         , weight(w)
@@ -106,7 +117,10 @@ struct beneficiary_route_type
     uint16_t weight;
 
     // For use by std::sort such that the route is sorted first by name (ascending)
-    bool operator<(const beneficiary_route_type& o) const { return account < o.account; }
+    bool operator<(const beneficiary_route_type& o) const
+    {
+        return account < o.account;
+    }
 };
 
 struct comment_payout_beneficiaries
@@ -142,7 +156,10 @@ struct comment_options_operation : public base_operation
     comment_options_extensions_type extensions;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(author); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(author);
+    }
 };
 
 struct prove_authority_operation : public base_operation
@@ -170,7 +187,10 @@ struct delete_comment_operation : public base_operation
     string permlink;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(author); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(author);
+    }
 };
 
 struct vote_operation : public base_operation
@@ -181,7 +201,10 @@ struct vote_operation : public base_operation
     int16_t weight = 0;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(voter); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(voter);
+    }
 };
 
 /**
@@ -202,7 +225,7 @@ struct transfer_operation : public base_operation
     string memo;
 
     void validate() const;
-    
+
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(from);
@@ -243,7 +266,10 @@ struct escrow_transfer_operation : public base_operation
     string json_meta;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(from); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(from);
+    }
 };
 
 /**
@@ -262,7 +288,10 @@ struct escrow_approve_operation : public base_operation
     bool approve = true;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(who); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(who);
+    }
 };
 
 /**
@@ -280,7 +309,10 @@ struct escrow_dispute_operation : public base_operation
     uint32_t escrow_id = 30;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(who); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(who);
+    }
 };
 
 /**
@@ -305,7 +337,10 @@ struct escrow_release_operation : public base_operation
     asset scorum_amount = asset(0, SCORUM_SYMBOL); ///< the amount of scorum to release
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(who); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(who);
+    }
 };
 
 /**
@@ -321,7 +356,10 @@ struct transfer_to_vesting_operation : public base_operation
     asset amount; ///< must be SCORUM
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(from); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(from);
+    }
 };
 
 /**
@@ -341,7 +379,10 @@ struct withdraw_vesting_operation : public base_operation
     asset vesting_shares;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 /**
@@ -359,7 +400,10 @@ struct set_withdraw_vesting_route_operation : public base_operation
     bool auto_vest = false;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(from_account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(from_account);
+    }
 };
 
 /**
@@ -413,7 +457,10 @@ struct witness_update_operation : public base_operation
     asset fee; ///< the fee paid to register a new witness, should be 10x current block production pay
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(owner); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
 };
 
 /**
@@ -428,7 +475,10 @@ struct account_witness_vote_operation : public base_operation
     bool approve = true;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 struct account_witness_proxy_operation : public base_operation
@@ -437,7 +487,10 @@ struct account_witness_proxy_operation : public base_operation
     account_name_type proxy;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 /**
@@ -556,7 +609,10 @@ struct request_account_recovery_operation : public base_operation
 
     extensions_type extensions; ///< Extensions. Not currently used.
 
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(recovery_account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(recovery_account);
+    }
 
     void validate() const;
 };
@@ -642,7 +698,10 @@ struct change_recovery_account_operation : public base_operation
     account_name_type new_recovery_account; ///< The account that creates the recover request
     extensions_type extensions; ///< Extensions. Not currently used.
 
-    void get_required_owner_authorities(flat_set<account_name_type>& a) const { a.insert(account_to_recover); }
+    void get_required_owner_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account_to_recover);
+    }
     void validate() const;
 };
 
@@ -651,7 +710,10 @@ struct decline_voting_rights_operation : public base_operation
     account_name_type account;
     bool decline = true;
 
-    void get_required_owner_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_owner_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
     void validate() const;
 };
 
@@ -661,7 +723,10 @@ struct claim_reward_balance_operation : public base_operation
     asset reward_scorum;
     asset reward_vests;
 
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
     void validate() const;
 };
 
@@ -680,7 +745,10 @@ struct delegate_vesting_shares_operation : public base_operation
     account_name_type delegatee; ///< The account receiving vesting shares
     asset vesting_shares; ///< The amount of vesting shares delegated
 
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(delegator); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(delegator);
+    }
     void validate() const;
 };
 
@@ -711,8 +779,8 @@ struct close_budget_operation : public base_operation
     }
 };
 
-}
-} // scorum::protocol
+} // namespace protocol
+} // namespace scorum
 
 // clang-format off
 

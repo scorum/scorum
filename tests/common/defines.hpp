@@ -1,8 +1,11 @@
 #pragma once
 
+#include <boost/version.hpp>
+
 #define TEST_CHAIN_ID fc::sha256::hash("testnet")
 #define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
 #define TEST_INITIAL_SUPPLY (10000000000ll)
+#define TEST_REWARD_INITIAL_SUPPLY asset(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS* SCORUM_BLOCKS_PER_DAY)
 #define TEST_GENESIS_TIMESTAMP (1431700000)
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
 
@@ -78,7 +81,7 @@
 
 #define REQUIRE_THROW_WITH_VALUE(op, field, value) REQUIRE_THROW_WITH_VALUE_2(op, field, value, fc::exception)
 
-/// This simply resets v back to its default-constructed value. Requires v to have a working assingment operator and
+/// This simply resets v back to its default-constructed value. Requires v to have a working assignment operator and
 /// default constructor.
 #define RESET(v) v = decltype(v)()
 /// This allows me to build consecutive test cases. It's pretty ugly, but it works well enough for unit tests.
@@ -111,33 +114,50 @@
 
 #define ASSET(s) asset::from_string(s)
 
-#define SCORUM_TEST_CASE(test_name)                                     \
-struct test_name : public BOOST_AUTO_TEST_CASE_FIXTURE                  \
-{                                                                       \
-    void test_method()                                                  \
-    {                                                                   \
-        try                                                             \
-        {                                                               \
-            test_method_override();                                     \
-        }                                                               \
-        FC_LOG_AND_RETHROW()                                            \
-    };                                                                  \
-    void test_method_override();                                        \
-};                                                                      \
-                                                                        \
-static void BOOST_AUTO_TC_INVOKER( test_name )()                        \
-{                                                                       \
-    test_name t;                                                        \
-    t.test_method();                                                    \
-}                                                                       \
-                                                                        \
-struct BOOST_AUTO_TC_UNIQUE_ID( test_name ) {};                         \
-                                                                        \
-BOOST_AUTO_TU_REGISTRAR( test_name )(                                   \
-    boost::unit_test::make_test_case(                                   \
-        &BOOST_AUTO_TC_INVOKER( test_name ), #test_name ),              \
-    boost::unit_test::ut_detail::auto_tc_exp_fail<                      \
-        BOOST_AUTO_TC_UNIQUE_ID( test_name )>::instance()->value() );   \
-                                                                        \
-void test_name::test_method_override()                                  \
+// test case defines
+#if BOOST_VERSION >= 106000 // boost ver. >= 1.60.0
 
+#define SCORUM_AUTO_TU_REGISTRAR(test_name)                                                                            \
+    BOOST_AUTO_TU_REGISTRAR(test_name)                                                                                 \
+    (boost::unit_test::make_test_case(&BOOST_AUTO_TC_INVOKER(test_name), #test_name, __FILE__, __LINE__),              \
+     boost::unit_test::decorator::collector::instance());
+
+#else // boost ver. <1.60.0
+
+#define SCORUM_AUTO_TU_REGISTRAR(test_name)                                                                            \
+    BOOST_AUTO_TU_REGISTRAR(test_name)                                                                                 \
+    (boost::unit_test::make_test_case(&BOOST_AUTO_TC_INVOKER(test_name), #test_name),                                  \
+     boost::unit_test::ut_detail::auto_tc_exp_fail<BOOST_AUTO_TC_UNIQUE_ID(test_name)>::instance()->value());
+
+#endif
+
+#define SCORUM_TEST_CASE(test_name)                                                                                    \
+    struct test_name : public BOOST_AUTO_TEST_CASE_FIXTURE                                                             \
+    {                                                                                                                  \
+        void test_method()                                                                                             \
+        {                                                                                                              \
+            try                                                                                                        \
+            {                                                                                                          \
+                test_method_override();                                                                                \
+            }                                                                                                          \
+            FC_LOG_AND_RETHROW()                                                                                       \
+        };                                                                                                             \
+        void test_method_override();                                                                                   \
+    };                                                                                                                 \
+                                                                                                                       \
+    static void BOOST_AUTO_TC_INVOKER(test_name)()                                                                     \
+    {                                                                                                                  \
+        BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture entry.");                                               \
+        test_name t;                                                                                                   \
+        BOOST_TEST_CHECKPOINT('"' << #test_name << "\" entry.");                                                       \
+        t.test_method();                                                                                               \
+        BOOST_TEST_CHECKPOINT('"' << #test_name << "\" exit.");                                                        \
+    }                                                                                                                  \
+                                                                                                                       \
+    struct BOOST_AUTO_TC_UNIQUE_ID(test_name)                                                                          \
+    {                                                                                                                  \
+    };                                                                                                                 \
+                                                                                                                       \
+    SCORUM_AUTO_TU_REGISTRAR(test_name)                                                                                \
+                                                                                                                       \
+    void test_name::test_method_override()
