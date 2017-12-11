@@ -66,18 +66,18 @@
 #define SCORUM_BLOCK_INTERVAL                  3
 #define SCORUM_BLOCKS_PER_YEAR                 (365*24*60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_BLOCKS_PER_DAY                  (24*60*60/SCORUM_BLOCK_INTERVAL)
+#define SCORUM_BLOCKS_PER_HOUR                 (60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_START_VESTING_BLOCK             (SCORUM_BLOCKS_PER_DAY * 7)
 #define SCORUM_START_MINER_VOTING_BLOCK        (SCORUM_BLOCKS_PER_DAY * 30)
 
 #define SCORUM_NUM_INIT_DELEGATES              1
-#define SCORUM_INIT_TIME                       (fc::time_point_sec());
 
-#define SCORUM_MAX_WITNESSES                   21
+#define SCORUM_MAX_VOTED_WITNESSES              20
+#define SCORUM_MAX_RUNNER_WITNESSES             1
+#define SCORUM_MAX_WITNESSES                    (SCORUM_MAX_VOTED_WITNESSES+SCORUM_MAX_RUNNER_WITNESSES)
+#define SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD  SCORUM_BLOCKS_PER_DAY/2
+#define SCORUM_HARDFORK_REQUIRED_WITNESSES      17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
 
-#define SCORUM_MAX_VOTED_WITNESSES             20
-#define SCORUM_MAX_RUNNER_WITNESSES            1
-
-#define SCORUM_HARDFORK_REQUIRED_WITNESSES     17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
 #define SCORUM_MAX_MEMO_SIZE                   2048
 #define SCORUM_MAX_PROXY_RECURSION_DEPTH       4
@@ -166,7 +166,6 @@
 
 #define SCORUM_MIN_PAYOUT                  (asset(5,SCORUM_SYMBOL))
 
-
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
 #define SCORUM_MAX_ACCOUNT_NAME_LENGTH         16
 
@@ -177,12 +176,9 @@
 #define SCORUM_MAX_SHARE_SUPPLY                int64_t(1000000000000000ll)
 #define SCORUM_MAX_SIG_CHECK_DEPTH             2
 
-#define SCORUM_SECONDS_PER_YEAR                (uint64_t(60*60*24*365ll))
-
 #define SCORUM_MAX_TRANSACTION_SIZE            (1024*64)
 #define SCORUM_MIN_BLOCK_SIZE_LIMIT            (SCORUM_MAX_TRANSACTION_SIZE)
 #define SCORUM_MAX_BLOCK_SIZE                  (SCORUM_MAX_TRANSACTION_SIZE*SCORUM_BLOCK_INTERVAL*2000)
-#define SCORUM_BLOCKS_PER_HOUR                 (60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_MAX_FEED_AGE_SECONDS            (60*60*24*7) // 7 days
 #define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
 
@@ -190,19 +186,10 @@
 #define SCORUM_MAX_UNDO_HISTORY                10000
 
 #define SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT (SCORUM_BLOCK_INTERVAL * 5) // 5 transactions per block
-#define SCORUM_BLOCKCHAIN_PRECISION            uint64_t( 1000 )
-
-#define SCORUM_BLOCKCHAIN_PRECISION_DIGITS     3
-#define SCORUM_MAX_INSTANCE_ID                 (uint64_t(-1)>>16)
-/** NOTE: making this a power of 2 (say 2^15) would greatly accelerate fee calcs */
-#define SCORUM_MAX_AUTHORITY_MEMBERSHIP        10
-#define SCORUM_MAX_ASSET_WHITELIST_AUTHORITIES 10
-#define SCORUM_MAX_URL_LENGTH                  127
 
 #define SCORUM_IRREVERSIBLE_THRESHOLD          (75 * SCORUM_1_PERCENT)
 
-#define VIRTUAL_SCHEDULE_LAP_LENGTH  ( fc::uint128(uint64_t(-1)) )
-#define VIRTUAL_SCHEDULE_LAP_LENGTH2 ( fc::uint128::max_value() )
+#define VIRTUAL_SCHEDULE_LAP_LENGTH ( fc::uint128::max_value() )
 
 /**
  *  Reserved Account IDs with special meaning
