@@ -74,7 +74,6 @@ RUN \
         -DLOW_MEMORY_NODE=OFF \
         -DCLEAR_VOTES=ON \
         -DSKIP_BY_TX_ID=ON \
-        -DCHAINBASE_CHECK_LOCKING=OFF \
         .. && \
     make -j$(nproc) wallet_tests chain_test && \
     ./tests/chain_test && \
