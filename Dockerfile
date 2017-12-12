@@ -52,8 +52,9 @@ RUN \
         -DCLEAR_VOTES=ON \
         -DSKIP_BY_TX_ID=ON \
         .. && \
-    make -j$(nproc) chain_test test_fixed_string && \
+    make -j$(nproc) wallet_tests chain_test test_fixed_string && \
     ./tests/chain_test && \
+    ./tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
     cd /usr/local/src/scorum && \
     doxygen && \
@@ -75,8 +76,9 @@ RUN \
         -DSKIP_BY_TX_ID=ON \
         -DCHAINBASE_CHECK_LOCKING=OFF \
         .. && \
-    make -j$(nproc) chain_test && \
+    make -j$(nproc) wallet_tests chain_test && \
     ./tests/chain_test && \
+    ./tests/wallet_tests && \
     mkdir -p /var/cobertura && \
     gcovr --object-directory="../" --root=../ --xml-pretty --gcov-exclude=".*tests.*" --gcov-exclude=".*fc.*" --gcov-exclude=".*app*" --gcov-exclude=".*net*" --gcov-exclude=".*plugins*" --gcov-exclude=".*schema*" --gcov-exclude=".*time*" --gcov-exclude=".*utilities*" --gcov-exclude=".*wallet*" --gcov-exclude=".*programs*" --output="/var/cobertura/coverage.xml" && \
     cd /usr/local/src/scorum && \
