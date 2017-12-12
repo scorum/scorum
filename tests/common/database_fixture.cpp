@@ -36,6 +36,10 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
 database_fixture::database_fixture()
     : app()
     , db(*app.chain_database())
+    , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(string("init_key"))))
+    , init_account_pub_key(init_account_priv_key.get_public_key())
+    , debug_key(graphene::utilities::key_to_wif(init_account_priv_key))
+    , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
 {
     genesis_state.init_supply = TEST_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
@@ -66,7 +70,6 @@ clean_database_fixture::clean_database_fixture()
         auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
         db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
         auto wit_plugin = app.register_plugin<scorum::witness::witness_plugin>();
-        init_account_pub_key = init_account_priv_key.get_public_key();
 
         boost::program_options::variables_map options;
 
@@ -137,7 +140,6 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
         if (arg == "--show-test-names")
             std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
     }
-    init_account_pub_key = init_account_priv_key.get_public_key();
 
     db.open(data_dir->path(), data_dir->path(), size, chainbase::database::read_write, genesis_state);
 
@@ -220,19 +222,12 @@ timed_blocks_database_fixture::timed_blocks_database_fixture()
 
 bool timed_blocks_database_fixture::_time_printed = false;
 
-private_key_type database_fixture::generate_private_key(string seed)
+private_key_type database_fixture::generate_private_key(const std::string& seed)
 {
-    static const private_key_type committee = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
+    static const private_key_type committee = private_key_type::regenerate(fc::sha256::hash(std::string("init_key")));
     if (seed == "init_key")
         return committee;
     return fc::ecc::private_key::regenerate(fc::sha256::hash(seed));
-}
-
-string database_fixture::generate_anon_acct_name()
-{
-    // names of the form "anon-acct-x123" ; the "x" is necessary
-    //    to workaround issue #46
-    return "anon-acct-x" + std::to_string(anon_acct_count++);
 }
 
 void database_fixture::open_database()

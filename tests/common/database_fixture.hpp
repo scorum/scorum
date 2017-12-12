@@ -34,24 +34,20 @@ struct database_fixture
     public_key_type committee_key;
     account_id_type committee_account;
 
-    private_key_type private_key = private_key_type::generate();
-    private_key_type init_account_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
+    const private_key_type init_account_priv_key;
+    const public_key_type init_account_pub_key;
 
-    string debug_key = graphene::utilities::key_to_wif(init_account_priv_key);
-    public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
-
-    uint32_t default_skip = 0 | database::skip_undo_history_check | database::skip_authority_check;
+    const std::string debug_key;
+    const uint32_t default_skip;
 
     std::shared_ptr<scorum::plugin::debug_node::debug_node_plugin> db_plugin;
 
     optional<fc::temp_directory> data_dir;
-    uint32_t anon_acct_count;
 
     database_fixture();
     ~database_fixture();
 
-    static fc::ecc::private_key generate_private_key(string seed = "init_key");
-    string generate_anon_acct_name();
+    static private_key_type generate_private_key(const std::string& seed);
     void open_database();
 
     void generate_block(uint32_t skip = 0,
