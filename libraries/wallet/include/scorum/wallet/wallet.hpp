@@ -87,6 +87,11 @@ namespace detail {
 class wallet_api_impl;
 }
 
+namespace utils {
+fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number);
+brain_key_info suggest_brain_key();
+} // namespace utils
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
