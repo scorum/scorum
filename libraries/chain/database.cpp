@@ -1442,10 +1442,8 @@ void database::process_funds()
 
     if (cwit.schedule == witness_object::timeshare)
         witness_reward *= wso.timeshare_weight;
-    else if (cwit.schedule == witness_object::miner)
-        witness_reward *= wso.miner_weight;
-    else if (cwit.schedule == witness_object::top19)
-        witness_reward *= wso.top19_weight;
+    else if (cwit.schedule == witness_object::top20)
+        witness_reward *= wso.top20_weight;
     else
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
 

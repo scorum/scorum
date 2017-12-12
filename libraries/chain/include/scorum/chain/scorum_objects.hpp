@@ -12,10 +12,10 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using scorum::protocol::price;
 using scorum::protocol::asset_symbol_type;
+using scorum::protocol::price;
 
-typedef protocol::fixed_string_16 reward_fund_name_type;
+typedef fc::fixed_string_16 reward_fund_name_type;
 
 class escrow_object : public object<escrow_object_type, escrow_object>
 {
@@ -125,6 +125,7 @@ public:
     curve_id curation_reward_curve;
 };
 
+// clang-format off
 struct by_withdraw_route;
 struct by_destination;
 typedef multi_index_container<withdraw_vesting_route_object,
@@ -242,8 +243,10 @@ typedef multi_index_container<reward_fund_object,
                                                                &reward_fund_object::name>>>,
                               allocator<reward_fund_object>>
     reward_fund_index;
-}
-} // scorum::chain
+// clang-format on
+
+} // namespace chain
+} // namespace scorum
 
 #include <scorum/chain/comment_object.hpp>
 #include <scorum/chain/account_object.hpp>
