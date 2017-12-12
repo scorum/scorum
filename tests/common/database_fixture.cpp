@@ -39,6 +39,7 @@ database_fixture::database_fixture(const genesis_state_type &external_genesis_st
 {
     genesis_state = external_genesis_state;
     genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
 
@@ -429,7 +430,6 @@ void database_fixture::vest(const string& account, const asset& amount)
 
             dbs_account& account_service = db.obtain_service<dbs_account>();
             account_service.create_vesting(db.get_account(account), amount);
-
         },
         default_skip);
 }
@@ -546,6 +546,6 @@ genesis_state_type create_registration_genesis()
     return std::move(fc::json::from_string(genesis_str).as<genesis_state_type>());
 }
 
-} // scorum::chain::test
-}
-} // scorum::chain
+} // namespace test
+} // namespace chain
+} // namespace scorum

@@ -103,7 +103,7 @@ SCORUM_TEST_CASE(create_check)
 {
     if (!registration_pool_service.is_pool_exists())
     {
-        //if pool has not created in basic fixture
+        //if object has not created in basic fixture
         BOOST_REQUIRE_NO_THROW(registration_pool_service.create_pool(genesis_state));
     }
 
@@ -130,7 +130,7 @@ SCORUM_TEST_CASE(create_double_check)
 {
     if (!registration_pool_service.is_pool_exists())
     {
-        //if pool has not created in basic fixture
+        //if object has not created in basic fixture
         BOOST_REQUIRE_NO_THROW(registration_pool_service.create_pool(genesis_state));
     }
 

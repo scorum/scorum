@@ -9,7 +9,6 @@
 #include <scorum/chain/fork_database.hpp>
 #include <scorum/chain/block_log.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/genesis_state.hpp>
 
 #include <scorum/protocol/protocol.hpp>
 
@@ -34,6 +33,7 @@ using scorum::protocol::signed_transaction;
 
 class database_impl;
 class custom_operation_interpreter;
+struct genesis_state_type;
 
 namespace util {
 struct comment_reward_context;
@@ -382,7 +382,7 @@ public:
 
     template <typename MultiIndexType> void add_plugin_index()
     {
-        _plugin_index_signal.connect([this]() { this->_add_index_impl<MultiIndexType>(); });
+        _plugin_index_signal.connect([this]() { this->add_index<MultiIndexType>(); });
     }
 
 private:
@@ -391,11 +391,6 @@ private:
     void _reset_virtual_schedule_time();
 
     void _update_median_witness_props();
-
-    template <typename MultiIndexType> void _add_index_impl()
-    {
-        add_index<MultiIndexType>();
-    }
 
 protected:
     // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
@@ -431,10 +426,11 @@ protected:
     void apply_hardfork(uint32_t hardfork);
     ///@}
 
-    void init_witness_schedule(const std::vector<genesis_state_type::witness_type>& witness_candidates);
-    void init_genesis_accounts(const std::vector<genesis_state_type::account_type>& accounts);
-    void init_genesis_witnesses(const std::vector<genesis_state_type::witness_type>& witnesses);
-    void init_genesis_global_property_object(uint64_t init_supply);
+    void init_genesis_accounts(const genesis_state_type& genesis_state);
+    void init_genesis_witnesses(const genesis_state_type& genesis_state);
+    void init_genesis_witness_schedule(const genesis_state_type& genesis_state);
+    void init_genesis_global_property_object(const genesis_state_type& genesis_state);
+    void init_genesis_rewards(const genesis_state_type& genesis_state);
 
 private:
     std::unique_ptr<database_impl> _my;

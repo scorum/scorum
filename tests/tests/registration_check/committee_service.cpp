@@ -32,6 +32,40 @@ SCORUM_TEST_CASE(create_invalid_genesis_state_check)
     BOOST_CHECK_THROW(registration_committee_service.create_committee(invalid_genesis_state), fc::assert_exception);
 }
 
+SCORUM_TEST_CASE(create_check)
+{
+    if (!registration_committee_service.is_committee_exists())
+    {
+        //if object has not created in basic fixture
+        BOOST_REQUIRE_NO_THROW(registration_committee_service.create_committee(genesis_state));
+    }
+
+    using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
+    const committee_members& members = registration_committee_service.get_committee();
+
+    BOOST_REQUIRE_EQUAL(members.size(), 2);
+
+    const char *inpit[] = {"alice", "bob"};
+    std::size_t ci = 0;
+    for (const registration_committee_member_object &member: members)
+    {
+        BOOST_CHECK_EQUAL(member.account, inpit[ci]);
+
+        ++ci;
+    }
+}
+
+SCORUM_TEST_CASE(create_double_check)
+{
+    if (!registration_committee_service.is_committee_exists())
+    {
+        //if object has not created in basic fixture
+        BOOST_REQUIRE_NO_THROW(registration_committee_service.create_committee(genesis_state));
+    }
+
+    BOOST_REQUIRE_THROW(registration_committee_service.create_committee(genesis_state), fc::assert_exception);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif

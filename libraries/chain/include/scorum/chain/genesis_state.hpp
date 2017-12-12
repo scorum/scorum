@@ -4,6 +4,7 @@
 #include <string>
 
 #include <scorum/protocol/types.hpp>
+#include <scorum/protocol/asset.hpp>
 
 #include <fc/reflect/reflect.hpp>
 
@@ -19,8 +20,8 @@ struct genesis_state_type
         std::string name;
         std::string recovery_account;
         sp::public_key_type public_key;
-        uint64_t scr_amount;
-        uint64_t sp_amount;
+        sp::share_type scr_amount;
+        sp::share_type sp_amount;
     };
 
     struct witness_type
@@ -36,9 +37,10 @@ struct genesis_state_type
         uint16_t bonus_percent;
     };
 
-    uint64_t registration_supply = 0;
-    uint64_t registration_maximum_bonus = 0;
-    uint64_t init_supply = 0;
+    sp::share_type registration_supply = 0;
+    sp::share_type registration_maximum_bonus = 0;
+    sp::share_type init_supply = 0;
+    sp::asset init_rewards_supply;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
@@ -77,6 +79,7 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (registration_supply)
            (registration_maximum_bonus)
            (init_supply)
+           (init_rewards_supply)
            (initial_timestamp)
            (accounts)
            (witness_candidates)

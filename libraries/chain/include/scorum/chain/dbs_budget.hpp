@@ -12,7 +12,7 @@ namespace chain {
 
 /** DB service for operations with budget_object
  *  --------------------------------------------
-*/
+ */
 class dbs_budget : public dbs_base
 {
     friend class dbservice_dbs_factory;
@@ -23,25 +23,18 @@ protected:
 public:
     using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
 
-    /** Lists all budgets.
-     *
-     * @returns a list of budget objects
-     */
-    budget_refs_type get_budgets() const;
-
-    /** Count of all budgets registered for owner.
-     *
-     * @param owner the name of the owner
-     * @returns a list of budget objects
-     */
-    uint64_t get_budget_count() const;
-
     /** Lists all budget owners.
      *
      *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.
      *
      */
     std::set<string> lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const;
+
+    /** Lists all budgets.
+     *
+     * @returns a list of budget objects
+     */
+    budget_refs_type get_budgets() const;
 
     /** Lists all budgets registered for owner.
      *
@@ -50,20 +43,9 @@ public:
      */
     budget_refs_type get_budgets(const account_name_type& owner) const;
 
-    /** Count of all budgets registered for owner.
-     *
-     * @param owner the name of the owner
-     * @returns a list of budget objects
-     */
-    uint64_t get_budget_count(const account_name_type& owner) const;
-
     /** Lists all fund budgets
      */
-    budget_refs_type get_fund_budgets() const;
-
-    /** Count of all fund budgets
-     */
-    uint64_t get_fund_budget_count() const;
+    const budget_object& get_fund_budget() const;
 
     /** Get budget by id
      */
@@ -73,23 +55,23 @@ public:
      *
      * @warning count of fund budgets must be less or equal than SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER.
      *
-     * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
+     * @param balance the total balance (use SCORUM_SYMBOL)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
-    const budget_object& create_fund_budget(const asset& balance_in_scorum, const time_point_sec& deadline);
+    const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline);
 
     /** Create budget.
      *  The owner has abilities for all operations (for update, close and schedule operations).
      *
      * @param owner the name of the owner
-     * @param balance_in_scorum the total balance (use SCORUM_SYMBOL)
+     * @param balance the total balance (use SCORUM_SYMBOL)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @param content_permlink the budget target identity (post or other)
      * @returns a budget object
      */
     const budget_object& create_budget(const account_object& owner,
-                                       const asset& balance_in_scorum,
+                                       const asset& balance,
                                        const time_point_sec& deadline,
                                        const optional<string>& content_permlink = optional<string>());
 
@@ -113,12 +95,13 @@ public:
 private:
     share_type
     _calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, share_type balance_amount);
-    asset _decrease_balance(const budget_object&, const asset& balance_in_scorum);
+    asset _decrease_balance(const budget_object&, const asset& balance);
     bool _check_autoclose(const budget_object&);
     bool _is_fund_budget(const budget_object&) const;
     void _close_budget(const budget_object&);
     void _close_owned_budget(const budget_object&);
     void _close_fund_budget(const budget_object&);
+    uint64_t _get_budget_count(const account_name_type& owner) const;
 };
-}
-}
+} // namespace chain
+} // namespace scorum

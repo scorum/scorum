@@ -102,6 +102,8 @@ def validate_members(name2members_ref, name2members_test):
     ne_items = []
     error_items = []
 
+    print("Checking reflection...")
+
     for name in sorted(name2members_ref.keys()):
         if name not in name2members_test:
             ne_items.append(name)
@@ -111,32 +113,51 @@ def validate_members(name2members_ref, name2members_test):
                 m2occ[m] = m2occ.get(m, 0)+1
             error_items.append(name)
             print("")
-            print("error in", name)
-            print("dupes  :", [m for m in m2occ if m2occ[m] > 1])
+            print("reflection error in", name)
+            print("\tdupes  :", [m for m in m2occ if m2occ[m] > 1])
         elif sorted(name2members_ref[name]) != sorted(name2members_test[name]):
             error_items.append(name)
+            diff = set(name2members_ref[name]).symmetric_difference(set(name2members_test[name]))
             print("")
-            print("error in", name)
-            print("doxygen:", name2members_ref[name])
-            print("fc     :", name2members_test[name])
-            print("diff   :", set(name2members_ref[name]).symmetric_difference(set(name2members_test[name])) )
+            print(("reflection error: {0} is/are not reflected in {1}:").format(diff, name))
+            print("\tdoxygen:", name2members_ref[name])
+            print("\tfc     :", name2members_test[name])
+            print("\tdiff   :", diff )
         else:
             ok_items.append(name)
 
-    print("")
-    print("ok:")
-    for item in ok_items:
-        print(item)
+    #print("")
+    #print("ok:")
+    #for item in ok_items:
+    #    print(item)
 
-    print("")
-    print("not evaluated:")
-    for item in ne_items:
-        print(item)
+    #print("")
+    #print("not evaluated:")
+    #for item in ne_items:
+    #    print(item)
 
-    print("")
-    print("error:")
-    for item in error_items:
-        print(item)
+    #print("")
+    #print("error:")
+    #for item in error_items:
+    #    print(item)
+
+    
+    if len(error_items) > 0:
+        print("")
+        print("Reflection check finished: FAILURE")
+    else:
+        print("")
+        print("OK:")
+        for item in ok_items:
+            print(item)
+
+        print("")
+        print("not evaluated items:")
+        for item in ne_items:
+            print(item)
+
+        print("")
+        print("Reflection check finished: SUCCESS")
 
     return {"ok_items" : ok_items, "ne_items" : ne_items, "error_items" : error_items, "other_issues" : other_issues}
 
