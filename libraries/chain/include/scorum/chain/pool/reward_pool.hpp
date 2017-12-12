@@ -7,7 +7,6 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using reward_pool_name_type = protocol::fixed_string_16;
 
 class reward_pool_object : public object<reward_pool_object_type, reward_pool_object>
 {
