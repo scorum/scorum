@@ -33,10 +33,11 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
     genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
 }
 
-database_fixture::database_fixture()
+database_fixture::database_fixture(const genesis_state_type &external_genesis_state)
     : app()
     , db(*app.chain_database())
 {
+    genesis_state = external_genesis_state;
     genesis_state.init_supply = TEST_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
@@ -48,7 +49,8 @@ database_fixture::~database_fixture()
 {
 }
 
-clean_database_fixture::clean_database_fixture()
+clean_database_fixture::clean_database_fixture(const genesis_state_type &external_genesis_state):
+    database_fixture(external_genesis_state)
 {
     try
     {
@@ -160,7 +162,8 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
     validate_database();
 }
 
-live_database_fixture::live_database_fixture()
+live_database_fixture::live_database_fixture(const genesis_state_type &external_genesis_state):
+    database_fixture(external_genesis_state)
 {
     try
     {
@@ -199,7 +202,8 @@ live_database_fixture::~live_database_fixture()
     FC_LOG_AND_RETHROW()
 }
 
-timed_blocks_database_fixture::timed_blocks_database_fixture()
+timed_blocks_database_fixture::timed_blocks_database_fixture(const genesis_state_type &external_genesis_state):
+    clean_database_fixture(external_genesis_state)
 {
     default_deadline = db.get_slot_time(BLOCK_LIMIT_DEFAULT);
     if (!_time_printed)
@@ -492,6 +496,54 @@ void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip
         db.push_transaction(tx, skip_flags);
     }
     FC_CAPTURE_AND_RETHROW((tx))
+}
+
+genesis_state_type create_registration_genesis()
+{
+    const std::string genesis_str = R"json(
+    {
+            "accounts": [
+            {
+                    "name": "alice",
+                    "recovery_account": "",
+                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
+                    "scr_amount": 0,
+                    "sp_amount": 0
+            },
+            {
+                    "name": "bob",
+                    "recovery_account": "",
+                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
+                    "scr_amount": 0,
+                    "sp_amount": 0
+            }],
+            "registration_supply": 9999,
+            "registration_maximum_bonus": 5,
+            "registration_committee": ["alice", "bob"],
+            "registration_schedule": [
+            {
+                    "stage": 1,
+                    "users_thousands": 100,
+                    "bonus_percent": 100
+            },
+            {
+                    "stage": 2,
+                    "users_thousands": 200,
+                    "bonus_percent": 75
+            },
+            {
+                    "stage": 3,
+                    "users_thousands": 300,
+                    "bonus_percent": 50
+            },
+            {
+                    "stage": 4,
+                    "users_thousands": 400,
+                    "bonus_percent": 25
+            }]
+    })json";
+
+    return std::move(fc::json::from_string(genesis_str).as<genesis_state_type>());
 }
 
 } // scorum::chain::test

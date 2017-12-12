@@ -19,7 +19,7 @@ bool dbs_registration_pool::is_pool_exists() const
 
 const registration_pool_object& dbs_registration_pool::get_pool() const
 {
-    auto idx = db_impl().get_index<registration_pool_index>().indicies();
+    const auto &idx = db_impl().get_index<registration_pool_index>().indicies();
     auto it = idx.cbegin();
     FC_ASSERT(it != idx.cend(), "Pool is not found.");
     return (*it);
@@ -27,7 +27,6 @@ const registration_pool_object& dbs_registration_pool::get_pool() const
 
 const registration_pool_object& dbs_registration_pool::create_pool(const genesis_state_type& genesis_state)
 {
-    FC_ASSERT(!is_pool_exists(), "Can't create more than one pool.");
     FC_ASSERT(genesis_state.registration_supply > 0, "Registration supply amount must be more than zerro.");
     FC_ASSERT(genesis_state.registration_maximum_bonus > 0,
               "Registration maximum bonus amount must be more than zerro.");
@@ -39,7 +38,6 @@ const registration_pool_object& dbs_registration_pool::create_pool(const genesis
     sorted_type items;
     for (const auto& genesis_item : genesis_state.registration_schedule)
     {
-        FC_ASSERT(genesis_item.stage >= 0, "Invalid schedule stage.");
         FC_ASSERT(genesis_item.users_thousands > 0, "Invalid schedule value (users in thousands) for stage ${1}.",
                   ("1", genesis_item.stage));
         FC_ASSERT(genesis_item.bonus_percent >= 0 && genesis_item.bonus_percent <= 100,
@@ -48,6 +46,9 @@ const registration_pool_object& dbs_registration_pool::create_pool(const genesis
             genesis_item.stage, schedule_item_type{ genesis_item.users_thousands, genesis_item.bonus_percent }));
     }
 
+    //check existence here to allow unit tests check input data even if object exists in DB
+    FC_ASSERT(!is_pool_exists(), "Can't create more than one pool.");
+
     // create pool
     const auto& new_pool = db_impl().create<registration_pool_object>([&](registration_pool_object& pool) {
         pool.balance = asset(genesis_state.registration_supply, VESTS_SYMBOL);
@@ -55,7 +56,7 @@ const registration_pool_object& dbs_registration_pool::create_pool(const genesis
         pool.schedule_items.reserve(items.size());
         for (const auto& item : items)
         {
-            pool.schedule_items.push_back(std::move(item.second));
+            pool.schedule_items.push_back(item.second);
         }
     });
 
@@ -147,38 +148,36 @@ share_type dbs_registration_pool::_decrease_balance(const registration_pool_obje
 
 share_type dbs_registration_pool::_calculate_per_reg(const registration_pool_object& this_pool)
 {
-    using schedule_item_type = registration_pool_object::schedule_item;
+    FC_ASSERT(!this_pool.schedule_items.empty(), "Invalid schedule.");
 
     // find position in schedule
     std::size_t ci = 0;
     uint64_t allocated_rest = this_pool.already_allocated_count;
-    for (const schedule_item_type& item : this_pool.schedule_items)
+    auto it = this_pool.schedule_items.begin();
+    for (; it != this_pool.schedule_items.end(); ++it, ++ci)
     {
-        uint64_t item_users_limit = item.users_thousands;
+        uint64_t item_users_limit = (*it).users_thousands;
         item_users_limit *= 1000;
 
         if (allocated_rest > item_users_limit)
         {
-            ++ci;
             allocated_rest -= item_users_limit;
         }
         else
         {
-            allocated_rest = 0;
             break;
         }
     }
 
-    if (allocated_rest > 0)
+    if (it == this_pool.schedule_items.end())
     {
-        // no more schedule items for already_allocated_count (out of schedule),
+        // no more schedule items (out of schedule),
         // use last stage to calculate bonus
-
-        FC_ASSERT(!this_pool.schedule_items.empty(), "Invalid schedule.");
-        ci = this_pool.schedule_items.size() - 1;
+        --it;
     }
 
-    const schedule_item_type& current_item = this_pool.schedule_items[ci];
+    using schedule_item_type = registration_pool_object::schedule_item;
+    const schedule_item_type& current_item = (*it);
     return current_item.bonus_percent * this_pool.maximum_bonus;
 }
 

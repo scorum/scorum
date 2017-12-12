@@ -23,15 +23,15 @@ protected:
     explicit dbs_registration_committee(database& db);
 
 public:
+    using registration_committee_member_refs_type = std::vector<std::reference_wrapper<const registration_committee_member_object>>;
+
     bool is_committee_exists() const;
 
-    const registration_committee_object& get_committee() const;
+    registration_committee_member_refs_type get_committee() const;
 
     const registration_committee_member_object& get_member(const account_name_type&) const;
 
-    uint64_t get_member_count() const;
-
-    const registration_committee_object& create_committee(const genesis_state_type& genesis_state);
+    registration_committee_member_refs_type create_committee(const genesis_state_type& genesis_state);
 
     const registration_committee_member_object& add_member(const account_name_type&);
 
@@ -40,6 +40,8 @@ public:
     void update_cash_info(const registration_committee_member_object&, share_type per_reg, bool reset);
 
 private:
+    uint64_t _get_member_count() const;
+
     bool _check_member_exist(const account_name_type&) const;
 
     const registration_committee_member_object& _add_member(const account_object&);

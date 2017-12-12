@@ -17,7 +17,7 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 {
     budget_refs_type ret;
 
-    auto idx = db_impl().get_index<budget_index>().indicies();
+    const auto &idx = db_impl().get_index<budget_index>().indicies();
     auto it = idx.cbegin();
     const auto it_end = idx.cend();
     FC_ASSERT(it != it_end, "non any budget");

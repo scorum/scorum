@@ -46,7 +46,7 @@ struct database_fixture
     optional<fc::temp_directory> data_dir;
     uint32_t anon_acct_count;
 
-    database_fixture();
+    database_fixture(const genesis_state_type & = genesis_state_type());
     ~database_fixture();
 
     static fc::ecc::private_key generate_private_key(string seed = "init_key");
@@ -105,7 +105,7 @@ struct database_fixture
 
 struct clean_database_fixture : public database_fixture
 {
-    clean_database_fixture();
+    clean_database_fixture(const genesis_state_type & = genesis_state_type());
     ~clean_database_fixture();
 
     void resize_shared_mem(uint64_t size);
@@ -113,7 +113,7 @@ struct clean_database_fixture : public database_fixture
 
 struct live_database_fixture : public database_fixture
 {
-    live_database_fixture();
+    live_database_fixture(const genesis_state_type & = genesis_state_type());
     ~live_database_fixture();
 
     fc::path _chain_dir;
@@ -121,7 +121,7 @@ struct live_database_fixture : public database_fixture
 
 struct timed_blocks_database_fixture : public clean_database_fixture
 {
-    timed_blocks_database_fixture();
+    timed_blocks_database_fixture(const genesis_state_type & = genesis_state_type());
 
     fc::time_point_sec default_deadline;
 
@@ -134,6 +134,7 @@ private:
 namespace test {
 bool _push_block(database& db, const signed_block& b, uint32_t skip_flags = 0);
 void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip_flags = 0);
+genesis_state_type create_registration_genesis();
 }
 }
 }

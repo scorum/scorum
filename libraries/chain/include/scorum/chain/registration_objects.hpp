@@ -10,6 +10,8 @@
 
 #include <scorum/protocol/types.hpp>
 
+#include <fc/shared_buffer.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -21,45 +23,27 @@ class registration_pool_object : public object<registration_pool_object_type, re
 
 public:
     template <typename Constructor, typename Allocator>
-    registration_pool_object(Constructor&& c, allocator<Allocator> a)
-        : schedule_items(a)
+    registration_pool_object(Constructor&& c, allocator<Allocator> a): schedule_items(a.get_segment_manager())
     {
         c(*this);
     }
-
-    struct schedule_item
-    {
-        uint16_t users_thousands;
-        uint16_t bonus_percent;
-    };
 
     id_type id;
 
     asset balance = asset(0, VESTS_SYMBOL);
 
+    share_type maximum_bonus = 0;
+
     uint64_t already_allocated_count = 0;
 
-    // schedule
-    share_type maximum_bonus = 0;
-    bip::vector<registration_pool_object::schedule_item, allocator<registration_pool_object::schedule_item>>
-        schedule_items;
-};
-
-class registration_committee_object : public object<registration_committee_object_type, registration_committee_object>
-{
-    registration_committee_object() = delete;
-
-public:
-    template <typename Constructor, typename Allocator>
-    registration_committee_object(Constructor&& c, allocator<Allocator> a)
-        : members(a)
+    struct schedule_item
     {
-        c(*this);
-    }
+        uint16_t users_thousands;
 
-    id_type id;
+        uint16_t bonus_percent;
+    };
 
-    bip::set<account_name_type, std::less<account_name_type>, allocator<account_name_type>> members;
+    fc::shared_vector<schedule_item> schedule_items;
 };
 
 class registration_committee_member_object
@@ -80,6 +64,7 @@ public:
 
     // cash info
     share_type already_allocated_cash = 0;
+
     uint32_t last_allocated_block = 0;
 };
 
@@ -90,14 +75,6 @@ typedef multi_index_container<registration_pool_object,
                                                                &registration_pool_object::id>>>,
                               allocator<registration_pool_object>>
     registration_pool_index;
-
-typedef multi_index_container<registration_committee_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<registration_committee_object,
-                                                               registration_committee_id_type,
-                                                               &registration_committee_object::id>>>,
-                              allocator<registration_committee_object>>
-    registration_committee_index;
 
 struct by_account_name;
 
@@ -116,13 +93,10 @@ typedef multi_index_container<registration_committee_member_object,
 }
 
 FC_REFLECT(scorum::chain::registration_pool_object,
-           (id)(balance)(already_allocated_count)(maximum_bonus)(schedule_items))
+           (id)(balance)(maximum_bonus)(already_allocated_count)(schedule_items))
 
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object, scorum::chain::registration_pool_index)
-
-FC_REFLECT(scorum::chain::registration_committee_object, (id)(members))
-
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_object, scorum::chain::registration_committee_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object,
+                         scorum::chain::registration_pool_index)
 
 FC_REFLECT(scorum::chain::registration_committee_member_object,
            (id)(account)(already_allocated_cash)(last_allocated_block))
