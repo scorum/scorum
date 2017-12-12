@@ -132,12 +132,12 @@ SCORUM_TEST_CASE(create_check)
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), 4);
 
-    int inpit[][2] = {{100, 100}, {200, 75}, {300, 50}, {400, 25}};
+    int input[][2] = {{100, 100}, {200, 75}, {300, 50}, {400, 25}};
     std::size_t ci = 0;
     for (const auto &item: pool.schedule_items)
     {
-        BOOST_CHECK_EQUAL(item.users_thousands, inpit[ci][0]);
-        BOOST_CHECK_EQUAL(item.bonus_percent, inpit[ci][1]);
+        BOOST_CHECK_EQUAL(item.users_thousands, input[ci][0]);
+        BOOST_CHECK_EQUAL(item.bonus_percent, input[ci][1]);
 
         ++ci;
     }

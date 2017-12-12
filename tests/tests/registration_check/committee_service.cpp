@@ -50,11 +50,11 @@ SCORUM_TEST_CASE(create_check)
 
     BOOST_REQUIRE_EQUAL(members.size(), 2);
 
-    const char *inpit[] = {"alice", "bob"};
+    const char *input[] = {"alice", "bob"};
     std::size_t ci = 0;
     for (const registration_committee_member_object &member: members)
     {
-        BOOST_CHECK_EQUAL(member.account, inpit[ci]);
+        BOOST_CHECK_EQUAL(member.account, input[ci]);
 
         ++ci;
     }
