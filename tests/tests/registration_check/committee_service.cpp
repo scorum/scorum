@@ -19,6 +19,15 @@ public:
     {
     }
 
+    void insure_committee_exists()
+    {
+        if (!registration_committee_service.is_committee_exists())
+        {
+            //if object has not created in basic fixture
+            registration_committee_service.create_committee(genesis_state);
+        }
+    }
+
     dbs_registration_committee& registration_committee_service;
 };
 
@@ -34,11 +43,7 @@ SCORUM_TEST_CASE(create_invalid_genesis_state_check)
 
 SCORUM_TEST_CASE(create_check)
 {
-    if (!registration_committee_service.is_committee_exists())
-    {
-        //if object has not created in basic fixture
-        BOOST_REQUIRE_NO_THROW(registration_committee_service.create_committee(genesis_state));
-    }
+    insure_committee_exists();
 
     using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
     const committee_members& members = registration_committee_service.get_committee();
@@ -57,11 +62,7 @@ SCORUM_TEST_CASE(create_check)
 
 SCORUM_TEST_CASE(create_double_check)
 {
-    if (!registration_committee_service.is_committee_exists())
-    {
-        //if object has not created in basic fixture
-        BOOST_REQUIRE_NO_THROW(registration_committee_service.create_committee(genesis_state));
-    }
+    insure_committee_exists();
 
     BOOST_REQUIRE_THROW(registration_committee_service.create_committee(genesis_state), fc::assert_exception);
 }

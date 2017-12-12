@@ -3,6 +3,7 @@
 
 #include <scorum/chain/scorum_objects.hpp>
 #include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
 
 #include "database_fixture.hpp"
 
@@ -19,11 +20,31 @@ class registration_pool_service_check_fixture : public timed_blocks_database_fix
 public:
     registration_pool_service_check_fixture()
         : timed_blocks_database_fixture(test::create_registration_genesis()),
-          registration_pool_service(db.obtain_service<dbs_registration_pool>())
+          registration_pool_service(db.obtain_service<dbs_registration_pool>()),
+          registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
     }
 
     dbs_registration_pool& registration_pool_service;
+    dbs_registration_committee& registration_committee_service;
+
+    void insure_pool_exists()
+    {
+        if (!registration_pool_service.is_pool_exists())
+        {
+            //if object has not created in basic fixture
+            registration_pool_service.create_pool(genesis_state);
+        }
+    }
+
+    void insure_committee_exists()
+    {
+        if (!registration_committee_service.is_committee_exists())
+        {
+            //if object has not created in basic fixture
+            registration_committee_service.create_committee(genesis_state);
+        }
+    }
 
     const std::string genesis_invalid_schedule_users_thousands_str = R"json(
     {
@@ -101,11 +122,7 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
 
 SCORUM_TEST_CASE(create_check)
 {
-    if (!registration_pool_service.is_pool_exists())
-    {
-        //if object has not created in basic fixture
-        BOOST_REQUIRE_NO_THROW(registration_pool_service.create_pool(genesis_state));
-    }
+    insure_pool_exists();
 
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
@@ -128,17 +145,29 @@ SCORUM_TEST_CASE(create_check)
 
 SCORUM_TEST_CASE(create_double_check)
 {
-    if (!registration_pool_service.is_pool_exists())
-    {
-        //if object has not created in basic fixture
-        BOOST_REQUIRE_NO_THROW(registration_pool_service.create_pool(genesis_state));
-    }
+    insure_pool_exists();
 
     BOOST_REQUIRE_THROW(registration_pool_service.create_pool(genesis_state), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(allocate_cash_check)
 {
+    insure_pool_exists();
+    insure_committee_exists();
+
+    const registration_pool_object& pool = registration_pool_service.get_pool();
+
+    asset allocated = registration_pool_service.allocate_cash("alice");
+    BOOST_REQUIRE_EQUAL(allocated, asset(pool.maximum_bonus, VESTS_SYMBOL));
+
+    //TODO
+}
+
+SCORUM_TEST_CASE(allocate_control_limits)
+{
+    insure_pool_exists();
+    insure_committee_exists();
+
     //TODO
 }
 

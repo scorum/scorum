@@ -196,7 +196,7 @@ SCORUM_TEST_CASE(auto_close_budget_by_balance)
 {
     BOOST_REQUIRE_NO_THROW(alice_create_budget(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL), time_point_sec::maximum()));
 
-    const budget_object& budget = (*budget_service.get_budgets("alice").cbegin());
+    BOOST_REQUIRE(!budget_service.get_budgets("alice").empty());
 
     asset total_cash(0, SCORUM_SYMBOL);
 
@@ -204,18 +204,22 @@ SCORUM_TEST_CASE(auto_close_budget_by_balance)
     {
         BOOST_REQUIRE(ci <= BUDGET_BALANCE_DEFAULT);
 
-        generate_block();
-
-        db_plugin->debug_update(
-            [&](database&) {
-                total_cash+= budget_service.allocate_cash(budget);
-            },
-            default_skip);
-
         if (budget_service.get_budgets("alice").empty())
         {
             break; // budget has closed, break and check result
         }
+
+        generate_block();
+
+        db_plugin->debug_update(
+            [&](database&) {
+                if (!budget_service.get_budgets("alice").empty())
+                {
+                    const budget_object& budget = (*budget_service.get_budgets("alice").cbegin());
+                    total_cash+= budget_service.allocate_cash(budget);
+                }
+            },
+            default_skip);
     }
 
     BOOST_REQUIRE(budget_service.get_budgets("alice").empty());

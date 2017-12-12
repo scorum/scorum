@@ -98,7 +98,7 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
         last_allocated_block = head_block_num;
     }
 
-    share_type pass_blocks = (share_type)(head_block_num - last_allocated_block);
+    share_type pass_blocks = (share_type)(head_block_num - last_allocated_block) + 1;
 
     bool reset = pass_blocks > SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
     if (!reset)
@@ -178,7 +178,7 @@ share_type dbs_registration_pool::_calculate_per_reg(const registration_pool_obj
 
     using schedule_item_type = registration_pool_object::schedule_item;
     const schedule_item_type& current_item = (*it);
-    return current_item.bonus_percent * this_pool.maximum_bonus;
+    return current_item.bonus_percent * this_pool.maximum_bonus / 100;
 }
 
 bool dbs_registration_pool::_check_autoclose(const registration_pool_object& this_pool)

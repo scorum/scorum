@@ -84,5 +84,6 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (accounts)
            (witness_candidates)
            (registration_schedule)
+           (registration_committee)
            (initial_chain_id))
 // clang-format on
