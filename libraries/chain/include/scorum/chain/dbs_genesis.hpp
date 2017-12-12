@@ -1,12 +1,12 @@
 #pragma once
 
 #include <scorum/chain/dbs_base_impl.hpp>
-#include <scorum/chain/genesis_state.hpp>
 
 namespace scorum {
 namespace chain {
 
 class database;
+class genesis_state_type;
 
 class dbs_genesis : public dbs_base
 {
