@@ -127,7 +127,7 @@ void database::init_genesis_witnesses(const genesis_state_type& genesis_state)
         create<witness_object>([&](witness_object& w) {
             w.owner = witness.owner_name;
             w.signing_key = witness.block_signing_key;
-            w.schedule = witness_object::top19;
+            w.schedule = witness_object::top20;
             w.hardfork_time_vote = get_genesis_time();
         });
     }
