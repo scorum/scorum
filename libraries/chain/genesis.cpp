@@ -75,11 +75,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
         db_genesis genesis(*this, genesis_state);
 
-        genesis.init_accounts();
-        genesis.init_witnesses();
-        genesis.init_witness_schedule();
-        genesis.init_global_property_object();
-        genesis.init_rewards();
+        genesis.init();
 
         // Nothing to do
         for (int i = 0; i < 0x10000; i++)
@@ -94,7 +90,22 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
     : _db(db)
     , _genesis_state(genesis_state)
+    , _applied(false)
 {
+}
+
+void db_genesis::init()
+{
+    if (!_applied)
+    {
+        _applied = true;
+
+        init_accounts();
+        init_witnesses();
+        init_witness_schedule();
+        init_global_property_object();
+        init_rewards();
+    }
 }
 
 void db_genesis::init_accounts()
