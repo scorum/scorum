@@ -33,7 +33,7 @@ struct genesis_state_type
     struct registration_schedule_item
     {
         uint8_t stage;
-        uint16_t users_thousands;
+        uint32_t users;
         uint16_t bonus_percent;
     };
 
@@ -72,7 +72,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
 
 FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
            (stage)
-           (users_thousands)
+           (users)
            (bonus_percent))
 
 FC_REFLECT(scorum::chain::genesis_state_type,

@@ -23,7 +23,8 @@ class registration_pool_object : public object<registration_pool_object_type, re
 
 public:
     template <typename Constructor, typename Allocator>
-    registration_pool_object(Constructor&& c, allocator<Allocator> a): schedule_items(a.get_segment_manager())
+    registration_pool_object(Constructor&& c, allocator<Allocator> a)
+        : schedule_items(a.get_segment_manager())
     {
         c(*this);
     }
@@ -38,7 +39,7 @@ public:
 
     struct schedule_item
     {
-        uint16_t users_thousands;
+        uint32_t users;
 
         uint16_t bonus_percent;
     };
@@ -62,10 +63,10 @@ public:
 
     account_name_type account;
 
-    // cash info
+    // temporary schedule info
     share_type already_allocated_cash = 0;
-
     uint32_t last_allocated_block = 0;
+    uint32_t per_n_block_rest = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
 typedef multi_index_container<registration_pool_object,
@@ -95,11 +96,10 @@ typedef multi_index_container<registration_committee_member_object,
 FC_REFLECT(scorum::chain::registration_pool_object,
            (id)(balance)(maximum_bonus)(already_allocated_count)(schedule_items))
 
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object,
-                         scorum::chain::registration_pool_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object, scorum::chain::registration_pool_index)
 
 FC_REFLECT(scorum::chain::registration_committee_member_object,
-           (id)(account)(already_allocated_cash)(last_allocated_block))
+           (id)(account)(already_allocated_cash)(last_allocated_block)(per_n_block_rest))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)

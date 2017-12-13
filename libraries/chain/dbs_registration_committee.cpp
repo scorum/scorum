@@ -20,7 +20,7 @@ dbs_registration_committee::registration_committee_member_refs_type dbs_registra
 {
     registration_committee_member_refs_type ret;
 
-    const auto &idx = db_impl().get_index<registration_committee_member_index>().indicies();
+    const auto& idx = db_impl().get_index<registration_committee_member_index>().indicies();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)
     {
         ret.push_back(std::cref(*it));
@@ -48,7 +48,7 @@ dbs_registration_committee::create_committee(const genesis_state_type& genesis_s
     FC_ASSERT(SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS > 0, "Invalid ${1} value.",
               ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
 
-    //check existence here to allow unit tests check input data even if object exists in DB
+    // check existence here to allow unit tests check input data even if object exists in DB
     FC_ASSERT(!is_committee_exists(), "Can't create more than one committee.");
 
     const dbs_account& account_service = db().obtain_service<dbs_account>();
@@ -107,25 +107,10 @@ void dbs_registration_committee::exclude_member(const account_name_type& account
     _exclude_member(accout);
 }
 
-void dbs_registration_committee::update_cash_info(const registration_committee_member_object& member,
-                                                  share_type per_reg,
-                                                  bool reset)
+void dbs_registration_committee::update_member_info(const registration_committee_member_object& member,
+                                                    member_info_modifier_type modifier)
 {
-    FC_ASSERT(per_reg > 0, "Invalid share.");
-
-    auto head_block_num = db_impl().head_block_num();
-
-    db_impl().modify(member, [&](registration_committee_member_object& m) {
-        m.last_allocated_block = head_block_num;
-        if (reset)
-        {
-            m.already_allocated_cash = per_reg;
-        }
-        else
-        {
-            m.already_allocated_cash += per_reg;
-        }
-    });
+    db_impl().modify(member, [&](registration_committee_member_object& m) { modifier(m); });
 }
 
 uint64_t dbs_registration_committee::_get_member_count() const

@@ -33,7 +33,7 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
     genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
 }
 
-database_fixture::database_fixture(const genesis_state_type &external_genesis_state)
+database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
     : app()
     , db(*app.chain_database())
     , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(string("init_key"))))
@@ -54,8 +54,8 @@ database_fixture::~database_fixture()
 {
 }
 
-clean_database_fixture::clean_database_fixture(const genesis_state_type &external_genesis_state):
-    database_fixture(external_genesis_state)
+clean_database_fixture::clean_database_fixture(const genesis_state_type& external_genesis_state)
+    : database_fixture(external_genesis_state)
 {
     try
     {
@@ -165,8 +165,8 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
     validate_database();
 }
 
-live_database_fixture::live_database_fixture(const genesis_state_type &external_genesis_state):
-    database_fixture(external_genesis_state)
+live_database_fixture::live_database_fixture(const genesis_state_type& external_genesis_state)
+    : database_fixture(external_genesis_state)
 {
     try
     {
@@ -205,8 +205,8 @@ live_database_fixture::~live_database_fixture()
     FC_LOG_AND_RETHROW()
 }
 
-timed_blocks_database_fixture::timed_blocks_database_fixture(const genesis_state_type &external_genesis_state):
-    clean_database_fixture(external_genesis_state)
+timed_blocks_database_fixture::timed_blocks_database_fixture(const genesis_state_type& external_genesis_state)
+    : clean_database_fixture(external_genesis_state)
 {
     default_deadline = db.get_slot_time(BLOCK_LIMIT_DEFAULT);
     if (!_time_printed)
@@ -518,22 +518,22 @@ genesis_state_type create_registration_genesis()
             "registration_schedule": [
             {
                     "stage": 1,
-                    "users_thousands": 100,
+                    "users": 2,
                     "bonus_percent": 100
             },
             {
                     "stage": 2,
-                    "users_thousands": 200,
+                    "users": 2,
                     "bonus_percent": 75
             },
             {
                     "stage": 3,
-                    "users_thousands": 300,
+                    "users": 1,
                     "bonus_percent": 50
             },
             {
                     "stage": 4,
-                    "users_thousands": 400,
+                    "users": 3,
                     "bonus_percent": 25
             }]
     })json";

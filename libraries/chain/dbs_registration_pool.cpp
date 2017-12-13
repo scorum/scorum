@@ -19,7 +19,7 @@ bool dbs_registration_pool::is_pool_exists() const
 
 const registration_pool_object& dbs_registration_pool::get_pool() const
 {
-    const auto &idx = db_impl().get_index<registration_pool_index>().indicies();
+    const auto& idx = db_impl().get_index<registration_pool_index>().indicies();
     auto it = idx.cbegin();
     FC_ASSERT(it != idx.cend(), "Pool is not found.");
     return (*it);
@@ -38,15 +38,15 @@ const registration_pool_object& dbs_registration_pool::create_pool(const genesis
     sorted_type items;
     for (const auto& genesis_item : genesis_state.registration_schedule)
     {
-        FC_ASSERT(genesis_item.users_thousands > 0, "Invalid schedule value (users in thousands) for stage ${1}.",
+        FC_ASSERT(genesis_item.users > 0, "Invalid schedule value (users in thousands) for stage ${1}.",
                   ("1", genesis_item.stage));
         FC_ASSERT(genesis_item.bonus_percent >= 0 && genesis_item.bonus_percent <= 100,
                   "Invalid schedule value (percent) for stage ${1}.", ("1", genesis_item.stage));
-        items.insert(sorted_type::value_type(
-            genesis_item.stage, schedule_item_type{ genesis_item.users_thousands, genesis_item.bonus_percent }));
+        items.insert(sorted_type::value_type(genesis_item.stage,
+                                             schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
     }
 
-    //check existence here to allow unit tests check input data even if object exists in DB
+    // check existence here to allow unit tests check input data even if object exists in DB
     FC_ASSERT(!is_pool_exists(), "Can't create more than one pool.");
 
     // create pool
@@ -82,29 +82,42 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     const registration_pool_object& this_pool = get_pool();
 
     share_type per_reg = _calculate_per_reg(this_pool);
-    FC_ASSERT(per_reg > 0, "Invalid schedule.");
+    FC_ASSERT(per_reg > 0, "Invalid schedule. Zero bonus return.");
+    FC_ASSERT(per_reg <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT
+                      / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK,
+              "Invalid schedule. Always exceeds the limit.");
 
     dbs_registration_committee& committee_service = db().obtain_service<dbs_registration_committee>();
 
-    uint64_t head_block_num = db_impl().head_block_num();
+    uint32_t head_block_num = db_impl().head_block_num();
 
     const registration_committee_member_object& member = committee_service.get_member(member_name);
 
-    uint64_t last_allocated_block = member.last_allocated_block;
+    uint32_t last_allocated_block = member.last_allocated_block;
     FC_ASSERT(last_allocated_block <= head_block_num);
 
     if (!last_allocated_block)
     {
+        // not any allocation
         last_allocated_block = head_block_num;
     }
 
-    share_type pass_blocks = (share_type)(head_block_num - last_allocated_block) + 1;
+    uint32_t pass_blocks = head_block_num - last_allocated_block;
 
-    bool reset = pass_blocks > SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-    if (!reset)
+    uint32_t per_n_block_rest = member.per_n_block_rest;
+    if (pass_blocks > per_n_block_rest)
+    {
+        per_n_block_rest = 0;
+    }
+    else
+    {
+        per_n_block_rest -= pass_blocks;
+    }
+
+    if (per_n_block_rest > 0)
     {
         // check limits
-        share_type limit_per_memeber = pass_blocks;
+        share_type limit_per_memeber = (share_type)(pass_blocks + 1);
         limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT;
         limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
         FC_ASSERT(member.already_allocated_cash + per_reg <= limit_per_memeber,
@@ -113,7 +126,20 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 
     per_reg = _decrease_balance(this_pool, per_reg);
 
-    committee_service.update_cash_info(member, per_reg, reset);
+    auto modifier = [=](registration_committee_member_object& m) {
+        m.last_allocated_block = head_block_num;
+        if (per_n_block_rest > 0)
+        {
+            m.per_n_block_rest = per_n_block_rest;
+            m.already_allocated_cash += per_reg;
+        }
+        else
+        {
+            m.per_n_block_rest = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+            m.already_allocated_cash = 0;
+        }
+    };
+    committee_service.update_member_info(member, modifier);
 
     if (!_check_autoclose(this_pool))
     {
@@ -156,10 +182,9 @@ share_type dbs_registration_pool::_calculate_per_reg(const registration_pool_obj
     auto it = this_pool.schedule_items.begin();
     for (; it != this_pool.schedule_items.end(); ++it, ++ci)
     {
-        uint64_t item_users_limit = (*it).users_thousands;
-        item_users_limit *= 1000;
+        uint64_t item_users_limit = (*it).users;
 
-        if (allocated_rest > item_users_limit)
+        if (allocated_rest >= item_users_limit)
         {
             allocated_rest -= item_users_limit;
         }

@@ -23,7 +23,8 @@ protected:
     explicit dbs_registration_committee(database& db);
 
 public:
-    using registration_committee_member_refs_type = std::vector<std::reference_wrapper<const registration_committee_member_object>>;
+    using registration_committee_member_refs_type
+        = std::vector<std::reference_wrapper<const registration_committee_member_object>>;
 
     bool is_committee_exists() const;
 
@@ -37,7 +38,8 @@ public:
 
     void exclude_member(const account_name_type&);
 
-    void update_cash_info(const registration_committee_member_object&, share_type per_reg, bool reset);
+    using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
+    void update_member_info(const registration_committee_member_object&, member_info_modifier_type modifier);
 
 private:
     uint64_t _get_member_count() const;

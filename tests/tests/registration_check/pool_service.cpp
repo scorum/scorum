@@ -7,6 +7,8 @@
 
 #include "database_fixture.hpp"
 
+#include <math.h>
+
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -19,32 +21,15 @@ class registration_pool_service_check_fixture : public timed_blocks_database_fix
 {
 public:
     registration_pool_service_check_fixture()
-        : timed_blocks_database_fixture(test::create_registration_genesis()),
-          registration_pool_service(db.obtain_service<dbs_registration_pool>()),
-          registration_committee_service(db.obtain_service<dbs_registration_committee>())
+        : timed_blocks_database_fixture(test::create_registration_genesis())
+        , registration_pool_service(db.obtain_service<dbs_registration_pool>())
+        , registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
+        schedule_input_size = sizeof(schedule_input) / (sizeof(int) * 2);
     }
 
     dbs_registration_pool& registration_pool_service;
     dbs_registration_committee& registration_committee_service;
-
-    void insure_pool_exists()
-    {
-        if (!registration_pool_service.is_pool_exists())
-        {
-            //if object has not created in basic fixture
-            registration_pool_service.create_pool(genesis_state);
-        }
-    }
-
-    void insure_committee_exists()
-    {
-        if (!registration_committee_service.is_committee_exists())
-        {
-            //if object has not created in basic fixture
-            registration_committee_service.create_committee(genesis_state);
-        }
-    }
 
     const std::string genesis_invalid_schedule_users_thousands_str = R"json(
     {
@@ -53,7 +38,7 @@ public:
             "registration_schedule": [
             {
                     "stage": 1,
-                    "users_thousands": 0,
+                    "users": 0,
                     "bonus_percent": 100
             }]
     })json";
@@ -65,7 +50,7 @@ public:
             "registration_schedule": [
             {
                     "stage": 1,
-                    "users_thousands": 1,
+                    "users": 1,
                     "bonus_percent": -10
             }]
     })json";
@@ -77,10 +62,140 @@ public:
             "registration_schedule": [
             {
                     "stage": 1,
-                    "users_thousands": 1,
+                    "users": 1,
                     "bonus_percent": 110
             }]
     })json";
+
+    void insure_pool_exists()
+    {
+        if (!registration_pool_service.is_pool_exists())
+        {
+            // if object has not created in basic fixture
+            registration_pool_service.create_pool(genesis_state);
+        }
+    }
+
+    void insure_committee_exists()
+    {
+        if (!registration_committee_service.is_committee_exists())
+        {
+            // if object has not created in basic fixture
+            registration_committee_service.create_committee(genesis_state);
+        }
+    }
+
+    uint64_t get_sin_f(uint64_t pos, uint64_t max_pos, uint64_t max_result)
+    {
+        BOOST_REQUIRE(max_pos > 0);
+        const float fpi = 3.141592653589793f;
+        float fpos = pos * fpi;
+        fpos /= max_pos;
+
+        float ret = std::sin(fpos);
+        ret *= max_result;
+        if (pos <= max_pos / 2)
+        {
+            ret += 0.5f;
+        }
+        else
+        {
+            ret -= 0.5f;
+        }
+        return (uint64_t)floor(ret);
+    }
+
+    uint64_t schedule_input_max_pos()
+    {
+        uint64_t ret = 0;
+        for (uint64_t stage = 0; stage < (uint64_t)schedule_input_size; ++stage)
+        {
+            ret += (uint64_t)schedule_input[stage][field_users];
+        }
+        return ret;
+    }
+
+    int schedule_input_bonus_percent_by_pos(uint64_t pos)
+    {
+        uint64_t rest = pos;
+        uint64_t stage = 0;
+        for (; stage < (uint64_t)schedule_input_size; ++stage)
+        {
+            uint64_t item_users_limit = (uint64_t)schedule_input[stage][field_users];
+
+            if (rest >= item_users_limit)
+            {
+                rest -= item_users_limit;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (stage < (uint64_t)schedule_input_size)
+        {
+            return schedule_input[stage][field_bonus_percent];
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    share_type schedule_input_predicted_allocate_by_pos(uint64_t pos, share_type maximum_bonus)
+    {
+        share_type ret = (share_type)schedule_input_bonus_percent_by_pos(pos);
+        ret *= maximum_bonus;
+        ret /= 100;
+        return ret;
+    }
+
+    share_type schedule_input_predicted_limit(uint64_t pass_through_blocks)
+    {
+        share_type ret = (share_type)pass_through_blocks;
+        ret *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT;
+        ret /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+        return ret;
+    }
+
+    using allocate_cash_fn_type = std::function<share_type(uint64_t pos)>;
+    bool schedule_input_pos_reach_limit(uint64_t& pos,
+                                        uint64_t max_pos,
+                                        share_type predicted_limit,
+                                        share_type maximum_bonus,
+                                        allocate_cash_fn_type allocate_cash)
+    {
+        share_type allocated = 0;
+        while (pos < max_pos)
+        {
+            share_type predicted_bonus = schedule_input_predicted_allocate_by_pos(pos, maximum_bonus);
+            if (predicted_bonus == share_type(0))
+            {
+                break;
+            }
+
+            if (allocated + predicted_bonus > predicted_limit)
+            {
+                // limit is reached
+                return true;
+            }
+
+            asset allocated_bonus = allocate_cash(pos);
+            allocated += allocated_bonus.amount;
+            ++pos;
+        }
+        return false;
+    }
+
+    enum
+    {
+        field_users = 0,
+        field_bonus_percent,
+    };
+    // it must correspond to json in create_registration_genesis
+    const int schedule_input[4][2] = { { 2, 100 }, { 2, 75 }, { 1, 50 }, { 3, 25 } };
+    int schedule_input_size;
 };
 
 BOOST_FIXTURE_TEST_SUITE(registration_pool_service_input_check, registration_pool_service_check_fixture)
@@ -107,15 +222,18 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
 {
     genesis_state_type invalid_genesis_state;
 
-    invalid_genesis_state = fc::json::from_string(genesis_invalid_schedule_users_thousands_str).as<genesis_state_type>();
+    invalid_genesis_state
+        = fc::json::from_string(genesis_invalid_schedule_users_thousands_str).as<genesis_state_type>();
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 
-    invalid_genesis_state = fc::json::from_string(genesis_invalid_schedule_bonus_percent_l_str).as<genesis_state_type>();
+    invalid_genesis_state
+        = fc::json::from_string(genesis_invalid_schedule_bonus_percent_l_str).as<genesis_state_type>();
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 
-    invalid_genesis_state = fc::json::from_string(genesis_invalid_schedule_bonus_percent_h_str).as<genesis_state_type>();
+    invalid_genesis_state
+        = fc::json::from_string(genesis_invalid_schedule_bonus_percent_h_str).as<genesis_state_type>();
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 }
@@ -130,14 +248,13 @@ SCORUM_TEST_CASE(create_check)
     BOOST_CHECK_EQUAL(pool.maximum_bonus.value, 5);
     BOOST_CHECK_EQUAL(pool.already_allocated_count, 0);
 
-    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), 4);
+    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input_size);
 
-    int input[][2] = {{100, 100}, {200, 75}, {300, 50}, {400, 25}};
     std::size_t ci = 0;
-    for (const auto &item: pool.schedule_items)
+    for (const auto& item : pool.schedule_items)
     {
-        BOOST_CHECK_EQUAL(item.users_thousands, input[ci][0]);
-        BOOST_CHECK_EQUAL(item.bonus_percent, input[ci][1]);
+        BOOST_CHECK_EQUAL(item.users, schedule_input[ci][field_users]);
+        BOOST_CHECK_EQUAL(item.bonus_percent, schedule_input[ci][field_bonus_percent]);
 
         ++ci;
     }
@@ -150,25 +267,278 @@ SCORUM_TEST_CASE(create_double_check)
     BOOST_REQUIRE_THROW(registration_pool_service.create_pool(genesis_state), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(allocate_cash_check)
+SCORUM_TEST_CASE(sin_f_check)
+{
+    BOOST_CHECK_EQUAL(get_sin_f(0, 10, 5), 0);
+    BOOST_CHECK_EQUAL(get_sin_f(1, 10, 5), 2);
+    BOOST_CHECK_EQUAL(get_sin_f(2, 10, 5), 3);
+    BOOST_CHECK_EQUAL(get_sin_f(3, 10, 5), 4);
+    BOOST_CHECK_EQUAL(get_sin_f(4, 10, 5), 5);
+    BOOST_CHECK_EQUAL(get_sin_f(5, 10, 5), 5);
+    BOOST_CHECK_EQUAL(get_sin_f(6, 10, 5), 4);
+    BOOST_CHECK_EQUAL(get_sin_f(7, 10, 5), 3);
+    BOOST_CHECK_EQUAL(get_sin_f(8, 10, 5), 2);
+    BOOST_CHECK_EQUAL(get_sin_f(9, 10, 5), 1);
+
+    BOOST_CHECK_EQUAL(get_sin_f(0, 5, 5), 0);
+    BOOST_CHECK_EQUAL(get_sin_f(1, 5, 5), 3);
+    BOOST_CHECK_EQUAL(get_sin_f(2, 5, 5), 5);
+    BOOST_CHECK_EQUAL(get_sin_f(3, 5, 5), 4);
+    BOOST_CHECK_EQUAL(get_sin_f(4, 5, 5), 2);
+
+    BOOST_CHECK_EQUAL(get_sin_f(0, 4, 3), 0);
+    BOOST_CHECK_EQUAL(get_sin_f(1, 4, 3), 2);
+    BOOST_CHECK_EQUAL(get_sin_f(2, 4, 3), 3);
+    BOOST_CHECK_EQUAL(get_sin_f(3, 4, 3), 1);
+}
+
+SCORUM_TEST_CASE(predict_input_check)
+{
+    // check methods for etalon schedule
+
+    BOOST_CHECK_EQUAL(schedule_input_max_pos(), (uint64_t)8);
+
+    BOOST_CHECK_EQUAL((share_type)schedule_input[0][field_bonus_percent], schedule_input_bonus_percent_by_pos(0));
+    BOOST_CHECK_EQUAL((share_type)schedule_input[0][field_bonus_percent], schedule_input_bonus_percent_by_pos(1));
+
+    BOOST_CHECK_EQUAL((share_type)schedule_input[1][field_bonus_percent], schedule_input_bonus_percent_by_pos(2));
+    BOOST_CHECK_EQUAL((share_type)schedule_input[1][field_bonus_percent], schedule_input_bonus_percent_by_pos(3));
+
+    BOOST_CHECK_EQUAL((share_type)schedule_input[2][field_bonus_percent], schedule_input_bonus_percent_by_pos(4));
+
+    BOOST_CHECK_EQUAL((share_type)schedule_input[3][field_bonus_percent], schedule_input_bonus_percent_by_pos(5));
+    BOOST_CHECK_EQUAL((share_type)schedule_input[3][field_bonus_percent], schedule_input_bonus_percent_by_pos(6));
+    BOOST_CHECK_EQUAL((share_type)schedule_input[3][field_bonus_percent], schedule_input_bonus_percent_by_pos(7));
+
+    BOOST_CHECK_EQUAL((share_type)0, schedule_input_bonus_percent_by_pos(8));
+
+    share_type maximum_bonus = 5;
+
+    BOOST_CHECK_EQUAL((share_type)schedule_input[1][field_bonus_percent] * maximum_bonus / 100,
+                      schedule_input_predicted_allocate_by_pos(2, maximum_bonus));
+
+    uint64_t pos = 0;
+    uint64_t max_pos = schedule_input_max_pos();
+    share_type predicted_limit = 10;
+    auto fn = [this, maximum_bonus](uint64_t p) -> share_type {
+        return this->schedule_input_predicted_allocate_by_pos(p, maximum_bonus);
+    };
+
+    BOOST_REQUIRE(schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));
+
+    BOOST_REQUIRE_EQUAL(pos, 2); // pass only first stage of schedule
+
+    BOOST_REQUIRE(schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));
+
+    BOOST_REQUIRE_EQUAL(pos, 7); // pass through 2 stages of schedule (1 and 2)
+
+    // limit is not reached (out of schedule)
+    BOOST_REQUIRE(!schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));
+
+    BOOST_REQUIRE_EQUAL(pos, max_pos); // out of schedule
+}
+
+SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
+{
+    db_plugin->debug_update(
+        [&](database&) {
+            insure_pool_exists();
+            insure_committee_exists();
+        },
+        default_skip);
+
+    const registration_pool_object& pool = registration_pool_service.get_pool();
+
+    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input_size);
+
+    // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
+    for (uint64_t input_pos = 0, stage = 0; stage < (uint64_t)schedule_input_size; ++stage)
+    {
+        for (uint64_t register_attempts = 0; register_attempts < (uint64_t)schedule_input[stage][field_users];
+             ++register_attempts, ++input_pos)
+        {
+            generate_block();
+
+            auto predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, pool.maximum_bonus.value);
+
+            asset allocated_bonus(0, VESTS_SYMBOL);
+            db_plugin->debug_update(
+                [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
+
+            BOOST_REQUIRE_EQUAL(allocated_bonus, asset(predicted_bonus, VESTS_SYMBOL));
+        }
+    }
+}
+
+SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distribution_check)
+{
+    db_plugin->debug_update(
+        [&](database&) {
+            insure_pool_exists();
+            insure_committee_exists();
+        },
+        default_skip);
+
+    const registration_pool_object& pool = registration_pool_service.get_pool();
+
+    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input_size);
+
+    uint64_t input_max_pos = schedule_input_max_pos();
+    share_type maximum_bonus = pool.maximum_bonus;
+
+    // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
+    for (uint64_t input_pos = 0, stage = 0; stage < (uint64_t)schedule_input_size; ++stage)
+    {
+        for (uint64_t register_attempts = 0; register_attempts < (uint64_t)schedule_input[stage][field_users];
+             ++register_attempts, ++input_pos)
+        {
+            uint64_t ampl = get_sin_f(input_pos, input_max_pos, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK + 1);
+            // produce enough block amount to break out of sliding window in center of schedule
+            for (uint64_t cblock = 0; cblock < ampl; ++cblock)
+            {
+                generate_block();
+            }
+
+            auto predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, maximum_bonus);
+
+            asset allocated_bonus(0, VESTS_SYMBOL);
+            db_plugin->debug_update(
+                [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
+
+            BOOST_CHECK_EQUAL(allocated_bonus, asset(predicted_bonus, VESTS_SYMBOL));
+        }
+    }
+}
+
+SCORUM_TEST_CASE(allocate_limits_check)
 {
     insure_pool_exists();
     insure_committee_exists();
 
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
-    asset allocated = registration_pool_service.allocate_cash("alice");
-    BOOST_REQUIRE_EQUAL(allocated, asset(pool.maximum_bonus, VESTS_SYMBOL));
+    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input_size);
 
-    //TODO
+    share_type predicted_limit = schedule_input_predicted_limit(1);
+
+    auto fn = [&](uint64_t) -> share_type {
+        asset allocated_bonus = registration_pool_service.allocate_cash("alice");
+        BOOST_CHECK_GT(allocated_bonus.amount, 0);
+        return allocated_bonus.amount;
+    };
+
+    uint64_t input_pos = 0;
+    bool found_limit
+        = schedule_input_pos_reach_limit(input_pos, schedule_input_max_pos(), predicted_limit, pool.maximum_bonus, fn);
+    BOOST_REQUIRE(found_limit);
+
+    // limit must be reached
+    BOOST_REQUIRE_THROW(registration_pool_service.allocate_cash("alice"), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(allocate_control_limits)
+SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
 {
-    insure_pool_exists();
-    insure_committee_exists();
+    db_plugin->debug_update(
+        [&](database&) {
+            insure_pool_exists();
+            insure_committee_exists();
+        },
+        default_skip);
 
-    //TODO
+    const registration_pool_object& pool = registration_pool_service.get_pool();
+
+    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input_size);
+
+    // 1 = minimal (for calling without any block between allocate_cash)
+    share_type predicted_limit = schedule_input_predicted_limit(1);
+
+    asset allocated_bonus(0, VESTS_SYMBOL);
+    auto fn = [&](uint64_t) -> share_type {
+        db_plugin->debug_update(
+            [&](database&) {
+                allocated_bonus = registration_pool_service.allocate_cash("alice");
+                BOOST_CHECK_GT(allocated_bonus.amount, 0);
+            },
+            default_skip);
+        return allocated_bonus.amount;
+    };
+
+    uint64_t input_pos = 0;
+    uint64_t input_max_pos = schedule_input_max_pos();
+
+    generate_block();
+
+    bool found_limit
+        = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn);
+    BOOST_REQUIRE(found_limit);
+
+    for (int ci = 0; ci < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK - (int)input_pos; ++ci)
+    {
+        generate_block(); // enlarge limit
+    }
+
+    for (int ci = 0; ci < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK - (int)input_pos; ++ci)
+    {
+        fn(0); // get one bonus
+    }
+
+    // limit must be reached
+    db_plugin->debug_update(
+        [&](database&) { BOOST_REQUIRE_THROW(registration_pool_service.allocate_cash("alice"), fc::assert_exception); },
+        default_skip);
+}
+
+SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
+{
+    db_plugin->debug_update(
+        [&](database&) {
+            insure_pool_exists();
+            insure_committee_exists();
+        },
+        default_skip);
+
+    const registration_pool_object& pool = registration_pool_service.get_pool();
+
+    BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input_size);
+
+    share_type predicted_limit = schedule_input_predicted_limit(1);
+
+    asset allocated_bonus(0, VESTS_SYMBOL);
+    auto fn = [&](uint64_t) -> share_type {
+        db_plugin->debug_update(
+            [&](database&) {
+                allocated_bonus = registration_pool_service.allocate_cash("alice");
+                BOOST_CHECK_GT(allocated_bonus.amount, 0);
+            },
+            default_skip);
+        return allocated_bonus.amount;
+    };
+
+    uint64_t input_pos = 0;
+    uint64_t input_max_pos = schedule_input_max_pos();
+
+    generate_block();
+
+    bool found_limit
+        = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn);
+    BOOST_REQUIRE(found_limit);
+
+    // move to next sliding window pos (reset limit)
+    for (int ci = input_pos; ci < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK + 1; ++ci)
+    {
+        generate_block();
+    }
+
+    predicted_limit = schedule_input_predicted_limit(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK);
+
+    // find next limit
+    found_limit = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn);
+    BOOST_REQUIRE(found_limit);
+
+    // limit must be reached
+    db_plugin->debug_update(
+        [&](database&) { BOOST_REQUIRE_THROW(registration_pool_service.allocate_cash("alice"), fc::assert_exception); },
+        default_skip);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
