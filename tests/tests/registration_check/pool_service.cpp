@@ -78,7 +78,7 @@ public:
 
     void insure_committee_exists()
     {
-        if (!registration_committee_service.is_committee_exists())
+        if (registration_committee_service.get_committee().empty())
         {
             // if object has not created in basic fixture
             registration_committee_service.create_committee(genesis_state);

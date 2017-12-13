@@ -13,17 +13,17 @@ using namespace scorum::protocol;
 class registration_committee_service_check_fixture : public timed_blocks_database_fixture
 {
 public:
-    registration_committee_service_check_fixture():
-          timed_blocks_database_fixture(test::create_registration_genesis()),
-          registration_committee_service(db.obtain_service<dbs_registration_committee>())
+    registration_committee_service_check_fixture()
+        : timed_blocks_database_fixture(test::create_registration_genesis())
+        , registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
     }
 
     void insure_committee_exists()
     {
-        if (!registration_committee_service.is_committee_exists())
+        if (registration_committee_service.get_committee().empty())
         {
-            //if object has not created in basic fixture
+            // if object has not created in basic fixture
             registration_committee_service.create_committee(genesis_state);
         }
     }
@@ -36,7 +36,8 @@ BOOST_FIXTURE_TEST_SUITE(registration_committee_service_check, registration_comm
 SCORUM_TEST_CASE(create_invalid_genesis_state_check)
 {
     genesis_state_type invalid_genesis_state = genesis_state;
-    invalid_genesis_state.registration_committee.clear();;
+    invalid_genesis_state.registration_committee.clear();
+    ;
 
     BOOST_CHECK_THROW(registration_committee_service.create_committee(invalid_genesis_state), fc::assert_exception);
 }
@@ -50,9 +51,9 @@ SCORUM_TEST_CASE(create_check)
 
     BOOST_REQUIRE_EQUAL(members.size(), 2);
 
-    const char *input[] = {"alice", "bob"};
+    const char* input[] = { "alice", "bob" };
     std::size_t ci = 0;
-    for (const registration_committee_member_object &member: members)
+    for (const registration_committee_member_object& member : members)
     {
         BOOST_CHECK_EQUAL(member.account, input[ci]);
 

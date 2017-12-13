@@ -11,11 +11,6 @@ dbs_registration_committee::dbs_registration_committee(database& db)
 {
 }
 
-bool dbs_registration_committee::is_committee_exists() const
-{
-    return !db_impl().get_index<registration_committee_member_index>().indicies().empty();
-}
-
 dbs_registration_committee::registration_committee_member_refs_type dbs_registration_committee::get_committee() const
 {
     registration_committee_member_refs_type ret;
@@ -26,9 +21,7 @@ dbs_registration_committee::registration_committee_member_refs_type dbs_registra
         ret.push_back(std::cref(*it));
     }
 
-    FC_ASSERT(!ret.empty(), "Committee is empty.");
-
-    return std::move(ret);
+    return ret;
 }
 
 const registration_committee_member_object&
@@ -49,7 +42,7 @@ dbs_registration_committee::create_committee(const genesis_state_type& genesis_s
               ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
 
     // check existence here to allow unit tests check input data even if object exists in DB
-    FC_ASSERT(!is_committee_exists(), "Can't create more than one committee.");
+    FC_ASSERT(get_committee().empty(), "Can't create more than one committee.");
 
     const dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -87,7 +80,7 @@ dbs_registration_committee::create_committee(const genesis_state_type& genesis_s
 const registration_committee_member_object&
 dbs_registration_committee::add_member(const account_name_type& account_name)
 {
-    FC_ASSERT(!is_committee_exists(), "No committee to add memeber.");
+    FC_ASSERT(!get_committee().empty(), "No committee to add memeber.");
 
     const dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -98,7 +91,7 @@ dbs_registration_committee::add_member(const account_name_type& account_name)
 
 void dbs_registration_committee::exclude_member(const account_name_type& account_name)
 {
-    FC_ASSERT(!is_committee_exists(), "No committee to exclude memeber.");
+    FC_ASSERT(!get_committee().empty(), "No committee to exclude memeber.");
 
     const dbs_account& account_service = db().obtain_service<dbs_account>();
 

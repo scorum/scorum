@@ -26,8 +26,6 @@ public:
     using registration_committee_member_refs_type
         = std::vector<std::reference_wrapper<const registration_committee_member_object>>;
 
-    bool is_committee_exists() const;
-
     registration_committee_member_refs_type get_committee() const;
 
     const registration_committee_member_object& get_member(const account_name_type&) const;

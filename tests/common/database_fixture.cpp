@@ -165,8 +165,8 @@ void clean_database_fixture::resize_shared_mem(uint64_t size)
     validate_database();
 }
 
-live_database_fixture::live_database_fixture(const genesis_state_type& external_genesis_state)
-    : database_fixture(external_genesis_state)
+live_database_fixture::live_database_fixture()
+    : database_fixture()
 {
     try
     {
