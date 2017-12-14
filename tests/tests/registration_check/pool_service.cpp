@@ -23,20 +23,20 @@ namespace {
 using schedule_input_type = genesis_state_type::registration_schedule_item;
 using schedule_inputs_type = std::vector<schedule_input_type>;
 
-share_type schedule_input_total_bonus(const schedule_inputs_type& schedule_input, share_type maximum_bonus)
+asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
 {
-    share_type ret;
+    asset ret(0, REGISTRATION_BONUS_SYMBOL);
     for (const auto& item : schedule_input)
     {
-        share_type stage_amount = maximum_bonus;
+        share_type stage_amount = maximum_bonus.amount;
         stage_amount *= item.bonus_percent;
         stage_amount /= 100;
-        ret += stage_amount * item.users;
+        ret += asset(stage_amount * item.users, REGISTRATION_BONUS_SYMBOL);
     }
     return ret;
 }
 
-genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input, share_type& rest_of_supply)
+genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input, asset& rest_of_supply)
 {
     const std::string genesis_str = R"json(
     {
@@ -68,14 +68,15 @@ genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_in
     schedule_input.emplace_back(schedule_input_type{ 3, 1, 50 });
     schedule_input.emplace_back(schedule_input_type{ 4, 3, 25 });
 
-    genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT;
-    genesis_state.registration_maximum_bonus /= 2; // half of limit
+    // half of limit
+    genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    genesis_state.registration_maximum_bonus.amount /= 2;
 
     genesis_state.registration_schedule = schedule_input;
 
     genesis_state.registration_supply
         = schedule_input_total_bonus(schedule_input, genesis_state.registration_maximum_bonus);
-    rest_of_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT;
+    rest_of_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     genesis_state.registration_supply += rest_of_supply;
 
     return genesis_state;
@@ -93,14 +94,12 @@ public:
     }
 
     static schedule_inputs_type schedule_input;
-    static share_type rest_of_supply;
+    static asset rest_of_supply;
     dbs_registration_pool& registration_pool_service;
     dbs_registration_committee& registration_committee_service;
 
-    const std::string genesis_invalid_schedule_users_thousands_str = R"json(
+    const std::string genesis_invalid_schedule_users_str = R"json(
     {
-            "registration_supply": 9999,
-            "registration_maximum_bonus": 5,
             "registration_schedule": [
             {
                     "stage": 1,
@@ -111,8 +110,6 @@ public:
 
     const std::string genesis_invalid_schedule_bonus_percent_l_str = R"json(
     {
-            "registration_supply": 9999,
-            "registration_maximum_bonus": 5,
             "registration_schedule": [
             {
                     "stage": 1,
@@ -123,8 +120,6 @@ public:
 
     const std::string genesis_invalid_schedule_bonus_percent_h_str = R"json(
     {
-            "registration_supply": 9999,
-            "registration_maximum_bonus": 5,
             "registration_schedule": [
             {
                     "stage": 1,
@@ -181,7 +176,7 @@ public:
         return ret;
     }
 
-    share_type schedule_input_total_bonus(share_type maximum_bonus)
+    asset schedule_input_total_bonus(const asset& maximum_bonus)
     {
         return ::schedule_input_total_bonus(schedule_input, maximum_bonus);
     }
@@ -214,34 +209,33 @@ public:
         }
     }
 
-    share_type schedule_input_predicted_allocate_by_pos(uint64_t pos, share_type maximum_bonus)
+    asset schedule_input_predicted_allocate_by_pos(uint64_t pos, asset maximum_bonus)
     {
         share_type ret = (share_type)schedule_input_bonus_percent_by_pos(pos);
-        ret *= maximum_bonus;
+        ret *= maximum_bonus.amount;
         ret /= 100;
-        return ret;
+        return asset(ret, maximum_bonus.symbol);
     }
 
-    share_type schedule_input_predicted_limit(uint64_t pass_through_blocks)
+    asset schedule_input_predicted_limit(uint64_t pass_through_blocks)
     {
         share_type ret = (share_type)pass_through_blocks;
-        ret *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT;
+        ret *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount;
         ret /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-        return ret;
+        return asset(ret, REGISTRATION_BONUS_SYMBOL);
     }
 
-    using allocate_cash_fn_type = std::function<share_type(uint64_t pos)>;
     bool schedule_input_pos_reach_limit(uint64_t& pos,
                                         uint64_t max_pos,
-                                        share_type predicted_limit,
-                                        share_type maximum_bonus,
-                                        allocate_cash_fn_type allocate_cash)
+                                        asset predicted_limit,
+                                        asset maximum_bonus,
+                                        std::function<asset(uint64_t pos)> allocate_cash)
     {
-        share_type allocated = 0;
+        asset allocated(0, REGISTRATION_BONUS_SYMBOL);
         while (pos < max_pos)
         {
-            share_type predicted_bonus = schedule_input_predicted_allocate_by_pos(pos, maximum_bonus);
-            if (predicted_bonus == share_type(0))
+            asset predicted_bonus = schedule_input_predicted_allocate_by_pos(pos, maximum_bonus);
+            if (predicted_bonus.amount == share_type(0))
             {
                 break;
             }
@@ -252,28 +246,42 @@ public:
                 return true;
             }
 
-            asset allocated_bonus = allocate_cash(pos);
-            allocated += allocated_bonus.amount;
+            allocated += allocate_cash(pos);
             ++pos;
         }
         return false;
     }
+
+    asset schedule_input_vest_all(std::function<asset()> allocate_cash)
+    {
+        asset total_allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
+        auto it = schedule_input.begin();
+        for (uint64_t input_pos = 0, stage = 0; it != schedule_input.end(); ++it, ++stage)
+        {
+            for (uint64_t register_attempts = 0; register_attempts < (uint64_t)(*it).users;
+                 ++register_attempts, ++input_pos)
+            {
+                total_allocated_bonus += allocate_cash();
+            }
+        }
+        return total_allocated_bonus;
+    }
 };
 
 schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
-share_type registration_pool_service_check_fixture::rest_of_supply;
+asset registration_pool_service_check_fixture::rest_of_supply;
 
 BOOST_FIXTURE_TEST_SUITE(registration_pool_service_input_check, registration_pool_service_check_fixture)
 
 SCORUM_TEST_CASE(create_invalid_genesis_state_amount_check)
 {
     genesis_state_type invalid_genesis_state = genesis_state;
-    invalid_genesis_state.registration_supply = 0;
+    invalid_genesis_state.registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state = genesis_state;
-    invalid_genesis_state.registration_maximum_bonus = 0;
+    invalid_genesis_state.registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 
@@ -287,18 +295,23 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
 {
     genesis_state_type invalid_genesis_state;
 
-    invalid_genesis_state
-        = fc::json::from_string(genesis_invalid_schedule_users_thousands_str).as<genesis_state_type>();
+    invalid_genesis_state = fc::json::from_string(genesis_invalid_schedule_users_str).as<genesis_state_type>();
+    invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state
         = fc::json::from_string(genesis_invalid_schedule_bonus_percent_l_str).as<genesis_state_type>();
+    invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state
         = fc::json::from_string(genesis_invalid_schedule_bonus_percent_h_str).as<genesis_state_type>();
+    invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
     BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
 }
@@ -309,8 +322,8 @@ SCORUM_TEST_CASE(create_check)
 
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
-    BOOST_CHECK_EQUAL(pool.balance.amount.value, genesis_state.registration_supply);
-    BOOST_CHECK_EQUAL(pool.maximum_bonus.value, genesis_state.registration_maximum_bonus);
+    BOOST_CHECK_EQUAL(pool.balance, genesis_state.registration_supply);
+    BOOST_CHECK_EQUAL(pool.maximum_bonus, genesis_state.registration_maximum_bonus);
     BOOST_CHECK_EQUAL(pool.already_allocated_count, 0);
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
@@ -377,21 +390,21 @@ SCORUM_TEST_CASE(predict_input_check)
 
     BOOST_CHECK_EQUAL((share_type)0, schedule_input_bonus_percent_by_pos(8));
 
-    share_type maximum_bonus = 5;
+    asset maximum_bonus(5, REGISTRATION_BONUS_SYMBOL);
 
-    BOOST_CHECK_EQUAL((share_type)schedule_input[0].bonus_percent * maximum_bonus / 100,
-                      schedule_input_predicted_allocate_by_pos(0, maximum_bonus));
-    BOOST_CHECK_EQUAL((share_type)schedule_input[1].bonus_percent * maximum_bonus / 100,
-                      schedule_input_predicted_allocate_by_pos(2, maximum_bonus));
-    BOOST_CHECK_EQUAL((share_type)schedule_input[2].bonus_percent * maximum_bonus / 100,
-                      schedule_input_predicted_allocate_by_pos(4, maximum_bonus));
-    BOOST_CHECK_EQUAL((share_type)schedule_input[3].bonus_percent * maximum_bonus / 100,
-                      schedule_input_predicted_allocate_by_pos(6, maximum_bonus));
+    BOOST_CHECK_EQUAL((share_type)schedule_input[0].bonus_percent * maximum_bonus.amount / 100,
+                      schedule_input_predicted_allocate_by_pos(0, maximum_bonus).amount);
+    BOOST_CHECK_EQUAL((share_type)schedule_input[1].bonus_percent * maximum_bonus.amount / 100,
+                      schedule_input_predicted_allocate_by_pos(2, maximum_bonus).amount);
+    BOOST_CHECK_EQUAL((share_type)schedule_input[2].bonus_percent * maximum_bonus.amount / 100,
+                      schedule_input_predicted_allocate_by_pos(4, maximum_bonus).amount);
+    BOOST_CHECK_EQUAL((share_type)schedule_input[3].bonus_percent * maximum_bonus.amount / 100,
+                      schedule_input_predicted_allocate_by_pos(6, maximum_bonus).amount);
 
     uint64_t pos = 0;
     uint64_t max_pos = schedule_input_max_pos();
-    share_type predicted_limit = 10;
-    auto fn = [this, maximum_bonus](uint64_t p) -> share_type {
+    asset predicted_limit(10, REGISTRATION_BONUS_SYMBOL);
+    auto fn = [this, maximum_bonus](uint64_t p) -> asset {
         return this->schedule_input_predicted_allocate_by_pos(p, maximum_bonus);
     };
 
@@ -431,13 +444,13 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
         {
             generate_block();
 
-            auto predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, pool.maximum_bonus.value);
+            asset predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, pool.maximum_bonus);
 
-            asset allocated_bonus(0, VESTS_SYMBOL);
+            asset allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
             db_plugin->debug_update(
                 [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
 
-            BOOST_REQUIRE_EQUAL(allocated_bonus, asset(predicted_bonus, VESTS_SYMBOL));
+            BOOST_REQUIRE_EQUAL(allocated_bonus, predicted_bonus);
         }
     }
 }
@@ -456,7 +469,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
     uint64_t input_max_pos = schedule_input_max_pos();
-    share_type maximum_bonus = pool.maximum_bonus;
+    asset maximum_bonus = pool.maximum_bonus;
 
     // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
     auto it = schedule_input.begin();
@@ -472,13 +485,13 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
                 generate_block();
             }
 
-            auto predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, maximum_bonus);
+            asset predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, maximum_bonus);
 
-            asset allocated_bonus(0, VESTS_SYMBOL);
+            asset allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
             db_plugin->debug_update(
                 [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
 
-            BOOST_CHECK_EQUAL(allocated_bonus, asset(predicted_bonus, VESTS_SYMBOL));
+            BOOST_CHECK_EQUAL(allocated_bonus, predicted_bonus);
         }
     }
 }
@@ -492,12 +505,12 @@ SCORUM_TEST_CASE(allocate_limits_check)
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
-    share_type predicted_limit = schedule_input_predicted_limit(1);
+    asset predicted_limit = schedule_input_predicted_limit(1);
 
-    auto fn = [&](uint64_t) -> share_type {
-        asset allocated_bonus = registration_pool_service.allocate_cash("alice");
-        BOOST_CHECK_GT(allocated_bonus.amount, 0);
-        return allocated_bonus.amount;
+    auto fn = [&](uint64_t) -> asset {
+        asset allocated_bonus(registration_pool_service.allocate_cash("alice").amount, REGISTRATION_BONUS_SYMBOL);
+        BOOST_CHECK_GT(allocated_bonus.amount, share_type(0));
+        return allocated_bonus;
     };
 
     uint64_t input_pos = 0;
@@ -523,17 +536,13 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
     // 1 = minimal (for calling without any block between allocate_cash)
-    share_type predicted_limit = schedule_input_predicted_limit(1);
+    asset predicted_limit = schedule_input_predicted_limit(1);
 
-    asset allocated_bonus(0, VESTS_SYMBOL);
-    auto fn = [&](uint64_t) -> share_type {
-        db_plugin->debug_update(
-            [&](database&) {
-                allocated_bonus = registration_pool_service.allocate_cash("alice");
-                BOOST_CHECK_GT(allocated_bonus.amount, 0);
-            },
-            default_skip);
-        return allocated_bonus.amount;
+    asset allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
+    auto fn = [&](uint64_t) -> asset {
+        db_plugin->debug_update([&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); },
+                                default_skip);
+        return allocated_bonus;
     };
 
     uint64_t input_pos = 0;
@@ -574,17 +583,17 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
-    share_type predicted_limit = schedule_input_predicted_limit(1);
+    asset predicted_limit = schedule_input_predicted_limit(1);
 
-    asset allocated_bonus(0, VESTS_SYMBOL);
-    auto fn = [&](uint64_t) -> share_type {
+    asset allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
+    auto fn = [&](uint64_t) -> asset {
         db_plugin->debug_update(
             [&](database&) {
                 allocated_bonus = registration_pool_service.allocate_cash("alice");
                 BOOST_CHECK_GT(allocated_bonus.amount, 0);
             },
             default_skip);
-        return allocated_bonus.amount;
+        return allocated_bonus;
     };
 
     uint64_t input_pos = 0;
@@ -631,38 +640,78 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 
     uint64_t input_max_pos = schedule_input_max_pos();
 
-    share_type total_balance = pool.balance.amount;
-    asset total_allocated_bonus(0, VESTS_SYMBOL);
+    asset total_balance = pool.balance;
+    asset total_allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
 
     // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
-    auto it = schedule_input.begin();
-    for (uint64_t input_pos = 0, stage = 0; it != schedule_input.end(); ++it, ++stage)
-    {
-        for (uint64_t register_attempts = 0; register_attempts < (uint64_t)(*it).users;
-             ++register_attempts, ++input_pos)
+    auto fn = [&]() -> asset {
+        // to prevent reaching limit
+        for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
         {
-            // to prevent reaching limit
-            for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
-            {
-                generate_block();
-            }
-
-            asset allocated_bonus(0, VESTS_SYMBOL);
-            db_plugin->debug_update(
-                [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
-            total_allocated_bonus += allocated_bonus;
+            generate_block();
         }
-    }
+        asset allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
+        db_plugin->debug_update([&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); },
+                                default_skip);
+        return allocated_bonus;
+    };
+    total_allocated_bonus = schedule_input_vest_all(fn);
 
-    BOOST_CHECK_EQUAL(pool.balance.amount, total_balance - total_allocated_bonus.amount);
-    BOOST_CHECK_EQUAL(total_allocated_bonus.amount, schedule_input_total_bonus(pool.maximum_bonus));
+    BOOST_CHECK_EQUAL(total_allocated_bonus, schedule_input_total_bonus(pool.maximum_bonus));
+    BOOST_CHECK_EQUAL(pool.balance, total_balance - total_allocated_bonus);
     BOOST_CHECK_EQUAL(pool.already_allocated_count, input_max_pos);
-    BOOST_CHECK_EQUAL(pool.balance.amount, rest_of_supply);
+    BOOST_CHECK_EQUAL(pool.balance, rest_of_supply);
 }
 
-SCORUM_TEST_CASE(autoclose_pool_check)
+SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
 {
-    // TODO
+    db_plugin->debug_update(
+        [&](database&) {
+            insure_pool_exists();
+            insure_committee_exists();
+        },
+        default_skip);
+
+    const registration_pool_object& pool = registration_pool_service.get_pool();
+
+    asset total_allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
+
+    // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
+    auto fn = [&]() -> asset {
+        // to prevent reaching limit
+        for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
+        {
+            generate_block();
+        }
+        asset allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
+        db_plugin->debug_update([&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); },
+                                default_skip);
+        return allocated_bonus;
+    };
+    total_allocated_bonus = schedule_input_vest_all(fn);
+
+    BOOST_REQUIRE_EQUAL(total_allocated_bonus, schedule_input_total_bonus(pool.maximum_bonus));
+
+    BOOST_REQUIRE_GT(rest_of_supply, asset(0, REGISTRATION_BONUS_SYMBOL));
+
+    asset last_bonus = schedule_input_predicted_allocate_by_pos(schedule_input_max_pos() - 1, pool.maximum_bonus);
+
+    BOOST_REQUIRE_GT(last_bonus, asset(0, REGISTRATION_BONUS_SYMBOL));
+
+    int last_regs = (int)rest_of_supply.amount.value / (int)last_bonus.amount.value;
+
+    BOOST_REQUIRE_GT(last_regs, 0);
+    for (int ci = 0; ci < last_regs; ++ci)
+    {
+        // to prevent reaching limit
+        for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
+        {
+            generate_block();
+        }
+        db_plugin->debug_update([&](database&) { registration_pool_service.allocate_cash("alice"); }, default_skip);
+    }
+
+    BOOST_REQUIRE(!registration_pool_service.is_pool_exists());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

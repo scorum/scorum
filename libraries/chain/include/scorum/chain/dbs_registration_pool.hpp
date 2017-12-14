@@ -32,9 +32,9 @@ public:
     asset allocate_cash(const account_name_type& committee_member);
 
 private:
-    share_type _calculate_per_reg(const registration_pool_object&);
+    asset _calculate_per_reg(const registration_pool_object&);
 
-    share_type _decrease_balance(const registration_pool_object&, const share_type&);
+    asset _decrease_balance(const registration_pool_object&, const asset&);
 
     bool _check_autoclose(const registration_pool_object&);
 

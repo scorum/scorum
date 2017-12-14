@@ -24,7 +24,7 @@ using namespace scorum::protocol;
 
 void generate_default_genesis_state(genesis_state_type& genesis)
 {
-    const sp::public_key_type init_public_key(SCORUM_DEFAULT_INIT_PUBLIC_KEY);
+    const public_key_type init_public_key(SCORUM_DEFAULT_INIT_PUBLIC_KEY);
 
     genesis.init_supply = SCORUM_DEFAULT_INIT_SUPPLY;
     genesis.init_rewards_supply = SCORUM_REWARDS_INITIAL_SUPPLY;

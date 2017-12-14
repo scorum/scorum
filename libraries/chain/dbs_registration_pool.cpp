@@ -27,8 +27,9 @@ const registration_pool_object& dbs_registration_pool::get_pool() const
 
 const registration_pool_object& dbs_registration_pool::create_pool(const genesis_state_type& genesis_state)
 {
-    FC_ASSERT(genesis_state.registration_supply > 0, "Registration supply amount must be more than zerro.");
-    FC_ASSERT(genesis_state.registration_maximum_bonus > 0,
+    FC_ASSERT(genesis_state.registration_supply > asset(0, REGISTRATION_BONUS_SYMBOL),
+              "Registration supply amount must be more than zerro.");
+    FC_ASSERT(genesis_state.registration_maximum_bonus > asset(0, REGISTRATION_BONUS_SYMBOL),
               "Registration maximum bonus amount must be more than zerro.");
     FC_ASSERT(!genesis_state.registration_schedule.empty(), "Registration schedule must have at least one item.");
 
@@ -51,7 +52,7 @@ const registration_pool_object& dbs_registration_pool::create_pool(const genesis
 
     // create pool
     const auto& new_pool = db_impl().create<registration_pool_object>([&](registration_pool_object& pool) {
-        pool.balance = asset(genesis_state.registration_supply, VESTS_SYMBOL);
+        pool.balance = genesis_state.registration_supply;
         pool.maximum_bonus = genesis_state.registration_maximum_bonus;
         pool.schedule_items.reserve(items.size());
         for (const auto& item : items)
@@ -67,13 +68,8 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
     if (!is_pool_exists())
     {
-        return asset(0, VESTS_SYMBOL);
+        return asset(0, REGISTRATION_BONUS_SYMBOL);
     }
-
-    FC_ASSERT(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK > 0, "Invalid ${1} value.",
-              ("1", SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK));
-    FC_ASSERT(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT > 0, "Invalid ${1} value.",
-              ("1", SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT));
 
     const dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -81,9 +77,9 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 
     const registration_pool_object& this_pool = get_pool();
 
-    share_type per_reg = _calculate_per_reg(this_pool);
-    FC_ASSERT(per_reg > 0, "Invalid schedule. Zero bonus return.");
-    FC_ASSERT(per_reg <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT
+    asset per_reg = _calculate_per_reg(this_pool);
+    FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
+    FC_ASSERT(per_reg.amount <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount
                       / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK,
               "Invalid schedule. Always exceeds the limit.");
 
@@ -104,39 +100,40 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 
     uint32_t pass_blocks = head_block_num - last_allocated_block;
 
-    uint32_t per_n_block_rest = member.per_n_block_rest;
-    if (pass_blocks > per_n_block_rest)
+    uint32_t per_n_block_remain = member.per_n_block_remain;
+    if (pass_blocks > per_n_block_remain)
     {
-        per_n_block_rest = 0;
+        per_n_block_remain = 0;
     }
     else
     {
-        per_n_block_rest -= pass_blocks;
+        per_n_block_remain -= pass_blocks;
     }
 
-    if (per_n_block_rest > 0)
+    if (per_n_block_remain > 0)
     {
         // check limits
         share_type limit_per_memeber = (share_type)(pass_blocks + 1);
-        limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK_AMOUNT;
+        limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount;
         limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-        FC_ASSERT(member.already_allocated_cash + per_reg <= limit_per_memeber,
+        FC_ASSERT(member.already_allocated_cash + per_reg <= asset(limit_per_memeber, REGISTRATION_BONUS_SYMBOL),
                   "Committee member '${1}' reaches cash limit.", ("1", member_name));
     }
 
+    // return value <= per_reg
     per_reg = _decrease_balance(this_pool, per_reg);
 
     auto modifier = [=](registration_committee_member_object& m) {
         m.last_allocated_block = head_block_num;
-        if (per_n_block_rest > 0)
+        if (per_n_block_remain > 0)
         {
-            m.per_n_block_rest = per_n_block_rest;
+            m.per_n_block_remain = per_n_block_remain;
             m.already_allocated_cash += per_reg;
         }
         else
         {
-            m.per_n_block_rest = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-            m.already_allocated_cash = 0;
+            m.per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+            m.already_allocated_cash = asset(0, REGISTRATION_BONUS_SYMBOL);
         }
     };
     committee_service.update_member_info(member, modifier);
@@ -146,33 +143,32 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
         db_impl().modify(this_pool, [&](registration_pool_object& pool) { pool.already_allocated_count++; });
     }
 
-    return asset(per_reg, VESTS_SYMBOL);
+    return per_reg;
 }
 
-share_type dbs_registration_pool::_decrease_balance(const registration_pool_object& this_pool,
-                                                    const share_type& balance)
+asset dbs_registration_pool::_decrease_balance(const registration_pool_object& this_pool, const asset& balance)
 {
-    FC_ASSERT(balance > 0, "Invalid balance.");
+    FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
-    share_type ret{ 0 };
+    asset ret(0, REGISTRATION_BONUS_SYMBOL);
 
     db_impl().modify(this_pool, [&](registration_pool_object& pool) {
-        if (pool.balance.amount > 0 && balance <= pool.balance.amount)
+        if (pool.balance.amount > 0 && balance <= pool.balance)
         {
-            pool.balance.amount -= balance;
+            pool.balance -= balance;
             ret = balance;
         }
         else
         {
-            ret = pool.balance.amount;
-            pool.balance.amount = 0;
+            ret = pool.balance;
+            pool.balance = asset(0, REGISTRATION_BONUS_SYMBOL);
         }
     });
 
     return ret;
 }
 
-share_type dbs_registration_pool::_calculate_per_reg(const registration_pool_object& this_pool)
+asset dbs_registration_pool::_calculate_per_reg(const registration_pool_object& this_pool)
 {
     FC_ASSERT(!this_pool.schedule_items.empty(), "Invalid schedule.");
 
@@ -203,7 +199,7 @@ share_type dbs_registration_pool::_calculate_per_reg(const registration_pool_obj
 
     using schedule_item_type = registration_pool_object::schedule_item;
     const schedule_item_type& current_item = (*it);
-    return current_item.bonus_percent * this_pool.maximum_bonus / 100;
+    return asset(current_item.bonus_percent * this_pool.maximum_bonus.amount / 100, REGISTRATION_BONUS_SYMBOL);
 }
 
 bool dbs_registration_pool::_check_autoclose(const registration_pool_object& this_pool)

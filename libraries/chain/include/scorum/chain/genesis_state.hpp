@@ -11,7 +11,10 @@
 namespace scorum {
 namespace chain {
 
-namespace sp = scorum::protocol;
+using scorum::protocol::share_type;
+using scorum::protocol::asset;
+using scorum::protocol::public_key_type;
+using scorum::protocol::chain_id_type;
 
 struct genesis_state_type
 {
@@ -19,15 +22,15 @@ struct genesis_state_type
     {
         std::string name;
         std::string recovery_account;
-        sp::public_key_type public_key;
-        sp::share_type scr_amount;
-        sp::share_type sp_amount;
+        public_key_type public_key;
+        share_type scr_amount;
+        share_type sp_amount;
     };
 
     struct witness_type
     {
         std::string owner_name;
-        sp::public_key_type block_signing_key;
+        public_key_type block_signing_key;
     };
 
     struct registration_schedule_item
@@ -37,17 +40,17 @@ struct genesis_state_type
         uint16_t bonus_percent;
     };
 
-    sp::share_type registration_supply = 0;
-    sp::share_type registration_maximum_bonus = 0;
-    sp::share_type init_supply = 0;
-    sp::asset init_rewards_supply;
+    asset registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
+    share_type init_supply = 0;
+    asset init_rewards_supply;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
     std::vector<registration_schedule_item> registration_schedule;
     std::vector<std::string> registration_committee;
 
-    sp::chain_id_type initial_chain_id;
+    chain_id_type initial_chain_id;
 };
 
 namespace utils {

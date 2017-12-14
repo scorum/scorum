@@ -31,9 +31,9 @@ public:
 
     id_type id;
 
-    asset balance = asset(0, VESTS_SYMBOL);
+    asset balance = asset(0, REGISTRATION_BONUS_SYMBOL);
 
-    share_type maximum_bonus = 0;
+    asset maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
 
     uint64_t already_allocated_count = 0;
 
@@ -64,9 +64,12 @@ public:
     account_name_type account;
 
     // temporary schedule info
-    share_type already_allocated_cash = 0;
+
+    asset already_allocated_cash = asset(0, REGISTRATION_BONUS_SYMBOL);
+
     uint32_t last_allocated_block = 0;
-    uint32_t per_n_block_rest = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+
+    uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
 typedef multi_index_container<registration_pool_object,
@@ -99,7 +102,7 @@ FC_REFLECT(scorum::chain::registration_pool_object,
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object, scorum::chain::registration_pool_index)
 
 FC_REFLECT(scorum::chain::registration_committee_member_object,
-           (id)(account)(already_allocated_cash)(last_allocated_block)(per_n_block_rest))
+           (id)(account)(already_allocated_cash)(last_allocated_block)(per_n_block_remain))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)
