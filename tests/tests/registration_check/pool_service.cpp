@@ -29,9 +29,10 @@ share_type schedule_input_total_bonus(const schedule_inputs_type& schedule_input
     for (const auto& item : schedule_input)
     {
         share_type stage_amount = maximum_bonus;
+        stage_amount *= item.users;
         stage_amount *= item.bonus_percent;
         stage_amount /= 100;
-        ret += stage_amount * item.users;
+        ret += stage_amount;
     }
     return ret;
 }
@@ -614,7 +615,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
         default_skip);
 }
 
-SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
+SCORUM_TEST_CASE(allocate_out_of_schedule_check)
 {
     db_plugin->debug_update(
         [&](database&) {
@@ -651,6 +652,8 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
             db_plugin->debug_update(
                 [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
             total_allocated_bonus += allocated_bonus;
+
+            std::cout << "pos: " << input_pos << ", allocated: " << allocated_bonus.amount << std::endl;
         }
     }
 
@@ -658,6 +661,8 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
     BOOST_CHECK_EQUAL(total_allocated_bonus.amount, schedule_input_total_bonus(pool.maximum_bonus));
     BOOST_CHECK_EQUAL(pool.already_allocated_count, input_max_pos);
     BOOST_CHECK_EQUAL(pool.balance.amount, rest_of_supply);
+
+    // TODO
 }
 
 SCORUM_TEST_CASE(autoclose_pool_check)
