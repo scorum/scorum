@@ -10,6 +10,8 @@
 namespace scorum {
 namespace chain {
 
+using std::set;
+
 dbs_budget::dbs_budget(database& db)
     : _base_type(db)
 {

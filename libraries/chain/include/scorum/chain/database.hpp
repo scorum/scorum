@@ -24,6 +24,8 @@
 namespace scorum {
 namespace chain {
 
+using std::vector;
+
 using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::authority;

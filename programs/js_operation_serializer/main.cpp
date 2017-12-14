@@ -70,7 +70,7 @@ template <typename T> void generate_serializer();
 template <typename T> void register_serializer();
 
 map<string, size_t> st;
-scorum::vector<std::function<void()>> serializers;
+std::vector<std::function<void()>> serializers;
 
 bool register_serializer(const string& name, std::function<void()> sr)
 {

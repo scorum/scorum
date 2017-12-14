@@ -131,7 +131,7 @@ struct operation_visitor
         // We need to write the transformed tags into a temporary
         // local container because we can't modify meta.tags concurrently
         // as we iterate over it.
-        set<string> lower_tags;
+        std::set<string> lower_tags;
 
         uint8_t tag_limit = 5;
         uint8_t count = 0;
@@ -267,8 +267,8 @@ struct operation_visitor
                 auto meta = filter_tags(c);
                 auto citr = comment_idx.lower_bound(c.id);
 
-                map<string, const tag_object*> existing_tags;
-                vector<const tag_object*> remove_queue;
+                std::map<std::string, const tag_object*> existing_tags;
+                std::vector<const tag_object*> remove_queue;
 
                 while (citr != comment_idx.end() && citr->comment == c.id)
                 {

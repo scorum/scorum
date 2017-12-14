@@ -12,6 +12,8 @@ class database; // for _temporary_public_imp only
 namespace scorum {
 namespace chain {
 
+using std::string;
+
 class dbservice : public dbservice_dbs_factory
 {
     typedef dbservice_dbs_factory _base_type;
@@ -31,7 +33,8 @@ public:
 
     virtual const account_object& get_account(const account_name_type& name) const = 0;
 
-    virtual const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const = 0;
+    virtual const comment_object& get_comment(const account_name_type& author,
+                                              const fc::shared_string& permlink) const = 0;
 
     virtual const comment_object& get_comment(const account_name_type& author, const string& permlink) const = 0;
 

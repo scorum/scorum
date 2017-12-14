@@ -29,7 +29,7 @@ public:
             assert("Negative operation tag" && false);
         if (u_which >= _op_evaluators.size())
             assert("No registered evaluator for this operation" && false);
-        unique_ptr<evaluator<OperationType>>& eval = _op_evaluators[u_which];
+        std::unique_ptr<evaluator<OperationType>>& eval = _op_evaluators[u_which];
         if (!eval)
             assert("No registered evaluator for this operation" && false);
         return *eval;

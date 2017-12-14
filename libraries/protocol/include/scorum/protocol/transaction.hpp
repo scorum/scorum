@@ -15,7 +15,7 @@ struct transaction
 
     fc::time_point_sec expiration;
 
-    vector<operation> operations;
+    std::vector<operation> operations;
     extensions_type extensions;
 
     digest_type digest() const;
@@ -26,23 +26,25 @@ struct transaction
     void set_expiration(fc::time_point_sec expiration_time);
     void set_reference_block(const block_id_type& reference_block);
 
-    template <typename Visitor> vector<typename Visitor::result_type> visit(Visitor&& visitor)
+    template <typename Visitor> std::vector<typename Visitor::result_type> visit(Visitor&& visitor)
     {
-        vector<typename Visitor::result_type> results;
+        std::vector<typename Visitor::result_type> results;
         for (auto& op : operations)
             results.push_back(op.visit(std::forward<Visitor>(visitor)));
         return results;
     }
-    template <typename Visitor> vector<typename Visitor::result_type> visit(Visitor&& visitor) const
+    template <typename Visitor> std::vector<typename Visitor::result_type> visit(Visitor&& visitor) const
     {
-        vector<typename Visitor::result_type> results;
+        std::vector<typename Visitor::result_type> results;
         for (auto& op : operations)
             results.push_back(op.visit(std::forward<Visitor>(visitor)));
         return results;
     }
 
-    void get_required_authorities(flat_set<account_name_type>& active, flat_set<account_name_type>& owner,
-        flat_set<account_name_type>& posting, vector<authority>& other) const;
+    void get_required_authorities(flat_set<account_name_type>& active,
+                                  flat_set<account_name_type>& owner,
+                                  flat_set<account_name_type>& posting,
+                                  std::vector<authority>& other) const;
 };
 
 struct signed_transaction : public transaction
@@ -56,23 +58,29 @@ struct signed_transaction : public transaction
 
     signature_type sign(const private_key_type& key, const chain_id_type& chain_id) const;
 
-    set<public_key_type> get_required_signatures(const chain_id_type& chain_id,
-        const flat_set<public_key_type>& available_keys, const authority_getter& get_active,
-        const authority_getter& get_owner, const authority_getter& get_posting,
-        uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH) const;
+    std::set<public_key_type> get_required_signatures(const chain_id_type& chain_id,
+                                                      const flat_set<public_key_type>& available_keys,
+                                                      const authority_getter& get_active,
+                                                      const authority_getter& get_owner,
+                                                      const authority_getter& get_posting,
+                                                      uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH) const;
 
-    void verify_authority(const chain_id_type& chain_id, const authority_getter& get_active,
-        const authority_getter& get_owner, const authority_getter& get_posting,
-        uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH) const;
+    void verify_authority(const chain_id_type& chain_id,
+                          const authority_getter& get_active,
+                          const authority_getter& get_owner,
+                          const authority_getter& get_posting,
+                          uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH) const;
 
-    set<public_key_type> minimize_required_signatures(const chain_id_type& chain_id,
-        const flat_set<public_key_type>& available_keys, const authority_getter& get_active,
-        const authority_getter& get_owner, const authority_getter& get_posting,
-        uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH) const;
+    std::set<public_key_type> minimize_required_signatures(const chain_id_type& chain_id,
+                                                           const flat_set<public_key_type>& available_keys,
+                                                           const authority_getter& get_active,
+                                                           const authority_getter& get_owner,
+                                                           const authority_getter& get_posting,
+                                                           uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH) const;
 
     flat_set<public_key_type> get_signature_keys(const chain_id_type& chain_id) const;
 
-    vector<signature_type> signatures;
+    std::vector<signature_type> signatures;
 
     digest_type merkle_digest() const;
 
@@ -83,16 +91,22 @@ struct signed_transaction : public transaction
     }
 };
 
-void verify_authority(const vector<operation>& ops, const flat_set<public_key_type>& sigs,
-    const authority_getter& get_active, const authority_getter& get_owner, const authority_getter& get_posting,
-    uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH, bool allow_committe = false,
-    const flat_set<account_name_type>& active_aprovals = flat_set<account_name_type>(),
-    const flat_set<account_name_type>& owner_aprovals = flat_set<account_name_type>(),
-    const flat_set<account_name_type>& posting_approvals = flat_set<account_name_type>());
+void verify_authority(const std::vector<operation>& ops,
+                      const flat_set<public_key_type>& sigs,
+                      const authority_getter& get_active,
+                      const authority_getter& get_owner,
+                      const authority_getter& get_posting,
+                      uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH,
+                      bool allow_committe = false,
+                      const flat_set<account_name_type>& active_aprovals = flat_set<account_name_type>(),
+                      const flat_set<account_name_type>& owner_aprovals = flat_set<account_name_type>(),
+                      const flat_set<account_name_type>& posting_approvals = flat_set<account_name_type>());
 
 struct annotated_signed_transaction : public signed_transaction
 {
-    annotated_signed_transaction() {}
+    annotated_signed_transaction()
+    {
+    }
     annotated_signed_transaction(const signed_transaction& trx)
         : signed_transaction(trx)
         , transaction_id(trx.id())
@@ -110,5 +124,6 @@ struct annotated_signed_transaction : public signed_transaction
 
 FC_REFLECT(scorum::protocol::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions))
 FC_REFLECT_DERIVED(scorum::protocol::signed_transaction, (scorum::protocol::transaction), (signatures))
-FC_REFLECT_DERIVED(scorum::protocol::annotated_signed_transaction, (scorum::protocol::signed_transaction),
-    (transaction_id)(block_num)(transaction_num));
+FC_REFLECT_DERIVED(scorum::protocol::annotated_signed_transaction,
+                   (scorum::protocol::signed_transaction),
+                   (transaction_id)(block_num)(transaction_num));

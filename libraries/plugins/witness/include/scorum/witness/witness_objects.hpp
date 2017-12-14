@@ -7,7 +7,6 @@
 namespace scorum {
 namespace witness {
 
-using namespace std;
 using namespace scorum::chain;
 
 #ifndef WITNESS_SPACE_ID
@@ -37,7 +36,9 @@ public:
         c(*this);
     }
 
-    account_bandwidth_object() {}
+    account_bandwidth_object()
+    {
+    }
 
     id_type id;
 
@@ -59,7 +60,9 @@ public:
         c(*this);
     }
 
-    content_edit_lock_object() {}
+    content_edit_lock_object()
+    {
+    }
 
     id_type id;
     account_name_type account;
@@ -76,7 +79,9 @@ public:
         c(*this);
     }
 
-    reserve_ratio_object() {}
+    reserve_ratio_object()
+    {
+    }
 
     id_type id;
 
@@ -115,31 +120,41 @@ typedef oid<reserve_ratio_object> reserve_ratio_id_type;
 struct by_account_bandwidth_type;
 
 typedef multi_index_container<account_bandwidth_object,
-    indexed_by<ordered_unique<tag<by_id>,
-                   member<account_bandwidth_object, account_bandwidth_id_type, &account_bandwidth_object::id>>,
-                                  ordered_unique<tag<by_account_bandwidth_type>,
-                                      composite_key<account_bandwidth_object,
-                                                     member<account_bandwidth_object, account_name_type,
-                                                         &account_bandwidth_object::account>,
-                                                     member<account_bandwidth_object, bandwidth_type,
-                                                         &account_bandwidth_object::type>>>>,
-    allocator<account_bandwidth_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<account_bandwidth_object,
+                                                               account_bandwidth_id_type,
+                                                               &account_bandwidth_object::id>>,
+                                         ordered_unique<tag<by_account_bandwidth_type>,
+                                                        composite_key<account_bandwidth_object,
+                                                                      member<account_bandwidth_object,
+                                                                             account_name_type,
+                                                                             &account_bandwidth_object::account>,
+                                                                      member<account_bandwidth_object,
+                                                                             bandwidth_type,
+                                                                             &account_bandwidth_object::type>>>>,
+                              allocator<account_bandwidth_object>>
     account_bandwidth_index;
 
 struct by_account;
 
 typedef multi_index_container<content_edit_lock_object,
-    indexed_by<ordered_unique<tag<by_id>,
-                   member<content_edit_lock_object, content_edit_lock_id_type, &content_edit_lock_object::id>>,
-                                  ordered_unique<tag<by_account>, member<content_edit_lock_object, account_name_type,
-                                                                      &content_edit_lock_object::account>>>,
-    allocator<content_edit_lock_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<content_edit_lock_object,
+                                                               content_edit_lock_id_type,
+                                                               &content_edit_lock_object::id>>,
+                                         ordered_unique<tag<by_account>,
+                                                        member<content_edit_lock_object,
+                                                               account_name_type,
+                                                               &content_edit_lock_object::account>>>,
+                              allocator<content_edit_lock_object>>
     content_edit_lock_index;
 
 typedef multi_index_container<reserve_ratio_object,
-    indexed_by<ordered_unique<tag<by_id>,
-        member<reserve_ratio_object, reserve_ratio_id_type, &reserve_ratio_object::id>>>,
-    allocator<reserve_ratio_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<reserve_ratio_object,
+                                                               reserve_ratio_id_type,
+                                                               &reserve_ratio_object::id>>>,
+                              allocator<reserve_ratio_object>>
     reserve_ratio_index;
 }
 } // scorum::witness

@@ -13,7 +13,6 @@
 using namespace scorum::app;
 using namespace scorum::chain;
 using namespace graphene::utilities;
-using namespace std;
 
 namespace scorum {
 namespace wallet {
@@ -25,7 +24,6 @@ typedef uint16_t transaction_handle_type;
 
 struct memo_data
 {
-
     static optional<memo_data> from_string(const std::string& str)
     {
         try
@@ -60,18 +58,18 @@ struct memo_data
 
 struct brain_key_info
 {
-    string brain_priv_key;
+    std::string brain_priv_key;
     public_key_type pub_key;
-    string wif_priv_key;
+    std::string wif_priv_key;
 };
 
 struct wallet_data
 {
     vector<char> cipher_keys; /** encrypted keys */
 
-    string ws_server = "ws://localhost:8090";
-    string ws_user;
-    string ws_password;
+    std::string ws_server = "ws://localhost:8090";
+    std::string ws_user;
+    std::string ws_password;
 
     chain_id_type chain_id;
 };

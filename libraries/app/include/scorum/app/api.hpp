@@ -45,7 +45,6 @@ namespace scorum {
 namespace app {
 using namespace scorum::chain;
 using namespace fc::ecc;
-using namespace std;
 
 class application;
 struct api_context;
@@ -179,7 +178,9 @@ private:
 
 struct scorum_version_info
 {
-    scorum_version_info() {}
+    scorum_version_info()
+    {
+    }
     scorum_version_info(fc::string bc_v, fc::string s_v, fc::string fc_v)
         : blockchain_version(bc_v)
         , scorum_revision(s_v)
@@ -232,8 +233,10 @@ FC_REFLECT(scorum::app::scorum_version_info, (blockchain_version)(scorum_revisio
 // FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 // FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 
-FC_API(scorum::app::network_broadcast_api, (broadcast_transaction)(broadcast_transaction_with_callback)(
-                                               broadcast_transaction_synchronous)(broadcast_block)(set_max_block_age))
-FC_API(scorum::app::network_node_api, (get_info)(add_node)(get_connected_peers)(get_potential_peers)(
-                                          get_advanced_node_parameters)(set_advanced_node_parameters))
+FC_API(scorum::app::network_broadcast_api,
+       (broadcast_transaction)(broadcast_transaction_with_callback)(broadcast_transaction_synchronous)(broadcast_block)(
+           set_max_block_age))
+FC_API(scorum::app::network_node_api,
+       (get_info)(add_node)(get_connected_peers)(get_potential_peers)(get_advanced_node_parameters)(
+           set_advanced_node_parameters))
 FC_API(scorum::app::login_api, (login)(get_api_by_name)(get_version))

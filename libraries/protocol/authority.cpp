@@ -15,9 +15,9 @@ void authority::add_authority(const account_name_type& k, weight_type w)
     account_auths[k] = w;
 }
 
-vector<public_key_type> authority::get_keys() const
+std::vector<public_key_type> authority::get_keys() const
 {
-    vector<public_key_type> result;
+    std::vector<public_key_type> result;
     result.reserve(key_auths.size());
     for (const auto& k : key_auths)
         result.push_back(k.first);
@@ -53,7 +53,7 @@ void authority::validate() const
     }
 }
 
-bool is_valid_account_name(const string& name)
+bool is_valid_account_name(const std::string& name)
 {
 #if SCORUM_MIN_ACCOUNT_NAME_LENGTH < 3
 #error This is_valid_account_name implementation implicitly enforces minimum name length of 3.

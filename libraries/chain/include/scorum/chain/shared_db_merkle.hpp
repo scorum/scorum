@@ -3,9 +3,9 @@
 namespace scorum {
 namespace chain {
 
-inline static const map<uint32_t, checksum_type>& get_shared_db_merkle()
+inline static const std::map<uint32_t, checksum_type>& get_shared_db_merkle()
 {
-    static const map<uint32_t, checksum_type> shared_db_merkle{
+    static const std::map<uint32_t, checksum_type> shared_db_merkle{
         { 3705111, checksum_type("0a8f0fd5450c3706ec8b8cbad795cd0b3679bf35") },
         { 3705120, checksum_type("2027edb72b671f7011c8cc4c7a8b59c39b305093") },
         { 3713940, checksum_type("bf8a1d516927c506ebdbb7b38bef2e992435435f") },

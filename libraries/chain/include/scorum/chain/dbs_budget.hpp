@@ -10,6 +10,8 @@
 namespace scorum {
 namespace chain {
 
+using std::string;
+
 /** DB service for operations with budget_object
  *  --------------------------------------------
  */

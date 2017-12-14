@@ -8,7 +8,6 @@
 namespace scorum {
 namespace witness {
 
-using namespace std;
 using scorum::protocol::base_operation;
 using scorum::chain::database;
 
@@ -21,7 +20,10 @@ struct enable_content_editing_operation : base_operation
 
     void validate() const;
 
-    void get_required_active_authorities(flat_set<protocol::account_name_type>& a) const { a.insert(account); }
+    void get_required_active_authorities(flat_set<protocol::account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 typedef fc::static_variant<enable_content_editing_operation> witness_plugin_operation;

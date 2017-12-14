@@ -141,7 +141,7 @@ void private_message_plugin::plugin_initialize(const boost::program_options::var
 
     app().register_api_factory<private_message_api>("private_message_api");
 
-    typedef pair<string, string> pairstring;
+    typedef std::pair<std::string, std::string> pairstring;
     LOAD_VALUE_SET(options, "pm-accounts", my->_tracked_accounts, pairstring);
 }
 

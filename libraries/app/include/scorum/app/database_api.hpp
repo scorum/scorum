@@ -28,9 +28,12 @@
 namespace scorum {
 namespace app {
 
+using std::set;
+using std::map;
+using std::pair;
+
 using namespace scorum::chain;
 using namespace scorum::protocol;
-using namespace std;
 
 struct api_context;
 
@@ -213,8 +216,8 @@ public:
     optional<account_bandwidth_api_obj> get_account_bandwidth(string account, witness::bandwidth_type type) const;
 
     vector<vesting_delegation_api_obj> get_vesting_delegations(string account, string from, uint32_t limit = 100) const;
-    vector<vesting_delegation_expiration_api_obj> get_expiring_vesting_delegations(
-        string account, time_point_sec from, uint32_t limit = 100) const;
+    vector<vesting_delegation_expiration_api_obj>
+    get_expiring_vesting_delegations(string account, time_point_sec from, uint32_t limit = 100) const;
 
     ///////////////
     // Witnesses //
@@ -273,8 +276,8 @@ public:
      * sign for
      *  and return the minimal subset of public keys that should add signatures to the transaction.
      */
-    set<public_key_type> get_required_signatures(
-        const signed_transaction& trx, const flat_set<public_key_type>& available_keys) const;
+    set<public_key_type> get_required_signatures(const signed_transaction& trx,
+                                                 const flat_set<public_key_type>& available_keys) const;
 
     /**
      *  This method will return the set of all public keys that could possibly sign for a given transaction.  This call
@@ -348,8 +351,8 @@ public:
      *  Return the active discussions with the highest cumulative pending payouts without respect to category, total
      *  pending payout means the pending payout of all children as well.
      */
-    vector<discussion> get_replies_by_last_update(
-        account_name_type start_author, string start_permlink, uint32_t limit) const;
+    vector<discussion>
+    get_replies_by_last_update(account_name_type start_author, string start_permlink, uint32_t limit) const;
 
     /**
      *  This method is used to fetch all posts/comments by start_author that occur after before_date and start_permlink
@@ -359,8 +362,10 @@ public:
      * two metrics will be used. This
      *  should allow easy pagination.
      */
-    vector<discussion> get_discussions_by_author_before_date(
-        string author, string start_permlink, time_point_sec before_date, uint32_t limit) const;
+    vector<discussion> get_discussions_by_author_before_date(string author,
+                                                             string start_permlink,
+                                                             time_point_sec before_date,
+                                                             uint32_t limit) const;
 
     /**
      *  Account operations have sequence numbers from 0 to N where N is the most recent operation. This method
@@ -381,17 +386,31 @@ private:
     void set_url(discussion& d) const;
     discussion get_discussion(comment_id_type, uint32_t truncate_body = 0) const;
 
-    static bool filter_default(const comment_api_obj& c) { return false; }
-    static bool exit_default(const comment_api_obj& c) { return false; }
-    static bool tag_exit_default(const tags::tag_object& c) { return false; }
+    static bool filter_default(const comment_api_obj& c)
+    {
+        return false;
+    }
+    static bool exit_default(const comment_api_obj& c)
+    {
+        return false;
+    }
+    static bool tag_exit_default(const tags::tag_object& c)
+    {
+        return false;
+    }
 
     template <typename Index, typename StartItr>
-    vector<discussion> get_discussions(const discussion_query& q, const string& tag, comment_id_type parent,
-        const Index& idx, StartItr itr, uint32_t truncate_body = 0,
-        const std::function<bool(const comment_api_obj&)>& filter = &database_api::filter_default,
-        const std::function<bool(const comment_api_obj&)>& exit = &database_api::exit_default,
-        const std::function<bool(const tags::tag_object&)>& tag_exit = &database_api::tag_exit_default,
-        bool ignore_parent = false) const;
+    vector<discussion>
+    get_discussions(const discussion_query& q,
+                    const string& tag,
+                    comment_id_type parent,
+                    const Index& idx,
+                    StartItr itr,
+                    uint32_t truncate_body = 0,
+                    const std::function<bool(const comment_api_obj&)>& filter = &database_api::filter_default,
+                    const std::function<bool(const comment_api_obj&)>& exit = &database_api::exit_default,
+                    const std::function<bool(const tags::tag_object&)>& tag_exit = &database_api::tag_exit_default,
+                    bool ignore_parent = false) const;
     comment_id_type get_parent(const discussion_query& q) const;
 
     void recursively_fetch_content(state& _state, discussion& root, set<string>& referenced_accounts) const;

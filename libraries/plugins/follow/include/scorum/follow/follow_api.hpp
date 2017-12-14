@@ -12,6 +12,7 @@ namespace follow {
 
 using std::vector;
 using std::string;
+using std::pair;
 using app::comment_api_obj;
 
 struct feed_entry
@@ -63,7 +64,9 @@ struct follow_api_obj
 
 struct follow_count_api_obj
 {
-    follow_count_api_obj() {}
+    follow_count_api_obj()
+    {
+    }
     follow_count_api_obj(const follow_count_object& o)
         : account(o.account)
         , follower_count(o.follower_count)
@@ -125,5 +128,5 @@ FC_REFLECT(scorum::follow::follow_api_obj, (follower)(following)(what))
 FC_REFLECT(scorum::follow::follow_count_api_obj, (account)(follower_count)(following_count))
 
 FC_API(scorum::follow::follow_api,
-    (get_followers)(get_following)(get_follow_count)(get_feed_entries)(get_feed)(get_blog_entries)(get_blog)(
+       (get_followers)(get_following)(get_follow_count)(get_feed_entries)(get_feed)(get_blog_entries)(get_blog)(
            get_account_reputations)(get_reblogged_by)(get_blog_authors))

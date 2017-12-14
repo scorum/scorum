@@ -28,8 +28,8 @@ struct asset
     int64_t precision() const;
     void set_decimals(uint8_t d);
 
-    static asset from_string(const string& from);
-    string to_string() const;
+    static asset from_string(const std::string& from);
+    std::string to_string() const;
 
     asset& operator+=(const asset& o)
     {

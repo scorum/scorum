@@ -44,34 +44,7 @@
 namespace scorum {
 namespace chain {
 
-struct object_schema_repr
-{
-    std::pair<uint16_t, uint16_t> space_type;
-    std::string type;
-};
-
-struct operation_schema_repr
-{
-    std::string id;
-    std::string type;
-};
-
-struct db_schema
-{
-    std::map<std::string, std::string> types;
-    std::vector<object_schema_repr> object_types;
-    std::string operation_type;
-    std::vector<operation_schema_repr> custom_operation_types;
-};
-} // namespace chain
-} // namespace scorum
-
-FC_REFLECT(scorum::chain::object_schema_repr, (space_type)(type))
-FC_REFLECT(scorum::chain::operation_schema_repr, (id)(type))
-FC_REFLECT(scorum::chain::db_schema, (types)(object_types)(operation_type)(custom_operation_types))
-
-namespace scorum {
-namespace chain {
+using std::shared_ptr;
 
 using boost::container::flat_set;
 
@@ -360,7 +333,7 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
 {
     try
     {
-        pair<fork_database::branch_type, fork_database::branch_type> branches
+        std::pair<fork_database::branch_type, fork_database::branch_type> branches
             = _fork_db.fetch_branch_from(head_block_id(), head_of_fork);
         if (!((branches.first.back()->previous_id() == branches.second.back()->previous_id())))
         {
@@ -632,7 +605,7 @@ bool database::_push_block(const signed_block& new_block)
                                 apply_block((*ritr)->data, skip);
                                 session.push();
                             }
-                            throw *except;
+                            throw * except;
                         }
                     }
                     return true;
@@ -718,7 +691,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-)
+                                      )
 {
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
@@ -1738,8 +1711,7 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check
-                    | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;

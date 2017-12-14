@@ -32,20 +32,6 @@ using fc::uint128_t;
 typedef boost::multiprecision::uint256_t u256;
 typedef boost::multiprecision::uint512_t u512;
 
-using std::deque;
-using std::enable_shared_from_this;
-using std::make_pair;
-using std::map;
-using std::pair;
-using std::set;
-using std::shared_ptr;
-using std::string;
-using std::tie;
-using std::unique_ptr;
-using std::unordered_map;
-using std::vector;
-using std::weak_ptr;
-
 using fc::enum_type;
 using fc::flat_map;
 using fc::flat_set;
