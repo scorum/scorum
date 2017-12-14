@@ -119,8 +119,8 @@ public:
 private:
     boost::signals2::scoped_connection _applied_block_connection;
 
-    map<transaction_id_type, confirmation_callback> _callbacks;
-    map<time_point_sec, vector<transaction_id_type>> _callbacks_expirations;
+    std::map<transaction_id_type, confirmation_callback> _callbacks;
+    std::map<time_point_sec, vector<transaction_id_type>> _callbacks_expirations;
 
     int32_t _max_block_age = -1;
 
@@ -213,9 +213,9 @@ public:
      * @note This must be called prior to requesting other APIs. Other APIs may not be accessible until the client
      * has sucessfully authenticated.
      */
-    bool login(const string& user, const string& password);
+    bool login(const std::string& user, const std::string& password);
 
-    fc::api_ptr get_api_by_name(const string& api_name) const;
+    fc::api_ptr get_api_by_name(const std::string& api_name) const;
 
     scorum_version_info get_version();
 

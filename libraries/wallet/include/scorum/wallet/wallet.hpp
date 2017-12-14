@@ -32,7 +32,7 @@ struct memo_data
             {
                 auto data = fc::from_base58(str.substr(1));
                 auto m = fc::raw::unpack<memo_data>(data);
-                FC_ASSERT(string(m) == str);
+                FC_ASSERT(std::string(m) == str);
                 return m;
             }
         }
@@ -46,9 +46,9 @@ struct memo_data
     public_key_type to;
     uint64_t nonce = 0;
     uint32_t check = 0;
-    vector<char> encrypted;
+    std::vector<char> encrypted;
 
-    operator string() const
+    operator std::string() const
     {
         auto data = fc::raw::pack(*this);
         auto base58 = fc::to_base58(data);
@@ -65,7 +65,7 @@ struct brain_key_info
 
 struct wallet_data
 {
-    vector<char> cipher_keys; /** encrypted keys */
+    std::vector<char> cipher_keys; /** encrypted keys */
 
     std::string ws_server = "ws://localhost:8090";
     std::string ws_user;
@@ -109,7 +109,7 @@ public:
      *
      * @returns a multi-line string suitable for displaying on a terminal
      */
-    string help() const;
+    std::string help() const;
 
     /**
      * Returns info about the current state of the blockchain
@@ -134,12 +134,12 @@ public:
      * @param block_num Block height of specified block
      * @param only_virtual Whether to only return virtual operations
      */
-    vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true);
+    std::vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true);
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)
      */
-    vector<account_name_type> get_active_witnesses() const;
+    std::vector<account_name_type> get_active_witnesses() const;
 
     /**
      * Returns the state info associated with the URL
@@ -152,12 +152,12 @@ public:
      * @param account Account to query routes
      * @param type Withdraw type type [incoming, outgoing, all]
      */
-    vector<withdraw_route> get_withdraw_routes(const std::string& account, withdraw_route_type type = all) const;
+    std::vector<withdraw_route> get_withdraw_routes(const std::string& account, withdraw_route_type type = all) const;
 
     /**
      *  Gets the account information for all accounts for which this wallet has a private key
      */
-    vector<account_api_obj> list_my_accounts();
+    std::vector<account_api_obj> list_my_accounts();
 
     /** Lists all accounts registered in the blockchain.
      * This returns a list of all account names and their account ids, sorted by account name.
@@ -171,7 +171,7 @@ public:
      * @param limit the maximum number of accounts to return (max: 1000)
      * @returns a list of accounts mapping account names to account ids
      */
-    set<string> list_accounts(const std::string& lowerbound, uint32_t limit);
+    std::set<std::string> list_accounts(const std::string& lowerbound, uint32_t limit);
 
     /** Returns the block chain's rapidly-changing properties.
      * The returned object contains information that changes every block interval
@@ -195,22 +195,22 @@ public:
      * @see set_wallet_filename()
      * @return the wallet filename
      */
-    string get_wallet_filename() const;
+    std::string get_wallet_filename() const;
 
     /**
      * Get the WIF private key corresponding to a public key.  The
      * private key must already be in the wallet.
      */
-    string get_private_key(const public_key_type& pubkey) const;
+    std::string get_private_key(const public_key_type& pubkey) const;
 
     /**
      *  @param account
      *  @param role - active | owner | posting | memo
      *  @param password
      */
-    pair<public_key_type, string> get_private_key_from_password(const std::string& account,
-                                                                const std::string& role,
-                                                                const std::string& password) const;
+    std::pair<public_key_type, std::string> get_private_key_from_password(const std::string& account,
+                                                                          const std::string& role,
+                                                                          const std::string& password) const;
 
     /**
      * Returns transaction by ID.
@@ -261,13 +261,13 @@ public:
      * using \c import_key()
      * @returns a map containing the private keys, indexed by their public key
      */
-    map<public_key_type, string> list_keys();
+    std::map<public_key_type, std::string> list_keys();
 
     /** Returns detailed help on a single API command.
      * @param method the name of the API command you want help with
      * @returns a multi-line string suitable for displaying on a terminal
      */
-    string gethelp(const std::string& method) const;
+    std::string gethelp(const std::string& method) const;
 
     /** Loads a specified Graphene wallet.
      *
@@ -323,7 +323,7 @@ public:
      *          this returns a raw string that may have null characters embedded
      *          in it
      */
-    string serialize_transaction(const signed_transaction& tx) const;
+    std::string serialize_transaction(const signed_transaction& tx) const;
 
     /** Imports a WIF Private Key into the wallet to be used to sign transactions by an account.
      *
@@ -341,7 +341,7 @@ public:
      * @param s the brain key as supplied by the user
      * @returns the brain key in its normalized form
      */
-    string normalize_brain_key(const std::string& s) const;
+    std::string normalize_brain_key(const std::string& s) const;
 
     /**
      *  This method will genrate new owner, active, and memo keys for the new account which
@@ -562,7 +562,7 @@ public:
      * @param limit the maximum number of witnesss to return (max: 1000)
      * @returns a list of witnesss mapping witness names to witness ids
      */
-    set<account_name_type> list_witnesses(const string& lowerbound, uint32_t limit);
+    std::set<account_name_type> list_witnesses(const std::string& lowerbound, uint32_t limit);
 
     /** Returns information about the given witness.
      * @param owner_account the name or id of the witness account owner, or the id of the witness
@@ -784,8 +784,8 @@ public:
      */
     operation get_prototype_operation(const std::string& operation_type);
 
-    void network_add_nodes(const vector<string>& nodes);
-    vector<variant> network_get_connected_peers();
+    void network_add_nodes(const std::vector<std::string>& nodes);
+    std::vector<variant> network_get_connected_peers();
 
     /**
      *  Post or update a comment.
@@ -814,8 +814,8 @@ public:
                                                       const std::string& body,
                                                       bool broadcast);
 
-    vector<extended_message_object> get_inbox(const std::string& account, fc::time_point newest, uint32_t limit);
-    vector<extended_message_object> get_outbox(const std::string& account, fc::time_point newest, uint32_t limit);
+    std::vector<extended_message_object> get_inbox(const std::string& account, fc::time_point newest, uint32_t limit);
+    std::vector<extended_message_object> get_outbox(const std::string& account, fc::time_point newest, uint32_t limit);
     message_body try_decrypt_message(const message_api_obj& mo);
 
     /**
@@ -896,7 +896,7 @@ public:
     annotated_signed_transaction
     change_recovery_account(const std::string& owner, const std::string& new_recovery_account, bool broadcast);
 
-    vector<owner_authority_history_api_obj> get_owner_history(const std::string& account) const;
+    std::vector<owner_authority_history_api_obj> get_owner_history(const std::string& account) const;
 
     /**
      * Prove an account's active authority, fulfilling a challenge, restoring posting rights, and making
@@ -915,7 +915,8 @@ public:
      *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
      *  @param limit - the maximum number of items that can be queried (0 to 1000], must be less than from
      */
-    map<uint32_t, applied_operation> get_account_history(const std::string& account, uint32_t from, uint32_t limit);
+    std::map<uint32_t, applied_operation>
+    get_account_history(const std::string& account, uint32_t from, uint32_t limit);
 
     /**
      *  Marks one account as following another account.  Requires the posting authority of the follower.
@@ -926,26 +927,26 @@ public:
      *  @param broadcast
      */
     annotated_signed_transaction
-    follow(const std::string& follower, const std::string& following, set<string> what, bool broadcast);
+    follow(const std::string& follower, const std::string& following, std::set<std::string> what, bool broadcast);
 
-    std::map<string, std::function<string(fc::variant, const fc::variants&)>> get_result_formatters() const;
+    std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const;
 
     void encrypt_keys();
 
     /**
      * Checks memos against private keys on account and imported in wallet
      */
-    void check_memo(const string& memo, const account_api_obj& account) const;
+    void check_memo(const std::string& memo, const account_api_obj& account) const;
 
     /**
      *  Returns the encrypted memo if memo starts with '#' otherwise returns memo
      */
-    string get_encrypted_memo(const std::string& from, const std::string& to, const std::string& memo);
+    std::string get_encrypted_memo(const std::string& from, const std::string& to, const std::string& memo);
 
     /**
      * Returns the decrypted memo if possible given wallet's known private keys
      */
-    string decrypt_memo(const std::string& memo);
+    std::string decrypt_memo(const std::string& memo);
 
     annotated_signed_transaction decline_voting_rights(const std::string& account, bool decline, bool broadcast);
 
@@ -957,17 +958,17 @@ public:
     /**
      *  Gets the budget information for all my budgets (list_my_accounts)
      */
-    vector<budget_api_obj> list_my_budgets();
+    std::vector<budget_api_obj> list_my_budgets();
 
     /**
      *  Gets the list of all budget owners (look list_accounts to understand input parameters)
      */
-    set<string> list_budget_owners(const std::string& lowerbound, uint32_t limit);
+    std::set<std::string> list_budget_owners(const std::string& lowerbound, uint32_t limit);
 
     /**
      *  Gets the budget information for certain account
      */
-    vector<budget_api_obj> get_budgets(const std::string& account_name);
+    std::vector<budget_api_obj> get_budgets(const std::string& account_name);
 
     /**
      *  This method will create new budget linked to owner account. The current account creation fee can be found with
@@ -1002,7 +1003,7 @@ private:
 struct plain_keys
 {
     fc::sha512 checksum;
-    map<public_key_type, string> keys;
+    std::map<public_key_type, std::string> keys;
 };
 } // namespace wallet
 } // namespace scorum
