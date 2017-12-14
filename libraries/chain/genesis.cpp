@@ -73,9 +73,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
         _const_genesis_time = genesis_state.initial_timestamp;
         create<chain_property_object>([&](chain_property_object& cp) { cp.chain_id = genesis_state.initial_chain_id; });
 
+        BOOST_ATTRIBUTE_UNUSED
         db_genesis genesis(*this, genesis_state);
-
-        genesis.init();
 
         // Nothing to do
         for (int i = 0; i < 0x10000; i++)
@@ -90,22 +89,12 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
     : _db(db)
     , _genesis_state(genesis_state)
-    , _applied(false)
 {
-}
-
-void db_genesis::init()
-{
-    if (!_applied)
-    {
-        _applied = true;
-
-        init_accounts();
-        init_witnesses();
-        init_witness_schedule();
-        init_global_property_object();
-        init_rewards();
-    }
+    init_accounts();
+    init_witnesses();
+    init_witness_schedule();
+    init_global_property_object();
+    init_rewards();
 }
 
 void db_genesis::init_accounts()
