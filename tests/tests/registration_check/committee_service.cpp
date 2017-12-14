@@ -10,11 +10,38 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
+namespace {
+genesis_state_type create_registration_genesis()
+{
+    const std::string genesis_str = R"json(
+    {
+            "accounts": [
+            {
+                    "name": "alice",
+                    "recovery_account": "",
+                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
+                    "scr_amount": 0,
+                    "sp_amount": 0
+            },
+            {
+                    "name": "bob",
+                    "recovery_account": "",
+                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
+                    "scr_amount": 0,
+                    "sp_amount": 0
+            }],
+            "registration_committee": ["alice", "bob"]
+    })json";
+
+    return fc::json::from_string(genesis_str).as<genesis_state_type>();
+}
+}
+
 class registration_committee_service_check_fixture : public timed_blocks_database_fixture
 {
 public:
     registration_committee_service_check_fixture()
-        : timed_blocks_database_fixture(test::create_registration_genesis())
+        : timed_blocks_database_fixture(create_registration_genesis())
         , registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
     }

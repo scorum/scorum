@@ -493,54 +493,6 @@ void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip
     FC_CAPTURE_AND_RETHROW((tx))
 }
 
-genesis_state_type create_registration_genesis()
-{
-    const std::string genesis_str = R"json(
-    {
-            "accounts": [
-            {
-                    "name": "alice",
-                    "recovery_account": "",
-                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
-            },
-            {
-                    "name": "bob",
-                    "recovery_account": "",
-                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
-            }],
-            "registration_supply": 9999,
-            "registration_maximum_bonus": 5,
-            "registration_committee": ["alice", "bob"],
-            "registration_schedule": [
-            {
-                    "stage": 1,
-                    "users": 2,
-                    "bonus_percent": 100
-            },
-            {
-                    "stage": 2,
-                    "users": 2,
-                    "bonus_percent": 75
-            },
-            {
-                    "stage": 3,
-                    "users": 1,
-                    "bonus_percent": 50
-            },
-            {
-                    "stage": 4,
-                    "users": 3,
-                    "bonus_percent": 25
-            }]
-    })json";
-
-    return std::move(fc::json::from_string(genesis_str).as<genesis_state_type>());
-}
-
 } // namespace test
 } // namespace chain
 } // namespace scorum

@@ -130,7 +130,6 @@ private:
 namespace test {
 bool _push_block(database& db, const signed_block& b, uint32_t skip_flags = 0);
 void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip_flags = 0);
-genesis_state_type create_registration_genesis();
 } // namespace test
 } // namespace chain
 } // namespace scorum
