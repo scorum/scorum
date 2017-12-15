@@ -63,6 +63,8 @@
 namespace scorum {
 namespace wallet {
 
+using scorum::wallet::utils::derive_private_key;
+
 namespace detail {
 
 template <class T> optional<T> maybe_id(const string& name_or_id)
@@ -96,14 +98,6 @@ string pubkey_to_shorthash(const public_key_type& key)
     result += hd[(x)&0x0f];
 
     return result;
-}
-
-fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number)
-{
-    std::string sequence_string = std::to_string(sequence_number);
-    fc::sha512 h = fc::sha512::hash(prefix_string + " " + sequence_string);
-    fc::ecc::private_key derived_key = fc::ecc::private_key::regenerate(fc::sha256::hash(h));
-    return derived_key;
 }
 
 string normalize_brain_key(const std::string& s)
@@ -981,12 +975,8 @@ public:
 #endif
     const string _wallet_filename_extension = ".wallet";
 };
-}
-}
-} // scorum::wallet::detail
 
-namespace scorum {
-namespace wallet {
+} // namespace detail
 
 wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
     : my(new detail::wallet_api_impl(*this, initial_data, rapi))
@@ -1056,36 +1046,6 @@ std::vector<account_name_type> wallet_api::get_active_witnesses() const
     return my->_remote_db->get_active_witnesses();
 }
 
-brain_key_info wallet_api::suggest_brain_key() const
-{
-    brain_key_info result;
-    // create a private key for secure entropy
-    fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
-    fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
-    fc::bigint entropy1(sha_entropy1.data(), sha_entropy1.data_size());
-    fc::bigint entropy2(sha_entropy2.data(), sha_entropy2.data_size());
-    fc::bigint entropy(entropy1);
-    entropy <<= 8 * sha_entropy1.data_size();
-    entropy += entropy2;
-    string brain_key = "";
-
-    for (int i = 0; i < BRAIN_KEY_WORD_COUNT; i++)
-    {
-        fc::bigint choice = entropy % graphene::words::word_list_size;
-        entropy /= graphene::words::word_list_size;
-        if (i > 0)
-            brain_key += " ";
-        brain_key += graphene::words::word_list[choice.to_int64()];
-    }
-
-    brain_key = normalize_brain_key(brain_key);
-    fc::ecc::private_key priv_key = detail::derive_private_key(brain_key, 0);
-    result.brain_priv_key = brain_key;
-    result.wif_priv_key = key_to_wif(priv_key);
-    result.pub_key = priv_key.get_public_key();
-    return result;
-}
-
 string wallet_api::serialize_transaction(const signed_transaction& tx) const
 {
     return fc::to_hex(fc::raw::pack(tx));
@@ -1135,13 +1095,6 @@ variant_object wallet_api::about() const
     return my->about();
 }
 
-/*
-fc::ecc::private_key wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
-{
-   return detail::derive_private_key( prefix_string, sequence_number );
-}
-*/
-
 set<account_name_type> wallet_api::list_witnesses(const string& lowerbound, uint32_t limit)
 {
     return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
@@ -1162,6 +1115,11 @@ annotated_signed_transaction wallet_api::set_voting_proxy(const std::string& acc
 void wallet_api::set_wallet_filename(const std::string& wallet_filename)
 {
     my->_wallet_filename = wallet_filename;
+}
+
+brain_key_info wallet_api::suggest_brain_key() const
+{
+    return utils::suggest_brain_key();
 }
 
 annotated_signed_transaction wallet_api::sign_transaction(const signed_transaction& tx, bool broadcast /* = false */)
@@ -2564,5 +2522,47 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
 
     return my->sign_transaction(tx, broadcast);
 }
+
+namespace utils {
+
+fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number)
+{
+    std::string sequence_string = std::to_string(sequence_number);
+    fc::sha512 h = fc::sha512::hash(prefix_string + " " + sequence_string);
+    fc::ecc::private_key derived_key = fc::ecc::private_key::regenerate(fc::sha256::hash(h));
+    return derived_key;
 }
-} // scorum::wallet
+
+brain_key_info suggest_brain_key()
+{
+    brain_key_info result;
+    // create a private key for secure entropy
+    fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
+    fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
+    fc::bigint entropy1(sha_entropy1.data(), sha_entropy1.data_size());
+    fc::bigint entropy2(sha_entropy2.data(), sha_entropy2.data_size());
+    fc::bigint entropy(entropy1);
+    entropy <<= 8 * sha_entropy1.data_size();
+    entropy += entropy2;
+    string brain_key = "";
+
+    for (int i = 0; i < BRAIN_KEY_WORD_COUNT; i++)
+    {
+        fc::bigint choice = entropy % graphene::words::word_list_size;
+        entropy /= graphene::words::word_list_size;
+        if (i > 0)
+            brain_key += " ";
+        brain_key += graphene::words::word_list[choice.to_int64()];
+    }
+
+    brain_key = detail::normalize_brain_key(brain_key);
+    fc::ecc::private_key priv_key = derive_private_key(brain_key, 0);
+    result.brain_priv_key = brain_key;
+    result.wif_priv_key = key_to_wif(priv_key);
+    result.pub_key = priv_key.get_public_key();
+    return result;
+}
+
+} // namespace utils
+} // namespace wallet
+} // namespace scorum
