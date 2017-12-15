@@ -660,9 +660,7 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
         db_plugin->debug_update([&](database&) { registration_pool_service.allocate_cash("alice"); }, default_skip);
     }
 
-    BOOST_REQUIRE_THROW(
-        registration_pool_service.get_pool(),
-        boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<std::out_of_range>>);
+    BOOST_REQUIRE_THROW(registration_pool_service.get_pool(), fc::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
