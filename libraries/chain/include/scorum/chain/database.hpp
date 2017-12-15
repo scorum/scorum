@@ -426,12 +426,6 @@ protected:
     void apply_hardfork(uint32_t hardfork);
     ///@}
 
-    void init_genesis_accounts(const genesis_state_type& genesis_state);
-    void init_genesis_witnesses(const genesis_state_type& genesis_state);
-    void init_genesis_witness_schedule(const genesis_state_type& genesis_state);
-    void init_genesis_global_property_object(const genesis_state_type& genesis_state);
-    void init_genesis_rewards(const genesis_state_type& genesis_state);
-
 private:
     std::unique_ptr<database_impl> _my;
 
