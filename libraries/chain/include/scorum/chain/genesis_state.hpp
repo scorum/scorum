@@ -49,11 +49,6 @@ struct genesis_state_type
     sp::chain_id_type initial_chain_id;
 };
 
-namespace utils {
-
-void generate_default_genesis_state(genesis_state_type& genesis);
-
-} // namespace utils
 } // namespace chain
 } // namespace scorum
 
