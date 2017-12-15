@@ -92,7 +92,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
 void database::init_genesis_accounts(const genesis_state_type& genesis_state)
 {
-    const vector<genesis_state_type::account_type>& accounts = genesis_state.accounts;
+    const std::vector<genesis_state_type::account_type>& accounts = genesis_state.accounts;
 
     for (auto& account : accounts)
     {

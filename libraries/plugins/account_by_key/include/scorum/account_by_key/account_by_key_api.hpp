@@ -20,7 +20,7 @@ public:
 
     void on_api_startup();
 
-    vector<vector<account_name_type>> get_key_references(vector<public_key_type> keys) const;
+    std::vector<std::vector<account_name_type>> get_key_references(std::vector<public_key_type> keys) const;
 
 private:
     std::shared_ptr<detail::account_by_key_api_impl> my;

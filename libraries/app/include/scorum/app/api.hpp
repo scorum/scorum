@@ -120,7 +120,7 @@ private:
     boost::signals2::scoped_connection _applied_block_connection;
 
     std::map<transaction_id_type, confirmation_callback> _callbacks;
-    std::map<time_point_sec, vector<transaction_id_type>> _callbacks_expirations;
+    std::map<time_point_sec, std::vector<transaction_id_type>> _callbacks_expirations;
 
     int32_t _max_block_age = -1;
 

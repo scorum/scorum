@@ -24,8 +24,6 @@
 namespace scorum {
 namespace chain {
 
-using std::vector;
-
 using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::authority;
@@ -441,7 +439,7 @@ private:
 
     optional<chainbase::database::session> _pending_tx_session;
 
-    vector<signed_transaction> _pending_tx;
+    std::vector<signed_transaction> _pending_tx;
     fork_database _fork_db;
     fc::time_point_sec _hardfork_times[SCORUM_NUM_HARDFORKS + 1];
     protocol::hardfork_version _hardfork_versions[SCORUM_NUM_HARDFORKS + 1];

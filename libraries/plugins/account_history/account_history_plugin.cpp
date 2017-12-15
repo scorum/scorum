@@ -42,7 +42,7 @@ public:
     flat_map<account_name_type, account_name_type> _tracked_accounts;
     bool _filter_content = false;
     bool _blacklist = false;
-    flat_set<string> _op_list;
+    flat_set<std::string> _op_list;
 };
 
 account_history_plugin_impl::~account_history_plugin_impl()
@@ -106,7 +106,7 @@ struct operation_visitor_filter : operation_visitor
                              const operation_notification& note,
                              const operation_object*& n,
                              account_name_type i,
-                             const flat_set<string>& filter,
+                             const flat_set<std::string>& filter,
                              bool blacklist)
         : operation_visitor(db, note, n, i)
         , _filter(filter)
@@ -114,7 +114,7 @@ struct operation_visitor_filter : operation_visitor
     {
     }
 
-    const flat_set<string>& _filter;
+    const flat_set<std::string>& _filter;
     bool _blacklist;
 
     template <typename T> void operator()(const T& op) const
@@ -205,11 +205,11 @@ void account_history_plugin::plugin_set_program_options(boost::program_options::
                                                         boost::program_options::options_description& cfg)
 {
     cli.add_options()(
-        "track-account-range", boost::program_options::value<vector<string>>()->composing()->multitoken(),
+        "track-account-range", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(),
         "Defines a range of accounts to track as a json pair [\"from\",\"to\"] [from,to] Can be specified multiple "
-        "times")("history-whitelist-ops", boost::program_options::value<vector<string>>()->composing(),
+        "times")("history-whitelist-ops", boost::program_options::value<std::vector<std::string>>()->composing(),
                  "Defines a list of operations which will be explicitly logged.")(
-        "history-blacklist-ops", boost::program_options::value<vector<string>>()->composing(),
+        "history-blacklist-ops", boost::program_options::value<std::vector<std::string>>()->composing(),
         "Defines a list of operations which will be explicitly ignored.");
     cfg.add(cli);
 }
@@ -227,12 +227,12 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
         my->_filter_content = true;
         my->_blacklist = false;
 
-        for (auto& arg : options.at("history-whitelist-ops").as<vector<string>>())
+        for (auto& arg : options.at("history-whitelist-ops").as<std::vector<std::string>>())
         {
-            vector<string> ops;
+            std::vector<std::string> ops;
             boost::split(ops, arg, boost::is_any_of(" \t,"));
 
-            for (const string& op : ops)
+            for (const std::string& op : ops)
             {
                 if (op.size())
                     my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
@@ -245,12 +245,12 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
     {
         my->_filter_content = true;
         my->_blacklist = true;
-        for (auto& arg : options.at("history-blacklist-ops").as<vector<string>>())
+        for (auto& arg : options.at("history-blacklist-ops").as<std::vector<std::string>>())
         {
-            vector<string> ops;
+            std::vector<std::string> ops;
             boost::split(ops, arg, boost::is_any_of(" \t,"));
 
-            for (const string& op : ops)
+            for (const std::string& op : ops)
             {
                 if (op.size())
                     my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);

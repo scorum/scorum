@@ -390,7 +390,7 @@ struct operation_visitor
         // if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol == SCORUM_SYMBOL )
         if (op.to == "" && op.amount.symbol == SCORUM_SYMBOL)
         {
-            vector<string> part;
+            std::vector<string> part;
             part.reserve(4);
             auto path = op.memo;
             boost::split(part, path, boost::is_any_of("/"));

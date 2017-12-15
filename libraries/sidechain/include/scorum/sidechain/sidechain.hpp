@@ -2,7 +2,6 @@
 
 namespace scorum {
 namespace sidechain {
-using std::string;
 
 #define side_ids 10
 
@@ -11,11 +10,11 @@ typedef side_object_types{ side_account_type = 1, pending_transaction_object = 2
 /** This operation can be used for internal transfers and withdraw requests */
 struct sidechain_transfer_operation
 {
-    string sidechain;
-    string from; /// must be in required active signatures
-    string to;
+    std::string sidechain;
+    std::string from; /// must be in required active signatures
+    std::string to;
     asset amount;
-    string memo;
+    std::string memo;
 };
 
 /** This operation can be used for broadcasting signatures to apply to pending
@@ -23,8 +22,8 @@ struct sidechain_transfer_operation
  */
 struct sidechain_sign_operation
 {
-    string sidechain;
-    string signer; ///< must be in required active signatures
+    std::string sidechain;
+    std::string signer; ///< must be in required active signatures
     transaction_id_type trx_id;
     set<signature_type> signatures;
 };
@@ -37,8 +36,8 @@ public:
     static const uint8_t space_id = side_ids;
     static const uint8_t type_id = side_account_type;
 
-    string sidechain; ///< name of the sidechain account
-    string name; /// sub account within the side chain
+    std::string sidechain; ///< name of the sidechain account
+    std::string name; /// sub account within the side chain
 
     asset scorum_balance;
     asset dollar_balance;
@@ -56,7 +55,7 @@ public:
     static const uint8_t space_id = side_ids;
     static const uint8_t type_id = side_account_type;
 
-    string sidechain; ///< name of the sidechain account
+    std::string sidechain; ///< name of the sidechain account
     bool approved; ///< whether or not the transaction has been confirmed
     time_point_sec expiration; ///< when the transaction expires
     transaction_id_type trx_id;

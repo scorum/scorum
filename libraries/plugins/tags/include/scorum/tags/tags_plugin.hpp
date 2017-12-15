@@ -500,9 +500,9 @@ public:
     {
     }
 
-    vector<tag_stats_object> get_tags() const
+    std::vector<tag_stats_object> get_tags() const
     {
-        return vector<tag_stats_object>();
+        return std::vector<tag_stats_object>();
     }
 
 private:

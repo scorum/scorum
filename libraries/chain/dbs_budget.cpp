@@ -10,8 +10,6 @@
 namespace scorum {
 namespace chain {
 
-using std::set;
-
 dbs_budget::dbs_budget(database& db)
     : _base_type(db)
 {
@@ -33,13 +31,13 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
     return ret;
 }
 
-std::set<string> dbs_budget::lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const
+std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
 {
     FC_ASSERT(limit <= SCORUM_LIMIT_BUDGETS_LIST_SIZE,
               "limit must be less or equal than ${1}, actual limit value == ${2}",
               ("1", SCORUM_LIMIT_BUDGETS_LIST_SIZE)("2", limit));
     const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
-    set<string> result;
+    std::set<std::string> result;
 
     for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
          limit-- && itr != budgets_by_owner_name.end(); ++itr)

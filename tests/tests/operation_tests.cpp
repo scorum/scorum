@@ -2214,8 +2214,8 @@ BOOST_AUTO_TEST_CASE(custom_binary_authorities)
 
     flat_set<account_name_type> acc_auths;
     flat_set<account_name_type> acc_expected;
-    vector<authority> auths;
-    vector<authority> expected;
+    std::vector<authority> auths;
+    std::vector<authority> expected;
 
     acc_expected.insert("alice");
     op.get_required_owner_authorities(acc_auths);

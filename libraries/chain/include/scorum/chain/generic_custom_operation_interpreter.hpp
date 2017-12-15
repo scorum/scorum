@@ -30,7 +30,7 @@ public:
     {
     }
 
-    void apply_operations(const vector<CustomOperationType>& custom_operations, const operation& outer_o)
+    void apply_operations(const std::vector<CustomOperationType>& custom_operations, const operation& outer_o)
     {
         auto plugin_session = this->_db.start_undo_session(true);
 
@@ -94,11 +94,11 @@ public:
     {
         try
         {
-            vector<CustomOperationType> custom_operations;
+            std::vector<CustomOperationType> custom_operations;
 
             try
             {
-                custom_operations = fc::raw::unpack<vector<CustomOperationType>>(outer_o.data);
+                custom_operations = fc::raw::unpack<std::vector<CustomOperationType>>(outer_o.data);
             }
             catch (fc::exception&)
             {

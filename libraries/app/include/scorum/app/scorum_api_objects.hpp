@@ -121,7 +121,7 @@ struct comment_api_obj
     bool allow_replies = false;
     bool allow_votes = false;
     bool allow_curation_rewards = false;
-    vector<beneficiary_route_type> beneficiaries;
+    std::vector<beneficiary_route_type> beneficiaries;
 };
 
 struct tag_api_obj
@@ -275,7 +275,7 @@ struct account_api_obj
     share_type to_withdraw;
     uint16_t withdraw_routes = 0;
 
-    vector<share_type> proxied_vsf_votes;
+    std::vector<share_type> proxied_vsf_votes;
 
     uint16_t witnesses_voted_for;
 
@@ -403,7 +403,7 @@ struct signed_block_api_obj : public signed_block
 
     block_id_type block_id;
     public_key_type signing_key;
-    vector<transaction_id_type> transaction_ids;
+    std::vector<transaction_id_type> transaction_ids;
 };
 
 struct dynamic_global_property_api_obj : public dynamic_global_property_object

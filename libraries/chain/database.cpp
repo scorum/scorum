@@ -44,8 +44,6 @@
 namespace scorum {
 namespace chain {
 
-using std::shared_ptr;
-
 using boost::container::flat_set;
 
 struct reward_fund_context
@@ -101,7 +99,9 @@ void database::open(const fc::path& data_dir,
                 with_write_lock([&]() { init_genesis(genesis_state); });
 
             if (!fc::exists(data_dir))
+            {
                 fc::create_directories(data_dir);
+            }
 
             _block_log.open(data_dir / "block_log");
 
@@ -175,7 +175,9 @@ void database::reindex(const fc::path& data_dir,
         });
 
         if (_block_log.head()->block_num())
+        {
             _fork_db.start_block(*_block_log.head());
+        }
 
         auto end = fc::time_point::now();
         ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
@@ -242,7 +244,9 @@ block_id_type database::find_block_id_for_num(uint32_t block_num) const
     try
     {
         if (block_num == 0)
+        {
             return block_id_type();
+        }
 
         // Reversible blocks are *usually* in the TAPOS buffer.  Since this
         // is the fastest check, we do it first.
@@ -251,18 +255,24 @@ block_id_type database::find_block_id_for_num(uint32_t block_num) const
         if (bs != nullptr)
         {
             if (protocol::block_header::num_from_id(bs->block_id) == block_num)
+            {
                 return bs->block_id;
+            }
         }
 
         // Next we query the block log.   Irreversible blocks are here.
         auto b = _block_log.read_block_by_num(block_num);
         if (b.valid())
+        {
             return b->id();
+        }
 
         // Finally we query the fork DB.
-        shared_ptr<fork_item> fitem = _fork_db.fetch_block_on_main_branch_by_number(block_num);
+        std::shared_ptr<fork_item> fitem = _fork_db.fetch_block_on_main_branch_by_number(block_num);
         if (fitem)
+        {
             return fitem->id;
+        }
 
         return block_id_type();
     }
@@ -286,7 +296,9 @@ optional<signed_block> database::fetch_block_by_id(const block_id_type& id) cons
             auto tmp = _block_log.read_block_by_num(protocol::block_header::num_from_id(id));
 
             if (tmp && tmp->id() == id)
+            {
                 return tmp;
+            }
 
             tmp.reset();
             return tmp;
@@ -305,9 +317,13 @@ optional<signed_block> database::fetch_block_by_number(uint32_t block_num) const
 
         auto results = _fork_db.fetch_block_by_number(block_num);
         if (results.size() == 1)
+        {
             b = results[0]->data;
+        }
         else
+        {
             b = _block_log.read_block_by_num(block_num);
+        }
 
         return b;
     }
@@ -342,7 +358,9 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
         }
         std::vector<block_id_type> result;
         for (const item_ptr& fork_block : branches.second)
+        {
             result.emplace_back(fork_block->id);
+        }
         result.emplace_back(branches.first.back()->previous_id());
         return result;
     }
@@ -470,7 +488,9 @@ void database::pay_fee(const account_object& account, asset fee)
 {
     FC_ASSERT(fee.amount >= 0); /// NOTE if this fails then validate() on some operation is probably wrong
     if (fee.amount == 0)
+    {
         return;
+    }
 
     FC_ASSERT(account.balance >= fee);
     adjust_balance(account, -fee);
@@ -486,7 +506,9 @@ uint32_t database::witness_participation_rate() const
 void database::add_checkpoints(const flat_map<uint32_t, block_id_type>& checkpts)
 {
     for (const auto& i : checkpts)
+    {
         _checkpoints[i.first] = i.second;
+    }
 }
 
 bool database::before_last_checkpoint() const
@@ -529,7 +551,7 @@ void database::_maybe_warn_multiple_production(uint32_t height) const
     auto blocks = _fork_db.fetch_block_by_number(height);
     if (blocks.size() > 1)
     {
-        vector<std::pair<account_name_type, fc::time_point_sec>> witness_time_pairs;
+        std::vector<std::pair<account_name_type, fc::time_point_sec>> witness_time_pairs;
         for (const auto& b : blocks)
         {
             witness_time_pairs.push_back(std::make_pair(b->data.witness, b->data.timestamp));
@@ -550,7 +572,7 @@ bool database::_push_block(const signed_block& new_block)
 
         if (!(skip & skip_fork_db))
         {
-            shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
+            std::shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
             _maybe_warn_multiple_production(new_head->num);
 
             // If the head block from the longest chain does not build off of the current head, we need to switch forks.
@@ -565,7 +587,9 @@ bool database::_push_block(const signed_block& new_block)
 
                     // pop blocks until we hit the forked block
                     while (head_block_id() != branches.second.back()->data.previous)
+                    {
                         pop_block();
+                    }
 
                     // push all blocks on the new fork
                     for (auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr)
@@ -596,7 +620,9 @@ bool database::_push_block(const signed_block& new_block)
 
                             // pop all blocks from the bad fork
                             while (head_block_id() != branches.second.back()->data.previous)
+                            {
                                 pop_block();
+                            }
 
                             // restore all blocks from the good fork
                             for (auto ritr = branches.second.rbegin(); ritr != branches.second.rend(); ++ritr)
@@ -611,7 +637,9 @@ bool database::_push_block(const signed_block& new_block)
                     return true;
                 }
                 else
+                {
                     return false;
+                }
             }
         }
 
@@ -668,7 +696,9 @@ void database::_push_transaction(const signed_transaction& trx)
     // If this is the first transaction pushed after applying a block, start a new undo session.
     // This allows us to quickly rewind to the clean state of the head block, in case a new block arrives.
     if (!_pending_tx_session.valid())
+    {
         _pending_tx_session = start_undo_session(true);
+    }
 
     // Create a temporary undo session as a child of _pending_tx_session.
     // The temporary session will be discarded by the destructor if
@@ -717,7 +747,9 @@ signed_block database::_generate_block(fc::time_point_sec when,
     const auto& witness_obj = get_witness(witness_owner);
 
     if (!(skip & skip_witness_signature))
+    {
         FC_ASSERT(witness_obj.signing_key == block_signing_private_key.get_public_key());
+    }
 
     static const size_t max_block_header_size = fc::raw::pack_size(signed_block_header()) + 4;
     auto maximum_block_size = get_dynamic_global_properties().maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
@@ -748,7 +780,9 @@ signed_block database::_generate_block(fc::time_point_sec when,
             // this should clear problem transactions and allow block production to continue
 
             if (tx.expiration < when)
+            {
                 continue;
+            }
 
             uint64_t new_total_size = total_block_size + fc::raw::pack_size(tx);
 
@@ -797,7 +831,9 @@ signed_block database::_generate_block(fc::time_point_sec when,
     const auto& witness = get_witness(witness_owner);
 
     if (witness.running_version != SCORUM_BLOCKCHAIN_VERSION)
+    {
         pending_block.extensions.insert(block_header_extensions(SCORUM_BLOCKCHAIN_VERSION));
+    }
 
     const auto& hfp = get_hardfork_property_object();
 
@@ -822,7 +858,9 @@ signed_block database::_generate_block(fc::time_point_sec when,
     }
 
     if (!(skip & skip_witness_signature))
+    {
         pending_block.sign(block_signing_private_key);
+    }
 
     // TODO:  Move this to _push_block() so session is restored.
     if (!(skip & skip_block_size_check))
@@ -935,7 +973,9 @@ account_name_type database::get_scheduled_witness(uint32_t slot_num) const
 fc::time_point_sec database::get_slot_time(uint32_t slot_num) const
 {
     if (slot_num == 0)
+    {
         return fc::time_point_sec();
+    }
 
     auto interval = SCORUM_BLOCK_INTERVAL;
     const dynamic_global_property_object& dpo = get_dynamic_global_properties();
@@ -961,7 +1001,9 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when) const
 {
     fc::time_point_sec first_slot_time = get_slot_time(1);
     if (when < first_slot_time)
+    {
         return 0;
+    }
     return (when - first_slot_time).to_seconds() / SCORUM_BLOCK_INTERVAL + 1;
 }
 
@@ -1010,7 +1052,9 @@ void database::process_vesting_withdrawals()
                                    from_account.to_withdraw % from_account.vesting_withdraw_rate.amount)
                               .value;
         else
+        {
             to_withdraw = std::min(from_account.vesting_shares.amount, from_account.vesting_withdraw_rate.amount).value;
+        }
 
         share_type vests_deposited_as_scorum = 0;
         share_type vests_deposited_as_vests = 0;
@@ -1097,7 +1141,9 @@ void database::process_vesting_withdrawals()
         });
 
         if (to_withdraw > 0)
+        {
             account_service.adjust_proxied_witness_votes(from_account, -to_withdraw);
+        }
 
         push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, from_account.name,
                                                                asset(to_withdraw, VESTS_SYMBOL), converted_scorum));
@@ -1111,7 +1157,9 @@ void database::adjust_total_payout(const comment_object& cur,
 {
     modify(cur, [&](comment_object& c) {
         if (c.total_payout_value.symbol == sbd_created.symbol)
+        {
             c.total_payout_value += sbd_created;
+        }
         c.curator_payout_value += curator_sbd_value;
         c.beneficiary_payout_value += beneficiary_value;
     });
@@ -1245,7 +1293,9 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
              * for the next time this post might get an upvote.
              */
             if (c.net_rshares > 0)
+            {
                 c.net_rshares = 0;
+            }
             c.children_abs_rshares = 0;
             c.abs_rshares = 0;
             c.vote_rshares = 0;
@@ -1291,8 +1341,8 @@ void database::process_comment_cashout()
 
     util::comment_reward_context ctx;
 
-    vector<reward_fund_context> funds;
-    vector<share_type> scorum_awarded;
+    std::vector<reward_fund_context> funds;
+    std::vector<share_type> scorum_awarded;
     const auto& reward_idx = get_index<reward_fund_index, by_id>();
 
     // Decay recent rshares of each fund
@@ -1412,11 +1462,17 @@ void database::process_funds()
     witness_reward *= SCORUM_MAX_WITNESSES;
 
     if (cwit.schedule == witness_object::timeshare)
+    {
         witness_reward *= wso.timeshare_weight;
+    }
     else if (cwit.schedule == witness_object::top20)
+    {
         witness_reward *= wso.top20_weight;
+    }
     else
+    {
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
+    }
 
     witness_reward /= wso.witness_pay_normalization_factor;
 
@@ -1529,7 +1585,9 @@ void database::process_decline_voting_rights()
         std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
         delta[0] = -account.vesting_shares.amount;
         for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
+        {
             delta[i + 1] = -account.proxied_vsf_votes[i];
+        }
         account_service.adjust_proxied_witness_votes(account, delta);
 
         account_service.clear_witness_votes(account);
@@ -1615,7 +1673,9 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 {
     auto it = _custom_operation_interpreters.find(id);
     if (it != _custom_operation_interpreters.end())
+    {
         return it->second;
+    }
     return std::shared_ptr<custom_operation_interpreter>();
 }
 
@@ -1778,7 +1838,9 @@ void database::show_free_memory(bool force)
         uint32_t free_mb = uint32_t(get_free_memory() / (1024 * 1024));
 
         if (free_mb <= 100 && head_block_num() % 10 == 0)
+        {
             elog("Free memory is now ${n}M. Increase shared file size immediately!", ("n", free_mb));
+        }
     }
 #endif
 }
@@ -1808,7 +1870,9 @@ void database::_apply_block(const signed_block& next_block)
                 auto itr = merkle_map.find(next_block_num);
 
                 if (itr == merkle_map.end() || itr->second != merkle_root)
+                {
                     throw e;
+                }
             }
         }
 
@@ -1937,7 +2001,9 @@ void database::_apply_transaction(const signed_transaction& trx)
         uint32_t skip = get_node_properties().skip_flags;
 
         if (!(skip & skip_validate)) /* issue #505 explains why this skip_flag is disabled */
+        {
             trx.validate();
+        }
 
         auto& trx_idx = get_index<transaction_index>();
         auto trx_id = trx.id();
@@ -1963,7 +2029,9 @@ void database::_apply_transaction(const signed_transaction& trx)
             catch (protocol::tx_missing_active_auth& e)
             {
                 if (get_shared_db_merkle().find(head_block_num() + 1) == get_shared_db_merkle().end())
+                {
                     throw e;
+                }
             }
         }
 
@@ -2040,7 +2108,9 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
         const witness_object& witness = get_witness(next_block.witness);
 
         if (!(skip & skip_witness_signature))
+        {
             FC_ASSERT(next_block.validate_signee(witness.signing_key));
+        }
 
         if (!(skip & skip_witness_schedule_check))
         {
@@ -2157,17 +2227,21 @@ void database::update_last_irreversible_block()
         {
             modify(dpo, [&](dynamic_global_property_object& _dpo) {
                 if (head_block_num() > SCORUM_MAX_WITNESSES)
+                {
                     _dpo.last_irreversible_block_num = head_block_num() - SCORUM_MAX_WITNESSES;
+                }
             });
         }
         else
         {
             const witness_schedule_object& wso = get_witness_schedule_object();
 
-            vector<const witness_object*> wit_objs;
+            std::vector<const witness_object*> wit_objs;
             wit_objs.reserve(wso.num_scheduled_witnesses);
             for (int i = 0; i < wso.num_scheduled_witnesses; i++)
+            {
                 wit_objs.push_back(&get_witness(wso.current_shuffled_witnesses[i]));
+            }
 
             static_assert(SCORUM_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero");
 
@@ -2202,13 +2276,15 @@ void database::update_last_irreversible_block()
             uint64_t log_head_num = 0;
 
             if (tmp_head)
+            {
                 log_head_num = tmp_head->block_num();
+            }
 
             if (log_head_num < dpo.last_irreversible_block_num)
             {
                 while (log_head_num < dpo.last_irreversible_block_num)
                 {
-                    shared_ptr<fork_item> block = _fork_db.fetch_block_on_main_branch_by_number(log_head_num + 1);
+                    std::shared_ptr<fork_item> block = _fork_db.fetch_block_on_main_branch_by_number(log_head_num + 1);
                     FC_ASSERT(block, "Current fork in the fork database does not contain the last_irreversible_block");
                     _block_log.append(block->data);
                     log_head_num++;
@@ -2230,7 +2306,9 @@ void database::clear_expired_transactions()
     auto& transaction_idx = get_index<transaction_index>();
     const auto& dedupe_index = transaction_idx.indices().get<by_expiration>();
     while ((!dedupe_index.empty()) && (head_block_time() > dedupe_index.begin()->expiration))
+    {
         remove(*dedupe_index.begin());
+    }
 }
 
 void database::clear_expired_delegations()
@@ -2268,7 +2346,9 @@ void database::adjust_supply(const asset& delta, bool adjust_vesting)
 {
     const auto& props = get_dynamic_global_properties();
     if (props.head_block_number < SCORUM_BLOCKS_PER_DAY * 7)
+    {
         adjust_vesting = false;
+    }
 
     modify(props, [&](dynamic_global_property_object& props) {
         switch (delta.symbol)
@@ -2332,7 +2412,9 @@ void database::process_hardforks()
                 apply_hardfork(hardforks.last_hardfork + 1);
             }
             else
+            {
                 throw unknown_hardfork_exception();
+            }
         }
     }
     FC_CAPTURE_AND_RETHROW()
@@ -2355,14 +2437,18 @@ void database::set_hardfork(uint32_t hardfork, bool apply_now)
         });
 
         if (apply_now)
+        {
             apply_hardfork(i);
+        }
     }
 }
 
 void database::apply_hardfork(uint32_t hardfork)
 {
     if (_log_hardforks)
+    {
         elog("HARDFORK ${hf} at block ${b}", ("hf", hardfork)("b", head_block_num()));
+    }
 
     switch (hardfork)
     {
@@ -2405,7 +2491,9 @@ void database::validate_invariants() const
         /// verify no witness has too many votes
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
+        {
             FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "", ("itr", *itr));
+        }
 
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
@@ -2428,9 +2516,13 @@ void database::validate_invariants() const
             total_supply += itr->scorum_balance;
 
             if (itr->pending_fee.symbol == SCORUM_SYMBOL)
+            {
                 total_supply += itr->pending_fee;
+            }
             else
+            {
                 FC_ASSERT(false, "found escrow pending fee that is not SBD or SCORUM");
+            }
         }
 
         fc::uint128_t total_rshares2;
@@ -2488,10 +2580,14 @@ void database::perform_vesting_share_split(uint32_t magnitude)
                 a.vesting_withdraw_rate
                     = asset(a.to_withdraw / SCORUM_VESTING_WITHDRAW_INTERVALS_PRE_HF_16, VESTS_SYMBOL);
                 if (a.vesting_withdraw_rate.amount == 0)
+                {
                     a.vesting_withdraw_rate.amount = 1;
+                }
 
                 for (uint32_t i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
+                {
                     a.proxied_vsf_votes[i] *= magnitude;
+                }
             });
         }
 
@@ -2508,7 +2604,9 @@ void database::perform_vesting_share_split(uint32_t magnitude)
         for (const auto& c : comments)
         {
             if (c.net_rshares.value > 0)
+            {
                 adjust_rshares2(c, 0, util::evaluate_reward_curve(c.net_rshares.value));
+            }
         }
     }
     FC_CAPTURE_AND_RETHROW()
@@ -2538,9 +2636,13 @@ void database::retally_comment_children()
                 modify(*parent, [&](comment_object& c) { c.children++; });
 
                 if (parent->parent_author != SCORUM_ROOT_POST_PARENT)
+                {
                     parent = &get_comment(parent->parent_author, parent->parent_permlink);
+                }
                 else
+                {
                     parent = nullptr;
+                }
             }
 #endif
         }
@@ -2568,7 +2670,9 @@ void database::retally_witness_votes()
     for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
     {
         if (itr->proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
+        {
             continue;
+        }
 
         const auto& a = *itr;
 
