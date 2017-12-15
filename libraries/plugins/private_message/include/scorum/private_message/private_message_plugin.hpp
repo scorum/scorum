@@ -65,10 +65,10 @@ class private_message_plugin_impl;
 struct message_body
 {
     fc::time_point thread_start; /// the sent_time of the original message, if any
-    string subject;
-    string body;
-    string json_meta;
-    flat_set<string> cc;
+    std::string subject;
+    std::string body;
+    std::string json_meta;
+    flat_set<std::string> cc;
 };
 
 class message_object : public object<message_object_type, message_object>
@@ -157,7 +157,7 @@ typedef multi_index_container<message_object,
                                                                       member<message_object,
                                                                              message_id_type,
                                                                              &message_object::id>>,
-                                                        composite_key_compare<std::less<string>,
+                                                        composite_key_compare<std::less<std::string>,
                                                                               std::greater<time_point_sec>,
                                                                               std::less<message_id_type>>>,
                                          ordered_unique<tag<by_from_date>,
@@ -171,7 +171,7 @@ typedef multi_index_container<message_object,
                                                                       member<message_object,
                                                                              message_id_type,
                                                                              &message_object::id>>,
-                                                        composite_key_compare<std::less<string>,
+                                                        composite_key_compare<std::less<std::string>,
                                                                               std::greater<time_point_sec>,
                                                                               std::less<message_id_type>>>>,
                               allocator<message_object>>
@@ -194,7 +194,7 @@ public:
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
 
-    flat_map<string, string> tracked_accounts() const; /// map start_range to end_range
+    flat_map<std::string, std::string> tracked_accounts() const; /// map start_range to end_range
 
     friend class detail::private_message_plugin_impl;
     std::unique_ptr<detail::private_message_plugin_impl> my;
@@ -217,8 +217,8 @@ public:
     /**
      *
      */
-    std::vector<message_api_obj> get_inbox(string to, time_point newest, uint16_t limit) const;
-    std::vector<message_api_obj> get_outbox(string from, time_point newest, uint16_t limit) const;
+    std::vector<message_api_obj> get_inbox(std::string to, time_point newest, uint16_t limit) const;
+    std::vector<message_api_obj> get_outbox(std::string from, time_point newest, uint16_t limit) const;
 
 private:
     app::application* _app = nullptr;

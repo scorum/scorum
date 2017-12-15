@@ -38,7 +38,7 @@ namespace scorum {
 namespace chain {
 using fc::uint128_t;
 
-inline void validate_permlink_0_1(const string& permlink)
+inline void validate_permlink_0_1(const std::string& permlink)
 {
     FC_ASSERT(permlink.size() > SCORUM_MIN_PERMLINK_LENGTH && permlink.size() < SCORUM_MAX_PERMLINK_LENGTH,
               "Permlink is not a valid size.");
@@ -54,7 +54,7 @@ inline void validate_permlink_0_1(const string& permlink)
 
 struct strcmp_equal
 {
-    bool operator()(const fc::shared_string& a, const string& b)
+    bool operator()(const fc::shared_string& a, const std::string& b)
     {
         return a.size() == b.size() || std::strcmp(a.c_str(), b.c_str()) == 0;
     }
@@ -1417,7 +1417,7 @@ void create_budget_evaluator::do_apply(const create_budget_operation& op)
 
     account_service.check_account_existence(op.owner);
 
-    optional<string> content_permlink;
+    optional<std::string> content_permlink;
     if (!op.content_permlink.empty())
     {
         content_permlink = op.content_permlink;

@@ -79,15 +79,15 @@ struct comment_api_obj
     }
 
     comment_id_type id;
-    string category;
+    std::string category;
     account_name_type parent_author;
-    string parent_permlink;
+    std::string parent_permlink;
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
-    string title;
-    string body;
-    string json_metadata;
+    std::string title;
+    std::string body;
+    std::string json_metadata;
     time_point_sec last_update;
     time_point_sec created;
     time_point_sec active;
@@ -140,7 +140,7 @@ struct tag_api_obj
     {
     }
 
-    string name;
+    std::string name;
     asset total_payouts;
     int32_t net_votes = 0;
     uint32_t top_posts = 0;
@@ -235,7 +235,7 @@ struct account_api_obj
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
     account_name_type proxy;
 
     time_point_sec last_owner_update;
@@ -368,7 +368,7 @@ struct witness_api_obj
     witness_id_type id;
     account_name_type owner;
     time_point_sec created;
-    string url;
+    std::string url;
     uint32_t total_missed = 0;
     uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
@@ -460,7 +460,7 @@ struct budget_api_obj
     int64_t id;
 
     account_name_type owner;
-    string content_permlink;
+    std::string content_permlink;
 
     time_point_sec created;
     time_point_sec deadline;

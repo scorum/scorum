@@ -13,7 +13,7 @@ struct follow_operation : base_operation
 {
     account_name_type follower;
     account_name_type following;
-    std::set<string> what; /// blog, mute
+    std::set<std::string> what; /// blog, mute
 
     void validate() const;
 
@@ -27,7 +27,7 @@ struct reblog_operation : base_operation
 {
     account_name_type account;
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
     void validate() const;
 

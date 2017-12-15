@@ -112,7 +112,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
 const budget_object& dbs_budget::create_budget(const account_object& owner,
                                                const asset& balance,
                                                const time_point_sec& deadline,
-                                               const optional<string>& content_permlink)
+                                               const optional<std::string>& content_permlink)
 {
     FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "SCORUM_ROOT_POST_PARENT name is not allowed for ordinary budget");
     FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");

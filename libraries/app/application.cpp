@@ -103,8 +103,8 @@ public:
 
             if (_options->count("seed-node"))
             {
-                auto seeds = _options->at("seed-node").as<std::vector<string>>();
-                for (const string& endpoint_string : seeds)
+                auto seeds = _options->at("seed-node").as<std::vector<std::string>>();
+                for (const std::string& endpoint_string : seeds)
                 {
                     try
                     {
@@ -126,7 +126,7 @@ public:
 
             if (_options->count("p2p-endpoint"))
             {
-                auto p2p_endpoint = _options->at("p2p-endpoint").as<string>();
+                auto p2p_endpoint = _options->at("p2p-endpoint").as<std::string>();
                 auto endpoints = resolve_string_to_ip_endpoints(p2p_endpoint);
                 FC_ASSERT(endpoints.size(), "p2p-endpoint ${hostname} did not resolve", ("hostname", p2p_endpoint));
                 _p2p_network->listen_on_endpoint(endpoints[0], true);
@@ -162,7 +162,7 @@ public:
     {
         try
         {
-            string::size_type colon_pos = endpoint_string.find(':');
+            std::string::size_type colon_pos = endpoint_string.find(':');
             if (colon_pos == std::string::npos)
                 FC_THROW("Missing required port number in endpoint string \"${endpoint_string}\"",
                          ("endpoint_string", endpoint_string));
@@ -198,7 +198,7 @@ public:
             _websocket_server = std::make_shared<fc::http::websocket_server>();
 
             _websocket_server->on_connection([&](const fc::http::websocket_connection_ptr& c) { on_connection(c); });
-            auto rpc_endpoint = _options->at("rpc-endpoint").as<string>();
+            auto rpc_endpoint = _options->at("rpc-endpoint").as<std::string>();
             ilog("Configured websocket rpc to listen on ${ip}", ("ip", rpc_endpoint));
             auto endpoints = resolve_string_to_ip_endpoints(rpc_endpoint);
             FC_ASSERT(endpoints.size(), "rpc-endpoint ${hostname} did not resolve", ("hostname", rpc_endpoint));
@@ -222,14 +222,14 @@ public:
                 return;
             }
 
-            string password
-                = _options->count("server-pem-password") ? _options->at("server-pem-password").as<string>() : "";
-            _websocket_tls_server
-                = std::make_shared<fc::http::websocket_tls_server>(_options->at("server-pem").as<string>(), password);
+            std::string password
+                = _options->count("server-pem-password") ? _options->at("server-pem-password").as<std::string>() : "";
+            _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>(
+                _options->at("server-pem").as<std::string>(), password);
 
             _websocket_tls_server->on_connection(
                 [this](const fc::http::websocket_connection_ptr& c) { on_connection(c); });
-            auto rpc_tls_endpoint = _options->at("rpc-tls-endpoint").as<string>();
+            auto rpc_tls_endpoint = _options->at("rpc-tls-endpoint").as<std::string>();
             ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip", rpc_tls_endpoint));
             auto endpoints = resolve_string_to_ip_endpoints(rpc_tls_endpoint);
             FC_ASSERT(endpoints.size(), "rpc-tls-endpoint ${hostname} did not resolve", ("hostname", rpc_tls_endpoint));
@@ -1054,8 +1054,8 @@ public:
     std::shared_ptr<fc::http::websocket_server> _websocket_server;
     std::shared_ptr<fc::http::websocket_tls_server> _websocket_tls_server;
 
-    std::map<string, std::shared_ptr<abstract_plugin>> _plugins_available;
-    std::map<string, std::shared_ptr<abstract_plugin>> _plugins_enabled;
+    std::map<std::string, std::shared_ptr<abstract_plugin>> _plugins_available;
+    std::map<std::string, std::shared_ptr<abstract_plugin>> _plugins_enabled;
     flat_map<std::string, std::function<fc::api_ptr(const api_context&)>> _api_factories_by_name;
     std::vector<std::string> _public_apis;
     int32_t _max_block_age = -1;
@@ -1102,7 +1102,7 @@ void application::set_program_options(boost::program_options::options_descriptio
 
     // clang-format off
     configuration_file_options.add_options()
-    ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
+    ("p2p-endpoint", bpo::value<std::string>(), "Endpoint for P2P node to listen on")
     ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
     ("seed-node,s", bpo::value<std::vector<std::string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
     ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")

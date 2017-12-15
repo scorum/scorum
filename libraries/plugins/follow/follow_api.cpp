@@ -7,7 +7,7 @@ namespace follow {
 
 namespace detail {
 
-inline void set_what(vector<follow_type>& what, uint16_t bitmask)
+inline void set_what(std::vector<follow_type>& what, uint16_t bitmask)
 {
     if (bitmask & 1 << blog)
         what.push_back(blog);
@@ -23,29 +23,31 @@ public:
     {
     }
 
-    vector<follow_api_obj>
-    get_followers(string following, string start_follower, follow_type type, uint16_t limit) const;
-    vector<follow_api_obj>
-    get_following(string follower, string start_following, follow_type type, uint16_t limit) const;
+    std::vector<follow_api_obj>
+    get_followers(std::string following, std::string start_follower, follow_type type, uint16_t limit) const;
+    std::vector<follow_api_obj>
+    get_following(std::string follower, std::string start_following, follow_type type, uint16_t limit) const;
 
-    follow_count_api_obj get_follow_count(string& account) const;
+    follow_count_api_obj get_follow_count(std::string& account) const;
 
-    vector<feed_entry> get_feed_entries(string account, uint32_t entry_id, uint16_t limit) const;
-    vector<comment_feed_entry> get_feed(string account, uint32_t entry_id, uint16_t limit) const;
+    std::vector<feed_entry> get_feed_entries(std::string account, uint32_t entry_id, uint16_t limit) const;
+    std::vector<comment_feed_entry> get_feed(std::string account, uint32_t entry_id, uint16_t limit) const;
 
-    vector<blog_entry> get_blog_entries(string account, uint32_t entry_id, uint16_t limit) const;
-    vector<comment_blog_entry> get_blog(string account, uint32_t entry_id, uint16_t limit) const;
+    std::vector<blog_entry> get_blog_entries(std::string account, uint32_t entry_id, uint16_t limit) const;
+    std::vector<comment_blog_entry> get_blog(std::string account, uint32_t entry_id, uint16_t limit) const;
 
-    vector<account_reputation> get_account_reputations(string lower_bound_name, uint32_t limit) const;
+    std::vector<account_reputation> get_account_reputations(std::string lower_bound_name, uint32_t limit) const;
 
     scorum::app::application& app;
 };
 
-vector<follow_api_obj>
-follow_api_impl::get_followers(string following, string start_follower, follow_type type, uint16_t limit) const
+std::vector<follow_api_obj> follow_api_impl::get_followers(std::string following,
+                                                           std::string start_follower,
+                                                           follow_type type,
+                                                           uint16_t limit) const
 {
     FC_ASSERT(limit <= 1000);
-    vector<follow_api_obj> result;
+    std::vector<follow_api_obj> result;
     result.reserve(limit);
 
     const auto& idx = app.chain_database()->get_index<follow_index>().indices().get<by_following_follower>();
@@ -68,11 +70,13 @@ follow_api_impl::get_followers(string following, string start_follower, follow_t
     return result;
 }
 
-vector<follow_api_obj>
-follow_api_impl::get_following(string follower, string start_following, follow_type type, uint16_t limit) const
+std::vector<follow_api_obj> follow_api_impl::get_following(std::string follower,
+                                                           std::string start_following,
+                                                           follow_type type,
+                                                           uint16_t limit) const
 {
     FC_ASSERT(limit <= 100);
-    vector<follow_api_obj> result;
+    std::vector<follow_api_obj> result;
     const auto& idx = app.chain_database()->get_index<follow_index>().indices().get<by_follower_following>();
     auto itr = idx.lower_bound(std::make_tuple(follower, start_following));
     while (itr != idx.end() && limit && itr->follower == follower)
@@ -93,7 +97,7 @@ follow_api_impl::get_following(string follower, string start_following, follow_t
     return result;
 }
 
-follow_count_api_obj follow_api_impl::get_follow_count(string& account) const
+follow_count_api_obj follow_api_impl::get_follow_count(std::string& account) const
 {
     follow_count_api_obj result;
     auto itr = app.chain_database()->find<follow_count_object, by_account>(account);
@@ -106,14 +110,14 @@ follow_count_api_obj follow_api_impl::get_follow_count(string& account) const
     return result;
 }
 
-vector<feed_entry> follow_api_impl::get_feed_entries(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<feed_entry> follow_api_impl::get_feed_entries(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     FC_ASSERT(limit <= 500, "Cannot retrieve more than 500 feed entries at a time.");
 
     if (entry_id == 0)
         entry_id = ~0;
 
-    vector<feed_entry> results;
+    std::vector<feed_entry> results;
     results.reserve(limit);
 
     const auto& db = *app.chain_database();
@@ -145,14 +149,14 @@ vector<feed_entry> follow_api_impl::get_feed_entries(string account, uint32_t en
     return results;
 }
 
-vector<comment_feed_entry> follow_api_impl::get_feed(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<comment_feed_entry> follow_api_impl::get_feed(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     FC_ASSERT(limit <= 500, "Cannot retrieve more than 500 feed entries at a time.");
 
     if (entry_id == 0)
         entry_id = ~0;
 
-    vector<comment_feed_entry> results;
+    std::vector<comment_feed_entry> results;
     results.reserve(limit);
 
     const auto& db = *app.chain_database();
@@ -183,14 +187,14 @@ vector<comment_feed_entry> follow_api_impl::get_feed(string account, uint32_t en
     return results;
 }
 
-vector<blog_entry> follow_api_impl::get_blog_entries(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<blog_entry> follow_api_impl::get_blog_entries(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     FC_ASSERT(limit <= 500, "Cannot retrieve more than 500 blog entries at a time.");
 
     if (entry_id == 0)
         entry_id = ~0;
 
-    vector<blog_entry> results;
+    std::vector<blog_entry> results;
     results.reserve(limit);
 
     const auto& db = *app.chain_database();
@@ -215,14 +219,14 @@ vector<blog_entry> follow_api_impl::get_blog_entries(string account, uint32_t en
     return results;
 }
 
-vector<comment_blog_entry> follow_api_impl::get_blog(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<comment_blog_entry> follow_api_impl::get_blog(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     FC_ASSERT(limit <= 500, "Cannot retrieve more than 500 blog entries at a time.");
 
     if (entry_id == 0)
         entry_id = ~0;
 
-    vector<comment_blog_entry> results;
+    std::vector<comment_blog_entry> results;
     results.reserve(limit);
 
     const auto& db = *app.chain_database();
@@ -246,7 +250,8 @@ vector<comment_blog_entry> follow_api_impl::get_blog(string account, uint32_t en
     return results;
 }
 
-vector<account_reputation> follow_api_impl::get_account_reputations(string lower_bound_name, uint32_t limit) const
+std::vector<account_reputation> follow_api_impl::get_account_reputations(std::string lower_bound_name,
+                                                                         uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000, "Cannot retrieve more than 1000 account reputations at a time.");
 
@@ -255,7 +260,7 @@ vector<account_reputation> follow_api_impl::get_account_reputations(string lower
 
     auto acc_itr = acc_idx.lower_bound(lower_bound_name);
 
-    vector<account_reputation> results;
+    std::vector<account_reputation> results;
     results.reserve(limit);
 
     while (acc_itr != acc_idx.end() && results.size() < limit)
@@ -285,55 +290,56 @@ void follow_api::on_api_startup()
 {
 }
 
-vector<follow_api_obj>
-follow_api::get_followers(string following, string start_follower, follow_type type, uint16_t limit) const
+std::vector<follow_api_obj>
+follow_api::get_followers(std::string following, std::string start_follower, follow_type type, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock(
         [&]() { return my->get_followers(following, start_follower, type, limit); });
 }
 
-vector<follow_api_obj>
-follow_api::get_following(string follower, string start_following, follow_type type, uint16_t limit) const
+std::vector<follow_api_obj>
+follow_api::get_following(std::string follower, std::string start_following, follow_type type, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock(
         [&]() { return my->get_following(follower, start_following, type, limit); });
 }
 
-follow_count_api_obj follow_api::get_follow_count(string account) const
+follow_count_api_obj follow_api::get_follow_count(std::string account) const
 {
     return my->app.chain_database()->with_read_lock([&]() { return my->get_follow_count(account); });
 }
 
-vector<feed_entry> follow_api::get_feed_entries(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<feed_entry> follow_api::get_feed_entries(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock([&]() { return my->get_feed_entries(account, entry_id, limit); });
 }
 
-vector<comment_feed_entry> follow_api::get_feed(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<comment_feed_entry> follow_api::get_feed(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock([&]() { return my->get_feed(account, entry_id, limit); });
 }
 
-vector<blog_entry> follow_api::get_blog_entries(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<blog_entry> follow_api::get_blog_entries(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock([&]() { return my->get_blog_entries(account, entry_id, limit); });
 }
 
-vector<comment_blog_entry> follow_api::get_blog(string account, uint32_t entry_id, uint16_t limit) const
+std::vector<comment_blog_entry> follow_api::get_blog(std::string account, uint32_t entry_id, uint16_t limit) const
 {
     return my->app.chain_database()->with_read_lock([&]() { return my->get_blog(account, entry_id, limit); });
 }
 
-vector<account_reputation> follow_api::get_account_reputations(string lower_bound_name, uint32_t limit) const
+std::vector<account_reputation> follow_api::get_account_reputations(std::string lower_bound_name, uint32_t limit) const
 {
     return my->app.chain_database()->with_read_lock(
         [&]() { return my->get_account_reputations(lower_bound_name, limit); });
 }
-vector<account_name_type> follow_api::get_reblogged_by(const string& author, const string& permlink) const
+std::vector<account_name_type> follow_api::get_reblogged_by(const std::string& author,
+                                                            const std::string& permlink) const
 {
     auto& db = *my->app.chain_database();
     return db.with_read_lock([&]() {
-        vector<account_name_type> result;
+        std::vector<account_name_type> result;
         const auto& post = db.get_comment(author, permlink);
         const auto& blog_idx = db.get_index<blog_index, by_comment>();
         auto itr = blog_idx.lower_bound(post.id);
@@ -346,11 +352,11 @@ vector<account_name_type> follow_api::get_reblogged_by(const string& author, con
     });
 }
 
-vector<pair<account_name_type, uint32_t>> follow_api::get_blog_authors(const account_name_type& blog) const
+std::vector<std::pair<account_name_type, uint32_t>> follow_api::get_blog_authors(const account_name_type& blog) const
 {
     auto& db = *my->app.chain_database();
     return db.with_read_lock([&]() {
-        vector<pair<account_name_type, uint32_t>> result;
+        std::vector<std::pair<account_name_type, uint32_t>> result;
         const auto& stats_idx = db.get_index<blog_author_stats_index, by_blogger_guest_count>();
         auto itr = stats_idx.lower_bound(boost::make_tuple(blog));
         while (itr != stats_idx.end() && itr->blogger == blog && result.size() < 2000)

@@ -10,16 +10,13 @@
 namespace scorum {
 namespace follow {
 
-using std::vector;
-using std::string;
-using std::pair;
 using app::comment_api_obj;
 
 struct feed_entry
 {
-    string author;
-    string permlink;
-    vector<account_name_type> reblog_by;
+    std::string author;
+    std::string permlink;
+    std::vector<account_name_type> reblog_by;
     time_point_sec reblog_on;
     uint32_t entry_id = 0;
 };
@@ -27,16 +24,16 @@ struct feed_entry
 struct comment_feed_entry
 {
     comment_api_obj comment;
-    vector<account_name_type> reblog_by;
+    std::vector<account_name_type> reblog_by;
     time_point_sec reblog_on;
     uint32_t entry_id = 0;
 };
 
 struct blog_entry
 {
-    string author;
-    string permlink;
-    string blog;
+    std::string author;
+    std::string permlink;
+    std::string blog;
     time_point_sec reblog_on;
     uint32_t entry_id = 0;
 };
@@ -44,22 +41,22 @@ struct blog_entry
 struct comment_blog_entry
 {
     comment_api_obj comment;
-    string blog;
+    std::string blog;
     time_point_sec reblog_on;
     uint32_t entry_id = 0;
 };
 
 struct account_reputation
 {
-    string account;
+    std::string account;
     share_type reputation;
 };
 
 struct follow_api_obj
 {
-    string follower;
-    string following;
-    vector<follow_type> what;
+    std::string follower;
+    std::string following;
+    std::vector<follow_type> what;
 };
 
 struct follow_count_api_obj
@@ -74,7 +71,7 @@ struct follow_count_api_obj
     {
     }
 
-    string account;
+    std::string account;
     uint32_t follower_count = 0;
     uint32_t following_count = 0;
 };
@@ -90,28 +87,30 @@ public:
 
     void on_api_startup();
 
-    vector<follow_api_obj> get_followers(string to, string start, follow_type type, uint16_t limit) const;
-    vector<follow_api_obj> get_following(string from, string start, follow_type type, uint16_t limit) const;
+    std::vector<follow_api_obj>
+    get_followers(std::string to, std::string start, follow_type type, uint16_t limit) const;
+    std::vector<follow_api_obj>
+    get_following(std::string from, std::string start, follow_type type, uint16_t limit) const;
 
-    follow_count_api_obj get_follow_count(string account) const;
+    follow_count_api_obj get_follow_count(std::string account) const;
 
-    vector<feed_entry> get_feed_entries(string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
-    vector<comment_feed_entry> get_feed(string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
+    std::vector<feed_entry> get_feed_entries(std::string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
+    std::vector<comment_feed_entry> get_feed(std::string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
 
-    vector<blog_entry> get_blog_entries(string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
-    vector<comment_blog_entry> get_blog(string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
+    std::vector<blog_entry> get_blog_entries(std::string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
+    std::vector<comment_blog_entry> get_blog(std::string account, uint32_t entry_id = 0, uint16_t limit = 500) const;
 
-    vector<account_reputation> get_account_reputations(string lower_bound_name, uint32_t limit = 1000) const;
+    std::vector<account_reputation> get_account_reputations(std::string lower_bound_name, uint32_t limit = 1000) const;
 
     /**
      * Gets list of accounts that have reblogged a particular post
      */
-    vector<account_name_type> get_reblogged_by(const string& author, const string& permlink) const;
+    std::vector<account_name_type> get_reblogged_by(const std::string& author, const std::string& permlink) const;
 
     /**
      * Gets a list of authors that have had their content reblogged on a given blog account
      */
-    vector<pair<account_name_type, uint32_t>> get_blog_authors(const account_name_type& blog_account) const;
+    std::vector<std::pair<account_name_type, uint32_t>> get_blog_authors(const account_name_type& blog_account) const;
 
 private:
     std::shared_ptr<detail::follow_api_impl> my;

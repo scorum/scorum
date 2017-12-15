@@ -30,7 +30,7 @@ struct discussion_index
 
 struct tag_index
 {
-    std::vector<string> trending; /// pending payouts
+    std::vector<std::string> trending; /// pending payouts
 };
 
 struct vote_state
@@ -111,7 +111,7 @@ struct extended_account : public account_api_obj
  */
 struct state
 {
-    string current_route;
+    std::string current_route;
 
     dynamic_global_property_api_obj props;
 

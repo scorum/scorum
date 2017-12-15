@@ -55,7 +55,7 @@ public:
     private_message_plugin& _self;
     std::shared_ptr<generic_custom_operation_interpreter<scorum::private_message::private_message_plugin_operation>>
         _custom_operation_interpreter;
-    flat_map<string, string> _tracked_accounts;
+    flat_map<std::string, std::string> _tracked_accounts;
 };
 
 private_message_plugin_impl::private_message_plugin_impl(private_message_plugin& _plugin)
@@ -80,7 +80,7 @@ private_message_plugin_impl::~private_message_plugin_impl()
 
 void private_message_evaluator::do_apply(const private_message_operation& pm)
 {
-    const flat_map<string, string>& tracked_accounts = _plugin->my->_tracked_accounts;
+    const flat_map<std::string, std::string>& tracked_accounts = _plugin->my->_tracked_accounts;
 
     auto to_itr = tracked_accounts.lower_bound(pm.to);
     auto from_itr = tracked_accounts.lower_bound(pm.from);
@@ -145,7 +145,7 @@ void private_message_plugin::plugin_initialize(const boost::program_options::var
     LOAD_VALUE_SET(options, "pm-accounts", my->_tracked_accounts, pairstring);
 }
 
-std::vector<message_api_obj> private_message_api::get_inbox(string to, time_point newest, uint16_t limit) const
+std::vector<message_api_obj> private_message_api::get_inbox(std::string to, time_point newest, uint16_t limit) const
 {
     FC_ASSERT(limit <= 100);
     std::vector<message_api_obj> result;
@@ -161,7 +161,7 @@ std::vector<message_api_obj> private_message_api::get_inbox(string to, time_poin
     return result;
 }
 
-std::vector<message_api_obj> private_message_api::get_outbox(string from, time_point newest, uint16_t limit) const
+std::vector<message_api_obj> private_message_api::get_outbox(std::string from, time_point newest, uint16_t limit) const
 {
     FC_ASSERT(limit <= 100);
     std::vector<message_api_obj> result;
@@ -181,7 +181,7 @@ void private_message_plugin::plugin_startup()
 {
 }
 
-flat_map<string, string> private_message_plugin::tracked_accounts() const
+flat_map<std::string, std::string> private_message_plugin::tracked_accounts() const
 {
     return my->_tracked_accounts;
 }

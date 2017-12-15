@@ -19,6 +19,8 @@ using namespace graphene::db;
 namespace scorum {
 namespace chain {
 
+using string = std::string;
+
 using namespace scorum::protocol;
 
 void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state);

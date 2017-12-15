@@ -2478,7 +2478,7 @@ std::vector<budget_api_obj> wallet_api::list_my_budgets()
     return my->_remote_db->get_budgets(names);
 }
 
-std::set<std::string> wallet_api::list_budget_owners(const string& lowerbound, uint32_t limit)
+std::set<std::string> wallet_api::list_budget_owners(const std::string& lowerbound, uint32_t limit)
 {
     return my->_remote_db->lookup_budget_owners(lowerbound, limit);
 }

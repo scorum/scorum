@@ -7,8 +7,6 @@
 namespace scorum {
 namespace chain {
 
-using std::string;
-
 // DB operations with account_*** objects
 //
 class dbs_account : public dbs_base
@@ -32,7 +30,7 @@ public:
     const account_object& create_account_by_faucets(const account_name_type& new_account_name,
                                                     const account_name_type& creator_name,
                                                     const public_key_type& memo_key,
-                                                    const string& json_metadata,
+                                                    const std::string& json_metadata,
                                                     const authority& owner,
                                                     const authority& active,
                                                     const authority& posting,
@@ -41,7 +39,7 @@ public:
     const account_object& create_account_with_delegation(const account_name_type& new_account_name,
                                                          const account_name_type& creator_name,
                                                          const public_key_type& memo_key,
-                                                         const string& json_metadata,
+                                                         const std::string& json_metadata,
                                                          const authority& owner,
                                                          const authority& active,
                                                          const authority& posting,
@@ -53,7 +51,7 @@ public:
     void update_acount(const account_object& account,
                        const account_authority_object& account_authority,
                        const public_key_type& memo_key,
-                       const string& json_metadata,
+                       const std::string& json_metadata,
                        const optional<authority>& owner,
                        const optional<authority>& active,
                        const optional<authority>& posting,

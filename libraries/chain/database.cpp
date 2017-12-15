@@ -414,7 +414,7 @@ const comment_object* database::find_comment(const account_name_type& author, co
     return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
 }
 
-const comment_object& database::get_comment(const account_name_type& author, const string& permlink) const
+const comment_object& database::get_comment(const account_name_type& author, const std::string& permlink) const
 {
     try
     {
@@ -423,7 +423,7 @@ const comment_object& database::get_comment(const account_name_type& author, con
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
-const comment_object* database::find_comment(const account_name_type& author, const string& permlink) const
+const comment_object* database::find_comment(const account_name_type& author, const std::string& permlink) const
 {
     return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
 }
@@ -741,7 +741,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
     uint32_t skip = get_node_properties().skip_flags;
     uint32_t slot_num = get_slot_at_time(when);
     FC_ASSERT(slot_num > 0);
-    string scheduled_witness = get_scheduled_witness(slot_num);
+    std::string scheduled_witness = get_scheduled_witness(slot_num);
     FC_ASSERT(scheduled_witness == witness_owner);
 
     const auto& witness_obj = get_witness(witness_owner);
@@ -2014,11 +2014,13 @@ void database::_apply_transaction(const signed_transaction& trx)
 
         if (!(skip & (skip_transaction_signatures | skip_authority_check)))
         {
-            auto get_active
-                = [&](const string& name) { return authority(get<account_authority_object, by_account>(name).active); };
-            auto get_owner
-                = [&](const string& name) { return authority(get<account_authority_object, by_account>(name).owner); };
-            auto get_posting = [&](const string& name) {
+            auto get_active = [&](const std::string& name) {
+                return authority(get<account_authority_object, by_account>(name).active);
+            };
+            auto get_owner = [&](const std::string& name) {
+                return authority(get<account_authority_object, by_account>(name).owner);
+            };
+            auto get_posting = [&](const std::string& name) {
                 return authority(get<account_authority_object, by_account>(name).posting);
             };
 
@@ -2117,7 +2119,7 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
             uint32_t slot_num = get_slot_at_time(next_block.timestamp);
             FC_ASSERT(slot_num > 0);
 
-            string scheduled_witness = get_scheduled_witness(slot_num);
+            std::string scheduled_witness = get_scheduled_witness(slot_num);
 
             FC_ASSERT(witness.owner == scheduled_witness, "Witness produced block at wrong time",
                       ("block witness", next_block.witness)("scheduled", scheduled_witness)("slot_num", slot_num));
