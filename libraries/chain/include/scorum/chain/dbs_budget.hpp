@@ -30,7 +30,7 @@ public:
      *  @warning limit must be less or equal than SCORUM_LIMIT_BUDGETS_LIST_SIZE.
      *
      */
-    std::set<string> lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const;
+    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const;
 
     /** Lists all budgets.
      *
@@ -75,7 +75,7 @@ public:
     const budget_object& create_budget(const account_object& owner,
                                        const asset& balance,
                                        const time_point_sec& deadline,
-                                       const optional<string>& content_permlink = optional<string>());
+                                       const optional<std::string>& content_permlink = optional<std::string>());
 
     /** Close budget.
      *  Delete the budget, cash back from budget to owner account.

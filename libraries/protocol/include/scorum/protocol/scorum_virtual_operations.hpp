@@ -10,8 +10,10 @@ namespace protocol {
 
 struct author_reward_operation : public virtual_operation
 {
-    author_reward_operation() {}
-    author_reward_operation(const account_name_type& a, const string& p, const asset& scr, const asset& v)
+    author_reward_operation()
+    {
+    }
+    author_reward_operation(const account_name_type& a, const std::string& p, const asset& scr, const asset& v)
         : author(a)
         , permlink(p)
         , scorum_payout(scr)
@@ -20,15 +22,17 @@ struct author_reward_operation : public virtual_operation
     }
 
     account_name_type author;
-    string permlink;
+    std::string permlink;
     asset scorum_payout;
     asset vesting_payout;
 };
 
 struct curation_reward_operation : public virtual_operation
 {
-    curation_reward_operation() {}
-    curation_reward_operation(const string& c, const asset& r, const string& a, const string& p)
+    curation_reward_operation()
+    {
+    }
+    curation_reward_operation(const std::string& c, const asset& r, const std::string& a, const std::string& p)
         : curator(c)
         , reward(r)
         , comment_author(a)
@@ -39,13 +43,15 @@ struct curation_reward_operation : public virtual_operation
     account_name_type curator;
     asset reward;
     account_name_type comment_author;
-    string comment_permlink;
+    std::string comment_permlink;
 };
 
 struct comment_reward_operation : public virtual_operation
 {
-    comment_reward_operation() {}
-    comment_reward_operation(const account_name_type& a, const string& pl, const asset& p)
+    comment_reward_operation()
+    {
+    }
+    comment_reward_operation(const account_name_type& a, const std::string& pl, const asset& p)
         : author(a)
         , permlink(pl)
         , payout(p)
@@ -53,14 +59,16 @@ struct comment_reward_operation : public virtual_operation
     }
 
     account_name_type author;
-    string permlink;
+    std::string permlink;
     asset payout;
 };
 
 struct fill_vesting_withdraw_operation : public virtual_operation
 {
-    fill_vesting_withdraw_operation() {}
-    fill_vesting_withdraw_operation(const string& f, const string& t, const asset& w, const asset& d)
+    fill_vesting_withdraw_operation()
+    {
+    }
+    fill_vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w, const asset& d)
         : from_account(f)
         , to_account(t)
         , withdrawn(w)
@@ -76,8 +84,10 @@ struct fill_vesting_withdraw_operation : public virtual_operation
 
 struct shutdown_witness_operation : public virtual_operation
 {
-    shutdown_witness_operation() {}
-    shutdown_witness_operation(const string& o)
+    shutdown_witness_operation()
+    {
+    }
+    shutdown_witness_operation(const std::string& o)
         : owner(o)
     {
     }
@@ -87,7 +97,9 @@ struct shutdown_witness_operation : public virtual_operation
 
 struct hardfork_operation : public virtual_operation
 {
-    hardfork_operation() {}
+    hardfork_operation()
+    {
+    }
     hardfork_operation(uint32_t hf_id)
         : hardfork_id(hf_id)
     {
@@ -98,20 +110,24 @@ struct hardfork_operation : public virtual_operation
 
 struct comment_payout_update_operation : public virtual_operation
 {
-    comment_payout_update_operation() {}
-    comment_payout_update_operation(const account_name_type& a, const string& p)
+    comment_payout_update_operation()
+    {
+    }
+    comment_payout_update_operation(const account_name_type& a, const std::string& p)
         : author(a)
         , permlink(p)
     {
     }
 
     account_name_type author;
-    string permlink;
+    std::string permlink;
 };
 
 struct return_vesting_delegation_operation : public virtual_operation
 {
-    return_vesting_delegation_operation() {}
+    return_vesting_delegation_operation()
+    {
+    }
     return_vesting_delegation_operation(const account_name_type& a, const asset& v)
         : account(a)
         , vesting_shares(v)
@@ -124,9 +140,13 @@ struct return_vesting_delegation_operation : public virtual_operation
 
 struct comment_benefactor_reward_operation : public virtual_operation
 {
-    comment_benefactor_reward_operation() {}
-    comment_benefactor_reward_operation(
-        const account_name_type& b, const account_name_type& a, const string& p, const asset& r)
+    comment_benefactor_reward_operation()
+    {
+    }
+    comment_benefactor_reward_operation(const account_name_type& b,
+                                        const account_name_type& a,
+                                        const std::string& p,
+                                        const asset& r)
         : benefactor(b)
         , author(a)
         , permlink(p)
@@ -136,14 +156,16 @@ struct comment_benefactor_reward_operation : public virtual_operation
 
     account_name_type benefactor;
     account_name_type author;
-    string permlink;
+    std::string permlink;
     asset reward;
 };
 
 struct producer_reward_operation : public virtual_operation
 {
-    producer_reward_operation() {}
-    producer_reward_operation(const string& p, const asset& v)
+    producer_reward_operation()
+    {
+    }
+    producer_reward_operation(const std::string& p, const asset& v)
         : producer(p)
         , vesting_shares(v)
     {

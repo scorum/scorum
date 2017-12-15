@@ -133,8 +133,8 @@ BOOST_AUTO_TEST_CASE(valid_name_test)
 BOOST_AUTO_TEST_CASE(merkle_root)
 {
     signed_block block;
-    vector<signed_transaction> tx;
-    vector<digest_type> t;
+    std::vector<signed_transaction> tx;
+    std::vector<digest_type> t;
     const uint32_t num_tx = 10;
 
     for (uint32_t i = 0; i < num_tx; i++)

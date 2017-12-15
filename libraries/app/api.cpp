@@ -59,7 +59,7 @@ void login_api::on_api_startup()
 {
 }
 
-bool login_api::login(const string& user, const string& password)
+bool login_api::login(const std::string& user, const std::string& password)
 {
     idump((user)(password));
     optional<api_access_info> acc = _ctx.app.get_api_access_info(user);
@@ -98,7 +98,7 @@ bool login_api::login(const string& user, const string& password)
     return true;
 }
 
-fc::api_ptr login_api::get_api_by_name(const string& api_name) const
+fc::api_ptr login_api::get_api_by_name(const std::string& api_name) const
 {
     std::shared_ptr<api_session_data> session = _ctx.session.lock();
     FC_ASSERT(session);

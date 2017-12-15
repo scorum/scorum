@@ -79,15 +79,15 @@ struct comment_api_obj
     }
 
     comment_id_type id;
-    string category;
+    std::string category;
     account_name_type parent_author;
-    string parent_permlink;
+    std::string parent_permlink;
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
-    string title;
-    string body;
-    string json_metadata;
+    std::string title;
+    std::string body;
+    std::string json_metadata;
     time_point_sec last_update;
     time_point_sec created;
     time_point_sec active;
@@ -121,7 +121,7 @@ struct comment_api_obj
     bool allow_replies = false;
     bool allow_votes = false;
     bool allow_curation_rewards = false;
-    vector<beneficiary_route_type> beneficiaries;
+    std::vector<beneficiary_route_type> beneficiaries;
 };
 
 struct tag_api_obj
@@ -140,7 +140,7 @@ struct tag_api_obj
     {
     }
 
-    string name;
+    std::string name;
     asset total_payouts;
     int32_t net_votes = 0;
     uint32_t top_posts = 0;
@@ -235,7 +235,7 @@ struct account_api_obj
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
     account_name_type proxy;
 
     time_point_sec last_owner_update;
@@ -275,7 +275,7 @@ struct account_api_obj
     share_type to_withdraw;
     uint16_t withdraw_routes = 0;
 
-    vector<share_type> proxied_vsf_votes;
+    std::vector<share_type> proxied_vsf_votes;
 
     uint16_t witnesses_voted_for;
 
@@ -368,7 +368,7 @@ struct witness_api_obj
     witness_id_type id;
     account_name_type owner;
     time_point_sec created;
-    string url;
+    std::string url;
     uint32_t total_missed = 0;
     uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
@@ -403,7 +403,7 @@ struct signed_block_api_obj : public signed_block
 
     block_id_type block_id;
     public_key_type signing_key;
-    vector<transaction_id_type> transaction_ids;
+    std::vector<transaction_id_type> transaction_ids;
 };
 
 struct dynamic_global_property_api_obj : public dynamic_global_property_object
@@ -460,7 +460,7 @@ struct budget_api_obj
     int64_t id;
 
     account_name_type owner;
-    string content_permlink;
+    std::string content_permlink;
 
     time_point_sec created;
     time_point_sec deadline;

@@ -52,7 +52,10 @@ tags_plugin_impl::~tags_plugin_impl()
 struct operation_visitor
 {
     operation_visitor(database& db)
-        : _db(db){};
+        : _db(db)
+    {
+    }
+
     typedef void result_type;
 
     database& _db;
@@ -102,7 +105,7 @@ struct operation_visitor
         }
     }
 
-    const tag_stats_object& get_stats(const string& tag) const
+    const tag_stats_object& get_stats(const std::string& tag) const
     {
         const auto& stats_idx = _db.get_index<tag_stats_index>().indices().get<by_tag>();
         auto itr = stats_idx.find(tag);
@@ -131,11 +134,11 @@ struct operation_visitor
         // We need to write the transformed tags into a temporary
         // local container because we can't modify meta.tags concurrently
         // as we iterate over it.
-        set<string> lower_tags;
+        std::set<std::string> lower_tags;
 
         uint8_t tag_limit = 5;
         uint8_t count = 0;
-        for (const string& tag : meta.tags)
+        for (const std::string& tag : meta.tags)
         {
             ++count;
             if (count > tag_limit || lower_tags.size() > tag_limit)
@@ -148,7 +151,7 @@ struct operation_visitor
         /// the universal tag applies to everything safe for work or nsfw with a non-negative payout
         if (c.net_rshares >= 0)
         {
-            lower_tags.insert(string()); /// add it to the universal tag
+            lower_tags.insert(std::string()); /// add it to the universal tag
         }
 
         meta.tags = lower_tags; /// TODO: std::move???
@@ -182,7 +185,7 @@ struct operation_visitor
         }
     }
 
-    void create_tag(const string& tag, const comment_object& comment, double hot, double trending) const
+    void create_tag(const std::string& tag, const comment_object& comment, double hot, double trending) const
     {
         comment_id_type parent;
         account_id_type author = _db.get_account(comment.author).id;
@@ -267,8 +270,8 @@ struct operation_visitor
                 auto meta = filter_tags(c);
                 auto citr = comment_idx.lower_bound(c.id);
 
-                map<string, const tag_object*> existing_tags;
-                vector<const tag_object*> remove_queue;
+                std::map<std::string, const tag_object*> existing_tags;
+                std::vector<const tag_object*> remove_queue;
 
                 while (citr != comment_idx.end() && citr->comment == c.id)
                 {
@@ -390,7 +393,7 @@ struct operation_visitor
         // if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol == SCORUM_SYMBOL )
         if (op.to == "" && op.amount.symbol == SCORUM_SYMBOL)
         {
-            vector<string> part;
+            std::vector<std::string> part;
             part.reserve(4);
             auto path = op.memo;
             boost::split(part, path, boost::is_any_of("/"));
@@ -457,7 +460,7 @@ struct operation_visitor
 
         comment_metadata meta = filter_tags(c);
 
-        for (const string& tag : meta.tags)
+        for (const std::string& tag : meta.tags)
         {
             _db.modify(get_stats(tag), [&](tag_stats_object& ts) { ts.total_payout += op.payout; });
         }

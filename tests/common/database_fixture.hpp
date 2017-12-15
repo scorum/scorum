@@ -19,6 +19,8 @@ using namespace graphene::db;
 namespace scorum {
 namespace chain {
 
+using string = std::string;
+
 using namespace scorum::protocol;
 
 void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state);
@@ -95,7 +97,7 @@ struct database_fixture
     const asset& get_balance(const string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);
 
-    vector<operation> get_last_operations(uint32_t ops);
+    std::vector<operation> get_last_operations(uint32_t ops);
 
     void validate_database(void);
 };

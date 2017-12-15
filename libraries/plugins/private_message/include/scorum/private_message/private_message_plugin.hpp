@@ -65,10 +65,10 @@ class private_message_plugin_impl;
 struct message_body
 {
     fc::time_point thread_start; /// the sent_time of the original message, if any
-    string subject;
-    string body;
-    string json_meta;
-    flat_set<string> cc;
+    std::string subject;
+    std::string body;
+    std::string json_meta;
+    flat_set<std::string> cc;
 };
 
 class message_object : public object<message_object_type, message_object>
@@ -110,7 +110,9 @@ struct message_api_obj
     {
     }
 
-    message_api_obj() {}
+    message_api_obj()
+    {
+    }
 
     message_id_type id;
     account_name_type from;
@@ -120,12 +122,14 @@ struct message_api_obj
     uint64_t sent_time;
     time_point_sec receive_time;
     uint32_t checksum;
-    vector<char> encrypted_message;
+    std::vector<char> encrypted_message;
 };
 
 struct extended_message_object : public message_api_obj
 {
-    extended_message_object() {}
+    extended_message_object()
+    {
+    }
     extended_message_object(const message_api_obj& o)
         : message_api_obj(o)
     {
@@ -140,24 +144,37 @@ struct by_from_date;
 using namespace boost::multi_index;
 
 typedef multi_index_container<message_object,
-    indexed_by<ordered_unique<tag<by_id>, member<message_object, message_id_type, &message_object::id>>,
-                                  ordered_unique<tag<by_to_date>,
-                                      composite_key<message_object,
-                                                     member<message_object, account_name_type, &message_object::to>,
-                                                     member<message_object, time_point_sec,
-                                                         &message_object::receive_time>,
-                                                     member<message_object, message_id_type, &message_object::id>>,
-                                      composite_key_compare<std::less<string>, std::greater<time_point_sec>,
-                                                     std::less<message_id_type>>>,
-                                  ordered_unique<tag<by_from_date>,
-                                      composite_key<message_object,
-                                                     member<message_object, account_name_type, &message_object::from>,
-                                                     member<message_object, time_point_sec,
-                                                         &message_object::receive_time>,
-                                                     member<message_object, message_id_type, &message_object::id>>,
-                                      composite_key_compare<std::less<string>, std::greater<time_point_sec>,
-                                                     std::less<message_id_type>>>>,
-    allocator<message_object>>
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<message_object, message_id_type, &message_object::id>>,
+                                         ordered_unique<tag<by_to_date>,
+                                                        composite_key<message_object,
+                                                                      member<message_object,
+                                                                             account_name_type,
+                                                                             &message_object::to>,
+                                                                      member<message_object,
+                                                                             time_point_sec,
+                                                                             &message_object::receive_time>,
+                                                                      member<message_object,
+                                                                             message_id_type,
+                                                                             &message_object::id>>,
+                                                        composite_key_compare<std::less<std::string>,
+                                                                              std::greater<time_point_sec>,
+                                                                              std::less<message_id_type>>>,
+                                         ordered_unique<tag<by_from_date>,
+                                                        composite_key<message_object,
+                                                                      member<message_object,
+                                                                             account_name_type,
+                                                                             &message_object::from>,
+                                                                      member<message_object,
+                                                                             time_point_sec,
+                                                                             &message_object::receive_time>,
+                                                                      member<message_object,
+                                                                             message_id_type,
+                                                                             &message_object::id>>,
+                                                        composite_key_compare<std::less<std::string>,
+                                                                              std::greater<time_point_sec>,
+                                                                              std::less<message_id_type>>>>,
+                              allocator<message_object>>
     message_index;
 
 /**
@@ -172,12 +189,12 @@ public:
     virtual ~private_message_plugin();
 
     std::string plugin_name() const override;
-    virtual void plugin_set_program_options(
-        boost::program_options::options_description& cli, boost::program_options::options_description& cfg) override;
+    virtual void plugin_set_program_options(boost::program_options::options_description& cli,
+                                            boost::program_options::options_description& cfg) override;
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
 
-    flat_map<string, string> tracked_accounts() const; /// map start_range to end_range
+    flat_map<std::string, std::string> tracked_accounts() const; /// map start_range to end_range
 
     friend class detail::private_message_plugin_impl;
     std::unique_ptr<detail::private_message_plugin_impl> my;
@@ -192,13 +209,16 @@ public:
     {
         ilog("creating private message api");
     }
-    void on_api_startup() { wlog("on private_message api startup"); }
+    void on_api_startup()
+    {
+        wlog("on private_message api startup");
+    }
 
     /**
      *
      */
-    vector<message_api_obj> get_inbox(string to, time_point newest, uint16_t limit) const;
-    vector<message_api_obj> get_outbox(string from, time_point newest, uint16_t limit) const;
+    std::vector<message_api_obj> get_inbox(std::string to, time_point newest, uint16_t limit) const;
+    std::vector<message_api_obj> get_outbox(std::string from, time_point newest, uint16_t limit) const;
 
 private:
     app::application* _app = nullptr;

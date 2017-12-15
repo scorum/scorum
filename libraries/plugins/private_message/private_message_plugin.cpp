@@ -55,7 +55,7 @@ public:
     private_message_plugin& _self;
     std::shared_ptr<generic_custom_operation_interpreter<scorum::private_message::private_message_plugin_operation>>
         _custom_operation_interpreter;
-    flat_map<string, string> _tracked_accounts;
+    flat_map<std::string, std::string> _tracked_accounts;
 };
 
 private_message_plugin_impl::private_message_plugin_impl(private_message_plugin& _plugin)
@@ -80,7 +80,7 @@ private_message_plugin_impl::~private_message_plugin_impl()
 
 void private_message_evaluator::do_apply(const private_message_operation& pm)
 {
-    const flat_map<string, string>& tracked_accounts = _plugin->my->_tracked_accounts;
+    const flat_map<std::string, std::string>& tracked_accounts = _plugin->my->_tracked_accounts;
 
     auto to_itr = tracked_accounts.lower_bound(pm.to);
     auto from_itr = tracked_accounts.lower_bound(pm.from);
@@ -141,14 +141,14 @@ void private_message_plugin::plugin_initialize(const boost::program_options::var
 
     app().register_api_factory<private_message_api>("private_message_api");
 
-    typedef pair<string, string> pairstring;
+    typedef std::pair<std::string, std::string> pairstring;
     LOAD_VALUE_SET(options, "pm-accounts", my->_tracked_accounts, pairstring);
 }
 
-vector<message_api_obj> private_message_api::get_inbox(string to, time_point newest, uint16_t limit) const
+std::vector<message_api_obj> private_message_api::get_inbox(std::string to, time_point newest, uint16_t limit) const
 {
     FC_ASSERT(limit <= 100);
-    vector<message_api_obj> result;
+    std::vector<message_api_obj> result;
     const auto& idx = _app->chain_database()->get_index<message_index>().indices().get<by_to_date>();
     auto itr = idx.lower_bound(std::make_tuple(to, newest));
     while (itr != idx.end() && limit && itr->to == to)
@@ -161,10 +161,10 @@ vector<message_api_obj> private_message_api::get_inbox(string to, time_point new
     return result;
 }
 
-vector<message_api_obj> private_message_api::get_outbox(string from, time_point newest, uint16_t limit) const
+std::vector<message_api_obj> private_message_api::get_outbox(std::string from, time_point newest, uint16_t limit) const
 {
     FC_ASSERT(limit <= 100);
-    vector<message_api_obj> result;
+    std::vector<message_api_obj> result;
     const auto& idx = _app->chain_database()->get_index<message_index>().indices().get<by_from_date>();
 
     auto itr = idx.lower_bound(std::make_tuple(from, newest));
@@ -181,7 +181,7 @@ void private_message_plugin::plugin_startup()
 {
 }
 
-flat_map<string, string> private_message_plugin::tracked_accounts() const
+flat_map<std::string, std::string> private_message_plugin::tracked_accounts() const
 {
     return my->_tracked_accounts;
 }
