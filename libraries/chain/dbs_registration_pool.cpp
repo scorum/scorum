@@ -19,10 +19,8 @@ bool dbs_registration_pool::is_pool_exists() const
 
 const registration_pool_object& dbs_registration_pool::get_pool() const
 {
-    const auto& idx = db_impl().get_index<registration_pool_index>().indicies();
-    auto it = idx.cbegin();
-    FC_ASSERT(it != idx.cend(), "Pool is not found.");
-    return (*it);
+    // This method uses get(id == 0). It is correct because we create object only one time
+    return db_impl().get<registration_pool_object>();
 }
 
 const registration_pool_object& dbs_registration_pool::create_pool(const asset& supply,
