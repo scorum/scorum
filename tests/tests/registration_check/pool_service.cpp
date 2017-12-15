@@ -299,7 +299,7 @@ public:
 schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
 asset registration_pool_service_check_fixture::rest_of_supply;
 
-BOOST_FIXTURE_TEST_SUITE(registration_pool_service_input_check, registration_pool_service_check_fixture)
+BOOST_FIXTURE_TEST_SUITE(registration_pool_service_check, registration_pool_service_check_fixture)
 
 SCORUM_TEST_CASE(create_invalid_genesis_state_amount_check)
 {

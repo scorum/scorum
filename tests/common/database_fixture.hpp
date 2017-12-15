@@ -21,8 +21,6 @@ namespace chain {
 
 using namespace scorum::protocol;
 
-void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state);
-
 struct database_fixture
 {
     // the reason we use an app is to exercise the indexes of built-in
@@ -128,6 +126,7 @@ private:
 };
 
 namespace test {
+genesis_state_type init_genesis(const genesis_state_type& = genesis_state_type());
 bool _push_block(database& db, const signed_block& b, uint32_t skip_flags = 0);
 void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip_flags = 0);
 } // namespace test

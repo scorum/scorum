@@ -2,6 +2,9 @@
 #include <scorum/chain/genesis_state.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_reward.hpp>
+#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
 
 #include <scorum/chain/account_object.hpp>
 #include <scorum/chain/block_summary_object.hpp>
@@ -13,6 +16,9 @@
 #include <scorum/chain/genesis.hpp>
 
 #include <fc/io/json.hpp>
+
+#include <vector>
+#include <map>
 
 namespace scorum {
 namespace chain {
@@ -73,29 +79,20 @@ scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis
     init_witness_schedule();
     init_global_property_object();
     init_rewards();
+    init_registration_objects();
 }
 
 void db_genesis::init_accounts()
 {
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
     for (auto& account : _genesis_state.accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
-        _db.create<account_object>([&](account_object& a) {
-            a.name = account.name;
-            a.memo_key = account.public_key;
-            a.balance = asset(account.scr_amount, SCORUM_SYMBOL);
-            a.json_metadata = "{created_at: 'GENESIS'}";
-            a.recovery_account = account.recovery_account;
-        });
-
-        _db.create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = account.name;
-            auth.owner.add_authority(account.public_key, 1);
-            auth.owner.weight_threshold = 1;
-            auth.active = auth.owner;
-            auth.posting = auth.active;
-        });
+        account_service.create_initial_account(account.name, account.public_key,
+                                               asset(account.scr_amount, SCORUM_SYMBOL), account.recovery_account,
+                                               "{created_at: 'GENESIS'}");
     }
 }
 
@@ -170,6 +167,33 @@ void db_genesis::init_rewards()
 
     reward_service.create_pool(initial_reward_pool_supply);
     budget_service.create_fund_budget(_genesis_state.init_rewards_supply - initial_reward_pool_supply, deadline);
+}
+
+void db_genesis::init_registration_objects()
+{
+    dbs_registration_pool& registration_pool_service = _db.obtain_service<dbs_registration_pool>();
+    dbs_registration_committee& registration_committee_service = _db.obtain_service<dbs_registration_committee>();
+
+    // create sorted items list form genesis unordered data
+    using schedule_item_type = registration_pool_object::schedule_item;
+    using schedule_items_type = std::map<uint8_t, schedule_item_type>;
+    schedule_items_type items;
+    for (const auto& genesis_item : _genesis_state.registration_schedule)
+    {
+        items.insert(schedule_items_type::value_type(
+            genesis_item.stage, schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
+    }
+
+    registration_pool_service.create_pool(_genesis_state.registration_supply, _genesis_state.registration_maximum_bonus,
+                                          items);
+
+    using account_names_type = std::vector<account_name_type>;
+    account_names_type committee;
+    for (const auto& member : _genesis_state.registration_committee)
+    {
+        committee.emplace_back(member);
+    }
+    registration_committee_service.create_committee(committee);
 }
 
 } // namespace chain
