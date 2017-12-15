@@ -180,23 +180,6 @@ struct egenesis_info
     }
 };
 
-void load_genesis(const boost::program_options::variables_map& options, egenesis_info& info)
-{
-    if (options.count("genesis-json"))
-    {
-        fc::path genesis_json_filename = get_path(options, "genesis-json");
-        std::cout << "embed_genesis: Reading genesis from file " << genesis_json_filename.preferred_string() << "\n";
-        info.genesis_json = std::string();
-        fc::read_file_contents(genesis_json_filename, *info.genesis_json);
-    }
-    else
-    {
-        sc::genesis_state_type genesis;
-        scorum::chain::utils::generate_default_genesis_state(genesis);
-        info.genesis = genesis;
-    }
-}
-
 bool write_to_file(const boost::filesystem::path& path, const std::string& content)
 {
     if (!boost::filesystem::exists(path.parent_path()))
@@ -250,6 +233,28 @@ bool read_from_file(const boost::filesystem::path& path, std::string& template_c
     return true;
 }
 
+bool load_genesis(const boost::program_options::variables_map& options, egenesis_info& info)
+{
+    if (options.count("genesis-json"))
+    {
+        boost::filesystem::path genesis_json_filename = get_path(options, "genesis-json");
+        std::cout << "embed_genesis: Reading genesis from file " << genesis_json_filename.c_str() << "\n";
+        info.genesis_json = std::string();
+
+        return read_from_file(genesis_json_filename, *info.genesis_json);
+    }
+    else
+    {
+        std::cerr << "WARNING: you are compiling without genesis-json." << std::endl;
+        std::cerr << "WARNING: your embeded genesis is empty.";
+
+        sc::genesis_state_type genesis;
+        info.genesis = genesis;
+
+        return true;
+    }
+}
+
 std::string process_template(const std::string& tmpl_content, const fc::variant_object& context)
 {
     return fc::format_string(tmpl_content, context);
@@ -292,7 +297,11 @@ int main(int argc, char** argv)
 
     egenesis_info info;
 
-    load_genesis(options, info);
+    if (!load_genesis(options, info))
+    {
+        return 1;
+    }
+
     info.fillin();
 
     fc::mutable_variant_object template_context = fc::mutable_variant_object()("chain_id", (*info.chain_id).str());
