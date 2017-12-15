@@ -67,6 +67,15 @@ BOOST_AUTO_TEST_CASE(check_initial_timestamp)
     BOOST_CHECK(genesis_state.initial_timestamp == fc::time_point_sec(1511880490));
 }
 
+BOOST_AUTO_TEST_CASE(check_initial_supply)
+{
+    std::string genesis_str = R"json({ "init_supply": 1000000})json";
+
+    sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
+
+    BOOST_CHECK(genesis_state.init_supply == 1000000);
+}
+
 BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
 {
     std::string genesis_str = R"json({ "init_rewards_supply": "1000.000 TESTS"})json";
