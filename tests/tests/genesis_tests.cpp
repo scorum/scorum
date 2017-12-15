@@ -10,13 +10,18 @@ BOOST_AUTO_TEST_SUITE(deserialize_genesis_state)
 
 BOOST_AUTO_TEST_CASE(check_accounts_fields)
 {
-    const std::string genesis_str = "{\"accounts\":[{"
-                                    "\"name\":\"user\","
-                                    "\"recovery_account\":\"admin\","
-                                    "\"public_key\":\"SCR1111111111111111111111111111111114T1Anm\","
-                                    "\"scr_amount\":1000,"
-                                    "\"sp_amount\":1000000"
-                                    "}]}";
+    const std::string genesis_str = R"json(
+                                    {
+                                        "accounts":[
+                                        {
+                                            "name":"user",
+                                            "recovery_account":"admin",
+                                            "public_key":"SCR1111111111111111111111111111111114T1Anm",
+                                            "scr_amount":1000,
+                                            "sp_amount":1000000
+                                        }]
+                                    }
+                                    )json";
 
     const sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
@@ -33,10 +38,15 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
 
 BOOST_AUTO_TEST_CASE(check_witness_fields)
 {
-    const std::string genesis_str = "{\"witness_candidates\":[{"
-                                    "\"owner_name\":\"user\","
-                                    "\"block_signing_key\":\"SCR1111111111111111111111111111111114T1Anm\""
-                                    "}]}";
+    const std::string genesis_str = R"json(
+                                    {
+                                        "witness_candidates":[
+                                        {
+                                            "owner_name":"user",
+                                            "block_signing_key":"SCR1111111111111111111111111111111114T1Anm"
+                                        }]
+                                    }
+                                    )json";
 
     const sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
@@ -50,20 +60,21 @@ BOOST_AUTO_TEST_CASE(check_witness_fields)
 
 BOOST_AUTO_TEST_CASE(check_initial_timestamp)
 {
-    const std::string genesis_str = "{\"initial_timestamp\": \"2017-11-28T14:48:10\"}";
+    const std::string genesis_str = R"json({"initial_timestamp": "2017-11-28T14:48:10"})json";
 
     const sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
     BOOST_CHECK(genesis_state.initial_timestamp == fc::time_point_sec(1511880490));
 }
 
-BOOST_AUTO_TEST_CASE(check_initial_supply)
+BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
 {
-    std::string genesis_str = "{\"init_supply\": 1000000}";
+    std::string genesis_str = R"json({ "init_rewards_supply": "1000.000 TESTS"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
-    BOOST_CHECK(genesis_state.init_supply == 1000000);
+    BOOST_CHECK(genesis_state.init_rewards_supply.amount == 1000000);
+    BOOST_CHECK(genesis_state.init_rewards_supply.symbol == SCORUM_SYMBOL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
