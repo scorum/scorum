@@ -35,9 +35,9 @@ dbs_registration_committee::get_member(const account_name_type& account) const
 }
 
 dbs_registration_committee::registration_committee_member_refs_type
-dbs_registration_committee::create_committee(const genesis_state_type& genesis_state)
+dbs_registration_committee::create_committee(const std::vector<account_name_type>& accounts)
 {
-    FC_ASSERT(!genesis_state.registration_committee.empty(), "Registration committee must have at least one member.");
+    FC_ASSERT(!accounts.empty(), "Registration committee must have at least one member.");
     FC_ASSERT(SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS > 0, "Invalid ${1} value.",
               ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
 
@@ -49,9 +49,9 @@ dbs_registration_committee::create_committee(const genesis_state_type& genesis_s
     // create unique accout list form genesis unordered data
     using sorted_type = std::map<account_name_type, std::reference_wrapper<const account_object>>;
     sorted_type items;
-    for (const auto& genesis_item : genesis_state.registration_committee)
+    for (const auto& account_name : accounts)
     {
-        const account_object& accout = account_service.get_account(genesis_item);
+        const account_object& accout = account_service.get_account(account_name);
 
         items.insert(sorted_type::value_type(accout.name, std::cref(accout)));
     }

@@ -6,6 +6,8 @@
 
 #include "database_fixture.hpp"
 
+#include <vector>
+
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -46,12 +48,24 @@ public:
     {
     }
 
+    using account_names_type = std::vector<account_name_type>;
+
+    account_names_type get_registration_committee()
+    {
+        account_names_type ret;
+        for (const auto& member : genesis_state.registration_committee)
+        {
+            ret.emplace_back(member);
+        }
+        return ret;
+    }
+
     void insure_committee_exists()
     {
         if (registration_committee_service.get_committee().empty())
         {
             // if object has not created in basic fixture
-            registration_committee_service.create_committee(genesis_state);
+            registration_committee_service.create_committee(get_registration_committee());
         }
     }
 
@@ -62,11 +76,9 @@ BOOST_FIXTURE_TEST_SUITE(registration_committee_service_check, registration_comm
 
 SCORUM_TEST_CASE(create_invalid_genesis_state_check)
 {
-    genesis_state_type invalid_genesis_state = genesis_state;
-    invalid_genesis_state.registration_committee.clear();
-    ;
+    account_names_type empty_committee;
 
-    BOOST_CHECK_THROW(registration_committee_service.create_committee(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(registration_committee_service.create_committee(empty_committee), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(create_check)
@@ -92,7 +104,8 @@ SCORUM_TEST_CASE(create_double_check)
 {
     insure_committee_exists();
 
-    BOOST_REQUIRE_THROW(registration_committee_service.create_committee(genesis_state), fc::assert_exception);
+    BOOST_REQUIRE_THROW(registration_committee_service.create_committee(get_registration_committee()),
+                        fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -7,7 +7,6 @@
 
 #include <scorum/chain/registration_objects.hpp>
 #include <scorum/chain/account_object.hpp>
-#include <scorum/chain/genesis_state.hpp>
 
 namespace scorum {
 namespace chain {
@@ -30,7 +29,7 @@ public:
 
     const registration_committee_member_object& get_member(const account_name_type&) const;
 
-    registration_committee_member_refs_type create_committee(const genesis_state_type& genesis_state);
+    registration_committee_member_refs_type create_committee(const std::vector<account_name_type>& accounts);
 
     const registration_committee_member_object& add_member(const account_name_type&);
 

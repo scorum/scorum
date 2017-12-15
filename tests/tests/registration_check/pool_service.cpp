@@ -137,12 +137,24 @@ public:
         }
     }
 
+    using account_names_type = std::vector<account_name_type>;
+
+    account_names_type get_registration_committee()
+    {
+        account_names_type ret;
+        for (const auto& member : genesis_state.registration_committee)
+        {
+            ret.emplace_back(member);
+        }
+        return ret;
+    }
+
     void insure_committee_exists()
     {
         if (registration_committee_service.get_committee().empty())
         {
             // if object has not created in basic fixture
-            registration_committee_service.create_committee(genesis_state);
+            registration_committee_service.create_committee(get_registration_committee());
         }
     }
 
