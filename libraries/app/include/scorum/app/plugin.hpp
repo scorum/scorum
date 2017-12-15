@@ -42,12 +42,13 @@ namespace app {
 
 using fc::static_variant;
 using fc::unique_ptr;
-using std::vector;
 
 class abstract_plugin
 {
 public:
-    virtual ~abstract_plugin() {}
+    virtual ~abstract_plugin()
+    {
+    }
     virtual std::string plugin_name() const = 0;
 
     /**
@@ -91,7 +92,7 @@ public:
      * may simply provide an empty implementation of this method.
      */
     virtual void plugin_set_program_options(boost::program_options::options_description& command_line_options,
-        boost::program_options::options_description& config_file_options)
+                                            boost::program_options::options_description& config_file_options)
         = 0;
 };
 
@@ -109,9 +110,12 @@ public:
     virtual void plugin_startup() override;
     virtual void plugin_shutdown() override;
     virtual void plugin_set_program_options(boost::program_options::options_description& command_line_options,
-        boost::program_options::options_description& config_file_options) override;
+                                            boost::program_options::options_description& config_file_options) override;
 
-    chain::database& database() { return *app().chain_database(); }
+    chain::database& database()
+    {
+        return *app().chain_database();
+    }
     application& app() const
     {
         assert(_app);
@@ -119,7 +123,10 @@ public:
     }
 
 protected:
-    graphene::net::node& p2p_node() { return *app().p2p_node(); }
+    graphene::net::node& p2p_node()
+    {
+        return *app().p2p_node();
+    }
 
 private:
     application* _app = nullptr;
@@ -127,15 +134,18 @@ private:
 
 /// @group Some useful tools for boost::program_options arguments using vectors of JSON strings
 /// @{
-template <typename T> T dejsonify(const string& s) { return fc::json::from_string(s).as<T>(); }
+template <typename T> T dejsonify(const std::string& s)
+{
+    return fc::json::from_string(s).as<T>();
+}
 
 #define DEFAULT_VALUE_VECTOR(value) default_value({ fc::json::to_string(value) }, fc::json::to_string(value))
 #define LOAD_VALUE_SET(options, name, container, type)                                                                 \
     if (options.count(name))                                                                                           \
     {                                                                                                                  \
         const std::vector<std::string>& ops = options[name].as<std::vector<std::string>>();                            \
-        std::transform(                                                                                                \
-            ops.begin(), ops.end(), std::inserter(container, container.end()), &scorum::app::dejsonify<type>);         \
+        std::transform(ops.begin(), ops.end(), std::inserter(container, container.end()),                              \
+                       &scorum::app::dejsonify<type>);                                                                 \
     }
 /// @}
 }

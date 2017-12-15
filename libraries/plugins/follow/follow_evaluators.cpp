@@ -11,8 +11,8 @@ void follow_evaluator::do_apply(const follow_operation& o)
 {
     try
     {
-        static map<string, follow_type> follow_type_map = []() {
-            map<string, follow_type> follow_map;
+        static std::map<std::string, follow_type> follow_type_map = []() {
+            std::map<std::string, follow_type> follow_map;
             follow_map["undefined"] = follow_type::undefined;
             follow_map["blog"] = follow_type::blog;
             follow_map["ignore"] = follow_type::ignore;

@@ -33,7 +33,7 @@ void database::_update_median_witness_props()
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
 
     /// fetch all witness objects
-    vector<const witness_object*> active;
+    std::vector<const witness_object*> active;
     active.reserve(wso.num_scheduled_witnesses);
     for (int i = 0; i < wso.num_scheduled_witnesses; i++)
     {
@@ -77,7 +77,7 @@ void database::update_witness_schedule()
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0) // wso.next_shuffle_block_num )
     {
         const witness_schedule_object& wso = _db.get_witness_schedule_object();
-        vector<account_name_type> active_witnesses;
+        std::vector<account_name_type> active_witnesses;
         active_witnesses.reserve(SCORUM_MAX_WITNESSES);
 
         /// Add the highest voted witnesses
@@ -88,7 +88,9 @@ void database::update_witness_schedule()
         for (auto itr = widx.begin(); itr != widx.end() && selected_voted.size() < wso.max_voted_witnesses; ++itr)
         {
             if (itr->signing_key == public_key_type())
+            {
                 continue;
+            }
             selected_voted.insert(itr->id);
             active_witnesses.push_back(itr->owner);
             _db.modify(*itr, [&](witness_object& wo) { wo.schedule = witness_object::top20; });
@@ -100,7 +102,7 @@ void database::update_witness_schedule()
         fc::uint128 new_virtual_time = wso.current_virtual_time;
         const auto& schedule_idx = _db.get_index<witness_index>().indices().get<by_schedule_time>();
         auto sitr = schedule_idx.begin();
-        vector<decltype(sitr)> processed_witnesses;
+        std::vector<decltype(sitr)> processed_witnesses;
         for (auto witness_count = selected_voted.size();
              sitr != schedule_idx.end() && witness_count < SCORUM_MAX_WITNESSES; ++sitr)
         {
@@ -108,7 +110,9 @@ void database::update_witness_schedule()
             processed_witnesses.push_back(sitr);
 
             if (sitr->signing_key == public_key_type())
+            {
                 continue; /// skip witnesses without a valid block signing key
+            }
 
             if (selected_voted.find(sitr->id) == selected_voted.end())
             {
@@ -158,15 +162,23 @@ void database::update_witness_schedule()
         {
             auto witness = _db.get_witness(wso.current_shuffled_witnesses[i]);
             if (witness_versions.find(witness.running_version) == witness_versions.end())
+            {
                 witness_versions[witness.running_version] = 1;
+            }
             else
+            {
                 witness_versions[witness.running_version] += 1;
+            }
 
             auto version_vote = std::make_tuple(witness.hardfork_version_vote, witness.hardfork_time_vote);
             if (hardfork_version_votes.find(version_vote) == hardfork_version_votes.end())
+            {
                 hardfork_version_votes[version_vote] = 1;
+            }
             else
+            {
                 hardfork_version_votes[version_vote] += 1;
+            }
         }
 
         int witnesses_on_version = 0;

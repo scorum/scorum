@@ -22,8 +22,6 @@ protected:
     explicit dbs_registration_pool(database& db);
 
 public:
-    bool is_pool_exists() const;
-
     const registration_pool_object& get_pool() const;
 
     using schedule_item_type = registration_pool_object::schedule_item;
@@ -34,13 +32,13 @@ public:
     asset allocate_cash(const account_name_type& committee_member);
 
 private:
-    asset _calculate_per_reg(const registration_pool_object&);
+    asset _calculate_per_reg();
 
-    asset _decrease_balance(const registration_pool_object&, const asset&);
+    asset _decrease_balance(const asset&);
 
-    bool _check_autoclose(const registration_pool_object&);
+    bool _check_autoclose();
 
-    void _close(const registration_pool_object&);
+    void _close();
 };
 }
 }

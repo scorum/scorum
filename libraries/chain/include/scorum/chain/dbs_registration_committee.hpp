@@ -41,7 +41,7 @@ public:
 private:
     uint64_t _get_member_count() const;
 
-    bool _check_member_exist(const account_name_type&) const;
+    bool _member_exists(const account_name_type&) const;
 
     const registration_committee_member_object& _add_member(const account_object&);
 

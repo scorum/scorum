@@ -9,7 +9,9 @@ typedef flat_map<account_name_type, weight_type> account_authority_map;
 
 struct authority
 {
-    authority() {}
+    authority()
+    {
+    }
 
     enum classification
     {
@@ -29,7 +31,10 @@ struct authority
     void add_authority(const public_key_type& k, weight_type w);
     void add_authority(const account_name_type& k, weight_type w);
 
-    template <typename AuthType> void add_authorities(AuthType k, weight_type w) { add_authority(k, w); }
+    template <typename AuthType> void add_authorities(AuthType k, weight_type w)
+    {
+        add_authority(k, w);
+    }
 
     template <typename AuthType, class... Args> void add_authorities(AuthType k, weight_type w, Args... auths)
     {
@@ -37,7 +42,7 @@ struct authority
         add_authorities(auths...);
     }
 
-    vector<public_key_type> get_keys() const;
+    std::vector<public_key_type> get_keys() const;
 
     bool is_impossible() const;
     uint32_t num_auths() const;
@@ -88,7 +93,7 @@ void add_authority_accounts(flat_set<account_name_type>& result, const Authority
  * - All letters are lowercase
  * - Length is between (inclusive) SCORUM_MIN_ACCOUNT_NAME_LENGTH and SCORUM_MAX_ACCOUNT_NAME_LENGTH
  */
-bool is_valid_account_name(const string& name);
+bool is_valid_account_name(const std::string& name);
 
 bool operator==(const authority& a, const authority& b);
 }

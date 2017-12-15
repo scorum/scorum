@@ -8,9 +8,14 @@ struct block_header
 {
     digest_type digest() const;
     block_id_type previous;
-    uint32_t block_num() const { return num_from_id(previous) + 1; }
+
+    uint32_t block_num() const
+    {
+        return num_from_id(previous) + 1;
+    }
+
     fc::time_point_sec timestamp;
-    string witness;
+    std::string witness;
     checksum_type transaction_merkle_root;
     block_header_extensions_type extensions;
 

@@ -39,7 +39,7 @@ public:
     // Blocks and transactions
     optional<block_header> get_block_header(uint32_t block_num) const;
     optional<signed_block_api_obj> get_block(uint32_t block_num) const;
-    vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual) const;
+    std::vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual) const;
 
     // Globals
     fc::variant_object get_config() const;
@@ -47,32 +47,32 @@ public:
     chain_id_type get_chain_id() const;
 
     // Keys
-    vector<set<string>> get_key_references(vector<public_key_type> key) const;
+    std::vector<std::set<std::string>> get_key_references(std::vector<public_key_type> key) const;
 
     // Accounts
-    vector<extended_account> get_accounts(const vector<string>& names) const;
-    vector<account_id_type> get_account_references(account_id_type account_id) const;
-    vector<optional<account_api_obj>> lookup_account_names(const vector<string>& account_names) const;
-    set<string> lookup_accounts(const string& lower_bound_name, uint32_t limit) const;
+    std::vector<extended_account> get_accounts(const std::vector<std::string>& names) const;
+    std::vector<account_id_type> get_account_references(account_id_type account_id) const;
+    std::vector<optional<account_api_obj>> lookup_account_names(const std::vector<std::string>& account_names) const;
+    std::set<std::string> lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const;
     uint64_t get_account_count() const;
 
     // Budgets
-    vector<budget_api_obj> get_budgets(const set<string>& names) const;
-    set<string> lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const;
+    std::vector<budget_api_obj> get_budgets(const std::set<std::string>& names) const;
+    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
 
     // Witnesses
-    vector<optional<witness_api_obj>> get_witnesses(const vector<witness_id_type>& witness_ids) const;
-    fc::optional<witness_api_obj> get_witness_by_account(const string& account_name) const;
-    set<account_name_type> lookup_witness_accounts(const string& lower_bound_name, uint32_t limit) const;
+    std::vector<optional<witness_api_obj>> get_witnesses(const std::vector<witness_id_type>& witness_ids) const;
+    fc::optional<witness_api_obj> get_witness_by_account(const std::string& account_name) const;
+    std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
     uint64_t get_witness_count() const;
 
     // Authority / validation
     std::string get_transaction_hex(const signed_transaction& trx) const;
-    set<public_key_type> get_required_signatures(const signed_transaction& trx,
-                                                 const flat_set<public_key_type>& available_keys) const;
-    set<public_key_type> get_potential_signatures(const signed_transaction& trx) const;
+    std::set<public_key_type> get_required_signatures(const signed_transaction& trx,
+                                                      const flat_set<public_key_type>& available_keys) const;
+    std::set<public_key_type> get_potential_signatures(const signed_transaction& trx) const;
     bool verify_authority(const signed_transaction& trx) const;
-    bool verify_account_authority(const string& name_or_id, const flat_set<public_key_type>& signers) const;
+    bool verify_account_authority(const std::string& name_or_id, const flat_set<public_key_type>& signers) const;
 
     // signal handlers
     void on_applied_block(const chain::signed_block& b);
@@ -103,7 +103,7 @@ applied_operation::applied_operation(const operation_object& op_obj)
     op = fc::raw::unpack<operation>(op_obj.serialized_op);
 }
 
-void find_accounts(set<string>& accounts, const discussion& d)
+void find_accounts(std::set<std::string>& accounts, const discussion& d)
 {
     accounts.insert(d.author);
 }
@@ -212,16 +212,16 @@ optional<signed_block_api_obj> database_api_impl::get_block(uint32_t block_num) 
     return _db.fetch_block_by_number(block_num);
 }
 
-vector<applied_operation> database_api::get_ops_in_block(uint32_t block_num, bool only_virtual) const
+std::vector<applied_operation> database_api::get_ops_in_block(uint32_t block_num, bool only_virtual) const
 {
     return my->_db.with_read_lock([&]() { return my->get_ops_in_block(block_num, only_virtual); });
 }
 
-vector<applied_operation> database_api_impl::get_ops_in_block(uint32_t block_num, bool only_virtual) const
+std::vector<applied_operation> database_api_impl::get_ops_in_block(uint32_t block_num, bool only_virtual) const
 {
     const auto& idx = _db.get_index<operation_index>().indices().get<by_location>();
     auto itr = idx.lower_bound(block_num);
-    vector<applied_operation> result;
+    std::vector<applied_operation> result;
     applied_operation temp;
     while (itr != idx.end() && itr->block == block_num)
     {
@@ -290,7 +290,7 @@ scheduled_hardfork database_api::get_next_scheduled_hardfork() const
     });
 }
 
-reward_fund_api_obj database_api::get_reward_fund(const string& name) const
+reward_fund_api_obj database_api::get_reward_fund(const std::string& name) const
 {
     return my->_db.with_read_lock([&]() {
         auto fund = my->_db.find<reward_fund_object, by_name>(name);
@@ -306,7 +306,7 @@ reward_fund_api_obj database_api::get_reward_fund(const string& name) const
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<set<string>> database_api::get_key_references(vector<public_key_type> key) const
+std::vector<std::set<std::string>> database_api::get_key_references(std::vector<public_key_type> key) const
 {
     return my->_db.with_read_lock([&]() { return my->get_key_references(key); });
 }
@@ -314,12 +314,11 @@ vector<set<string>> database_api::get_key_references(vector<public_key_type> key
 /**
  *  @return all accounts that referr to the key or account id in their owner or active authorities.
  */
-vector<set<string>> database_api_impl::get_key_references(vector<public_key_type> keys) const
+std::vector<std::set<std::string>> database_api_impl::get_key_references(std::vector<public_key_type> keys) const
 {
-    FC_ASSERT(false,
-              "database_api::get_key_references has been deprecated. Please use "
-              "account_by_key_api::get_key_references instead.");
-    vector<set<string>> final_result;
+    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
+                     "account_by_key_api::get_key_references instead.");
+    std::vector<std::set<std::string>> final_result;
     return final_result;
 }
 
@@ -329,16 +328,16 @@ vector<set<string>> database_api_impl::get_key_references(vector<public_key_type
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<extended_account> database_api::get_accounts(const vector<string>& names) const
+std::vector<extended_account> database_api::get_accounts(const std::vector<std::string>& names) const
 {
     return my->_db.with_read_lock([&]() { return my->get_accounts(names); });
 }
 
-vector<extended_account> database_api_impl::get_accounts(const vector<string>& names) const
+std::vector<extended_account> database_api_impl::get_accounts(const std::vector<std::string>& names) const
 {
     const auto& idx = _db.get_index<account_index>().indices().get<by_name>();
     const auto& vidx = _db.get_index<witness_vote_index>().indices().get<by_account_witness>();
-    vector<extended_account> results;
+    std::vector<extended_account> results;
 
     for (auto name : names)
     {
@@ -364,18 +363,18 @@ vector<extended_account> database_api_impl::get_accounts(const vector<string>& n
     return results;
 }
 
-vector<account_id_type> database_api::get_account_references(account_id_type account_id) const
+std::vector<account_id_type> database_api::get_account_references(account_id_type account_id) const
 {
     return my->_db.with_read_lock([&]() { return my->get_account_references(account_id); });
 }
 
-vector<account_id_type> database_api_impl::get_account_references(account_id_type account_id) const
+std::vector<account_id_type> database_api_impl::get_account_references(account_id_type account_id) const
 {
     /*const auto& idx = _db.get_index<account_index>();
     const auto& aidx = dynamic_cast<const primary_index<account_index>&>(idx);
     const auto& refs = aidx.get_secondary_index<scorum::chain::account_member_index>();
     auto itr = refs.account_to_account_memberships.find(account_id);
-    vector<account_id_type> result;
+    std::vector<account_id_type> result;
 
     if( itr != refs.account_to_account_memberships.end() )
     {
@@ -386,14 +385,16 @@ vector<account_id_type> database_api_impl::get_account_references(account_id_typ
     FC_ASSERT(false, "database_api::get_account_references --- Needs to be refactored for scorum.");
 }
 
-vector<optional<account_api_obj>> database_api::lookup_account_names(const vector<string>& account_names) const
+std::vector<optional<account_api_obj>>
+database_api::lookup_account_names(const std::vector<std::string>& account_names) const
 {
     return my->_db.with_read_lock([&]() { return my->lookup_account_names(account_names); });
 }
 
-vector<optional<account_api_obj>> database_api_impl::lookup_account_names(const vector<string>& account_names) const
+std::vector<optional<account_api_obj>>
+database_api_impl::lookup_account_names(const std::vector<std::string>& account_names) const
 {
-    vector<optional<account_api_obj>> result;
+    std::vector<optional<account_api_obj>> result;
     result.reserve(account_names.size());
 
     for (auto& name : account_names)
@@ -413,16 +414,16 @@ vector<optional<account_api_obj>> database_api_impl::lookup_account_names(const 
     return result;
 }
 
-set<string> database_api::lookup_accounts(const string& lower_bound_name, uint32_t limit) const
+std::set<std::string> database_api::lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() { return my->lookup_accounts(lower_bound_name, limit); });
 }
 
-set<string> database_api_impl::lookup_accounts(const string& lower_bound_name, uint32_t limit) const
+std::set<std::string> database_api_impl::lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
     const auto& accounts_by_name = _db.get_index<account_index>().indices().get<by_name>();
-    set<string> result;
+    std::set<std::string> result;
 
     for (auto itr = accounts_by_name.lower_bound(lower_bound_name); limit-- && itr != accounts_by_name.end(); ++itr)
     {
@@ -442,10 +443,10 @@ uint64_t database_api_impl::get_account_count() const
     return _db.get_index<account_index>().indices().size();
 }
 
-vector<owner_authority_history_api_obj> database_api::get_owner_history(string account) const
+std::vector<owner_authority_history_api_obj> database_api::get_owner_history(std::string account) const
 {
     return my->_db.with_read_lock([&]() {
-        vector<owner_authority_history_api_obj> results;
+        std::vector<owner_authority_history_api_obj> results;
 
         const auto& hist_idx = my->_db.get_index<owner_authority_history_index>().indices().get<by_account>();
         auto itr = hist_idx.lower_bound(account);
@@ -460,7 +461,7 @@ vector<owner_authority_history_api_obj> database_api::get_owner_history(string a
     });
 }
 
-optional<account_recovery_request_api_obj> database_api::get_recovery_request(string account) const
+optional<account_recovery_request_api_obj> database_api::get_recovery_request(std::string account) const
 {
     return my->_db.with_read_lock([&]() {
         optional<account_recovery_request_api_obj> result;
@@ -475,7 +476,7 @@ optional<account_recovery_request_api_obj> database_api::get_recovery_request(st
     });
 }
 
-optional<escrow_api_obj> database_api::get_escrow(string from, uint32_t escrow_id) const
+optional<escrow_api_obj> database_api::get_escrow(std::string from, uint32_t escrow_id) const
 {
     return my->_db.with_read_lock([&]() {
         optional<escrow_api_obj> result;
@@ -492,10 +493,10 @@ optional<escrow_api_obj> database_api::get_escrow(string from, uint32_t escrow_i
     });
 }
 
-vector<withdraw_route> database_api::get_withdraw_routes(string account, withdraw_route_type type) const
+std::vector<withdraw_route> database_api::get_withdraw_routes(std::string account, withdraw_route_type type) const
 {
     return my->_db.with_read_lock([&]() {
-        vector<withdraw_route> result;
+        std::vector<withdraw_route> result;
 
         const auto& acc = my->_db.get_account(account);
 
@@ -541,7 +542,7 @@ vector<withdraw_route> database_api::get_withdraw_routes(string account, withdra
     });
 }
 
-optional<account_bandwidth_api_obj> database_api::get_account_bandwidth(string account,
+optional<account_bandwidth_api_obj> database_api::get_account_bandwidth(std::string account,
                                                                         witness::bandwidth_type type) const
 {
     optional<account_bandwidth_api_obj> result;
@@ -563,14 +564,16 @@ optional<account_bandwidth_api_obj> database_api::get_account_bandwidth(string a
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<optional<witness_api_obj>> database_api::get_witnesses(const vector<witness_id_type>& witness_ids) const
+std::vector<optional<witness_api_obj>>
+database_api::get_witnesses(const std::vector<witness_id_type>& witness_ids) const
 {
     return my->_db.with_read_lock([&]() { return my->get_witnesses(witness_ids); });
 }
 
-vector<optional<witness_api_obj>> database_api_impl::get_witnesses(const vector<witness_id_type>& witness_ids) const
+std::vector<optional<witness_api_obj>>
+database_api_impl::get_witnesses(const std::vector<witness_id_type>& witness_ids) const
 {
-    vector<optional<witness_api_obj>> result;
+    std::vector<optional<witness_api_obj>> result;
     result.reserve(witness_ids.size());
     std::transform(witness_ids.begin(), witness_ids.end(), std::back_inserter(result),
                    [this](witness_id_type id) -> optional<witness_api_obj> {
@@ -581,18 +584,18 @@ vector<optional<witness_api_obj>> database_api_impl::get_witnesses(const vector<
     return result;
 }
 
-fc::optional<witness_api_obj> database_api::get_witness_by_account(string account_name) const
+fc::optional<witness_api_obj> database_api::get_witness_by_account(std::string account_name) const
 {
     return my->_db.with_read_lock([&]() { return my->get_witness_by_account(account_name); });
 }
 
-vector<witness_api_obj> database_api::get_witnesses_by_vote(string from, uint32_t limit) const
+std::vector<witness_api_obj> database_api::get_witnesses_by_vote(std::string from, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         // idump((from)(limit));
         FC_ASSERT(limit <= 100);
 
-        vector<witness_api_obj> result;
+        std::vector<witness_api_obj> result;
         result.reserve(limit);
 
         const auto& name_idx = my->_db.get_index<witness_index>().indices().get<by_name>();
@@ -615,7 +618,7 @@ vector<witness_api_obj> database_api::get_witnesses_by_vote(string from, uint32_
     });
 }
 
-fc::optional<witness_api_obj> database_api_impl::get_witness_by_account(const string& account_name) const
+fc::optional<witness_api_obj> database_api_impl::get_witness_by_account(const std::string& account_name) const
 {
     const auto& idx = _db.get_index<witness_index>().indices().get<by_name>();
     auto itr = idx.find(account_name);
@@ -624,12 +627,14 @@ fc::optional<witness_api_obj> database_api_impl::get_witness_by_account(const st
     return {};
 }
 
-set<account_name_type> database_api::lookup_witness_accounts(const string& lower_bound_name, uint32_t limit) const
+std::set<account_name_type> database_api::lookup_witness_accounts(const std::string& lower_bound_name,
+                                                                  uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() { return my->lookup_witness_accounts(lower_bound_name, limit); });
 }
 
-set<account_name_type> database_api_impl::lookup_witness_accounts(const string& lower_bound_name, uint32_t limit) const
+std::set<account_name_type> database_api_impl::lookup_witness_accounts(const std::string& lower_bound_name,
+                                                                       uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
     const auto& witnesses_by_id = _db.get_index<witness_index>().indices().get<by_id>();
@@ -637,7 +642,7 @@ set<account_name_type> database_api_impl::lookup_witness_accounts(const string& 
     // get all the names and look them all up, sort them, then figure out what
     // records to return.  This could be optimized, but we expect the
     // number of witnesses to be few and the frequency of calls to be rare
-    set<account_name_type> witnesses_by_account_name;
+    std::set<account_name_type> witnesses_by_account_name;
     for (const witness_api_obj& witness : witnesses_by_id)
         if (witness.owner >= lower_bound_name) // we can ignore anything below lower_bound_name
             witnesses_by_account_name.insert(witness.owner);
@@ -675,25 +680,26 @@ std::string database_api_impl::get_transaction_hex(const signed_transaction& trx
     return fc::to_hex(fc::raw::pack(trx));
 }
 
-set<public_key_type> database_api::get_required_signatures(const signed_transaction& trx,
-                                                           const flat_set<public_key_type>& available_keys) const
+std::set<public_key_type> database_api::get_required_signatures(const signed_transaction& trx,
+                                                                const flat_set<public_key_type>& available_keys) const
 {
     return my->_db.with_read_lock([&]() { return my->get_required_signatures(trx, available_keys); });
 }
 
-set<public_key_type> database_api_impl::get_required_signatures(const signed_transaction& trx,
-                                                                const flat_set<public_key_type>& available_keys) const
+std::set<public_key_type>
+database_api_impl::get_required_signatures(const signed_transaction& trx,
+                                           const flat_set<public_key_type>& available_keys) const
 {
     //   wdump((trx)(available_keys));
     auto result = trx.get_required_signatures(
         get_chain_id(), available_keys,
-        [&](string account_name) {
+        [&](std::string account_name) {
             return authority(_db.get<account_authority_object, by_account>(account_name).active);
         },
-        [&](string account_name) {
+        [&](std::string account_name) {
             return authority(_db.get<account_authority_object, by_account>(account_name).owner);
         },
-        [&](string account_name) {
+        [&](std::string account_name) {
             return authority(_db.get<account_authority_object, by_account>(account_name).posting);
         },
         SCORUM_MAX_SIG_CHECK_DEPTH);
@@ -701,15 +707,15 @@ set<public_key_type> database_api_impl::get_required_signatures(const signed_tra
     return result;
 }
 
-set<public_key_type> database_api::get_potential_signatures(const signed_transaction& trx) const
+std::set<public_key_type> database_api::get_potential_signatures(const signed_transaction& trx) const
 {
     return my->_db.with_read_lock([&]() { return my->get_potential_signatures(trx); });
 }
 
-set<public_key_type> database_api_impl::get_potential_signatures(const signed_transaction& trx) const
+std::set<public_key_type> database_api_impl::get_potential_signatures(const signed_transaction& trx) const
 {
     //   wdump((trx));
-    set<public_key_type> result;
+    std::set<public_key_type> result;
     trx.get_required_signatures(
         get_chain_id(), flat_set<public_key_type>(),
         [&](account_name_type account_name) {
@@ -744,25 +750,26 @@ bool database_api::verify_authority(const signed_transaction& trx) const
 bool database_api_impl::verify_authority(const signed_transaction& trx) const
 {
     trx.verify_authority(get_chain_id(),
-                         [&](string account_name) {
+                         [&](std::string account_name) {
                              return authority(_db.get<account_authority_object, by_account>(account_name).active);
                          },
-                         [&](string account_name) {
+                         [&](std::string account_name) {
                              return authority(_db.get<account_authority_object, by_account>(account_name).owner);
                          },
-                         [&](string account_name) {
+                         [&](std::string account_name) {
                              return authority(_db.get<account_authority_object, by_account>(account_name).posting);
                          },
                          SCORUM_MAX_SIG_CHECK_DEPTH);
     return true;
 }
 
-bool database_api::verify_account_authority(const string& name_or_id, const flat_set<public_key_type>& signers) const
+bool database_api::verify_account_authority(const std::string& name_or_id,
+                                            const flat_set<public_key_type>& signers) const
 {
     return my->_db.with_read_lock([&]() { return my->verify_account_authority(name_or_id, signers); });
 }
 
-bool database_api_impl::verify_account_authority(const string& name, const flat_set<public_key_type>& keys) const
+bool database_api_impl::verify_account_authority(const std::string& name, const flat_set<public_key_type>& keys) const
 {
     FC_ASSERT(name.size() > 0);
     auto account = _db.find<account_object, by_name>(name);
@@ -777,7 +784,7 @@ bool database_api_impl::verify_account_authority(const string& name, const flat_
     return verify_authority(trx);
 }
 
-discussion database_api::get_content(string author, string permlink) const
+discussion database_api::get_content(std::string author, std::string permlink) const
 {
     return my->_db.with_read_lock([&]() {
         const auto& by_permlink_idx = my->_db.get_index<comment_index>().indices().get<by_permlink>();
@@ -793,10 +800,10 @@ discussion database_api::get_content(string author, string permlink) const
     });
 }
 
-vector<vote_state> database_api::get_active_votes(string author, string permlink) const
+std::vector<vote_state> database_api::get_active_votes(std::string author, std::string permlink) const
 {
     return my->_db.with_read_lock([&]() {
-        vector<vote_state> result;
+        std::vector<vote_state> result;
         const auto& comment = my->_db.get_comment(author, permlink);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
         comment_id_type cid(comment.id);
@@ -825,10 +832,10 @@ vector<vote_state> database_api::get_active_votes(string author, string permlink
     });
 }
 
-vector<account_vote> database_api::get_account_votes(string voter) const
+std::vector<account_vote> database_api::get_account_votes(std::string voter) const
 {
     return my->_db.with_read_lock([&]() {
-        vector<account_vote> result;
+        std::vector<account_vote> result;
 
         const auto& voter_acnt = my->_db.get_account(voter);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_voter_comment>();
@@ -910,13 +917,13 @@ void database_api::set_url(discussion& d) const
         d.url += "#@" + d.author + "/" + d.permlink;
 }
 
-vector<discussion> database_api::get_content_replies(string author, string permlink) const
+std::vector<discussion> database_api::get_content_replies(std::string author, std::string permlink) const
 {
     return my->_db.with_read_lock([&]() {
         account_name_type acc_name = account_name_type(author);
         const auto& by_permlink_idx = my->_db.get_index<comment_index>().indices().get<by_parent>();
         auto itr = by_permlink_idx.find(boost::make_tuple(acc_name, permlink));
-        vector<discussion> result;
+        std::vector<discussion> result;
         while (itr != by_permlink_idx.end() && itr->parent_author == author
                && fc::to_string(itr->parent_permlink) == permlink)
         {
@@ -933,17 +940,17 @@ vector<discussion> database_api::get_content_replies(string author, string perml
 // Budgets                                                          //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
-vector<budget_api_obj> database_api::get_budgets(const set<string>& names) const
+std::vector<budget_api_obj> database_api::get_budgets(const std::set<std::string>& names) const
 {
     return my->_db.with_read_lock([&]() { return my->get_budgets(names); });
 }
 
-vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) const
+std::vector<budget_api_obj> database_api_impl::get_budgets(const std::set<std::string>& names) const
 {
     FC_ASSERT(names.size() <= SCORUM_BUDGET_LIMIT_API_LIST_SIZE, "names size must be less or equal than ${1}",
               ("1", SCORUM_BUDGET_LIMIT_API_LIST_SIZE));
 
-    vector<budget_api_obj> results;
+    std::vector<budget_api_obj> results;
 
     chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
@@ -964,12 +971,12 @@ vector<budget_api_obj> database_api_impl::get_budgets(const set<string>& names) 
     return results;
 }
 
-set<string> database_api::lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const
+std::set<std::string> database_api::lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() { return my->lookup_budget_owners(lower_bound_name, limit); });
 }
 
-set<string> database_api_impl::lookup_budget_owners(const string& lower_bound_name, uint32_t limit) const
+std::set<std::string> database_api_impl::lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const
 {
     FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_API_LIST_SIZE, "limit must be less or equal than ${1}",
               ("1", SCORUM_BUDGET_LIMIT_API_LIST_SIZE));
@@ -985,12 +992,12 @@ set<string> database_api_impl::lookup_budget_owners(const string& lower_bound_na
  *  The first call should be (account_to_retrieve replies, "", limit)
  *  Subsequent calls should be (last_author, last_permlink, limit)
  */
-vector<discussion> database_api::get_replies_by_last_update(account_name_type start_parent_author,
-                                                            string start_permlink,
-                                                            uint32_t limit) const
+std::vector<discussion> database_api::get_replies_by_last_update(account_name_type start_parent_author,
+                                                                 std::string start_permlink,
+                                                                 uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
-        vector<discussion> result;
+        std::vector<discussion> result;
 
 #ifndef IS_LOW_MEM
         FC_ASSERT(limit <= 100);
@@ -1024,7 +1031,8 @@ vector<discussion> database_api::get_replies_by_last_update(account_name_type st
     });
 }
 
-map<uint32_t, applied_operation> database_api::get_account_history(string account, uint64_t from, uint32_t limit) const
+std::map<uint32_t, applied_operation>
+database_api::get_account_history(std::string account, uint64_t from, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         FC_ASSERT(limit <= 10000, "Limit of ${l} is greater than maxmimum allowed", ("l", limit));
@@ -1036,7 +1044,7 @@ map<uint32_t, applied_operation> database_api::get_account_history(string accoun
         auto end = idx.upper_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
         //   if( end != idx.end() ) idump((*end));
 
-        map<uint32_t, applied_operation> result;
+        std::map<uint32_t, applied_operation> result;
         while (itr != end)
         {
             result[itr->sequence] = my->_db.get(itr->op);
@@ -1046,14 +1054,14 @@ map<uint32_t, applied_operation> database_api::get_account_history(string accoun
     });
 }
 
-vector<pair<string, uint32_t>> database_api::get_tags_used_by_author(const string& author) const
+std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_author(const std::string& author) const
 {
     return my->_db.with_read_lock([&]() {
         const auto* acnt = my->_db.find_account(author);
         FC_ASSERT(acnt != nullptr);
         const auto& tidx = my->_db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
         auto itr = tidx.lower_bound(boost::make_tuple(acnt->id, 0));
-        vector<pair<string, uint32_t>> result;
+        std::vector<std::pair<std::string, uint32_t>> result;
         while (itr != tidx.end() && itr->author == acnt->id && result.size() < 1000)
         {
             result.push_back(std::make_pair(itr->tag, itr->total_posts));
@@ -1063,11 +1071,11 @@ vector<pair<string, uint32_t>> database_api::get_tags_used_by_author(const strin
     });
 }
 
-vector<tag_api_obj> database_api::get_trending_tags(string after, uint32_t limit) const
+std::vector<tag_api_obj> database_api::get_trending_tags(std::string after, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         limit = std::min(limit, uint32_t(1000));
-        vector<tag_api_obj> result;
+        std::vector<tag_api_obj> result;
         result.reserve(limit);
 
         const auto& nidx = my->_db.get_index<tags::tag_stats_index>().indices().get<tags::by_tag>();
@@ -1110,19 +1118,19 @@ discussion database_api::get_discussion(comment_id_type id, uint32_t truncate_bo
 }
 
 template <typename Index, typename StartItr>
-vector<discussion> database_api::get_discussions(const discussion_query& query,
-                                                 const string& tag,
-                                                 comment_id_type parent,
-                                                 const Index& tidx,
-                                                 StartItr tidx_itr,
-                                                 uint32_t truncate_body,
-                                                 const std::function<bool(const comment_api_obj&)>& filter,
-                                                 const std::function<bool(const comment_api_obj&)>& exit,
-                                                 const std::function<bool(const tags::tag_object&)>& tag_exit,
-                                                 bool ignore_parent) const
+std::vector<discussion> database_api::get_discussions(const discussion_query& query,
+                                                      const std::string& tag,
+                                                      comment_id_type parent,
+                                                      const Index& tidx,
+                                                      StartItr tidx_itr,
+                                                      uint32_t truncate_body,
+                                                      const std::function<bool(const comment_api_obj&)>& filter,
+                                                      const std::function<bool(const comment_api_obj&)>& exit,
+                                                      const std::function<bool(const tags::tag_object&)>& tag_exit,
+                                                      bool ignore_parent) const
 {
     // idump((query));
-    vector<discussion> result;
+    std::vector<discussion> result;
 
     const auto& cidx = my->_db.get_index<tags::tag_index>().indices().get<tags::by_comment>();
     comment_id_type start;
@@ -1199,7 +1207,7 @@ comment_id_type database_api::get_parent(const discussion_query& query) const
     });
 }
 
-vector<discussion> database_api::get_discussions_by_payout(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_payout(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1215,7 +1223,7 @@ vector<discussion> database_api::get_discussions_by_payout(const discussion_quer
     });
 }
 
-vector<discussion> database_api::get_post_discussions_by_payout(const discussion_query& query) const
+std::vector<discussion> database_api::get_post_discussions_by_payout(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1231,7 +1239,7 @@ vector<discussion> database_api::get_post_discussions_by_payout(const discussion
     });
 }
 
-vector<discussion> database_api::get_comment_discussions_by_payout(const discussion_query& query) const
+std::vector<discussion> database_api::get_comment_discussions_by_payout(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1247,7 +1255,7 @@ vector<discussion> database_api::get_comment_discussions_by_payout(const discuss
     });
 }
 
-vector<discussion> database_api::get_discussions_by_promoted(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_promoted(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1262,7 +1270,7 @@ vector<discussion> database_api::get_discussions_by_promoted(const discussion_qu
     });
 }
 
-vector<discussion> database_api::get_discussions_by_trending(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_trending(const discussion_query& query) const
 {
 
     return my->_db.with_read_lock([&]() {
@@ -1278,7 +1286,7 @@ vector<discussion> database_api::get_discussions_by_trending(const discussion_qu
     });
 }
 
-vector<discussion> database_api::get_discussions_by_created(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_created(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1292,7 +1300,7 @@ vector<discussion> database_api::get_discussions_by_created(const discussion_que
     });
 }
 
-vector<discussion> database_api::get_discussions_by_active(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_active(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1306,11 +1314,11 @@ vector<discussion> database_api::get_discussions_by_active(const discussion_quer
     });
 }
 
-vector<discussion> database_api::get_discussions_by_cashout(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_cashout(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
-        vector<discussion> result;
+        std::vector<discussion> result;
 
         auto tag = fc::to_lower(query.tag);
         auto parent = get_parent(query);
@@ -1323,7 +1331,7 @@ vector<discussion> database_api::get_discussions_by_cashout(const discussion_que
     });
 }
 
-vector<discussion> database_api::get_discussions_by_votes(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_votes(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1337,7 +1345,7 @@ vector<discussion> database_api::get_discussions_by_votes(const discussion_query
     });
 }
 
-vector<discussion> database_api::get_discussions_by_children(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_children(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1351,7 +1359,7 @@ vector<discussion> database_api::get_discussions_by_children(const discussion_qu
     });
 }
 
-vector<discussion> database_api::get_discussions_by_hot(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_hot(const discussion_query& query) const
 {
 
     return my->_db.with_read_lock([&]() {
@@ -1367,7 +1375,7 @@ vector<discussion> database_api::get_discussions_by_hot(const discussion_query& 
     });
 }
 
-vector<discussion> database_api::get_discussions_by_feed(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_feed(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1389,7 +1397,7 @@ vector<discussion> database_api::get_discussions_by_feed(const discussion_query&
             feed_itr = f_idx.iterator_to(*start_c);
         }
 
-        vector<discussion> result;
+        std::vector<discussion> result;
         result.reserve(query.limit);
 
         while (result.size() < query.limit && feed_itr != f_idx.end())
@@ -1402,7 +1410,7 @@ vector<discussion> database_api::get_discussions_by_feed(const discussion_query&
                 if (feed_itr->first_reblogged_by != account_name_type())
                 {
                     result.back().reblogged_by
-                        = vector<account_name_type>(feed_itr->reblogged_by.begin(), feed_itr->reblogged_by.end());
+                        = std::vector<account_name_type>(feed_itr->reblogged_by.begin(), feed_itr->reblogged_by.end());
                     result.back().first_reblogged_by = feed_itr->first_reblogged_by;
                     result.back().first_reblogged_on = feed_itr->first_reblogged_on;
                 }
@@ -1418,7 +1426,7 @@ vector<discussion> database_api::get_discussions_by_feed(const discussion_query&
     });
 }
 
-vector<discussion> database_api::get_discussions_by_blog(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_blog(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
         query.validate();
@@ -1442,7 +1450,7 @@ vector<discussion> database_api::get_discussions_by_blog(const discussion_query&
             blog_itr = b_idx.iterator_to(*start_c);
         }
 
-        vector<discussion> result;
+        std::vector<discussion> result;
         result.reserve(query.limit);
 
         while (result.size() < query.limit && blog_itr != b_idx.end())
@@ -1496,10 +1504,10 @@ vector<discussion> database_api::get_discussions_by_blog(const discussion_query&
     });
 }
 
-vector<discussion> database_api::get_discussions_by_comments(const discussion_query& query) const
+std::vector<discussion> database_api::get_discussions_by_comments(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
-        vector<discussion> result;
+        std::vector<discussion> result;
 #ifndef IS_LOW_MEM
         query.validate();
         FC_ASSERT(query.start_author, "Must get comments for a specific author");
@@ -1549,7 +1557,9 @@ vector<discussion> database_api::get_discussions_by_comments(const discussion_qu
  *  any accounts referenced by authors.
  *
  */
-void database_api::recursively_fetch_content(state& _state, discussion& root, set<string>& referenced_accounts) const
+void database_api::recursively_fetch_content(state& _state,
+                                             discussion& root,
+                                             std::set<std::string>& referenced_accounts) const
 {
     return my->_db.with_read_lock([&]() {
         try
@@ -1578,12 +1588,12 @@ void database_api::recursively_fetch_content(state& _state, discussion& root, se
     });
 }
 
-vector<account_name_type> database_api::get_active_witnesses() const
+std::vector<account_name_type> database_api::get_active_witnesses() const
 {
     return my->_db.with_read_lock([&]() {
         const auto& wso = my->_db.get_witness_schedule_object();
         size_t n = wso.current_shuffled_witnesses.size();
-        vector<account_name_type> result;
+        std::vector<account_name_type> result;
         result.reserve(n);
         for (size_t i = 0; i < n; i++)
             result.push_back(wso.current_shuffled_witnesses[i]);
@@ -1591,15 +1601,15 @@ vector<account_name_type> database_api::get_active_witnesses() const
     });
 }
 
-vector<discussion> database_api::get_discussions_by_author_before_date(string author,
-                                                                       string start_permlink,
-                                                                       time_point_sec before_date,
-                                                                       uint32_t limit) const
+std::vector<discussion> database_api::get_discussions_by_author_before_date(std::string author,
+                                                                            std::string start_permlink,
+                                                                            time_point_sec before_date,
+                                                                            uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         try
         {
-            vector<discussion> result;
+            std::vector<discussion> result;
 #ifndef IS_LOW_MEM
             FC_ASSERT(limit <= 100);
             result.reserve(limit);
@@ -1636,13 +1646,13 @@ vector<discussion> database_api::get_discussions_by_author_before_date(string au
     });
 }
 
-vector<vesting_delegation_api_obj>
-database_api::get_vesting_delegations(string account, string from, uint32_t limit) const
+std::vector<vesting_delegation_api_obj>
+database_api::get_vesting_delegations(std::string account, std::string from, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
 
     return my->_db.with_read_lock([&]() {
-        vector<vesting_delegation_api_obj> result;
+        std::vector<vesting_delegation_api_obj> result;
         result.reserve(limit);
 
         const auto& delegation_idx = my->_db.get_index<vesting_delegation_index, by_delegation>();
@@ -1657,13 +1667,13 @@ database_api::get_vesting_delegations(string account, string from, uint32_t limi
     });
 }
 
-vector<vesting_delegation_expiration_api_obj>
-database_api::get_expiring_vesting_delegations(string account, time_point_sec from, uint32_t limit) const
+std::vector<vesting_delegation_expiration_api_obj>
+database_api::get_expiring_vesting_delegations(std::string account, time_point_sec from, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
 
     return my->_db.with_read_lock([&]() {
-        vector<vesting_delegation_expiration_api_obj> result;
+        std::vector<vesting_delegation_expiration_api_obj> result;
         result.reserve(limit);
 
         const auto& exp_idx = my->_db.get_index<vesting_delegation_expiration_index, by_account_expiration>();
@@ -1678,7 +1688,7 @@ database_api::get_expiring_vesting_delegations(string account, time_point_sec fr
     });
 }
 
-state database_api::get_state(string path) const
+state database_api::get_state(std::string path) const
 {
     return my->_db.with_read_lock([&]() {
         state _state;
@@ -1697,13 +1707,13 @@ state database_api::get_state(string path) const
             auto trending_tags = get_trending_tags(std::string(), 50);
             for (const auto& t : trending_tags)
             {
-                _state.tag_idx.trending.push_back(string(t.name));
+                _state.tag_idx.trending.push_back(std::string(t.name));
             }
             /// END FETCH CATEGORY STATE
 
-            set<string> accounts;
+            std::set<std::string> accounts;
 
-            vector<string> part;
+            std::vector<std::string> part;
             part.reserve(4);
             boost::split(part, path, boost::is_any_of("/"));
             part.resize(std::max(part.size(), size_t(4))); // at least 4
@@ -1762,7 +1772,7 @@ state database_api::get_state(string path) const
                 else if (part[1] == "recent-replies")
                 {
                     auto replies = get_replies_by_last_update(acnt, "", 50);
-                    eacnt.recent_replies = vector<string>();
+                    eacnt.recent_replies = std::vector<std::string>();
                     for (const auto& reply : replies)
                     {
                         auto reply_ref = reply.author + "/" + reply.permlink;
@@ -1781,7 +1791,7 @@ state database_api::get_state(string path) const
                     int count = 0;
                     const auto& pidx = my->_db.get_index<comment_index>().indices().get<by_author_last_update>();
                     auto itr = pidx.lower_bound(acnt);
-                    eacnt.comments = vector<string>();
+                    eacnt.comments = std::vector<std::string>();
 
                     while (itr != pidx.end() && itr->author == acnt && count < 20)
                     {
@@ -1803,7 +1813,7 @@ state database_api::get_state(string path) const
                     if (my->_follow_api)
                     {
                         auto blog = my->_follow_api->get_blog_entries(eacnt.name, 0, 20);
-                        eacnt.blog = vector<string>();
+                        eacnt.blog = std::vector<std::string>();
 
                         for (auto b : blog)
                         {
@@ -1824,7 +1834,7 @@ state database_api::get_state(string path) const
                     if (my->_follow_api)
                     {
                         auto feed = my->_follow_api->get_feed_entries(eacnt.name, 0, 20);
-                        eacnt.feed = vector<string>();
+                        eacnt.feed = std::vector<std::string>();
 
                         for (auto f : feed)
                         {
@@ -2085,7 +2095,7 @@ state database_api::get_state(string path) const
                 auto trending_tags = get_trending_tags(std::string(), 250);
                 for (const auto& t : trending_tags)
                 {
-                    string name = t.name;
+                    std::string name = t.name;
                     _state.tag_idx.trending.push_back(name);
                     _state.tags[name] = t;
                 }

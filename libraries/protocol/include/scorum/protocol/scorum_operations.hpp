@@ -9,12 +9,12 @@
 namespace scorum {
 namespace protocol {
 
-inline void validate_account_name(const string& name)
+inline void validate_account_name(const std::string& name)
 {
     FC_ASSERT(is_valid_account_name(name), "Account name ${n} is invalid", ("n", name));
 }
 
-inline void validate_permlink(const string& permlink)
+inline void validate_permlink(const std::string& permlink)
 {
     FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
     FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
@@ -29,7 +29,7 @@ struct account_create_operation : public base_operation
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -48,7 +48,7 @@ struct account_create_with_delegation_operation : public base_operation
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
 
     extensions_type extensions;
 
@@ -66,7 +66,7 @@ struct account_update_operation : public base_operation
     optional<authority> active;
     optional<authority> posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
 
     void validate() const;
 
@@ -86,14 +86,14 @@ struct account_update_operation : public base_operation
 struct comment_operation : public base_operation
 {
     account_name_type parent_author;
-    string parent_permlink;
+    std::string parent_permlink;
 
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
-    string title;
-    string body;
-    string json_metadata;
+    std::string title;
+    std::string body;
+    std::string json_metadata;
 
     void validate() const;
     void get_required_posting_authorities(flat_set<account_name_type>& a) const
@@ -125,7 +125,7 @@ struct beneficiary_route_type
 
 struct comment_payout_beneficiaries
 {
-    vector<beneficiary_route_type> beneficiaries;
+    std::vector<beneficiary_route_type> beneficiaries;
 
     void validate() const;
 };
@@ -145,7 +145,7 @@ typedef flat_set<comment_options_extension> comment_options_extensions_type;
 struct comment_options_operation : public base_operation
 {
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
     asset max_accepted_payout
         = asset(1000000000, SCORUM_SYMBOL); /// SBD value of the maximum payout this post will receive
@@ -184,7 +184,7 @@ struct prove_authority_operation : public base_operation
 struct delete_comment_operation : public base_operation
 {
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
     void validate() const;
     void get_required_posting_authorities(flat_set<account_name_type>& a) const
@@ -197,7 +197,7 @@ struct vote_operation : public base_operation
 {
     account_name_type voter;
     account_name_type author;
-    string permlink;
+    std::string permlink;
     int16_t weight = 0;
 
     void validate() const;
@@ -222,7 +222,7 @@ struct transfer_operation : public base_operation
 
     /// The memo is plain-text, any encryption on the memo is up to
     /// a higher level protocol.
-    string memo;
+    std::string memo;
 
     void validate() const;
 
@@ -263,7 +263,7 @@ struct escrow_transfer_operation : public base_operation
     time_point_sec ratification_deadline;
     time_point_sec escrow_expiration;
 
-    string json_meta;
+    std::string json_meta;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -451,7 +451,7 @@ struct chain_properties
 struct witness_update_operation : public base_operation
 {
     account_name_type owner;
-    string url;
+    std::string url;
     public_key_type block_signing_key;
     chain_properties props;
     asset fee; ///< the fee paid to register a new witness, should be 10x current block production pay
@@ -503,7 +503,7 @@ struct custom_operation : public base_operation
 {
     flat_set<account_name_type> required_auths;
     uint16_t id = 0;
-    vector<char> data;
+    std::vector<char> data;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -520,8 +520,8 @@ struct custom_json_operation : public base_operation
 {
     flat_set<account_name_type> required_auths;
     flat_set<account_name_type> required_posting_auths;
-    string id; ///< must be less than 32 characters long
-    string json; ///< must be proper utf8 / JSON string.
+    std::string id; ///< must be less than 32 characters long
+    std::string json; ///< must be proper utf8 / JSON string.
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -541,10 +541,10 @@ struct custom_binary_operation : public base_operation
     flat_set<account_name_type> required_owner_auths;
     flat_set<account_name_type> required_active_auths;
     flat_set<account_name_type> required_posting_auths;
-    vector<authority> required_auths;
+    std::vector<authority> required_auths;
 
-    string id; ///< must be less than 32 characters long
-    vector<char> data;
+    std::string id; ///< must be less than 32 characters long
+    std::vector<char> data;
 
     void validate() const;
     void get_required_owner_authorities(flat_set<account_name_type>& a) const
@@ -562,7 +562,7 @@ struct custom_binary_operation : public base_operation
         for (const auto& i : required_posting_auths)
             a.insert(i);
     }
-    void get_required_authorities(vector<authority>& a) const
+    void get_required_authorities(std::vector<authority>& a) const
     {
         for (const auto& i : required_auths)
             a.push_back(i);
@@ -665,7 +665,7 @@ struct recover_account_operation : public base_operation
 
     extensions_type extensions; ///< Extensions. Not currently used.
 
-    void get_required_authorities(vector<authority>& a) const
+    void get_required_authorities(std::vector<authority>& a) const
     {
         a.push_back(new_owner_authority);
         a.push_back(recent_owner_authority);
@@ -755,7 +755,7 @@ struct delegate_vesting_shares_operation : public base_operation
 struct create_budget_operation : public base_operation
 {
     account_name_type owner;
-    string content_permlink;
+    std::string content_permlink;
 
     asset balance;
     time_point_sec deadline;

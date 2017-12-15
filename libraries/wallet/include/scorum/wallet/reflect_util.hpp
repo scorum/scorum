@@ -32,8 +32,8 @@ namespace wallet {
 
 struct static_variant_map
 {
-    flat_map<string, int> name_to_which;
-    vector<string> which_to_name;
+    flat_map<std::string, int> name_to_which;
+    std::vector<std::string> which_to_name;
 };
 
 namespace impl {
@@ -56,7 +56,9 @@ std::string clean_name(const std::string& name)
 
 struct static_variant_map_visitor
 {
-    static_variant_map_visitor() {}
+    static_variant_map_visitor()
+    {
+    }
 
     typedef void result_type;
 

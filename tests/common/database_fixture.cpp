@@ -436,9 +436,9 @@ void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key&
     trx.sign(key, db.get_chain_id());
 }
 
-vector<operation> database_fixture::get_last_operations(uint32_t num_ops)
+std::vector<operation> database_fixture::get_last_operations(uint32_t num_ops)
 {
-    vector<operation> ops;
+    std::vector<operation> ops;
     const auto& acc_hist_idx = db.get_index<account_history_index>().indices().get<by_id>();
     auto itr = acc_hist_idx.end();
 

@@ -28,35 +28,36 @@ public:
                                  const optional<const char*>& context_type_name = optional<const char*>()) const;
 
     const account_object& create_initial_account(const account_name_type& new_account_name,
-                                   const public_key_type& memo_key,
-                                   const asset& balance_in_scorums,
-                                   const account_name_type& recovery_account,
-                                   const string& json_metadata);
+                                                 const public_key_type& memo_key,
+                                                 const asset& balance_in_scorums,
+                                                 const account_name_type& recovery_account,
+                                                 const std::string& json_metadata);
 
     const account_object& create_account(const account_name_type& new_account_name,
-                                   const account_name_type& creator_name,
-                                   const public_key_type& memo_key,
-                                   const string& json_metadata,
-                                   const authority& owner,
-                                   const authority& active,
-                                   const authority& posting,
-                                   const asset& fee_in_scorums);
+                                         const account_name_type& creator_name,
+                                         const public_key_type& memo_key,
+                                         const std::string& json_metadata,
+                                         const authority& owner,
+                                         const authority& active,
+                                         const authority& posting,
+                                         const asset& fee_in_scorums);
 
     const account_object& create_account_with_delegation(const account_name_type& new_account_name,
-                                        const account_name_type& creator_name,
-                                        const public_key_type& memo_key,
-                                        const string& json_metadata,
-                                        const authority& owner,
-                                        const authority& active,
-                                        const authority& posting,
-                                        const asset& fee_in_scorums,
-                                        const asset& delegation_in_vests,
-                                        const optional<time_point_sec>& now = optional<time_point_sec>());
+                                                         const account_name_type& creator_name,
+                                                         const public_key_type& memo_key,
+                                                         const std::string& json_metadata,
+                                                         const authority& owner,
+                                                         const authority& active,
+                                                         const authority& posting,
+                                                         const asset& fee_in_scorums,
+                                                         const asset& delegation_in_vests,
+                                                         const optional<time_point_sec>& now
+                                                         = optional<time_point_sec>());
 
     void update_acount(const account_object& account,
                        const account_authority_object& account_authority,
                        const public_key_type& memo_key,
-                       const string& json_metadata,
+                       const std::string& json_metadata,
                        const optional<authority>& owner,
                        const optional<authority>& active,
                        const optional<authority>& posting,
@@ -127,7 +128,7 @@ public:
     * @param to_reward_balance
     * @return the sbd created and deposited to_account, may return SCORUM if there is no median feed
     */
-    asset create_vesting(const account_object& to_account, const asset &scorum, bool to_reward_balance = false);
+    asset create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance = false);
 
     /** clears all vote records for a particular account but does not update the
     * witness vote totals.  Vote totals should be updated first via a call to
@@ -144,8 +145,7 @@ public:
     void adjust_proxied_witness_votes(const account_object& account, share_type delta, int depth = 0);
 
 private:
-    const account_object& get_account(const account_id_type &) const;
-
+    const account_object& get_account(const account_id_type&) const;
 };
 } // namespace chain
 } // namespace scorum

@@ -12,15 +12,14 @@ dbs_registration_pool::dbs_registration_pool(database& db)
 {
 }
 
-bool dbs_registration_pool::is_pool_exists() const
-{
-    return !db_impl().get_index<registration_pool_index>().indicies().empty();
-}
-
 const registration_pool_object& dbs_registration_pool::get_pool() const
 {
-    // This method uses get(id == 0). It is correct because we create object only one time
-    return db_impl().get<registration_pool_object>();
+    try
+    {
+        // This method uses get(id == 0). It is correct because we create object only one time
+        return db_impl().get<registration_pool_object>();
+    }
+    FC_CAPTURE_AND_RETHROW(("Pool does not exist."))
 }
 
 const registration_pool_object& dbs_registration_pool::create_pool(const asset& supply,
@@ -42,8 +41,9 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
                   "Invalid schedule value (percent) for stage ${1}.", ("1", stage));
     }
 
-    // check existence here to allow unit tests check input data even if object exists in DB
-    FC_ASSERT(!is_pool_exists(), "Can't create more than one pool.");
+    // Check existence here to allow unit tests check input data even if object exists in DB
+    // This method uses get(id == 0). Look get_pool.
+    FC_ASSERT(db_impl().find<registration_pool_object>() == nullptr, "Can't create more than one pool.");
 
     // create pool
     const auto& new_pool = db_impl().create<registration_pool_object>([&](registration_pool_object& pool) {
@@ -61,18 +61,13 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
-    if (!is_pool_exists())
-    {
-        return asset(0, REGISTRATION_BONUS_SYMBOL);
-    }
+    const registration_pool_object& this_pool = get_pool();
 
     const dbs_account& account_service = db().obtain_service<dbs_account>();
 
     account_service.check_account_existence(member_name);
 
-    const registration_pool_object& this_pool = get_pool();
-
-    asset per_reg = _calculate_per_reg(this_pool);
+    asset per_reg = _calculate_per_reg();
     FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
     FC_ASSERT(per_reg.amount <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount
                       / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK,
@@ -116,7 +111,7 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     }
 
     // return value <= per_reg
-    per_reg = _decrease_balance(this_pool, per_reg);
+    per_reg = _decrease_balance(per_reg);
 
     auto modifier = [=](registration_committee_member_object& m) {
         m.last_allocated_block = head_block_num;
@@ -133,7 +128,7 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     };
     committee_service.update_member_info(member, modifier);
 
-    if (!_check_autoclose(this_pool))
+    if (!_check_autoclose())
     {
         db_impl().modify(this_pool, [&](registration_pool_object& pool) { pool.already_allocated_count++; });
     }
@@ -141,9 +136,11 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     return per_reg;
 }
 
-asset dbs_registration_pool::_decrease_balance(const registration_pool_object& this_pool, const asset& balance)
+asset dbs_registration_pool::_decrease_balance(const asset& balance)
 {
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
+
+    const registration_pool_object& this_pool = get_pool();
 
     asset ret(0, REGISTRATION_BONUS_SYMBOL);
 
@@ -163,8 +160,10 @@ asset dbs_registration_pool::_decrease_balance(const registration_pool_object& t
     return ret;
 }
 
-asset dbs_registration_pool::_calculate_per_reg(const registration_pool_object& this_pool)
+asset dbs_registration_pool::_calculate_per_reg()
 {
+    const registration_pool_object& this_pool = get_pool();
+
     FC_ASSERT(!this_pool.schedule_items.empty(), "Invalid schedule.");
 
     // find position in schedule
@@ -197,11 +196,13 @@ asset dbs_registration_pool::_calculate_per_reg(const registration_pool_object& 
     return asset(current_item.bonus_percent * this_pool.maximum_bonus.amount / 100, REGISTRATION_BONUS_SYMBOL);
 }
 
-bool dbs_registration_pool::_check_autoclose(const registration_pool_object& this_pool)
+bool dbs_registration_pool::_check_autoclose()
 {
+    const registration_pool_object& this_pool = get_pool();
+
     if (this_pool.balance.amount <= 0)
     {
-        _close(this_pool);
+        _close();
         return true;
     }
     else
@@ -210,8 +211,9 @@ bool dbs_registration_pool::_check_autoclose(const registration_pool_object& thi
     }
 }
 
-void dbs_registration_pool::_close(const registration_pool_object& this_pool)
+void dbs_registration_pool::_close()
 {
+    const registration_pool_object& this_pool = get_pool();
     db_impl().remove(this_pool);
 }
 }

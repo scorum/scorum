@@ -17,7 +17,7 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 {
     budget_refs_type ret;
 
-    const auto &idx = db_impl().get_index<budget_index>().indicies();
+    const auto& idx = db_impl().get_index<budget_index>().indicies();
     auto it = idx.cbegin();
     const auto it_end = idx.cend();
     while (it != it_end)
@@ -29,13 +29,13 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
     return ret;
 }
 
-std::set<string> dbs_budget::lookup_budget_owners(const string& lower_bound_owner_name, uint32_t limit) const
+std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
 {
     FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_DB_LIST_SIZE,
-              "limit must be less or equal than ${1}, actual limit value == ${2}",
+              "Limit must be less or equal than ${1}, actual limit value == ${2}.",
               ("1", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE)("2", limit));
     const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
-    set<string> result;
+    std::set<std::string> result;
 
     for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
          limit-- && itr != budgets_by_owner_name.end(); ++itr)
@@ -66,7 +66,7 @@ const budget_object& dbs_budget::get_fund_budget() const
 {
     budget_refs_type fund_budget = get_budgets(SCORUM_ROOT_POST_PARENT);
 
-    FC_ASSERT(!fund_budget.empty(), "fund_budget_object is not created");
+    FC_ASSERT(!fund_budget.empty(), "Fund budget does not exist.");
 
     return fund_budget[0];
 }
@@ -79,15 +79,15 @@ const budget_object& dbs_budget::get_budget(budget_id_type id) const
 const budget_object& dbs_budget::create_fund_budget(const asset& balance, const time_point_sec& deadline)
 {
     // clang-format off
-    FC_ASSERT((db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT) == nullptr), "recreation of fund_budget_object is not allowed");
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(balance.amount > 0, "invalid balance");
+    FC_ASSERT((db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT) == nullptr), "Recreation of fund budget is not allowed.");
+    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
     time_point_sec start_date = props.time;
-    FC_ASSERT(start_date < deadline, "invalid deadline");
+    FC_ASSERT(start_date < deadline, "Invalid deadline.");
 
     auto head_block_num = db_impl().head_block_num();
 
@@ -110,19 +110,20 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
 const budget_object& dbs_budget::create_budget(const account_object& owner,
                                                const asset& balance,
                                                const time_point_sec& deadline,
-                                               const optional<string>& content_permlink)
+                                               const optional<std::string>& content_permlink)
 {
-    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "SCORUM_ROOT_POST_PARENT name is not allowed for ordinary budget");
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(balance.amount > 0, "invalid balance");
-    FC_ASSERT(owner.balance >= balance, "insufficient funds");
+    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "'${1}' name is not allowed for ordinary budget.",
+              ("1", SCORUM_ROOT_POST_PARENT));
+    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.amount > 0, "Invalid balance.");
+    FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
     FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER,
-              "can't create more then ${1} budgets per owner", ("1", SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER));
+              "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
     time_point_sec start_date = props.time;
-    FC_ASSERT(start_date < deadline, "invalid deadline");
+    FC_ASSERT(start_date < deadline, "Invalid deadline.");
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -168,7 +169,7 @@ asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time
         return ret; // empty (allocation waits new block)
     }
 
-    FC_ASSERT(budget.per_block > 0, "invalid per_block");
+    FC_ASSERT(budget.per_block > 0, "Invalid per_block.");
     ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
 
     if (budget.deadline <= t)
@@ -195,7 +196,7 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
                                             const time_point_sec& end_date,
                                             share_type balance_amount)
 {
-    FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(), "invalid date interval");
+    FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(), "Invalid date interval.");
 
     share_type ret(balance_amount);
 
@@ -218,8 +219,8 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
 
 asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& balance)
 {
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(balance.amount > 0, "invalid balance");
+    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
     asset ret(0, SCORUM_SYMBOL);
 
@@ -271,7 +272,7 @@ void dbs_budget::_close_budget(const budget_object& budget)
 
 void dbs_budget::_close_owned_budget(const budget_object& budget)
 {
-    FC_ASSERT(!_is_fund_budget(budget), "not allowed for fund budget");
+    FC_ASSERT(!_is_fund_budget(budget), "Not allowed for fund budget.");
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -297,7 +298,7 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
 
 void dbs_budget::_close_fund_budget(const budget_object& budget)
 {
-    FC_ASSERT(_is_fund_budget(budget), "not allowed for ordinary budget");
+    FC_ASSERT(_is_fund_budget(budget), "Not allowed for ordinary budget.");
 
     // delete budget
     //

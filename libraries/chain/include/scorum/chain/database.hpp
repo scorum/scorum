@@ -141,8 +141,8 @@ public:
                                       const fc::shared_string& permlink) const override;
     const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
-    const comment_object& get_comment(const account_name_type& author, const string& permlink) const override;
-    const comment_object* find_comment(const account_name_type& author, const string& permlink) const;
+    const comment_object& get_comment(const account_name_type& author, const std::string& permlink) const override;
+    const comment_object* find_comment(const account_name_type& author, const std::string& permlink) const;
 
     const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const override;
     const escrow_object* find_escrow(const account_name_type& name, uint32_t escrow_id) const;
@@ -302,7 +302,7 @@ public:
     void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
     asset get_balance(const account_object& a, asset_symbol_type symbol) const override;
-    asset get_balance(const string& aname, asset_symbol_type symbol) const override
+    asset get_balance(const std::string& aname, asset_symbol_type symbol) const override
     {
         return get_balance(get_account(aname), symbol);
     }
@@ -433,7 +433,7 @@ private:
 
     optional<chainbase::database::session> _pending_tx_session;
 
-    vector<signed_transaction> _pending_tx;
+    std::vector<signed_transaction> _pending_tx;
     fork_database _fork_db;
     fc::time_point_sec _hardfork_times[SCORUM_NUM_HARDFORKS + 1];
     protocol::hardfork_version _hardfork_versions[SCORUM_NUM_HARDFORKS + 1];

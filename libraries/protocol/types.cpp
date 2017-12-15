@@ -180,7 +180,7 @@ bool operator!=(const extended_private_key_type& p1, const extended_private_key_
 } // scorum::protocol
 
 namespace fc {
-using namespace std;
+
 void to_variant(const scorum::protocol::public_key_type& var, fc::variant& vo)
 {
     vo = std::string(var);

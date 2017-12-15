@@ -48,9 +48,6 @@ namespace witness {
 
 namespace bpo = boost::program_options;
 
-using std::string;
-using std::vector;
-
 using protocol::signed_transaction;
 using chain::account_object;
 
@@ -121,9 +118,9 @@ struct comment_options_extension_visitor
     }
 };
 
-void check_memo(const string& memo, const account_object& account, const account_authority_object& auth)
+void check_memo(const std::string& memo, const account_object& account, const account_authority_object& auth)
 {
-    vector<public_key_type> keys;
+    std::vector<public_key_type> keys;
 
     try
     {
@@ -138,15 +135,15 @@ void check_memo(const string& memo, const account_object& account, const account
     }
 
     // Get possible keys if memo was an account password
-    string owner_seed = account.name + "owner" + memo;
+    std::string owner_seed = account.name + "owner" + memo;
     auto owner_secret = fc::sha256::hash(owner_seed.c_str(), owner_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(owner_secret).get_public_key());
 
-    string active_seed = account.name + "active" + memo;
+    std::string active_seed = account.name + "active" + memo;
     auto active_secret = fc::sha256::hash(active_seed.c_str(), active_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(active_secret).get_public_key());
 
-    string posting_seed = account.name + "posting" + memo;
+    std::string posting_seed = account.name + "posting" + memo;
     auto posting_secret = fc::sha256::hash(posting_seed.c_str(), posting_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(posting_secret).get_public_key());
 
@@ -240,7 +237,7 @@ void witness_plugin_impl::pre_transaction(const signed_transaction& trx)
 {
     const auto& _db = _self.database();
     flat_set<account_name_type> required;
-    vector<authority> other;
+    std::vector<authority> other;
     trx.get_required_authorities(required, required, required, other);
 
     auto trx_size = fc::raw::pack_size(trx);
@@ -319,7 +316,9 @@ void witness_plugin_impl::on_block(const signed_block& b)
 
                     // We do not want the reserve ratio to drop below 1
                     if (r.current_reserve_ratio < RESERVE_RATIO_PRECISION)
+                    {
                         r.current_reserve_ratio = RESERVE_RATIO_PRECISION;
+                    }
                 }
                 else
                 {
@@ -329,7 +328,9 @@ void witness_plugin_impl::on_block(const signed_block& b)
                                     (r.current_reserve_ratio * distance) / (distance - DISTANCE_CALC_PRECISION));
 
                     if (r.current_reserve_ratio > SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION)
+                    {
                         r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
+                    }
                 }
 
                 if (old_reserve_ratio != r.current_reserve_ratio)
@@ -372,7 +373,9 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
         auto delta_time = (_db.head_block_time() - band->last_bandwidth_update).to_seconds();
 
         if (delta_time > SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+        {
             new_bandwidth = 0;
+        }
         else
             new_bandwidth
                 = (((SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time) * fc::uint128(band->average_bandwidth.value))
@@ -415,7 +418,9 @@ witness_plugin::~witness_plugin()
     try
     {
         if (_block_production_task.valid())
+        {
             _block_production_task.cancel_and_wait(__FUNCTION__);
+        }
     }
     catch (fc::canceled_exception&)
     {
@@ -430,7 +435,7 @@ witness_plugin::~witness_plugin()
 void witness_plugin::plugin_set_program_options(boost::program_options::options_description& command_line_options,
                                                 boost::program_options::options_description& config_file_options)
 {
-    string witness_id_example = "initwitness";
+    std::string witness_id_example = "initwitness";
     command_line_options.add_options()("enable-stale-production",
                                        bpo::bool_switch()->notifier([this](bool e) { _production_enabled = e; }),
                                        "Enable block production, even if the chain is stale.")(
@@ -438,9 +443,9 @@ void witness_plugin::plugin_set_program_options(boost::program_options::options_
             _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT);
         }),
         "Percent of witnesses (0-99) that must be participating in order to produce blocks")(
-        "witness,w", bpo::value<vector<string>>()->composing()->multitoken(),
+        "witness,w", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
         ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())(
-        "private-key", bpo::value<vector<string>>()->composing()->multitoken(),
+        "private-key", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
         "WIF PRIVATE KEY to be used by one or more witnesses or miners");
     config_file_options.add(command_line_options);
 }
@@ -450,16 +455,12 @@ std::string witness_plugin::plugin_name() const
     return "witness";
 }
 
-using std::vector;
-using std::pair;
-using std::string;
-
 void witness_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try
     {
         _options = &options;
-        LOAD_VALUE_SET(options, "witness", _witnesses, string)
+        LOAD_VALUE_SET(options, "witness", _witnesses, std::string)
 
         if (options.count("private-key"))
         {
@@ -500,7 +501,9 @@ void witness_plugin::plugin_startup()
             if (_production_enabled)
             {
                 if (d.head_block_num() == 0)
+                {
                     new_chain_banner(d);
+                }
                 _production_skip_flags |= scorum::chain::database::skip_undo_history_check;
             }
             schedule_production_loop();
@@ -526,7 +529,9 @@ void witness_plugin::schedule_production_loop()
     fc::time_point fc_now = fc::time_point::now();
     int64_t time_to_next_second = 1000000 - (fc_now.time_since_epoch().count() % 1000000);
     if (time_to_next_second < 50000) // we must sleep for at least 50ms
+    {
         time_to_next_second += 1000000;
+    }
 
     fc::time_point next_wakeup(fc_now + fc::microseconds(time_to_next_second));
 
@@ -622,9 +627,13 @@ witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
     if (!_production_enabled)
     {
         if (db.get_slot_time(1) >= now)
+        {
             _production_enabled = true;
+        }
         else
+        {
             return block_production_condition::not_synced;
+        }
     }
 
     // is anyone scheduled to produce now or one second in the future?
@@ -645,7 +654,7 @@ witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
     //
     assert(now > db.head_block_time());
 
-    string scheduled_witness = db.get_scheduled_witness(slot);
+    std::string scheduled_witness = db.get_scheduled_witness(slot);
     // we must control the witness scheduled to produce the next block.
     if (_witnesses.find(scheduled_witness) == _witnesses.end())
     {

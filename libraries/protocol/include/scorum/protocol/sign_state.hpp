@@ -6,7 +6,7 @@
 namespace scorum {
 namespace protocol {
 
-typedef std::function<authority(const string&)> authority_getter;
+typedef std::function<authority(const std::string&)> authority_getter;
 
 struct sign_state
 {
@@ -14,7 +14,7 @@ struct sign_state
      * produce a signature for this key, else returns false.
      */
     bool signed_by(const public_key_type& k);
-    bool check_authority(string id);
+    bool check_authority(const std::string& id);
 
     /**
      *  Checks to see if we have signatures of the active authorites of
@@ -30,7 +30,7 @@ struct sign_state
     const flat_set<public_key_type>& available_keys;
 
     flat_map<public_key_type, bool> provided_signatures;
-    flat_set<string> approved_by;
+    flat_set<std::string> approved_by;
     uint32_t max_recursion = SCORUM_MAX_SIG_CHECK_DEPTH;
 };
 }

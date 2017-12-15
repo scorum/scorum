@@ -67,7 +67,7 @@ using scorum::wallet::utils::derive_private_key;
 
 namespace detail {
 
-template <class T> optional<T> maybe_id(const string& name_or_id)
+template <class T> optional<T> maybe_id(const std::string& name_or_id)
 {
     if (std::isdigit(name_or_id.front()))
     {
@@ -82,11 +82,11 @@ template <class T> optional<T> maybe_id(const string& name_or_id)
     return optional<T>();
 }
 
-string pubkey_to_shorthash(const public_key_type& key)
+std::string pubkey_to_shorthash(const public_key_type& key)
 {
     uint32_t x = fc::sha256::hash(key)._hash[0];
     static const char hd[] = "0123456789abcdef";
-    string result;
+    std::string result;
 
     result += hd[(x >> 0x1c) & 0x0f];
     result += hd[(x >> 0x18) & 0x0f];
@@ -100,7 +100,7 @@ string pubkey_to_shorthash(const public_key_type& key)
     return result;
 }
 
-string normalize_brain_key(const std::string& s)
+std::string normalize_brain_key(const std::string& s)
 {
     size_t i = 0, n = s.length();
     std::string result;
@@ -229,9 +229,9 @@ struct op_prototype_visitor
 
     template <typename Type> result_type operator()(const Type& op) const
     {
-        string name = fc::get_typename<Type>::name();
+        std::string name = fc::get_typename<Type>::name();
         size_t p = name.rfind(':');
-        if (p != string::npos)
+        if (p != std::string::npos)
             name = name.substr(p + 1);
         name2op[name] = Type();
     }
@@ -354,9 +354,9 @@ public:
 
     variant_object about() const
     {
-        string client_version(graphene::utilities::git_revision_description);
+        std::string client_version(graphene::utilities::git_revision_description);
         const size_t pos = client_version.find('/');
-        if (pos != string::npos && client_version.size() > pos)
+        if (pos != std::string::npos && client_version.size() > pos)
             client_version = client_version.substr(pos + 1);
 
         fc::mutable_variant_object result;
@@ -406,7 +406,7 @@ public:
         return accounts.front();
     }
 
-    string get_wallet_filename() const
+    std::string get_wallet_filename() const
     {
         return _wallet_filename;
     }
@@ -428,7 +428,7 @@ public:
 
     fc::ecc::private_key get_private_key_for_account(const account_api_obj& account) const
     {
-        vector<public_key_type> active_keys = account.active.get_keys();
+        std::vector<public_key_type> active_keys = account.active.get_keys();
         if (active_keys.size() != 1)
             FC_THROW("Expecting a simple authority with one active key");
         return get_private_key(active_keys.front());
@@ -450,7 +450,7 @@ public:
     }
 
     // TODO: Needs refactoring
-    bool load_wallet_file(string wallet_filename = "")
+    bool load_wallet_file(std::string wallet_filename = "")
     {
         // TODO:  Merge imported wallet with existing wallet,
         //        instead of replacing it
@@ -466,7 +466,7 @@ public:
     }
 
     // TODO: Needs refactoring
-    void save_wallet_file(string wallet_filename = "")
+    void save_wallet_file(std::string wallet_filename = "")
     {
         //
         // Serialize in memory, then save to disk
@@ -482,7 +482,7 @@ public:
 
         wlog("saving wallet to file ${fn}", ("fn", wallet_filename));
 
-        string data = fc::json::to_pretty_string(_wallet);
+        std::string data = fc::json::to_pretty_string(_wallet);
         try
         {
             enable_umask_protection();
@@ -618,7 +618,7 @@ public:
         flat_set<account_name_type> req_active_approvals;
         flat_set<account_name_type> req_owner_approvals;
         flat_set<account_name_type> req_posting_approvals;
-        vector<authority> other_auths;
+        std::vector<authority> other_auths;
 
         tx.get_required_authorities(req_active_approvals, req_owner_approvals, req_posting_approvals, other_auths);
 
@@ -629,7 +629,7 @@ public:
         // std::merge lets us de-duplicate account_id's that occur in both
         //   sets, and dump them into a vector (as required by remote_db api)
         //   at the same time
-        vector<string> v_approving_account_names;
+        std::vector<std::string> v_approving_account_names;
         std::merge(req_active_approvals.begin(), req_active_approvals.end(), req_owner_approvals.begin(),
                    req_owner_approvals.end(), std::back_inserter(v_approving_account_names));
 
@@ -645,7 +645,7 @@ public:
         FC_ASSERT(approving_account_objects.size() == v_approving_account_names.size(), "",
                   ("aco.size:", approving_account_objects.size())("acn", v_approving_account_names.size()));
 
-        flat_map<string, account_api_obj> approving_account_lut;
+        flat_map<std::string, account_api_obj> approving_account_lut;
         size_t i = 0;
         for (const optional<account_api_obj>& approving_acct : approving_account_objects)
         {
@@ -667,7 +667,7 @@ public:
             if (it == approving_account_lut.end())
                 continue;
             const account_api_obj& acct = it->second;
-            vector<public_key_type> v_approving_keys = acct.active.get_keys();
+            std::vector<public_key_type> v_approving_keys = acct.active.get_keys();
             wdump((v_approving_keys));
             for (const public_key_type& approving_key : v_approving_keys)
             {
@@ -682,7 +682,7 @@ public:
             if (it == approving_account_lut.end())
                 continue;
             const account_api_obj& acct = it->second;
-            vector<public_key_type> v_approving_keys = acct.posting.get_keys();
+            std::vector<public_key_type> v_approving_keys = acct.posting.get_keys();
             wdump((v_approving_keys));
             for (const public_key_type& approving_key : v_approving_keys)
             {
@@ -697,7 +697,7 @@ public:
             if (it == approving_account_lut.end())
                 continue;
             const account_api_obj& acct = it->second;
-            vector<public_key_type> v_approving_keys = acct.owner.get_keys();
+            std::vector<public_key_type> v_approving_keys = acct.owner.get_keys();
             for (const public_key_type& approving_key : v_approving_keys)
             {
                 wdump((approving_key));
@@ -739,14 +739,18 @@ public:
             return it->second;
         };
 
-        auto minimal_signing_keys = tx.minimize_required_signatures(
-            _chain_id, available_keys,
-            [&](const string& account_name) -> const authority& { return (get_account_from_lut(account_name).active); },
-            [&](const string& account_name) -> const authority& { return (get_account_from_lut(account_name).owner); },
-            [&](const string& account_name) -> const authority& {
-                return (get_account_from_lut(account_name).posting);
-            },
-            SCORUM_MAX_SIG_CHECK_DEPTH);
+        auto minimal_signing_keys
+            = tx.minimize_required_signatures(_chain_id, available_keys,
+                                              [&](const std::string& account_name) -> const authority& {
+                                                  return (get_account_from_lut(account_name).active);
+                                              },
+                                              [&](const std::string& account_name) -> const authority& {
+                                                  return (get_account_from_lut(account_name).owner);
+                                              },
+                                              [&](const std::string& account_name) -> const authority& {
+                                                  return (get_account_from_lut(account_name).posting);
+                                              },
+                                              SCORUM_MAX_SIG_CHECK_DEPTH);
 
         for (const public_key_type& k : minimal_signing_keys)
         {
@@ -775,9 +779,9 @@ public:
         return tx;
     }
 
-    std::map<string, std::function<string(fc::variant, const fc::variants&)>> get_result_formatters() const
+    std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const
     {
-        std::map<string, std::function<string(fc::variant, const fc::variants&)>> m;
+        std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> m;
         m["help"] = [](variant result, const fc::variants& a) { return result.get_string(); };
 
         m["gethelp"] = [](variant result, const fc::variants& a) { return result.get_string(); };
@@ -785,7 +789,7 @@ public:
         m["list_my_accounts"] = [](variant result, const fc::variants& a) {
             std::stringstream out;
 
-            auto accounts = result.as<vector<account_api_obj>>();
+            auto accounts = result.as<std::vector<account_api_obj>>();
             asset total_scorum;
             asset total_vest(0, VESTS_SYMBOL);
             for (const auto& a : accounts)
@@ -829,7 +833,7 @@ public:
             return ss.str();
         };
         m["get_withdraw_routes"] = [](variant result, const fc::variants& a) {
-            auto routes = result.as<vector<withdraw_route>>();
+            auto routes = result.as<std::vector<withdraw_route>>();
             std::stringstream ss;
 
             ss << ' ' << std::left << std::setw(20) << "From";
@@ -917,20 +921,20 @@ public:
         }
     }
 
-    void network_add_nodes(const vector<string>& nodes)
+    void network_add_nodes(const std::vector<std::string>& nodes)
     {
         use_network_node_api();
-        for (const string& node_address : nodes)
+        for (const std::string& node_address : nodes)
         {
             (*_remote_net_node)->add_node(fc::ip::endpoint::from_string(node_address));
         }
     }
 
-    vector<variant> network_get_connected_peers()
+    std::vector<variant> network_get_connected_peers()
     {
         use_network_node_api();
         const auto peers = (*_remote_net_node)->get_connected_peers();
-        vector<variant> result;
+        std::vector<variant> result;
         result.reserve(peers.size());
         for (const auto& peer : peers)
         {
@@ -949,10 +953,10 @@ public:
         return it->second;
     }
 
-    string _wallet_filename;
+    std::string _wallet_filename;
     wallet_data _wallet;
 
-    map<public_key_type, string> _keys;
+    std::map<public_key_type, std::string> _keys;
     fc::sha512 _checksum;
 
     chain_id_type _chain_id;
@@ -966,14 +970,14 @@ public:
     optional<fc::api<follow::follow_api>> _remote_follow_api;
     uint32_t _tx_expiration_seconds = 30;
 
-    flat_map<string, operation> _prototype_ops;
+    flat_map<std::string, operation> _prototype_ops;
 
     static_variant_map _operation_which_map = create_static_variant_map<operation>();
 
 #ifdef __unix__
     mode_t _old_umask;
 #endif
-    const string _wallet_filename_extension = ".wallet";
+    const std::string _wallet_filename_extension = ".wallet";
 };
 
 } // namespace detail
@@ -987,7 +991,7 @@ wallet_api::~wallet_api()
 {
 }
 
-bool wallet_api::copy_wallet_file(const string& destination_filename)
+bool wallet_api::copy_wallet_file(const std::string& destination_filename)
 {
     return my->copy_wallet_file(destination_filename);
 }
@@ -997,15 +1001,15 @@ optional<signed_block_api_obj> wallet_api::get_block(uint32_t num)
     return my->_remote_db->get_block(num);
 }
 
-vector<applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, bool only_virtual)
+std::vector<applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, bool only_virtual)
 {
     return my->_remote_db->get_ops_in_block(block_num, only_virtual);
 }
 
-vector<account_api_obj> wallet_api::list_my_accounts()
+std::vector<account_api_obj> wallet_api::list_my_accounts()
 {
     FC_ASSERT(!is_locked(), "Wallet must be unlocked to list accounts");
-    vector<account_api_obj> result;
+    std::vector<account_api_obj> result;
 
     try
     {
@@ -1017,14 +1021,14 @@ vector<account_api_obj> wallet_api::list_my_accounts()
         return result;
     }
 
-    vector<public_key_type> pub_keys;
+    std::vector<public_key_type> pub_keys;
     pub_keys.reserve(my->_keys.size());
 
     for (const auto& item : my->_keys)
         pub_keys.push_back(item.first);
 
     auto refs = (*my->_remote_account_by_key_api)->get_key_references(pub_keys);
-    set<string> names;
+    std::set<std::string> names;
     for (const auto& item : refs)
         for (const auto& name : item)
             names.insert(name);
@@ -1036,7 +1040,7 @@ vector<account_api_obj> wallet_api::list_my_accounts()
     return result;
 }
 
-set<string> wallet_api::list_accounts(const string& lowerbound, uint32_t limit)
+std::set<std::string> wallet_api::list_accounts(const std::string& lowerbound, uint32_t limit)
 {
     return my->_remote_db->lookup_accounts(lowerbound, limit);
 }
@@ -1046,12 +1050,12 @@ std::vector<account_name_type> wallet_api::get_active_witnesses() const
     return my->_remote_db->get_active_witnesses();
 }
 
-string wallet_api::serialize_transaction(const signed_transaction& tx) const
+std::string wallet_api::serialize_transaction(const signed_transaction& tx) const
 {
     return fc::to_hex(fc::raw::pack(tx));
 }
 
-string wallet_api::get_wallet_filename() const
+std::string wallet_api::get_wallet_filename() const
 {
     return my->get_wallet_filename();
 }
@@ -1080,7 +1084,7 @@ bool wallet_api::import_key(const std::string& wif_key)
     return false;
 }
 
-string wallet_api::normalize_brain_key(const std::string& s) const
+std::string wallet_api::normalize_brain_key(const std::string& s) const
 {
     return detail::normalize_brain_key(s);
 }
@@ -1095,7 +1099,7 @@ variant_object wallet_api::about() const
     return my->about();
 }
 
-set<account_name_type> wallet_api::list_witnesses(const string& lowerbound, uint32_t limit)
+std::set<account_name_type> wallet_api::list_witnesses(const std::string& lowerbound, uint32_t limit)
 {
     return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
 }
@@ -1136,17 +1140,17 @@ operation wallet_api::get_prototype_operation(const std::string& operation_name)
     return my->get_prototype_operation(operation_name);
 }
 
-void wallet_api::network_add_nodes(const vector<string>& nodes)
+void wallet_api::network_add_nodes(const std::vector<std::string>& nodes)
 {
     my->network_add_nodes(nodes);
 }
 
-vector<variant> wallet_api::network_get_connected_peers()
+std::vector<variant> wallet_api::network_get_connected_peers()
 {
     return my->network_get_connected_peers();
 }
 
-string wallet_api::help() const
+std::string wallet_api::help() const
 {
     std::vector<std::string> method_names = my->method_documentation.get_method_names();
     std::stringstream ss;
@@ -1164,7 +1168,7 @@ string wallet_api::help() const
     return ss.str();
 }
 
-string wallet_api::gethelp(const std::string& method) const
+std::string wallet_api::gethelp(const std::string& method) const
 {
     fc::api<wallet_api> tmp;
     std::stringstream ss;
@@ -1189,7 +1193,8 @@ void wallet_api::save_wallet_file(const std::string& wallet_filename)
     my->save_wallet_file(wallet_filename);
 }
 
-std::map<string, std::function<string(fc::variant, const fc::variants&)>> wallet_api::get_result_formatters() const
+std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>>
+wallet_api::get_result_formatters() const
 {
     return my->get_result_formatters();
 }
@@ -1223,13 +1228,13 @@ void wallet_api::lock()
     FC_CAPTURE_AND_RETHROW()
 }
 
-void wallet_api::unlock(const string& password)
+void wallet_api::unlock(const std::string& password)
 {
     try
     {
         FC_ASSERT(password.size() > 0);
         auto pw = fc::sha512::hash(password.c_str(), password.size());
-        vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
+        std::vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
         auto pk = fc::raw::unpack<plain_keys>(decrypted);
         FC_ASSERT(pk.checksum == pw);
         my->_keys = std::move(pk.keys);
@@ -1247,20 +1252,20 @@ void wallet_api::set_password(const std::string& password)
     lock();
 }
 
-map<public_key_type, string> wallet_api::list_keys()
+std::map<public_key_type, std::string> wallet_api::list_keys()
 {
     FC_ASSERT(!is_locked());
     return my->_keys;
 }
 
-string wallet_api::get_private_key(const public_key_type& pubkey) const
+std::string wallet_api::get_private_key(const public_key_type& pubkey) const
 {
     return key_to_wif(my->get_private_key(pubkey));
 }
 
-pair<public_key_type, string> wallet_api::get_private_key_from_password(const std::string& account,
-                                                                        const std::string& role,
-                                                                        const std::string& password) const
+std::pair<public_key_type, std::string> wallet_api::get_private_key_from_password(const std::string& account,
+                                                                                  const std::string& role,
+                                                                                  const std::string& password) const
 {
     auto seed = account + role + password;
     FC_ASSERT(seed.size());
@@ -1314,8 +1319,8 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
 annotated_signed_transaction wallet_api::create_account_with_keys_delegated(const std::string& creator,
                                                                             const asset& scorum_fee,
                                                                             const asset& delegated_vests,
-                                                                            const string& newname,
-                                                                            const string& json_meta,
+                                                                            const std::string& newname,
+                                                                            const std::string& json_meta,
                                                                             const public_key_type& owner,
                                                                             const public_key_type& active,
                                                                             const public_key_type& posting,
@@ -1398,7 +1403,7 @@ wallet_api::change_recovery_account(const std::string& owner, const std::string&
     return my->sign_transaction(tx, broadcast);
 }
 
-vector<owner_authority_history_api_obj> wallet_api::get_owner_history(const std::string& account) const
+std::vector<owner_authority_history_api_obj> wallet_api::get_owner_history(const std::string& account) const
 {
     return my->_remote_db->get_owner_history(account);
 }
@@ -1815,9 +1820,9 @@ annotated_signed_transaction wallet_api::vote_for_witness(const std::string& vot
     FC_CAPTURE_AND_RETHROW((voting_account)(witness_to_vote_for)(approve)(broadcast))
 }
 
-void wallet_api::check_memo(const string& memo, const account_api_obj& account) const
+void wallet_api::check_memo(const std::string& memo, const account_api_obj& account) const
 {
-    vector<public_key_type> keys;
+    std::vector<public_key_type> keys;
 
     try
     {
@@ -1832,15 +1837,15 @@ void wallet_api::check_memo(const string& memo, const account_api_obj& account) 
     }
 
     // Get possible keys if memo was an account password
-    string owner_seed = account.name + "owner" + memo;
+    std::string owner_seed = account.name + "owner" + memo;
     auto owner_secret = fc::sha256::hash(owner_seed.c_str(), owner_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(owner_secret).get_public_key());
 
-    string active_seed = account.name + "active" + memo;
+    std::string active_seed = account.name + "active" + memo;
     auto active_secret = fc::sha256::hash(active_seed.c_str(), active_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(active_secret).get_public_key());
 
-    string posting_seed = account.name + "posting" + memo;
+    std::string posting_seed = account.name + "posting" + memo;
     auto posting_secret = fc::sha256::hash(posting_seed.c_str(), posting_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(posting_secret).get_public_key());
 
@@ -1878,7 +1883,7 @@ void wallet_api::check_memo(const string& memo, const account_api_obj& account) 
     }
 }
 
-string wallet_api::get_encrypted_memo(const std::string& from, const std::string& to, const std::string& memo)
+std::string wallet_api::get_encrypted_memo(const std::string& from, const std::string& to, const std::string& memo)
 {
 
     if (memo.size() > 0 && memo[0] == '#')
@@ -2081,7 +2086,7 @@ annotated_signed_transaction wallet_api::set_withdraw_vesting_route(
     return my->sign_transaction(tx, broadcast);
 }
 
-string wallet_api::decrypt_memo(const std::string& encrypted_memo)
+std::string wallet_api::decrypt_memo(const std::string& encrypted_memo)
 {
     if (is_locked())
         return encrypted_memo;
@@ -2115,7 +2120,7 @@ string wallet_api::decrypt_memo(const std::string& encrypted_memo)
 
             try
             {
-                vector<char> decrypted = fc::aes_decrypt(encryption_key, m->encrypted);
+                std::vector<char> decrypted = fc::aes_decrypt(encryption_key, m->encrypted);
                 return fc::raw::unpack<std::string>(decrypted);
             }
             catch (...)
@@ -2158,7 +2163,7 @@ annotated_signed_transaction wallet_api::claim_reward_balance(const std::string&
     return my->sign_transaction(tx, broadcast);
 }
 
-map<uint32_t, applied_operation>
+std::map<uint32_t, applied_operation>
 wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
 {
     auto result = my->_remote_db->get_account_history(account, from, limit);
@@ -2181,7 +2186,7 @@ app::state wallet_api::get_state(const std::string& url)
     return my->_remote_db->get_state(url);
 }
 
-vector<withdraw_route> wallet_api::get_withdraw_routes(const std::string& account, withdraw_route_type type) const
+std::vector<withdraw_route> wallet_api::get_withdraw_routes(const std::string& account, withdraw_route_type type) const
 {
     return my->_remote_db->get_withdraw_routes(account, type);
 }
@@ -2277,8 +2282,10 @@ annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id)
     return my->_remote_db->get_transaction(id);
 }
 
-annotated_signed_transaction
-wallet_api::follow(const std::string& follower, const std::string& following, set<string> what, bool broadcast)
+annotated_signed_transaction wallet_api::follow(const std::string& follower,
+                                                const std::string& following,
+                                                std::set<std::string> what,
+                                                bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -2346,7 +2353,7 @@ annotated_signed_transaction wallet_api::send_private_message(
     auto hash_encrypt_key = fc::sha256::hash(encrypt_key);
     pmo.checksum = hash_encrypt_key._hash[0];
 
-    vector<char> plain_text = fc::raw::pack(message);
+    std::vector<char> plain_text = fc::raw::pack(message);
     pmo.encrypted_message = fc::aes_encrypt(encrypt_key, plain_text);
 
     message_api_obj obj;
@@ -2414,10 +2421,11 @@ message_body wallet_api::try_decrypt_message(const message_api_obj& mo)
     }
 }
 
-vector<extended_message_object> wallet_api::get_inbox(const std::string& account, fc::time_point newest, uint32_t limit)
+std::vector<extended_message_object>
+wallet_api::get_inbox(const std::string& account, fc::time_point newest, uint32_t limit)
 {
     FC_ASSERT(!is_locked());
-    vector<extended_message_object> result;
+    std::vector<extended_message_object> result;
     auto remote_result = (*my->_remote_message_api)->get_inbox(account, newest, limit);
     for (const auto& item : remote_result)
     {
@@ -2427,11 +2435,11 @@ vector<extended_message_object> wallet_api::get_inbox(const std::string& account
     return result;
 }
 
-vector<extended_message_object>
+std::vector<extended_message_object>
 wallet_api::get_outbox(const std::string& account, fc::time_point newest, uint32_t limit)
 {
     FC_ASSERT(!is_locked());
-    vector<extended_message_object> result;
+    std::vector<extended_message_object> result;
     auto remote_result = (*my->_remote_message_api)->get_outbox(account, newest, limit);
     for (const auto& item : remote_result)
     {
@@ -2441,7 +2449,7 @@ wallet_api::get_outbox(const std::string& account, fc::time_point newest, uint32
     return result;
 }
 
-vector<budget_api_obj> wallet_api::list_my_budgets()
+std::vector<budget_api_obj> wallet_api::list_my_budgets()
 {
     FC_ASSERT(!is_locked());
 
@@ -2455,14 +2463,14 @@ vector<budget_api_obj> wallet_api::list_my_budgets()
         return {};
     }
 
-    vector<public_key_type> pub_keys;
+    std::vector<public_key_type> pub_keys;
     pub_keys.reserve(my->_keys.size());
 
     for (const auto& item : my->_keys)
         pub_keys.push_back(item.first);
 
     auto refs = (*my->_remote_account_by_key_api)->get_key_references(pub_keys);
-    set<string> names;
+    std::set<std::string> names;
     for (const auto& item : refs)
         for (const auto& name : item)
             names.insert(name);
@@ -2470,14 +2478,14 @@ vector<budget_api_obj> wallet_api::list_my_budgets()
     return my->_remote_db->get_budgets(names);
 }
 
-set<string> wallet_api::list_budget_owners(const string& lowerbound, uint32_t limit)
+std::set<std::string> wallet_api::list_budget_owners(const std::string& lowerbound, uint32_t limit)
 {
     return my->_remote_db->lookup_budget_owners(lowerbound, limit);
 }
 
-vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
+std::vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
 {
-    vector<budget_api_obj> result;
+    std::vector<budget_api_obj> result;
 
     result = my->_remote_db->get_budgets({ account_name });
 
@@ -2544,7 +2552,7 @@ brain_key_info suggest_brain_key()
     fc::bigint entropy(entropy1);
     entropy <<= 8 * sha_entropy1.data_size();
     entropy += entropy2;
-    string brain_key = "";
+    std::string brain_key = "";
 
     for (int i = 0; i < BRAIN_KEY_WORD_COUNT; i++)
     {

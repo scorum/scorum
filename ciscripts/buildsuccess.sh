@@ -11,4 +11,6 @@ curl --silent -XPOST -H "Authorization: token $GITHUB_SECRET" https://api.github
 
 rm -rf $WORKSPACE/*
 # make docker cleanup after itself and delete all exited containers
-sudo docker rm -v $(docker ps -a -q -f status=exited) || true
+# sudo docker rm -v $(docker ps -a -q -f status=exited) || true
+sudo docker rm -v $(docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null
+sudo docker rmi $(docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null

@@ -59,10 +59,10 @@ int64_t asset::precision() const
     return table[d];
 }
 
-string asset::to_string() const
+std::string asset::to_string() const
 {
     int64_t prec = precision();
-    string result = fc::to_string(amount.value / prec);
+    std::string result = fc::to_string(amount.value / prec);
     if (prec > 1)
     {
         auto fract = amount.value % prec;
@@ -75,11 +75,11 @@ string asset::to_string() const
     return result + " " + symbol_name();
 }
 
-asset asset::from_string(const string& from)
+asset asset::from_string(const std::string& from)
 {
     try
     {
-        string s = fc::trim(from);
+        std::string s = fc::trim(from);
         auto space_pos = s.find(" ");
         auto dot_pos = s.find(".");
 

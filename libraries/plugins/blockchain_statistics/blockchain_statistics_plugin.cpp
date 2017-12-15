@@ -321,7 +321,7 @@ void blockchain_statistics_plugin::plugin_set_program_options(boost::program_opt
 {
     cli.add_options()(
         "chain-stats-bucket-size",
-        boost::program_options::value<string>()->default_value("[60,3600,21600,86400,604800,2592000]"),
+        boost::program_options::value<std::string>()->default_value("[60,3600,21600,86400,604800,2592000]"),
         "Track blockchain statistics by grouping orders into buckets of equal size measured in seconds specified as a "
         "JSON array of numbers")(
         "chain-stats-history-per-bucket", boost::program_options::value<uint32_t>()->default_value(100),
@@ -344,7 +344,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
 
         if (options.count("chain-stats-bucket-size"))
         {
-            const std::string& buckets = options["chain-stats-bucket-size"].as<string>();
+            const std::string& buckets = options["chain-stats-bucket-size"].as<std::string>();
             _my->_tracked_buckets = fc::json::from_string(buckets).as<flat_set<uint32_t>>();
         }
         if (options.count("chain-stats-history-per-bucket"))

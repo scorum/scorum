@@ -7,29 +7,34 @@
 namespace scorum {
 namespace follow {
 
-using namespace std;
 using scorum::protocol::base_operation;
 
 struct follow_operation : base_operation
 {
     account_name_type follower;
     account_name_type following;
-    set<string> what; /// blog, mute
+    std::set<std::string> what; /// blog, mute
 
     void validate() const;
 
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(follower); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(follower);
+    }
 };
 
 struct reblog_operation : base_operation
 {
     account_name_type account;
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
     void validate() const;
 
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 typedef fc::static_variant<follow_operation, reblog_operation> follow_plugin_operation;

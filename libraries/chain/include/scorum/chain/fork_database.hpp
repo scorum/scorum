@@ -29,7 +29,7 @@ struct fork_item
         return data.previous;
     }
 
-    weak_ptr<fork_item> prev;
+    std::weak_ptr<fork_item> prev;
     uint32_t num; // initialized in ctor
     /**
      * Used to flag a block as invalid and prevent other blocks from
@@ -39,7 +39,7 @@ struct fork_item
     block_id_type id;
     signed_block data;
 };
-typedef shared_ptr<fork_item> item_ptr;
+typedef std::shared_ptr<fork_item> item_ptr;
 
 /**
  *  As long as blocks are pushed in order the fork
@@ -54,7 +54,7 @@ typedef shared_ptr<fork_item> item_ptr;
 class fork_database
 {
 public:
-    typedef vector<item_ptr> branch_type;
+    typedef std::vector<item_ptr> branch_type;
     /// The maximum number of blocks that may be skipped in an out-of-order push
     const static int MAX_BLOCK_REORDERING = 1024;
 
@@ -63,16 +63,16 @@ public:
 
     void start_block(signed_block b);
     void remove(block_id_type b);
-    void set_head(shared_ptr<fork_item> h);
+    void set_head(std::shared_ptr<fork_item> h);
     bool is_known_block(const block_id_type& id) const;
-    shared_ptr<fork_item> fetch_block(const block_id_type& id) const;
-    vector<item_ptr> fetch_block_by_number(uint32_t n) const;
+    std::shared_ptr<fork_item> fetch_block(const block_id_type& id) const;
+    std::vector<item_ptr> fetch_block_by_number(uint32_t n) const;
 
     /**
      *  @return the new head block ( the longest fork )
      */
-    shared_ptr<fork_item> push_block(const signed_block& b);
-    shared_ptr<fork_item> head() const
+    std::shared_ptr<fork_item> push_block(const signed_block& b);
+    std::shared_ptr<fork_item> head() const
     {
         return _head;
     }
@@ -82,9 +82,9 @@ public:
      *  Given two head blocks, return two branches of the fork graph that
      *  end with a common ancestor (same prior block)
      */
-    pair<branch_type, branch_type> fetch_branch_from(block_id_type first, block_id_type second) const;
-    shared_ptr<fork_item> walk_main_branch_to_num(uint32_t block_num) const;
-    shared_ptr<fork_item> fetch_block_on_main_branch_by_number(uint32_t block_num) const;
+    std::pair<branch_type, branch_type> fetch_branch_from(block_id_type first, block_id_type second) const;
+    std::shared_ptr<fork_item> walk_main_branch_to_num(uint32_t block_num) const;
+    std::shared_ptr<fork_item> fetch_block_on_main_branch_by_number(uint32_t block_num) const;
 
     struct block_id;
     struct block_num;
@@ -113,7 +113,8 @@ private:
 
     fork_multi_index_type _unlinked_index;
     fork_multi_index_type _index;
-    shared_ptr<fork_item> _head;
+    std::shared_ptr<fork_item> _head;
 };
-}
-} // scorum::chain
+
+} // namespace chain
+} // namespace scorum

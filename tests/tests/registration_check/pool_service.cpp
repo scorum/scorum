@@ -144,36 +144,6 @@ public:
                                                      genesis_state.registration_maximum_bonus, items);
     }
 
-    void insure_pool_exists()
-    {
-        if (!registration_pool_service.is_pool_exists())
-        {
-            // if object has not created in basic fixture
-            create_pool(genesis_state);
-        }
-    }
-
-    using account_names_type = std::vector<account_name_type>;
-
-    account_names_type get_registration_committee()
-    {
-        account_names_type ret;
-        for (const auto& member : genesis_state.registration_committee)
-        {
-            ret.emplace_back(member);
-        }
-        return ret;
-    }
-
-    void insure_committee_exists()
-    {
-        if (registration_committee_service.get_committee().empty())
-        {
-            // if object has not created in basic fixture
-            registration_committee_service.create_committee(get_registration_committee());
-        }
-    }
-
     uint64_t get_sin_f(uint64_t pos, uint64_t max_pos, uint64_t max_result)
     {
         BOOST_REQUIRE(max_pos > 0);
@@ -346,8 +316,6 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
 
 SCORUM_TEST_CASE(create_check)
 {
-    insure_pool_exists();
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_CHECK_EQUAL(pool.balance, genesis_state.registration_supply);
@@ -368,8 +336,6 @@ SCORUM_TEST_CASE(create_check)
 
 SCORUM_TEST_CASE(create_double_check)
 {
-    insure_pool_exists();
-
     BOOST_REQUIRE_THROW(create_pool(genesis_state), fc::assert_exception);
 }
 
@@ -452,13 +418,6 @@ SCORUM_TEST_CASE(predict_input_check)
 
 SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
 {
-    db_plugin->debug_update(
-        [&](database&) {
-            insure_pool_exists();
-            insure_committee_exists();
-        },
-        default_skip);
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
@@ -485,13 +444,6 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
 
 SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distribution_check)
 {
-    db_plugin->debug_update(
-        [&](database&) {
-            insure_pool_exists();
-            insure_committee_exists();
-        },
-        default_skip);
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
@@ -526,9 +478,6 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
 
 SCORUM_TEST_CASE(allocate_limits_check)
 {
-    insure_pool_exists();
-    insure_committee_exists();
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
@@ -552,13 +501,6 @@ SCORUM_TEST_CASE(allocate_limits_check)
 
 SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
 {
-    db_plugin->debug_update(
-        [&](database&) {
-            insure_pool_exists();
-            insure_committee_exists();
-        },
-        default_skip);
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
@@ -600,13 +542,6 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
 
 SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 {
-    db_plugin->debug_update(
-        [&](database&) {
-            insure_pool_exists();
-            insure_committee_exists();
-        },
-        default_skip);
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
@@ -653,13 +588,6 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 
 SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 {
-    db_plugin->debug_update(
-        [&](database&) {
-            insure_pool_exists();
-            insure_committee_exists();
-        },
-        default_skip);
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     generate_block();
@@ -693,13 +621,6 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 
 SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
 {
-    db_plugin->debug_update(
-        [&](database&) {
-            insure_pool_exists();
-            insure_committee_exists();
-        },
-        default_skip);
-
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     asset total_allocated_bonus(0, REGISTRATION_BONUS_SYMBOL);
@@ -739,7 +660,9 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
         db_plugin->debug_update([&](database&) { registration_pool_service.allocate_cash("alice"); }, default_skip);
     }
 
-    BOOST_REQUIRE(!registration_pool_service.is_pool_exists());
+    BOOST_REQUIRE_THROW(
+        registration_pool_service.get_pool(),
+        boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<std::out_of_range>>);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

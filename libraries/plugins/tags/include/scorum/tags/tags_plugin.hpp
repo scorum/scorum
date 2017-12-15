@@ -118,6 +118,7 @@ struct by_reward_fund_net_rshares;
 struct by_comment;
 struct by_tag;
 
+// clang-format off
 typedef multi_index_container<
     tag_object,
     indexed_by<
@@ -249,6 +250,7 @@ typedef multi_index_container<
                                              std::less<tag_id_type>>>>,
     allocator<tag_object>>
     tag_index;
+// clang-format on
 
 /**
  *  The purpose of this index is to quickly identify how popular various tags by maintaining variou sums over
@@ -282,6 +284,7 @@ struct by_comments;
 struct by_top_posts;
 struct by_trending;
 
+// clang-format off
 typedef multi_index_container<
     tag_stats_object,
     indexed_by<
@@ -310,6 +313,7 @@ typedef multi_index_container<
                            composite_key_compare<std::greater<fc::uint128>, std::less<tag_name_type>>>>,
     allocator<tag_stats_object>>
     tag_stats_index;
+// clang-format on
 
 /**
  *  The purpose of this object is to track the relationship between accounts based upon how a user votes. Every time
@@ -366,6 +370,8 @@ typedef oid<peer_stats_object> peer_stats_id_type;
 
 struct by_rank;
 struct by_voter_peer;
+
+// clang-format off
 typedef multi_index_container<
     peer_stats_object,
     indexed_by<ordered_unique<tag<by_id>, member<peer_stats_object, peer_stats_id_type, &peer_stats_object::id>>,
@@ -383,6 +389,7 @@ typedef multi_index_container<
                               composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>>,
     allocator<peer_stats_object>>
     peer_stats_index;
+// clang-format on
 
 /**
  *  This purpose of this object is to maintain stats about which tags an author uses, how frequnetly, and
@@ -410,9 +417,8 @@ struct by_author_tag_posts;
 struct by_author_posts_tag;
 struct by_author_tag_rewards;
 struct by_tag_rewards_author;
-using std::greater;
-using std::less;
 
+// clang-format off
 typedef chainbase::shared_multi_index_container<
     author_tag_stats_object,
     indexed_by<
@@ -423,34 +429,35 @@ typedef chainbase::shared_multi_index_container<
                                      member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>,
                                      member<author_tag_stats_object, uint32_t, &author_tag_stats_object::total_posts>,
                                      member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>>,
-                       composite_key_compare<less<account_id_type>, greater<uint32_t>, less<tag_name_type>>>,
+                       composite_key_compare<std::less<account_id_type>, std::greater<uint32_t>, std::less<tag_name_type>>>,
         ordered_unique<tag<by_author_tag_posts>,
                        composite_key<author_tag_stats_object,
                                      member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>,
                                      member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>,
                                      member<author_tag_stats_object, uint32_t, &author_tag_stats_object::total_posts>>,
-                       composite_key_compare<less<account_id_type>, less<tag_name_type>, greater<uint32_t>>>,
+                       composite_key_compare<std::less<account_id_type>, std::less<tag_name_type>, std::greater<uint32_t>>>,
         ordered_unique<tag<by_author_tag_rewards>,
                        composite_key<author_tag_stats_object,
                                      member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>,
                                      member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>,
                                      member<author_tag_stats_object, asset, &author_tag_stats_object::total_rewards>>,
-                       composite_key_compare<less<account_id_type>, less<tag_name_type>, greater<asset>>>,
+                       composite_key_compare<std::less<account_id_type>, std::less<tag_name_type>, std::greater<asset>>>,
         ordered_unique<
             tag<by_tag_rewards_author>,
             composite_key<author_tag_stats_object,
                           member<author_tag_stats_object, tag_name_type, &author_tag_stats_object::tag>,
                           member<author_tag_stats_object, asset, &author_tag_stats_object::total_rewards>,
                           member<author_tag_stats_object, account_id_type, &author_tag_stats_object::author>>,
-            composite_key_compare<less<tag_name_type>, greater<asset>, less<account_id_type>>>>>
+            composite_key_compare<std::less<tag_name_type>, std::greater<asset>, std::less<account_id_type>>>>>
     author_tag_stats_index;
+// clang-format on
 
 /**
  * Used to parse the metadata from the comment json_meta field.
  */
 struct comment_metadata
 {
-    set<string> tags;
+    std::set<std::string> tags;
 };
 
 /**
@@ -491,9 +498,9 @@ public:
     {
     }
 
-    vector<tag_stats_object> get_tags() const
+    std::vector<tag_stats_object> get_tags() const
     {
-        return vector<tag_stats_object>();
+        return std::vector<tag_stats_object>();
     }
 
 private:

@@ -56,7 +56,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
                                                           const public_key_type& memo_key,
                                                           const asset& balance,
                                                           const account_name_type& recovery_account,
-                                                          const string& json_metadata)
+                                                          const std::string& json_metadata)
 {
     FC_ASSERT(new_account_name.size() > 0, "Account 'name' should not be empty.");
     FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
@@ -83,7 +83,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
 const account_object& dbs_account::create_account(const account_name_type& new_account_name,
                                                   const account_name_type& creator_name,
                                                   const public_key_type& memo_key,
-                                                  const string& json_metadata,
+                                                  const std::string& json_metadata,
                                                   const authority& owner,
                                                   const authority& active,
                                                   const authority& posting,
@@ -127,7 +127,7 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
 const account_object& dbs_account::create_account_with_delegation(const account_name_type& new_account_name,
                                                                   const account_name_type& creator_name,
                                                                   const public_key_type& memo_key,
-                                                                  const string& json_metadata,
+                                                                  const std::string& json_metadata,
                                                                   const authority& owner,
                                                                   const authority& active,
                                                                   const authority& posting,
@@ -191,7 +191,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
 void dbs_account::update_acount(const account_object& account,
                                 const account_authority_object& account_authority,
                                 const public_key_type& memo_key,
-                                const string& json_metadata,
+                                const std::string& json_metadata,
                                 const optional<authority>& owner,
                                 const optional<authority>& active,
                                 const optional<authority>& posting,

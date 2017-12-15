@@ -34,7 +34,6 @@
 namespace scorum {
 namespace witness {
 
-using std::string;
 using protocol::public_key_type;
 using app::application;
 using scorum::protocol::block_id_type;
@@ -68,9 +67,12 @@ public:
     std::string plugin_name() const override;
 
     virtual void plugin_set_program_options(boost::program_options::options_description& command_line_options,
-        boost::program_options::options_description& config_file_options) override;
+                                            boost::program_options::options_description& config_file_options) override;
 
-    void set_block_production(bool allow) { _production_enabled = allow; }
+    void set_block_production(bool allow)
+    {
+        _production_enabled = allow;
+    }
 
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
@@ -91,7 +93,7 @@ private:
     fc::time_point _hash_start_time;
 
     std::map<public_key_type, fc::ecc::private_key> _private_keys;
-    std::set<string> _witnesses;
+    std::set<std::string> _witnesses;
     fc::future<void> _block_production_task;
 
     friend class detail::witness_plugin_impl;
