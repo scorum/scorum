@@ -7,7 +7,6 @@
 
 #include <scorum/chain/registration_objects.hpp>
 #include <scorum/chain/account_object.hpp>
-#include <scorum/chain/genesis_state.hpp>
 
 namespace scorum {
 namespace chain {
@@ -27,7 +26,10 @@ public:
 
     const registration_pool_object& get_pool() const;
 
-    const registration_pool_object& create_pool(const genesis_state_type& genesis_state);
+    using schedule_item_type = registration_pool_object::schedule_item;
+    using schedule_items_type = std::map<uint8_t /*stage field*/, schedule_item_type /*all other fields*/>;
+    const registration_pool_object&
+    create_pool(const asset& supply, const asset& maximum_bonus, const schedule_items_type& schedule_items);
 
     asset allocate_cash(const account_name_type& committee_member);
 

@@ -128,12 +128,28 @@ public:
             }]
     })json";
 
+    const registration_pool_object& create_pool(const genesis_state_type& genesis_state)
+    {
+        // create sorted items list form genesis unordered data
+        using schedule_item_type = registration_pool_object::schedule_item;
+        using sorted_type = std::map<uint8_t, schedule_item_type>;
+        sorted_type items;
+        for (const auto& genesis_item : genesis_state.registration_schedule)
+        {
+            items.insert(sorted_type::value_type(genesis_item.stage,
+                                                 schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
+        }
+
+        return registration_pool_service.create_pool(genesis_state.registration_supply,
+                                                     genesis_state.registration_maximum_bonus, items);
+    }
+
     void insure_pool_exists()
     {
         if (!registration_pool_service.is_pool_exists())
         {
             // if object has not created in basic fixture
-            registration_pool_service.create_pool(genesis_state);
+            create_pool(genesis_state);
         }
     }
 
@@ -290,17 +306,17 @@ SCORUM_TEST_CASE(create_invalid_genesis_state_amount_check)
     genesis_state_type invalid_genesis_state = genesis_state;
     invalid_genesis_state.registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
 
-    BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state = genesis_state;
     invalid_genesis_state.registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
 
-    BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state = genesis_state;
     invalid_genesis_state.registration_schedule.clear();
 
-    BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
@@ -311,21 +327,21 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
     invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
-    BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state
         = fc::json::from_string(genesis_invalid_schedule_bonus_percent_l_str).as<genesis_state_type>();
     invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
-    BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state
         = fc::json::from_string(genesis_invalid_schedule_bonus_percent_h_str).as<genesis_state_type>();
     invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
-    BOOST_CHECK_THROW(registration_pool_service.create_pool(invalid_genesis_state), fc::assert_exception);
+    BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(create_check)
@@ -354,7 +370,7 @@ SCORUM_TEST_CASE(create_double_check)
 {
     insure_pool_exists();
 
-    BOOST_REQUIRE_THROW(registration_pool_service.create_pool(genesis_state), fc::assert_exception);
+    BOOST_REQUIRE_THROW(create_pool(genesis_state), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(sin_f_check)

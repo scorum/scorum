@@ -25,26 +25,23 @@ const registration_pool_object& dbs_registration_pool::get_pool() const
     return (*it);
 }
 
-const registration_pool_object& dbs_registration_pool::create_pool(const genesis_state_type& genesis_state)
+const registration_pool_object& dbs_registration_pool::create_pool(const asset& supply,
+                                                                   const asset& maximum_bonus,
+                                                                   const schedule_items_type& schedule_items)
 {
-    FC_ASSERT(genesis_state.registration_supply > asset(0, REGISTRATION_BONUS_SYMBOL),
-              "Registration supply amount must be more than zerro.");
-    FC_ASSERT(genesis_state.registration_maximum_bonus > asset(0, REGISTRATION_BONUS_SYMBOL),
+    FC_ASSERT(supply > asset(0, REGISTRATION_BONUS_SYMBOL), "Registration supply amount must be more than zerro.");
+    FC_ASSERT(maximum_bonus > asset(0, REGISTRATION_BONUS_SYMBOL),
               "Registration maximum bonus amount must be more than zerro.");
-    FC_ASSERT(!genesis_state.registration_schedule.empty(), "Registration schedule must have at least one item.");
+    FC_ASSERT(!schedule_items.empty(), "Registration schedule must have at least one item.");
 
-    // create sorted items list form genesis unordered data
-    using schedule_item_type = registration_pool_object::schedule_item;
-    using sorted_type = std::map<uint8_t, schedule_item_type>;
-    sorted_type items;
-    for (const auto& genesis_item : genesis_state.registration_schedule)
+    // check schedule
+    for (const auto& value : schedule_items)
     {
-        FC_ASSERT(genesis_item.users > 0, "Invalid schedule value (users in thousands) for stage ${1}.",
-                  ("1", genesis_item.stage));
-        FC_ASSERT(genesis_item.bonus_percent >= 0 && genesis_item.bonus_percent <= 100,
-                  "Invalid schedule value (percent) for stage ${1}.", ("1", genesis_item.stage));
-        items.insert(sorted_type::value_type(genesis_item.stage,
-                                             schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
+        const auto& stage = value.first;
+        const schedule_item_type& item = value.second;
+        FC_ASSERT(item.users > 0, "Invalid schedule value (users in thousands) for stage ${1}.", ("1", stage));
+        FC_ASSERT(item.bonus_percent >= 0 && item.bonus_percent <= 100,
+                  "Invalid schedule value (percent) for stage ${1}.", ("1", stage));
     }
 
     // check existence here to allow unit tests check input data even if object exists in DB
@@ -52,12 +49,12 @@ const registration_pool_object& dbs_registration_pool::create_pool(const genesis
 
     // create pool
     const auto& new_pool = db_impl().create<registration_pool_object>([&](registration_pool_object& pool) {
-        pool.balance = genesis_state.registration_supply;
-        pool.maximum_bonus = genesis_state.registration_maximum_bonus;
-        pool.schedule_items.reserve(items.size());
-        for (const auto& item : items)
+        pool.balance = supply;
+        pool.maximum_bonus = maximum_bonus;
+        pool.schedule_items.reserve(schedule_items.size());
+        for (const auto& value : schedule_items)
         {
-            pool.schedule_items.push_back(item.second);
+            pool.schedule_items.push_back(value.second);
         }
     });
 
