@@ -131,7 +131,6 @@ private:
             op.set_which(t);
             op.visit(op_prototype_visitor(t, _prototype_ops));
         }
-        return;
     }
 
 public:
