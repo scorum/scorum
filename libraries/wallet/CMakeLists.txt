@@ -1,4 +1,7 @@
 file(GLOB HEADERS "include/scorum/wallet/*.hpp")
+file(GLOB SOURCES "wallet.cpp"
+                  "utils.cpp"
+                  "${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp")
 
 find_package( Perl )
 find_package( Doxygen )
@@ -23,7 +26,7 @@ else()
                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/api_documentation_standin.cpp )
 endif()
 
-add_library( scorum_wallet wallet.cpp ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp ${HEADERS} )
+add_library( scorum_wallet ${SOURCES} ${HEADERS} )
 # I don't know why scorum_app is required twice in the following line, I just know the linker breaks if it isn't.
 target_link_libraries( scorum_wallet PRIVATE scorum_app graphene_net scorum_chain scorum_protocol graphene_utilities fc scorum_private_message scorum_app scorum_follow scorum_account_by_key ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 target_include_directories( scorum_wallet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
