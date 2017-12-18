@@ -1,99 +1,27 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
-#include <scorum/chain/dbs_registration_committee.hpp>
-
 #include "database_fixture.hpp"
 
-#include <vector>
 #include <math.h>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+#include "registration_check_common.hpp"
 
 //
 // usage for all registration tests 'chain_test  -t registration_*'
 //
 
-namespace {
-
-using schedule_input_type = genesis_state_type::registration_schedule_item;
-using schedule_inputs_type = std::vector<schedule_input_type>;
-
-asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
-{
-    asset ret(0, REGISTRATION_BONUS_SYMBOL);
-    for (const auto& item : schedule_input)
-    {
-        share_type stage_amount = maximum_bonus.amount;
-        stage_amount *= item.bonus_percent;
-        stage_amount /= 100;
-        ret += asset(stage_amount * item.users, REGISTRATION_BONUS_SYMBOL);
-    }
-    return ret;
-}
-
-genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input, asset& rest_of_supply)
-{
-    const std::string genesis_str = R"json(
-    {
-            "accounts": [
-            {
-                    "name": "alice",
-                    "recovery_account": "",
-                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
-            },
-            {
-                    "name": "bob",
-                    "recovery_account": "",
-                    "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
-            }],
-            "registration_committee": ["alice", "bob"],
-    })json";
-
-    genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
-
-    schedule_input.clear();
-    schedule_input.reserve(4);
-
-    schedule_input.emplace_back(schedule_input_type{ 1, 2, 100 });
-    schedule_input.emplace_back(schedule_input_type{ 2, 2, 75 });
-    schedule_input.emplace_back(schedule_input_type{ 3, 1, 50 });
-    schedule_input.emplace_back(schedule_input_type{ 4, 3, 25 });
-
-    // half of limit
-    genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-    genesis_state.registration_maximum_bonus.amount /= 2;
-
-    genesis_state.registration_schedule = schedule_input;
-
-    genesis_state.registration_supply
-        = schedule_input_total_bonus(schedule_input, genesis_state.registration_maximum_bonus);
-    rest_of_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-    genesis_state.registration_supply += rest_of_supply;
-
-    return genesis_state;
-}
-}
-
 class registration_pool_service_check_fixture : public timed_blocks_database_fixture
 {
 public:
     registration_pool_service_check_fixture()
-        : timed_blocks_database_fixture(create_registration_genesis(schedule_input, rest_of_supply))
+        : timed_blocks_database_fixture(registration_check::create_registration_genesis(schedule_input, rest_of_supply))
         , registration_pool_service(db.obtain_service<dbs_registration_pool>())
         , registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
     }
 
-    static schedule_inputs_type schedule_input;
+    static registration_check::schedule_inputs_type schedule_input;
     static asset rest_of_supply;
     dbs_registration_pool& registration_pool_service;
     dbs_registration_committee& registration_committee_service;
@@ -176,7 +104,7 @@ public:
 
     asset schedule_input_total_bonus(const asset& maximum_bonus)
     {
-        return ::schedule_input_total_bonus(schedule_input, maximum_bonus);
+        return registration_check::schedule_input_total_bonus(schedule_input, maximum_bonus);
     }
 
     int schedule_input_bonus_percent_by_pos(uint64_t pos)
@@ -266,7 +194,7 @@ public:
     }
 };
 
-schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
+registration_check::schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
 asset registration_pool_service_check_fixture::rest_of_supply;
 
 BOOST_FIXTURE_TEST_SUITE(registration_pool_service_check, registration_pool_service_check_fixture)
