@@ -30,5 +30,29 @@
 	}, {
 		"owner_name": "bob",
 		"block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B"
+	}],
+
+	"init_rewards_supply": "0.100 SCORUM",
+
+	"registration_committee": ["alice", "bob"],
+	"registration_supply": "1.000 SCORUM",
+	"registration_maximum_bonus": "0.005 SCORUM",
+
+	"registration_schedule": [{
+		"stage": 1,
+		"users": 1,
+		"bonus_percent": 100
+	}, {
+		"stage": 2,
+		"users": 2,
+		"bonus_percent": 75
+	}, {
+		"stage": 3,
+		"users": 5,
+		"bonus_percent": 75
+	}, {
+		"stage": 4,
+		"users": 10,
+		"bonus_percent": 25
 	}]
 }

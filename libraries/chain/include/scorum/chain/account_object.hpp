@@ -254,7 +254,7 @@ typedef multi_index_container<account_object,
                                                                       member<account_object,
                                                                              account_id_type,
                                                                              &account_object::id>> /// composite key by
-                                                                                                   /// proxy
+                                                        /// proxy
                                                         >,
                                          ordered_unique<tag<by_next_vesting_withdrawal>,
                                                         composite_key<account_object,

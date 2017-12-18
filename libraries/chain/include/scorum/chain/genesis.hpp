@@ -21,6 +21,7 @@ private:
     void init_witness_schedule();
     void init_global_property_object();
     void init_rewards();
+    void init_registration_objects();
 
     database& _db;
     genesis_state_type _genesis_state;

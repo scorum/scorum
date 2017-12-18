@@ -25,8 +25,8 @@ public:
 
     void create_account()
     {
-        data_service.create_account_by_faucets("user", "initdelegate", public_key, "", authority(), authority(),
-                                               authority(), asset(0, SCORUM_SYMBOL));
+        data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(), authority(),
+                                    asset(0, SCORUM_SYMBOL));
     }
 
     share_type calc_fee()
@@ -74,10 +74,9 @@ BOOST_AUTO_TEST_CASE(fail_on_second_creation)
     {
         create_account();
 
-        BOOST_CHECK_THROW(
-            data_service.create_account_by_faucets("user", "initdelegate", public_key, "", authority(), authority(),
-                                                   authority(), asset(0, SCORUM_SYMBOL)),
-            boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<std::logic_error>>);
+        BOOST_CHECK_THROW(data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(),
+                                                      authority(), asset(0, SCORUM_SYMBOL)),
+                          std::logic_error);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -103,8 +102,8 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
 
         const share_type fee = calc_fee();
 
-        data_service.create_account_by_faucets("user", "initdelegate", public_key, "", authority(), authority(),
-                                               authority(), asset(fee, SCORUM_SYMBOL));
+        data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(), authority(),
+                                    asset(fee, SCORUM_SYMBOL));
 
         BOOST_CHECK(db.get_account("initdelegate").balance == asset(balance_before_creation.amount - fee));
     }
