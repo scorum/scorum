@@ -22,6 +22,17 @@
 namespace scorum {
 namespace chain {
 
+void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
+{
+    private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
+    public_key_type init_public_key = init_delegate_priv_key.get_public_key();
+
+    genesis_state.accounts.push_back(
+        { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
+
+    genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
+}
+
 database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
     : app()
     , db(*app.chain_database())
@@ -465,10 +476,13 @@ namespace test {
 genesis_state_type init_genesis(const genesis_state_type& external_genesis_state)
 {
     genesis_state_type genesis_state = external_genesis_state;
+
     genesis_state.init_supply = TEST_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
+    create_initdelegate_for_genesis_state(genesis_state);
 
     if (genesis_state.registration_schedule.empty())
     {
@@ -490,14 +504,6 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
         genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
         genesis_state.registration_supply.amount /= 2;
     }
-
-    private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
-    public_key_type init_public_key = init_delegate_priv_key.get_public_key();
-
-    genesis_state.accounts.push_back(
-        { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
-
-    genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
 
     if (genesis_state.registration_committee.empty())
     {

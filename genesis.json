@@ -32,11 +32,11 @@
 		"block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B"
 	}],
 
-	"init_rewards_supply": "0.100 TESTS",
+	"init_rewards_supply": "0.100 SCORUM",
 
 	"registration_committee": ["alice", "bob"],
-	"registration_supply": "1.000 TESTS",
-	"registration_maximum_bonus": "0.005 TESTS",
+	"registration_supply": "1.000 SCORUM",
+	"registration_maximum_bonus": "0.005 SCORUM",
 
 	"registration_schedule": [{
 		"stage": 1,
