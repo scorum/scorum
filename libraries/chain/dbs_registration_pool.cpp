@@ -2,7 +2,6 @@
 #include <scorum/chain/database.hpp>
 
 #include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_account.hpp>
 
 namespace scorum {
 namespace chain {
@@ -62,10 +61,6 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
     const registration_pool_object& this_pool = get_pool();
-
-    const dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    account_service.check_account_existence(member_name);
 
     asset per_reg = _calculate_per_reg();
     FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");

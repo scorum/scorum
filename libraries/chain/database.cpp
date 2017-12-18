@@ -1661,6 +1661,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
 }
 
 void database::set_custom_operation_interpreter(const std::string& id,

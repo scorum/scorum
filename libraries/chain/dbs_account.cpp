@@ -188,6 +188,47 @@ const account_object& dbs_account::create_account_with_delegation(const account_
     return new_account;
 }
 
+const account_object& dbs_account::create_account_with_bonus(const account_name_type& new_account_name,
+                                                             const account_name_type& creator_name,
+                                                             const public_key_type& memo_key,
+                                                             const std::string& json_metadata,
+                                                             const authority& owner,
+                                                             const authority& active,
+                                                             const authority& posting,
+                                                             const asset& bonus)
+{
+    FC_ASSERT(bonus.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+
+    const auto& props = db_impl().get_dynamic_global_properties();
+
+    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
+        acc.name = new_account_name;
+        acc.memo_key = memo_key;
+        acc.created = props.time;
+        acc.last_vote_time = props.time;
+        acc.mined = false;
+
+        acc.recovery_account = creator_name;
+
+#ifndef IS_LOW_MEM
+        fc::from_string(acc.json_metadata, json_metadata);
+#endif
+    });
+
+    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
+        auth.account = new_account_name;
+        auth.owner = owner;
+        auth.active = active;
+        auth.posting = posting;
+        auth.last_owner_update = fc::time_point_sec::min();
+    });
+
+    if (bonus.amount > 0)
+        create_vesting(new_account, bonus);
+
+    return new_account;
+}
+
 void dbs_account::update_acount(const account_object& account,
                                 const account_authority_object& account_authority,
                                 const public_key_type& memo_key,

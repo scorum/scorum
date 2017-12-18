@@ -54,6 +54,15 @@ public:
                                                          const optional<time_point_sec>& now
                                                          = optional<time_point_sec>());
 
+    const account_object& create_account_with_bonus(const account_name_type& new_account_name,
+                                                    const account_name_type& creator_name,
+                                                    const public_key_type& memo_key,
+                                                    const std::string& json_metadata,
+                                                    const authority& owner,
+                                                    const authority& active,
+                                                    const authority& posting,
+                                                    const asset& bonus);
+
     void update_acount(const account_object& account,
                        const account_authority_object& account_authority,
                        const public_key_type& memo_key,

@@ -47,6 +47,22 @@ void account_create_with_delegation_operation::validate() const
     FC_ASSERT(delegation >= asset(0, VESTS_SYMBOL), "Delegation cannot be negative");
 }
 
+void account_create_by_committee_operation::validate() const
+{
+    validate_account_name(creator);
+    validate_account_name(new_account_name);
+
+    owner.validate();
+    active.validate();
+    posting.validate();
+
+    if (json_metadata.size() > 0)
+    {
+        FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
+        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
+    }
+}
+
 void account_update_operation::validate() const
 {
     validate_account_name(account);

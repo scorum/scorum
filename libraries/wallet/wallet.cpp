@@ -581,7 +581,7 @@ public:
             }
             return tx;
         }
-        FC_CAPTURE_AND_RETHROW((account_name)(creator_account_name)(broadcast))
+        FC_CAPTURE_AND_RETHROW((account_name)(creator_account_name)(broadcast)(save_wallet))
     }
 
     signed_transaction
@@ -1308,7 +1308,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
 
         return my->sign_transaction(tx, broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(memo)(broadcast))
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(posting)(memo)(broadcast))
 }
 
 /**
@@ -1347,7 +1347,37 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(cons
 
         return my->sign_transaction(tx, broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(memo)(broadcast))
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(posting)(memo)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::create_account_by_committee(const std::string& creator,
+                                                                     const std::string& newname,
+                                                                     const std::string& json_meta,
+                                                                     const public_key_type& owner,
+                                                                     const public_key_type& active,
+                                                                     const public_key_type& posting,
+                                                                     const public_key_type& memo,
+                                                                     bool broadcast) const
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+        account_create_by_committee_operation op;
+        op.creator = creator;
+        op.new_account_name = newname;
+        op.owner = authority(1, owner, 1);
+        op.active = authority(1, active, 1);
+        op.posting = authority(1, posting, 1);
+        op.memo_key = memo;
+        op.json_metadata = json_meta;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction(tx, broadcast);
+    }
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(posting)(memo)(broadcast))
 }
 
 annotated_signed_transaction wallet_api::request_account_recovery(const std::string& recovery_account,
@@ -1434,7 +1464,7 @@ annotated_signed_transaction wallet_api::update_account(const std::string& accou
 
         return my->sign_transaction(tx, broadcast);
     }
-    FC_CAPTURE_AND_RETHROW((account_name)(json_meta)(owner)(active)(memo)(broadcast))
+    FC_CAPTURE_AND_RETHROW((account_name)(json_meta)(owner)(active)(posting)(memo)(broadcast))
 }
 
 annotated_signed_transaction wallet_api::update_account_auth_key(const std::string& account_name,
