@@ -61,6 +61,7 @@ enum object_type
     budget_object_type,
     registration_pool_object_type,
     registration_committee_member_object_type,
+    reg_committee_change_proposal_object_type
 };
 
 class dynamic_global_property_object;
@@ -91,6 +92,7 @@ class vesting_delegation_expiration_object;
 class budget_object;
 class registration_pool_object;
 class registration_committee_member_object;
+class reg_committee_change_proposal_object;
 
 typedef oid<dynamic_global_property_object> dynamic_global_property_id_type;
 typedef oid<chain_property_object> chain_property_id_type;
@@ -120,6 +122,7 @@ typedef oid<vesting_delegation_expiration_object> vesting_delegation_expiration_
 typedef oid<budget_object> budget_id_type;
 typedef oid<registration_pool_object> registration_pool_id_type;
 typedef oid<registration_committee_member_object> registration_committee_member_id_type;
+typedef oid<reg_committee_change_proposal_object> reg_committee_change_proposal_id_type;
 
 enum bandwidth_type
 {
@@ -161,6 +164,7 @@ FC_REFLECT_ENUM( scorum::chain::object_type,
                  (budget_object_type)
                  (registration_pool_object_type)
                  (registration_committee_member_object_type)
+                 (reg_committee_change_proposal_object_type)
                  )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )
