@@ -4,6 +4,8 @@
 
 // clang-format off
 
+#define REGISTRATION_BONUS_SYMBOL SCORUM_SYMBOL
+
 #pragma once
 
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 1) )
@@ -32,9 +34,13 @@
 #define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        3
 #define SCORUM_ADJUST_REWARD_PERCENT                    5
 
-#define SCORUM_LIMIT_BUDGETS_PER_OWNER          5
-#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          SCORUM_LIMIT_BUDGETS_PER_OWNER
-#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      SCORUM_LIMIT_BUDGETS_PER_OWNER
+#define SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER       5
+#define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
+#define SCORUM_BUDGET_LIMIT_API_LIST_SIZE         SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
+
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 10, REGISTRATION_BONUS_SYMBOL )
+
+#define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        1
 
 #else // IS LIVE SCORUM NETWORK
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
@@ -57,9 +63,13 @@
 #define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        100
 #define SCORUM_ADJUST_REWARD_PERCENT                    5
 
-#define SCORUM_LIMIT_BUDGETS_PER_OWNER          1000
-#define SCORUM_LIMIT_BUDGETS_LIST_SIZE          1000
-#define SCORUM_LIMIT_API_BUDGETS_LIST_SIZE      1000
+#define SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER       1000
+#define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          1000
+#define SCORUM_BUDGET_LIMIT_API_LIST_SIZE         1000
+
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 1000, VESTS_SYMBOL )
+
+#define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        30
 
 #endif
 
@@ -194,12 +204,12 @@
 /**
  *  Reserved Account IDs with special meaning
  */
-///@{
-
 /// Represents the canonical account for specifying you will vote for directly (as opposed to a proxy)
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           ""
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT                (account_name_type())
+
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK        2
 
 ///@}
 

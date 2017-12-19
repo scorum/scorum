@@ -11,7 +11,10 @@
 namespace scorum {
 namespace chain {
 
-namespace sp = scorum::protocol;
+using scorum::protocol::asset;
+using scorum::protocol::chain_id_type;
+using scorum::protocol::public_key_type;
+using scorum::protocol::share_type;
 
 struct genesis_state_type
 {
@@ -19,33 +22,35 @@ struct genesis_state_type
     {
         std::string name;
         std::string recovery_account;
-        sp::public_key_type public_key;
-        sp::share_type scr_amount;
-        sp::share_type sp_amount;
+        public_key_type public_key;
+        share_type scr_amount;
+        share_type sp_amount;
     };
 
     struct witness_type
     {
         std::string owner_name;
-        sp::public_key_type block_signing_key;
+        public_key_type block_signing_key;
     };
 
-    genesis_state_type()
+    struct registration_schedule_item
     {
-    }
+        uint8_t stage;
+        uint32_t users;
+        uint16_t bonus_percent;
+    };
 
-    genesis_state_type(const sp::asset& account_supply)
-        : init_accounts_supply(account_supply)
-    {
-    }
-
-    sp::asset init_accounts_supply;
-    sp::asset init_rewards_supply;
+    asset registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset init_accounts_supply;
+    asset init_rewards_supply;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;
+    std::vector<registration_schedule_item> registration_schedule;
+    std::vector<std::string> registration_committee;
 
-    sp::chain_id_type initial_chain_id;
+    chain_id_type initial_chain_id;
 };
 
 } // namespace chain
@@ -63,11 +68,20 @@ FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
            (owner_name)
            (block_signing_key))
 
+FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
+           (stage)
+           (users)
+           (bonus_percent))
+
 FC_REFLECT(scorum::chain::genesis_state_type,
+           (registration_supply)
+           (registration_maximum_bonus)
            (init_accounts_supply)
            (init_rewards_supply)
            (initial_timestamp)
            (accounts)
            (witness_candidates)
+           (registration_schedule)
+           (registration_committee)
            (initial_chain_id))
 // clang-format on

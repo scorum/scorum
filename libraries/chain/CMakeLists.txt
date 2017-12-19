@@ -28,6 +28,8 @@ add_library( scorum_chain
              dbs_reward.cpp
              dbs_witness.cpp
              dbs_budget.cpp
+             dbs_registration_pool.cpp
+             dbs_registration_committee.cpp
 
              scorum_evaluator.cpp
 

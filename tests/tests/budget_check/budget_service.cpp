@@ -24,17 +24,17 @@ public:
         : budget_service(db.obtain_service<dbs_budget>())
         , account_service(db.obtain_service<dbs_account>())
         , public_key(database_fixture::generate_private_key("user private key").get_public_key())
-        , fake(account_service.create_account_by_faucets(SCORUM_ROOT_POST_PARENT,
-                                                         "initdelegate",
-                                                         public_key,
-                                                         "",
-                                                         authority(),
-                                                         authority(),
-                                                         authority(),
-                                                         asset(0, SCORUM_SYMBOL)))
-        , alice(account_service.create_account_by_faucets(
+        , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
+                                              "initdelegate",
+                                              public_key,
+                                              "",
+                                              authority(),
+                                              authority(),
+                                              authority(),
+                                              asset(0, SCORUM_SYMBOL)))
+        , alice(account_service.create_account(
               "alice", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
-        , bob(account_service.create_account_by_faucets(
+        , bob(account_service.create_account(
               "bob", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
     {
         account_service.increase_balance(alice, asset(ALICE_ACCOUNT_BUDGET, SCORUM_SYMBOL));
@@ -198,18 +198,18 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
 SCORUM_TEST_CASE(budget_creation_limit)
 {
-    share_type bp = SCORUM_LIMIT_BUDGETS_PER_OWNER + 1;
+    share_type bp = SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER + 1;
     BOOST_REQUIRE(BOB_ACCOUNT_BUDGET >= bp);
 
     asset balance(BOB_ACCOUNT_BUDGET / bp, SCORUM_SYMBOL);
     time_point_sec deadline(default_deadline);
 
-    for (int ci = 0; ci < SCORUM_LIMIT_BUDGETS_PER_OWNER; ++ci)
+    for (int ci = 0; ci < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER; ++ci)
     {
         BOOST_REQUIRE_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     }
 
-    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_LIMIT_BUDGETS_PER_OWNER * balance.amount));
+    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER * balance.amount));
 
     BOOST_REQUIRE_THROW(budget_service.create_budget(bob, balance, deadline), fc::assert_exception);
 }
@@ -255,17 +255,17 @@ SCORUM_TEST_CASE(lookup_budget_owners)
                       fc::assert_exception);
 
     {
-        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, SCORUM_LIMIT_BUDGETS_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 3);
     }
 
     {
-        auto owners = budget_service.lookup_budget_owners("alice", SCORUM_LIMIT_BUDGETS_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners("alice", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 2);
     }
 
     {
-        auto owners = budget_service.lookup_budget_owners("bob", SCORUM_LIMIT_BUDGETS_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners("bob", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 1);
     }
 
@@ -373,34 +373,6 @@ SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
 
     BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), (size_t)0);
 }
-
-// TODO rework this test
-// SCORUM_TEST_CASE(auto_close_fund_budget_by_balance)
-//{
-//    BOOST_REQUIRE_NO_THROW(
-//        create_fund_budget_in_block(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL), time_point_sec::maximum()));
-//
-//    asset total_cash(0, SCORUM_SYMBOL);
-//
-//    for (int ci = 0; true; ++ci)
-//    {
-//        BOOST_REQUIRE(ci <= BUDGET_BALANCE_DEFAULT);
-//
-//        generate_block();
-//        generate_block();
-//
-//        total_cash += allocate_cash_from_fund_budget_in_block();
-//
-//        if (!budget_service.get_fund_budget_count())
-//        {
-//            break; // budget has closed, break and check result
-//        }
-//    }
-//
-//    BOOST_REQUIRE_THROW(budget_service.get_fund_budgets(), fc::assert_exception);
-//
-//    BOOST_REQUIRE(total_cash.amount == BUDGET_BALANCE_DEFAULT);
-//}
 
 SCORUM_TEST_CASE(try_close_fund_budget)
 {

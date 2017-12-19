@@ -17,8 +17,6 @@ class dbs_budget : public dbs_base
 {
     friend class dbservice_dbs_factory;
 
-    dbs_budget() = delete;
-
 protected:
     explicit dbs_budget(database& db);
 
@@ -27,7 +25,7 @@ public:
 
     /** Lists all budget owners.
      *
-     *  @warning limit must be less or equal than SCORUM_LIMIT_BUDGETS_LIST_SIZE.
+     *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.
      *
      */
     std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const;
@@ -55,7 +53,7 @@ public:
 
     /** Create fund budget (non any owner).
      *
-     * @warning count of fund budgets must be less or equal than SCORUM_LIMIT_BUDGETS_PER_OWNER.
+     * @warning count of fund budgets must be less or equal than SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER.
      *
      * @param balance the total balance (use SCORUM_SYMBOL)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
