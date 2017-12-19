@@ -28,6 +28,9 @@ public:
         account_committee_op.posting = authority(1, new_account_public_key, 1);
         account_committee_op.memo_key = new_account_public_key;
         account_committee_op.json_metadata = "";
+
+        // Only "initdelegate" has money. He gift some to creator
+        vest("initdelegate", creator_name, 100);
     }
 
     static registration_check::committee_private_keys_type committee_private_keys;
@@ -80,8 +83,7 @@ SCORUM_TEST_CASE(create_account_by_committee_check)
 {
     generate_block();
 
-    // add vests to overcome the bandwidth limit for an empty (no shares) account
-    vest(creator_name, asset(100, SCORUM_SYMBOL));
+    BOOST_REQUIRE_NO_THROW(validate_database());
 
     account_create_by_committee_operation op;
 
@@ -111,6 +113,8 @@ SCORUM_TEST_CASE(create_account_by_committee_check)
     const account_object& account = account_service.get_account(new_account_name);
 
     BOOST_CHECK_GT(account.vesting_shares, asset(0, VESTS_SYMBOL));
+
+    // BOOST_REQUIRE_NO_THROW(validate_database());
 }
 
 SCORUM_TEST_CASE(create_account_by_committee_no_member_check)
@@ -118,8 +122,6 @@ SCORUM_TEST_CASE(create_account_by_committee_no_member_check)
     ACTORS((kate))
 
     generate_block();
-
-    vest("kate", asset(100, SCORUM_SYMBOL));
 
     account_create_by_committee_operation op;
 

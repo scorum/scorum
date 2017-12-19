@@ -22,8 +22,13 @@
 namespace scorum {
 namespace chain {
 
-void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
+void create_default_genesis_state(genesis_state_type& genesis_state)
 {
+    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
     private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
@@ -389,13 +394,13 @@ void database_fixture::transfer(const string& from, const string& to, const shar
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_fixture::vest(const string& from, const share_type& amount)
+void database_fixture::vest(const string& from, const string& to, const share_type& amount)
 {
     try
     {
         transfer_to_vesting_operation op;
         op.from = from;
-        op.to = "";
+        op.to = to;
         op.amount = asset(amount, SCORUM_SYMBOL);
 
         trx.operations.push_back(op);
@@ -405,6 +410,11 @@ void database_fixture::vest(const string& from, const share_type& amount)
         trx.operations.clear();
     }
     FC_CAPTURE_AND_RETHROW((from)(amount))
+}
+
+void database_fixture::vest(const string& from, const share_type& amount)
+{
+    vest(from, "", amount);
 }
 
 void database_fixture::vest(const string& account, const asset& amount)
@@ -477,12 +487,7 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
 {
     genesis_state_type genesis_state = external_genesis_state;
 
-    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
-    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
-    genesis_state.initial_chain_id = TEST_CHAIN_ID;
-    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
-
-    create_initdelegate_for_genesis_state(genesis_state);
+    create_default_genesis_state(genesis_state);
 
     if (genesis_state.registration_schedule.empty())
     {
