@@ -1,7 +1,7 @@
 file(GLOB HEADERS "include/scorum/wallet/*.hpp")
-file(GLOB SOURCES "wallet.cpp"
-                  "utils.cpp"
-                  "${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp")
+file(GLOB SOURCES wallet.cpp
+                  utils.cpp
+                  ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp)
 
 find_package( Perl )
 find_package( Doxygen )
