@@ -2531,6 +2531,13 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::vote_for_new_committee_member(const std::string& account_to_vote_with,
+                                                                       const std::string& account_to_vote_for,
+                                                                       bool approve,
+                                                                       bool broadcast)
+{
+}
+
 namespace utils {
 
 fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number)

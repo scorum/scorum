@@ -993,6 +993,14 @@ public:
      */
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
+    annotated_signed_transaction change_committee
+
+        annotated_signed_transaction
+        vote_for_committee_proposal(const std::string& account_to_vote_with,
+                                    const std::string& account_to_vote_for,
+                                    bool approve = true,
+                                    bool broadcast = false);
+
 public:
     fc::signal<void(bool)> lock_changed;
 
