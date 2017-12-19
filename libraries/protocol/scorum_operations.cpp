@@ -349,5 +349,11 @@ void close_budget_operation::validate() const
 {
     validate_account_name(owner);
 }
+
+void vote_for_registration_committee_proposal_operation::validate() const
+{
+    validate_account_name(account);
 }
-} // scorum::protocol
+
+} // namespace protocol
+} // namespace scorum

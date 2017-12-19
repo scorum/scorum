@@ -1437,5 +1437,10 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
     budget_service.close_budget(budget);
 }
 
+void vote_for_registration_committee_proposal_evaluator::do_apply(
+    const vote_for_registration_committee_proposal_operation& op)
+{
+}
+
 } // namespace chain
 } // namespace scorum

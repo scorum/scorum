@@ -779,6 +779,18 @@ struct close_budget_operation : public base_operation
     }
 };
 
+struct vote_for_registration_committee_proposal_operation : public base_operation
+{
+    account_name_type account;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
+
+    void validate() const;
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -850,5 +862,7 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
+
+FC_REFLECT( scorum::protocol::vote_for_registration_committee_proposal_operation, (account))
 
 // clang-format on

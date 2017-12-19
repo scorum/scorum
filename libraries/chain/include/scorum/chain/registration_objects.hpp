@@ -91,11 +91,11 @@ public:
         c(*this);
     }
 
+    id_type id;
     account_name_type account;
 
     proposal_action action = proposal_action::none;
 
-    id_type id;
     share_type votes;
 };
 
@@ -121,6 +121,18 @@ typedef multi_index_container<registration_committee_member_object,
                               allocator<registration_committee_member_object>>
     registration_committee_member_index;
 
+typedef multi_index_container<reg_committee_change_proposal_object,
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<reg_committee_change_proposal_object,
+                                                               reg_committee_change_proposal_id_type,
+                                                               &reg_committee_change_proposal_object::id>>,
+                                         ordered_unique<tag<by_account_name>,
+                                                        member<reg_committee_change_proposal_object,
+                                                               account_name_type,
+                                                               &reg_committee_change_proposal_object::account>>>,
+                              allocator<reg_committee_change_proposal_object>>
+    reg_committee_change_proposal_object_index;
+
 } // namespace scorum
 } // namespace chain
 
@@ -134,3 +146,8 @@ FC_REFLECT(scorum::chain::registration_committee_member_object,
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)
+
+FC_REFLECT(scorum::chain::reg_committee_change_proposal_object, (id)(account)(action)(votes))
+
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::reg_committee_change_proposal_object,
+                         scorum::chain::reg_committee_change_proposal_object_index)
