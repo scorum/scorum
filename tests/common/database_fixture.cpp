@@ -28,7 +28,7 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
     genesis_state.accounts.push_back(
-        { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
+        { "initdelegate", "null", init_public_key, genesis_state.init_accounts_supply.amount, uint64_t(0) });
 
     genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
 }
@@ -41,7 +41,7 @@ database_fixture::database_fixture()
     , debug_key(graphene::utilities::key_to_wif(init_account_priv_key))
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
 {
-    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_accounts_supply = TEST_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
@@ -365,7 +365,7 @@ void database_fixture::fund(const string& account_name, const asset& amount)
 
                 db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
                     if (amount.symbol == SCORUM_SYMBOL)
-                        gpo.current_supply += amount;
+                        gpo.accounts_current_supply += amount;
                 });
             },
             default_skip);
@@ -417,7 +417,7 @@ void database_fixture::vest(const string& account, const asset& amount)
     db_plugin->debug_update(
         [=](database& db) {
             db.modify(db.get_dynamic_global_properties(),
-                      [&](dynamic_global_property_object& gpo) { gpo.current_supply += amount; });
+                      [&](dynamic_global_property_object& gpo) { gpo.accounts_current_supply += amount; });
 
             dbs_account& account_service = db.obtain_service<dbs_account>();
             account_service.create_vesting(db.get_account(account), amount);

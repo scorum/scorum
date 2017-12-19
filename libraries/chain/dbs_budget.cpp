@@ -19,7 +19,7 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 {
     budget_refs_type ret;
 
-    auto idx = db_impl().get_index<budget_index>().indicies();
+    const auto& idx = db_impl().get_index<budget_index>().indicies();
     auto it = idx.cbegin();
     const auto it_end = idx.cend();
     while (it != it_end)
@@ -147,8 +147,6 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
         // allocate cash only after next block generation
         budget.last_allocated_block = head_block_num;
     });
-
-    db_impl().modify(props, [&](dynamic_global_property_object& ps) { ps.current_supply -= balance; });
 
     return new_budget;
 }
@@ -284,12 +282,8 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
-        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
-
-        db_impl().modify(props, [&](dynamic_global_property_object& ps) { ps.current_supply += repayable; });
     }
 
     // delete budget

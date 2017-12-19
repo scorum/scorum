@@ -41,7 +41,8 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset current_supply = asset(0, SCORUM_SYMBOL);
+    asset total_supply = asset(0, SCORUM_SYMBOL);
+    asset accounts_current_supply = asset(0, SCORUM_SYMBOL);
     asset confidential_supply = asset(0, SCORUM_SYMBOL); ///< total asset held in confidential balances
     asset total_vesting_fund_scorum = asset(0, SCORUM_SYMBOL);
     asset total_vesting_shares = asset(0, VESTS_SYMBOL);
@@ -104,11 +105,11 @@ typedef multi_index_container<dynamic_global_property_object,
                                                                &dynamic_global_property_object::id>>>,
                               allocator<dynamic_global_property_object>>
     dynamic_global_property_index;
-}
-} // scorum::chain
+} // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::dynamic_global_property_object,
-           (id)(head_block_number)(head_block_id)(time)(current_witness)(current_supply)(confidential_supply)(
+           (id)(head_block_number)(head_block_id)(time)(current_witness)(accounts_current_supply)(confidential_supply)(
                total_vesting_fund_scorum)(total_vesting_shares)(total_reward_fund_scorum)(total_reward_shares2)(
                pending_rewarded_vesting_shares)(pending_rewarded_vesting_scorum)(maximum_block_size)(current_aslot)(
                recent_slots_filled)(participation_count)(last_irreversible_block_num)(vote_power_reserve_rate))

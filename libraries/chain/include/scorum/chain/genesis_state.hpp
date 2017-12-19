@@ -31,16 +31,15 @@ struct genesis_state_type
     };
 
     genesis_state_type()
-        : init_supply(0)
     {
     }
 
-    genesis_state_type(const sp::share_type& supply)
-        : init_supply(supply)
+    genesis_state_type(const sp::asset& account_supply)
+        : init_accounts_supply(account_supply)
     {
     }
 
-    sp::share_type init_supply;
+    sp::asset init_accounts_supply;
     sp::asset init_rewards_supply;
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
@@ -65,7 +64,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
            (block_signing_key))
 
 FC_REFLECT(scorum::chain::genesis_state_type,
-           (init_supply)
+           (init_accounts_supply)
            (init_rewards_supply)
            (initial_timestamp)
            (accounts)

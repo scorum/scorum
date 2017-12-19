@@ -37,7 +37,7 @@ const witness_object& dbs_witness::get_top_witness() const
     return (*idx.begin());
 }
 
-void dbs_witness::adjust_witness_votes(const account_object& account, share_type delta)
+void dbs_witness::adjust_witness_votes(const account_object& account, const share_type& delta)
 {
     const auto& vidx = db_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
     auto itr = vidx.lower_bound(boost::make_tuple(account.id, witness_id_type()));
@@ -48,7 +48,7 @@ void dbs_witness::adjust_witness_votes(const account_object& account, share_type
     }
 }
 
-void dbs_witness::adjust_witness_vote(const witness_object& witness, share_type delta)
+void dbs_witness::adjust_witness_vote(const witness_object& witness, const share_type& delta)
 {
     const auto& props = db_impl().get_dynamic_global_properties();
 

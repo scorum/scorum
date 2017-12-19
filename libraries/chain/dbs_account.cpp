@@ -608,7 +608,7 @@ void dbs_account::adjust_proxied_witness_votes(
     }
 }
 
-void dbs_account::adjust_proxied_witness_votes(const account_object& account, share_type delta, int depth)
+void dbs_account::adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth)
 {
     dbs_witness& witness_service = db().obtain_service<dbs_witness>();
 
@@ -633,5 +633,5 @@ const account_object& dbs_account::get_account(const account_id_type& account_id
 {
     return db_impl().get<account_object, by_id>(account_id);
 }
-}
-}
+} // namespace chain
+} // namespace scorum

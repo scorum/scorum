@@ -49,7 +49,7 @@ void db_setup_and_open(database& db, const fc::path& path)
 {
     genesis_state_type genesis;
 
-    genesis.init_supply = TEST_INITIAL_SUPPLY;
+    genesis.init_accounts_supply = TEST_INITIAL_SUPPLY;
     genesis.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis.initial_chain_id = TEST_CHAIN_ID;
     genesis.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);

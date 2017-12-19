@@ -33,8 +33,6 @@ struct database_fixture
     chain::database& db;
     genesis_state_type genesis_state;
     signed_transaction trx;
-    public_key_type committee_key;
-    account_id_type committee_account;
 
     const private_key_type init_account_priv_key;
     const public_key_type init_account_pub_key;
