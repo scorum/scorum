@@ -41,7 +41,7 @@ public:
         account_service.increase_balance(bob, asset(BOB_ACCOUNT_BUDGET, SCORUM_SYMBOL));
     }
 
-    asset allocate_all_cash_from_fund_budget_in_block();
+    const asset get_fund_budget_with_correction_for_block(uint32_t);
 
     dbs_budget& budget_service;
     dbs_account& account_service;
@@ -54,26 +54,21 @@ public:
     const int ALICE_ACCOUNT_BUDGET = 500;
     const int BOB_ACCOUNT_BUDGET = 1001;
 
-    const int BUDGET_PER_BLOCK_DEFAULT = 40;
-    const int BUDGET_BALANCE_DEFAULT = 200;
+    const int BUDGET_PER_BLOCK_DEFAULT = 1;
+    const int BUDGET_BALANCE_DEFAULT = 5;
 
-    const asset FUND_BUDGET_INITIAL_SUPPLY
-        = asset(TEST_REWARD_INITIAL_SUPPLY.amount
-                * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
-                / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+    // clang-format off
+    const asset FUND_BUDGET_INITIAL_SUPPLY = asset( TEST_REWARD_INITIAL_SUPPLY.amount 
+                                                    * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
+                                                    /  SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+    // clang-format on
 };
 
-asset budget_service_check_fixture::allocate_all_cash_from_fund_budget_in_block()
+const asset budget_service_check_fixture::get_fund_budget_with_correction_for_block(uint32_t already_generated_blocks)
 {
-    fc::time_point deadline = db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
-    asset result;
-    db_plugin->debug_update(
-        [&](database&) {
-            const budget_object& budget = budget_service.get_fund_budget();
-            result = budget_service.allocate_cash(budget, deadline);
-        },
-        default_skip);
-    return result;
+    return FUND_BUDGET_INITIAL_SUPPLY
+        - asset(FUND_BUDGET_INITIAL_SUPPLY.amount * already_generated_blocks
+                / (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY));
 }
 
 //
@@ -154,7 +149,12 @@ SCORUM_TEST_CASE(fund_budget_initial_supply)
 {
     auto budget = budget_service.get_fund_budget();
 
-    BOOST_REQUIRE_EQUAL(budget.balance, FUND_BUDGET_INITIAL_SUPPLY);
+    // because of clean_database_fixture spends reward for 2 block generations in constructor
+    // we reduce initial supply by 2 block rewards.
+    // Thus, here we check two in one:
+    // 1)fund budget is equal FUND_BUDGET_INITIAL_SUPPLY
+    // 2)fund budget was reduced precisely by 2 block rewards
+    BOOST_REQUIRE_EQUAL(budget.balance, get_fund_budget_with_correction_for_block(2));
 }
 
 SCORUM_TEST_CASE(fund_budget_initial_deadline)
@@ -346,32 +346,6 @@ SCORUM_TEST_CASE(allocate_cash_per_block)
     auto cash = budget_service.allocate_cash(budget);
 
     BOOST_REQUIRE_EQUAL(cash.amount, 0); // wait next block
-}
-
-SCORUM_TEST_CASE(allocate_cash_from_fund_budget_per_block)
-{
-    const auto& budget = budget_service.get_fund_budget();
-
-    auto cash = budget_service.allocate_cash(budget);
-
-    BOOST_REQUIRE_GE(cash.amount,
-                     FUND_BUDGET_INITIAL_SUPPLY.amount
-                         / (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY));
-
-    BOOST_REQUIRE_EQUAL(budget.balance.amount, (FUND_BUDGET_INITIAL_SUPPLY - cash).amount);
-}
-
-SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
-{
-    generate_block();
-
-    asset total_cash = allocate_all_cash_from_fund_budget_in_block();
-
-    BOOST_REQUIRE_THROW(budget_service.get_fund_budget(), fc::assert_exception);
-
-    BOOST_REQUIRE_EQUAL(total_cash, FUND_BUDGET_INITIAL_SUPPLY);
-
-    BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), (size_t)0);
 }
 
 SCORUM_TEST_CASE(try_close_fund_budget)

@@ -1423,7 +1423,6 @@ void database::process_funds()
     dbs_budget& budget_service = obtain_service<dbs_budget>();
 
     const auto& props = get_dynamic_global_properties();
-    const auto& wso = get_witness_schedule_object();
 
     // We don't have inflation.
     // We just get per block reward from reward pool and expect that after initial supply is handed out(fund budget is
@@ -1444,33 +1443,17 @@ void database::process_funds()
     auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 10% to witness pay
     // clang-format on
 
-    const auto& cwit = get_witness(props.current_witness);
-    witness_reward.amount *= SCORUM_MAX_WITNESSES;
+    modify(props, [&](dynamic_global_property_object& p) {
+        p.total_vesting_fund_scorum += vesting_reward;
+        p.accounts_current_supply += total_block_reward;
+    });
 
-    if (cwit.schedule == witness_object::timeshare)
-    {
-        witness_reward.amount *= wso.timeshare_weight;
-    }
-    else if (cwit.schedule == witness_object::top20)
-    {
-        witness_reward.amount *= wso.top20_weight;
-    }
-    else
+    const auto& cwit = get_witness(props.current_witness);
+
+    if (cwit.schedule != witness_object::top20 && cwit.schedule != witness_object::timeshare)
     {
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
     }
-
-    witness_reward.amount /= wso.witness_pay_normalization_factor;
-
-    auto new_scorum = content_reward + vesting_reward + witness_reward;
-
-    // After normalization we can have a remainder, return it to pool in order to not violate invariants
-    reward_service.increase_pool_ballance(total_block_reward - new_scorum);
-
-    modify(props, [&](dynamic_global_property_object& p) {
-        p.total_vesting_fund_scorum += vesting_reward;
-        p.accounts_current_supply += new_scorum;
-    });
 
     const auto& producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));

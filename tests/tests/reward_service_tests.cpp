@@ -59,7 +59,11 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_supply_distribution)
         asset total_reward_supply = pool.balance;
         total_reward_supply += budget_service.get_fund_budget().balance;
 
-        BOOST_REQUIRE_EQUAL(total_reward_supply, TEST_REWARD_INITIAL_SUPPLY);
+        // because of clean_database_fixture spends reward for 2 block generations in constructor
+        // we reduce initial supply by 2 block rewards.
+        auto current_reward_supply = TEST_REWARD_INITIAL_SUPPLY - asset(pool.current_per_block_reward.amount * 2);
+
+        BOOST_REQUIRE_EQUAL(total_reward_supply, current_reward_supply);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -92,9 +96,11 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_balancing)
     {
         const reward_pool_object& pool = reward_service.get_pool();
 
+        // because of clean_database_fixture spends reward for 2 block generations in constructor
+        // we reduce initial supply by 2 block rewards.
         BOOST_REQUIRE_GE(pool.balance.amount,
-                         pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                             * SCORUM_BLOCKS_PER_DAY);
+                         pool.current_per_block_reward.amount
+                             * (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY - 2));
     }
     FC_LOG_AND_RETHROW()
 }
