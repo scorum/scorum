@@ -2396,21 +2396,55 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::vote_for_committee_proposal(const std::string& account_to_vote_with,
+annotated_signed_transaction wallet_api::vote_for_committee_proposal(const std::string& voting_account,
                                                                      const std::string& account_to_vote_for,
                                                                      bool approve,
                                                                      bool broadcast)
 {
+    vote_for_registration_committee_proposal_operation op;
+    op.voting_account = voting_account;
+    op.committee_member = account_to_vote_for;
+    op.approve = approve;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 
 annotated_signed_transaction
 wallet_api::invite_new_committee_member(const std::string& inviter, const std::string& invitee, bool broadcast)
 {
+    using scorum::protocol::registration_committee_proposal_action;
+
+    create_committee_proposal_operation op;
+    op.creator = inviter;
+    op.committee_member = invitee;
+    op.action = registration_committee_proposal_action::invite;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 
 annotated_signed_transaction
-wallet_api::dropout_cmomittee_member(const std::string& initiator, const std::string& dropout, const bool broadcast)
+wallet_api::dropout_committee_member(const std::string& initiator, const std::string& dropout, bool broadcast)
 {
+    using scorum::protocol::registration_committee_proposal_action;
+
+    create_committee_proposal_operation op;
+    op.creator = initiator;
+    op.committee_member = dropout;
+    op.action = registration_committee_proposal_action::dropout;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 
 } // namespace wallet

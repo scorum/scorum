@@ -1442,5 +1442,9 @@ void vote_for_registration_committee_proposal_evaluator::do_apply(
 {
 }
 
+void create_committee_proposal_evaluator::do_apply(const create_committee_proposal_operation& op)
+{
+}
+
 } // namespace chain
 } // namespace scorum

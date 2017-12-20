@@ -979,16 +979,25 @@ public:
      */
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
+    /**
+     * Vote for registration committee proposal
+     */
     annotated_signed_transaction vote_for_committee_proposal(const std::string& account_to_vote_with,
                                                              const std::string& account_to_vote_for,
                                                              bool approve,
                                                              bool broadcast);
 
+    /**
+     * Create proposal for inviting new member in to the registration commmittee
+     */
     annotated_signed_transaction
     invite_new_committee_member(const std::string& inviter, const std::string& invitee, bool broadcast);
 
+    /**
+     * Create proposal for droping out registration committee member
+     */
     annotated_signed_transaction
-    dropout_cmomittee_member(const std::string& initiator, const std::string& dropout, const bool broadcast);
+    dropout_committee_member(const std::string& initiator, const std::string& dropout, bool broadcast);
 
 public:
     fc::signal<void(bool)> lock_changed;

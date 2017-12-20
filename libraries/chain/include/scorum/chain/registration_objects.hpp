@@ -72,13 +72,6 @@ public:
     uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
-enum proposal_action
-{
-    none,
-    add,
-    exclude
-};
-
 class reg_committee_change_proposal_object
     : public object<reg_committee_change_proposal_object_type, reg_committee_change_proposal_object>
 {
@@ -94,7 +87,7 @@ public:
     id_type id;
     account_name_type account;
 
-    proposal_action action = proposal_action::none;
+    fc::optional<scorum::protocol::registration_committee_proposal_action> action;
 
     share_type votes;
 };
@@ -133,8 +126,8 @@ typedef multi_index_container<reg_committee_change_proposal_object,
                               allocator<reg_committee_change_proposal_object>>
     reg_committee_change_proposal_object_index;
 
-} // namespace scorum
 } // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::registration_pool_object,
            (id)(balance)(maximum_bonus)(already_allocated_count)(schedule_items))
