@@ -951,7 +951,7 @@ bool wallet_api::import_key(const std::string& wif_key)
 
 std::string wallet_api::normalize_brain_key(const std::string& s) const
 {
-    return normalize_brain_key(s);
+    return scorum::wallet::normalize_brain_key(s);
 }
 
 variant wallet_api::info()
@@ -988,7 +988,7 @@ void wallet_api::set_wallet_filename(const std::string& wallet_filename)
 
 brain_key_info wallet_api::suggest_brain_key() const
 {
-    return suggest_brain_key();
+    return scorum::wallet::suggest_brain_key();
 }
 
 annotated_signed_transaction wallet_api::sign_transaction(const signed_transaction& tx, bool broadcast /* = false */)
