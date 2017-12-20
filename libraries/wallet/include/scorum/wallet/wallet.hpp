@@ -1098,6 +1098,9 @@ FC_API( scorum::wallet::wallet_api,
         (claim_reward_balance)
         (create_budget)
         (close_budget)
+        (vote_for_committee_proposal)
+        (invite_new_committee_member)
+        (dropout_committee_member)
 
         // private message api
         (send_private_message)
