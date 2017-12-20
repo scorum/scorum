@@ -2396,5 +2396,22 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::vote_for_committee_proposal(const std::string& account_to_vote_with,
+                                                                     const std::string& account_to_vote_for,
+                                                                     bool approve,
+                                                                     bool broadcast)
+{
+}
+
+annotated_signed_transaction
+wallet_api::invite_new_committee_member(const std::string& inviter, const std::string& invitee, bool broadcast)
+{
+}
+
+annotated_signed_transaction
+wallet_api::dropout_cmomittee_member(const std::string& initiator, const std::string& dropout, const bool broadcast)
+{
+}
+
 } // namespace wallet
 } // namespace scorum

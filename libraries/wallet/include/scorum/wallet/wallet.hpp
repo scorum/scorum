@@ -981,8 +981,14 @@ public:
 
     annotated_signed_transaction vote_for_committee_proposal(const std::string& account_to_vote_with,
                                                              const std::string& account_to_vote_for,
-                                                             bool approve = true,
-                                                             bool broadcast = false);
+                                                             bool approve,
+                                                             bool broadcast);
+
+    annotated_signed_transaction
+    invite_new_committee_member(const std::string& inviter, const std::string& invitee, bool broadcast);
+
+    annotated_signed_transaction
+    dropout_cmomittee_member(const std::string& initiator, const std::string& dropout, const bool broadcast);
 
 public:
     fc::signal<void(bool)> lock_changed;
