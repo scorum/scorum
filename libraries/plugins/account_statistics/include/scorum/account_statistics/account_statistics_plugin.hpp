@@ -40,7 +40,9 @@ struct account_stats_bucket_object : public object<account_stats_bucket_object_t
         c(*this);
     }
 
-    account_stats_bucket_object() {}
+    account_stats_bucket_object()
+    {
+    }
 
     id_type id;
 
@@ -65,42 +67,42 @@ struct account_stats_bucket_object : public object<account_stats_bucket_object_t
     uint32_t changed_reply_votes = 0; ///< Changed votes for replies
     uint32_t author_reward_payouts = 0; ///< Number of author reward payouts
     share_type author_rewards_sbd = 0; ///< SBD paid for author rewards
-    share_type author_rewards_vests = 0; ///< VESTS paid for author rewards
-    share_type author_rewards_total_scorum_value = 0; ///< SCORUM Value of author rewards
-    share_type author_rewards_payout_sbd_value = 0; ///< SBD Value of author rewards at time of payout
+    share_type author_rewards_vests = 0; ///< SP paid for author rewards
+    share_type author_rewards_total_scorum_value = 0; ///< SCR value of author rewards
+    share_type author_rewards_payout_sbd_value = 0; ///< SBD value of author rewards at time of payout
     uint32_t curation_reward_payouts = 0; ///< Number of curation reward payouts.
-    share_type curation_rewards_vests = 0; ///< VESTS paid for curation rewards
-    share_type curation_rewards_scorum_value = 0; ///< SCORUM Value of curation rewards
-    share_type curation_rewards_payout_sbd_value = 0; ///< SBD Value of curation rewards at time of payout
+    share_type curation_rewards_vests = 0; ///< SP paid for curation rewards
+    share_type curation_rewards_scorum_value = 0; ///< SCR value of curation rewards
+    share_type curation_rewards_payout_sbd_value = 0; ///< SBD value of curation rewards at time of payout
     uint32_t transfers_to = 0; ///< Account to account transfers to this account
     uint32_t transfers_from = 0; ///< Account to account transfers from this account
-    share_type scorum_sent = 0; ///< SCORUM sent from this account
-    share_type scorum_received = 0; ///< SCORUM received by this account
+    share_type scorum_sent = 0; ///< SCR sent from this account
+    share_type scorum_received = 0; ///< SCR received by this account
     share_type sbd_sent = 0; ///< SBD sent from this account
     share_type sbd_received = 0; ///< SBD received by this account
     uint32_t sbd_interest_payments = 0; ///< Number of times interest was paid to SBD
     share_type sbd_paid_as_interest = 0; ///< Amount of SBD paid as interest
     uint32_t transfers_to_vesting = 0; ///< Transfers to vesting by this account. Note: Transfer to vesting from A to B
     /// counts as a transfer from A to B followed by a vesting deposit by B.
-    share_type scorum_vested = 0; ///< SCORUM vested by the account
-    share_type new_vests = 0; ///< New VESTS by vesting transfers
+    share_type scorum_vested = 0; ///< SCR vested by the account
+    share_type new_vests = 0; ///< New SP by vesting transfers
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
     uint32_t modified_vesting_withdrawal_requests = 0; ///< Changes to vesting withdraw requests
     uint32_t vesting_withdrawals_processed = 0; ///< Vesting withdrawals processed for this account
     uint32_t finished_vesting_withdrawals = 0; ///< Processed vesting withdrawals that are now finished
-    share_type vests_withdrawn = 0; ///< VESTS withdrawn from the account
-    share_type scorum_received_from_withdrawls = 0; ///< SCORUM received from this account's vesting withdrawals
-    share_type scorum_received_from_routes = 0; ///< SCORUM received from another account's vesting withdrawals
-    share_type vests_received_from_routes = 0; ///< VESTS received from another account's vesting withdrawals
+    share_type vests_withdrawn = 0; ///< SP withdrawn from the account
+    share_type scorum_received_from_withdrawls = 0; ///< SCR received from this account's vesting withdrawals
+    share_type scorum_received_from_routes = 0; ///< SCR received from another account's vesting withdrawals
+    share_type vests_received_from_routes = 0; ///< SP received from another account's vesting withdrawals
     uint32_t sbd_conversion_requests_created = 0; ///< SBD conversion requests created
     share_type sbd_to_be_converted = 0; ///< Amount of SBD to be converted
     uint32_t sbd_conversion_requests_filled = 0; ///< SBD conversion requests filled
-    share_type scorum_converted = 0; ///< Amount of SCORUM that was converted
+    share_type scorum_converted = 0; ///< Amount of SCR that was converted
     uint32_t limit_orders_created = 0; ///< Limit orders created by this account
     uint32_t limit_orders_filled = 0; ///< Limit orders filled by this account
     uint32_t limit_orders_cancelled = 0; ///< Limit orders cancelled by this account
-    share_type limit_order_scorum_paid = 0; ///< SCORUM paid by limit orders
-    share_type limit_order_scorum_received = 0; ///< SCORUM received from limit orders
+    share_type limit_order_scorum_paid = 0; ///< SCR paid by limit orders
+    share_type limit_order_scorum_received = 0; ///< SCR received from limit orders
     share_type limit_order_sbd_paid = 0; ///< SBD paid by limit orders
     share_type limit_order_sbd_received = 0; ///< SBD received by limit orders
     uint32_t total_pow = 0; ///< POW completed
@@ -118,7 +120,9 @@ struct account_activity_bucket_object
         c(*this);
     }
 
-    account_activity_bucket_object() {}
+    account_activity_bucket_object()
+    {
+    }
 
     id_type id;
 
@@ -141,9 +145,12 @@ public:
     account_statistics_plugin(application* app);
     virtual ~account_statistics_plugin();
 
-    virtual std::string plugin_name() const override { return ACCOUNT_STATISTICS_PLUGIN_NAME; }
-    virtual void plugin_set_program_options(
-        boost::program_options::options_description& cli, boost::program_options::options_description& cfg) override;
+    virtual std::string plugin_name() const override
+    {
+        return ACCOUNT_STATISTICS_PLUGIN_NAME;
+    }
+    virtual void plugin_set_program_options(boost::program_options::options_description& cli,
+                                            boost::program_options::options_description& cfg) override;
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
 

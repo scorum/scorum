@@ -790,7 +790,7 @@ public:
             std::stringstream out;
 
             auto accounts = result.as<std::vector<account_api_obj>>();
-            asset total_scorum;
+            asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
             for (const auto& a : accounts)
             {

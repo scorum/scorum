@@ -14,7 +14,7 @@ bool inline is_asset_type(asset asset, asset_symbol_type symbol)
 void account_create_operation::validate() const
 {
     validate_account_name(new_account_name);
-    FC_ASSERT(is_asset_type(fee, SCORUM_SYMBOL), "Account creation fee must be SCORUM");
+    FC_ASSERT(is_asset_type(fee, SCORUM_SYMBOL), "Account creation fee must be SCR");
     owner.validate();
     active.validate();
 
@@ -30,8 +30,8 @@ void account_create_with_delegation_operation::validate() const
 {
     validate_account_name(new_account_name);
     validate_account_name(creator);
-    FC_ASSERT(is_asset_type(fee, SCORUM_SYMBOL), "Account creation fee must be SCORUM");
-    FC_ASSERT(is_asset_type(delegation, VESTS_SYMBOL), "Delegation must be VESTS");
+    FC_ASSERT(is_asset_type(fee, SCORUM_SYMBOL), "Account creation fee must be SCR");
+    FC_ASSERT(is_asset_type(delegation, VESTS_SYMBOL), "Delegation must be SP");
 
     owner.validate();
     active.validate();
@@ -174,7 +174,7 @@ void transfer_operation::validate() const
 void transfer_to_vesting_operation::validate() const
 {
     validate_account_name(from);
-    FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCORUM");
+    FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCR");
     if (to != account_name_type())
         validate_account_name(to);
     FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Must transfer a nonzero amount");
@@ -183,7 +183,7 @@ void transfer_to_vesting_operation::validate() const
 void withdraw_vesting_operation::validate() const
 {
     validate_account_name(account);
-    FC_ASSERT(is_asset_type(vesting_shares, VESTS_SYMBOL), "Amount must be VESTS");
+    FC_ASSERT(is_asset_type(vesting_shares, VESTS_SYMBOL), "Amount must be SP");
 }
 
 void set_withdraw_vesting_route_operation::validate() const
@@ -285,7 +285,7 @@ void escrow_release_operation::validate() const
     FC_ASSERT(who == from || who == to || who == agent, "who must be from or to or agent");
     FC_ASSERT(receiver == from || receiver == to, "receiver must be from or to");
     FC_ASSERT(scorum_amount.amount >= 0, "scorum amount cannot be negative");
-    FC_ASSERT(scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCORUM");
+    FC_ASSERT(scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCR");
 }
 
 void request_account_recovery_operation::validate() const
@@ -321,8 +321,8 @@ void decline_voting_rights_operation::validate() const
 void claim_reward_balance_operation::validate() const
 {
     validate_account_name(account);
-    FC_ASSERT(is_asset_type(reward_scorum, SCORUM_SYMBOL), "Reward Scorum must be SCORUM");
-    FC_ASSERT(is_asset_type(reward_vests, VESTS_SYMBOL), "Reward Scorum must be VESTS");
+    FC_ASSERT(is_asset_type(reward_scorum, SCORUM_SYMBOL), "Reward Scorum must be SCR");
+    FC_ASSERT(is_asset_type(reward_vests, VESTS_SYMBOL), "Reward Scorum must be SP");
     FC_ASSERT(reward_scorum.amount >= 0, "Cannot claim a negative amount");
     FC_ASSERT(reward_vests.amount >= 0, "Cannot claim a negative amount");
     FC_ASSERT(reward_scorum.amount > 0 || reward_vests.amount > 0, "Must claim something.");
@@ -332,8 +332,8 @@ void delegate_vesting_shares_operation::validate() const
 {
     validate_account_name(delegator);
     validate_account_name(delegatee);
-    FC_ASSERT(delegator != delegatee, "You cannot delegate VESTS to yourself");
-    FC_ASSERT(is_asset_type(vesting_shares, VESTS_SYMBOL), "Delegation must be VESTS");
+    FC_ASSERT(delegator != delegatee, "You cannot delegate SP to yourself");
+    FC_ASSERT(is_asset_type(vesting_shares, VESTS_SYMBOL), "Delegation must be SP");
     FC_ASSERT(vesting_shares >= asset(0, VESTS_SYMBOL), "Delegation cannot be negative");
 }
 

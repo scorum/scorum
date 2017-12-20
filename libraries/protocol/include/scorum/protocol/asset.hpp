@@ -9,7 +9,14 @@ typedef uint64_t asset_symbol_type;
 
 struct asset
 {
-    asset(share_type a = 0, asset_symbol_type id = SCORUM_SYMBOL)
+    asset()
+        : amount(0)
+        , symbol(SCORUM_SYMBOL)
+    {
+        // used for fc::variant
+    }
+
+    asset(share_type a, asset_symbol_type id)
         : amount(a)
         , symbol(id)
     {
@@ -86,6 +93,11 @@ struct asset
         FC_ASSERT(a.symbol == b.symbol);
         return asset(a.amount + b.amount, a.symbol);
     }
+    friend asset operator*(const asset& a, const asset& b)
+    {
+        FC_ASSERT(a.symbol == b.symbol);
+        return asset(a.amount * b.amount, a.symbol);
+    }
 };
 
 template <typename Stream> Stream& operator<<(Stream& stream, const scorum::protocol::asset& a)
@@ -104,7 +116,13 @@ template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::
 
 struct price
 {
-    price(const asset& base = asset(), const asset& quote = asset())
+    price()
+        : base(asset())
+        , quote(asset())
+    {
+    }
+
+    price(const asset& base, const asset& quote)
         : base(base)
         , quote(quote)
     {

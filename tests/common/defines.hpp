@@ -1,11 +1,13 @@
 #pragma once
 
 #include <boost/version.hpp>
+#include <scorum/protocol/config.hpp>
 
 #define TEST_CHAIN_ID fc::sha256::hash("testnet")
 #define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
 #define TEST_INITIAL_SUPPLY (10000000000ll)
-#define TEST_REWARD_INITIAL_SUPPLY asset(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS* SCORUM_BLOCKS_PER_DAY)
+#define TEST_REWARD_INITIAL_SUPPLY                                                                                     \
+    asset(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS* SCORUM_BLOCKS_PER_DAY, SCORUM_SYMBOL)
 #define TEST_GENESIS_TIMESTAMP (1431700000)
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
 
