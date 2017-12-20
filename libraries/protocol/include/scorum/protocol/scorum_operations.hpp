@@ -3,6 +3,8 @@
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
 
+#include <scorum/protocol/types.hpp>
+
 #include <fc/utf8.hpp>
 #include <fc/crypto/equihash.hpp>
 
@@ -796,10 +798,12 @@ struct vote_for_registration_committee_proposal_operation : public base_operatio
 
 struct create_committee_proposal_operation : public base_operation
 {
+    typedef scorum::protocol::registration_committee_proposal_action action_t;
+
     account_name_type creator;
     account_name_type committee_member;
 
-    fc::optional<scorum::protocol::registration_committee_proposal_action> action;
+    fc::optional<fc::enum_type<uint8_t, action_t>> action;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
