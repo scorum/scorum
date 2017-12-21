@@ -11,6 +11,7 @@
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_committee_proposal.hpp>
+#include <scorum/chain/registration_objects.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -1438,18 +1439,18 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
     budget_service.close_budget(budget);
 }
 
-void vote_for_registration_committee_proposal_evaluator::do_apply(
-    const vote_for_registration_committee_proposal_operation& op)
+void proposal_vote_evaluator::do_apply(const proposal_vote_operation& op)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_committee_proposal& proposal_service = _db.obtain_service<dbs_committee_proposal>();
 
     account_service.check_account_existence(op.voting_account);
 
-    proposal_service.vote_for(op.committee_member, op.approve);
+    auto proposal = proposal_service.vote_for(op.committee_member);
+    //    if (proposal.vote == )
 }
 
-void create_committee_proposal_evaluator::do_apply(const create_committee_proposal_operation& op)
+void proposal_create_evaluator::do_apply(const proposal_create_operation& op)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_committee_proposal& proposal_service = _db.obtain_service<dbs_committee_proposal>();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/chain/dbs_base_impl.hpp>
-#include <scorum/chain/registration_objects.hpp>
+#include <scorum/protocol/types.hpp>
 
 namespace scorum {
 namespace chain {
@@ -17,7 +17,11 @@ public:
     using action_t = scorum::protocol::registration_committee_proposal_action;
 
     void create(const account_name_type& creator, const account_name_type& member, action_t action);
-    void vote_for(const account_name_type& member, bool approve);
+    const proposal_vote_object& vote_for(const account_name_type& member);
+
+private:
+    const proposal_vote_object* check_and_return_proposal(const account_name_type& member);
+    void adjust_proposal_vote(const proposal_vote_object& member);
 };
 
 } // namespace scorum

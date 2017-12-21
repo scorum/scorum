@@ -72,20 +72,19 @@ public:
     uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
-class reg_committee_change_proposal_object
-    : public object<reg_committee_change_proposal_object_type, reg_committee_change_proposal_object>
+class proposal_vote_object : public object<proposal_vote_object_type, proposal_vote_object>
 {
-    reg_committee_change_proposal_object() = delete;
+    proposal_vote_object() = delete;
 
 public:
-    template <typename Constructor, typename Allocator>
-    reg_committee_change_proposal_object(Constructor&& c, allocator<Allocator>)
+    template <typename Constructor, typename Allocator> proposal_vote_object(Constructor&& c, allocator<Allocator>)
     {
         c(*this);
     }
 
     id_type id;
-    account_name_type account;
+    account_name_type creator;
+    account_name_type member;
 
     fc::optional<scorum::protocol::registration_committee_proposal_action> action;
 
@@ -101,6 +100,7 @@ typedef multi_index_container<registration_pool_object,
     registration_pool_index;
 
 struct by_account_name;
+struct by_member_name;
 
 typedef multi_index_container<registration_committee_member_object,
                               indexed_by<ordered_unique<tag<by_id>,
@@ -114,17 +114,17 @@ typedef multi_index_container<registration_committee_member_object,
                               allocator<registration_committee_member_object>>
     registration_committee_member_index;
 
-typedef multi_index_container<reg_committee_change_proposal_object,
+typedef multi_index_container<proposal_vote_object,
                               indexed_by<ordered_unique<tag<by_id>,
-                                                        member<reg_committee_change_proposal_object,
-                                                               reg_committee_change_proposal_id_type,
-                                                               &reg_committee_change_proposal_object::id>>,
-                                         ordered_unique<tag<by_account_name>,
-                                                        member<reg_committee_change_proposal_object,
+                                                        member<proposal_vote_object,
+                                                               proposal_id_type,
+                                                               &proposal_vote_object::id>>,
+                                         ordered_unique<tag<by_member_name>,
+                                                        member<proposal_vote_object,
                                                                account_name_type,
-                                                               &reg_committee_change_proposal_object::account>>>,
-                              allocator<reg_committee_change_proposal_object>>
-    reg_committee_change_proposal_object_index;
+                                                               &proposal_vote_object::member>>>,
+                              allocator<proposal_vote_object>>
+    proposal_vote_index;
 
 } // namespace chain
 } // namespace scorum
@@ -140,7 +140,6 @@ FC_REFLECT(scorum::chain::registration_committee_member_object,
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)
 
-FC_REFLECT(scorum::chain::reg_committee_change_proposal_object, (id)(account)(action)(votes))
+FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(action)(votes))
 
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::reg_committee_change_proposal_object,
-                         scorum::chain::reg_committee_change_proposal_object_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_vote_object, scorum::chain::proposal_vote_index)

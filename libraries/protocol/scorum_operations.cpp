@@ -350,13 +350,13 @@ void close_budget_operation::validate() const
     validate_account_name(owner);
 }
 
-void vote_for_registration_committee_proposal_operation::validate() const
+void proposal_vote_operation::validate() const
 {
     validate_account_name(voting_account);
     validate_account_name(committee_member);
 }
 
-void create_committee_proposal_operation::validate() const
+void proposal_create_operation::validate() const
 {
     validate_account_name(creator);
     validate_account_name(committee_member);

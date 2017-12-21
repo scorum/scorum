@@ -50,8 +50,8 @@ typedef fc::static_variant<vote_operation,
                            create_budget_operation,
                            close_budget_operation,
 
-                           vote_for_registration_committee_proposal_operation,
-                           create_committee_proposal_operation,
+                           proposal_vote_operation,
+                           proposal_create_operation,
 
                            /// virtual operations
                            author_reward_operation,

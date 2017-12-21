@@ -148,6 +148,7 @@ public:
         _wallet.ws_user = initial_data.ws_user;
         _wallet.ws_password = initial_data.ws_password;
     }
+
     virtual ~wallet_api_impl()
     {
     }
@@ -2398,13 +2399,11 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
 
 annotated_signed_transaction wallet_api::vote_for_committee_proposal(const std::string& voting_account,
                                                                      const std::string& account_to_vote_for,
-                                                                     bool approve,
                                                                      bool broadcast)
 {
-    vote_for_registration_committee_proposal_operation op;
+    proposal_vote_operation op;
     op.voting_account = voting_account;
     op.committee_member = account_to_vote_for;
-    op.approve = approve;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2418,7 +2417,7 @@ wallet_api::invite_new_committee_member(const std::string& inviter, const std::s
 {
     using scorum::protocol::registration_committee_proposal_action;
 
-    create_committee_proposal_operation op;
+    proposal_create_operation op;
     op.creator = inviter;
     op.committee_member = invitee;
     op.action = registration_committee_proposal_action::invite;
@@ -2435,7 +2434,7 @@ wallet_api::dropout_committee_member(const std::string& initiator, const std::st
 {
     using scorum::protocol::registration_committee_proposal_action;
 
-    create_committee_proposal_operation op;
+    proposal_create_operation op;
     op.creator = initiator;
     op.committee_member = dropout;
     op.action = registration_committee_proposal_action::dropout;

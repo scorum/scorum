@@ -39,8 +39,8 @@ DEFINE_EVALUATOR(claim_reward_balance)
 DEFINE_EVALUATOR(delegate_vesting_shares)
 DEFINE_EVALUATOR(create_budget)
 DEFINE_EVALUATOR(close_budget)
-DEFINE_EVALUATOR(vote_for_registration_committee_proposal)
-DEFINE_EVALUATOR(create_committee_proposal)
+DEFINE_EVALUATOR(proposal_vote)
+DEFINE_EVALUATOR(proposal_create)
 
 } // namespace chain
 } // namespace scorum

@@ -781,12 +781,10 @@ struct close_budget_operation : public base_operation
     }
 };
 
-struct vote_for_registration_committee_proposal_operation : public base_operation
+struct proposal_vote_operation : public base_operation
 {
     account_name_type voting_account;
     account_name_type committee_member;
-
-    bool approve = true;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -796,7 +794,7 @@ struct vote_for_registration_committee_proposal_operation : public base_operatio
     void validate() const;
 };
 
-struct create_committee_proposal_operation : public base_operation
+struct proposal_create_operation : public base_operation
 {
     typedef scorum::protocol::registration_committee_proposal_action action_t;
 
@@ -885,12 +883,11 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
-FC_REFLECT( scorum::protocol::vote_for_registration_committee_proposal_operation,
+FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
-            (committee_member)
-            (approve))
+            (committee_member))
 
-FC_REFLECT( scorum::protocol::create_committee_proposal_operation,
+FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
             (committee_member)
             (action))

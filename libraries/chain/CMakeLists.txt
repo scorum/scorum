@@ -30,6 +30,7 @@ add_library( scorum_chain
              dbs_budget.cpp
              dbs_registration_pool.cpp
              dbs_registration_committee.cpp
+             dbs_committee_proposal.cpp
 
              scorum_evaluator.cpp
 

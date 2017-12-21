@@ -984,7 +984,6 @@ public:
      */
     annotated_signed_transaction vote_for_committee_proposal(const std::string& account_to_vote_with,
                                                              const std::string& account_to_vote_for,
-                                                             bool approve,
                                                              bool broadcast);
 
     /**
