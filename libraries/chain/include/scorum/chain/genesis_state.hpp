@@ -14,7 +14,6 @@ namespace chain {
 using scorum::protocol::asset;
 using scorum::protocol::chain_id_type;
 using scorum::protocol::public_key_type;
-using scorum::protocol::share_type;
 
 struct genesis_state_type
 {
@@ -23,8 +22,8 @@ struct genesis_state_type
         std::string name;
         std::string recovery_account;
         public_key_type public_key;
-        share_type scr_amount;
-        share_type sp_amount;
+        asset scr_amount;
+        asset sp_amount;
     };
 
     struct witness_type

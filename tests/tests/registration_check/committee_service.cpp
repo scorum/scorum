@@ -22,15 +22,15 @@ genesis_state_type create_registration_genesis()
                     "name": "alice",
                     "recovery_account": "",
                     "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
+                    "scr_amount":"0.000 TESTS",
+                    "sp_amount":"0.000000 VESTS"
             },
             {
                     "name": "bob",
                     "recovery_account": "",
                     "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
+                    "scr_amount":"0.000 TESTS",
+                    "sp_amount":"0.000000 VESTS"
             }],
             "registration_committee": ["alice", "bob"]
     })json";

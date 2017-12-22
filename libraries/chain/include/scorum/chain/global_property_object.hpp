@@ -108,9 +108,10 @@ typedef multi_index_container<dynamic_global_property_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::dynamic_global_property_object,
-           (id)(head_block_number)(head_block_id)(time)(current_witness)(accounts_current_supply)(confidential_supply)(
-               total_vesting_fund_scorum)(total_vesting_shares)(total_reward_fund_scorum)(total_reward_shares2)(
-               pending_rewarded_vesting_shares)(pending_rewarded_vesting_scorum)(maximum_block_size)(current_aslot)(
-               recent_slots_filled)(participation_count)(last_irreversible_block_num)(vote_power_reserve_rate))
+FC_REFLECT(
+    scorum::chain::dynamic_global_property_object,
+    (id)(head_block_number)(head_block_id)(time)(current_witness)(total_supply)(accounts_current_supply)(
+        confidential_supply)(total_vesting_fund_scorum)(total_vesting_shares)(total_reward_fund_scorum)(
+        total_reward_shares2)(pending_rewarded_vesting_shares)(pending_rewarded_vesting_scorum)(maximum_block_size)(
+        current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(vote_power_reserve_rate))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)

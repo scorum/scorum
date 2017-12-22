@@ -90,9 +90,8 @@ void db_genesis::init_accounts()
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
-        account_service.create_initial_account(account.name, account.public_key,
-                                               asset(account.scr_amount, SCORUM_SYMBOL), account.recovery_account,
-                                               "{created_at: 'GENESIS'}");
+        account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
+                                               account.recovery_account, "{created_at: 'GENESIS'}");
     }
 }
 

@@ -27,10 +27,10 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
     private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(std::string("init_key")));
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
-    genesis_state.accounts.push_back(
-        { "initdelegate", "null", init_public_key, genesis_state.init_accounts_supply.amount, uint64_t(0) });
+    genesis_state.accounts.push_back({ TEST_INIT_DELEGATE_NAME, "null", init_public_key,
+                                       genesis_state.init_accounts_supply, asset(0, VESTS_SYMBOL) });
 
-    genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
+    genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_public_key });
 }
 
 database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
@@ -501,7 +501,7 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
 
     if (genesis_state.registration_committee.empty())
     {
-        genesis_state.registration_committee.emplace_back("initdelegate");
+        genesis_state.registration_committee.emplace_back(TEST_INIT_DELEGATE_NAME);
     }
 
     return genesis_state;

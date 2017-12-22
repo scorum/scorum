@@ -17,8 +17,8 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
                                             "name":"user",
                                             "recovery_account":"admin",
                                             "public_key":"SCR1111111111111111111111111111111114T1Anm",
-                                            "scr_amount":1000,
-                                            "sp_amount":1000000
+                                            "scr_amount":"1.000 TESTS",
+                                            "sp_amount":"1.000000 VESTS"
                                         }]
                                     }
                                     )json";
@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
 
     BOOST_CHECK(account.name == "user");
     BOOST_CHECK(account.public_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
-    BOOST_CHECK(account.scr_amount == 1000);
-    BOOST_CHECK(account.sp_amount == 1000000);
+    BOOST_CHECK(account.scr_amount == sp::asset(1000, SCORUM_SYMBOL));
+    BOOST_CHECK(account.sp_amount == sp::asset(1000000, VESTS_SYMBOL));
     BOOST_CHECK(account.recovery_account == "admin");
 }
 

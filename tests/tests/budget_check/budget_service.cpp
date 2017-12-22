@@ -25,17 +25,29 @@ public:
         , account_service(db.obtain_service<dbs_account>())
         , public_key(database_fixture::generate_private_key("user private key").get_public_key())
         , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
-                                              "initdelegate",
+                                              TEST_INIT_DELEGATE_NAME,
                                               public_key,
                                               "",
                                               authority(),
                                               authority(),
                                               authority(),
                                               asset(0, SCORUM_SYMBOL)))
-        , alice(account_service.create_account(
-              "alice", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
-        , bob(account_service.create_account(
-              "bob", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
+        , alice(account_service.create_account("alice",
+                                               TEST_INIT_DELEGATE_NAME,
+                                               public_key,
+                                               "",
+                                               authority(),
+                                               authority(),
+                                               authority(),
+                                               asset(0, SCORUM_SYMBOL)))
+        , bob(account_service.create_account("bob",
+                                             TEST_INIT_DELEGATE_NAME,
+                                             public_key,
+                                             "",
+                                             authority(),
+                                             authority(),
+                                             authority(),
+                                             asset(0, SCORUM_SYMBOL)))
     {
         account_service.increase_balance(alice, asset(ALICE_ACCOUNT_BUDGET, SCORUM_SYMBOL));
         account_service.increase_balance(bob, asset(BOB_ACCOUNT_BUDGET, SCORUM_SYMBOL));
