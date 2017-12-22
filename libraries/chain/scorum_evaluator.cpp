@@ -11,7 +11,7 @@
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_committee_proposal.hpp>
-#include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/proposal_vote_object.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>

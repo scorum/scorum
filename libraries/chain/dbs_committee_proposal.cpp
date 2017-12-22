@@ -1,11 +1,9 @@
 #include <scorum/chain/dbs_committee_proposal.hpp>
-#include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/proposal_vote_object.hpp>
 #include <scorum/chain/database.hpp>
 
 namespace scorum {
 namespace chain {
-
-using proposal_vote_object = scorum::chain::proposal_vote_object;
 
 dbs_committee_proposal::dbs_committee_proposal(database& db)
     : _base_type(db)
