@@ -17,6 +17,7 @@
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/budget_objects.hpp>
 #include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/atomicswap_objects.hpp>
 
 #include <scorum/chain/genesis_state.hpp>
 
@@ -42,6 +43,7 @@
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_atomicswap.hpp>
 
 namespace scorum {
 namespace chain {
@@ -1661,6 +1663,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<atomicswap_initiate_evaluator>();
+    _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
 }
 
 void database::set_custom_operation_interpreter(const std::string& id,
@@ -1710,6 +1714,7 @@ void database::initialize_indexes()
     add_index<budget_index>();
     add_index<registration_pool_index>();
     add_index<registration_committee_member_index>();
+    add_index<atomicswap_contract_index>();
 
     _plugin_index_signal();
 }
@@ -1928,6 +1933,7 @@ void database::_apply_block(const signed_block& next_block)
         update_witness_schedule();
 
         process_funds();
+        obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
         process_comment_cashout();
         process_vesting_withdrawals();
@@ -2504,6 +2510,7 @@ void database::validate_invariants() const
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
+            total_supply += itr->locked_balance;
             total_supply += itr->reward_scorum_balance;
             total_vesting += itr->vesting_shares;
             total_vesting += itr->reward_vesting_balance;

@@ -39,5 +39,7 @@ DEFINE_EVALUATOR(claim_reward_balance)
 DEFINE_EVALUATOR(delegate_vesting_shares)
 DEFINE_EVALUATOR(create_budget)
 DEFINE_EVALUATOR(close_budget)
+DEFINE_EVALUATOR(atomicswap_initiate)
+DEFINE_EVALUATOR(atomicswap_redeem)
 }
 } // scorum::chain

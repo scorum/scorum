@@ -10,6 +10,7 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_atomicswap.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -1435,6 +1436,33 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
     const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
 
     budget_service.close_budget(budget);
+}
+
+void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation& op)
+{
+    dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.initiator);
+    account_service.check_account_existence(op.participant);
+
+    const auto& initiator = account_service.get_account(op.initiator);
+    const auto& participant = account_service.get_account(op.participant);
+
+    atomicswap_service.create_initiator_contract(initiator, participant, op.amount, op.secret_hash);
+}
+
+void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op)
+{
+    dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.recipient);
+
+    const auto& recipient = account_service.get_account(op.recipient);
+    const auto& contract = atomicswap_service.get_contract(recipient, op.secret_hash);
+
+    atomicswap_service.redeem_contract(contract);
 }
 
 } // namespace chain

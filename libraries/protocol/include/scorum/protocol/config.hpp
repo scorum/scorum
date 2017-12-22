@@ -42,6 +42,11 @@
 
 #define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        1
 
+#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           4
+#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         2
+
+#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS            5
+
 #else // IS LIVE SCORUM NETWORK
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
@@ -70,6 +75,11 @@
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 1000, VESTS_SYMBOL )
 
 #define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        30
+
+#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           48*3600
+#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         24*3600
+
+#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS            1000
 
 #endif
 

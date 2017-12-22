@@ -57,6 +57,7 @@ public:
         last_vote_time; ///< used to increase the voting power of this account the longer it goes without voting.
 
     asset balance = asset(0, SCORUM_SYMBOL); ///< total liquid shares held by this account
+    asset locked_balance = asset(0, SCORUM_SYMBOL);
 
     asset reward_scorum_balance = asset(0, SCORUM_SYMBOL);
     asset reward_vesting_balance = asset(0, VESTS_SYMBOL);

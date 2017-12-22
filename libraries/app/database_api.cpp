@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_atomicswap.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -59,6 +60,9 @@ public:
     // Budgets
     std::vector<budget_api_obj> get_budgets(const std::set<std::string>& names) const;
     std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
+
+    // Atomic Swap
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 
     // Witnesses
     std::vector<optional<witness_api_obj>> get_witnesses(const std::vector<witness_id_type>& witness_ids) const;
@@ -984,6 +988,31 @@ std::set<std::string> database_api_impl::lookup_budget_owners(const std::string&
     chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
     return budget_service.lookup_budget_owners(lower_bound_name, limit);
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// Atomic Swap                                                      //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+std::vector<atomicswap_contract_api_obj> database_api::get_atomicswap_contracts(const std::string& owner) const
+{
+    return my->_db.with_read_lock([&]() { return my->get_atomicswap_contracts(owner); });
+}
+
+std::vector<atomicswap_contract_api_obj> database_api_impl::get_atomicswap_contracts(const std::string& owner) const
+{
+    std::vector<atomicswap_contract_api_obj> results;
+
+    chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
+
+    auto contracts = atomicswap_service.get_contracts(owner);
+    for (const chain::atomicswap_contract_object& contract : contracts)
+    {
+        results.push_back(atomicswap_contract_api_obj(contract));
+    }
+
+    return results;
 }
 
 /**

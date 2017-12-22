@@ -349,5 +349,20 @@ void close_budget_operation::validate() const
 {
     validate_account_name(owner);
 }
+
+void atomicswap_initiate_operation::validate() const
+{
+    validate_account_name(initiator);
+    validate_account_name(participant);
+    FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCR");
+    FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Amount must be positive");
+    validate_ripemd160Hash(secret_hash);
+}
+
+void atomicswap_redeem_operation::validate() const
+{
+    validate_account_name(recipient);
+    validate_ripemd160Hash(secret_hash);
+}
 }
 } // scorum::protocol

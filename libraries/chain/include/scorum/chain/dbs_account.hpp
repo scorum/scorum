@@ -66,6 +66,9 @@ public:
     void increase_balance(const account_object& account, const asset& scorums);
     void decrease_balance(const account_object& account, const asset& scorums);
 
+    void lock_balance(const account_object& account, const asset& scorums);
+    asset unlock_balance(const account_object& account, const asset& scorums);
+
     void increase_reward_balance(const account_object& account, const asset& scorums);
     void decrease_reward_balance(const account_object& account, const asset& scorums);
 

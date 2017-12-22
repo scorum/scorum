@@ -50,6 +50,9 @@ typedef fc::static_variant<vote_operation,
                            create_budget_operation,
                            close_budget_operation,
 
+                           atomicswap_initiate_operation,
+                           atomicswap_redeem_operation,
+
                            /// virtual operations
                            author_reward_operation,
                            curation_reward_operation,

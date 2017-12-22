@@ -2396,5 +2396,72 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& initiator,
+                                                             const std::string& participant,
+                                                             const asset& amount,
+                                                             const std::string& secret_hash,
+                                                             const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    std::string secret;
+    std::string _secret_hash(secret_hash);
+    if (_secret_hash.empty())
+    {
+        secret = scorum::wallet::suggest_brain_key().brain_priv_key; // get memo
+        fc::ripemd160 encode;
+        _secret_hash = encode.hash(secret).str(); // get hex ripemd160
+    }
+
+    atomicswap_initiate_operation op;
+
+    op.initiator = initiator;
+    op.participant = participant;
+    op.secret_hash = _secret_hash;
+    op.amount = amount;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret = my->sign_transaction(tx, broadcast);
+
+    if (!secret.empty())
+    {
+        ulog("Memorize! Secret: ${s}\nSecret Hash: ${sh}", ("s", secret)("sh", _secret_hash));
+    }
+
+    return ret;
+}
+
+annotated_signed_transaction
+wallet_api::atomicswap_redeem(const std::string& recipient, const std::string& secret, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_redeem_operation op;
+
+    fc::ripemd160 encode;
+    std::string secret_hash = encode.hash(secret).str(); // get hex ripemd160
+
+    op.recipient = recipient;
+    op.secret_hash = secret_hash;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
+{
+    std::vector<atomicswap_contract_api_obj> result;
+
+    result = my->_remote_db->get_atomicswap_contracts(owner);
+
+    return result;
+}
+
 } // namespace wallet
 } // namespace scorum

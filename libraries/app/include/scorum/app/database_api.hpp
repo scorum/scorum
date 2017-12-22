@@ -201,6 +201,8 @@ public:
 
     std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
 
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
+
     std::vector<owner_authority_history_api_obj> get_owner_history(std::string account) const;
 
     optional<account_recovery_request_api_obj> get_recovery_request(std::string account) const;
@@ -510,6 +512,9 @@ FC_API(scorum::app::database_api,
     // Budget
    (get_budgets)
    (lookup_budget_owners)
+
+    // Atomic Swap
+   (get_atomicswap_contracts)
 )
 
 // clang-format on

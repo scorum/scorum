@@ -261,6 +261,29 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
     increase_balance(account, -scorums);
 }
 
+void dbs_account::lock_balance(const account_object& account, const asset& scorums)
+{
+    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& acnt) {
+        acnt.balance -= scorums;
+        acnt.locked_balance += scorums;
+    });
+}
+
+asset dbs_account::unlock_balance(const account_object& account, const asset& scorums)
+{
+    asset ret(scorums);
+    if (account.locked_balance.amount <= 0 || scorums.amount > account.locked_balance.amount)
+    {
+        ret = account.locked_balance;
+    }
+    if (ret.amount > 0)
+    {
+        lock_balance(account, -ret);
+    }
+    return ret;
+}
+
 void dbs_account::increase_reward_balance(const account_object& account, const asset& scorums)
 {
     FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");

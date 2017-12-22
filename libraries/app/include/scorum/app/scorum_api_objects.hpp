@@ -8,6 +8,7 @@
 #include <scorum/chain/transaction_object.hpp>
 #include <scorum/chain/witness_objects.hpp>
 #include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/atomicswap_objects.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -172,6 +173,7 @@ struct account_api_obj
         , voting_power(a.voting_power)
         , last_vote_time(a.last_vote_time)
         , balance(a.balance)
+        , locked_balance(a.locked_balance)
         , reward_scorum_balance(a.reward_scorum_balance)
         , reward_vesting_balance(a.reward_vesting_balance)
         , reward_vesting_scorum(a.reward_vesting_scorum)
@@ -258,6 +260,7 @@ struct account_api_obj
     time_point_sec last_vote_time;
 
     asset balance;
+    asset locked_balance;
 
     asset reward_scorum_balance;
     asset reward_vesting_balance;
@@ -471,6 +474,39 @@ struct budget_api_obj
     uint32_t last_allocated_block;
 };
 
+struct atomicswap_contract_api_obj
+{
+    atomicswap_contract_api_obj(const chain::atomicswap_contract_object& c)
+        : id(c.id._id)
+        , owner(c.owner)
+        , to(c.to)
+        , amount(c.amount)
+        , secret_hash(fc::to_string(c.secret_hash))
+        , contract_hash(c.contract_hash)
+        , created(c.created)
+        , deadline(c.deadline)
+    {
+    }
+
+    // because fc::variant require for temporary object
+    atomicswap_contract_api_obj()
+    {
+    }
+
+    atomicswap_contract_id_type id;
+
+    account_name_type owner;
+
+    account_name_type to;
+    asset amount = asset(0, SCORUM_SYMBOL);
+
+    std::string secret_hash;
+    hash_index_type contract_hash;
+
+    time_point_sec created;
+    time_point_sec deadline;
+};
+
 } // namespace app
 } // namespace scorum
 
@@ -493,7 +529,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (created)(mined)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
-             (balance)
+             (balance)(locked_balance)
              (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
@@ -553,7 +589,7 @@ FC_REFLECT_DERIVED( scorum::app::dynamic_global_property_api_obj, (scorum::chain
                   )
 
 FC_REFLECT( scorum::app::budget_api_obj,
-             (id)
+            (id)
             (owner)
             (content_permlink)
             (created)
@@ -561,6 +597,16 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (balance)
             (per_block)
             (last_allocated_block)
+          )
+
+FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
+            (id)
+            (owner)
+            (to)
+            (amount)
+            (secret_hash)
+            (created)
+            (deadline)
           )
 
 // clang-format on

@@ -5,6 +5,7 @@
 
 #include <fc/utf8.hpp>
 #include <fc/crypto/equihash.hpp>
+#include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -18,6 +19,17 @@ inline void validate_permlink(const std::string& permlink)
 {
     FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
     FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
+}
+
+inline void validate_ripemd160Hash(const std::string& hash)
+{
+    fc::ripemd160 fmt;
+    FC_ASSERT(hash.size() == fmt.data_size() * 2, "Invalid hash format. It must be in hex RIPEMD160 format");
+    try
+    {
+        fmt = fc::ripemd160(hash);
+    }
+    FC_CAPTURE_AND_RETHROW((hash))
 }
 
 struct account_create_operation : public base_operation
@@ -779,6 +791,35 @@ struct close_budget_operation : public base_operation
     }
 };
 
+struct atomicswap_initiate_operation : public base_operation
+{
+    account_name_type initiator;
+    account_name_type participant;
+
+    asset amount = asset(0, SCORUM_SYMBOL);
+
+    std::string secret_hash;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(initiator);
+    }
+};
+
+struct atomicswap_redeem_operation : public base_operation
+{
+    account_name_type recipient; // participant or initiator
+
+    std::string secret_hash;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(recipient);
+    }
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -850,5 +891,8 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
+
+FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (initiator)(participant)(amount)(secret_hash) )
+FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (recipient)(secret_hash) )
 
 // clang-format on
