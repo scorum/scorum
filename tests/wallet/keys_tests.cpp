@@ -22,7 +22,7 @@ BOOST_FIXTURE_TEST_SUITE(test_keys_generation, keys_fixture)
 
 BOOST_AUTO_TEST_CASE(secret_to_wif)
 {
-    const fc::ecc::private_key private_key = sw::utils::derive_private_key(secret, 0);
+    const fc::ecc::private_key private_key = sw::derive_private_key(secret, 0);
 
     BOOST_CHECK_EQUAL(wif, graphene::utilities::key_to_wif(private_key));
 }
@@ -41,14 +41,14 @@ BOOST_AUTO_TEST_SUITE_END()
 class suggest_brain_key_fixture
 {
 public:
-    const sw::brain_key_info brain_key_data = sw::utils::suggest_brain_key();
+    const sw::brain_key_info brain_key_data = sw::suggest_brain_key();
 };
 
 BOOST_FIXTURE_TEST_SUITE(suggest_brain_key_tests, suggest_brain_key_fixture)
 
 BOOST_AUTO_TEST_CASE(secret_to_wif)
 {
-    const fc::ecc::private_key private_key = sw::utils::derive_private_key(brain_key_data.brain_priv_key, 0);
+    const fc::ecc::private_key private_key = sw::derive_private_key(brain_key_data.brain_priv_key, 0);
     BOOST_CHECK_EQUAL(brain_key_data.wif_priv_key, graphene::utilities::key_to_wif(private_key));
 }
 
