@@ -5,19 +5,17 @@
 #include <scorum/follow/follow_plugin.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
-#include <graphene/utilities/key_conversion.hpp>
+#include <scorum/wallet/utils.hpp>
 
 #include <fc/real128.hpp>
 #include <fc/crypto/base58.hpp>
 
 using namespace scorum::app;
 using namespace scorum::chain;
-using namespace graphene::utilities;
 
 namespace scorum {
 namespace wallet {
 
-using scorum::app::discussion;
 using namespace scorum::private_message;
 
 typedef uint16_t transaction_handle_type;
@@ -56,13 +54,6 @@ struct memo_data
     }
 };
 
-struct brain_key_info
-{
-    std::string brain_priv_key;
-    public_key_type pub_key;
-    std::string wif_priv_key;
-};
-
 struct wallet_data
 {
     std::vector<char> cipher_keys; /** encrypted keys */
@@ -84,11 +75,6 @@ enum authority_type
 namespace detail {
 class wallet_api_impl;
 }
-
-namespace utils {
-fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number);
-brain_key_info suggest_brain_key();
-} // namespace utils
 
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
