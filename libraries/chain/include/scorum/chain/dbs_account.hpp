@@ -128,7 +128,7 @@ public:
      * @param to_reward_balance
      * @return the sbd created and deposited to_account, may return SCORUM if there is no median feed
      */
-    asset create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance = false);
+    const asset create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance = false);
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to

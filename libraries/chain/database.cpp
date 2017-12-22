@@ -1455,7 +1455,7 @@ void database::process_funds()
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
     }
 
-    const auto& producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
+    const auto producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 

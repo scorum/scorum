@@ -1482,6 +1482,9 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
         generate_block();
         vest("alice", ASSET("10.000 TESTS"));
 
+        generate_block();
+        validate_database();
+
         BOOST_TEST_MESSAGE("--- Test withdraw of existing VESTS");
 
         {
@@ -1566,22 +1569,6 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
             db.push_transaction(tx, 0);
             generate_block();
         }
-
-        db_plugin->debug_update(
-            [=](database& db) {
-                auto& wso = db.get_witness_schedule_object();
-
-                db.modify(wso, [&](witness_schedule_object& w) {
-                    w.median_props.account_creation_fee = ASSET("10.000 TESTS");
-                });
-
-                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
-                    gpo.accounts_current_supply
-                        += wso.median_props.account_creation_fee - ASSET("0.001 TESTS") - gpo.total_vesting_fund_scorum;
-                    gpo.total_vesting_fund_scorum = wso.median_props.account_creation_fee - ASSET("0.001 TESTS");
-                });
-            },
-            database::skip_witness_signature);
 
         withdraw_vesting_operation op;
         signed_transaction tx;
@@ -4023,7 +4010,6 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
         ACTORS((alice));
         generate_blocks(1);
         fund("alice", ASSET("1000.000 TESTS"));
-        vest("alice", ASSET("10000.000000 VESTS"));
 
         private_key_type priv_key = generate_private_key("temp_key");
 
@@ -4081,6 +4067,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         ACTORS((alice));
         // 150 * fee = ( 5 * SCORUM ) + SP
         generate_blocks(1);
+
         fund("alice", ASSET("1510.000 TESTS"));
         vest("alice", ASSET("1000.000 TESTS"));
 
@@ -4088,10 +4075,13 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         generate_block();
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
-        });
+        db_plugin->debug_update(
+            [=](database& db) {
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("1.000 TESTS");
+                });
+            },
+            default_skip);
 
         generate_block();
 
@@ -4215,6 +4205,7 @@ BOOST_AUTO_TEST_CASE(claim_reward_balance_apply)
             });
 
             db.modify(db.get_dynamic_global_properties(), [](dynamic_global_property_object& gpo) {
+                gpo.total_supply += ASSET("20.000 TESTS");
                 gpo.accounts_current_supply += ASSET("20.000 TESTS");
                 gpo.pending_rewarded_vesting_shares += ASSET("10.000000 VESTS");
                 gpo.pending_rewarded_vesting_scorum += ASSET("10.000 TESTS");
@@ -4298,7 +4289,6 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
         BOOST_TEST_MESSAGE("Testing: delegate_vesting_shares_authorities");
         signed_transaction tx;
         ACTORS((alice)(bob))
-        vest("alice", ASSET("10000.000000 VESTS"));
 
         delegate_vesting_shares_operation op;
         op.vesting_shares = ASSET("300.000000 VESTS");
@@ -4352,10 +4342,13 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         generate_block();
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
-        });
+        db_plugin->debug_update(
+            [=](database& db) {
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("1.000 TESTS");
+                });
+            },
+            default_skip);
 
         generate_block();
 
@@ -4542,10 +4535,13 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         generate_block();
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 TESTS"); });
-        });
+        db_plugin->debug_update(
+            [=](database& db) {
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("1.000 TESTS");
+                });
+            },
+            default_skip);
 
         generate_block();
 

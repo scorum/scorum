@@ -538,7 +538,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance)
+const asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance)
 {
     try
     {
@@ -555,7 +555,7 @@ asset dbs_account::create_vesting(const account_object& to_account, const asset&
          *  If Cn equals o.amount, then we must solve for Vn to know how many new vesting shares
          *  the user should receive.
          *
-         *  128 bit math is requred due to multiplying of 64 bit numbers. This is done in asset and price.
+         *  128 bit math is required due to multiplying of 64 bit numbers. This is done in asset and price.
          */
         asset new_vesting
             = scorum * (to_reward_balance ? cprops.get_reward_vesting_share_price() : cprops.get_vesting_share_price());
