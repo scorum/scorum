@@ -34,13 +34,12 @@ genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedu
     schedule_input.emplace_back(schedule_input_type{ 4, 3, 25 });
 
     // half of limit
-    genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-    genesis_state.registration_maximum_bonus.amount /= 2;
+    genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    genesis_state.registration_bonus.amount /= 2;
 
     genesis_state.registration_schedule = schedule_input;
 
-    genesis_state.registration_supply
-        = schedule_input_total_bonus(schedule_input, genesis_state.registration_maximum_bonus);
+    genesis_state.registration_supply = schedule_input_total_bonus(schedule_input, genesis_state.registration_bonus);
     rest_of_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     genesis_state.registration_supply += rest_of_supply;
 

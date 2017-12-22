@@ -69,7 +69,7 @@ public:
         }
 
         return registration_pool_service.create_pool(genesis_state.registration_supply,
-                                                     genesis_state.registration_maximum_bonus, items);
+                                                     genesis_state.registration_bonus, items);
     }
 
     uint64_t get_sin_f(uint64_t pos, uint64_t max_pos, uint64_t max_result)
@@ -207,7 +207,7 @@ SCORUM_TEST_CASE(create_invalid_genesis_state_amount_check)
     BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state = genesis_state;
-    invalid_genesis_state.registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
+    invalid_genesis_state.registration_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
 
     BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
@@ -222,21 +222,21 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
     genesis_state_type invalid_genesis_state;
 
     invalid_genesis_state = fc::json::from_string(genesis_invalid_schedule_users_str).as<genesis_state_type>();
-    invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    invalid_genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
     BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state
         = fc::json::from_string(genesis_invalid_schedule_bonus_percent_l_str).as<genesis_state_type>();
-    invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    invalid_genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
     BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
 
     invalid_genesis_state
         = fc::json::from_string(genesis_invalid_schedule_bonus_percent_h_str).as<genesis_state_type>();
-    invalid_genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+    invalid_genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
     invalid_genesis_state.registration_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
 
     BOOST_CHECK_THROW(create_pool(invalid_genesis_state), fc::assert_exception);
@@ -247,7 +247,7 @@ SCORUM_TEST_CASE(create_check)
     const registration_pool_object& pool = registration_pool_service.get_pool();
 
     BOOST_CHECK_EQUAL(pool.balance, genesis_state.registration_supply);
-    BOOST_CHECK_EQUAL(pool.maximum_bonus, genesis_state.registration_maximum_bonus);
+    BOOST_CHECK_EQUAL(pool.maximum_bonus, genesis_state.registration_bonus);
     BOOST_CHECK_EQUAL(pool.already_allocated_count, 0);
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());

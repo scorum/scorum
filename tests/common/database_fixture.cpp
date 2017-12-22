@@ -22,13 +22,8 @@
 namespace scorum {
 namespace chain {
 
-void create_default_genesis_state(genesis_state_type& genesis_state)
+void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
 {
-    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
-    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
-    genesis_state.initial_chain_id = TEST_CHAIN_ID;
-    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
-
     private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
@@ -36,6 +31,16 @@ void create_default_genesis_state(genesis_state_type& genesis_state)
         { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
 
     genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
+}
+
+void create_default_genesis_state(genesis_state_type& genesis_state)
+{
+    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
+    create_initdelegate_for_genesis_state(genesis_state);
 }
 
 database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
@@ -498,10 +503,10 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
         genesis_state.registration_schedule = schedule_input;
     }
 
-    if (!genesis_state.registration_maximum_bonus.amount.value)
+    if (!genesis_state.registration_bonus.amount.value)
     {
-        genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-        genesis_state.registration_maximum_bonus.amount /= 2;
+        genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+        genesis_state.registration_bonus.amount /= 2;
     }
 
     if (!genesis_state.registration_supply.amount.value)

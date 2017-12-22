@@ -41,7 +41,7 @@ struct genesis_state_type
     };
 
     asset registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
-    asset registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset registration_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
     share_type init_supply = 0;
     asset init_rewards_supply;
     time_point_sec initial_timestamp;
@@ -75,7 +75,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
 
 FC_REFLECT(scorum::chain::genesis_state_type,
            (registration_supply)
-           (registration_maximum_bonus)
+           (registration_bonus)
            (init_supply)
            (init_rewards_supply)
            (initial_timestamp)

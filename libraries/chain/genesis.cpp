@@ -184,8 +184,7 @@ void db_genesis::init_registration_objects()
             genesis_item.stage, schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
     }
 
-    registration_pool_service.create_pool(_genesis_state.registration_supply, _genesis_state.registration_maximum_bonus,
-                                          items);
+    registration_pool_service.create_pool(_genesis_state.registration_supply, _genesis_state.registration_bonus, items);
 
     using account_names_type = std::vector<account_name_type>;
     account_names_type committee;
