@@ -42,6 +42,32 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
+BOOST_AUTO_TEST_SUITE(type_operation_tests)
+
+BOOST_AUTO_TEST_CASE(asset_operation_test)
+{
+    BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) * 3, asset(6, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(6, SCORUM_SYMBOL) / 3, asset(2, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) + 1, asset(3, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(3, SCORUM_SYMBOL) - 1, asset(2, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) + asset(1, SCORUM_SYMBOL), asset(3, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(3, SCORUM_SYMBOL) - asset(1, SCORUM_SYMBOL), asset(2, SCORUM_SYMBOL));
+
+    asset tmp(2, SCORUM_SYMBOL);
+    tmp *= 3;
+    BOOST_REQUIRE_EQUAL(tmp, asset(6, SCORUM_SYMBOL));
+    tmp /= 3;
+    BOOST_REQUIRE_EQUAL(tmp, asset(2, SCORUM_SYMBOL));
+    tmp += 3;
+    BOOST_REQUIRE_EQUAL(tmp, asset(5, SCORUM_SYMBOL));
+    tmp -= 3;
+    BOOST_REQUIRE_EQUAL(tmp, asset(2, SCORUM_SYMBOL));
+    tmp = -tmp;
+    BOOST_REQUIRE_EQUAL(tmp, asset(-2, SCORUM_SYMBOL));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_FIXTURE_TEST_SUITE(basic_tests, clean_database_fixture)
 
 BOOST_AUTO_TEST_CASE(parse_size_test)

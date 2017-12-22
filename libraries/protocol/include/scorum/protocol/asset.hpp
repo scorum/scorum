@@ -9,6 +9,8 @@ typedef uint64_t asset_symbol_type;
 
 struct asset
 {
+    using ammout_type = share_type::value_type;
+
     asset()
         : amount(0)
         , symbol(SCORUM_SYMBOL)
@@ -44,16 +46,35 @@ struct asset
         amount += o.amount;
         return *this;
     }
-
     asset& operator-=(const asset& o)
     {
         FC_ASSERT(symbol == o.symbol);
         amount -= o.amount;
         return *this;
     }
+    asset& operator+=(const share_type& o_amount)
+    {
+        amount += o_amount;
+        return *this;
+    }
+    asset& operator-=(const share_type& o_amount)
+    {
+        amount -= o_amount;
+        return *this;
+    }
     asset operator-() const
     {
         return asset(-amount, symbol);
+    }
+    asset& operator*=(const share_type& o_amount)
+    {
+        amount *= o_amount;
+        return *this;
+    }
+    asset& operator/=(const share_type& o_amount)
+    {
+        amount /= o_amount;
+        return *this;
     }
 
     friend bool operator==(const asset& a, const asset& b)
@@ -69,7 +90,6 @@ struct asset
     {
         return (a == b) || (a < b);
     }
-
     friend bool operator!=(const asset& a, const asset& b)
     {
         return !(a == b);
@@ -82,21 +102,43 @@ struct asset
     {
         return !(a < b);
     }
-
-    friend asset operator-(const asset& a, const asset& b)
-    {
-        FC_ASSERT(a.symbol == b.symbol);
-        return asset(a.amount - b.amount, a.symbol);
-    }
     friend asset operator+(const asset& a, const asset& b)
     {
         FC_ASSERT(a.symbol == b.symbol);
-        return asset(a.amount + b.amount, a.symbol);
+        asset ret(a);
+        ret += b.amount;
+        return ret;
     }
-    friend asset operator*(const asset& a, const asset& b)
+    friend asset operator-(const asset& a, const asset& b)
     {
         FC_ASSERT(a.symbol == b.symbol);
-        return asset(a.amount * b.amount, a.symbol);
+        asset ret(a);
+        ret -= b.amount;
+        return ret;
+    }
+    friend asset operator+(const asset& a, const share_type& b_amount)
+    {
+        asset ret(a);
+        ret += b_amount;
+        return ret;
+    }
+    friend asset operator-(const asset& a, const share_type& b_amount)
+    {
+        asset ret(a);
+        ret -= b_amount;
+        return ret;
+    }
+    friend asset operator*(const asset& a, const share_type& b_amount)
+    {
+        asset ret(a);
+        ret *= b_amount;
+        return ret;
+    }
+    friend asset operator/(const asset& a, const share_type& b_amount)
+    {
+        asset ret(a);
+        ret /= b_amount;
+        return ret;
     }
 };
 

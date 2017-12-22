@@ -1164,8 +1164,8 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
         op.posting = authority(1, posting, 1);
         op.memo_key = memo;
         op.json_metadata = json_meta;
-        op.fee = my->_remote_db->get_chain_properties().account_creation_fee
-            * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL);
+        op.fee
+            = my->_remote_db->get_chain_properties().account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
 
         signed_transaction tx;
         tx.operations.push_back(op);

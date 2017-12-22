@@ -106,12 +106,9 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
     // check fee
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    FC_ASSERT(o.fee >= asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                             SCORUM_SYMBOL),
+    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
               "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f",
-               wso.median_props.account_creation_fee
-                   * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))("p", o.fee));
+              ("f", wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER)("p", o.fee));
 
     // check accounts existence
 
