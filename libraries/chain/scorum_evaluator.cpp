@@ -1439,17 +1439,6 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
     budget_service.close_budget(budget);
 }
 
-void proposal_vote_evaluator::do_apply(const proposal_vote_operation& op)
-{
-    dbs_account& account_service = _db.obtain_service<dbs_account>();
-    dbs_committee_proposal& proposal_service = _db.obtain_service<dbs_committee_proposal>();
-
-    account_service.check_account_existence(op.voting_account);
-
-    auto proposal = proposal_service.vote_for(op.committee_member);
-    //    if (proposal.vote == )
-}
-
 void proposal_create_evaluator::do_apply(const proposal_create_operation& op)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
@@ -1460,7 +1449,7 @@ void proposal_create_evaluator::do_apply(const proposal_create_operation& op)
 
     FC_ASSERT(op.action.valid(), "proposal is not set.");
 
-    proposal_service.create(op.creator, op.committee_member, *op.action);
+    proposal_service.create(op.creator, op.committee_member, *op.action, *op.lifetime);
 }
 
 } // namespace chain

@@ -3,6 +3,7 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/proposal_vote_evaluator.hpp>
 
 namespace scorum {
 namespace chain {
@@ -39,7 +40,7 @@ DEFINE_EVALUATOR(claim_reward_balance)
 DEFINE_EVALUATOR(delegate_vesting_shares)
 DEFINE_EVALUATOR(create_budget)
 DEFINE_EVALUATOR(close_budget)
-DEFINE_EVALUATOR(proposal_vote)
+// DEFINE_EVALUATOR(proposal_vote)
 DEFINE_EVALUATOR(proposal_create)
 
 } // namespace chain

@@ -797,11 +797,13 @@ struct proposal_vote_operation : public base_operation
 struct proposal_create_operation : public base_operation
 {
     typedef scorum::protocol::registration_committee_proposal_action action_t;
+    typedef scorum::protocol::proposal_life_time lifetime_t;
 
     account_name_type creator;
     account_name_type committee_member;
 
     fc::optional<fc::enum_type<uint8_t, action_t>> action;
+    fc::optional<fc::enum_type<uint8_t, lifetime_t>> lifetime;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -890,6 +892,7 @@ FC_REFLECT( scorum::protocol::proposal_vote_operation,
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
             (committee_member)
-            (action))
+            (action)
+            (lifetime))
 
 // clang-format on

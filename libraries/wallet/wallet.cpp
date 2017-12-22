@@ -2421,6 +2421,7 @@ wallet_api::invite_new_committee_member(const std::string& inviter, const std::s
     op.creator = inviter;
     op.committee_member = invitee;
     op.action = registration_committee_proposal_action::invite;
+    op.lifetime = proposal_life_time::week;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2438,6 +2439,7 @@ wallet_api::dropout_committee_member(const std::string& initiator, const std::st
     op.creator = initiator;
     op.committee_member = dropout;
     op.action = registration_committee_proposal_action::dropout;
+    op.lifetime = proposal_life_time::week;
 
     signed_transaction tx;
     tx.operations.push_back(op);

@@ -12,13 +12,16 @@ dbs_committee_proposal::dbs_committee_proposal(database& db)
 
 void dbs_committee_proposal::create(const protocol::account_name_type& creator,
                                     const protocol::account_name_type& member,
-                                    dbs_committee_proposal::action_t action)
+                                    dbs_committee_proposal::action_t action,
+                                    lifetime_t lifetime)
 {
     db_impl().create<proposal_vote_object>([&](proposal_vote_object& proposal) {
         proposal.creator = creator;
         proposal.member = member;
         proposal.action = action;
         proposal.votes = 0;
+        proposal.created = db_impl().head_block_time();
+        proposal.lifetime = lifetime;
     });
 }
 
@@ -43,6 +46,16 @@ const proposal_vote_object& dbs_committee_proposal::vote_for(const protocol::acc
     adjust_proposal_vote(*proposal);
 
     return *proposal;
+}
+
+void dbs_committee_proposal::remove(const proposal_vote_object& proposal)
+{
+    //    db_impl().fin
+}
+
+bool check_quorum(const proposal_vote_object& proposal_object, uint32_t quorum, size_t members_count)
+{
+    return true;
 }
 
 } // namespace scorum

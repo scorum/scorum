@@ -20,7 +20,10 @@ public:
     account_name_type creator;
     account_name_type member;
 
+    fc::time_point_sec created;
+
     fc::optional<scorum::protocol::registration_committee_proposal_action> action;
+    fc::optional<scorum::protocol::proposal_life_time> lifetime;
 
     share_type votes;
 };
@@ -42,5 +45,5 @@ typedef multi_index_container<proposal_vote_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(action)(votes))
+FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(created)(action)(lifetime)(votes))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_vote_object, scorum::chain::proposal_vote_index)

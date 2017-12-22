@@ -5,9 +5,13 @@
 namespace scorum {
 namespace chain {
 
+class database;
+
 template <typename OperationType> class evaluator_registry
 {
 public:
+    typedef OperationType operation_type;
+
     evaluator_registry(database& d)
         : _db(d)
     {
@@ -19,6 +23,17 @@ public:
     {
         _op_evaluators[OperationType::template tag<typename EvaluatorType::operation_type>::value].reset(
             new EvaluatorType(_db, args...));
+    }
+
+    //    template <typename EvaluatorType, typename A> void register_evaluator()
+    //    {
+    //        _op_evaluators[OperationType::template tag<typename EvaluatorType<A>::operation_type>::value].reset(
+    //            new EvaluatorType<A>(_db));
+    //    }
+
+    template <typename EvaluatorType> void register_evaluator(EvaluatorType* e)
+    {
+        _op_evaluators[OperationType::template tag<typename EvaluatorType::operation_type>::value].reset(e);
     }
 
     evaluator<OperationType>& get_evaluator(const OperationType& op)
@@ -38,5 +53,6 @@ public:
     std::vector<std::unique_ptr<evaluator<OperationType>>> _op_evaluators;
     database& _db;
 };
-}
-}
+
+} // namespace chain
+} // namespace scorum
