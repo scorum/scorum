@@ -25,13 +25,13 @@ public:
         , account_service(db.obtain_service<dbs_account>())
         , public_key(database_fixture::generate_private_key("user private key").get_public_key())
         , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
-                                                         "initdelegate",
-                                                         public_key,
-                                                         "",
-                                                         authority(),
-                                                         authority(),
-                                                         authority(),
-                                                         asset(0, SCORUM_SYMBOL)))
+                                              "initdelegate",
+                                              public_key,
+                                              "",
+                                              authority(),
+                                              authority(),
+                                              authority(),
+                                              asset(0, SCORUM_SYMBOL)))
         , alice(account_service.create_account(
               "alice", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
         , bob(account_service.create_account(
@@ -59,14 +59,15 @@ public:
 
     const asset FUND_BUDGET_INITIAL_SUPPLY
         = asset(TEST_REWARD_INITIAL_SUPPLY.amount
-                * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
-                / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+                    * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
+                    / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
+                SCORUM_SYMBOL);
 };
 
 asset budget_service_check_fixture::allocate_all_cash_from_fund_budget_in_block()
 {
     fc::time_point deadline = db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
-    asset result;
+    asset result(0, SCORUM_SYMBOL);
     db_plugin->debug_update(
         [&](database&) {
             const budget_object& budget = budget_service.get_fund_budget();

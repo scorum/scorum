@@ -23,8 +23,8 @@ struct author_reward_operation : public virtual_operation
 
     account_name_type author;
     std::string permlink;
-    asset scorum_payout;
-    asset vesting_payout;
+    asset scorum_payout = asset(0, SCORUM_SYMBOL);
+    asset vesting_payout = asset(0, VESTS_SYMBOL);
 };
 
 struct curation_reward_operation : public virtual_operation
@@ -41,7 +41,7 @@ struct curation_reward_operation : public virtual_operation
     }
 
     account_name_type curator;
-    asset reward;
+    asset reward = asset(0, VESTS_SYMBOL);
     account_name_type comment_author;
     std::string comment_permlink;
 };
@@ -60,7 +60,7 @@ struct comment_reward_operation : public virtual_operation
 
     account_name_type author;
     std::string permlink;
-    asset payout;
+    asset payout = asset(0, SCORUM_SYMBOL);
 };
 
 struct fill_vesting_withdraw_operation : public virtual_operation
@@ -135,7 +135,7 @@ struct return_vesting_delegation_operation : public virtual_operation
     }
 
     account_name_type account;
-    asset vesting_shares;
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
 };
 
 struct comment_benefactor_reward_operation : public virtual_operation
@@ -157,7 +157,7 @@ struct comment_benefactor_reward_operation : public virtual_operation
     account_name_type benefactor;
     account_name_type author;
     std::string permlink;
-    asset reward;
+    asset reward = asset(0, VESTS_SYMBOL);
 };
 
 struct producer_reward_operation : public virtual_operation
@@ -172,7 +172,7 @@ struct producer_reward_operation : public virtual_operation
     }
 
     account_name_type producer;
-    asset vesting_shares;
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
 };
 }
 } // scorum::protocol

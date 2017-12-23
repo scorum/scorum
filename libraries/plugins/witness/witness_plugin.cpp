@@ -399,7 +399,7 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
 
         if (_db.is_producing())
             SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
-                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
+                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCR.",
                           ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
                                                                                   account_average_bandwidth)(
                               "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));

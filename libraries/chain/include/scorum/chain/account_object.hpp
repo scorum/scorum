@@ -147,7 +147,7 @@ public:
     id_type id;
     account_name_type delegator;
     account_name_type delegatee;
-    asset vesting_shares;
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
     time_point_sec min_delegation_time;
 };
 
@@ -167,7 +167,7 @@ public:
 
     id_type id;
     account_name_type delegator;
-    asset vesting_shares;
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
     time_point_sec expiration;
 };
 

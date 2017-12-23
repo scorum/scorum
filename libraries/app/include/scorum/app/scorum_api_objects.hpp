@@ -108,8 +108,8 @@ struct comment_api_obj
 
     uint16_t reward_weight = 0;
 
-    asset total_payout_value;
-    asset curator_payout_value;
+    asset total_payout_value = asset(0, SCORUM_SYMBOL);
+    asset curator_payout_value = asset(0, SCORUM_SYMBOL);
 
     share_type author_rewards;
 
@@ -117,7 +117,7 @@ struct comment_api_obj
 
     comment_id_type root_comment;
 
-    asset max_accepted_payout;
+    asset max_accepted_payout = asset(0, SCORUM_SYMBOL);
     uint16_t percent_scrs = 0;
     bool allow_replies = false;
     bool allow_votes = false;
@@ -142,7 +142,7 @@ struct tag_api_obj
     }
 
     std::string name;
-    asset total_payouts;
+    asset total_payouts = asset(0, SCORUM_SYMBOL);
     int32_t net_votes = 0;
     uint32_t top_posts = 0;
     uint32_t comments = 0;
@@ -259,20 +259,20 @@ struct account_api_obj
     uint16_t voting_power = 0;
     time_point_sec last_vote_time;
 
-    asset balance;
+    asset balance = asset(0, SCORUM_SYMBOL);
     asset locked_balance;
 
-    asset reward_scorum_balance;
-    asset reward_vesting_balance;
-    asset reward_vesting_scorum;
+    asset reward_scorum_balance = asset(0, SCORUM_SYMBOL);
+    asset reward_vesting_balance = asset(0, VESTS_SYMBOL);
+    asset reward_vesting_scorum = asset(0, SCORUM_SYMBOL);
 
     share_type curation_rewards;
     share_type posting_rewards;
 
-    asset vesting_shares;
-    asset delegated_vesting_shares;
-    asset received_vesting_shares;
-    asset vesting_withdraw_rate;
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset delegated_vesting_shares = asset(0, VESTS_SYMBOL);
+    asset received_vesting_shares = asset(0, VESTS_SYMBOL);
+    asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
     time_point_sec next_vesting_withdrawal;
     share_type withdrawn;
     share_type to_withdraw;
@@ -468,7 +468,7 @@ struct budget_api_obj
     time_point_sec created;
     time_point_sec deadline;
 
-    asset balance;
+    asset balance = asset(0, SCORUM_SYMBOL);
     share_type per_block;
 
     uint32_t last_allocated_block;
