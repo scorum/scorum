@@ -46,24 +46,39 @@ BOOST_AUTO_TEST_SUITE(type_operation_tests)
 
 BOOST_AUTO_TEST_CASE(asset_operation_test)
 {
-    BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) * 3, asset(6, SCORUM_SYMBOL));
-    BOOST_CHECK_EQUAL(asset(6, SCORUM_SYMBOL) / 3, asset(2, SCORUM_SYMBOL));
     BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) + 1, asset(3, SCORUM_SYMBOL));
     BOOST_CHECK_EQUAL(asset(3, SCORUM_SYMBOL) - 1, asset(2, SCORUM_SYMBOL));
     BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) + asset(1, SCORUM_SYMBOL), asset(3, SCORUM_SYMBOL));
     BOOST_CHECK_EQUAL(asset(3, SCORUM_SYMBOL) - asset(1, SCORUM_SYMBOL), asset(2, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(2, SCORUM_SYMBOL) * 3, asset(6, SCORUM_SYMBOL));
+    BOOST_CHECK_EQUAL(asset(6, SCORUM_SYMBOL) / 3, asset(2, SCORUM_SYMBOL));
 
     asset tmp(2, SCORUM_SYMBOL);
-    tmp *= 3;
-    BOOST_REQUIRE_EQUAL(tmp, asset(6, SCORUM_SYMBOL));
-    tmp /= 3;
-    BOOST_REQUIRE_EQUAL(tmp, asset(2, SCORUM_SYMBOL));
     tmp += 3;
     BOOST_REQUIRE_EQUAL(tmp, asset(5, SCORUM_SYMBOL));
     tmp -= 3;
     BOOST_REQUIRE_EQUAL(tmp, asset(2, SCORUM_SYMBOL));
     tmp = -tmp;
     BOOST_REQUIRE_EQUAL(tmp, asset(-2, SCORUM_SYMBOL));
+    tmp *= 3;
+    BOOST_REQUIRE_EQUAL(tmp, asset(-6, SCORUM_SYMBOL));
+    tmp /= 3.f;
+    BOOST_REQUIRE_EQUAL(tmp, asset(-2, SCORUM_SYMBOL));
+    tmp = -tmp;
+
+    BOOST_CHECK(tmp == tmp);
+
+    asset tmp2(3, SCORUM_SYMBOL);
+
+    BOOST_CHECK(tmp2 != tmp);
+
+    BOOST_CHECK(tmp < tmp2);
+    BOOST_CHECK(tmp <= tmp2);
+    BOOST_CHECK(tmp2 > tmp);
+    BOOST_CHECK(tmp2 >= tmp);
+
+    BOOST_CHECK_THROW(asset(2, SCORUM_SYMBOL) + asset(1, VESTS_SYMBOL), fc::assert_exception);
+    BOOST_CHECK_THROW(asset(3, SCORUM_SYMBOL) - asset(1, VESTS_SYMBOL), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

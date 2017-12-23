@@ -13,9 +13,9 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
-//< SCORUM = SCR with 3 digits of precision
+// SCORUM = SCR with 3 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
-//< VESTS = SP with 6 digits of precision
+// VESTS = SP with 6 digits of precision
 #define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
 #ifdef IS_TEST_NET

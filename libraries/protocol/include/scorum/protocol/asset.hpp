@@ -9,13 +9,11 @@ typedef uint64_t asset_symbol_type;
 
 struct asset
 {
-    using ammout_type = share_type::value_type;
-
     asset()
         : amount(0)
         , symbol(SCORUM_SYMBOL)
     {
-        // used for fc::variant
+        // used for fc::variant and price
     }
 
     asset(share_type a, asset_symbol_type id)
@@ -40,38 +38,36 @@ struct asset
     static asset from_string(const std::string& from);
     std::string to_string() const;
 
+    template <typename T> asset& operator+=(const T& o_amount)
+    {
+        amount += o_amount;
+        return *this;
+    }
     asset& operator+=(const asset& o)
     {
         FC_ASSERT(symbol == o.symbol);
-        amount += o.amount;
+        return *this += o.amount;
+    }
+    template <typename T> asset& operator-=(const T& o_amount)
+    {
+        amount -= o_amount;
         return *this;
     }
     asset& operator-=(const asset& o)
     {
         FC_ASSERT(symbol == o.symbol);
-        amount -= o.amount;
-        return *this;
-    }
-    asset& operator+=(const share_type& o_amount)
-    {
-        amount += o_amount;
-        return *this;
-    }
-    asset& operator-=(const share_type& o_amount)
-    {
-        amount -= o_amount;
-        return *this;
+        return *this -= o.amount;
     }
     asset operator-() const
     {
         return asset(-amount, symbol);
     }
-    asset& operator*=(const share_type& o_amount)
+    template <typename T> asset& operator*=(const T& o_amount)
     {
         amount *= o_amount;
         return *this;
     }
-    asset& operator/=(const share_type& o_amount)
+    template <typename T> asset& operator/=(const T& o_amount)
     {
         amount /= o_amount;
         return *this;
@@ -102,39 +98,37 @@ struct asset
     {
         return !(a < b);
     }
-    friend asset operator+(const asset& a, const asset& b)
-    {
-        FC_ASSERT(a.symbol == b.symbol);
-        asset ret(a);
-        ret += b.amount;
-        return ret;
-    }
-    friend asset operator-(const asset& a, const asset& b)
-    {
-        FC_ASSERT(a.symbol == b.symbol);
-        asset ret(a);
-        ret -= b.amount;
-        return ret;
-    }
-    friend asset operator+(const asset& a, const share_type& b_amount)
+    template <typename T> friend asset operator+(const asset& a, const T& b_amount)
     {
         asset ret(a);
         ret += b_amount;
         return ret;
     }
-    friend asset operator-(const asset& a, const share_type& b_amount)
+    friend asset operator+(const asset& a, const asset& b)
+    {
+        asset ret(a);
+        ret += b;
+        return ret;
+    }
+    template <typename T> friend asset operator-(const asset& a, const T& b_amount)
     {
         asset ret(a);
         ret -= b_amount;
         return ret;
     }
-    friend asset operator*(const asset& a, const share_type& b_amount)
+    friend asset operator-(const asset& a, const asset& b)
+    {
+        asset ret(a);
+        ret -= b;
+        return ret;
+    }
+    template <typename T> friend asset operator*(const asset& a, const T& b_amount)
     {
         asset ret(a);
         ret *= b_amount;
         return ret;
     }
-    friend asset operator/(const asset& a, const share_type& b_amount)
+    template <typename T> friend asset operator/(const asset& a, const T& b_amount)
     {
         asset ret(a);
         ret /= b_amount;
@@ -200,8 +194,6 @@ inline price operator~(const price& p)
     return price{ p.quote, p.base };
 }
 
-bool operator<(const asset& a, const asset& b);
-bool operator<=(const asset& a, const asset& b);
 bool operator<(const price& a, const price& b);
 bool operator<=(const price& a, const price& b);
 bool operator>(const price& a, const price& b);
