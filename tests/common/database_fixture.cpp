@@ -378,7 +378,7 @@ void database_fixture::transfer(const string& from, const string& to, const shar
         transfer_operation op;
         op.from = from;
         op.to = to;
-        op.amount = amount;
+        op.amount = asset(amount, SCORUM_SYMBOL);
 
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);

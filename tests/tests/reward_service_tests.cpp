@@ -136,10 +136,12 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_automatic_reward_increasing)
 
         asset initial_per_block_reward = pool.current_per_block_reward;
         asset threshold_balance(pool.current_per_block_reward.amount * SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS
-                                * SCORUM_BLOCKS_PER_DAY);
+                                    * SCORUM_BLOCKS_PER_DAY,
+                                SCORUM_SYMBOL);
 
-        BOOST_REQUIRE_EQUAL(reward_service.increase_pool_ballance(threshold_balance + asset(1) - pool.balance),
-                            threshold_balance + asset(1));
+        BOOST_REQUIRE_EQUAL(
+            reward_service.increase_pool_ballance(threshold_balance + asset(1, SCORUM_SYMBOL) - pool.balance),
+            threshold_balance + asset(1, SCORUM_SYMBOL));
 
         asset current_per_block_reward = reward_service.take_block_reward();
 
@@ -157,7 +159,8 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_automatic_reward_decreasing)
 
         asset initial_per_block_reward = pool.current_per_block_reward;
         asset threshold_balance(pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                                * SCORUM_BLOCKS_PER_DAY);
+                                    * SCORUM_BLOCKS_PER_DAY,
+                                SCORUM_SYMBOL);
 
         while (pool.balance >= threshold_balance)
         {

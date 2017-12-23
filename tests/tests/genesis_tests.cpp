@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(check_initial_supply)
 
 BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
 {
-    std::string genesis_str = R"json({ "init_rewards_supply": "1000.000 TESTS"})json";
+    std::string genesis_str = R"json({ "init_rewards_supply": "1000.000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 

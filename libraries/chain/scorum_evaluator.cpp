@@ -106,12 +106,9 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
     // check fee
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    FC_ASSERT(o.fee >= asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                             SCORUM_SYMBOL),
+    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
               "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f",
-               wso.median_props.account_creation_fee
-                   * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))("p", o.fee));
+              ("f", wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER)("p", o.fee));
 
     // check accounts existence
 
@@ -537,12 +534,13 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
                   "The escorw ratification deadline must be after head block time.");
         FC_ASSERT(o.escrow_expiration > _db.head_block_time(), "The escrow expiration must be after head block time.");
 
+        FC_ASSERT(o.fee.symbol == SCORUM_SYMBOL, "Fee must be in SCR.");
+
         asset scorum_spent = o.scorum_amount;
-        if (o.fee.symbol == SCORUM_SYMBOL)
-            scorum_spent += o.fee;
+        scorum_spent += o.fee;
 
         FC_ASSERT(from_account.balance >= scorum_spent,
-                  "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}",
+                  "Account cannot cover SCR costs of escrow. Required: ${r} Available: ${a}",
                   ("r", scorum_spent)("a", from_account.balance));
 
         account_service.decrease_balance(from_account, scorum_spent);
@@ -723,7 +721,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     const auto& to_account = o.to.size() ? account_service.get_account(o.to) : from_account;
 
     FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
-              "Account does not have sufficient SCORUM for transfer.");
+              "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.create_vesting(to_account, o.amount);
 }
@@ -1289,9 +1287,9 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
 
     const auto& acnt = account_service.get_account(op.account);
 
-    FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCORUM. Claim: ${c} Actual: ${a}",
+    FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCR. Claim: ${c} Actual: ${a}",
               ("c", op.reward_scorum)("a", acnt.reward_scorum_balance));
-    FC_ASSERT(op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much VESTS. Claim: ${c} Actual: ${a}",
+    FC_ASSERT(op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much SP. Claim: ${c} Actual: ${a}",
               ("c", op.reward_vests)("a", acnt.reward_vesting_balance));
 
     asset reward_vesting_scorum_to_move = asset(0, SCORUM_SYMBOL);
