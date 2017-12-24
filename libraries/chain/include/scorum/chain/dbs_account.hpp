@@ -63,21 +63,21 @@ public:
                        const optional<authority>& posting,
                        const optional<time_point_sec>& now = optional<time_point_sec>());
 
-    void increase_balance(const account_object& account, const asset& scorums);
-    void decrease_balance(const account_object& account, const asset& scorums);
+    void increase_balance(const account_object& account, const asset& amount);
+    void decrease_balance(const account_object& account, const asset& amount);
 
-    void lock_balance(const account_object& account, const asset& scorums);
-    asset unlock_balance(const account_object& account, const asset& scorums);
+    void lock_balance(const account_object& account, const asset& amount);
+    asset unlock_balance(const account_object& account, const asset& amount);
 
-    void increase_reward_balance(const account_object& account, const asset& scorums);
-    void decrease_reward_balance(const account_object& account, const asset& scorums);
+    void increase_reward_balance(const account_object& account, const asset& amount);
+    void decrease_reward_balance(const account_object& account, const asset& amount);
 
-    void increase_vesting_shares(const account_object& account, const asset& vesting, const asset& scorums);
+    void increase_vesting_shares(const account_object& account, const asset& vesting, const asset& amount);
 
-    void increase_delegated_vesting_shares(const account_object& account, const asset& vesting);
+    void increase_delegated_vesting_shares(const account_object& account, const asset& amount);
 
-    void increase_received_vesting_shares(const account_object& account, const asset& vesting);
-    void decrease_received_vesting_shares(const account_object& account, const asset& vesting);
+    void increase_received_vesting_shares(const account_object& account, const asset& amount);
+    void decrease_received_vesting_shares(const account_object& account, const asset& amount);
 
     void drop_challenged(const account_object& account,
                          const optional<time_point_sec>& now = optional<time_point_sec>());

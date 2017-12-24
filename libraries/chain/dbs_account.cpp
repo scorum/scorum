@@ -261,19 +261,19 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
     increase_balance(account, -scorums);
 }
 
-void dbs_account::lock_balance(const account_object& account, const asset& scorums)
+void dbs_account::lock_balance(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     db_impl().modify(account, [&](account_object& acnt) {
-        acnt.balance -= scorums;
-        acnt.locked_balance += scorums;
+        acnt.balance -= amount;
+        acnt.locked_balance += amount;
     });
 }
 
-asset dbs_account::unlock_balance(const account_object& account, const asset& scorums)
+asset dbs_account::unlock_balance(const account_object& account, const asset& amount)
 {
-    asset ret(scorums);
-    if (account.locked_balance.amount <= 0 || scorums.amount > account.locked_balance.amount)
+    asset ret(amount);
+    if (account.locked_balance.amount <= 0 || amount.amount > account.locked_balance.amount)
     {
         ret = account.locked_balance;
     }
@@ -284,43 +284,43 @@ asset dbs_account::unlock_balance(const account_object& account, const asset& sc
     return ret;
 }
 
-void dbs_account::increase_reward_balance(const account_object& account, const asset& scorums)
+void dbs_account::increase_reward_balance(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& acnt) { acnt.reward_scorum_balance += scorums; });
+    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& acnt) { acnt.reward_scorum_balance += amount; });
 }
 
-void dbs_account::decrease_reward_balance(const account_object& account, const asset& scorums)
+void dbs_account::decrease_reward_balance(const account_object& account, const asset& amount)
 {
-    increase_reward_balance(account, -scorums);
+    increase_reward_balance(account, -amount);
 }
 
-void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting, const asset& scorums)
+void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting, const asset& amount)
 {
     FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     db_impl().modify(account, [&](account_object& a) {
         a.vesting_shares += vesting;
         a.reward_vesting_balance -= vesting;
-        a.reward_vesting_scorum -= scorums;
+        a.reward_vesting_scorum -= amount;
     });
 }
 
-void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += vesting; });
+    FC_ASSERT(amount.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += amount; });
 }
 
-void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.received_vesting_shares += vesting; });
+    FC_ASSERT(amount.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.received_vesting_shares += amount; });
 }
 
-void dbs_account::decrease_received_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::decrease_received_vesting_shares(const account_object& account, const asset& amount)
 {
-    increase_received_vesting_shares(account, -vesting);
+    increase_received_vesting_shares(account, -amount);
 }
 
 void dbs_account::drop_challenged(const account_object& account, const optional<time_point_sec>& now)

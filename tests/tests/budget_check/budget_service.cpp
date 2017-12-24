@@ -77,9 +77,6 @@ asset budget_service_check_fixture::allocate_all_cash_from_fund_budget_in_block(
     return result;
 }
 
-//
-// usage for all budget tests 'chain_test  -t budget_*'
-//
 BOOST_FIXTURE_TEST_SUITE(budget_service_check, budget_service_check_fixture)
 
 SCORUM_TEST_CASE(is_const_ref_to_same_memory)
