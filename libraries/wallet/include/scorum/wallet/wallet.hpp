@@ -983,19 +983,18 @@ public:
      *  Asset (amount) will be locked for 48 hours while is not redeemed and refund automatically by timeout
      *
      *  @warning If secret is not set, it is been generating. API prints secret string to memorize.
-     *           If secret is already known, API receive ripemd160 hash from secret data.
-     *           For example use 'echo -n "my secret" |openssl dgst -ripemd160' to produce hash.
+     *           API prints secret hash as well.
      *
      *  @param initiator
      *  @param participant
      *  @param amount
-     *  @param secret_hash the ripemd160 hash from secret or empty string (to generate secret)
+     *  @param secret the secret ("my secret") or empty string (generate secret)
      *  @param broadcast
      */
     annotated_signed_transaction atomicswap_initiate(const std::string& initiator,
                                                      const std::string& participant,
                                                      const asset& amount,
-                                                     const std::string& secret_hash,
+                                                     const std::string& secret,
                                                      const bool broadcast);
 
     /** Redeem Atomic Swap contract by participant.
@@ -1008,7 +1007,7 @@ public:
      *           Atomic Swap protocol guarantees that no ways to extract secret before redeeming.
      *
      *  @param recipient the participant or initiator name (address)
-     *  @param secret the secret ("my secret") from hash that was set in atomicswap_initiate or atomicswap_participate
+     *  @param secret the secret ("my secret") that was set in atomicswap_initiate
      * API
      *  @param broadcast
      */

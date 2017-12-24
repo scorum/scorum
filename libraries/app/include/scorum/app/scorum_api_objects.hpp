@@ -501,7 +501,7 @@ struct atomicswap_contract_api_obj
     asset amount = asset(0, SCORUM_SYMBOL);
 
     std::string secret_hash;
-    hash_index_type contract_hash;
+    chain::hash_index_type contract_hash;
 
     time_point_sec created;
     time_point_sec deadline;

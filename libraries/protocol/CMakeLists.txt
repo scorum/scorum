@@ -14,6 +14,7 @@ add_library( scorum_protocol
              asset.cpp
              version.cpp
              get_config.cpp
+             atomicswap_helper.cpp
 
              ${HEADERS}
            )

@@ -37,9 +37,6 @@ public:
     void refund_contract(const atomicswap_contract_object& contract);
 
     void check_contracts_expiration();
-
-private:
-    hash_index_type _get_contract_hash(const account_name_type& recipient, const std::string& secret_hash) const;
 };
 } // namespace chain
 } // namespace scorum

@@ -13,11 +13,13 @@
 
 #include <numeric>
 
+#include <scorum/protocol/atomicswap_helper.hpp>
+
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using scorum::protocol::hash_index_type;
+using scorum::protocol::atomicswap::hash_index_type;
 
 class atomicswap_contract_object : public object<atomicswap_contract_object_type, atomicswap_contract_object>
 {

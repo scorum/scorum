@@ -21,17 +21,6 @@ inline void validate_permlink(const std::string& permlink)
     FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
 }
 
-inline void validate_ripemd160Hash(const std::string& hash)
-{
-    fc::ripemd160 fmt;
-    FC_ASSERT(hash.size() == fmt.data_size() * 2, "Invalid hash format. It must be in hex RIPEMD160 format");
-    try
-    {
-        fmt = fc::ripemd160(hash);
-    }
-    FC_CAPTURE_AND_RETHROW((hash))
-}
-
 struct account_create_operation : public base_operation
 {
     asset fee = asset(0, SCORUM_SYMBOL);

@@ -3,6 +3,8 @@
 
 #include <locale>
 
+#include <scorum/protocol/atomicswap_helper.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -356,13 +358,13 @@ void atomicswap_initiate_operation::validate() const
     validate_account_name(participant);
     FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCR");
     FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Amount must be positive");
-    validate_ripemd160Hash(secret_hash);
+    atomicswap::validate_secret_hash(secret_hash);
 }
 
 void atomicswap_redeem_operation::validate() const
 {
     validate_account_name(recipient);
-    validate_ripemd160Hash(secret_hash);
+    atomicswap::validate_secret_hash(secret_hash);
 }
 }
 } // scorum::protocol

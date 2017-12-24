@@ -2,9 +2,9 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/account_object.hpp>
+#include <scorum/protocol/atomicswap_helper.hpp>
 
-#include <sstream>
-#include <fc/crypto/sha256.hpp>
+using namespace scorum::protocol;
 
 namespace scorum {
 namespace chain {
@@ -32,7 +32,7 @@ const atomicswap_contract_object& dbs_atomicswap::get_contract(const account_obj
 {
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");
 
-    hash_index_type contract_hash = _get_contract_hash(recipient.name, secret_hash);
+    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(recipient.name, secret_hash);
     return db_impl().get<atomicswap_contract_object, by_contract_hash>(contract_hash);
 }
 
@@ -46,7 +46,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
     FC_ASSERT(initiator.balance >= amount, "Insufficient funds.");
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");
 
-    hash_index_type contract_hash = _get_contract_hash(participant.name, secret_hash);
+    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(participant.name, secret_hash);
 
     FC_ASSERT((nullptr == db_impl().find<atomicswap_contract_object, by_contract_hash>(contract_hash)),
               "There is contract for '${a}' with same secret. Use another secret and try again.",
@@ -101,9 +101,6 @@ void dbs_atomicswap::refund_contract(const atomicswap_contract_object& contract)
 
 void dbs_atomicswap::check_contracts_expiration()
 {
-    // TODO: if contracts.size() >> 1000 it should be changed algorithm.
-    // Randomize selection of contracts list limited by size and wait next block for instance
-
     atomicswap_contracts_refs_type contracts;
 
     const auto& idx = db_impl().get_index<atomicswap_contract_index>().indicies().get<by_owner_name>();
@@ -121,29 +118,6 @@ void dbs_atomicswap::check_contracts_expiration()
             refund_contract(contract);
         }
     }
-}
-
-hash_index_type dbs_atomicswap::_get_contract_hash(const account_name_type& recipient,
-                                                   const std::string& secret_hash) const
-{
-    std::stringstream data;
-    data << recipient << secret_hash;
-
-    fc::sha256 encode;
-    encode = encode.hash(data.str());
-
-    hash_index_type ret;
-    if (encode.data_size() <= sizeof(ret.data))
-        memcpy((char*)&ret.data, encode.data(), encode.data_size());
-    else
-    {
-        // if somebody change hash index_type size (almost never)
-        memcpy((char*)&ret.data, encode.data(), sizeof(ret.data));
-    }
-
-    ret.data = boost::endian::big_to_native(ret.data);
-
-    return ret;
 }
 
 } // namespace chain

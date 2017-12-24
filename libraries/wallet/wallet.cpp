@@ -12,6 +12,8 @@
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
 
+#include <scorum/protocol/atomicswap_helper.hpp>
+
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -2399,25 +2401,23 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
 annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& initiator,
                                                              const std::string& participant,
                                                              const asset& amount,
-                                                             const std::string& secret_hash,
+                                                             const std::string& secret,
                                                              const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
-    std::string secret;
-    std::string _secret_hash(secret_hash);
-    if (_secret_hash.empty())
+    std::string _secret(secret);
+    if (_secret.empty())
     {
-        secret = scorum::wallet::suggest_brain_key().brain_priv_key; // get memo
-        fc::ripemd160 encode;
-        _secret_hash = encode.hash(secret).str(); // get hex ripemd160
+        _secret = scorum::wallet::suggest_brain_key().brain_priv_key;
     }
+    std::string secret_hash = atomicswap::get_secret_hash(_secret);
 
     atomicswap_initiate_operation op;
 
     op.initiator = initiator;
     op.participant = participant;
-    op.secret_hash = _secret_hash;
+    op.secret_hash = secret_hash;
     op.amount = amount;
 
     signed_transaction tx;
@@ -2426,10 +2426,11 @@ annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& 
 
     annotated_signed_transaction ret = my->sign_transaction(tx, broadcast);
 
-    if (!secret.empty())
+    if (secret.empty())
     {
-        ulog("Memorize! Secret: ${s}\nSecret Hash: ${sh}", ("s", secret)("sh", _secret_hash));
+        ulog("Memorize Secret: ${s}", ("s", _secret));
     }
+    ulog("Secret Hash: ${sh}", ("sh", secret_hash));
 
     return ret;
 }
@@ -2441,11 +2442,8 @@ wallet_api::atomicswap_redeem(const std::string& recipient, const std::string& s
 
     atomicswap_redeem_operation op;
 
-    fc::ripemd160 encode;
-    std::string secret_hash = encode.hash(secret).str(); // get hex ripemd160
-
     op.recipient = recipient;
-    op.secret_hash = secret_hash;
+    op.secret_hash = atomicswap::get_secret_hash(secret);
 
     signed_transaction tx;
     tx.operations.push_back(op);
