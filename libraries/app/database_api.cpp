@@ -18,6 +18,7 @@
 #include <cfenv>
 #include <iostream>
 
+#include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_atomicswap.hpp>
 
@@ -1004,9 +1005,12 @@ std::vector<atomicswap_contract_api_obj> database_api_impl::get_atomicswap_contr
 {
     std::vector<atomicswap_contract_api_obj> results;
 
+    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
+    const chain::account_object& owner_obj = account_service.get_account(owner);
+
     chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
 
-    auto contracts = atomicswap_service.get_contracts(owner);
+    auto contracts = atomicswap_service.get_contracts(owner_obj);
     for (const chain::atomicswap_contract_object& contract : contracts)
     {
         results.push_back(atomicswap_contract_api_obj(contract));

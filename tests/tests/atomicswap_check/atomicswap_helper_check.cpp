@@ -16,7 +16,7 @@ using namespace scorum::protocol::atomicswap;
 
 BOOST_AUTO_TEST_SUITE(atomicswap_helpers)
 
-SCORUM_TEST_CASE(hash)
+SCORUM_TEST_CASE(get_hash)
 {
     BOOST_REQUIRE_EQUAL(fc::sha256().data_size(), sizeof(hash_index_type().data));
 

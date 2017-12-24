@@ -14,12 +14,13 @@ dbs_atomicswap::dbs_atomicswap(database& db)
 {
 }
 
-dbs_atomicswap::atomicswap_contracts_refs_type dbs_atomicswap::get_contracts(const account_name_type& owner) const
+dbs_atomicswap::atomicswap_contracts_refs_type dbs_atomicswap::get_contracts(const account_object& owner) const
 {
     atomicswap_contracts_refs_type ret;
 
-    const auto& idx = db_impl().get_index<atomicswap_contract_index>().indicies().get<by_owner_name>();
-    for (auto it = idx.cbegin(); it != idx.cend(); ++it)
+    const auto& idx
+        = db_impl().get_index<atomicswap_contract_index>().indicies().get<by_owner_name>().equal_range(owner.name);
+    for (auto it = idx.first; it != idx.second; ++it)
     {
         ret.push_back(std::cref(*it));
     }
@@ -32,8 +33,12 @@ const atomicswap_contract_object& dbs_atomicswap::get_contract(const account_obj
 {
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");
 
-    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(recipient.name, secret_hash);
-    return db_impl().get<atomicswap_contract_object, by_contract_hash>(contract_hash);
+    try
+    {
+        atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(recipient.name, secret_hash);
+        return db_impl().get<atomicswap_contract_object, by_contract_hash>(contract_hash);
+    }
+    FC_CAPTURE_AND_RETHROW((recipient.name)(secret_hash))
 }
 
 const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(const account_object& initiator,
@@ -51,6 +56,9 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
     FC_ASSERT((nullptr == db_impl().find<atomicswap_contract_object, by_contract_hash>(contract_hash)),
               "There is contract for '${a}' with same secret. Use another secret and try again.",
               ("a", participant.name));
+    FC_ASSERT(get_contracts(initiator).size() < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS,
+              "Can't create more then ${1} contract per initiator.",
+              ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 

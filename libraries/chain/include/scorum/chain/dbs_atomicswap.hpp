@@ -22,7 +22,7 @@ protected:
 public:
     using atomicswap_contracts_refs_type = std::vector<std::reference_wrapper<const atomicswap_contract_object>>;
 
-    atomicswap_contracts_refs_type get_contracts(const account_name_type& owner) const;
+    atomicswap_contracts_refs_type get_contracts(const account_object& owner) const;
 
     const atomicswap_contract_object& get_contract(const account_object& recipient,
                                                    const std::string& secret_hash) const;
