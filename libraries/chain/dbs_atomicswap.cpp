@@ -77,7 +77,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
           });
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
-    account_service.lock_balance(initiator, amount);
+    account_service.decrease_balance(initiator, amount);
 
     return new_contract;
 }
@@ -86,11 +86,8 @@ void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract)
 {
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
-    const account_object& from = account_service.get_account(contract.owner);
     const account_object& to = account_service.get_account(contract.to);
 
-    FC_ASSERT(contract.amount == account_service.unlock_balance(from, contract.amount), "Insufficient funds.");
-    account_service.decrease_balance(from, contract.amount);
     account_service.increase_balance(to, contract.amount);
 
     db_impl().remove(contract);
@@ -102,7 +99,7 @@ void dbs_atomicswap::refund_contract(const atomicswap_contract_object& contract)
 
     const account_object& owner = account_service.get_account(contract.owner);
 
-    account_service.unlock_balance(owner, contract.amount);
+    account_service.increase_balance(owner, contract.amount);
 
     db_impl().remove(contract);
 }

@@ -2511,7 +2511,6 @@ void database::validate_invariants() const
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
-            total_supply += itr->locked_balance;
             total_supply += itr->reward_scorum_balance;
             total_vesting += itr->vesting_shares;
             total_vesting += itr->reward_vesting_balance;
@@ -2550,6 +2549,13 @@ void database::validate_invariants() const
         for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
         {
             total_supply += itr->reward_balance;
+        }
+
+        const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
+
+        for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
+        {
+            total_supply += itr->amount;
         }
 
         total_supply

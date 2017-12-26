@@ -49,13 +49,11 @@ BOOST_FIXTURE_TEST_SUITE(atomicswap_service_create_initiator_check, atomicswap_s
 SCORUM_TEST_CASE(create_initiator_contract_check_balance)
 {
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE);
-    BOOST_REQUIRE_EQUAL(alice.locked_balance, ASSET_NULL_SCR);
 
     BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB,
                                                                         atomicswap::get_secret_hash(ALICE_SECRET)));
 
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE - ALICE_SHARE_FOR_BOB);
-    BOOST_REQUIRE_EQUAL(alice.locked_balance, ALICE_SHARE_FOR_BOB);
 }
 
 SCORUM_TEST_CASE(create_initiator_contract_check_get_contracts)
@@ -142,13 +140,11 @@ SCORUM_TEST_CASE(create_redeem_check_balance)
 
     BOOST_REQUIRE_EQUAL(bob.balance, ASSET_NULL_SCR);
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE - ALICE_SHARE_FOR_BOB);
-    BOOST_REQUIRE_EQUAL(alice.locked_balance, ALICE_SHARE_FOR_BOB);
 
     BOOST_REQUIRE_NO_THROW(atomicswap_service.redeem_contract(contract));
 
     BOOST_REQUIRE_EQUAL(bob.balance, ALICE_SHARE_FOR_BOB);
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE - ALICE_SHARE_FOR_BOB);
-    BOOST_REQUIRE_EQUAL(alice.locked_balance, ASSET_NULL_SCR);
 
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice_secret_hash), fc::exception);
 }

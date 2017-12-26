@@ -173,7 +173,6 @@ struct account_api_obj
         , voting_power(a.voting_power)
         , last_vote_time(a.last_vote_time)
         , balance(a.balance)
-        , locked_balance(a.locked_balance)
         , reward_scorum_balance(a.reward_scorum_balance)
         , reward_vesting_balance(a.reward_vesting_balance)
         , reward_vesting_scorum(a.reward_vesting_scorum)
@@ -260,7 +259,6 @@ struct account_api_obj
     time_point_sec last_vote_time;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    asset locked_balance;
 
     asset reward_scorum_balance = asset(0, SCORUM_SYMBOL);
     asset reward_vesting_balance = asset(0, VESTS_SYMBOL);
@@ -529,7 +527,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (created)(mined)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
-             (balance)(locked_balance)
+             (balance)
              (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
@@ -605,6 +603,7 @@ FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
             (to)
             (amount)
             (secret_hash)
+            (contract_hash)
             (created)
             (deadline)
           )
