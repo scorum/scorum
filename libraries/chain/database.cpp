@@ -1467,7 +1467,7 @@ uint16_t database::get_curation_rewards_percent(const comment_object& c) const
 const asset database::pay_reward_funds(const asset& reward)
 {
     const auto& reward_idx = get_index<reward_fund_index, by_id>();
-    asset used_rewards(0, SCORUM_SYMBOL);
+    asset used_rewards(0, reward.symbol);
 
     for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
     {
@@ -2436,7 +2436,7 @@ void database::validate_invariants() const
     try
     {
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();
-        asset total_floating_funds_supply = asset(0, SCORUM_SYMBOL);
+        asset total_supply = asset(0, SCORUM_SYMBOL);
         asset total_vesting = asset(0, VESTS_SYMBOL);
         asset pending_vesting_scorum = asset(0, SCORUM_SYMBOL);
         share_type total_vsf_votes = share_type(0);
@@ -2452,8 +2452,8 @@ void database::validate_invariants() const
 
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
-            total_floating_funds_supply += itr->balance;
-            total_floating_funds_supply += itr->reward_scorum_balance;
+            total_supply += itr->balance;
+            total_supply += itr->reward_scorum_balance;
             total_vesting += itr->vesting_shares;
             total_vesting += itr->reward_vesting_balance;
             pending_vesting_scorum += itr->reward_vesting_scorum;
@@ -2468,11 +2468,11 @@ void database::validate_invariants() const
 
         for (auto itr = escrow_idx.begin(); itr != escrow_idx.end(); ++itr)
         {
-            total_floating_funds_supply += itr->scorum_balance;
+            total_supply += itr->scorum_balance;
 
             if (itr->pending_fee.symbol == SCORUM_SYMBOL)
             {
-                total_floating_funds_supply += itr->pending_fee;
+                total_supply += itr->pending_fee;
             }
             else
             {
@@ -2497,13 +2497,12 @@ void database::validate_invariants() const
 
         for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
         {
-            total_floating_funds_supply += itr->reward_balance;
+            total_supply += itr->reward_balance;
         }
 
-        total_floating_funds_supply
+        total_supply
             += gpo.total_vesting_fund_scorum + gpo.total_reward_fund_scorum + gpo.pending_rewarded_vesting_scorum;
 
-        asset total_supply = total_floating_funds_supply;
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {
