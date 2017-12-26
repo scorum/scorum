@@ -15,16 +15,27 @@ namespace chain {
 
 using namespace scorum::protocol;
 
-class dbservice;
-
-template <typename EvaluatorType, typename OperationType = scorum::protocol::operation>
-class evaluator_impl_x : public evaluator<OperationType>
+// clang-format off
+template <typename AccountService,
+          typename ProposalService,
+          typename CommiteeService,
+          typename OperationType = scorum::protocol::operation>
+class proposal_vote_evaluator_t : public evaluator<OperationType>
+// clang-format on
 {
 public:
-    typedef OperationType operation_sv_type;
-    // typedef typename EvaluatorType::operation_type op_type;
+    //    typedef scorum::protocol::operation ;
+    typedef proposal_vote_evaluator_t<AccountService, ProposalService, CommiteeService> EvaluatorType;
+    typedef proposal_vote_operation operation_type;
 
-    evaluator_impl_x()
+    proposal_vote_evaluator_t(AccountService& account_service,
+                              ProposalService& proposal_service,
+                              CommiteeService& commitee_service,
+                              uint32_t quorum)
+        : _account_service(account_service)
+        , _proposal_service(proposal_service)
+        , _committee_service(commitee_service)
+        , _quorum(quorum)
     {
     }
 
@@ -38,29 +49,6 @@ public:
     virtual int get_type() const override
     {
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
-    }
-};
-
-// clang-format off
-template <typename AccountService, typename ProposalService, typename CommiteeService>
-class proposal_vote_evaluator_t : public scorum::chain::evaluator_impl_x<proposal_vote_evaluator_t<AccountService,
-                                                                                                 ProposalService,
-                                                                                                 CommiteeService>>
-// clang-format on
-{
-public:
-    typedef proposal_vote_operation operation_type;
-
-    proposal_vote_evaluator_t(AccountService& account_service,
-                              ProposalService& proposal_service,
-                              CommiteeService& commitee_service,
-                              uint32_t quorum)
-        : scorum::chain::evaluator_impl_x<proposal_vote_evaluator_t>()
-        , _account_service(account_service)
-        , _proposal_service(proposal_service)
-        , _committee_service(commitee_service)
-        , _quorum(quorum)
-    {
     }
 
     void do_apply(const proposal_vote_operation& op)
