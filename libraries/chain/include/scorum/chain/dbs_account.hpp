@@ -124,9 +124,9 @@ public:
 
     /**
      * @param to_account - the account to receive the new vesting shares
-     * @param SCORUM - SCORUM to be converted to vesting shares
+     * @param scorum - SCR to be converted to vesting shares
      * @param to_reward_balance
-     * @return the sbd created and deposited to_account, may return SCORUM if there is no median feed
+     * @return the SP created and deposited to account
      */
     const asset create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance = false);
 
@@ -141,7 +141,7 @@ public:
                                       const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta,
                                       int depth = 0);
 
-    /** this updates the votes for all witnesses as a result of account VESTS changing */
+    /** this updates the votes for all witnesses as a result of account SP changing */
     void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0);
 
 private:

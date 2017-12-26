@@ -345,7 +345,7 @@ void database_fixture::fund(const std::string& account_name, const share_type& a
 {
     try
     {
-        transfer(TEST_INIT_DELEGATE_NAME, account_name, amount);
+        transfer(TEST_INIT_DELEGATE_NAME, account_name, asset(amount, SCORUM_SYMBOL));
     }
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }
@@ -401,7 +401,7 @@ void database_fixture::vest(const std::string& account_name, const share_type& a
 {
     try
     {
-        transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, amount);
+        transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, asset(amount, SCORUM_SYMBOL));
     }
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }
@@ -471,7 +471,7 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
 {
     genesis_state_type genesis_state = external_genesis_state;
 
-    genesis_state.init_accounts_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);

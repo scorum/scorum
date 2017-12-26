@@ -442,7 +442,7 @@ BOOST_FIXTURE_TEST_CASE(optional_tapos, clean_database_fixture)
 
         BOOST_TEST_MESSAGE("Create transaction");
 
-        transfer(TEST_INIT_DELEGATE_NAME, "alice", share_type(1000000));
+        transfer(TEST_INIT_DELEGATE_NAME, "alice", asset(1000000, SCORUM_SYMBOL));
         transfer_operation op;
         op.from = "alice";
         op.to = "bob";
@@ -566,7 +566,7 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
 
         db.get_account(TEST_INIT_DELEGATE_NAME);
         // transfer from committee account to Sam account
-        transfer(TEST_INIT_DELEGATE_NAME, "sam", share_type(100000));
+        transfer(TEST_INIT_DELEGATE_NAME, "sam", asset(100000, SCORUM_SYMBOL));
 
         generate_block(skip_flags);
 

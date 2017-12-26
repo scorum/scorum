@@ -20,7 +20,7 @@ const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
     FC_ASSERT(initial_supply > asset(0, SCORUM_SYMBOL), "initial supply for reward_pool must not be null");
     FC_ASSERT(initial_per_block_reward > asset(0, SCORUM_SYMBOL),
               "initial supply for reward_pool is not sufficient to make per_block_reward > 0. It should be at least ${1}, but current value is ${2}",
-              ("1", asset(SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY)) ("2", initial_supply));
+              ("1", asset(SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY, SCORUM_SYMBOL)) ("2", initial_supply));
 
     return db_impl().create<reward_pool_object>([&](reward_pool_object& rp) {
         rp.balance = initial_supply;
@@ -42,7 +42,7 @@ const asset& dbs_reward::increase_pool_ballance(const asset& delta)
         switch (delta.symbol)
         {
         case SCORUM_SYMBOL:
-            FC_ASSERT(delta >= asset(0));
+            FC_ASSERT(delta >= asset(0, SCORUM_SYMBOL));
             pool.balance += delta;
             break;
         default:
@@ -64,15 +64,15 @@ const asset dbs_reward::take_block_reward()
 
     db_impl().modify(pool, [&](reward_pool_object& pool) 
     { 
-        if (pool.balance > asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS))
+        if (pool.balance > asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS, SCORUM_SYMBOL))
         {
             // recalculate
-            pool.current_per_block_reward += asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100);
+            pool.current_per_block_reward += asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100, SCORUM_SYMBOL);
         }
-        else if (pool.balance < asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS))
+        else if (pool.balance < asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS, SCORUM_SYMBOL))
         {
             // recalculate
-            pool.current_per_block_reward -= asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100);
+            pool.current_per_block_reward -= asset((pool.current_per_block_reward.amount * SCORUM_ADJUST_REWARD_PERCENT) / 100, SCORUM_SYMBOL);
         }
         else
         {

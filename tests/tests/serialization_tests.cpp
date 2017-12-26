@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(serialization_json_test)
         op.amount = asset(100, SCORUM_SYMBOL);
 
         fc::variant test(op.amount);
-        auto tmp = test.as<asset>();
+        asset tmp = test.as<asset>();
         BOOST_REQUIRE(tmp == op.amount);
 
         trx.operations.push_back(op);
@@ -120,25 +120,25 @@ BOOST_AUTO_TEST_CASE(asset_test)
 {
     try
     {
-        BOOST_CHECK_EQUAL(asset().decimals(), 3);
-        BOOST_CHECK_EQUAL(asset().symbol_name(), "TESTS");
-        BOOST_CHECK_EQUAL(asset().to_string(), "0.000 TESTS");
+        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).decimals(), 3);
+        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).symbol_name(), "SCR");
+        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).to_string(), "0.000 SCR");
 
         BOOST_TEST_MESSAGE("Asset Test");
-        asset scorum = asset::from_string("123.456 TESTS");
-        asset tmp = asset::from_string("0.456 TESTS");
+        asset scorum = asset::from_string("123.456 SCR");
+        asset tmp = asset::from_string("0.456 SCR");
         BOOST_CHECK_EQUAL(tmp.amount.value, 456);
-        tmp = asset::from_string("0.056 TESTS");
+        tmp = asset::from_string("0.056 SCR");
         BOOST_CHECK_EQUAL(tmp.amount.value, 56);
 
         BOOST_CHECK(std::abs(scorum.to_real() - 123.456) < 0.0005);
         BOOST_CHECK_EQUAL(scorum.amount.value, 123456);
         BOOST_CHECK_EQUAL(scorum.decimals(), 3);
-        BOOST_CHECK_EQUAL(scorum.symbol_name(), "TESTS");
-        BOOST_CHECK_EQUAL(scorum.to_string(), "123.456 TESTS");
+        BOOST_CHECK_EQUAL(scorum.symbol_name(), "SCR");
+        BOOST_CHECK_EQUAL(scorum.to_string(), "123.456 SCR");
         BOOST_CHECK_EQUAL(scorum.symbol, SCORUM_SYMBOL);
-        BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.050 TESTS");
-        BOOST_CHECK_EQUAL(asset(50000, SCORUM_SYMBOL).to_string(), "50.000 TESTS");
+        BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.050 SCR");
+        BOOST_CHECK_EQUAL(asset(50000, SCORUM_SYMBOL).to_string(), "50.000 SCR");
 
         BOOST_CHECK_THROW(scorum.set_decimals(100), fc::exception);
         char* scorum_sy = (char*)&scorum.symbol;
@@ -154,29 +154,29 @@ BOOST_AUTO_TEST_CASE(asset_test)
         };
 
         BOOST_CHECK_THROW(check_sym(scorum), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.00000000000000000000 TESTS"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.000TESTS"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1. 333 TESTS"),
-                          fc::exception); // Fails because symbol is '333 TESTS', which is too long
-        BOOST_CHECK_THROW(asset::from_string("1 .333 TESTS"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.00000000000000000000 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.000SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1. 333 SCR"),
+                          fc::exception); // Fails because symbol is '333 SCR', which is too long
+        BOOST_CHECK_THROW(asset::from_string("1 .333 SCR"), fc::exception);
         asset unusual = asset::from_string("1. 333 X"); // Passes because symbol '333 X' is short enough
         FC_ASSERT(unusual.decimals() == 0);
         FC_ASSERT(unusual.symbol_name() == "333 X");
         BOOST_CHECK_THROW(asset::from_string("1 .333 X"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1 .333"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1 1.1"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 TESTS"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.1.1 TESTS"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.abc TESTS"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(" TESTS"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("TESTS"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.1.1 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.abc SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string(" SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1.333"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1.333 "), fc::exception);
         BOOST_CHECK_THROW(asset::from_string(""), fc::exception);
         BOOST_CHECK_THROW(asset::from_string(" "), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("  "), fc::exception);
 
-        BOOST_CHECK_EQUAL(asset::from_string("100 TESTS").amount.value, 100);
+        BOOST_CHECK_EQUAL(asset::from_string("100 SCR").amount.value, 100);
     }
     FC_LOG_AND_RETHROW()
 }

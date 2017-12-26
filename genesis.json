@@ -1,28 +1,28 @@
 {
   "initial_timestamp": "2017-11-29T10:03:00",
-  "init_accounts_supply": "1000.000 SCORUM",
-  "init_rewards_supply": "21024.000 SCORUM",
+  "init_accounts_supply": "1000.000 SCR",
+  "init_rewards_supply": "21024.000 SCR",
   "accounts": [
     {
       "name": "initdelegate",
       "recovery_account": "",
       "public_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
-      "scr_amount": "1000.000 SCORUM",
-      "sp_amount": "0.000000 VESTS"
+      "scr_amount": "1000.000 SCR",
+      "sp_amount": "0.000000 SP"
     },
     {
       "name": "alice",
       "recovery_account": "",
       "public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
-      "scr_amount": "0.000 SCORUM",
-      "sp_amount": "0.000000 VESTS"
+      "scr_amount": "0.000 SCR",
+      "sp_amount": "0.000000 SP"
     },
     {
       "name": "bob",
       "recovery_account": "",
       "public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
-      "scr_amount": "0.000 SCORUM",
-      "sp_amount": "0.000000 VESTS"
+      "scr_amount": "0.000 SCR",
+      "sp_amount": "0.000000 SP"
     }
   ],
 
@@ -38,8 +38,8 @@
   }],
 
   "registration_committee": ["alice", "bob"],
-  "registration_supply": "1.000 SCORUM",
-  "registration_maximum_bonus": "0.005 SCORUM",
+  "registration_supply": "1.000 SCR",
+  "registration_maximum_bonus": "0.005 SCR",
 
   "registration_schedule": [{
     "stage": 1,

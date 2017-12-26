@@ -286,7 +286,7 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    /** @return the sbd created and deposited to_account, may return SCORUM if there is no median feed */
+    /** @return the sbd created and deposited to_account, may return SCR if there is no median feed */
     asset create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance = false);
     void adjust_total_payout(const comment_object& a,
                              const asset& sbd,

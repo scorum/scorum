@@ -72,7 +72,7 @@ public:
     // clang-format off
     const asset FUND_BUDGET_INITIAL_SUPPLY = asset( TEST_REWARD_INITIAL_SUPPLY.amount 
                                                     * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
-                                                    /  SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+                                                    /  SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS, SCORUM_SYMBOL);
     // clang-format on
 };
 
@@ -80,7 +80,8 @@ const asset budget_service_check_fixture::get_fund_budget_with_correction_for_bl
 {
     return FUND_BUDGET_INITIAL_SUPPLY
         - asset(FUND_BUDGET_INITIAL_SUPPLY.amount * already_generated_blocks
-                / (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY));
+                    / (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY),
+                SCORUM_SYMBOL);
 }
 
 //

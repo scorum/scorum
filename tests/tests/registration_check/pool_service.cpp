@@ -45,15 +45,15 @@ genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_in
                     "name": "alice",
                     "recovery_account": "",
                     "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount":"0.000 TESTS",
-                    "sp_amount":"0.000000 VESTS"
+                    "scr_amount":"0.000 SCR",
+                    "sp_amount":"0.000000 SP"
             },
             {
                     "name": "bob",
                     "recovery_account": "",
                     "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount":"0.000 TESTS",
-                    "sp_amount":"0.000000 VESTS"
+                    "scr_amount":"0.000 SCR",
+                    "sp_amount":"0.000000 SP"
             }],
             "registration_committee": ["alice", "bob"],
     })json";
@@ -267,7 +267,7 @@ public:
 };
 
 schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
-asset registration_pool_service_check_fixture::rest_of_supply;
+asset registration_pool_service_check_fixture::rest_of_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
 
 BOOST_FIXTURE_TEST_SUITE(registration_pool_service_check, registration_pool_service_check_fixture)
 
