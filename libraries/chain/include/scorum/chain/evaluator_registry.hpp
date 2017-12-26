@@ -25,12 +25,6 @@ public:
             new EvaluatorType(_db, args...));
     }
 
-    //    template <typename EvaluatorType, typename A> void register_evaluator()
-    //    {
-    //        _op_evaluators[OperationType::template tag<typename EvaluatorType<A>::operation_type>::value].reset(
-    //            new EvaluatorType<A>(_db));
-    //    }
-
     template <typename EvaluatorType> void register_evaluator(EvaluatorType* e)
     {
         _op_evaluators[OperationType::template tag<typename EvaluatorType::operation_type>::value].reset(e);

@@ -1663,7 +1663,9 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
 
-    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(SCORUM_COMMITTEE_QUORUM_PERCENT);
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(new proposal_vote_evaluator(
+        this->obtain_service<dbs_account>(), this->obtain_service<dbs_committee_proposal>(),
+        this->obtain_service<dbs_registration_committee>(), SCORUM_COMMITTEE_QUORUM_PERCENT));
 }
 
 void database::set_custom_operation_interpreter(const std::string& id,
