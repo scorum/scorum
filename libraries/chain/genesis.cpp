@@ -90,9 +90,8 @@ void db_genesis::init_accounts()
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
-        account_service.create_initial_account(account.name, account.public_key,
-                                               asset(account.scr_amount, SCORUM_SYMBOL), account.recovery_account,
-                                               "{created_at: 'GENESIS'}");
+        account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
+                                               account.recovery_account, "{created_at: 'GENESIS'}");
     }
 }
 
@@ -129,7 +128,8 @@ void db_genesis::init_global_property_object()
         gpo.time = _db.get_genesis_time();
         gpo.recent_slots_filled = fc::uint128::max_value();
         gpo.participation_count = 128;
-        gpo.current_supply = asset(_genesis_state.init_supply, SCORUM_SYMBOL);
+        gpo.accounts_current_supply = _genesis_state.init_accounts_supply;
+        gpo.total_supply = gpo.accounts_current_supply + _genesis_state.init_rewards_supply;
         gpo.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
 
         gpo.total_reward_fund_scorum = asset(0, SCORUM_SYMBOL);

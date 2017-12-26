@@ -11,7 +11,7 @@ fc::variant_object get_config()
 {
     fc::mutable_variant_object result;
 
-// clang-format off
+    // clang-format off
 
 #ifdef IS_TEST_NET
     result[ "IS_TEST_NET" ] = true;

@@ -512,7 +512,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                     }
                 }
 #endif
-
             });
 
         } // end EDIT case
@@ -761,7 +760,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     else
     {
 
-        // SCORUM: We have to decide wether we use 13 weeks vesting period or low it down
+        // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
         int vesting_withdraw_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
 
         auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / vesting_withdraw_intervals, VESTS_SYMBOL);

@@ -49,18 +49,6 @@ int main(int argc, char** argv)
     fc::oexception unhandled_exception;
     try
     {
-
-        //#ifdef IS_TEST_NET
-        //        std::cerr << "------------------------------------------------------\n\n";
-        //        std::cerr << "            STARTING TEST NETWORK\n\n";
-        //        std::cerr << "------------------------------------------------------\n";
-        //        auto initdelegate_private_key = graphene::utilities::key_to_wif(SCORUM_INIT_PRIVATE_KEY);
-        //        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        //        std::cerr << "initdelegate private key: " << initdelegate_private_key << "\n";
-        //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
-        //        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-        //        std::cerr << "------------------------------------------------------\n";
-        //#else
         std::cerr << "------------------------------------------------------\n\n";
         std::cerr << "            STARTING SCORUM NETWORK\n\n";
         std::cerr << "------------------------------------------------------\n";
@@ -68,7 +56,6 @@ int main(int argc, char** argv)
         //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
         std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
         std::cerr << "------------------------------------------------------\n";
-        //#endif
 
         // clang-format off
         bpo::options_description app_options("Scorum Daemon");

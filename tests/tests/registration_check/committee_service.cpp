@@ -22,22 +22,22 @@ genesis_state_type create_registration_genesis()
                     "name": "alice",
                     "recovery_account": "",
                     "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
+                    "scr_amount":"0.000 SCR",
+                    "sp_amount":"0.000000 SP"
             },
             {
                     "name": "bob",
                     "recovery_account": "",
                     "public_key": "SCR1111111111111111111111111111111114T1Anm",
-                    "scr_amount": 0,
-                    "sp_amount": 0
+                    "scr_amount":"0.000 SCR",
+                    "sp_amount":"0.000000 SP"
             }],
             "registration_committee": ["alice", "bob"]
     })json";
 
     return fc::json::from_string(genesis_str).as<genesis_state_type>();
 }
-}
+} // namespace
 
 class registration_committee_service_check_fixture : public timed_blocks_database_fixture
 {
@@ -77,7 +77,7 @@ SCORUM_TEST_CASE(create_check)
     using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
     const committee_members& members = registration_committee_service.get_committee();
 
-    BOOST_REQUIRE_EQUAL(members.size(), 2);
+    BOOST_REQUIRE_EQUAL(members.size(), (size_t)2);
 
     const char* input[] = { "alice", "bob" };
     std::size_t ci = 0;

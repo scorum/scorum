@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE( vests_stock_split )
       }
 
       auto old_virtual_supply = db.get_dynamic_global_properties().virtual_supply;
-      auto old_current_supply = db.get_dynamic_global_properties().current_supply;
+      auto old_current_supply = db.get_dynamic_global_properties().accounts_current_supply;
       auto old_vesting_fund = db.get_dynamic_global_properties().total_vesting_fund_scorum;
       auto old_vesting_shares = db.get_dynamic_global_properties().total_vesting_shares;
       auto old_rshares2 = db.get_dynamic_global_properties().total_reward_shares2;
@@ -102,7 +102,7 @@ com_itr->net_rshares.value * magnitude * magnitude : 0;
 
       BOOST_TEST_MESSAGE( "Verify split took place correctly" );
 
-      BOOST_REQUIRE( db.get_dynamic_global_properties().current_supply == old_current_supply );
+      BOOST_REQUIRE( db.get_dynamic_global_properties().accounts_current_supply == old_current_supply );
       BOOST_REQUIRE( db.get_dynamic_global_properties().virtual_supply == old_virtual_supply );
       BOOST_REQUIRE( db.get_dynamic_global_properties().total_vesting_fund_scorum == old_vesting_fund );
       BOOST_REQUIRE( db.get_dynamic_global_properties().total_vesting_shares.amount == old_vesting_shares.amount *

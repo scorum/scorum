@@ -42,6 +42,8 @@
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_reward.hpp>
 
 namespace scorum {
 namespace chain {
@@ -486,19 +488,6 @@ const reward_fund_object& database::get_reward_fund(const comment_object& c) con
     return get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
 }
 
-void database::pay_fee(const account_object& account, asset fee)
-{
-    FC_ASSERT(fee.amount >= 0); /// NOTE if this fails then validate() on some operation is probably wrong
-    if (fee.amount == 0)
-    {
-        return;
-    }
-
-    FC_ASSERT(account.balance >= fee);
-    adjust_balance(account, -fee);
-    adjust_supply(-fee);
-}
-
 uint32_t database::witness_participation_rate() const
 {
     const dynamic_global_property_object& dpo = get_dynamic_global_properties();
@@ -633,7 +622,7 @@ bool database::_push_block(const signed_block& new_block)
                                 apply_block((*ritr)->data, skip);
                                 session.push();
                             }
-                            throw * except;
+                            throw *except;
                         }
                     }
                     return true;
@@ -723,7 +712,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-                                      )
+)
 {
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
@@ -1425,69 +1414,49 @@ void database::process_comment_cashout()
 }
 
 /**
- *  Overall the network has an inflation rate of 102% of virtual scorum per year
- *  90% of inflation is directed to vesting shares
- *  10% of inflation is directed to subjective proof of work voting
- *  1% of inflation is directed to liquidity providers
- *  1% of inflation is directed to block producers
- *
  *  This method pays out vesting and reward shares every block, and liquidity shares once per day.
  *  This method does not pay out witnesses.
  */
 void database::process_funds()
 {
     dbs_account& account_service = obtain_service<dbs_account>();
+    dbs_reward& reward_service = obtain_service<dbs_reward>();
+    dbs_budget& budget_service = obtain_service<dbs_budget>();
 
     const auto& props = get_dynamic_global_properties();
-    const auto& wso = get_witness_schedule_object();
 
-    // SCORUM: compare to our inflation rate strategy
+    // We don't have inflation.
+    // We just get per block reward from reward pool and expect that after initial supply is handed out(fund budget is
+    // over) reward budgets will be created by our users.
 
-    /**
-     * At block 7,000,000 have a 9.5% instantaneous inflation rate, decreasing to 0.95% at a rate of 0.01%
-     * every 250k blocks. This narrowing will take approximately 20.5 years and will complete on block 220,750,000
-     */
-    int64_t start_inflation_rate = int64_t(SCORUM_INFLATION_RATE_START_PERCENT);
-    int64_t inflation_rate_adjustment = int64_t(head_block_num() / SCORUM_INFLATION_NARROWING_PERIOD);
-    int64_t inflation_rate_floor = int64_t(SCORUM_INFLATION_RATE_STOP_PERCENT);
+    asset budgets_reward = asset(0, SCORUM_SYMBOL);
+    for (const budget_object& budget : budget_service.get_budgets())
+    {
+        budgets_reward += budget_service.allocate_cash(budget);
+    }
+    reward_service.increase_pool_ballance(budgets_reward);
 
-    // below subtraction cannot underflow int64_t because inflation_rate_adjustment is <2^32
-    int64_t current_inflation_rate = std::max(start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor);
-
-    auto new_scorum = (props.current_supply.amount * current_inflation_rate)
-        / (int64_t(SCORUM_100_PERCENT) * int64_t(SCORUM_BLOCKS_PER_YEAR));
-    auto content_reward = (new_scorum * SCORUM_CONTENT_REWARD_PERCENT) / SCORUM_100_PERCENT;
+    auto total_block_reward = reward_service.take_block_reward();
+    // clang-format off
+    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
     content_reward = pay_reward_funds(content_reward); /// 75% to content creator
-    auto vesting_reward = (new_scorum * SCORUM_VESTING_FUND_PERCENT) / SCORUM_100_PERCENT; /// 15% to vesting fund
-    auto witness_reward = new_scorum - content_reward - vesting_reward; /// Remaining 10% to witness pay
+    auto vesting_reward = asset(total_block_reward.amount * SCORUM_VESTING_FUND_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol); /// 15% to vesting fund
+    auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 10% to witness pay
+    // clang-format on
+
+    modify(props, [&](dynamic_global_property_object& p) {
+        p.total_vesting_fund_scorum += vesting_reward;
+        p.accounts_current_supply += total_block_reward;
+    });
 
     const auto& cwit = get_witness(props.current_witness);
-    witness_reward *= SCORUM_MAX_WITNESSES;
 
-    if (cwit.schedule == witness_object::timeshare)
-    {
-        witness_reward *= wso.timeshare_weight;
-    }
-    else if (cwit.schedule == witness_object::top20)
-    {
-        witness_reward *= wso.top20_weight;
-    }
-    else
+    if (cwit.schedule != witness_object::top20 && cwit.schedule != witness_object::timeshare)
     {
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
     }
 
-    witness_reward /= wso.witness_pay_normalization_factor;
-
-    new_scorum = content_reward + vesting_reward + witness_reward;
-
-    modify(props, [&](dynamic_global_property_object& p) {
-        p.total_vesting_fund_scorum += asset(vesting_reward, SCORUM_SYMBOL);
-        p.current_supply += asset(new_scorum, SCORUM_SYMBOL);
-    });
-
-    const auto& producer_reward
-        = account_service.create_vesting(get_account(cwit.owner), asset(witness_reward, SCORUM_SYMBOL));
+    const auto producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 
@@ -1496,17 +1465,21 @@ uint16_t database::get_curation_rewards_percent(const comment_object& c) const
     return get_reward_fund(c).percent_curation_rewards;
 }
 
-share_type database::pay_reward_funds(share_type reward)
+const asset database::pay_reward_funds(const asset& reward)
 {
     const auto& reward_idx = get_index<reward_fund_index, by_id>();
-    share_type used_rewards = 0;
+    asset used_rewards(0, reward.symbol);
 
     for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
     {
         // reward is a per block reward and the percents are 16-bit. This should never overflow
-        auto r = (reward * itr->percent_content_rewards) / SCORUM_100_PERCENT;
+        auto r = asset(reward.amount * itr->percent_content_rewards / SCORUM_100_PERCENT, reward.symbol);
 
-        modify(*itr, [&](reward_fund_object& rfo) { rfo.reward_balance += asset(r, SCORUM_SYMBOL); });
+        // clang-format off
+        modify(*itr, [&](reward_fund_object& rfo) { 
+            rfo.reward_balance += r; 
+        });
+        // clang-format on
 
         used_rewards += r;
 
@@ -1776,7 +1749,8 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check
+                    | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;
@@ -2349,31 +2323,6 @@ void database::adjust_balance(const account_object& a, const asset& delta)
     });
 }
 
-void database::adjust_supply(const asset& delta, bool adjust_vesting)
-{
-    const auto& props = get_dynamic_global_properties();
-    if (props.head_block_number < SCORUM_BLOCKS_PER_DAY * 7)
-    {
-        adjust_vesting = false;
-    }
-
-    modify(props, [&](dynamic_global_property_object& props) {
-        switch (delta.symbol)
-        {
-        case SCORUM_SYMBOL:
-        {
-            asset new_vesting((adjust_vesting && delta.amount > 0) ? delta.amount * 9 : 0, SCORUM_SYMBOL);
-            props.current_supply += delta + new_vesting;
-            props.total_vesting_fund_scorum += new_vesting;
-            assert(props.current_supply.amount.value >= 0);
-            break;
-        }
-        default:
-            FC_ASSERT(false, "invalid symbol");
-        }
-    });
-}
-
 asset database::get_balance(const account_object& a, asset_symbol_type symbol) const
 {
     switch (symbol)
@@ -2481,7 +2430,7 @@ void database::apply_hardfork(uint32_t hardfork)
 }
 
 /**
- * Verifies all supply invariantes check out
+ * Verifies all supply invariants check out
  */
 void database::validate_invariants() const
 {
@@ -2493,7 +2442,7 @@ void database::validate_invariants() const
         asset pending_vesting_scorum = asset(0, SCORUM_SYMBOL);
         share_type total_vsf_votes = share_type(0);
 
-        auto gpo = get_dynamic_global_properties();
+        const auto& gpo = get_dynamic_global_properties();
 
         /// verify no witness has too many votes
         const auto& witness_idx = get_index<witness_index>().indices();
@@ -2548,8 +2497,14 @@ void database::validate_invariants() const
         total_supply
             += gpo.total_vesting_fund_scorum + gpo.total_reward_fund_scorum + gpo.pending_rewarded_vesting_scorum;
 
-        FC_ASSERT(gpo.current_supply == total_supply, "",
-                  ("gpo.current_supply", gpo.current_supply)("total_supply", total_supply));
+        total_supply += obtain_service<dbs_reward>().get_pool().balance;
+        for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
+        {
+            total_supply += budget.balance;
+        }
+
+        FC_ASSERT(gpo.total_supply == total_supply, "",
+                  ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
         FC_ASSERT(gpo.total_vesting_shares + gpo.pending_rewarded_vesting_shares == total_vesting, "",
                   ("gpo.total_vesting_shares", gpo.total_vesting_shares)("total_vesting", total_vesting));
         FC_ASSERT(gpo.total_vesting_shares.amount == total_vsf_votes, "",

@@ -147,8 +147,6 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
         budget.last_allocated_block = head_block_num;
     });
 
-    db_impl().modify(props, [&](dynamic_global_property_object& ps) { ps.current_supply -= balance; });
-
     return new_budget;
 }
 
@@ -283,12 +281,8 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
-        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
-
-        db_impl().modify(props, [&](dynamic_global_property_object& ps) { ps.current_supply += repayable; });
     }
 
     // delete budget
