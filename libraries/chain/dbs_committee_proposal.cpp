@@ -30,11 +30,18 @@ void dbs_committee_proposal::remove(const proposal_vote_object& proposal)
     db_impl().remove(proposal);
 }
 
-const proposal_vote_object* dbs_committee_proposal::get(const account_name_type& member)
+bool dbs_committee_proposal::is_exist(const account_name_type& member)
 {
     auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
 
-    return proposal;
+    return proposal == nullptr ? true : false;
+}
+
+const proposal_vote_object& dbs_committee_proposal::get(const account_name_type& member)
+{
+    auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
+
+    return *proposal;
 }
 
 void dbs_committee_proposal::vote_for(const proposal_vote_object& proposal)
@@ -44,7 +51,7 @@ void dbs_committee_proposal::vote_for(const proposal_vote_object& proposal)
 
 bool dbs_committee_proposal::is_expired(const proposal_vote_object& proposal)
 {
-    return false;
+    return proposal.expiration < this->_get_now() ? false : true;
 }
 
 bool check_quorum(const proposal_vote_object& proposal_object, uint32_t quorum, size_t members_count)
