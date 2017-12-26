@@ -23,6 +23,7 @@ public:
     account_name_type member;
 
     fc::time_point_sec created;
+    fc::time_point_sec expiration;
 
     fc::optional<scorum::protocol::registration_committee_proposal_action> action;
     fc::optional<scorum::protocol::proposal_life_time> lifetime;

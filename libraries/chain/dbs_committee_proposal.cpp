@@ -51,7 +51,7 @@ void dbs_committee_proposal::vote_for(const proposal_vote_object& proposal)
 
 bool dbs_committee_proposal::is_expired(const proposal_vote_object& proposal)
 {
-    return false;
+    return proposal.expiration < this->_get_now() ? false : true;
 }
 
 bool check_quorum(const proposal_vote_object& proposal_object, uint32_t quorum, size_t members_count)
