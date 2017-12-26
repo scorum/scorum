@@ -93,11 +93,9 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_balancing)
     {
         const reward_pool_object& pool = reward_service.get_pool();
 
-        // because of clean_database_fixture spends reward for 2 block generations in constructor
-        // we reduce initial supply by 2 block rewards.
-        BOOST_REQUIRE_GE(pool.balance.amount,
-                         pool.current_per_block_reward.amount
-                             * (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY - 2));
+        BOOST_REQUIRE_EQUAL(pool.balance.amount,
+                            pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
+                                * SCORUM_BLOCKS_PER_DAY);
     }
     FC_LOG_AND_RETHROW()
 }
