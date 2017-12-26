@@ -34,20 +34,28 @@ std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_
     FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_DB_LIST_SIZE,
               "Limit must be less or equal than ${1}, actual limit value == ${2}.",
               ("1", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE)("2", limit));
-    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
     std::set<std::string> result;
 
+    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
+
+    // prepare output if limit > 0
     for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
          limit-- && itr != budgets_by_owner_name.end(); ++itr)
     {
+        if (itr->owner == SCORUM_ROOT_POST_PARENT)
+        {
+            ++limit;
+            continue;
+        }
         result.insert(itr->owner);
     }
-
     return result;
 }
 
 dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& owner) const
 {
+    FC_ASSERT(owner != SCORUM_ROOT_POST_PARENT, "Owner name reserved for fund budget.");
+
     budget_refs_type ret;
 
     auto it_pair = db_impl().get_index<budget_index>().indicies().get<by_owner_name>().equal_range(owner);
@@ -64,11 +72,12 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& ow
 
 const budget_object& dbs_budget::get_fund_budget() const
 {
-    budget_refs_type fund_budget = get_budgets(SCORUM_ROOT_POST_PARENT);
+    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
 
-    FC_ASSERT(!fund_budget.empty(), "Fund budget does not exist.");
+    auto itr = budgets_by_owner_name.lower_bound(SCORUM_ROOT_POST_PARENT);
+    FC_ASSERT(itr != budgets_by_owner_name.end(), "Fund budget does not exist.");
 
-    return fund_budget[0];
+    return *itr;
 }
 
 const budget_object& dbs_budget::get_budget(budget_id_type id) const
@@ -154,6 +163,8 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 
 void dbs_budget::close_budget(const budget_object& budget)
 {
+    FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT, "Can't close fund budget.");
+
     _close_owned_budget(budget);
 }
 
