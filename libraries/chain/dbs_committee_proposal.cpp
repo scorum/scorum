@@ -25,32 +25,26 @@ void dbs_committee_proposal::create(const protocol::account_name_type& creator,
     });
 }
 
-const proposal_vote_object* dbs_committee_proposal::check_and_return_proposal(const account_name_type& member)
+void dbs_committee_proposal::remove(const proposal_vote_object& proposal)
+{
+    db_impl().remove(proposal);
+}
+
+const proposal_vote_object* dbs_committee_proposal::get(const account_name_type& member)
 {
     auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
-
-    FC_ASSERT(proposal != nullptr, "There is no proposal for account name '${account}'", ("account", member));
 
     return proposal;
 }
 
-void dbs_committee_proposal::adjust_proposal_vote(const proposal_vote_object& proposal)
+void dbs_committee_proposal::vote_for(const proposal_vote_object& proposal)
 {
     db_impl().modify(proposal, [&](proposal_vote_object& p) { p.votes += 1; });
 }
 
-const proposal_vote_object& dbs_committee_proposal::vote_for(const protocol::account_name_type& member)
+bool dbs_committee_proposal::is_expired(const proposal_vote_object& proposal)
 {
-    auto proposal = check_and_return_proposal(member);
-
-    adjust_proposal_vote(*proposal);
-
-    return *proposal;
-}
-
-void dbs_committee_proposal::remove(const proposal_vote_object& proposal)
-{
-    //    db_impl().fin
+    return false;
 }
 
 bool check_quorum(const proposal_vote_object& proposal_object, uint32_t quorum, size_t members_count)

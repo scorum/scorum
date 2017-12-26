@@ -29,6 +29,13 @@ const account_authority_object& dbs_account::get_account_authority(const account
     FC_CAPTURE_AND_RETHROW((name))
 }
 
+bool dbs_account::check_account_existence(const account_name_type& account)
+{
+    auto acc = db_impl().find<account_object, by_name>(account);
+
+    return acc == nullptr ? false : true;
+}
+
 void dbs_account::check_account_existence(const account_name_type& name,
                                           const optional<const char*>& context_type_name) const
 {

@@ -22,13 +22,14 @@ public:
 
     void
     create(const account_name_type& creator, const account_name_type& member, action_t action, lifetime_t lifetime);
-    const proposal_vote_object& vote_for(const account_name_type& member);
 
     void remove(const proposal_vote_object& proposal);
 
-private:
-    const proposal_vote_object* check_and_return_proposal(const account_name_type& member);
-    void adjust_proposal_vote(const proposal_vote_object& member);
+    const proposal_vote_object* get(const account_name_type& member);
+
+    void vote_for(const proposal_vote_object& proposal);
+
+    bool is_expired(const proposal_vote_object& proposal);
 };
 
 bool check_quorum(const proposal_vote_object& proposal, uint32_t quorum, size_t members_count);

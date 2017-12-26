@@ -8,12 +8,14 @@ namespace chain {
 
 class proposal_vote_object : public object<proposal_vote_object_type, proposal_vote_object>
 {
-    proposal_vote_object() = delete;
-
 public:
     template <typename Constructor, typename Allocator> proposal_vote_object(Constructor&& c, allocator<Allocator>)
     {
         c(*this);
+    }
+
+    proposal_vote_object()
+    {
     }
 
     id_type id;
