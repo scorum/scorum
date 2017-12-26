@@ -54,9 +54,11 @@ bool dbs_committee_proposal::is_expired(const proposal_vote_object& proposal)
     return proposal.expiration < this->_get_now() ? false : true;
 }
 
-bool check_quorum(const proposal_vote_object& proposal_object, uint32_t quorum, size_t members_count)
+bool check_quorum(protocol::share_type votes, uint32_t quorum, size_t members_count)
 {
-    return true;
+    const share_type needed_votes = ceil(static_cast<double>(members_count * quorum) / SCORUM_100_PERCENT);
+
+    return votes >= needed_votes ? true : false;
 }
 
 } // namespace scorum

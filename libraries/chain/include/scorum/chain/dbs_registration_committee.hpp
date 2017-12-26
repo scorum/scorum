@@ -38,9 +38,9 @@ public:
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
     void update_member_info(const registration_committee_member_object&, member_info_modifier_type modifier);
 
-private:
-    uint64_t _get_member_count() const;
+    size_t get_members_count() const;
 
+private:
     bool _member_exists(const account_name_type&) const;
 
     const registration_committee_member_object& _add_member(const account_object&);

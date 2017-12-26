@@ -66,9 +66,9 @@ public:
 
         _proposal_service.vote_for(proposal);
 
-        size_t members_count = 10; // committee_service.get_members_count();
+        const size_t members_count = _committee_service.get_members_count();
 
-        if (check_quorum(proposal, _quorum, members_count))
+        if (check_quorum(proposal.votes, _quorum, members_count))
         {
             if (proposal.action == invite)
             {

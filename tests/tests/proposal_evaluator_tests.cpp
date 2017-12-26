@@ -32,7 +32,6 @@ class proposal_service_mock
 {
 public:
     using action_t = scorum::protocol::registration_committee_proposal_action;
-    using lifetime_t = scorum::protocol::proposal_life_time;
 
     proposal_service_mock()
     {
@@ -100,8 +99,15 @@ public:
         excluded_members.push_back(account);
     }
 
+    size_t get_members_count()
+    {
+        return members_count;
+    }
+
     std::vector<account_name_type> added_members;
     std::vector<account_name_type> excluded_members;
+
+    size_t members_count = 0;
 };
 
 typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
@@ -191,12 +197,7 @@ SCORUM_TEST_CASE(add_one_new_member)
 
 SCORUM_TEST_CASE(during_adding_we_do_not_remove_any_member)
 {
-    proposal().creator = "alice";
-    proposal().member = "bob";
     proposal().action = registration_committee_proposal_action::invite;
-
-    op.voting_account = "alice";
-    op.committee_member = "bob";
 
     apply();
 
@@ -205,12 +206,7 @@ SCORUM_TEST_CASE(during_adding_we_do_not_remove_any_member)
 
 SCORUM_TEST_CASE(dropout_one_member)
 {
-    proposal().creator = "alice";
-    proposal().member = "bob";
     proposal().action = registration_committee_proposal_action::dropout;
-
-    op.voting_account = "alice";
-    op.committee_member = "bob";
 
     apply();
 
@@ -220,12 +216,7 @@ SCORUM_TEST_CASE(dropout_one_member)
 
 SCORUM_TEST_CASE(during_dropping_we_do_not_add_new_members)
 {
-    proposal().creator = "alice";
-    proposal().member = "bob";
     proposal().action = registration_committee_proposal_action::dropout;
-
-    op.voting_account = "alice";
-    op.committee_member = "bob";
 
     apply();
 
@@ -234,12 +225,7 @@ SCORUM_TEST_CASE(during_dropping_we_do_not_add_new_members)
 
 SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 {
-    proposal().creator = "alice";
-    proposal().member = "bob";
     proposal().action = registration_committee_proposal_action::dropout;
-
-    op.voting_account = "alice";
-    op.committee_member = "bob";
 
     apply();
 
@@ -249,12 +235,12 @@ SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 
 SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
 {
-    account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
-
     proposal_service.expired.push_back(proposal());
 
     BOOST_CHECK_THROW(apply(), fc::exception);
 }
+
+// TODO write tests for `check_quorum` function. test round.
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -59,7 +59,7 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
     // add members
     for (const auto& item : items)
     {
-        if (_get_member_count() > SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS)
+        if (get_members_count() > SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS)
         {
             wlog("Too many committee members in genesis state. More than ${1} are ignored.",
                  ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
@@ -69,7 +69,7 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
         _add_member(accout);
     }
 
-    if (!_get_member_count())
+    if (!get_members_count())
     {
         FC_ASSERT(false, "Can't initialize at least one member.");
     }
@@ -108,7 +108,7 @@ void dbs_registration_committee::update_member_info(const registration_committee
     db_impl().modify(member, [&](registration_committee_member_object& m) { modifier(m); });
 }
 
-uint64_t dbs_registration_committee::_get_member_count() const
+size_t dbs_registration_committee::get_members_count() const
 {
     return db_impl().get_index<registration_committee_member_index>().indicies().size();
 }
@@ -122,7 +122,7 @@ bool dbs_registration_committee::_member_exists(const account_name_type& account
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)
 {
     FC_ASSERT(!_member_exists(account.name), "Member already exists.");
-    FC_ASSERT(_get_member_count() <= SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS,
+    FC_ASSERT(get_members_count() <= SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS,
               "Can't add member. Limit ${1} is reached.", ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
 
     const registration_committee_member_object& new_member = db_impl().create<registration_committee_member_object>(

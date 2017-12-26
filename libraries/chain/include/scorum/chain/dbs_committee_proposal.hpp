@@ -34,7 +34,7 @@ public:
     bool is_expired(const proposal_vote_object& proposal);
 };
 
-bool check_quorum(const proposal_vote_object& proposal, uint32_t quorum, size_t members_count);
+bool check_quorum(share_type votes, uint32_t quorum, size_t members_count);
 
 } // namespace scorum
 } // namespace chain
