@@ -15,13 +15,14 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 using fc::string;
 
-class dbs_reward_fixture : public clean_database_fixture
+class dbs_reward_fixture : public database_fixture
 {
 public:
     dbs_reward_fixture()
         : reward_service(db.obtain_service<dbs_reward>())
         , budget_service(db.obtain_service<dbs_budget>())
     {
+        open_database();
     }
 
     dbs_reward& reward_service;
@@ -59,12 +60,7 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_supply_distribution)
         asset total_reward_supply = pool.balance;
         total_reward_supply += budget_service.get_fund_budget().balance;
 
-        // because of clean_database_fixture spends reward for 2 block generations in constructor
-        // we reduce initial supply by 2 block rewards.
-        auto current_reward_supply
-            = TEST_REWARD_INITIAL_SUPPLY - asset(pool.current_per_block_reward.amount * 2, SCORUM_SYMBOL);
-
-        BOOST_REQUIRE_EQUAL(total_reward_supply, current_reward_supply);
+        BOOST_REQUIRE_EQUAL(total_reward_supply, TEST_REWARD_INITIAL_SUPPLY);
     }
     FC_LOG_AND_RETHROW()
 }
