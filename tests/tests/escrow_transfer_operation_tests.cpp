@@ -31,10 +31,10 @@ struct escrow_transfer_apply_fixture : public clean_database_fixture
     {
         op.from = "alice";
         op.to = "bob";
-        op.scorum_amount = ASSET("1.000 TESTS");
+        op.scorum_amount = ASSET("1.000 SCR");
         op.escrow_id = 0;
         op.agent = "sam";
-        op.fee = ASSET("0.100 TESTS");
+        op.fee = ASSET("0.100 SCR");
         op.json_meta = "";
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;

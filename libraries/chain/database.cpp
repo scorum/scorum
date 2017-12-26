@@ -1256,7 +1256,8 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
                 for (auto& b : comment.beneficiaries)
                 {
                     auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                    auto vest_created = account_service.create_vesting(get_account(b.account), benefactor_tokens, true);
+                    asset vest_created = account_service.create_vesting(get_account(b.account),
+                                                                        asset(benefactor_tokens, SCORUM_SYMBOL), true);
                     push_virtual_operation(comment_benefactor_reward_operation(
                         b.account, comment.author, fc::to_string(comment.permlink), vest_created));
                     total_beneficiary += benefactor_tokens;
@@ -1268,7 +1269,7 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
                 auto vesting_scorum = author_tokens - scorum;
 
                 const auto& author = get_account(comment.author);
-                auto vest_created = account_service.create_vesting(author, vesting_scorum, true);
+                asset vest_created = account_service.create_vesting(author, asset(vesting_scorum, SCORUM_SYMBOL), true);
                 auto scr_payout = asset(scorum, SCORUM_SYMBOL);
 
                 account_service.increase_reward_balance(author, scr_payout);
@@ -1417,7 +1418,7 @@ void database::process_comment_cashout()
         {
             modify(get<reward_fund_object, by_id>(reward_fund_id_type(i)), [&](reward_fund_object& rfo) {
                 rfo.recent_claims = funds[i].recent_claims;
-                rfo.reward_balance -= funds[i].scorum_awarded;
+                rfo.reward_balance.amount -= funds[i].scorum_awarded;
             });
         }
     }
@@ -1509,7 +1510,7 @@ share_type database::pay_reward_funds(share_type reward)
 
         used_rewards += r;
 
-        // Sanity check to ensure we aren't printing more SCORUM than has been allocated through inflation
+        // Sanity check to ensure we aren't printing more SCR than has been allocated through inflation
         FC_ASSERT(used_rewards <= reward);
     }
 
@@ -2522,14 +2523,7 @@ void database::validate_invariants() const
         {
             total_supply += itr->scorum_balance;
 
-            if (itr->pending_fee.symbol == SCORUM_SYMBOL)
-            {
-                total_supply += itr->pending_fee;
-            }
-            else
-            {
-                FC_ASSERT(false, "found escrow pending fee that is not SBD or SCORUM");
-            }
+            total_supply += itr->pending_fee;
         }
 
         fc::uint128_t total_rshares2;
@@ -2577,7 +2571,7 @@ void database::perform_vesting_share_split(uint32_t magnitude)
             d.total_reward_shares2 = 0;
         });
 
-        // Need to update all VESTS in accounts and the total VESTS in the dgpo
+        // Need to update all SP in accounts and the total SP in the dgpo
         for (const auto& account : get_index<account_index>().indices())
         {
             modify(account, [&](account_object& a) {

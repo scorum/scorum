@@ -195,7 +195,7 @@ public:
 };
 
 registration_check::schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
-asset registration_pool_service_check_fixture::rest_of_supply;
+asset registration_pool_service_check_fixture::rest_of_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
 
 BOOST_FIXTURE_TEST_SUITE(registration_pool_service_check, registration_pool_service_check_fixture)
 

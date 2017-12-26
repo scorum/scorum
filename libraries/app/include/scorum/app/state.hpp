@@ -64,8 +64,8 @@ struct discussion : public comment_api_obj
 
     std::string url; /// /category/@rootauthor/root_permlink#author/permlink
     std::string root_title;
-    asset pending_payout_value; ///< sbd
-    asset total_pending_payout_value; ///< sbd including replies
+    asset pending_payout_value = asset(0, SCORUM_SYMBOL); ///< sbd
+    asset total_pending_payout_value = asset(0, SCORUM_SYMBOL); ///< sbd including replies
     std::vector<vote_state> active_votes;
     std::vector<std::string> replies; ///< author/slug mapping
     share_type author_reputation = 0;
@@ -89,7 +89,7 @@ struct extended_account : public account_api_obj
     {
     }
 
-    asset vesting_balance; /// convert vesting_shares to vesting scorum
+    asset vesting_balance = asset(0, VESTS_SYMBOL); /// convert vesting_shares to vesting scorum
     share_type reputation = 0;
     std::map<uint64_t, applied_operation> transfer_history; /// transfer to/from vesting
     std::map<uint64_t, applied_operation> post_history;

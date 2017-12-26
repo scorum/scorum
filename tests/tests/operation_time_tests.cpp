@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
         std::vector<voter_actor> voters;
 
         authors.emplace_back("alice", alice_private_key);
-        authors.emplace_back("bob", bob_private_key, ASSET("0.000 TESTS"));
+        authors.emplace_back("bob", bob_private_key, ASSET("0.000 SCR"));
         authors.emplace_back("dave", dave_private_key);
         voters.emplace_back("ulysses", ulysses_private_key, "alice");
         voters.emplace_back("vivian", vivian_private_key, "bob");
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
         // U,V,W : voters
 
         // SCORUM: we don't have stable coin but might have an threshold
-        // set a ridiculously high SCORUM price ($1 / satoshi) to disable dust threshold
-        // set_price_feed( price( ASSET( "0.001 TESTS" ), ASSET( "1.000 TBD" ) ) );
+        // set a ridiculously high SCR price ($1 / satoshi) to disable dust threshold
+        // set_price_feed( price( ASSET( "0.001 SCR" ), ASSET( "1.000 TBD" ) ) );
 
         for (const auto& voter : voters)
         {
@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         ACTORS((alice)(bob))
         generate_block();
 
-        vest("alice", ASSET("10.000 TESTS"));
-        vest("bob", ASSET("10.000 TESTS"));
+        vest("alice", ASSET("10.000 SCR"));
+        vest("bob", ASSET("10.000 SCR"));
 
         generate_block();
         validate_database();
@@ -211,9 +211,9 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
 
         generate_blocks(db.get_comment("alice", string("test")).cashout_time);
 
-        // If comments are paid out independent of order, then the last satoshi of SCORUM cannot be divided among them
+        // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
         const auto rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
-        BOOST_REQUIRE(rf.reward_balance == ASSET("0.001 TESTS"));
+        BOOST_REQUIRE(rf.reward_balance == ASSET("0.001 SCR"));
 
         validate_database();
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE( reward_funds )
       ACTORS( (alice)(bob) )
       generate_block();
 
-      set_price_feed( price( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) ) );
+      set_price_feed( price( ASSET( "1.000 SCR" ), ASSET( "1.000 TBD" ) ) );
       generate_block();
 
       comment_operation comment;
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
       fund( "dave", 5000 );
       vest( "dave", 5000 );
 
-      price exchange_rate( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) );
+      price exchange_rate( ASSET( "1.000 SCR" ), ASSET( "1.000 TBD" ) );
       set_price_feed( exchange_rate );
 
       signed_transaction tx;
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
 
       //generate_blocks( db.get_comment( "bob", string( "test" ) ).cashout_time - SCORUM_BLOCK_INTERVAL, true );
 
-      auto reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum + ASSET( "1.667 TESTS" );
+      auto reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum + ASSET( "1.667 SCR" );
       auto total_rshares2 = db.get_dynamic_global_properties().total_reward_shares2;
       auto bob_comment_rshares = db.get_comment( "bob", string( "test" ) ).net_rshares;
       auto bob_vest_shares = db.get_account( "bob" ).vesting_shares;
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE( comment_payout )
       fund( "dave", 5000 );
       vest( "dave", 5000 );
 
-      price exchange_rate( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) );
+      price exchange_rate( ASSET( "1.000 SCR" ), ASSET( "1.000 TBD" ) );
       set_price_feed( exchange_rate );
 
       auto gpo = db.get_dynamic_global_properties();
@@ -682,7 +682,7 @@ true );
       BOOST_REQUIRE( db.get_comment( "bob", string( "test" ) ).net_rshares.value > 0 );
       validate_database();
 
-      auto reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum + ASSET( "2.000 TESTS" );
+      auto reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum + ASSET( "2.000 SCR" );
       auto total_rshares2 = db.get_dynamic_global_properties().total_reward_shares2;
       auto bob_comment_vote_total = db.get_comment( "bob", string( "test" ) ).total_vote_weight;
       auto bob_comment_rshares = db.get_comment( "bob", string( "test" ) ).net_rshares;
@@ -780,7 +780,7 @@ bob_comment_vesting_reward ).amount.value );
 
       BOOST_TEST_MESSAGE( "Generate block to cause payout" );
 
-      reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum + ASSET( "2.000 TESTS" );
+      reward_scorum = db.get_dynamic_global_properties().total_reward_fund_scorum + ASSET( "2.000 SCR" );
       total_rshares2 = db.get_dynamic_global_properties().total_reward_shares2;
       auto alice_comment_vote_total = db.get_comment( "alice", string( "test" ) ).total_vote_weight;
       auto alice_comment_rshares = db.get_comment( "alice", string( "test" ) ).net_rshares;
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE( nested_comments )
       fund( "dave", 10000 );
       vest( "dave", 10000 );
 
-      price exchange_rate( ASSET( "1.000 TESTS" ), ASSET( "1.000 TBD" ) );
+      price exchange_rate( ASSET( "1.000 SCR" ), ASSET( "1.000 TBD" ) );
       set_price_feed( exchange_rate );
 
       signed_transaction tx;
@@ -1019,7 +1019,7 @@ BOOST_AUTO_TEST_CASE( nested_comments )
 true );
 
       auto gpo = db.get_dynamic_global_properties();
-      uint128_t reward_scorum = gpo.total_reward_fund_scorum.amount.value + ASSET( "2.000 TESTS" ).amount.value;
+      uint128_t reward_scorum = gpo.total_reward_fund_scorum.amount.value + ASSET( "2.000 SCR" ).amount.value;
       uint128_t total_rshares2 = gpo.total_reward_shares2;
 
       auto alice_comment = db.get_comment( "alice", string( "test" ) );

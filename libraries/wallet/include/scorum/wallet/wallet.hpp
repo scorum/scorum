@@ -5,19 +5,17 @@
 #include <scorum/follow/follow_plugin.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
-#include <graphene/utilities/key_conversion.hpp>
+#include <scorum/wallet/utils.hpp>
 
 #include <fc/real128.hpp>
 #include <fc/crypto/base58.hpp>
 
 using namespace scorum::app;
 using namespace scorum::chain;
-using namespace graphene::utilities;
 
 namespace scorum {
 namespace wallet {
 
-using scorum::app::discussion;
 using namespace scorum::private_message;
 
 typedef uint16_t transaction_handle_type;
@@ -56,13 +54,6 @@ struct memo_data
     }
 };
 
-struct brain_key_info
-{
-    std::string brain_priv_key;
-    public_key_type pub_key;
-    std::string wif_priv_key;
-};
-
 struct wallet_data
 {
     std::vector<char> cipher_keys; /** encrypted keys */
@@ -84,11 +75,6 @@ enum authority_type
 namespace detail {
 class wallet_api_impl;
 }
-
-namespace utils {
-fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number);
-brain_key_info suggest_brain_key();
-} // namespace utils
 
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
@@ -389,10 +375,10 @@ public:
      *  that is paid by the creator. The current account creation fee can be found with the
      *  'info' wallet command.
      *
-     *  These accounts are created with combination of SCORUM and delegated SP
+     *  These accounts are created with combination of SCR and delegated SP
      *
      *  @param creator The account creating the new account
-     *  @param scorum_fee The amount of the fee to be paid with SCORUM
+     *  @param scorum_fee The amount of the fee to be paid with SCR
      *  @param delegated_vests The amount of the fee to be paid with delegation
      *  @param new_account_name The name of the new account
      *  @param json_meta JSON Metadata associated with the new account
@@ -411,10 +397,10 @@ public:
      * wallet. There is a fee associated with account creation that is paid by the creator.
      * The current account creation fee can be found with the 'info' wallet command.
      *
-     * These accounts are created with combination of SCORUM and delegated SP
+     * These accounts are created with combination of SCR and delegated SP
      *
      * @param creator The account creating the new account
-     * @param scorum_fee The amount of the fee to be paid with SCORUM
+     * @param scorum_fee The amount of the fee to be paid with SCR
      * @param delegated_vests The amount of the fee to be paid with delegation
      * @param newname The name of the new account
      * @param json_meta JSON Metadata associated with the new account
@@ -551,11 +537,11 @@ public:
     update_account_memo_key(const std::string& account_name, const public_key_type& key, bool broadcast);
 
     /**
-     * This method delegates VESTS from one account to another.
+     * This method delegates SP from one account to another.
      *
-     * @param delegator The name of the account delegating VESTS
-     * @param delegatee The name of the account receiving VESTS
-     * @param vesting_shares The amount of VESTS to delegate
+     * @param delegator The name of the account delegating SP
+     * @param delegatee The name of the account receiving SP
+     * @param vesting_shares The amount of SP to delegate
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction delegate_vesting_shares(const std::string& delegator,
@@ -642,11 +628,11 @@ public:
                                                   bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another. SCORUM and SBD can be transferred.
+     * Transfer funds from one account to another. SCR and SBD can be transferred.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
-     * @param amount The funds being transferred. i.e. "100.000 SCORUM"
+     * @param amount The funds being transferred. i.e. "100.000 SCR"
      * @param memo A memo for the transactionm, encrypted with the to account's public memo key
      * @param broadcast true if you wish to broadcast the transaction
      */
@@ -657,13 +643,13 @@ public:
                                           bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another using escrow. SCORUM and SBD can be transferred.
+     * Transfer funds from one account to another using escrow. SCR and SBD can be transferred.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
      * @param agent The account acting as the agent in case of dispute
      * @param escrow_id A unique id for the escrow transfer. (from, escrow_id) must be a unique pair
-     * @param scorum_amount The amount of SCORUM to transfer
+     * @param scorum_amount The amount of SCR to transfer
      * @param fee The fee paid to the agent
      * @param ratification_deadline The deadline for 'to' and 'agent' to approve the escrow transfer
      * @param escrow_expiration The expiration of the escrow transfer, after which either party can claim the funds
@@ -727,7 +713,7 @@ public:
      * @param who The account authorizing the release
      * @param receiver The account that will receive funds being released
      * @param escrow_id A unique id for the escrow transfer
-     * @param scorum_amount The amount of SCORUM that will be released
+     * @param scorum_amount The amount of SCR that will be released
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction escrow_release(const std::string& from,
@@ -740,13 +726,13 @@ public:
                                                 bool broadcast = false);
 
     /**
-     * Transfer SCORUM into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
+     * Transfer SCR into a vesting fund represented by vesting shares (SP). SP are required to vesting
      * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
-     * VESTS are protected against dilution up until 90% of SCORUM is vesting.
+     * SP are protected against dilution up until 90% of SCR is vesting.
      *
-     * @param from The account the SCORUM is coming from
-     * @param to The account getting the VESTS
-     * @param amount The amount of SCORUM to vest i.e. "100.00 SCORUM"
+     * @param from The account the SCR is coming from
+     * @param to The account getting the SP
+     * @param amount The amount of SCR to vest i.e. "100.00 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
@@ -755,9 +741,9 @@ public:
     /**
      * Set up a vesting withdraw request. The request is fulfilled once a week over the next two year (104 weeks).
      *
-     * @param from The account the VESTS are withdrawn from
-     * @param vesting_shares The amount of VESTS to withdraw over the next two years. Each week (amount/104) shares are
-     *    withdrawn and deposited back as SCORUM. i.e. "10.000000 VESTS"
+     * @param from The account the SP are withdrawn from
+     * @param vesting_shares The amount of SP to withdraw over the next two years. Each week (amount/104) shares are
+     *    withdrawn and deposited back as SCR. i.e. "10.000000 SP"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
@@ -767,12 +753,12 @@ public:
      * Set up a vesting withdraw route. When vesting shares are withdrawn, they will be routed to these accounts
      * based on the specified weights.
      *
-     * @param from The account the VESTS are withdrawn from.
-     * @param to   The account receiving either VESTS or SCORUM.
+     * @param from The account the SP are withdrawn from.
+     * @param to   The account receiving either SP or SCR.
      * @param percent The percent of the withdraw to go to the 'to' account. This is denoted in hundreths of a percent.
      *    i.e. 100 is 1% and 10000 is 100%. This value must be between 1 and 100000
-     * @param auto_vest Set to true if the from account should receive the VESTS as VESTS, or false if it should receive
-     *    them as SCORUM.
+     * @param auto_vest Set to true if the from account should receive the SP as SP, or false if it should receive
+     *    them as SCR.
      * @param broadcast true if you wish to broadcast the transaction.
      */
     annotated_signed_transaction set_withdraw_vesting_route(
@@ -841,7 +827,7 @@ public:
     message_body try_decrypt_message(const message_api_obj& mo);
 
     /**
-     * Vote on a comment to be paid SCORUM
+     * Vote on a comment to be paid SCR
      *
      * @param voter The account voting
      * @param author The author of the comment to be voted on

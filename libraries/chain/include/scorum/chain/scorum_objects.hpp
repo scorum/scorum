@@ -37,8 +37,8 @@ public:
     account_name_type agent;
     time_point_sec ratification_deadline;
     time_point_sec escrow_expiration;
-    asset scorum_balance;
-    asset pending_fee;
+    asset scorum_balance = asset(0, SCORUM_SYMBOL);
+    asset pending_fee = asset(0, SCORUM_SYMBOL);
     bool to_approved = false;
     bool agent_approved = false;
     bool disputed = false;

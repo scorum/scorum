@@ -25,9 +25,9 @@ struct comment_reward_context
 {
     share_type rshares;
     uint16_t reward_weight = 0;
-    asset max_scr;
+    asset max_scr = asset(0, SCORUM_SYMBOL);
     uint128_t total_reward_shares2;
-    asset total_reward_fund_scorum;
+    asset total_reward_fund_scorum = asset(0, SCORUM_SYMBOL);
     curve_id reward_curve = quadratic;
 };
 
@@ -42,7 +42,7 @@ inline bool is_comment_payout_dust(uint64_t scorum_payout)
     // return to_sbd( p, asset( scorum_payout, SCORUM_SYMBOL ) ) < SCORUM_MIN_PAYOUT_SBD;
 
     // SCORUM: it make sense to move SCORUM_MIN_PAYOUT to global properties and let witnesses vote on it
-    return asset(scorum_payout) < SCORUM_MIN_PAYOUT;
+    return asset(scorum_payout, SCORUM_SYMBOL) < SCORUM_MIN_PAYOUT;
 
     // SCORUM: no payout limits
     // return scorum_payout <= 0;
@@ -52,4 +52,4 @@ inline bool is_comment_payout_dust(uint64_t scorum_payout)
 } // scorum::chain::util
 
 FC_REFLECT(scorum::chain::util::comment_reward_context,
-    (rshares)(reward_weight)(max_scr)(total_reward_shares2)(total_reward_fund_scorum)(reward_curve))
+           (rshares)(reward_weight)(max_scr)(total_reward_shares2)(total_reward_fund_scorum)(reward_curve))

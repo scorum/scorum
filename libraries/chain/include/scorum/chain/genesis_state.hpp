@@ -43,7 +43,7 @@ struct genesis_state_type
     asset registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
     asset registration_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
     share_type init_supply = 0;
-    asset init_rewards_supply;
+    asset init_rewards_supply = asset(0, SCORUM_SYMBOL);
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
     std::vector<witness_type> witness_candidates;

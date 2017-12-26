@@ -105,7 +105,8 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
         data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(), authority(),
                                     asset(fee, SCORUM_SYMBOL));
 
-        BOOST_CHECK(db.get_account("initdelegate").balance == asset(balance_before_creation.amount - fee));
+        BOOST_CHECK(db.get_account("initdelegate").balance
+                    == asset(balance_before_creation.amount - fee, SCORUM_SYMBOL));
     }
     FC_LOG_AND_RETHROW()
 }
