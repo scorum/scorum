@@ -15,6 +15,7 @@ using scorum::protocol::account_name_type;
 using scorum::chain::proposal_vote_object;
 using scorum::chain::proposal_vote_operation;
 using scorum::protocol::registration_committee_proposal_action;
+using scorum::chain::proposal_id_type;
 
 class account_service_mock
 {
@@ -42,15 +43,25 @@ public:
         removed_proposals.push_back(proposal);
     }
 
-    const proposal_vote_object* get(const account_name_type& member)
+    bool is_exist(const account_name_type& member)
     {
         for (size_t i = 0; i < proposals.size(); ++i)
         {
             if (proposals[i].member == member)
-                return &proposals[i];
+                return true;
+        }
+        return false;
+    }
+
+    const proposal_vote_object& get(const account_name_type& member)
+    {
+        for (size_t i = 0; i < proposals.size(); ++i)
+        {
+            if (proposals[i].member == member)
+                return proposals[i];
         }
 
-        return nullptr;
+        BOOST_THROW_EXCEPTION(std::out_of_range("no such proposal"));
     }
 
     void vote_for(const proposal_vote_object& proposal)

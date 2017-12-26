@@ -68,25 +68,25 @@ public:
         FC_ASSERT(_account_service.check_account_existence(op.voting_account),
                   "Account \"${account_name}\" must exist.", ("account_name", op.voting_account));
 
-        const proposal_vote_object* proposal = _proposal_service.get(op.committee_member);
+        FC_ASSERT(_proposal_service.is_exist(op.committee_member),
+                  "There is no proposal for account name '${account_name}'", ("account_name", op.committee_member));
 
-        FC_ASSERT(proposal != nullptr, "There is no proposal for account name '${account_name}'",
+        const proposal_vote_object& proposal = _proposal_service.get(op.committee_member);
+
+        FC_ASSERT(!_proposal_service.is_expired(proposal), "This proposal is expired '${account_name}'",
                   ("account_name", op.committee_member));
 
-        FC_ASSERT(!_proposal_service.is_expired(*proposal), "This proposal is expired '${account_name}'",
-                  ("account_name", op.committee_member));
-
-        _proposal_service.vote_for(*proposal);
+        _proposal_service.vote_for(proposal);
 
         size_t members_count = 10; // committee_service.get_members_count();
 
-        if (check_quorum(*proposal, _quorum, members_count))
+        if (check_quorum(proposal, _quorum, members_count))
         {
-            if (proposal->action == invite)
+            if (proposal.action == invite)
             {
                 _committee_service.add_member(op.committee_member);
             }
-            else if (proposal->action == dropout)
+            else if (proposal.action == dropout)
             {
                 _committee_service.exclude_member(op.committee_member);
             }
@@ -95,7 +95,7 @@ public:
                 FC_ASSERT("Invalid proposal action type");
             }
 
-            _proposal_service.remove(*proposal);
+            _proposal_service.remove(proposal);
         }
     }
 
