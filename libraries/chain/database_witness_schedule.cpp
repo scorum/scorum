@@ -242,8 +242,6 @@ void database::update_witness_schedule()
             }
 
             _wso.num_scheduled_witnesses = std::max<uint8_t>(active_witnesses.size(), 1);
-            _wso.witness_pay_normalization_factor
-                = _wso.top20_weight * num_elected + _wso.timeshare_weight * num_timeshare;
 
             /// shuffle current shuffled witnesses
             auto now_hi = uint64_t(_db.head_block_time().sec_since_epoch()) << 32;

@@ -216,5 +216,5 @@ void dbs_registration_pool::_close()
     const registration_pool_object& this_pool = get_pool();
     db_impl().remove(this_pool);
 }
-}
-}
+} // namespace chain
+} // namespace scorum

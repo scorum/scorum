@@ -1,58 +1,61 @@
 {
-	"initial_timestamp" : "2017-11-29T10:03:00",
-	"init_supply": 1000,
-	"accounts": [{
-		"name": "initdelegate",
-		"recovery_account": "",
-		"public_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
-		"scr_amount": 1000,
-		"sp_amount": 0
-	}, {
-		"name": "alice",
-		"recovery_account": "",
-		"public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
-		"scr_amount": 0,
-		"sp_amount": 0
-	}, {
-		"name": "bob",
-		"recovery_account": "",
-		"public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
-		"scr_amount": 0,
-		"sp_amount": 0
-	}],
+  "initial_timestamp": "2017-11-29T10:03:00",
+  "init_accounts_supply": "1000.000 SCR",
+  "init_rewards_supply": "21024.000 SCR",
+  "accounts": [
+    {
+      "name": "initdelegate",
+      "recovery_account": "",
+      "public_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
+      "scr_amount": "1000.000 SCR",
+      "sp_amount": "0.000000 SP"
+    },
+    {
+      "name": "alice",
+      "recovery_account": "",
+      "public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
+      "scr_amount": "0.000 SCR",
+      "sp_amount": "0.000000 SP"
+    },
+    {
+      "name": "bob",
+      "recovery_account": "",
+      "public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
+      "scr_amount": "0.000 SCR",
+      "sp_amount": "0.000000 SP"
+    }
+  ],
 
-	"witness_candidates": [{
-		"owner_name": "initdelegate",
-		"block_signing_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa"
-	}, {
-		"owner_name": "alice",
-		"block_signing_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c"
-	}, {
-		"owner_name": "bob",
-		"block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B"
-	}],
+  "witness_candidates": [{
+    "owner_name": "initdelegate",
+    "block_signing_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa"
+  }, {
+    "owner_name": "alice",
+    "block_signing_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c"
+  }, {
+    "owner_name": "bob",
+    "block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B"
+  }],
 
-	"init_rewards_supply": "0.100 SCORUM",
+  "registration_committee": ["alice", "bob"],
+  "registration_supply": "1.000 SCR",
+  "registration_maximum_bonus": "0.005 SCR",
 
-	"registration_committee": ["alice", "bob"],
-	"registration_supply": "1.000 SCORUM",
-	"registration_maximum_bonus": "0.005 SCORUM",
-
-	"registration_schedule": [{
-		"stage": 1,
-		"users": 1,
-		"bonus_percent": 100
-	}, {
-		"stage": 2,
-		"users": 2,
-		"bonus_percent": 75
-	}, {
-		"stage": 3,
-		"users": 5,
-		"bonus_percent": 75
-	}, {
-		"stage": 4,
-		"users": 10,
-		"bonus_percent": 25
-	}]
+  "registration_schedule": [{
+    "stage": 1,
+    "users": 1,
+    "bonus_percent": 100
+  }, {
+    "stage": 2,
+    "users": 2,
+    "bonus_percent": 75
+  }, {
+    "stage": 3,
+    "users": 5,
+    "bonus_percent": 75
+  }, {
+    "stage": 4,
+    "users": 10,
+    "bonus_percent": 25
+  }]
 }

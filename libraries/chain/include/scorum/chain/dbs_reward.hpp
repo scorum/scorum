@@ -24,7 +24,7 @@ public:
     // return actual balance after increasing
     const asset& increase_pool_ballance(const asset& delta);
 
-    const asset& take_block_reward();
+    const asset take_block_reward();
 };
 
 } // namespace chain

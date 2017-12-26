@@ -13,7 +13,7 @@ BOOST_FIXTURE_TEST_SUITE(registration_committee_operation_check, clean_database_
 
 SCORUM_TEST_CASE(any_check)
 {
-    //TODO
+    // TODO
 }
 
 BOOST_AUTO_TEST_SUITE_END()

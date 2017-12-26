@@ -11,7 +11,6 @@
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
-using fc::string;
 
 //
 // usage for all budget tests 'chain_test  -t budget_*'
@@ -25,23 +24,33 @@ public:
         , account_service(db.obtain_service<dbs_account>())
         , public_key(database_fixture::generate_private_key("user private key").get_public_key())
         , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
-                                              "initdelegate",
+                                              TEST_INIT_DELEGATE_NAME,
                                               public_key,
                                               "",
                                               authority(),
                                               authority(),
                                               authority(),
                                               asset(0, SCORUM_SYMBOL)))
-        , alice(account_service.create_account(
-              "alice", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
-        , bob(account_service.create_account(
-              "bob", "initdelegate", public_key, "", authority(), authority(), authority(), asset(0, SCORUM_SYMBOL)))
+        , alice(account_service.create_account("alice",
+                                               TEST_INIT_DELEGATE_NAME,
+                                               public_key,
+                                               "",
+                                               authority(),
+                                               authority(),
+                                               authority(),
+                                               asset(0, SCORUM_SYMBOL)))
+        , bob(account_service.create_account("bob",
+                                             TEST_INIT_DELEGATE_NAME,
+                                             public_key,
+                                             "",
+                                             authority(),
+                                             authority(),
+                                             authority(),
+                                             asset(0, SCORUM_SYMBOL)))
     {
         account_service.increase_balance(alice, asset(ALICE_ACCOUNT_BUDGET, SCORUM_SYMBOL));
         account_service.increase_balance(bob, asset(BOB_ACCOUNT_BUDGET, SCORUM_SYMBOL));
     }
-
-    asset allocate_all_cash_from_fund_budget_in_block();
 
     dbs_budget& budget_service;
     dbs_account& account_service;
@@ -54,28 +63,9 @@ public:
     const int ALICE_ACCOUNT_BUDGET = 500;
     const int BOB_ACCOUNT_BUDGET = 1001;
 
-    const int BUDGET_PER_BLOCK_DEFAULT = 40;
-    const int BUDGET_BALANCE_DEFAULT = 200;
-
-    const asset FUND_BUDGET_INITIAL_SUPPLY
-        = asset(TEST_REWARD_INITIAL_SUPPLY.amount
-                    * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
-                    / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                SCORUM_SYMBOL);
+    const int BUDGET_PER_BLOCK_DEFAULT = 1;
+    const int BUDGET_BALANCE_DEFAULT = 5;
 };
-
-asset budget_service_check_fixture::allocate_all_cash_from_fund_budget_in_block()
-{
-    fc::time_point deadline = db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
-    asset result(0, SCORUM_SYMBOL);
-    db_plugin->debug_update(
-        [&](database&) {
-            const budget_object& budget = budget_service.get_fund_budget();
-            result = budget_service.allocate_cash(budget, deadline);
-        },
-        default_skip);
-    return result;
-}
 
 //
 // usage for all budget tests 'chain_test  -t budget_*'
@@ -134,35 +124,6 @@ SCORUM_TEST_CASE(second_owned_budget_creation)
     const auto& actual_account = account_service.get_account("alice");
 
     BOOST_REQUIRE(actual_account.balance.amount == reqired_alice_balance);
-}
-
-SCORUM_TEST_CASE(fund_budget_creation)
-{
-    // fund budget is created within database(in database::init_genesis_rewards())
-    // TODO: make MOC for database and test budget_service separately
-    BOOST_REQUIRE_NO_THROW(budget_service.get_fund_budget());
-}
-
-SCORUM_TEST_CASE(second_fund_budget_creation)
-{
-    asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
-
-    BOOST_REQUIRE_THROW(budget_service.create_fund_budget(balance, deadline), fc::assert_exception);
-}
-
-SCORUM_TEST_CASE(fund_budget_initial_supply)
-{
-    auto budget = budget_service.get_fund_budget();
-
-    BOOST_REQUIRE(budget.balance == FUND_BUDGET_INITIAL_SUPPLY);
-}
-
-SCORUM_TEST_CASE(fund_budget_initial_deadline)
-{
-    auto budget = budget_service.get_fund_budget();
-
-    BOOST_REQUIRE(budget.deadline == db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS));
 }
 
 SCORUM_TEST_CASE(owned_budget_creation_asserts)
@@ -349,39 +310,6 @@ SCORUM_TEST_CASE(allocate_cash_per_block)
     auto cash = budget_service.allocate_cash(budget);
 
     BOOST_REQUIRE_EQUAL(cash.amount, 0); // wait next block
-}
-
-SCORUM_TEST_CASE(allocate_cash_from_fund_budget_per_block)
-{
-    const auto& budget = budget_service.get_fund_budget();
-
-    auto cash = budget_service.allocate_cash(budget);
-
-    BOOST_REQUIRE_GE(cash.amount,
-                     FUND_BUDGET_INITIAL_SUPPLY.amount
-                         / (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY));
-
-    BOOST_REQUIRE_EQUAL(budget.balance.amount, (FUND_BUDGET_INITIAL_SUPPLY - cash).amount);
-}
-
-SCORUM_TEST_CASE(auto_close_fund_budget_by_deadline)
-{
-    generate_block();
-
-    asset total_cash = allocate_all_cash_from_fund_budget_in_block();
-
-    BOOST_REQUIRE_THROW(budget_service.get_fund_budget(), fc::assert_exception);
-
-    BOOST_REQUIRE_EQUAL(total_cash, FUND_BUDGET_INITIAL_SUPPLY);
-
-    BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), (size_t)0);
-}
-
-SCORUM_TEST_CASE(try_close_fund_budget)
-{
-    auto budget = budget_service.get_fund_budget();
-
-    BOOST_REQUIRE_THROW(budget_service.close_budget(budget), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

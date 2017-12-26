@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_SUITE(serialization_tests, clean_database_fixture)
 BOOST_AUTO_TEST_CASE( account_name_type_test )
 {
 
-auto test = []( const string& data ) {
+auto test = []( const std::string& data ) {
    fixed_string<> a(data);
    std::string    b(data);
 
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(version_test)
 {
     try
     {
-        BOOST_REQUIRE_EQUAL(string(version(1, 2, 3)), "1.2.3");
+        BOOST_REQUIRE_EQUAL(std::string(version(1, 2, 3)), "1.2.3");
 
         fc::variant ver_str("3.0.0");
         version ver;
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(hardfork_version_test)
 {
     try
     {
-        BOOST_REQUIRE_EQUAL(string(hardfork_version(1, 2)), "1.2.0");
+        BOOST_REQUIRE_EQUAL(std::string(hardfork_version(1, 2)), "1.2.0");
 
         fc::variant ver_str("3.0.0");
         hardfork_version ver;

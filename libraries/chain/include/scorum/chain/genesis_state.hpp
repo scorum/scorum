@@ -11,10 +11,9 @@
 namespace scorum {
 namespace chain {
 
-using scorum::protocol::share_type;
 using scorum::protocol::asset;
-using scorum::protocol::public_key_type;
 using scorum::protocol::chain_id_type;
+using scorum::protocol::public_key_type;
 
 struct genesis_state_type
 {
@@ -23,8 +22,8 @@ struct genesis_state_type
         std::string name;
         std::string recovery_account;
         public_key_type public_key;
-        share_type scr_amount;
-        share_type sp_amount;
+        asset scr_amount;
+        asset sp_amount;
     };
 
     struct witness_type
@@ -42,7 +41,7 @@ struct genesis_state_type
 
     asset registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
     asset registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
-    share_type init_supply = 0;
+    asset init_accounts_supply;
     asset init_rewards_supply = asset(0, SCORUM_SYMBOL);
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
@@ -76,7 +75,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
 FC_REFLECT(scorum::chain::genesis_state_type,
            (registration_supply)
            (registration_maximum_bonus)
-           (init_supply)
+           (init_accounts_supply)
            (init_rewards_supply)
            (initial_timestamp)
            (accounts)

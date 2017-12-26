@@ -15,13 +15,14 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 using fc::string;
 
-class dbs_reward_fixture : public clean_database_fixture
+class dbs_reward_fixture : public database_fixture
 {
 public:
     dbs_reward_fixture()
         : reward_service(db.obtain_service<dbs_reward>())
         , budget_service(db.obtain_service<dbs_budget>())
     {
+        open_database();
     }
 
     dbs_reward& reward_service;
@@ -92,9 +93,9 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_balancing)
     {
         const reward_pool_object& pool = reward_service.get_pool();
 
-        BOOST_REQUIRE_GE(pool.balance.amount,
-                         pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                             * SCORUM_BLOCKS_PER_DAY);
+        BOOST_REQUIRE_EQUAL(pool.balance.amount,
+                            pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
+                                * SCORUM_BLOCKS_PER_DAY);
     }
     FC_LOG_AND_RETHROW()
 }
