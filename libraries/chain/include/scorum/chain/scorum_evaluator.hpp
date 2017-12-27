@@ -41,5 +41,6 @@ DEFINE_EVALUATOR(create_budget)
 DEFINE_EVALUATOR(close_budget)
 DEFINE_EVALUATOR(atomicswap_initiate)
 DEFINE_EVALUATOR(atomicswap_redeem)
+DEFINE_EVALUATOR(atomicswap_refund)
 }
 } // scorum::chain

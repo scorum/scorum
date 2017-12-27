@@ -810,6 +810,18 @@ struct atomicswap_redeem_operation : public base_operation
     }
 };
 
+struct atomicswap_refund_operation : public base_operation
+{
+    int64_t contract_id;
+    account_name_type contract_owner;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(contract_owner);
+    }
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -884,5 +896,6 @@ FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (initiator)(participant)(amount)(secret_hash) )
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (recipient)(secret) )
+FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (contract_id)(contract_owner) )
 
 // clang-format on

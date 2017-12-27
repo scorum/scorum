@@ -27,6 +27,8 @@ public:
     const atomicswap_contract_object& get_contract(const account_object& recipient,
                                                    const std::string& secret_hash) const;
 
+    const atomicswap_contract_object& get_contract(atomicswap_contract_id_type id) const;
+
     const atomicswap_contract_object& create_initiator_contract(const account_object& initiator,
                                                                 const account_object& participant,
                                                                 const asset& amount,
@@ -37,6 +39,9 @@ public:
     void refund_contract(const atomicswap_contract_object& contract);
 
     void check_contracts_expiration();
+
+private:
+    std::size_t _contracts_per_recipient(const account_name_type& owner, const account_name_type& recipient) const;
 };
 } // namespace chain
 } // namespace scorum

@@ -45,13 +45,14 @@ public:
     fc::shared_string secret;
     hash_index_type contract_hash;
 
-    bool wait_deadline_to_die = false;
+    bool initiator_contract = false;
 
     time_point_sec created = time_point_sec::min();
     time_point_sec deadline = time_point_sec::min();
 };
 
 struct by_owner_name;
+struct by_recipient_name;
 struct by_contract_hash;
 
 typedef multi_index_container<atomicswap_contract_object,
@@ -63,6 +64,10 @@ typedef multi_index_container<atomicswap_contract_object,
                                                             member<atomicswap_contract_object,
                                                                    account_name_type,
                                                                    &atomicswap_contract_object::owner>>,
+                                         ordered_non_unique<tag<by_recipient_name>,
+                                                            member<atomicswap_contract_object,
+                                                                   account_name_type,
+                                                                   &atomicswap_contract_object::to>>,
                                          ordered_unique<tag<by_contract_hash>,
                                                         member<atomicswap_contract_object,
                                                                hash_index_type,
@@ -73,6 +78,6 @@ typedef multi_index_container<atomicswap_contract_object,
 }
 
 FC_REFLECT(scorum::chain::atomicswap_contract_object,
-           (id)(owner)(to)(amount)(secret_hash)(secret)(contract_hash)(wait_deadline_to_die)(created)(deadline))
+           (id)(owner)(to)(amount)(secret_hash)(secret)(contract_hash)(initiator_contract)(created)(deadline))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::atomicswap_contract_object, scorum::chain::atomicswap_contract_index)

@@ -35,11 +35,15 @@ public:
 
         redeem_op.recipient = "bob";
         redeem_op.secret = ALICE_SECRET;
+
+        refund_op.contract_id = 0;
+        refund_op.contract_owner = "alice";
     }
 
     std::string alice_secret_hash;
     atomicswap_initiate_operation initiate_op;
     atomicswap_redeem_operation redeem_op;
+    atomicswap_refund_operation refund_op;
 
     const std::string ALICE_SECRET = "CHOCHO GUNJ UNSOUR EARLY MUSHER ...";
     const asset ALICE_SHARE_FOR_BOB = asset(2, SCORUM_SYMBOL);
@@ -57,6 +61,11 @@ SCORUM_TEST_CASE(redeem_operation_check)
     BOOST_REQUIRE_NO_THROW(redeem_op.validate());
 }
 
+SCORUM_TEST_CASE(refund_operation_check)
+{
+    BOOST_REQUIRE_NO_THROW(refund_op.validate());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 class atomicswap_operation_initiate_fixture : public atomicswap_operation_check_fixture
@@ -66,8 +75,7 @@ public:
         : atomicswap_service(db.obtain_service<dbs_atomicswap>())
         , account_service(db.obtain_service<dbs_account>())
     {
-        ACTOR(alice);
-        ACTOR(bob);
+        ACTORS((alice)(bob));
 
         m_alice_private_key = alice_private_key;
         m_bob_private_key = bob_private_key;
@@ -82,7 +90,7 @@ public:
     private_key_type m_alice_private_key;
     private_key_type m_bob_private_key;
 
-    const asset ALICE_BALANCE = asset(2 * SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS + 1, SCORUM_SYMBOL);
+    const asset ALICE_BALANCE = asset(2 * SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1, SCORUM_SYMBOL);
 };
 
 BOOST_FIXTURE_TEST_SUITE(atomicswap_operation_initiate_check, atomicswap_operation_initiate_fixture)
@@ -146,6 +154,29 @@ SCORUM_TEST_CASE(redeem_check)
     BOOST_REQUIRE_NO_THROW(validate_database());
 
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice_secret_hash), fc::exception);
+}
+
+SCORUM_TEST_CASE(initiator_cant_refund)
+{
+    BOOST_REQUIRE_NO_THROW(validate_database());
+
+    const account_object& alice = account_service.get_account("alice");
+
+    BOOST_REQUIRE(atomicswap_service.get_contracts(alice).size() > 0);
+
+    const atomicswap_contract_object& contract = atomicswap_service.get_contracts(alice)[0];
+
+    BOOST_REQUIRE_EQUAL(contract.id._id, refund_op.contract_id);
+
+    signed_transaction tx;
+
+    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.operations.push_back(refund_op);
+
+    BOOST_REQUIRE_NO_THROW(tx.sign(m_alice_private_key, db.get_chain_id()));
+    BOOST_REQUIRE_NO_THROW(tx.validate());
+
+    BOOST_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

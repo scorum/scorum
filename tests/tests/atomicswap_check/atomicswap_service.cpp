@@ -4,6 +4,8 @@
 #include <scorum/chain/dbs_atomicswap.hpp>
 #include <scorum/chain/dbs_account.hpp>
 
+#include <sstream>
+
 #include <fc/time.hpp>
 
 #include "database_fixture.hpp"
@@ -30,6 +32,17 @@ public:
               "bob", "initdelegate", public_key, "", authority(), authority(), authority(), ASSET_NULL_SCR))
     {
         account_service.increase_balance(alice, ALICE_BALANCE);
+
+        for (int ci = 0; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1; ++ci)
+        {
+            std::stringstream store;
+            store << "man" << ci;
+            account_name_type next_name = store.str();
+            const account_object& man = account_service.create_account(
+                next_name, "initdelegate", public_key, "", authority(), authority(), authority(), ASSET_NULL_SCR);
+            account_service.increase_balance(man, MAN_BALANCE);
+            people.push_back(next_name);
+        }
     }
 
     dbs_atomicswap& atomicswap_service;
@@ -39,9 +52,16 @@ public:
     const account_object& alice;
     const account_object& bob;
 
+    using recipients_type = std::vector<account_name_type>;
+    recipients_type people;
+
     const std::string ALICE_SECRET = "CHOCHO GUNJ UNSOUR EARLY MUSHER ...";
-    const asset ALICE_BALANCE = asset(2 * SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS + 1, SCORUM_SYMBOL);
+    const asset ALICE_BALANCE = asset(2 * SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1, SCORUM_SYMBOL);
     const asset ALICE_SHARE_FOR_BOB = asset(2, SCORUM_SYMBOL);
+
+    const std::string MAN_SECRET = ALICE_SECRET;
+    const asset MAN_BALANCE = asset(SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1, SCORUM_SYMBOL);
+    const asset MAN_SHARE_FOR_BOB = asset(1, SCORUM_SYMBOL);
 };
 
 BOOST_FIXTURE_TEST_SUITE(atomicswap_service_create_initiator_check, atomicswap_service_check_fixture)
@@ -90,22 +110,45 @@ SCORUM_TEST_CASE(create_initiator_contract_check_double)
     BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash));
 }
 
-SCORUM_TEST_CASE(create_initiator_contract_check_limit)
+SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_owner)
 {
     std::string secret_hash = atomicswap::get_secret_hash(ALICE_SECRET);
 
-    for (int ci = 0; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS; ++ci)
+    int ci = 0;
+    for (; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER; ++ci)
     {
+        const account_object& man = account_service.get_account(people[ci]);
         BOOST_REQUIRE_NO_THROW(
-            atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash));
+            atomicswap_service.create_initiator_contract(alice, man, ALICE_SHARE_FOR_BOB, secret_hash));
         std::stringstream data;
         data << secret_hash << ci;
         secret_hash = atomicswap::get_secret_hash(data.str());
     }
 
-    BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS);
+    BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(),
+                        SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER);
 
-    BOOST_REQUIRE_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash),
+    BOOST_REQUIRE_THROW(atomicswap_service.create_initiator_contract(alice, account_service.get_account(people[ci]),
+                                                                     ALICE_SHARE_FOR_BOB, secret_hash),
+                        fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_recipient)
+{
+    std::string secret_hash = atomicswap::get_secret_hash(MAN_SECRET);
+
+    int ci = 0;
+    for (; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT; ++ci)
+    {
+        const account_object& man = account_service.get_account(people[ci]);
+        BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(man, bob, MAN_SHARE_FOR_BOB, secret_hash));
+        std::stringstream data;
+        data << secret_hash << ci;
+        secret_hash = atomicswap::get_secret_hash(data.str());
+    }
+
+    BOOST_REQUIRE_THROW(atomicswap_service.create_initiator_contract(account_service.get_account(people[ci]), bob,
+                                                                     MAN_SHARE_FOR_BOB, secret_hash),
                         fc::assert_exception);
 }
 

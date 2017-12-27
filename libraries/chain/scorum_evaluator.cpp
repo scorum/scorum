@@ -1465,5 +1465,20 @@ void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op
     atomicswap_service.redeem_contract(contract, op.secret);
 }
 
+void atomicswap_refund_evaluator::do_apply(const atomicswap_refund_operation& op)
+{
+    dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.contract_owner);
+
+    const auto& contract = atomicswap_service.get_contract(op.contract_id);
+
+    FC_ASSERT(!contract.initiator_contract, "Can't refund initiator contract. It is locked on ${h} hours.",
+              ("h", SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS / 3600));
+
+    atomicswap_service.refund_contract(contract);
+}
+
 } // namespace chain
 } // namespace scorum

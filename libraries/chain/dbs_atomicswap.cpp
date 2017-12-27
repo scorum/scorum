@@ -41,6 +41,15 @@ const atomicswap_contract_object& dbs_atomicswap::get_contract(const account_obj
     FC_CAPTURE_AND_RETHROW((recipient.name)(secret_hash))
 }
 
+const atomicswap_contract_object& dbs_atomicswap::get_contract(atomicswap_contract_id_type id) const
+{
+    try
+    {
+        return db_impl().get<atomicswap_contract_object>(id);
+    }
+    FC_CAPTURE_AND_RETHROW((id))
+}
+
 const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(const account_object& initiator,
                                                                             const account_object& participant,
                                                                             const asset& amount,
@@ -56,9 +65,13 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
     FC_ASSERT((nullptr == db_impl().find<atomicswap_contract_object, by_contract_hash>(contract_hash)),
               "There is contract for '${a}' with same secret. Use another secret and try again.",
               ("a", participant.name));
-    FC_ASSERT(get_contracts(initiator).size() < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS,
+    FC_ASSERT(get_contracts(initiator).size() < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER,
               "Can't create more then ${1} contract per initiator.",
-              ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS));
+              ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER));
+    FC_ASSERT(_contracts_per_recipient(initiator.name, participant.name)
+                  < (std::size_t)SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT,
+              "Can't create more then ${1} contract per participant.",
+              ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
@@ -74,7 +87,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
               contract.deadline = deadline;
               fc::from_string(contract.secret_hash, secret_hash);
               contract.contract_hash = contract_hash;
-              contract.wait_deadline_to_die = false;
+              contract.initiator_contract = true;
           });
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
@@ -91,22 +104,20 @@ void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract,
 
     account_service.increase_balance(to, contract.amount);
 
-    if (contract.wait_deadline_to_die)
+    if (contract.initiator_contract)
+    {
+        db_impl().remove(contract);
+    }
+    else
     {
         // save secret for participant
         db_impl().modify(contract,
                          [&](atomicswap_contract_object& contract) { fc::from_string(contract.secret, secret); });
     }
-    else
-    {
-        db_impl().remove(contract);
-    }
 }
 
 void dbs_atomicswap::refund_contract(const atomicswap_contract_object& contract)
 {
-    FC_ASSERT(contract.secret.empty(), "Can't refund redeemed contract."); // move this check to evaluator
-
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
     const account_object& owner = account_service.get_account(contract.owner);
@@ -134,7 +145,7 @@ void dbs_atomicswap::check_contracts_expiration()
         {
             if (contract.secret.empty())
             {
-                // only for not redeemed contracts
+                // only for initiator or not redeemed participant contracts
                 refund_contract(contract);
             }
             else
@@ -143,6 +154,12 @@ void dbs_atomicswap::check_contracts_expiration()
             }
         }
     }
+}
+
+std::size_t dbs_atomicswap::_contracts_per_recipient(const account_name_type& owner,
+                                                     const account_name_type& recipient) const
+{
+    return db_impl().get_index<atomicswap_contract_index>().indicies().get<by_recipient_name>().count(recipient);
 }
 
 } // namespace chain

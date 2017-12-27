@@ -1014,9 +1014,19 @@ public:
     annotated_signed_transaction
     atomicswap_redeem(const std::string& recipient, const std::string& secret, const bool broadcast);
 
+    /** Refund contact by participant.
+     *
+     *  @warning Can't refund initiator contract. It is refunded automatically in 48 hours.
+     *
+     *  @param contract_id
+     *  @param contract_owner the participant
+     *  @param broadcast
+     */
+    annotated_signed_transaction
+    atomicswap_refund(const int64_t contract_id, const std::string& contract_owner, const bool broadcast);
+
     // atomicswap_auditcontract: TODO
     // atomicswap_participate: TODO
-    // atomicswap_refund: TODO
     // atomicswap_extractsecret: TODO
 
     /** Initiate Atomic Swap helper to get list of contract info.
@@ -1128,6 +1138,7 @@ FC_API( scorum::wallet::wallet_api,
         //Atomic Swap API
         (atomicswap_initiate)
         (atomicswap_redeem)
+        (atomicswap_refund)
         (get_atomicswap_contracts)
 
         // private message api

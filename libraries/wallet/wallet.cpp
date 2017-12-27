@@ -2452,6 +2452,23 @@ wallet_api::atomicswap_redeem(const std::string& recipient, const std::string& s
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction
+wallet_api::atomicswap_refund(const int64_t contract_id, const std::string& contract_owner, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_refund_operation op;
+
+    op.contract_id = contract_id;
+    op.contract_owner = contract_owner;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
 {
     std::vector<atomicswap_contract_api_obj> result;

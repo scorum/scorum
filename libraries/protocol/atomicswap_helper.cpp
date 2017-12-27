@@ -26,9 +26,9 @@ std::string get_secret_hash(const std::string& secret)
 
 fc::sha256 get_contract_hash_obj(const account_name_type& recipient, const std::string& secret_hash)
 {
-    std::stringstream data;
-    data << recipient << secret_hash;
-    return fc::sha256().hash(data.str());
+    std::stringstream store;
+    store << recipient << secret_hash;
+    return fc::sha256().hash(store.str());
 }
 
 std::string get_contract_hash_hex(const account_name_type& recipient, const std::string& secret_hash)

@@ -73,7 +73,11 @@ const budget_object& dbs_budget::get_fund_budget() const
 
 const budget_object& dbs_budget::get_budget(budget_id_type id) const
 {
-    return db_impl().get<budget_object>(id);
+    try
+    {
+        return db_impl().get<budget_object>(id);
+    }
+    FC_CAPTURE_AND_RETHROW((id))
 }
 
 const budget_object& dbs_budget::create_fund_budget(const asset& balance, const time_point_sec& deadline)
