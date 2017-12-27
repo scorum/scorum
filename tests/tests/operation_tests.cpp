@@ -856,8 +856,9 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             itr = vote_idx.find(std::make_tuple(bob_comment.id, alice.id));
 
             BOOST_REQUIRE(db.get_account("alice").voting_power
-                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
-                                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
+                          == old_voting_power
+                              - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
+                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
             BOOST_REQUIRE(bob_comment.net_rshares.value
                           == alice.vesting_shares.amount.value
                               * (old_voting_power - db.get_account("alice").voting_power) / SCORUM_100_PERCENT);
@@ -1481,6 +1482,8 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
         generate_block();
         vest("alice", ASSET("10.000 SCR"));
 
+        generate_block();
+        validate_database();
         BOOST_TEST_MESSAGE("--- Test withdraw of existing SP");
 
         {
@@ -1565,22 +1568,6 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
             db.push_transaction(tx, 0);
             generate_block();
         }
-
-        db_plugin->debug_update(
-            [=](database& db) {
-                auto& wso = db.get_witness_schedule_object();
-
-                db.modify(wso, [&](witness_schedule_object& w) {
-                    w.median_props.account_creation_fee = ASSET("10.000 SCR");
-                });
-
-                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
-                    gpo.current_supply
-                        += wso.median_props.account_creation_fee - ASSET("0.001 SCR") - gpo.total_vesting_fund_scorum;
-                    gpo.total_vesting_fund_scorum = wso.median_props.account_creation_fee - ASSET("0.001 SCR");
-                });
-            },
-            database::skip_witness_signature);
 
         withdraw_vesting_operation op;
         signed_transaction tx;
@@ -4022,7 +4009,6 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
         ACTORS((alice));
         generate_blocks(1);
         fund("alice", ASSET("1000.000 SCR"));
-        vest("alice", ASSET("10000.000000 SP"));
 
         private_key_type priv_key = generate_private_key("temp_key");
 
@@ -4087,10 +4073,13 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         generate_block();
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 SCR"); });
-        });
+        db_plugin->debug_update(
+            [=](database& db) {
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("1.000 SCR");
+                });
+            },
+            default_skip);
 
         generate_block();
 
@@ -4165,9 +4154,10 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient fee fo reach target delegation.");
-        fund("alice", asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                            SCORUM_SYMBOL));
+        fund("alice",
+             asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                       * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                   SCORUM_SYMBOL));
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         validate_database();
@@ -4213,7 +4203,8 @@ BOOST_AUTO_TEST_CASE(claim_reward_balance_apply)
             });
 
             db.modify(db.get_dynamic_global_properties(), [](dynamic_global_property_object& gpo) {
-                gpo.current_supply += ASSET("20.000 SCR");
+                gpo.total_supply += ASSET("20.000 SCR");
+                gpo.accounts_current_supply += ASSET("20.000 SCR");
                 gpo.pending_rewarded_vesting_shares += ASSET("10.000000 SP");
                 gpo.pending_rewarded_vesting_scorum += ASSET("10.000 SCR");
             });
@@ -4296,7 +4287,6 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
         BOOST_TEST_MESSAGE("Testing: delegate_vesting_shares_authorities");
         signed_transaction tx;
         ACTORS((alice)(bob))
-        vest("alice", ASSET("10000.000000 SP"));
 
         delegate_vesting_shares_operation op;
         op.vesting_shares = ASSET("300.000000 SP");
@@ -4350,10 +4340,13 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         generate_block();
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 SCR"); });
-        });
+        db_plugin->debug_update(
+            [=](database& db) {
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("1.000 SCR");
+                });
+            },
+            default_skip);
 
         generate_block();
 
@@ -4540,10 +4533,13 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         generate_block();
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("1.000 SCR"); });
-        });
+        db_plugin->debug_update(
+            [=](database& db) {
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = ASSET("1.000 SCR");
+                });
+            },
+            default_skip);
 
         generate_block();
 
@@ -4753,9 +4749,9 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
 
         db_plugin->debug_update([=](database& db) {
             db.modify(db.get_dynamic_global_properties(), [=](dynamic_global_property_object& gpo) {
-                gpo.current_supply -= gpo.total_reward_fund_scorum;
+                gpo.accounts_current_supply -= gpo.total_reward_fund_scorum;
                 gpo.total_reward_fund_scorum = ASSET("100.000 SCR");
-                gpo.current_supply += gpo.total_reward_fund_scorum;
+                gpo.accounts_current_supply += gpo.total_reward_fund_scorum;
             });
         });
 

@@ -13,7 +13,7 @@ namespace chain {
 
 /** DB service for operations with registration_committee_* objects
  *  --------------------------------------------
-*/
+ */
 class dbs_registration_committee : public dbs_base
 {
     friend class dbservice_dbs_factory;
@@ -47,5 +47,5 @@ private:
 
     void _exclude_member(const account_object&);
 };
-}
-}
+} // namespace chain
+} // namespace scorum

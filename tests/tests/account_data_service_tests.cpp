@@ -25,8 +25,8 @@ public:
 
     void create_account()
     {
-        data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(), authority(),
-                                    asset(0, SCORUM_SYMBOL));
+        data_service.create_account("user", TEST_INIT_DELEGATE_NAME, public_key, "", authority(), authority(),
+                                    authority(), asset(0, SCORUM_SYMBOL));
     }
 
     share_type calc_fee()
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(check_recovery_account_name)
 
         const account_object& acount = db.get_account("user");
 
-        BOOST_CHECK(acount.recovery_account == "initdelegate");
+        BOOST_CHECK(acount.recovery_account == TEST_INIT_DELEGATE_NAME);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(fail_on_second_creation)
     {
         create_account();
 
-        BOOST_CHECK_THROW(data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(),
-                                                      authority(), asset(0, SCORUM_SYMBOL)),
+        BOOST_CHECK_THROW(data_service.create_account("user", TEST_INIT_DELEGATE_NAME, public_key, "", authority(),
+                                                      authority(), authority(), asset(0, SCORUM_SYMBOL)),
                           std::logic_error);
     }
     FC_LOG_AND_RETHROW()
@@ -85,11 +85,11 @@ BOOST_AUTO_TEST_CASE(create_without_fee)
 {
     try
     {
-        const asset balance_before_creation = db.get_account("initdelegate").balance;
+        const asset balance_before_creation = db.get_account(TEST_INIT_DELEGATE_NAME).balance;
 
         create_account();
 
-        BOOST_CHECK(db.get_account("initdelegate").balance == balance_before_creation);
+        BOOST_CHECK(db.get_account(TEST_INIT_DELEGATE_NAME).balance == balance_before_creation);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -98,14 +98,14 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
 {
     try
     {
-        const asset balance_before_creation = db.get_account("initdelegate").balance;
+        const asset balance_before_creation = db.get_account(TEST_INIT_DELEGATE_NAME).balance;
 
         const share_type fee = calc_fee();
 
-        data_service.create_account("user", "initdelegate", public_key, "", authority(), authority(), authority(),
-                                    asset(fee, SCORUM_SYMBOL));
+        data_service.create_account("user", TEST_INIT_DELEGATE_NAME, public_key, "", authority(), authority(),
+                                    authority(), asset(fee, SCORUM_SYMBOL));
 
-        BOOST_CHECK(db.get_account("initdelegate").balance
+        BOOST_CHECK(db.get_account(TEST_INIT_DELEGATE_NAME).balance
                     == asset(balance_before_creation.amount - fee, SCORUM_SYMBOL));
     }
     FC_LOG_AND_RETHROW()

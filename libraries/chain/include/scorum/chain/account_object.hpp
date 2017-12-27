@@ -239,276 +239,219 @@ struct by_vote_count;
 /**
  * @ingroup object_index
  */
-typedef multi_index_container<account_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<account_object, account_id_type, &account_object::id>>,
-                                         ordered_unique<tag<by_name>,
-                                                        member<account_object,
-                                                               account_name_type,
-                                                               &account_object::name>>,
-                                         ordered_unique<tag<by_proxy>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             account_name_type,
-                                                                             &account_object::proxy>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>> /// composite key by
-                                                        /// proxy
-                                                        >,
-                                         ordered_unique<tag<by_next_vesting_withdrawal>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             time_point_sec,
-                                                                             &account_object::next_vesting_withdrawal>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>> /// composite key
-                                                        /// by_next_vesting_withdrawal
-                                                        >,
-                                         ordered_unique<tag<by_last_post>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             time_point_sec,
-                                                                             &account_object::last_post>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>>,
-                                                        composite_key_compare<std::greater<time_point_sec>,
-                                                                              std::less<account_id_type>>>,
-                                         ordered_unique<tag<by_scorum_balance>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             asset,
-                                                                             &account_object::balance>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>>,
-                                                        composite_key_compare<std::greater<asset>,
-                                                                              std::less<account_id_type>>>,
-                                         ordered_unique<tag<by_smp_balance>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             asset,
-                                                                             &account_object::vesting_shares>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>>,
-                                                        composite_key_compare<std::greater<asset>,
-                                                                              std::less<account_id_type>>>,
-                                         ordered_unique<tag<by_post_count>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             uint32_t,
-                                                                             &account_object::post_count>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>>,
-                                                        composite_key_compare<std::greater<uint32_t>,
-                                                                              std::less<account_id_type>>>,
-                                         ordered_unique<tag<by_vote_count>,
-                                                        composite_key<account_object,
-                                                                      member<account_object,
-                                                                             uint32_t,
-                                                                             &account_object::lifetime_vote_count>,
-                                                                      member<account_object,
-                                                                             account_id_type,
-                                                                             &account_object::id>>,
-                                                        composite_key_compare<std::greater<uint32_t>,
-                                                                              std::less<account_id_type>>>>,
-                              allocator<account_object>>
+typedef multi_index_container<
+    account_object,
+    indexed_by<
+        ordered_unique<tag<by_id>, member<account_object, account_id_type, &account_object::id>>,
+        ordered_unique<tag<by_name>, member<account_object, account_name_type, &account_object::name>>,
+        ordered_unique<tag<by_proxy>,
+                       composite_key<account_object,
+                                     member<account_object, account_name_type, &account_object::proxy>,
+                                     member<account_object,
+                                            account_id_type,
+                                            &account_object::id>> /// composite key by
+                       /// proxy
+                       >,
+        ordered_unique<tag<by_next_vesting_withdrawal>,
+                       composite_key<account_object,
+                                     member<account_object, time_point_sec, &account_object::next_vesting_withdrawal>,
+                                     member<account_object,
+                                            account_id_type,
+                                            &account_object::id>> /// composite key
+                       /// by_next_vesting_withdrawal
+                       >,
+        ordered_unique<tag<by_last_post>,
+                       composite_key<account_object,
+                                     member<account_object, time_point_sec, &account_object::last_post>,
+                                     member<account_object, account_id_type, &account_object::id>>,
+                       composite_key_compare<std::greater<time_point_sec>, std::less<account_id_type>>>,
+        ordered_unique<tag<by_scorum_balance>,
+                       composite_key<account_object,
+                                     member<account_object, asset, &account_object::balance>,
+                                     member<account_object, account_id_type, &account_object::id>>,
+                       composite_key_compare<std::greater<asset>, std::less<account_id_type>>>,
+        ordered_unique<tag<by_smp_balance>,
+                       composite_key<account_object,
+                                     member<account_object, asset, &account_object::vesting_shares>,
+                                     member<account_object, account_id_type, &account_object::id>>,
+                       composite_key_compare<std::greater<asset>, std::less<account_id_type>>>,
+        ordered_unique<tag<by_post_count>,
+                       composite_key<account_object,
+                                     member<account_object, uint32_t, &account_object::post_count>,
+                                     member<account_object, account_id_type, &account_object::id>>,
+                       composite_key_compare<std::greater<uint32_t>, std::less<account_id_type>>>,
+        ordered_unique<tag<by_vote_count>,
+                       composite_key<account_object,
+                                     member<account_object, uint32_t, &account_object::lifetime_vote_count>,
+                                     member<account_object, account_id_type, &account_object::id>>,
+                       composite_key_compare<std::greater<uint32_t>, std::less<account_id_type>>>>,
+    allocator<account_object>>
     account_index;
 
 struct by_account;
 struct by_last_valid;
 
-typedef multi_index_container<owner_authority_history_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<owner_authority_history_object,
-                                                               owner_authority_history_id_type,
-                                                               &owner_authority_history_object::id>>,
-                                         ordered_unique<tag<by_account>,
-                                                        composite_key<owner_authority_history_object,
-                                                                      member<owner_authority_history_object,
-                                                                             account_name_type,
-                                                                             &owner_authority_history_object::account>,
-                                                                      member<owner_authority_history_object,
-                                                                             time_point_sec,
-                                                                             &owner_authority_history_object::
-                                                                                 last_valid_time>,
-                                                                      member<owner_authority_history_object,
-                                                                             owner_authority_history_id_type,
-                                                                             &owner_authority_history_object::id>>,
-                                                        composite_key_compare<std::less<account_name_type>,
-                                                                              std::less<time_point_sec>,
-                                                                              std::
-                                                                                  less<owner_authority_history_id_type>>>>,
-                              allocator<owner_authority_history_object>>
+typedef multi_index_container<
+    owner_authority_history_object,
+    indexed_by<ordered_unique<tag<by_id>,
+                              member<owner_authority_history_object,
+                                     owner_authority_history_id_type,
+                                     &owner_authority_history_object::id>>,
+               ordered_unique<tag<by_account>,
+                              composite_key<owner_authority_history_object,
+                                            member<owner_authority_history_object,
+                                                   account_name_type,
+                                                   &owner_authority_history_object::account>,
+                                            member<owner_authority_history_object,
+                                                   time_point_sec,
+                                                   &owner_authority_history_object::last_valid_time>,
+                                            member<owner_authority_history_object,
+                                                   owner_authority_history_id_type,
+                                                   &owner_authority_history_object::id>>,
+                              composite_key_compare<std::less<account_name_type>,
+                                                    std::less<time_point_sec>,
+                                                    std::less<owner_authority_history_id_type>>>>,
+    allocator<owner_authority_history_object>>
     owner_authority_history_index;
 
 struct by_last_owner_update;
 
-typedef multi_index_container<account_authority_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<account_authority_object,
-                                                               account_authority_id_type,
-                                                               &account_authority_object::id>>,
-                                         ordered_unique<tag<by_account>,
-                                                        composite_key<account_authority_object,
-                                                                      member<account_authority_object,
-                                                                             account_name_type,
-                                                                             &account_authority_object::account>,
-                                                                      member<account_authority_object,
-                                                                             account_authority_id_type,
-                                                                             &account_authority_object::id>>,
-                                                        composite_key_compare<std::less<account_name_type>,
-                                                                              std::less<account_authority_id_type>>>,
-                                         ordered_unique<tag<by_last_owner_update>,
-                                                        composite_key<account_authority_object,
-                                                                      member<account_authority_object,
-                                                                             time_point_sec,
-                                                                             &account_authority_object::
-                                                                                 last_owner_update>,
-                                                                      member<account_authority_object,
-                                                                             account_authority_id_type,
-                                                                             &account_authority_object::id>>,
-                                                        composite_key_compare<std::greater<time_point_sec>,
-                                                                              std::less<account_authority_id_type>>>>,
-                              allocator<account_authority_object>>
+typedef multi_index_container<
+    account_authority_object,
+    indexed_by<
+        ordered_unique<tag<by_id>,
+                       member<account_authority_object, account_authority_id_type, &account_authority_object::id>>,
+        ordered_unique<
+            tag<by_account>,
+            composite_key<account_authority_object,
+                          member<account_authority_object, account_name_type, &account_authority_object::account>,
+                          member<account_authority_object, account_authority_id_type, &account_authority_object::id>>,
+            composite_key_compare<std::less<account_name_type>, std::less<account_authority_id_type>>>,
+        ordered_unique<
+            tag<by_last_owner_update>,
+            composite_key<
+                account_authority_object,
+                member<account_authority_object, time_point_sec, &account_authority_object::last_owner_update>,
+                member<account_authority_object, account_authority_id_type, &account_authority_object::id>>,
+            composite_key_compare<std::greater<time_point_sec>, std::less<account_authority_id_type>>>>,
+    allocator<account_authority_object>>
     account_authority_index;
 
 struct by_delegation;
 
-typedef multi_index_container<vesting_delegation_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<vesting_delegation_object,
-                                                               vesting_delegation_id_type,
-                                                               &vesting_delegation_object::id>>,
-                                         ordered_unique<tag<by_delegation>,
-                                                        composite_key<vesting_delegation_object,
-                                                                      member<vesting_delegation_object,
-                                                                             account_name_type,
-                                                                             &vesting_delegation_object::delegator>,
-                                                                      member<vesting_delegation_object,
-                                                                             account_name_type,
-                                                                             &vesting_delegation_object::delegatee>>,
-                                                        composite_key_compare<std::less<account_name_type>,
-                                                                              std::less<account_name_type>>>>,
-                              allocator<vesting_delegation_object>>
+typedef multi_index_container<
+    vesting_delegation_object,
+    indexed_by<
+        ordered_unique<tag<by_id>,
+                       member<vesting_delegation_object, vesting_delegation_id_type, &vesting_delegation_object::id>>,
+        ordered_unique<
+            tag<by_delegation>,
+            composite_key<vesting_delegation_object,
+                          member<vesting_delegation_object, account_name_type, &vesting_delegation_object::delegator>,
+                          member<vesting_delegation_object, account_name_type, &vesting_delegation_object::delegatee>>,
+            composite_key_compare<std::less<account_name_type>, std::less<account_name_type>>>>,
+    allocator<vesting_delegation_object>>
     vesting_delegation_index;
 
 struct by_expiration;
 struct by_account_expiration;
 
-typedef multi_index_container<vesting_delegation_expiration_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<vesting_delegation_expiration_object,
-                                                               vesting_delegation_expiration_id_type,
-                                                               &vesting_delegation_expiration_object::id>>,
-                                         ordered_unique<tag<by_expiration>,
-                                                        composite_key<vesting_delegation_expiration_object,
-                                                                      member<vesting_delegation_expiration_object,
-                                                                             time_point_sec,
-                                                                             &vesting_delegation_expiration_object::
-                                                                                 expiration>,
-                                                                      member<vesting_delegation_expiration_object,
-                                                                             vesting_delegation_expiration_id_type,
-                                                                             &vesting_delegation_expiration_object::
-                                                                                 id>>,
-                                                        composite_key_compare<std::less<time_point_sec>,
-                                                                              std::
-                                                                                  less<vesting_delegation_expiration_id_type>>>,
-                                         ordered_unique<tag<by_account_expiration>,
-                                                        composite_key<vesting_delegation_expiration_object,
-                                                                      member<vesting_delegation_expiration_object,
-                                                                             account_name_type,
-                                                                             &vesting_delegation_expiration_object::
-                                                                                 delegator>,
-                                                                      member<vesting_delegation_expiration_object,
-                                                                             time_point_sec,
-                                                                             &vesting_delegation_expiration_object::
-                                                                                 expiration>,
-                                                                      member<vesting_delegation_expiration_object,
-                                                                             vesting_delegation_expiration_id_type,
-                                                                             &vesting_delegation_expiration_object::
-                                                                                 id>>,
-                                                        composite_key_compare<std::less<account_name_type>,
-                                                                              std::less<time_point_sec>,
-                                                                              std::
-                                                                                  less<vesting_delegation_expiration_id_type>>>>,
-                              allocator<vesting_delegation_expiration_object>>
+typedef multi_index_container<
+    vesting_delegation_expiration_object,
+    indexed_by<ordered_unique<tag<by_id>,
+                              member<vesting_delegation_expiration_object,
+                                     vesting_delegation_expiration_id_type,
+                                     &vesting_delegation_expiration_object::id>>,
+               ordered_unique<
+                   tag<by_expiration>,
+                   composite_key<vesting_delegation_expiration_object,
+                                 member<vesting_delegation_expiration_object,
+                                        time_point_sec,
+                                        &vesting_delegation_expiration_object::expiration>,
+                                 member<vesting_delegation_expiration_object,
+                                        vesting_delegation_expiration_id_type,
+                                        &vesting_delegation_expiration_object::id>>,
+                   composite_key_compare<std::less<time_point_sec>, std::less<vesting_delegation_expiration_id_type>>>,
+               ordered_unique<tag<by_account_expiration>,
+                              composite_key<vesting_delegation_expiration_object,
+                                            member<vesting_delegation_expiration_object,
+                                                   account_name_type,
+                                                   &vesting_delegation_expiration_object::delegator>,
+                                            member<vesting_delegation_expiration_object,
+                                                   time_point_sec,
+                                                   &vesting_delegation_expiration_object::expiration>,
+                                            member<vesting_delegation_expiration_object,
+                                                   vesting_delegation_expiration_id_type,
+                                                   &vesting_delegation_expiration_object::id>>,
+                              composite_key_compare<std::less<account_name_type>,
+                                                    std::less<time_point_sec>,
+                                                    std::less<vesting_delegation_expiration_id_type>>>>,
+    allocator<vesting_delegation_expiration_object>>
     vesting_delegation_expiration_index;
 
 struct by_expiration;
 
-typedef multi_index_container<account_recovery_request_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<account_recovery_request_object,
-                                                               account_recovery_request_id_type,
-                                                               &account_recovery_request_object::id>>,
-                                         ordered_unique<tag<by_account>,
-                                                        composite_key<account_recovery_request_object,
-                                                                      member<account_recovery_request_object,
-                                                                             account_name_type,
-                                                                             &account_recovery_request_object::
-                                                                                 account_to_recover>,
-                                                                      member<account_recovery_request_object,
-                                                                             account_recovery_request_id_type,
-                                                                             &account_recovery_request_object::id>>,
-                                                        composite_key_compare<std::less<account_name_type>,
-                                                                              std::
-                                                                                  less<account_recovery_request_id_type>>>,
-                                         ordered_unique<tag<by_expiration>,
-                                                        composite_key<account_recovery_request_object,
-                                                                      member<account_recovery_request_object,
-                                                                             time_point_sec,
-                                                                             &account_recovery_request_object::expires>,
-                                                                      member<account_recovery_request_object,
-                                                                             account_recovery_request_id_type,
-                                                                             &account_recovery_request_object::id>>,
-                                                        composite_key_compare<std::less<time_point_sec>,
-                                                                              std::
-                                                                                  less<account_recovery_request_id_type>>>>,
-                              allocator<account_recovery_request_object>>
+typedef multi_index_container<
+    account_recovery_request_object,
+    indexed_by<
+        ordered_unique<tag<by_id>,
+                       member<account_recovery_request_object,
+                              account_recovery_request_id_type,
+                              &account_recovery_request_object::id>>,
+        ordered_unique<
+            tag<by_account>,
+            composite_key<account_recovery_request_object,
+                          member<account_recovery_request_object,
+                                 account_name_type,
+                                 &account_recovery_request_object::account_to_recover>,
+                          member<account_recovery_request_object,
+                                 account_recovery_request_id_type,
+                                 &account_recovery_request_object::id>>,
+            composite_key_compare<std::less<account_name_type>, std::less<account_recovery_request_id_type>>>,
+        ordered_unique<
+            tag<by_expiration>,
+            composite_key<
+                account_recovery_request_object,
+                member<account_recovery_request_object, time_point_sec, &account_recovery_request_object::expires>,
+                member<account_recovery_request_object,
+                       account_recovery_request_id_type,
+                       &account_recovery_request_object::id>>,
+            composite_key_compare<std::less<time_point_sec>, std::less<account_recovery_request_id_type>>>>,
+    allocator<account_recovery_request_object>>
     account_recovery_request_index;
 
 struct by_effective_date;
 
-typedef multi_index_container<change_recovery_account_request_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<change_recovery_account_request_object,
-                                                               change_recovery_account_request_id_type,
-                                                               &change_recovery_account_request_object::id>>,
-                                         ordered_unique<tag<by_account>,
-                                                        composite_key<change_recovery_account_request_object,
-                                                                      member<change_recovery_account_request_object,
-                                                                             account_name_type,
-                                                                             &change_recovery_account_request_object::
-                                                                                 account_to_recover>,
-                                                                      member<change_recovery_account_request_object,
-                                                                             change_recovery_account_request_id_type,
-                                                                             &change_recovery_account_request_object::
-                                                                                 id>>,
-                                                        composite_key_compare<std::less<account_name_type>,
-                                                                              std::
-                                                                                  less<change_recovery_account_request_id_type>>>,
-                                         ordered_unique<tag<by_effective_date>,
-                                                        composite_key<change_recovery_account_request_object,
-                                                                      member<change_recovery_account_request_object,
-                                                                             time_point_sec,
-                                                                             &change_recovery_account_request_object::
-                                                                                 effective_on>,
-                                                                      member<change_recovery_account_request_object,
-                                                                             change_recovery_account_request_id_type,
-                                                                             &change_recovery_account_request_object::
-                                                                                 id>>,
-                                                        composite_key_compare<std::less<time_point_sec>,
-                                                                              std::
-                                                                                  less<change_recovery_account_request_id_type>>>>,
-                              allocator<change_recovery_account_request_object>>
+typedef multi_index_container<
+    change_recovery_account_request_object,
+    indexed_by<ordered_unique<tag<by_id>,
+                              member<change_recovery_account_request_object,
+                                     change_recovery_account_request_id_type,
+                                     &change_recovery_account_request_object::id>>,
+               ordered_unique<tag<by_account>,
+                              composite_key<change_recovery_account_request_object,
+                                            member<change_recovery_account_request_object,
+                                                   account_name_type,
+                                                   &change_recovery_account_request_object::account_to_recover>,
+                                            member<change_recovery_account_request_object,
+                                                   change_recovery_account_request_id_type,
+                                                   &change_recovery_account_request_object::id>>,
+                              composite_key_compare<std::less<account_name_type>,
+                                                    std::less<change_recovery_account_request_id_type>>>,
+               ordered_unique<tag<by_effective_date>,
+                              composite_key<change_recovery_account_request_object,
+                                            member<change_recovery_account_request_object,
+                                                   time_point_sec,
+                                                   &change_recovery_account_request_object::effective_on>,
+                                            member<change_recovery_account_request_object,
+                                                   change_recovery_account_request_id_type,
+                                                   &change_recovery_account_request_object::id>>,
+                              composite_key_compare<std::less<time_point_sec>,
+                                                    std::less<change_recovery_account_request_id_type>>>>,
+    allocator<change_recovery_account_request_object>>
     change_recovery_account_request_index;
-}
-}
+} // namespace chain
+} // namespace scorum
 
 // clang-format off
 
