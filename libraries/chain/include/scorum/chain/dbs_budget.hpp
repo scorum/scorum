@@ -88,9 +88,8 @@ public:
      *  This operation takes into account the deadline and last block number
      *
      * @param budget the budget that is distributed
-     * @param now the now time or empty (for empty function obtains the now from database)
      */
-    asset allocate_cash(const budget_object& budget, const optional<time_point_sec>& now = optional<time_point_sec>());
+    asset allocate_cash(const budget_object& budget);
 
 private:
     share_type

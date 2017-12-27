@@ -132,8 +132,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
                                                                   const authority& active,
                                                                   const authority& posting,
                                                                   const asset& fee,
-                                                                  const asset& delegation,
-                                                                  const optional<time_point_sec>& now)
+                                                                  const asset& delegation)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(delegation.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
@@ -172,7 +171,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
 
     if (delegation.amount > 0)
     {
-        _time t = _get_now(now);
+        time_point_sec t = db_impl().head_block_time();
 
         db_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vdo) {
             vdo.delegator = creator_name;
@@ -237,10 +236,9 @@ void dbs_account::update_acount(const account_object& account,
                                 const std::string& json_metadata,
                                 const optional<authority>& owner,
                                 const optional<authority>& active,
-                                const optional<authority>& posting,
-                                const optional<time_point_sec>& now)
+                                const optional<authority>& posting)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(account, [&](account_object& acc) {
         if (memo_key != public_key_type())
@@ -271,11 +269,9 @@ void dbs_account::update_acount(const account_object& account,
     }
 }
 
-void dbs_account::update_owner_authority(const account_object& account,
-                                         const authority& owner_authority,
-                                         const optional<time_point_sec>& now)
+void dbs_account::update_owner_authority(const account_object& account, const authority& owner_authority)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     if (db_impl().head_block_num() >= SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM)
     {
@@ -343,9 +339,9 @@ void dbs_account::decrease_received_vesting_shares(const account_object& account
     increase_received_vesting_shares(account, -vesting);
 }
 
-void dbs_account::drop_challenged(const account_object& account, const optional<time_point_sec>& now)
+void dbs_account::drop_challenged(const account_object& account)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     if (account.active_challenged)
     {
@@ -356,11 +352,9 @@ void dbs_account::drop_challenged(const account_object& account, const optional<
     }
 }
 
-void dbs_account::prove_authority(const account_object& account,
-                                  bool require_owner,
-                                  const optional<time_point_sec>& now)
+void dbs_account::prove_authority(const account_object& account, bool require_owner)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(account, [&](account_object& a) {
         a.active_challenged = false;
@@ -407,11 +401,9 @@ void dbs_account::decrease_witnesses_voted_for(const account_object& account)
     db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for--; });
 }
 
-void dbs_account::add_post(const account_object& author_account,
-                           const optional<account_name_type>& parent_author_name,
-                           const optional<time_point_sec>& now)
+void dbs_account::add_post(const account_object& author_account, const optional<account_name_type>& parent_author_name)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(author_account, [&](account_object& a) {
         if (!parent_author_name.valid())
@@ -423,11 +415,10 @@ void dbs_account::add_post(const account_object& author_account,
     });
 }
 
-void dbs_account::update_voting_power(const account_object& account,
-                                      uint16_t voting_power,
-                                      const optional<time_point_sec>& now)
+void dbs_account::update_voting_power(const account_object& account, uint16_t voting_power)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
+
     db_impl().modify(account, [&](account_object& a) {
         a.voting_power = voting_power;
         a.last_vote_time = t;
@@ -435,10 +426,9 @@ void dbs_account::update_voting_power(const account_object& account,
 }
 
 void dbs_account::create_account_recovery(const account_name_type& account_to_recover,
-                                          const authority& new_owner_authority,
-                                          const optional<time_point_sec>& now)
+                                          const authority& new_owner_authority)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -476,10 +466,9 @@ void dbs_account::create_account_recovery(const account_name_type& account_to_re
 
 void dbs_account::submit_account_recovery(const account_object& account_to_recover,
                                           const authority& new_owner_authority,
-                                          const authority& recent_owner_authority,
-                                          const optional<time_point_sec>& now)
+                                          const authority& recent_owner_authority)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -509,10 +498,9 @@ void dbs_account::submit_account_recovery(const account_object& account_to_recov
 }
 
 void dbs_account::change_recovery_account(const account_object& account_to_recover,
-                                          const account_name_type& new_recovery_account_name,
-                                          const optional<time_point_sec>& now)
+                                          const account_name_type& new_recovery_account_name)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     const auto& change_recovery_idx
         = db_impl().get_index<change_recovery_account_request_index>().indices().get<by_account>();

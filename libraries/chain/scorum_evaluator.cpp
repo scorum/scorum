@@ -411,7 +411,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 parent_author = o.parent_author;
             }
 
-            account_service.add_post(auth, parent_author, now);
+            account_service.add_post(auth, parent_author);
 
             _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
                 validate_permlink_0_1(o.parent_permlink);

@@ -155,11 +155,11 @@ void dbs_budget::close_budget(const budget_object& budget)
     _close_owned_budget(budget);
 }
 
-asset dbs_budget::allocate_cash(const budget_object& budget, const optional<time_point_sec>& now)
+asset dbs_budget::allocate_cash(const budget_object& budget)
 {
     asset ret(0, SCORUM_SYMBOL);
 
-    dbs_budget::_time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
     auto head_block_num = db_impl().head_block_num();
 
     if (budget.last_allocated_block >= head_block_num)
