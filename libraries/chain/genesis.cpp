@@ -74,10 +74,10 @@ scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis
     : _db(db)
     , _genesis_state(genesis_state)
 {
+    init_global_property_object();
     init_accounts();
     init_witnesses();
     init_witness_schedule();
-    init_global_property_object();
     init_rewards();
     init_registration_objects();
 }

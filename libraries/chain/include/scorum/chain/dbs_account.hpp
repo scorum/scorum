@@ -139,7 +139,13 @@ public:
     void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0);
 
 private:
-    const account_object& get_account(const account_id_type&) const;
+    const account_object& _create_account_objects(const account_name_type& new_account_name,
+                                                  const account_name_type& recovery_account,
+                                                  const public_key_type& memo_key,
+                                                  const std::string& json_metadata,
+                                                  const authority& owner,
+                                                  const authority& active,
+                                                  const authority& posting);
 };
 } // namespace chain
 } // namespace scorum
