@@ -32,7 +32,7 @@ public:
                                                                 const asset& amount,
                                                                 const std::string& secret_hash);
 
-    void redeem_contract(const atomicswap_contract_object& contract);
+    void redeem_contract(const atomicswap_contract_object& contract, const std::string& secret);
 
     void refund_contract(const atomicswap_contract_object& contract);
 

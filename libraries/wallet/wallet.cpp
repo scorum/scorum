@@ -2443,7 +2443,7 @@ wallet_api::atomicswap_redeem(const std::string& recipient, const std::string& s
     atomicswap_redeem_operation op;
 
     op.recipient = recipient;
-    op.secret_hash = atomicswap::get_secret_hash(secret);
+    op.secret = secret;
 
     signed_transaction tx;
     tx.operations.push_back(op);

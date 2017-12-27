@@ -1457,9 +1457,12 @@ void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op
     account_service.check_account_existence(op.recipient);
 
     const auto& recipient = account_service.get_account(op.recipient);
-    const auto& contract = atomicswap_service.get_contract(recipient, op.secret_hash);
 
-    atomicswap_service.redeem_contract(contract);
+    std::string secret_hash = atomicswap::get_secret_hash(op.secret);
+
+    const auto& contract = atomicswap_service.get_contract(recipient, secret_hash);
+
+    atomicswap_service.redeem_contract(contract, op.secret);
 }
 
 } // namespace chain

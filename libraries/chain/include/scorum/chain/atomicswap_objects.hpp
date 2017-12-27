@@ -29,6 +29,7 @@ public:
     template <typename Constructor, typename Allocator>
     atomicswap_contract_object(Constructor&& c, allocator<Allocator> a)
         : secret_hash(a)
+        , secret(a)
     {
         c(*this);
     }
@@ -41,7 +42,10 @@ public:
     asset amount = asset(0, SCORUM_SYMBOL);
 
     fc::shared_string secret_hash;
+    fc::shared_string secret;
     hash_index_type contract_hash;
+
+    bool wait_deadline_to_die = false;
 
     time_point_sec created = time_point_sec::min();
     time_point_sec deadline = time_point_sec::min();
@@ -69,6 +73,6 @@ typedef multi_index_container<atomicswap_contract_object,
 }
 
 FC_REFLECT(scorum::chain::atomicswap_contract_object,
-           (id)(owner)(to)(amount)(secret_hash)(contract_hash)(created)(deadline))
+           (id)(owner)(to)(amount)(secret_hash)(secret)(contract_hash)(wait_deadline_to_die)(created)(deadline))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::atomicswap_contract_object, scorum::chain::atomicswap_contract_index)

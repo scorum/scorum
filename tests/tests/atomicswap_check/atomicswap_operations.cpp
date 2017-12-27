@@ -34,7 +34,7 @@ public:
         initiate_op.secret_hash = alice_secret_hash;
 
         redeem_op.recipient = "bob";
-        redeem_op.secret_hash = alice_secret_hash;
+        redeem_op.secret = ALICE_SECRET;
     }
 
     std::string alice_secret_hash;

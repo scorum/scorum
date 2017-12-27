@@ -801,7 +801,7 @@ struct atomicswap_redeem_operation : public base_operation
 {
     account_name_type recipient; // participant or initiator
 
-    std::string secret_hash;
+    std::string secret;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -883,6 +883,6 @@ FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (initiator)(participant)(amount)(secret_hash) )
-FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (recipient)(secret_hash) )
+FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (recipient)(secret) )
 
 // clang-format on

@@ -74,6 +74,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
               contract.deadline = deadline;
               fc::from_string(contract.secret_hash, secret_hash);
               contract.contract_hash = contract_hash;
+              contract.wait_deadline_to_die = false;
           });
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
@@ -82,7 +83,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(cons
     return new_contract;
 }
 
-void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract)
+void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract, const std::string& secret)
 {
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -90,11 +91,22 @@ void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract)
 
     account_service.increase_balance(to, contract.amount);
 
-    db_impl().remove(contract);
+    if (contract.wait_deadline_to_die)
+    {
+        // save secret for participant
+        db_impl().modify(contract,
+                         [&](atomicswap_contract_object& contract) { fc::from_string(contract.secret, secret); });
+    }
+    else
+    {
+        db_impl().remove(contract);
+    }
 }
 
 void dbs_atomicswap::refund_contract(const atomicswap_contract_object& contract)
 {
+    FC_ASSERT(contract.secret.empty(), "Can't refund redeemed contract."); // move this check to evaluator
+
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
     const account_object& owner = account_service.get_account(contract.owner);
@@ -120,7 +132,15 @@ void dbs_atomicswap::check_contracts_expiration()
     {
         if (props.time >= contract.deadline)
         {
-            refund_contract(contract);
+            if (contract.secret.empty())
+            {
+                // only for not redeemed contracts
+                refund_contract(contract);
+            }
+            else
+            {
+                db_impl().remove(contract);
+            }
         }
     }
 }

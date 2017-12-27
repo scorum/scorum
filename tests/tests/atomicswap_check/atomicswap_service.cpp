@@ -129,7 +129,8 @@ SCORUM_TEST_CASE(create_redeem_close_contract)
 {
     BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), 1);
 
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.redeem_contract(atomicswap_service.get_contracts(alice)[0]));
+    BOOST_REQUIRE_NO_THROW(
+        atomicswap_service.redeem_contract(atomicswap_service.get_contracts(alice)[0], ALICE_SECRET));
 
     BOOST_REQUIRE(atomicswap_service.get_contracts(alice).empty());
 }
@@ -141,7 +142,7 @@ SCORUM_TEST_CASE(create_redeem_check_balance)
     BOOST_REQUIRE_EQUAL(bob.balance, ASSET_NULL_SCR);
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE - ALICE_SHARE_FOR_BOB);
 
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.redeem_contract(contract));
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.redeem_contract(contract, ALICE_SECRET));
 
     BOOST_REQUIRE_EQUAL(bob.balance, ALICE_SHARE_FOR_BOB);
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE - ALICE_SHARE_FOR_BOB);
