@@ -201,7 +201,7 @@
 
 #define VIRTUAL_SCHEDULE_LAP_LENGTH ( fc::uint128::max_value() )
 
-#define SCORUM_COMMITTEE_QUORUM_PERCENT         66
+#define SCORUM_COMMITTEE_QUORUM_PERCENT         (66 * SCORUM_1_PERCENT)
 
 /**
  *  Reserved Account IDs with special meaning

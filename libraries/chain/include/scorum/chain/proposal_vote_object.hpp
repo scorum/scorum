@@ -28,7 +28,7 @@ public:
     fc::optional<scorum::protocol::registration_committee_proposal_action> action;
     fc::optional<scorum::protocol::proposal_life_time> lifetime;
 
-    share_type votes;
+    uint32_t votes;
 };
 
 struct by_member_name;

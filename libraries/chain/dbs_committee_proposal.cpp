@@ -34,7 +34,7 @@ bool dbs_committee_proposal::is_exist(const account_name_type& member)
 {
     auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
 
-    return proposal == nullptr ? true : false;
+    return (proposal == nullptr) ? true : false;
 }
 
 const proposal_vote_object& dbs_committee_proposal::get(const account_name_type& member)
@@ -51,14 +51,14 @@ void dbs_committee_proposal::vote_for(const proposal_vote_object& proposal)
 
 bool dbs_committee_proposal::is_expired(const proposal_vote_object& proposal)
 {
-    return proposal.expiration < this->_get_now() ? false : true;
+    return (proposal.expiration < this->_get_now()) ? false : true;
 }
 
-bool check_quorum(protocol::share_type votes, uint32_t quorum, size_t members_count)
+bool check_quorum(uint32_t votes, uint32_t quorum, size_t members_count)
 {
-    const share_type needed_votes = ceil(static_cast<double>(members_count * quorum) / SCORUM_100_PERCENT);
+    const uint32_t needed_votes = (members_count * quorum) / SCORUM_100_PERCENT;
 
-    return votes >= needed_votes ? true : false;
+    return (votes >= needed_votes) ? true : false;
 }
 
 } // namespace scorum
