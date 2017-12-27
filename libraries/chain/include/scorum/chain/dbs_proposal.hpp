@@ -2,22 +2,22 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
+//#include <scorum/chain/proposal_vote_object.hpp>
 
 namespace scorum {
 namespace chain {
 
 class proposal_vote_object;
 
-class dbs_committee_proposal : public dbs_base
+class dbs_proposal : public dbs_base
 {
     friend class dbservice_dbs_factory;
 
 protected:
-    explicit dbs_committee_proposal(database& db);
+    explicit dbs_proposal(database& db);
 
 public:
-    using action_t = scorum::protocol::registration_committee_proposal_action;
+    using action_t = scorum::protocol::proposal_action;
 
     void create(const account_name_type& creator,
                 const account_name_type& member,

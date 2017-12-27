@@ -10,7 +10,7 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_committee_proposal.hpp>
+#include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/proposal_vote_object.hpp>
 
 #ifndef IS_LOW_MEM
@@ -1447,7 +1447,7 @@ void proposal_create_evaluator::do_apply(const proposal_create_operation& op)
               ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
     dbs_account& account_service = _db.obtain_service<dbs_account>();
-    dbs_committee_proposal& proposal_service = _db.obtain_service<dbs_committee_proposal>();
+    dbs_proposal& proposal_service = _db.obtain_service<dbs_proposal>();
 
     account_service.check_account_existence(op.creator);
     account_service.check_account_existence(op.committee_member);

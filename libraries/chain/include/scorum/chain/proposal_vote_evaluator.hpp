@@ -7,7 +7,7 @@
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/proposal_vote_object.hpp>
-#include <scorum/chain/dbs_committee_proposal.hpp>
+#include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
 
 namespace scorum {
@@ -95,8 +95,7 @@ protected:
     uint32_t _quorum;
 };
 
-typedef proposal_vote_evaluator_t<dbs_account, dbs_committee_proposal, dbs_registration_committee>
-    proposal_vote_evaluator;
+typedef proposal_vote_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee> proposal_vote_evaluator;
 
 } // namespace chain
 } // namespace scorum

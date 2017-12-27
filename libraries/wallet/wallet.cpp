@@ -2417,12 +2417,12 @@ annotated_signed_transaction wallet_api::invite_new_committee_member(const std::
                                                                      uint32_t lifetime_sec,
                                                                      bool broadcast)
 {
-    using scorum::protocol::registration_committee_proposal_action;
+    using scorum::protocol::proposal_action;
 
     proposal_create_operation op;
     op.creator = inviter;
     op.committee_member = invitee;
-    op.action = registration_committee_proposal_action::invite;
+    op.action = proposal_action::invite;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
@@ -2437,12 +2437,12 @@ annotated_signed_transaction wallet_api::dropout_committee_member(const std::str
                                                                   uint32_t lifetime_sec,
                                                                   bool broadcast)
 {
-    using scorum::protocol::registration_committee_proposal_action;
+    using scorum::protocol::proposal_action;
 
     proposal_create_operation op;
     op.creator = initiator;
     op.committee_member = dropout;
-    op.action = registration_committee_proposal_action::dropout;
+    op.action = proposal_action::dropout;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;

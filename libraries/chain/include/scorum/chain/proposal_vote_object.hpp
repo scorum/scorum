@@ -24,7 +24,7 @@ public:
 
     fc::time_point_sec expiration;
 
-    fc::optional<scorum::protocol::registration_committee_proposal_action> action;
+    fc::optional<scorum::protocol::proposal_action> action;
     uint32_t votes;
 };
 

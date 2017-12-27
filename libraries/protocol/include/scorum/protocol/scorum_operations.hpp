@@ -796,7 +796,7 @@ struct proposal_vote_operation : public base_operation
 
 struct proposal_create_operation : public base_operation
 {
-    typedef scorum::protocol::registration_committee_proposal_action action_t;
+    typedef scorum::protocol::proposal_action action_t;
 
     account_name_type creator;
     account_name_type committee_member;

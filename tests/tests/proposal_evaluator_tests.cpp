@@ -3,7 +3,7 @@
 #include <scorum/protocol/exceptions.hpp>
 
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/dbs_committee_proposal.hpp>
+#include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/proposal_vote_evaluator.hpp>
 #include <scorum/chain/proposal_vote_object.hpp>
 
@@ -14,7 +14,7 @@ namespace tests {
 using scorum::protocol::account_name_type;
 using scorum::chain::proposal_vote_object;
 using scorum::chain::proposal_vote_operation;
-using scorum::protocol::registration_committee_proposal_action;
+using scorum::protocol::proposal_action;
 using scorum::chain::proposal_id_type;
 
 class account_service_mock
@@ -31,7 +31,7 @@ public:
 class proposal_service_mock
 {
 public:
-    using action_t = scorum::protocol::registration_committee_proposal_action;
+    using action_t = scorum::protocol::proposal_action;
 
     proposal_service_mock()
     {
@@ -164,7 +164,7 @@ SCORUM_TEST_CASE(throw_on_add_when_creator_account_does_not_exists)
 {
     account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
 
-    proposal().action = registration_committee_proposal_action::invite;
+    proposal().action = proposal_action::invite;
 
     BOOST_CHECK_THROW(apply(), fc::exception);
 }
@@ -173,7 +173,7 @@ SCORUM_TEST_CASE(throw_on_drop_when_creator_account_does_not_exists)
 {
     account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
 
-    proposal().action = registration_committee_proposal_action::dropout;
+    proposal().action = proposal_action::dropout;
 
     BOOST_CHECK_THROW(apply(), fc::exception);
 }
@@ -187,7 +187,7 @@ SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 
 SCORUM_TEST_CASE(add_one_new_member)
 {
-    proposal().action = registration_committee_proposal_action::invite;
+    proposal().action = proposal_action::invite;
 
     apply();
 
@@ -197,7 +197,7 @@ SCORUM_TEST_CASE(add_one_new_member)
 
 SCORUM_TEST_CASE(during_adding_we_do_not_remove_any_member)
 {
-    proposal().action = registration_committee_proposal_action::invite;
+    proposal().action = proposal_action::invite;
 
     apply();
 
@@ -206,7 +206,7 @@ SCORUM_TEST_CASE(during_adding_we_do_not_remove_any_member)
 
 SCORUM_TEST_CASE(dropout_one_member)
 {
-    proposal().action = registration_committee_proposal_action::dropout;
+    proposal().action = proposal_action::dropout;
 
     apply();
 
@@ -216,7 +216,7 @@ SCORUM_TEST_CASE(dropout_one_member)
 
 SCORUM_TEST_CASE(during_dropping_we_do_not_add_new_members)
 {
-    proposal().action = registration_committee_proposal_action::dropout;
+    proposal().action = proposal_action::dropout;
 
     apply();
 
@@ -225,7 +225,7 @@ SCORUM_TEST_CASE(during_dropping_we_do_not_add_new_members)
 
 SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 {
-    proposal().action = registration_committee_proposal_action::dropout;
+    proposal().action = proposal_action::dropout;
 
     apply();
 

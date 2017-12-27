@@ -1,19 +1,19 @@
-#include <scorum/chain/dbs_committee_proposal.hpp>
+#include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/proposal_vote_object.hpp>
 #include <scorum/chain/database.hpp>
 
 namespace scorum {
 namespace chain {
 
-dbs_committee_proposal::dbs_committee_proposal(database& db)
+dbs_proposal::dbs_proposal(database& db)
     : _base_type(db)
 {
 }
 
-void dbs_committee_proposal::create(const protocol::account_name_type& creator,
-                                    const protocol::account_name_type& member,
-                                    dbs_committee_proposal::action_t action,
-                                    time_point_sec expiration)
+void dbs_proposal::create(const protocol::account_name_type& creator,
+                          const protocol::account_name_type& member,
+                          dbs_proposal::action_t action,
+                          time_point_sec expiration)
 {
     db_impl().create<proposal_vote_object>([&](proposal_vote_object& proposal) {
         proposal.creator = creator;
@@ -24,31 +24,31 @@ void dbs_committee_proposal::create(const protocol::account_name_type& creator,
     });
 }
 
-void dbs_committee_proposal::remove(const proposal_vote_object& proposal)
+void dbs_proposal::remove(const proposal_vote_object& proposal)
 {
     db_impl().remove(proposal);
 }
 
-bool dbs_committee_proposal::is_exist(const account_name_type& member)
+bool dbs_proposal::is_exist(const account_name_type& member)
 {
     auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
 
     return (proposal == nullptr) ? true : false;
 }
 
-const proposal_vote_object& dbs_committee_proposal::get(const account_name_type& member)
+const proposal_vote_object& dbs_proposal::get(const account_name_type& member)
 {
     auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
 
     return *proposal;
 }
 
-void dbs_committee_proposal::vote_for(const proposal_vote_object& proposal)
+void dbs_proposal::vote_for(const proposal_vote_object& proposal)
 {
     db_impl().modify(proposal, [&](proposal_vote_object& p) { p.votes += 1; });
 }
 
-bool dbs_committee_proposal::is_expired(const proposal_vote_object& proposal)
+bool dbs_proposal::is_expired(const proposal_vote_object& proposal)
 {
     return (proposal.expiration < this->_get_now()) ? false : true;
 }
