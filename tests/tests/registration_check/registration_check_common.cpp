@@ -22,7 +22,8 @@ genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedu
     {
         fc::ecc::private_key private_key = database_fixture::generate_private_key(member);
         committee_private_keys.insert(committee_private_keys_type::value_type(member, private_key));
-        genesis_state.accounts.push_back({ member, "", private_key.get_public_key(), share_type(0), share_type(0) });
+        genesis_state.accounts.push_back(
+            { member, "", private_key.get_public_key(), asset(0, SCORUM_SYMBOL), asset(0, SCORUM_SYMBOL) });
     }
 
     schedule_input.clear();
@@ -49,13 +50,13 @@ genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedu
 
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
 {
-    asset ret(0, REGISTRATION_BONUS_SYMBOL);
+    asset ret(0, SCORUM_SYMBOL);
     for (const auto& item : schedule_input)
     {
         share_type stage_amount = maximum_bonus.amount;
         stage_amount *= item.bonus_percent;
         stage_amount /= 100;
-        ret += asset(stage_amount * item.users, REGISTRATION_BONUS_SYMBOL);
+        ret += asset(stage_amount * item.users, SCORUM_SYMBOL);
     }
     return ret;
 }

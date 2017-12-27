@@ -31,9 +31,9 @@ public:
 
     id_type id;
 
-    asset balance = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset balance = asset(0, SCORUM_SYMBOL);
 
-    asset maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset maximum_bonus = asset(0, SCORUM_SYMBOL);
 
     uint64_t already_allocated_count = 0;
 
@@ -65,19 +65,19 @@ public:
 
     // temporary schedule info
 
-    asset already_allocated_cash = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset already_allocated_cash = asset(0, SCORUM_SYMBOL);
 
     uint32_t last_allocated_block = 0;
 
     uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
-typedef multi_index_container<registration_pool_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<registration_pool_object,
-                                                               registration_pool_id_type,
-                                                               &registration_pool_object::id>>>,
-                              allocator<registration_pool_object>>
+typedef multi_index_container<
+    registration_pool_object,
+    indexed_by<
+        ordered_unique<tag<by_id>,
+                       member<registration_pool_object, registration_pool_id_type, &registration_pool_object::id>>>,
+    allocator<registration_pool_object>>
     registration_pool_index;
 
 struct by_account_name;
@@ -93,8 +93,8 @@ typedef multi_index_container<registration_committee_member_object,
                                                                &registration_committee_member_object::account>>>,
                               allocator<registration_committee_member_object>>
     registration_committee_member_index;
-}
-}
+} // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::registration_pool_object,
            (id)(balance)(maximum_bonus)(already_allocated_count)(schedule_items))

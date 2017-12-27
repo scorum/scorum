@@ -24,18 +24,18 @@ namespace chain {
 
 void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
 {
-    private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(string("init_key")));
+    private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(std::string("init_key")));
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
-    genesis_state.accounts.push_back(
-        { "initdelegate", "null", init_public_key, genesis_state.init_supply, uint64_t(0) });
+    genesis_state.accounts.push_back({ TEST_INIT_DELEGATE_NAME, "null", init_public_key,
+                                       genesis_state.init_accounts_supply, asset(0, VESTS_SYMBOL) });
 
-    genesis_state.witness_candidates.push_back({ "initdelegate", init_public_key });
+    genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_public_key });
 }
 
 void create_default_genesis_state(genesis_state_type& genesis_state)
 {
-    genesis_state.init_supply = TEST_INITIAL_SUPPLY;
+    genesis_state.init_accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
@@ -46,7 +46,7 @@ void create_default_genesis_state(genesis_state_type& genesis_state)
 database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
     : app()
     , db(*app.chain_database())
-    , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(string("init_key"))))
+    , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(std::string("init_key"))))
     , init_account_pub_key(init_account_priv_key.get_public_key())
     , debug_key(graphene::utilities::key_to_wif(init_account_priv_key))
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
@@ -98,7 +98,7 @@ clean_database_fixture::clean_database_fixture(const genesis_state_type& externa
         for (int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
         {
             account_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
-            fund(TEST_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD.amount.value);
+            fund(TEST_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD);
             witness_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
                            init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
         }
@@ -267,13 +267,13 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
     BOOST_REQUIRE((db.head_block_time() - timestamp).to_seconds() < SCORUM_BLOCK_INTERVAL);
 }
 
-const account_object& database_fixture::account_create(const string& name,
-                                                       const string& creator,
+const account_object& database_fixture::account_create(const std::string& name,
+                                                       const std::string& creator,
                                                        const private_key_type& creator_key,
                                                        const share_type& fee,
                                                        const public_key_type& key,
                                                        const public_key_type& post_key,
-                                                       const string& json_metadata)
+                                                       const std::string& json_metadata)
 {
     try
     {
@@ -306,7 +306,7 @@ const account_object& database_fixture::account_create(const string& name,
 }
 
 const account_object&
-database_fixture::account_create(const string& name, const public_key_type& key, const public_key_type& post_key)
+database_fixture::account_create(const std::string& name, const public_key_type& key, const public_key_type& post_key)
 {
     try
     {
@@ -319,14 +319,14 @@ database_fixture::account_create(const string& name, const public_key_type& key,
     FC_CAPTURE_AND_RETHROW((name));
 }
 
-const account_object& database_fixture::account_create(const string& name, const public_key_type& key)
+const account_object& database_fixture::account_create(const std::string& name, const public_key_type& key)
 {
     return account_create(name, key, key);
 }
 
-const witness_object& database_fixture::witness_create(const string& owner,
+const witness_object& database_fixture::witness_create(const std::string& owner,
                                                        const private_key_type& owner_key,
-                                                       const string& url,
+                                                       const std::string& url,
                                                        const public_key_type& signing_key,
                                                        const share_type& fee)
 {
@@ -351,8 +351,19 @@ const witness_object& database_fixture::witness_create(const string& owner,
     FC_CAPTURE_AND_RETHROW((owner)(url))
 }
 
-void database_fixture::fund(const string& account_name, const share_type& amount)
+void database_fixture::fund(const std::string& account_name, const share_type& amount)
 {
+    try
+    {
+        transfer(TEST_INIT_DELEGATE_NAME, account_name, asset(amount, SCORUM_SYMBOL));
+    }
+    FC_CAPTURE_AND_RETHROW((account_name)(amount))
+}
+
+void database_fixture::fund(const std::string& account_name, const asset& amount)
+{
+    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+
     try
     {
         transfer(TEST_INIT_DELEGATE_NAME, account_name, amount);
@@ -360,85 +371,64 @@ void database_fixture::fund(const string& account_name, const share_type& amount
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }
 
-void database_fixture::fund(const string& account_name, const asset& amount)
-{
-    try
-    {
-        db_plugin->debug_update(
-            [=](database& db) {
-                db.modify(db.get_account(account_name), [&](account_object& a) {
-                    if (amount.symbol == SCORUM_SYMBOL)
-                        a.balance += amount;
-                });
-
-                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
-                    if (amount.symbol == SCORUM_SYMBOL)
-                        gpo.current_supply += amount;
-                });
-            },
-            default_skip);
-    }
-    FC_CAPTURE_AND_RETHROW((account_name)(amount))
-}
-
-void database_fixture::transfer(const string& from, const string& to, const share_type& amount)
+void database_fixture::transfer(const std::string& from, const std::string& to, const asset& amount)
 {
     try
     {
         transfer_operation op;
         op.from = from;
         op.to = to;
-        op.amount = asset(amount, SCORUM_SYMBOL);
+        op.amount = amount;
 
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.validate();
-        db.push_transaction(trx, ~0);
+        db.push_transaction(trx, default_skip);
         trx.operations.clear();
     }
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_fixture::vest(const string& from, const string& to, const share_type& amount)
+void database_fixture::transfer_to_vest(const std::string& from, const std::string& to, const asset& amount)
 {
     try
     {
         transfer_to_vesting_operation op;
         op.from = from;
         op.to = to;
-        op.amount = asset(amount, SCORUM_SYMBOL);
+        op.amount = amount;
 
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.validate();
-        db.push_transaction(trx, ~0);
+        db.push_transaction(trx, default_skip);
         trx.operations.clear();
     }
-    FC_CAPTURE_AND_RETHROW((from)(amount))
+    FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_fixture::vest(const string& from, const share_type& amount)
+void database_fixture::transfer_to_vest(const std::string& from, const std::string& to, const share_type& amount)
 {
-    vest(from, "", amount);
+    transfer_to_vest(from, to, asset(amount, SCORUM_SYMBOL));
 }
 
-void database_fixture::vest(const string& account, const asset& amount)
+void database_fixture::vest(const std::string& account_name, const asset& amount)
 {
-    if (amount.symbol != SCORUM_SYMBOL)
-        return;
+    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
-    db_plugin->debug_update(
-        [=](database& db) {
-            db.modify(db.get_dynamic_global_properties(),
-                      [&](dynamic_global_property_object& gpo) { gpo.current_supply += amount; });
-
-            dbs_account& account_service = db.obtain_service<dbs_account>();
-            account_service.create_vesting(db.get_account(account), amount);
-        },
-        default_skip);
+    try
+    {
+        transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, amount);
+    }
+    FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }
 
-void database_fixture::proxy(const string& account, const string& proxy)
+void database_fixture::vest(const std::string& from, const share_type& amount)
+{
+    vest(from, asset(amount, SCORUM_SYMBOL));
+}
+
+void database_fixture::proxy(const std::string& account, const std::string& proxy)
 {
     try
     {
@@ -452,7 +442,7 @@ void database_fixture::proxy(const string& account, const string& proxy)
     FC_CAPTURE_AND_RETHROW((account)(proxy))
 }
 
-const asset& database_fixture::get_balance(const string& account_name) const
+const asset& database_fixture::get_balance(const std::string& account_name) const
 {
     return db.get_account(account_name).balance;
 }
@@ -492,7 +482,12 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
 {
     genesis_state_type genesis_state = external_genesis_state;
 
-    create_default_genesis_state(genesis_state);
+    genesis_state.init_accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
+    create_initdelegate_for_genesis_state(genesis_state);
 
     if (genesis_state.registration_schedule.empty())
     {
@@ -517,7 +512,7 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
 
     if (genesis_state.registration_committee.empty())
     {
-        genesis_state.registration_committee.emplace_back("initdelegate");
+        genesis_state.registration_committee.emplace_back(TEST_INIT_DELEGATE_NAME);
     }
 
     return genesis_state;

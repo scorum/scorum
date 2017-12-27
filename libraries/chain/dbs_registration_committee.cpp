@@ -139,5 +139,5 @@ void dbs_registration_committee::_exclude_member(const account_object& account)
 
     db_impl().remove(member);
 }
-}
-}
+} // namespace chain
+} // namespace scorum

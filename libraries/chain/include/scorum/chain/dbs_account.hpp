@@ -132,17 +132,17 @@ public:
     void update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account);
 
     /**
-    * @param to_account - the account to receive the new vesting shares
-    * @param scorum - SCR to be converted to vesting shares
-    * @param to_reward_balance
-    * @return the SP created and deposited to account
-    */
-    asset create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance = false);
+     * @param to_account - the account to receive the new vesting shares
+     * @param scorum - SCR to be converted to vesting shares
+     * @param to_reward_balance
+     * @return the SP created and deposited to account
+     */
+    const asset create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance = false);
 
     /** clears all vote records for a particular account but does not update the
-    * witness vote totals.  Vote totals should be updated first via a call to
-    * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
-    */
+     * witness vote totals.  Vote totals should be updated first via a call to
+     * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
+     */
     void clear_witness_votes(const account_object& account);
 
     /** this updates the votes for witnesses as a result of account voting proxy changing */
@@ -151,7 +151,7 @@ public:
                                       int depth = 0);
 
     /** this updates the votes for all witnesses as a result of account SP changing */
-    void adjust_proxied_witness_votes(const account_object& account, share_type delta, int depth = 0);
+    void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0);
 
 private:
     const account_object& get_account(const account_id_type&) const;

@@ -13,7 +13,7 @@ namespace chain {
 
 /** DB service for operations with registration_pool object
  *  --------------------------------------------
-*/
+ */
 class dbs_registration_pool : public dbs_base
 {
     friend class dbservice_dbs_factory;
@@ -40,5 +40,5 @@ private:
 
     void _close();
 };
-}
-}
+} // namespace chain
+} // namespace scorum
