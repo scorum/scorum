@@ -91,30 +91,6 @@
 
 #define P2P_IN_DEDICATED_THREAD 1
 
-#define INVOCATION_COUNTER(name)                                                                                       \
-    static unsigned total_##name##_counter = 0;                                                                        \
-    static unsigned active_##name##_counter = 0;                                                                       \
-    struct name##_invocation_logger                                                                                    \
-    {                                                                                                                  \
-        unsigned* total;                                                                                               \
-        unsigned* active;                                                                                              \
-        name##_invocation_logger(unsigned* total, unsigned* active)                                                    \
-            : total(total)                                                                                             \
-            , active(active)                                                                                           \
-        {                                                                                                              \
-            ++*total;                                                                                                  \
-            ++*active;                                                                                                 \
-            dlog("NEWDEBUG: Entering " #name ", now ${total} total calls, ${active} active calls",                     \
-                 ("total", *total)("active", *active));                                                                \
-        }                                                                                                              \
-        ~name##_invocation_logger()                                                                                    \
-        {                                                                                                              \
-            --*active;                                                                                                 \
-            dlog("NEWDEBUG: Leaving " #name ", now ${total} total calls, ${active} active calls",                      \
-                 ("total", *total)("active", *active));                                                                \
-        }                                                                                                              \
-    } invocation_logger(&total_##name##_counter, &active_##name##_counter)
-
 // log these messages even at warn level when operating on the test network
 #ifdef GRAPHENE_TEST_NETWORK
 #define testnetlog wlog

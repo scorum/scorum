@@ -115,7 +115,7 @@ void peer_database_impl::open(const fc::path& peer_database_filename)
                 _potential_peer_set.erase(iter, _potential_peer_set.end());
             }
         }
-        catch (const fc::exception& e)
+        catch (const fc::exception&)
         {
             elog("error opening peer database file ${peer_database_filename}, starting with a clean database",
                  ("peer_database_filename", _peer_database_filename));
