@@ -2412,8 +2412,10 @@ annotated_signed_transaction wallet_api::vote_for_committee_proposal(const std::
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::invite_new_committee_member(const std::string& inviter, const std::string& invitee, bool broadcast)
+annotated_signed_transaction wallet_api::invite_new_committee_member(const std::string& inviter,
+                                                                     const std::string& invitee,
+                                                                     uint32_t lifetime_sec,
+                                                                     bool broadcast)
 {
     using scorum::protocol::registration_committee_proposal_action;
 
@@ -2421,7 +2423,7 @@ wallet_api::invite_new_committee_member(const std::string& inviter, const std::s
     op.creator = inviter;
     op.committee_member = invitee;
     op.action = registration_committee_proposal_action::invite;
-    op.lifetime = proposal_life_time::week;
+    op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2430,8 +2432,10 @@ wallet_api::invite_new_committee_member(const std::string& inviter, const std::s
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::dropout_committee_member(const std::string& initiator, const std::string& dropout, bool broadcast)
+annotated_signed_transaction wallet_api::dropout_committee_member(const std::string& initiator,
+                                                                  const std::string& dropout,
+                                                                  uint32_t lifetime_sec,
+                                                                  bool broadcast)
 {
     using scorum::protocol::registration_committee_proposal_action;
 
@@ -2439,7 +2443,7 @@ wallet_api::dropout_committee_member(const std::string& initiator, const std::st
     op.creator = initiator;
     op.committee_member = dropout;
     op.action = registration_committee_proposal_action::dropout;
-    op.lifetime = proposal_life_time::week;
+    op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
     tx.operations.push_back(op);

@@ -4,14 +4,16 @@
 
 // clang-format off
 
-#define REGISTRATION_BONUS_SYMBOL SCORUM_SYMBOL
-
 #pragma once
+
+#define DAYS_TO_SECONDS(X)                     (60*60*24*X)
 
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 1) )
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
+
+#define REGISTRATION_BONUS_SYMBOL              SCORUM_SYMBOL
 
 #ifdef IS_TEST_NET
 #define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
@@ -46,7 +48,7 @@
 #define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
 #define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
 
-#define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60*24*7)  /// 7 days
+#define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
 
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE           1
@@ -91,13 +93,15 @@
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
 #define SCORUM_MAX_MEMO_SIZE                   2048
 #define SCORUM_MAX_PROXY_RECURSION_DEPTH       4
+
 #define SCORUM_VESTING_WITHDRAW_INTERVALS_PRE_HF_16 104
-#define SCORUM_VESTING_WITHDRAW_INTERVALS      13
-#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS (60*60*24*7) /// 1 week per interval
+#define SCORUM_VESTING_WITHDRAW_INTERVALS           13
+#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS    (DAYS_TO_SECONDS(7)) /// 1 week per interval
+
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
 #define SCORUM_SAVINGS_WITHDRAW_TIME           (fc::days(3))
 #define SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT  100
-#define SCORUM_VOTE_REGENERATION_SECONDS       (5*60*60*24) // 5 day
+#define SCORUM_VOTE_REGENERATION_SECONDS       (DAYS_TO_SECONDS(5))
 #define SCORUM_MAX_VOTE_CHANGES                5
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (60*30) /// 30 minutes
 #define SCORUM_MIN_VOTE_INTERVAL_SEC           3
@@ -118,7 +122,7 @@
 #define SCORUM_CONTENT_REWARD_PERCENT          (75*SCORUM_1_PERCENT) //75% of inflation, 7.125% inflation
 #define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT) //15% of inflation, 1.425% inflation
 
-#define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (60*60*24*7) ///< 1 week
+#define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (DAYS_TO_SECONDS(7))
 #define SCORUM_BANDWIDTH_PRECISION              (uint64_t(1000000)) ///< 1 million
 #define SCORUM_MAX_COMMENT_DEPTH                0xffff // 64k
 #define SCORUM_SOFT_MAX_COMMENT_DEPTH           0xff // 255
@@ -129,12 +133,12 @@
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
 
-#define SCORUM_MINING_REWARD                   asset( 1000, SCORUM_SYMBOL )
+#define SCORUM_DEFAULT_REWARD                  asset( 1000, SCORUM_SYMBOL )
 
-#define SCORUM_MIN_CONTENT_REWARD              SCORUM_MINING_REWARD
-#define SCORUM_MIN_CURATE_REWARD               SCORUM_MINING_REWARD
-#define SCORUM_MIN_PRODUCER_REWARD             SCORUM_MINING_REWARD
-#define SCORUM_MIN_POW_REWARD                  SCORUM_MINING_REWARD
+#define SCORUM_MIN_CONTENT_REWARD              SCORUM_DEFAULT_REWARD
+#define SCORUM_MIN_CURATE_REWARD               SCORUM_DEFAULT_REWARD
+#define SCORUM_MIN_PRODUCER_REWARD             SCORUM_DEFAULT_REWARD
+#define SCORUM_MIN_POW_REWARD                  SCORUM_DEFAULT_REWARD
 
 #define SCORUM_POST_REWARD_FUND_NAME           ("post")
 #define SCORUM_COMMENT_REWARD_FUND_NAME        ("comment")
@@ -189,7 +193,7 @@
 #define SCORUM_MAX_TRANSACTION_SIZE            (1024*64)
 #define SCORUM_MIN_BLOCK_SIZE_LIMIT            (SCORUM_MAX_TRANSACTION_SIZE)
 #define SCORUM_MAX_BLOCK_SIZE                  (SCORUM_MAX_TRANSACTION_SIZE*SCORUM_BLOCK_INTERVAL*2000)
-#define SCORUM_MAX_FEED_AGE_SECONDS            (60*60*24*7) // 7 days
+#define SCORUM_MAX_FEED_AGE_SECONDS            (DAYS_TO_SECONDS(7))
 #define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
 
 #define SCORUM_MIN_UNDO_HISTORY                10
@@ -202,6 +206,9 @@
 #define VIRTUAL_SCHEDULE_LAP_LENGTH ( fc::uint128::max_value() )
 
 #define SCORUM_COMMITTEE_QUORUM_PERCENT         (66 * SCORUM_1_PERCENT)
+
+#define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS            (DAYS_TO_SECONDS(1))
+#define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS            (DAYS_TO_SECONDS(10))
 
 /**
  *  Reserved Account IDs with special meaning

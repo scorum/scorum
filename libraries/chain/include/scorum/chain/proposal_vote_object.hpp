@@ -22,16 +22,14 @@ public:
     account_name_type creator;
     account_name_type member;
 
-    fc::time_point_sec created;
     fc::time_point_sec expiration;
 
     fc::optional<scorum::protocol::registration_committee_proposal_action> action;
-    fc::optional<scorum::protocol::proposal_life_time> lifetime;
-
     uint32_t votes;
 };
 
 struct by_member_name;
+struct by_expiration;
 
 typedef multi_index_container<proposal_vote_object,
                               indexed_by<ordered_unique<tag<by_id>,
@@ -41,12 +39,16 @@ typedef multi_index_container<proposal_vote_object,
                                          ordered_unique<tag<by_member_name>,
                                                         member<proposal_vote_object,
                                                                account_name_type,
-                                                               &proposal_vote_object::member>>>,
+                                                               &proposal_vote_object::member>>,
+                                         ordered_unique<tag<by_expiration>,
+                                                        member<proposal_vote_object,
+                                                               fc::time_point_sec,
+                                                               &proposal_vote_object::expiration>>>,
                               allocator<proposal_vote_object>>
     proposal_vote_index;
 
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(created)(action)(lifetime)(votes))
+FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(action)(expiration)(votes))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_vote_object, scorum::chain::proposal_vote_index)

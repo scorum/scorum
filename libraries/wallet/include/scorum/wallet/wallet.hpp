@@ -989,14 +989,18 @@ public:
     /**
      * Create proposal for inviting new member in to the registration commmittee
      */
-    annotated_signed_transaction
-    invite_new_committee_member(const std::string& inviter, const std::string& invitee, bool broadcast);
+    annotated_signed_transaction invite_new_committee_member(const std::string& inviter,
+                                                             const std::string& invitee,
+                                                             uint32_t lifetime_sec,
+                                                             bool broadcast);
 
     /**
      * Create proposal for droping out registration committee member
      */
-    annotated_signed_transaction
-    dropout_committee_member(const std::string& initiator, const std::string& dropout, bool broadcast);
+    annotated_signed_transaction dropout_committee_member(const std::string& initiator,
+                                                          const std::string& dropout,
+                                                          uint32_t lifetime_sec,
+                                                          bool broadcast);
 
 public:
     fc::signal<void(bool)> lock_changed;

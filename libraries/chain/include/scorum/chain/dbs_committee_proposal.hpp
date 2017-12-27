@@ -18,10 +18,11 @@ protected:
 
 public:
     using action_t = scorum::protocol::registration_committee_proposal_action;
-    using lifetime_t = scorum::protocol::proposal_life_time;
 
-    void
-    create(const account_name_type& creator, const account_name_type& member, action_t action, lifetime_t lifetime);
+    void create(const account_name_type& creator,
+                const account_name_type& member,
+                action_t action,
+                time_point_sec expiration);
 
     void remove(const proposal_vote_object& proposal);
 

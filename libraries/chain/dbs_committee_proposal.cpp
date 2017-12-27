@@ -13,15 +13,14 @@ dbs_committee_proposal::dbs_committee_proposal(database& db)
 void dbs_committee_proposal::create(const protocol::account_name_type& creator,
                                     const protocol::account_name_type& member,
                                     dbs_committee_proposal::action_t action,
-                                    lifetime_t lifetime)
+                                    time_point_sec expiration)
 {
     db_impl().create<proposal_vote_object>([&](proposal_vote_object& proposal) {
         proposal.creator = creator;
         proposal.member = member;
         proposal.action = action;
         proposal.votes = 0;
-        proposal.created = db_impl().head_block_time();
-        proposal.lifetime = lifetime;
+        proposal.expiration = expiration;
     });
 }
 

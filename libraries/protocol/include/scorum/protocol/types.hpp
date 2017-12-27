@@ -146,12 +146,6 @@ enum registration_committee_proposal_action
     dropout
 };
 
-enum proposal_life_time
-{
-    day,
-    week
-};
-
 } // namespace protocol
 } // namespace scorum
 
@@ -176,4 +170,3 @@ FC_REFLECT_TYPENAME(scorum::protocol::share_type)
 FC_REFLECT(scorum::void_t, )
 
 FC_REFLECT_ENUM(scorum::protocol::registration_committee_proposal_action, (invite)(dropout))
-FC_REFLECT_ENUM(scorum::protocol::proposal_life_time, (day)(week))
