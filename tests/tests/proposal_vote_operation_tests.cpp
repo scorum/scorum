@@ -113,10 +113,10 @@ public:
 typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
     evaluator_mocked;
 
-class proposal_vote_operation_fixture
+class proposal_vote_evaluator_fixture
 {
 public:
-    proposal_vote_operation_fixture()
+    proposal_vote_evaluator_fixture()
         : evaluator(account_service, proposal_service, committee_service, 10)
     {
         account_service.existent_accounts.insert("alice");
@@ -138,7 +138,7 @@ public:
         proposal_service.proposals.push_back(p);
     }
 
-    ~proposal_vote_operation_fixture()
+    ~proposal_vote_evaluator_fixture()
     {
     }
 
@@ -164,7 +164,7 @@ public:
     evaluator_mocked evaluator;
 };
 
-BOOST_FIXTURE_TEST_SUITE(proposal_vote_operation_tests, proposal_vote_operation_fixture)
+BOOST_FIXTURE_TEST_SUITE(proposal_vote_evaluator_tests, proposal_vote_evaluator_fixture)
 
 SCORUM_TEST_CASE(throw_on_add_when_creator_account_does_not_exists)
 {

@@ -60,8 +60,6 @@ public:
         FC_ASSERT(_account_service.is_exists(op.committee_member), "Account \"${account_name}\" must exist.",
                   ("account_name", op.committee_member));
 
-        FC_ASSERT(op.action.valid(), "Proposal is not set.");
-
         fc::time_point_sec expiration = _proposal_service.head_block_time() + op.lifetime_sec;
 
         _proposal_service.create(op.creator, op.committee_member, *op.action, expiration);

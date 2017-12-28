@@ -359,6 +359,8 @@ void proposal_create_operation::validate() const
 {
     validate_account_name(creator);
     validate_account_name(committee_member);
+
+    FC_ASSERT(action.valid(), "Proposal is not set.");
 }
 
 } // namespace protocol

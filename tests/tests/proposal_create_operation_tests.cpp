@@ -54,10 +54,10 @@ public:
 typedef scorum::chain::proposal_create_evaluator_t<account_service_mock, proposal_service_mock>
     proposal_create_evaluator_mocked;
 
-class proposal_create_operation_fixture
+class proposal_create_evaluator_fixture
 {
 public:
-    proposal_create_operation_fixture()
+    proposal_create_evaluator_fixture()
         : lifetime_min(5)
         , lifetime_max(10)
         , evaluator(account_service, proposal_service, lifetime_min, lifetime_max)
@@ -75,13 +75,13 @@ public:
     proposal_create_evaluator_mocked evaluator;
 };
 
-BOOST_FIXTURE_TEST_SUITE(proposal_create_operation_tests, proposal_create_operation_fixture)
-
 std::string exception_to_string(fc::exception& e)
 {
     BOOST_REQUIRE(e.get_log().size() == 1);
     return e.get_log().front().get_message();
 }
+
+BOOST_FIXTURE_TEST_SUITE(proposal_create_evaluator_tests, proposal_create_evaluator_fixture)
 
 SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_small)
 {
@@ -117,23 +117,6 @@ SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_big)
     {
         BOOST_CHECK(exception_to_string(e).find("Proposal life time is not in range of 5 - 10 seconds.")
                     != std::string::npos);
-    }
-}
-
-SCORUM_TEST_CASE(throw_exception_if_action_is_not_set)
-{
-    proposal_create_operation op;
-    op.creator = "alice";
-    op.committee_member = "bob";
-    op.lifetime_sec = lifetime_min + 1;
-
-    try
-    {
-        evaluator.do_apply(op);
-    }
-    catch (fc::exception& e)
-    {
-        BOOST_CHECK(exception_to_string(e).find("Proposal is not set.") != std::string::npos);
     }
 }
 
@@ -174,6 +157,55 @@ SCORUM_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime)
     evaluator.do_apply(op);
 
     BOOST_CHECK(proposal_service.expiration == (proposal_service._head_block_time + op.lifetime_sec));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(proposal_create_operation_validate_tests)
+
+BOOST_AUTO_TEST_CASE(throw_exception_if_creator_is_not_set)
+{
+    proposal_create_operation op;
+
+    try
+    {
+        op.validate();
+    }
+    catch (fc::exception& e)
+    {
+        BOOST_CHECK(exception_to_string(e).find("Account name  is invalid") != std::string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(throw_exception_if_member_is_not_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+
+    try
+    {
+        op.validate();
+    }
+    catch (fc::exception& e)
+    {
+        BOOST_CHECK(exception_to_string(e).find("Account name  is invalid") != std::string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(throw_exception_if_action_is_not_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.committee_member = "bob";
+
+    try
+    {
+        op.validate();
+    }
+    catch (fc::exception& e)
+    {
+        BOOST_CHECK(exception_to_string(e).find("Proposal is not set.") != std::string::npos);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
