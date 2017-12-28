@@ -81,10 +81,10 @@ const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_con
     switch (tp)
     {
     case atomicswap_contract_initiator:
-        start += fc::seconds(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS);
+        deadline += fc::seconds(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS);
         break;
     case atomicswap_contract_participant:
-        start += fc::seconds(SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS);
+        deadline += fc::seconds(SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS);
         break;
     default:
         FC_ASSERT(false, "Invalid contract type.");
