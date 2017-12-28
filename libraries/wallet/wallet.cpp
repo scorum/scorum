@@ -2380,6 +2380,8 @@ std::set<std::string> wallet_api::list_budget_owners(const std::string& lowerbou
 
 std::vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
 {
+    validate_account_name(account_name);
+
     std::vector<budget_api_obj> result;
 
     result = my->_remote_db->get_budgets({ account_name });
