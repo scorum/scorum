@@ -99,15 +99,15 @@ public:
         excluded_members.push_back(account);
     }
 
-    size_t get_members_count()
+    uint64_t get_quorum(uint64_t percent)
     {
-        return members_count;
+        return quorum_votes;
     }
 
     std::vector<account_name_type> added_members;
     std::vector<account_name_type> excluded_members;
 
-    size_t members_count = 0;
+    uint64_t quorum_votes = 1;
 };
 
 typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
@@ -125,6 +125,7 @@ public:
         proposal_vote_object proposal;
         proposal.creator = "alice";
         proposal.member = "bob";
+        proposal.votes = 1;
 
         add(proposal);
 
@@ -201,6 +202,29 @@ SCORUM_TEST_CASE(add_one_new_member)
     BOOST_CHECK_EQUAL(committee_service.added_members.front(), "bob");
 }
 
+SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
+{
+    proposal().action = proposal_action::invite;
+
+    proposal().votes = 1;
+    committee_service.quorum_votes = 2;
+
+    apply();
+
+    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 0);
+}
+
+SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
+{
+    proposal().action = proposal_action::dropout;
+    proposal().votes = 1;
+    committee_service.quorum_votes = 2;
+
+    apply();
+
+    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 0);
+}
+
 SCORUM_TEST_CASE(during_adding_we_do_not_remove_any_member)
 {
     proposal().action = proposal_action::invite;
@@ -247,6 +271,15 @@ SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
 }
 
 // TODO write tests for `check_quorum` function. test round.
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(test_get_quorum)
+
+BOOST_AUTO_TEST_CASE(sixty_percent_from_ten_is_six_votes)
+{
+    BOOST_CHECK_EQUAL(6, scorum::chain::utils::get_quorum(10, 60 * SCORUM_1_PERCENT));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

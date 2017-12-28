@@ -40,6 +40,8 @@ public:
 
     size_t get_members_count() const;
 
+    uint64_t get_quorum(uint64_t percent);
+
 private:
     bool _member_exists(const account_name_type&) const;
 
@@ -47,5 +49,10 @@ private:
 
     void _exclude_member(const account_object&);
 };
+
+namespace utils {
+uint64_t get_quorum(size_t members_count, uint64_t percent);
 }
-}
+
+} // namespace chain
+} // namespace scorum

@@ -36,7 +36,7 @@ public:
         : _account_service(account_service)
         , _proposal_service(proposal_service)
         , _committee_service(commitee_service)
-        , _quorum(quorum)
+        , _quorum_percent(quorum)
     {
     }
 
@@ -66,9 +66,7 @@ public:
 
         _proposal_service.vote_for(proposal);
 
-        const size_t members_count = _committee_service.get_members_count();
-
-        if (check_quorum(proposal.votes, _quorum, members_count))
+        if (proposal.votes >= _committee_service.get_quorum(_quorum_percent))
         {
             if (proposal.action == invite)
             {
@@ -92,7 +90,7 @@ protected:
     ProposalService& _proposal_service;
     CommiteeService& _committee_service;
 
-    uint32_t _quorum;
+    uint32_t _quorum_percent;
 };
 
 typedef proposal_vote_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee> proposal_vote_evaluator;

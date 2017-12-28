@@ -63,12 +63,5 @@ void dbs_proposal::clear_expired_proposals()
     }
 }
 
-bool check_quorum(uint32_t votes, uint32_t quorum, size_t members_count)
-{
-    const uint32_t needed_votes = (members_count * quorum) / SCORUM_100_PERCENT;
-
-    return (votes >= needed_votes) ? true : false;
-}
-
 } // namespace scorum
 } // namespace chain

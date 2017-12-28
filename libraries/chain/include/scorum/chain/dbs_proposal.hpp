@@ -34,7 +34,5 @@ public:
     void clear_expired_proposals();
 };
 
-bool check_quorum(uint32_t votes, uint32_t quorum, size_t members_count);
-
 } // namespace scorum
 } // namespace chain

@@ -113,6 +113,11 @@ size_t dbs_registration_committee::get_members_count() const
     return db_impl().get_index<registration_committee_member_index>().indicies().size();
 }
 
+uint64_t dbs_registration_committee::get_quorum(uint64_t percent)
+{
+    return utils::get_quorum(get_members_count(), percent);
+}
+
 bool dbs_registration_committee::_member_exists(const account_name_type& account_name) const
 {
     const auto& idx = db_impl().get_index<registration_committee_member_index>().indices().get<by_account_name>();
@@ -139,5 +144,16 @@ void dbs_registration_committee::_exclude_member(const account_object& account)
 
     db_impl().remove(member);
 }
+
+namespace utils {
+
+uint64_t get_quorum(size_t members_count, uint64_t percent)
+{
+    const uint32_t needed_votes = (members_count * percent) / SCORUM_100_PERCENT;
+
+    return needed_votes;
 }
-}
+
+} // namespace utils
+} // namespace chain
+} // namespace scorum
