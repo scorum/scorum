@@ -10,7 +10,11 @@ struct environment_check
     environment_check()
     {
         memset(&compiler_version, 0, sizeof(compiler_version));
+#ifdef WIN32
+        snprintf(compiler_version.data(), compiler_version.size(), "%d", _MSC_FULL_VER);
+#else
         memcpy(&compiler_version, __VERSION__, std::min<size_t>(strlen(__VERSION__), 256));
+#endif
 #ifndef NDEBUG
         debug = true;
 #endif
