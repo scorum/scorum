@@ -44,8 +44,8 @@ std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_
     {
         if (itr->owner == SCORUM_ROOT_POST_PARENT)
             continue;
-        else
-            --limit;
+
+        --limit;
         result.insert(itr->owner);
     }
     return result;
