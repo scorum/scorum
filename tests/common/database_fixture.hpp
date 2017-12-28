@@ -85,9 +85,9 @@ struct database_fixture
     void fund(const std::string& account_name, const asset& amount);
     void transfer(const std::string& from, const std::string& to, const asset& amount);
     void transfer_to_vest(const std::string& from, const std::string& to, const asset& amount);
-    void convert(const std::string& account_name, const asset& amount);
-    void vest(const std::string& from, const share_type& amount);
+    void transfer_to_vest(const std::string& from, const std::string& to, const share_type& amount);
     void vest(const std::string& account, const asset& amount);
+    void vest(const std::string& from, const share_type& amount);
     void proxy(const std::string& account, const std::string& proxy);
     const asset& get_balance(const std::string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);

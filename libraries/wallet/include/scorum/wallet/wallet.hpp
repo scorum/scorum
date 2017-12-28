@@ -422,6 +422,28 @@ public:
                                                                     bool broadcast) const;
 
     /**
+     * This method is used by faucets to create new accounts for other users which must
+     * provide their desired keys. The resulting account accepts bonus from registration pool.
+     * Creator must belong registration committee.
+     *
+     * @param creator The committee memeber creating the new account
+     * @param newname The name of the new account
+     * @param json_meta JSON Metadata associated with the new account
+     * @param owner public owner key of the new account
+     * @param active public active key of the new account
+     * @param posting public posting key of the new account
+     * @param memo public memo key of the new account
+     * @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction create_account_by_committee(const std::string& creator,
+                                                             const std::string& newname,
+                                                             const std::string& json_meta,
+                                                             const public_key_type& owner,
+                                                             const public_key_type& active,
+                                                             const public_key_type& posting,
+                                                             const public_key_type& memo,
+                                                             bool broadcast) const;
+    /**
      * This method updates the keys of an existing account.
      *
      * @param accountname The name of the account

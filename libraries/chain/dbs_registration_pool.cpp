@@ -2,7 +2,6 @@
 #include <scorum/chain/database.hpp>
 
 #include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_account.hpp>
 
 namespace scorum {
 namespace chain {
@@ -26,9 +25,8 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
                                                                    const asset& maximum_bonus,
                                                                    const schedule_items_type& schedule_items)
 {
-    FC_ASSERT(supply > asset(0, REGISTRATION_BONUS_SYMBOL), "Registration supply amount must be more than zerro.");
-    FC_ASSERT(maximum_bonus > asset(0, REGISTRATION_BONUS_SYMBOL),
-              "Registration maximum bonus amount must be more than zerro.");
+    FC_ASSERT(supply > asset(0, SCORUM_SYMBOL), "Registration supply amount must be more than zerro.");
+    FC_ASSERT(maximum_bonus > asset(0, SCORUM_SYMBOL), "Registration maximum bonus amount must be more than zerro.");
     FC_ASSERT(!schedule_items.empty(), "Registration schedule must have at least one item.");
 
     // check schedule
@@ -62,10 +60,6 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
     const registration_pool_object& this_pool = get_pool();
-
-    const dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    account_service.check_account_existence(member_name);
 
     asset per_reg = _calculate_per_reg();
     FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
@@ -106,7 +100,7 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
         share_type limit_per_memeber = (share_type)(pass_blocks + 1);
         limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount;
         limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-        FC_ASSERT(member.already_allocated_cash + per_reg <= asset(limit_per_memeber, REGISTRATION_BONUS_SYMBOL),
+        FC_ASSERT(member.already_allocated_cash + per_reg <= asset(limit_per_memeber, SCORUM_SYMBOL),
                   "Committee member '${1}' reaches cash limit.", ("1", member_name));
     }
 
@@ -123,7 +117,7 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
         else
         {
             m.per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-            m.already_allocated_cash = asset(0, REGISTRATION_BONUS_SYMBOL);
+            m.already_allocated_cash = asset(0, SCORUM_SYMBOL);
         }
     };
     committee_service.update_member_info(member, modifier);
@@ -142,7 +136,7 @@ asset dbs_registration_pool::_decrease_balance(const asset& balance)
 
     const registration_pool_object& this_pool = get_pool();
 
-    asset ret(0, REGISTRATION_BONUS_SYMBOL);
+    asset ret(0, SCORUM_SYMBOL);
 
     db_impl().modify(this_pool, [&](registration_pool_object& pool) {
         if (pool.balance.amount > 0 && balance <= pool.balance)
@@ -153,7 +147,7 @@ asset dbs_registration_pool::_decrease_balance(const asset& balance)
         else
         {
             ret = pool.balance;
-            pool.balance = asset(0, REGISTRATION_BONUS_SYMBOL);
+            pool.balance = asset(0, SCORUM_SYMBOL);
         }
     });
 
@@ -193,7 +187,7 @@ asset dbs_registration_pool::_calculate_per_reg()
 
     using schedule_item_type = registration_pool_object::schedule_item;
     const schedule_item_type& current_item = (*it);
-    return asset(current_item.bonus_percent * this_pool.maximum_bonus.amount / 100, REGISTRATION_BONUS_SYMBOL);
+    return asset(current_item.bonus_percent * this_pool.maximum_bonus.amount / 100, SCORUM_SYMBOL);
 }
 
 bool dbs_registration_pool::_check_autoclose()
