@@ -21,6 +21,12 @@ namespace chain {
 using scorum::protocol::asset;
 using scorum::protocol::atomicswap::hash_index_type;
 
+enum atomicswap_contract_type
+{
+    atomicswap_contract_initiator = 0,
+    atomicswap_contract_participant,
+};
+
 class atomicswap_contract_object : public object<atomicswap_contract_object_type, atomicswap_contract_object>
 {
     atomicswap_contract_object() = delete;
@@ -45,7 +51,7 @@ public:
     fc::shared_string secret;
     hash_index_type contract_hash;
 
-    bool initiator_contract = false;
+    atomicswap_contract_type type = atomicswap_contract_initiator;
 
     time_point_sec created = time_point_sec::min();
     time_point_sec deadline = time_point_sec::min();
@@ -77,7 +83,10 @@ typedef multi_index_container<atomicswap_contract_object,
 }
 }
 
+FC_REFLECT_ENUM(scorum::chain::atomicswap_contract_type,
+                (atomicswap_contract_initiator)(atomicswap_contract_participant))
+
 FC_REFLECT(scorum::chain::atomicswap_contract_object,
-           (id)(owner)(to)(amount)(secret_hash)(secret)(contract_hash)(initiator_contract)(created)(deadline))
+           (id)(owner)(to)(amount)(secret_hash)(secret)(contract_hash)(type)(created)(deadline))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::atomicswap_contract_object, scorum::chain::atomicswap_contract_index)

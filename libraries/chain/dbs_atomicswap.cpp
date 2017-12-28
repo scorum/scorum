@@ -50,48 +50,60 @@ const atomicswap_contract_object& dbs_atomicswap::get_contract(atomicswap_contra
     FC_CAPTURE_AND_RETHROW((id))
 }
 
-const atomicswap_contract_object& dbs_atomicswap::create_initiator_contract(const account_object& initiator,
-                                                                            const account_object& participant,
-                                                                            const asset& amount,
-                                                                            const std::string& secret_hash)
+const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_contract_type tp,
+                                                                  const account_object& owner,
+                                                                  const account_object& recipient,
+                                                                  const asset& amount,
+                                                                  const std::string& secret_hash)
 {
     FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(amount.amount > 0, "Invalid amount.");
-    FC_ASSERT(initiator.balance >= amount, "Insufficient funds.");
+    FC_ASSERT(owner.balance >= amount, "Insufficient funds.");
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");
 
-    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(participant.name, secret_hash);
+    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(recipient.name, secret_hash);
 
     FC_ASSERT((nullptr == db_impl().find<atomicswap_contract_object, by_contract_hash>(contract_hash)),
               "There is contract for '${a}' with same secret. Use another secret and try again.",
-              ("a", participant.name));
-    FC_ASSERT(get_contracts(initiator).size() < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER,
-              "Can't create more then ${1} contract per initiator.",
+              ("a", recipient.name));
+    FC_ASSERT(get_contracts(owner).size() < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER,
+              "Can't create more then ${1} contract per owner.",
               ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER));
-    FC_ASSERT(_contracts_per_recipient(initiator.name, participant.name)
+    FC_ASSERT(_contracts_per_recipient(owner.name, recipient.name)
                   < (std::size_t)SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT,
-              "Can't create more then ${1} contract per participant.",
+              "Can't create more then ${1} contract per recipient.",
               ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT));
 
     const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
 
     time_point_sec start = props.time;
-    time_point_sec deadline = start + fc::seconds(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS);
+    time_point_sec deadline = start;
+    switch (tp)
+    {
+    case atomicswap_contract_initiator:
+        start += fc::seconds(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS);
+        break;
+    case atomicswap_contract_participant:
+        start += fc::seconds(SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS);
+        break;
+    default:
+        FC_ASSERT(false, "Invalid contract type.");
+    }
 
     const atomicswap_contract_object& new_contract
         = db_impl().create<atomicswap_contract_object>([&](atomicswap_contract_object& contract) {
-              contract.owner = initiator.name;
-              contract.to = participant.name;
+              contract.type = tp;
+              contract.owner = owner.name;
+              contract.to = recipient.name;
               contract.amount = amount;
               contract.created = start;
               contract.deadline = deadline;
               fc::from_string(contract.secret_hash, secret_hash);
               contract.contract_hash = contract_hash;
-              contract.initiator_contract = true;
           });
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
-    account_service.decrease_balance(initiator, amount);
+    account_service.decrease_balance(owner, amount);
 
     return new_contract;
 }
@@ -104,7 +116,7 @@ void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract,
 
     account_service.increase_balance(to, contract.amount);
 
-    if (contract.initiator_contract)
+    if (contract.type == atomicswap_contract_initiator)
     {
         db_impl().remove(contract);
     }

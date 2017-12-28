@@ -70,8 +70,8 @@ SCORUM_TEST_CASE(create_initiator_contract_check_balance)
 {
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE);
 
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB,
-                                                                        atomicswap::get_secret_hash(ALICE_SECRET)));
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(
+        atomicswap_contract_initiator, alice, bob, ALICE_SHARE_FOR_BOB, atomicswap::get_secret_hash(ALICE_SECRET)));
 
     BOOST_REQUIRE_EQUAL(alice.balance, ALICE_BALANCE - ALICE_SHARE_FOR_BOB);
 }
@@ -80,8 +80,8 @@ SCORUM_TEST_CASE(create_initiator_contract_check_get_contracts)
 {
     BOOST_REQUIRE(atomicswap_service.get_contracts(alice).empty());
 
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB,
-                                                                        atomicswap::get_secret_hash(ALICE_SECRET)));
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(
+        atomicswap_contract_initiator, alice, bob, ALICE_SHARE_FOR_BOB, atomicswap::get_secret_hash(ALICE_SECRET)));
 
     BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), 1);
 }
@@ -92,7 +92,8 @@ SCORUM_TEST_CASE(create_initiator_contract_check_get_contract)
 
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, secret_hash), fc::exception);
 
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash));
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, alice, bob,
+                                                              ALICE_SHARE_FOR_BOB, secret_hash));
 
     const atomicswap_contract_object& contract = atomicswap_service.get_contract(bob, secret_hash);
     BOOST_REQUIRE_EQUAL(fc::microseconds(contract.deadline - contract.created).to_seconds(),
@@ -103,11 +104,14 @@ SCORUM_TEST_CASE(create_initiator_contract_check_double)
 {
     std::string secret_hash = atomicswap::get_secret_hash(ALICE_SECRET);
 
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash));
-    BOOST_REQUIRE_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash),
-                        fc::assert_exception);
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, alice, bob,
+                                                              ALICE_SHARE_FOR_BOB, secret_hash));
+    BOOST_REQUIRE_THROW(
+        atomicswap_service.create_contract(atomicswap_contract_initiator, alice, bob, ALICE_SHARE_FOR_BOB, secret_hash),
+        fc::assert_exception);
     secret_hash = atomicswap::get_secret_hash(ALICE_SECRET + "2");
-    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, secret_hash));
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, alice, bob,
+                                                              ALICE_SHARE_FOR_BOB, secret_hash));
 }
 
 SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_owner)
@@ -118,8 +122,8 @@ SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_owner)
     for (; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER; ++ci)
     {
         const account_object& man = account_service.get_account(people[ci]);
-        BOOST_REQUIRE_NO_THROW(
-            atomicswap_service.create_initiator_contract(alice, man, ALICE_SHARE_FOR_BOB, secret_hash));
+        BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, alice, man,
+                                                                  ALICE_SHARE_FOR_BOB, secret_hash));
         std::stringstream data;
         data << secret_hash << ci;
         secret_hash = atomicswap::get_secret_hash(data.str());
@@ -128,8 +132,9 @@ SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_owner)
     BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(),
                         SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER);
 
-    BOOST_REQUIRE_THROW(atomicswap_service.create_initiator_contract(alice, account_service.get_account(people[ci]),
-                                                                     ALICE_SHARE_FOR_BOB, secret_hash),
+    BOOST_REQUIRE_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, alice,
+                                                           account_service.get_account(people[ci]), ALICE_SHARE_FOR_BOB,
+                                                           secret_hash),
                         fc::assert_exception);
 }
 
@@ -141,14 +146,16 @@ SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_recipient)
     for (; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT; ++ci)
     {
         const account_object& man = account_service.get_account(people[ci]);
-        BOOST_REQUIRE_NO_THROW(atomicswap_service.create_initiator_contract(man, bob, MAN_SHARE_FOR_BOB, secret_hash));
+        BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, man, bob,
+                                                                  MAN_SHARE_FOR_BOB, secret_hash));
         std::stringstream data;
         data << secret_hash << ci;
         secret_hash = atomicswap::get_secret_hash(data.str());
     }
 
-    BOOST_REQUIRE_THROW(atomicswap_service.create_initiator_contract(account_service.get_account(people[ci]), bob,
-                                                                     MAN_SHARE_FOR_BOB, secret_hash),
+    BOOST_REQUIRE_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator,
+                                                           account_service.get_account(people[ci]), bob,
+                                                           MAN_SHARE_FOR_BOB, secret_hash),
                         fc::assert_exception);
 }
 
@@ -160,7 +167,8 @@ public:
     atomicswap_service_check_redeem_fixture()
     {
         alice_secret_hash = atomicswap::get_secret_hash(ALICE_SECRET);
-        atomicswap_service.create_initiator_contract(alice, bob, ALICE_SHARE_FOR_BOB, alice_secret_hash);
+        atomicswap_service.create_contract(atomicswap_contract_initiator, alice, bob, ALICE_SHARE_FOR_BOB,
+                                           alice_secret_hash);
     }
 
     std::string alice_secret_hash;

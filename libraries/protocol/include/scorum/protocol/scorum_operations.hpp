@@ -783,8 +783,17 @@ struct close_budget_operation : public base_operation
 
 struct atomicswap_initiate_operation : public base_operation
 {
-    account_name_type initiator;
-    account_name_type participant;
+    enum initiate_type
+    {
+        initiate_by_initiator = 0,
+        initiate_by_participant,
+    };
+    // TODO: Fix DEFINE_OPERATION_TYPE to use initiate_type instead int
+    //      (FC_REFLECT_ENUM does not work)
+    int type = initiate_by_initiator;
+
+    account_name_type owner;
+    account_name_type recipient;
 
     asset amount = asset(0, SCORUM_SYMBOL);
 
@@ -793,7 +802,7 @@ struct atomicswap_initiate_operation : public base_operation
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
-        a.insert(initiator);
+        a.insert(owner);
     }
 };
 
@@ -894,7 +903,7 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
-FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (initiator)(participant)(amount)(secret_hash) )
+FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash) )
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (recipient)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (contract_id)(contract_owner) )
 

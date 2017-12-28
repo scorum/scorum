@@ -980,12 +980,12 @@ public:
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
     /** Initiate Atomic Swap transfer from initiator to participant.
-     *  Asset (amount) will be locked for 48 hours while is not redeemed and refund automatically by timeout
+     *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout
      *
      *  @warning If secret is not set, it is been generating. API prints secret string to memorize.
      *           API prints secret hash as well.
      *
-     *  @param initiator
+     *  @param initiator the new contract owner
      *  @param participant
      *  @param amount
      *  @param secret the secret ("my secret") or empty string (generate secret)
@@ -996,6 +996,24 @@ public:
                                                      const asset& amount,
                                                      const std::string& secret,
                                                      const bool broadcast);
+
+    /** Initiate Atomic Swap transfer from participant to initiator.
+     *  Asset (amount) will be locked for 24 hours while is not redeemed or refund before redeem
+     *
+     *  @warning If secret is not set, it is been generating. API prints secret string to memorize.
+     *           API prints secret hash as well.
+     *
+     *  @param participant the new contract owner
+     *  @param initiator
+     *  @param amount
+     *  @param secret_hash the secret hash (received from initiator)
+     *  @param broadcast
+     */
+    annotated_signed_transaction atomicswap_participate(const std::string& participant,
+                                                        const std::string& initiator,
+                                                        const asset& amount,
+                                                        const std::string& secret_hash,
+                                                        const bool broadcast);
 
     /** Redeem Atomic Swap contract by participant.
      *  This API find and close contract
@@ -1014,6 +1032,15 @@ public:
     annotated_signed_transaction
     atomicswap_redeem(const std::string& recipient, const std::string& secret, const bool broadcast);
 
+    // atomicswap_auditcontract: TODO
+    // atomicswap_extractsecret: TODO
+
+    /** Initiate Atomic Swap helper to get list of contract info.
+     *
+     *  @param owner
+     */
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
+
     /** Refund contact by participant.
      *
      *  @warning Can't refund initiator contract. It is refunded automatically in 48 hours.
@@ -1024,16 +1051,6 @@ public:
      */
     annotated_signed_transaction
     atomicswap_refund(const int64_t contract_id, const std::string& contract_owner, const bool broadcast);
-
-    // atomicswap_auditcontract: TODO
-    // atomicswap_participate: TODO
-    // atomicswap_extractsecret: TODO
-
-    /** Initiate Atomic Swap helper to get list of contract info.
-     *
-     *  @param owner
-     */
-    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
 public:
     fc::signal<void(bool)> lock_changed;

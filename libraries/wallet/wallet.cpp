@@ -2415,8 +2415,9 @@ annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& 
 
     atomicswap_initiate_operation op;
 
-    op.initiator = initiator;
-    op.participant = participant;
+    op.type = atomicswap_initiate_operation::initiate_by_initiator;
+    op.owner = initiator;
+    op.recipient = participant;
     op.secret_hash = secret_hash;
     op.amount = amount;
 
@@ -2433,6 +2434,29 @@ annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& 
     ulog("Secret Hash: ${sh}", ("sh", secret_hash));
 
     return ret;
+}
+
+annotated_signed_transaction wallet_api::atomicswap_participate(const std::string& participant,
+                                                                const std::string& initiator,
+                                                                const asset& amount,
+                                                                const std::string& secret_hash,
+                                                                const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_initiate_operation op;
+
+    op.type = atomicswap_initiate_operation::initiate_by_participant;
+    op.owner = participant;
+    op.recipient = initiator;
+    op.secret_hash = secret_hash;
+    op.amount = amount;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 
 annotated_signed_transaction
@@ -2452,6 +2476,15 @@ wallet_api::atomicswap_redeem(const std::string& recipient, const std::string& s
     return my->sign_transaction(tx, broadcast);
 }
 
+std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
+{
+    std::vector<atomicswap_contract_api_obj> result;
+
+    result = my->_remote_db->get_atomicswap_contracts(owner);
+
+    return result;
+}
+
 annotated_signed_transaction
 wallet_api::atomicswap_refund(const int64_t contract_id, const std::string& contract_owner, const bool broadcast)
 {
@@ -2467,15 +2500,6 @@ wallet_api::atomicswap_refund(const int64_t contract_id, const std::string& cont
     tx.validate();
 
     return my->sign_transaction(tx, broadcast);
-}
-
-std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
-{
-    std::vector<atomicswap_contract_api_obj> result;
-
-    result = my->_remote_db->get_atomicswap_contracts(owner);
-
-    return result;
 }
 
 } // namespace wallet

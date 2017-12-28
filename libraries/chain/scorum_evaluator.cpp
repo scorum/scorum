@@ -1440,13 +1440,24 @@ void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation
     dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
     dbs_account& account_service = _db.obtain_service<dbs_account>();
 
-    account_service.check_account_existence(op.initiator);
-    account_service.check_account_existence(op.participant);
+    account_service.check_account_existence(op.owner);
+    account_service.check_account_existence(op.recipient);
 
-    const auto& initiator = account_service.get_account(op.initiator);
-    const auto& participant = account_service.get_account(op.participant);
+    const auto& owner = account_service.get_account(op.owner);
+    const auto& recipient = account_service.get_account(op.recipient);
 
-    atomicswap_service.create_initiator_contract(initiator, participant, op.amount, op.secret_hash);
+    switch (op.type)
+    {
+    case atomicswap_initiate_operation::initiate_by_initiator:
+        atomicswap_service.create_contract(atomicswap_contract_initiator, owner, recipient, op.amount, op.secret_hash);
+        break;
+    case atomicswap_initiate_operation::initiate_by_participant:
+        atomicswap_service.create_contract(atomicswap_contract_participant, owner, recipient, op.amount,
+                                           op.secret_hash);
+        break;
+    default:
+        FC_ASSERT(false, "Invalid operation type.");
+    }
 }
 
 void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op)
@@ -1474,7 +1485,8 @@ void atomicswap_refund_evaluator::do_apply(const atomicswap_refund_operation& op
 
     const auto& contract = atomicswap_service.get_contract(op.contract_id);
 
-    FC_ASSERT(!contract.initiator_contract, "Can't refund initiator contract. It is locked on ${h} hours.",
+    FC_ASSERT(contract.type != atomicswap_contract_initiator,
+              "Can't refund initiator contract. It is locked on ${h} hours.",
               ("h", SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS / 3600));
 
     atomicswap_service.refund_contract(contract);

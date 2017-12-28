@@ -29,10 +29,11 @@ public:
 
     const atomicswap_contract_object& get_contract(atomicswap_contract_id_type id) const;
 
-    const atomicswap_contract_object& create_initiator_contract(const account_object& initiator,
-                                                                const account_object& participant,
-                                                                const asset& amount,
-                                                                const std::string& secret_hash);
+    const atomicswap_contract_object& create_contract(atomicswap_contract_type tp,
+                                                      const account_object& owner,
+                                                      const account_object& recipient,
+                                                      const asset& amount,
+                                                      const std::string& secret_hash);
 
     void redeem_contract(const atomicswap_contract_object& contract, const std::string& secret);
 
