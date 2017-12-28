@@ -761,7 +761,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares,
               "Account does not have sufficient Scorum Power for withdraw.");
 
-    if (!account.mined)
+    if (!account.initially_supplied)
     {
         const auto& props = _db.get_dynamic_global_properties();
         const witness_schedule_object& wso = _db.get_witness_schedule_object();

@@ -64,12 +64,13 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
     authority owner;
     owner.add_authority(memo_key, 1);
     owner.weight_threshold = 1;
-    authority active = owner;
-    authority posting = active;
     const auto& new_account
-        = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, active, posting);
+        = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
 
-    db_impl().modify(new_account, [&](account_object& acc) { acc.balance = balance; });
+    db_impl().modify(new_account, [&](account_object& acc) {
+        acc.initially_supplied = true;
+        acc.balance = balance;
+    });
 
     return new_account;
 }
@@ -636,7 +637,6 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
         acc.memo_key = memo_key;
         acc.created = props.time;
         acc.last_vote_time = props.time;
-        acc.mined = false;
 #ifndef IS_LOW_MEM
         fc::from_string(acc.json_metadata, json_metadata);
 #endif

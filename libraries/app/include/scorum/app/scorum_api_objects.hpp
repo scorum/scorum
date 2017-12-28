@@ -158,7 +158,7 @@ struct account_api_obj
         , proxy(a.proxy)
         , last_account_update(a.last_account_update)
         , created(a.created)
-        , mined(a.mined)
+        , initially_supplied(a.initially_supplied)
         , owner_challenged(a.owner_challenged)
         , active_challenged(a.active_challenged)
         , last_owner_proved(a.last_owner_proved)
@@ -242,7 +242,7 @@ struct account_api_obj
     time_point_sec last_account_update;
 
     time_point_sec created;
-    bool mined = false;
+    bool initially_supplied = false;
     bool owner_challenged = false;
     bool active_challenged = false;
     time_point_sec last_owner_proved;
@@ -490,7 +490,7 @@ FC_REFLECT( scorum::app::comment_api_obj,
 
 FC_REFLECT( scorum::app::account_api_obj,
              (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)
-             (created)(mined)
+             (created)(initially_supplied)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
