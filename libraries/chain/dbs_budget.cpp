@@ -40,13 +40,12 @@ std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_
 
     // prepare output if limit > 0
     for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
-         limit-- && itr != budgets_by_owner_name.end(); ++itr)
+         limit && itr != budgets_by_owner_name.end(); ++itr)
     {
         if (itr->owner == SCORUM_ROOT_POST_PARENT)
-        {
-            ++limit;
             continue;
-        }
+        else
+            --limit;
         result.insert(itr->owner);
     }
     return result;
