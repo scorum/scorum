@@ -203,6 +203,8 @@ SCORUM_TEST_CASE(lookup_budget_owners)
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
     time_point_sec deadline(default_deadline);
 
+    BOOST_REQUIRE_GT(SCORUM_BUDGET_LIMIT_DB_LIST_SIZE, 1);
+
     BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
@@ -215,7 +217,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
 
     {
         auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
-        BOOST_REQUIRE(owners.size() == 3);
+        BOOST_REQUIRE(owners.size() == 2);
     }
 
     {
@@ -229,8 +231,8 @@ SCORUM_TEST_CASE(lookup_budget_owners)
     }
 
     {
-        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, 2);
-        BOOST_REQUIRE(owners.size() == 2);
+        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, 1);
+        BOOST_REQUIRE(owners.size() == 1);
     }
 }
 
