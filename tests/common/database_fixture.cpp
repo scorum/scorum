@@ -33,6 +33,16 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
     genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_public_key });
 }
 
+void create_default_genesis_state(genesis_state_type& genesis_state)
+{
+    genesis_state.init_accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
+    genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
+    genesis_state.initial_chain_id = TEST_CHAIN_ID;
+    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
+
+    create_initdelegate_for_genesis_state(genesis_state);
+}
+
 database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
     : app()
     , db(*app.chain_database())
@@ -397,13 +407,9 @@ void database_fixture::transfer_to_vest(const std::string& from, const std::stri
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_fixture::vest(const std::string& account_name, const share_type& amount)
+void database_fixture::transfer_to_vest(const std::string& from, const std::string& to, const share_type& amount)
 {
-    try
-    {
-        transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, asset(amount, SCORUM_SYMBOL));
-    }
-    FC_CAPTURE_AND_RETHROW((account_name)(amount))
+    transfer_to_vest(from, to, asset(amount, SCORUM_SYMBOL));
 }
 
 void database_fixture::vest(const std::string& account_name, const asset& amount)
@@ -415,6 +421,11 @@ void database_fixture::vest(const std::string& account_name, const asset& amount
         transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, amount);
     }
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
+}
+
+void database_fixture::vest(const std::string& from, const share_type& amount)
+{
+    vest(from, asset(amount, SCORUM_SYMBOL));
 }
 
 void database_fixture::proxy(const std::string& account, const std::string& proxy)
@@ -487,10 +498,10 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
         genesis_state.registration_schedule = schedule_input;
     }
 
-    if (!genesis_state.registration_maximum_bonus.amount.value)
+    if (!genesis_state.registration_bonus.amount.value)
     {
-        genesis_state.registration_maximum_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-        genesis_state.registration_maximum_bonus.amount /= 2;
+        genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+        genesis_state.registration_bonus.amount /= 2;
     }
 
     if (!genesis_state.registration_supply.amount.value)

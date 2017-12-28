@@ -61,20 +61,15 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
     FC_ASSERT(new_account_name.size() > 0, "Account 'name' should not be empty.");
     FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
 
-    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
-        acc.name = new_account_name;
-        acc.memo_key = memo_key;
-        acc.balance = balance;
-        fc::from_string(acc.json_metadata, json_metadata);
-        acc.recovery_account = recovery_account;
-    });
+    authority owner;
+    owner.add_authority(memo_key, 1);
+    owner.weight_threshold = 1;
+    const auto& new_account
+        = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
 
-    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = new_account_name;
-        auth.owner.add_authority(memo_key, 1);
-        auth.owner.weight_threshold = 1;
-        auth.active = auth.owner;
-        auth.posting = auth.active;
+    db_impl().modify(new_account, [&](account_object& acc) {
+        acc.created_by_genesis = true;
+        acc.balance = balance;
     });
 
     return new_account;
@@ -91,33 +86,12 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
-    const auto& props = db_impl().get_dynamic_global_properties();
     const auto& creator = get_account(creator_name);
 
     db_impl().modify(creator, [&](account_object& c) { c.balance -= fee; });
 
-    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
-        acc.name = new_account_name;
-        acc.memo_key = memo_key;
-        acc.created = props.time;
-        acc.last_vote_time = props.time;
-        acc.mined = false;
-
-        acc.recovery_account = creator_name;
-
-#ifndef IS_LOW_MEM
-        fc::from_string(acc.json_metadata, json_metadata);
-#endif
-    });
-
-    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = new_account_name;
-        auth.owner = owner;
-        auth.active = active;
-        auth.posting = posting;
-        auth.last_owner_update = fc::time_point_sec::min();
-    });
-
+    const auto& new_account
+        = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
     if (fee.amount > 0)
         create_vesting(new_account, fee);
 
@@ -132,13 +106,11 @@ const account_object& dbs_account::create_account_with_delegation(const account_
                                                                   const authority& active,
                                                                   const authority& posting,
                                                                   const asset& fee,
-                                                                  const asset& delegation,
-                                                                  const optional<time_point_sec>& now)
+                                                                  const asset& delegation)
 {
     FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
     FC_ASSERT(delegation.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
 
-    const auto& props = db_impl().get_dynamic_global_properties();
     const auto& creator = get_account(creator_name);
 
     db_impl().modify(creator, [&](account_object& c) {
@@ -146,33 +118,14 @@ const account_object& dbs_account::create_account_with_delegation(const account_
         c.delegated_vesting_shares += delegation;
     });
 
-    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
-        acc.name = new_account_name;
-        acc.memo_key = memo_key;
-        acc.created = props.time;
-        acc.last_vote_time = props.time;
-        acc.mined = false;
+    const auto& new_account
+        = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
 
-        acc.recovery_account = creator_name;
-
-        acc.received_vesting_shares = delegation;
-
-#ifndef IS_LOW_MEM
-        fc::from_string(acc.json_metadata, json_metadata);
-#endif
-    });
-
-    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = new_account_name;
-        auth.owner = owner;
-        auth.active = active;
-        auth.posting = posting;
-        auth.last_owner_update = fc::time_point_sec::min();
-    });
+    db_impl().modify(new_account, [&](account_object& acc) { acc.received_vesting_shares = delegation; });
 
     if (delegation.amount > 0)
     {
-        _time t = _get_now(now);
+        time_point_sec t = db_impl().head_block_time();
 
         db_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vdo) {
             vdo.delegator = creator_name;
@@ -188,16 +141,37 @@ const account_object& dbs_account::create_account_with_delegation(const account_
     return new_account;
 }
 
+const account_object& dbs_account::create_account_with_bonus(const account_name_type& new_account_name,
+                                                             const account_name_type& creator_name,
+                                                             const public_key_type& memo_key,
+                                                             const std::string& json_metadata,
+                                                             const authority& owner,
+                                                             const authority& active,
+                                                             const authority& posting,
+                                                             const asset& bonus)
+{
+    FC_ASSERT(bonus.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+
+    const auto& new_account
+        = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
+
+    if (bonus.amount > 0)
+    {
+        create_vesting(new_account, bonus);
+    }
+
+    return new_account;
+}
+
 void dbs_account::update_acount(const account_object& account,
                                 const account_authority_object& account_authority,
                                 const public_key_type& memo_key,
                                 const std::string& json_metadata,
                                 const optional<authority>& owner,
                                 const optional<authority>& active,
-                                const optional<authority>& posting,
-                                const optional<time_point_sec>& now)
+                                const optional<authority>& posting)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(account, [&](account_object& acc) {
         if (memo_key != public_key_type())
@@ -228,11 +202,9 @@ void dbs_account::update_acount(const account_object& account,
     }
 }
 
-void dbs_account::update_owner_authority(const account_object& account,
-                                         const authority& owner_authority,
-                                         const optional<time_point_sec>& now)
+void dbs_account::update_owner_authority(const account_object& account, const authority& owner_authority)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     if (db_impl().head_block_num() >= SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM)
     {
@@ -300,9 +272,9 @@ void dbs_account::decrease_received_vesting_shares(const account_object& account
     increase_received_vesting_shares(account, -amount);
 }
 
-void dbs_account::drop_challenged(const account_object& account, const optional<time_point_sec>& now)
+void dbs_account::drop_challenged(const account_object& account)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     if (account.active_challenged)
     {
@@ -313,11 +285,9 @@ void dbs_account::drop_challenged(const account_object& account, const optional<
     }
 }
 
-void dbs_account::prove_authority(const account_object& account,
-                                  bool require_owner,
-                                  const optional<time_point_sec>& now)
+void dbs_account::prove_authority(const account_object& account, bool require_owner)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(account, [&](account_object& a) {
         a.active_challenged = false;
@@ -364,11 +334,9 @@ void dbs_account::decrease_witnesses_voted_for(const account_object& account)
     db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for--; });
 }
 
-void dbs_account::add_post(const account_object& author_account,
-                           const optional<account_name_type>& parent_author_name,
-                           const optional<time_point_sec>& now)
+void dbs_account::add_post(const account_object& author_account, const optional<account_name_type>& parent_author_name)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(author_account, [&](account_object& a) {
         if (!parent_author_name.valid())
@@ -380,11 +348,10 @@ void dbs_account::add_post(const account_object& author_account,
     });
 }
 
-void dbs_account::update_voting_power(const account_object& account,
-                                      uint16_t voting_power,
-                                      const optional<time_point_sec>& now)
+void dbs_account::update_voting_power(const account_object& account, uint16_t voting_power)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
+
     db_impl().modify(account, [&](account_object& a) {
         a.voting_power = voting_power;
         a.last_vote_time = t;
@@ -392,10 +359,9 @@ void dbs_account::update_voting_power(const account_object& account,
 }
 
 void dbs_account::create_account_recovery(const account_name_type& account_to_recover,
-                                          const authority& new_owner_authority,
-                                          const optional<time_point_sec>& now)
+                                          const authority& new_owner_authority)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -433,10 +399,9 @@ void dbs_account::create_account_recovery(const account_name_type& account_to_re
 
 void dbs_account::submit_account_recovery(const account_object& account_to_recover,
                                           const authority& new_owner_authority,
-                                          const authority& recent_owner_authority,
-                                          const optional<time_point_sec>& now)
+                                          const authority& recent_owner_authority)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -466,10 +431,9 @@ void dbs_account::submit_account_recovery(const account_object& account_to_recov
 }
 
 void dbs_account::change_recovery_account(const account_object& account_to_recover,
-                                          const account_name_type& new_recovery_account_name,
-                                          const optional<time_point_sec>& now)
+                                          const account_name_type& new_recovery_account_name)
 {
-    _time t = _get_now(now);
+    time_point_sec t = db_impl().head_block_time();
 
     const auto& change_recovery_idx
         = db_impl().get_index<change_recovery_account_request_index>().indices().get<by_account>();
@@ -657,9 +621,36 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
         witness_service.adjust_witness_votes(account, delta);
     }
 }
-const account_object& dbs_account::get_account(const account_id_type& account_id) const
+const account_object& dbs_account::_create_account_objects(const account_name_type& new_account_name,
+                                                           const account_name_type& recovery_account,
+                                                           const public_key_type& memo_key,
+                                                           const std::string& json_metadata,
+                                                           const authority& owner,
+                                                           const authority& active,
+                                                           const authority& posting)
 {
-    return db_impl().get<account_object, by_id>(account_id);
+    const auto& props = db_impl().get_dynamic_global_properties();
+
+    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
+        acc.name = new_account_name;
+        acc.recovery_account = recovery_account;
+        acc.memo_key = memo_key;
+        acc.created = props.time;
+        acc.last_vote_time = props.time;
+#ifndef IS_LOW_MEM
+        fc::from_string(acc.json_metadata, json_metadata);
+#endif
+    });
+
+    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
+        auth.account = new_account_name;
+        auth.owner = owner;
+        auth.active = active;
+        auth.posting = posting;
+        auth.last_owner_update = fc::time_point_sec::min();
+    });
+
+    return new_account;
 }
 } // namespace chain
 } // namespace scorum

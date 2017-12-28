@@ -64,6 +64,12 @@ struct get_impacted_account_visitor
         _impacted.insert(op.creator);
     }
 
+    void operator()(const account_create_by_committee_operation& op)
+    {
+        _impacted.insert(op.new_account_name);
+        _impacted.insert(op.creator);
+    }
+
     void operator()(const comment_operation& op)
     {
         _impacted.insert(op.author);

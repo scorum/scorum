@@ -39,9 +39,9 @@ struct genesis_state_type
         uint16_t bonus_percent;
     };
 
-    asset registration_supply = asset(0, REGISTRATION_BONUS_SYMBOL);
-    asset registration_maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
-    asset init_accounts_supply;
+    asset registration_supply = asset(0, SCORUM_SYMBOL);
+    asset registration_bonus = asset(0, SCORUM_SYMBOL);
+    asset init_accounts_supply = asset(0, SCORUM_SYMBOL);
     asset init_rewards_supply = asset(0, SCORUM_SYMBOL);
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
@@ -74,7 +74,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
 
 FC_REFLECT(scorum::chain::genesis_state_type,
            (registration_supply)
-           (registration_maximum_bonus)
+           (registration_bonus)
            (init_accounts_supply)
            (init_rewards_supply)
            (initial_timestamp)

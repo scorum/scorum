@@ -10,6 +10,8 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_atomicswap.hpp>
 
 #ifndef IS_LOW_MEM
@@ -177,6 +179,29 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     account_service.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                                    o.active, o.posting, o.fee, o.delegation);
+}
+
+void account_create_by_committee_evaluator::do_apply(const account_create_by_committee_operation& o)
+{
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(o.creator);
+
+    dbs_registration_committee& registration_committee_service = db().obtain_service<dbs_registration_committee>();
+    FC_ASSERT(registration_committee_service.member_exists(o.creator), "Account '${1}' is not committee member.",
+              ("1", o.creator));
+
+    dbs_registration_pool& registration_pool_service = db().obtain_service<dbs_registration_pool>();
+    asset bonus = registration_pool_service.allocate_cash(o.creator);
+
+    account_service.check_account_existence(o.owner.account_auths);
+
+    account_service.check_account_existence(o.active.account_auths);
+
+    account_service.check_account_existence(o.posting.account_auths);
+
+    account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+                                              o.active, o.posting, bonus);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -387,7 +412,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 parent_author = o.parent_author;
             }
 
-            account_service.add_post(auth, parent_author, now);
+            account_service.add_post(auth, parent_author);
 
             _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
                 validate_permlink_0_1(o.parent_permlink);
@@ -737,7 +762,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares,
               "Account does not have sufficient Scorum Power for withdraw.");
 
-    if (!account.mined)
+    if (!account.created_by_genesis)
     {
         const auto& props = _db.get_dynamic_global_properties();
         const witness_schedule_object& wso = _db.get_witness_schedule_object();

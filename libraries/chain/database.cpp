@@ -45,6 +45,7 @@
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_reward.hpp>
+#include <scorum/chain/dbs_registration_pool.hpp>
 #include <scorum/chain/dbs_atomicswap.hpp>
 
 namespace scorum {
@@ -1637,6 +1638,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_initiate_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
@@ -2515,6 +2517,7 @@ void database::validate_invariants() const
         {
             total_supply += budget.balance;
         }
+        total_supply += obtain_service<dbs_registration_pool>().get_pool().balance;
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
