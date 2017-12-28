@@ -802,7 +802,7 @@ struct proposal_create_operation : public base_operation
     account_name_type committee_member;
 
     fc::optional<fc::enum_type<uint8_t, action_t>> action;
-    uint32_t lifetime_sec;
+    uint32_t lifetime_sec = 0;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {

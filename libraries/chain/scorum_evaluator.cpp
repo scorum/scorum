@@ -1439,25 +1439,5 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
     budget_service.close_budget(budget);
 }
 
-void proposal_create_evaluator::do_apply(const proposal_create_operation& op)
-{
-    FC_ASSERT((op.lifetime_sec <= SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS
-               && op.lifetime_sec >= SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS),
-              "Proposal life time is not in range of ${min} - ${max} seconds.",
-              ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
-
-    dbs_account& account_service = _db.obtain_service<dbs_account>();
-    dbs_proposal& proposal_service = _db.obtain_service<dbs_proposal>();
-
-    account_service.check_account_existence(op.creator);
-    account_service.check_account_existence(op.committee_member);
-
-    FC_ASSERT(op.action.valid(), "proposal is not set.");
-
-    fc::time_point_sec expiration; // = proposal_service.head_block_time() + op.lifetime_sec;
-
-    proposal_service.create(op.creator, op.committee_member, *op.action, expiration);
-}
-
 } // namespace chain
 } // namespace scorum

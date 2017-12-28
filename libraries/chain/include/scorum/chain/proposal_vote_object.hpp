@@ -15,6 +15,8 @@ public:
     }
 
     proposal_vote_object()
+        : action(scorum::protocol::proposal_action::invite)
+        , votes(0)
     {
     }
 
@@ -24,7 +26,7 @@ public:
 
     fc::time_point_sec expiration;
 
-    fc::optional<scorum::protocol::proposal_action> action;
+    scorum::protocol::proposal_action action;
     uint32_t votes;
 };
 

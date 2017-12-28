@@ -6,9 +6,10 @@
 #include <scorum/chain/dbservice.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
+
+#include <scorum/chain/proposal_vote_object.hpp>
 
 namespace scorum {
 namespace chain {
@@ -53,8 +54,8 @@ public:
 
     void do_apply(const proposal_vote_operation& op)
     {
-        FC_ASSERT(_account_service.check_account_existence(op.voting_account),
-                  "Account \"${account_name}\" must exist.", ("account_name", op.voting_account));
+        FC_ASSERT(_account_service.is_exists(op.voting_account), "Account \"${account_name}\" must exist.",
+                  ("account_name", op.voting_account));
 
         FC_ASSERT(_proposal_service.is_exist(op.committee_member),
                   "There is no proposal for account name '${account_name}'", ("account_name", op.committee_member));

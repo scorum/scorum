@@ -12,8 +12,8 @@ dbs_proposal::dbs_proposal(database& db)
 
 void dbs_proposal::create(const protocol::account_name_type& creator,
                           const protocol::account_name_type& member,
-                          dbs_proposal::action_t action,
-                          time_point_sec expiration)
+                          protocol::proposal_action action,
+                          fc::time_point_sec expiration)
 {
     db_impl().create<proposal_vote_object>([&](proposal_vote_object& proposal) {
         proposal.creator = creator;
@@ -50,7 +50,17 @@ void dbs_proposal::vote_for(const proposal_vote_object& proposal)
 
 bool dbs_proposal::is_expired(const proposal_vote_object& proposal)
 {
-    return (proposal.expiration < this->_get_now()) ? false : true;
+    return (head_block_time() > proposal.expiration) ? true : false;
+}
+
+void dbs_proposal::clear_expired_proposals()
+{
+    const auto& proposal_expiration_index = db_impl().get_index<proposal_vote_index>().indices().get<by_expiration>();
+
+    while (!proposal_expiration_index.empty() && is_expired(*proposal_expiration_index.begin()))
+    {
+        db_impl().remove(*proposal_expiration_index.begin());
+    }
 }
 
 bool check_quorum(uint32_t votes, uint32_t quorum, size_t members_count)

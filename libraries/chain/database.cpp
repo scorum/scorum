@@ -26,6 +26,12 @@
 
 #include <scorum/chain/pool/reward_pool.hpp>
 
+#include <scorum/chain/proposal_vote_evaluator.hpp>
+#include <scorum/chain/proposal_create_evaluator.hpp>
+
+#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/dbs_witness.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/container/deque.hpp>
@@ -39,9 +45,6 @@
 
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
-
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_witness.hpp>
 
 namespace scorum {
 namespace chain {
@@ -1661,7 +1664,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(
+        new proposal_create_evaluator(this->obtain_service<dbs_account>(), this->obtain_service<dbs_proposal>(),
+                                      SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS, SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(new proposal_vote_evaluator(
         this->obtain_service<dbs_account>(), this->obtain_service<dbs_proposal>(),
@@ -1715,6 +1721,7 @@ void database::initialize_indexes()
     add_index<budget_index>();
     add_index<registration_pool_index>();
     add_index<registration_committee_member_index>();
+    add_index<proposal_vote_index>();
 
     _plugin_index_signal();
 }
@@ -1940,6 +1947,8 @@ void database::_apply_block(const signed_block& next_block)
         account_recovery_processing();
         expire_escrow_ratification();
         process_decline_voting_rights();
+
+        this->obtain_service<dbs_proposal>().clear_expired_proposals();
 
         process_hardforks();
 

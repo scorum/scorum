@@ -20,7 +20,7 @@ using scorum::chain::proposal_id_type;
 class account_service_mock
 {
 public:
-    bool check_account_existence(const account_name_type& account)
+    bool is_exists(const account_name_type& account)
     {
         return existent_accounts.count(account) == 1 ? true : false;
     }

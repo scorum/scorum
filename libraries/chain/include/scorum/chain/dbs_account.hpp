@@ -21,7 +21,7 @@ public:
 
     const account_authority_object& get_account_authority(const account_name_type&) const;
 
-    bool check_account_existence(const account_name_type& account);
+    bool is_exists(const account_name_type& account);
 
     void check_account_existence(const account_name_type&,
                                  const optional<const char*>& context_type_name = optional<const char*>()) const;
