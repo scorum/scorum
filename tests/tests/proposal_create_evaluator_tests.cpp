@@ -46,7 +46,6 @@ public:
         this->expiration = expiration;
     }
 
-    //    std::vector<int> x;
     uint32_t proposals_created = 0;
     fc::time_point_sec expiration;
     const fc::time_point_sec _head_block_time;

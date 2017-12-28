@@ -982,9 +982,8 @@ public:
     /**
      * Vote for registration committee proposal
      */
-    annotated_signed_transaction vote_for_committee_proposal(const std::string& account_to_vote_with,
-                                                             const std::string& account_to_vote_for,
-                                                             bool broadcast);
+    annotated_signed_transaction
+    vote_for_committee_proposal(const std::string& account_to_vote_with, int64_t proposal_id, bool broadcast);
 
     /**
      * Create proposal for inviting new member in to the registration commmittee

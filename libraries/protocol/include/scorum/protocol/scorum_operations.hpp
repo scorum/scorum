@@ -784,7 +784,7 @@ struct close_budget_operation : public base_operation
 struct proposal_vote_operation : public base_operation
 {
     account_name_type voting_account;
-    account_name_type committee_member;
+    int64_t proposal_id;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -886,7 +886,7 @@ FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
-            (committee_member))
+            (proposal_id))
 
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)

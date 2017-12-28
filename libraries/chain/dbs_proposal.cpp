@@ -29,16 +29,16 @@ void dbs_proposal::remove(const proposal_vote_object& proposal)
     db_impl().remove(proposal);
 }
 
-bool dbs_proposal::is_exist(const account_name_type& member)
+bool dbs_proposal::is_exist(proposal_id_type proposal_id)
 {
-    auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
+    auto proposal = db_impl().find<proposal_vote_object, by_id>(proposal_id);
 
     return (proposal == nullptr) ? true : false;
 }
 
-const proposal_vote_object& dbs_proposal::get(const account_name_type& member)
+const proposal_vote_object& dbs_proposal::get(proposal_id_type proposal_id)
 {
-    auto proposal = db_impl().find<proposal_vote_object, by_member_name>(member);
+    auto proposal = db_impl().find<proposal_vote_object, by_id>(proposal_id);
 
     return *proposal;
 }

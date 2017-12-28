@@ -23,9 +23,9 @@ public:
 
     void remove(const proposal_vote_object& proposal);
 
-    bool is_exist(const account_name_type& member);
+    bool is_exist(proposal_id_type proposal_id);
 
-    const proposal_vote_object& get(const account_name_type& member);
+    const proposal_vote_object& get(proposal_id_type proposal_id);
 
     void vote_for(const proposal_vote_object& proposal);
 

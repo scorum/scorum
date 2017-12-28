@@ -57,13 +57,12 @@ public:
         FC_ASSERT(_account_service.is_exists(op.voting_account), "Account \"${account_name}\" must exist.",
                   ("account_name", op.voting_account));
 
-        FC_ASSERT(_proposal_service.is_exist(op.committee_member),
-                  "There is no proposal for account name '${account_name}'", ("account_name", op.committee_member));
+        FC_ASSERT(_proposal_service.is_exist(op.proposal_id), "There is no proposal with id '${id}'",
+                  ("id", op.proposal_id));
 
-        const proposal_vote_object& proposal = _proposal_service.get(op.committee_member);
+        const proposal_vote_object& proposal = _proposal_service.get(op.proposal_id);
 
-        FC_ASSERT(!_proposal_service.is_expired(proposal), "This proposal is expired '${account_name}'",
-                  ("account_name", op.committee_member));
+        FC_ASSERT(!_proposal_service.is_expired(proposal), "This proposal is expired '${id}'", ("id", op.proposal_id));
 
         _proposal_service.vote_for(proposal);
 
@@ -73,11 +72,11 @@ public:
         {
             if (proposal.action == invite)
             {
-                _committee_service.add_member(op.committee_member);
+                _committee_service.add_member(proposal.member);
             }
             else if (proposal.action == dropout)
             {
-                _committee_service.exclude_member(op.committee_member);
+                _committee_service.exclude_member(proposal.member);
             }
             else
             {

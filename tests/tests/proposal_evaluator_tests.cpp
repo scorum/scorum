@@ -39,24 +39,24 @@ public:
 
     void remove(const proposal_vote_object& proposal)
     {
-        removed_proposals.push_back(proposal);
+        removed_proposals.push_back(proposal.id);
     }
 
-    bool is_exist(const account_name_type& member)
+    bool is_exist(const uint64_t id)
     {
         for (size_t i = 0; i < proposals.size(); ++i)
         {
-            if (proposals[i].member == member)
+            if (proposals[i].id == id)
                 return true;
         }
         return false;
     }
 
-    const proposal_vote_object& get(const account_name_type& member)
+    const proposal_vote_object& get(const uint64_t id)
     {
         for (proposal_vote_object& p : proposals)
         {
-            if (p.member == member)
+            if (p.id == id)
                 return p;
         }
 
@@ -65,14 +65,14 @@ public:
 
     void vote_for(const proposal_vote_object& proposal)
     {
-        voted_proposal.push_back(proposal);
+        voted_proposal.push_back(proposal.id);
     }
 
     bool is_expired(const proposal_vote_object& proposal)
     {
-        for (proposal_vote_object& p : expired)
+        for (proposal_id_type id : expired)
         {
-            if (p.member == proposal.member)
+            if (id == proposal.id)
                 return true;
         }
 
@@ -81,9 +81,9 @@ public:
 
     std::vector<proposal_vote_object> proposals;
 
-    std::vector<proposal_vote_object> removed_proposals;
-    std::vector<proposal_vote_object> voted_proposal;
-    std::vector<proposal_vote_object> expired;
+    std::vector<proposal_id_type> removed_proposals;
+    std::vector<proposal_id_type> voted_proposal;
+    std::vector<proposal_id_type> expired;
 };
 
 class committee_service_mock
@@ -126,10 +126,16 @@ public:
         proposal.creator = "alice";
         proposal.member = "bob";
 
-        proposal_service.proposals.push_back(proposal);
+        add(proposal);
 
         op.voting_account = "alice";
-        op.committee_member = "bob";
+        op.proposal_id = proposal.id._id;
+    }
+
+    void add(proposal_vote_object& p)
+    {
+        p.id = proposal_service.proposals.size() + 1;
+        proposal_service.proposals.push_back(p);
     }
 
     ~proposal_evaluator_fixture()
@@ -180,7 +186,7 @@ SCORUM_TEST_CASE(throw_on_drop_when_creator_account_does_not_exists)
 
 SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 {
-    op.committee_member = "joe";
+    op.proposal_id = 100;
 
     BOOST_CHECK_THROW(apply(), fc::exception);
 }
@@ -230,12 +236,12 @@ SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
     apply();
 
     BOOST_REQUIRE_EQUAL(proposal_service.removed_proposals.size(), 1);
-    BOOST_CHECK_EQUAL(proposal_service.removed_proposals.front().member, op.committee_member);
+    BOOST_CHECK_EQUAL(proposal_service.removed_proposals.front()._id, op.proposal_id);
 }
 
 SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
 {
-    proposal_service.expired.push_back(proposal());
+    proposal_service.expired.push_back(proposal().id);
 
     BOOST_CHECK_THROW(apply(), fc::exception);
 }

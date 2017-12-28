@@ -2397,13 +2397,12 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::vote_for_committee_proposal(const std::string& voting_account,
-                                                                     const std::string& account_to_vote_for,
-                                                                     bool broadcast)
+annotated_signed_transaction
+wallet_api::vote_for_committee_proposal(const std::string& voting_account, int64_t proposal_id, bool broadcast)
 {
     proposal_vote_operation op;
     op.voting_account = voting_account;
-    op.committee_member = account_to_vote_for;
+    op.proposal_id = proposal_id;
 
     signed_transaction tx;
     tx.operations.push_back(op);

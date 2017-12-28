@@ -353,7 +353,6 @@ void close_budget_operation::validate() const
 void proposal_vote_operation::validate() const
 {
     validate_account_name(voting_account);
-    validate_account_name(committee_member);
 }
 
 void proposal_create_operation::validate() const
