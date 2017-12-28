@@ -68,7 +68,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
         = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
 
     db_impl().modify(new_account, [&](account_object& acc) {
-        acc.initially_supplied = true;
+        acc.created_by_genesis = true;
         acc.balance = balance;
     });
 

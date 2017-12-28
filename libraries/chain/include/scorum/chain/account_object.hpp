@@ -40,7 +40,7 @@ public:
     time_point_sec last_account_update;
 
     time_point_sec created;
-    bool initially_supplied = false;
+    bool created_by_genesis = false;
     bool owner_challenged = false;
     bool active_challenged = false;
     time_point_sec last_owner_proved = time_point_sec::min();
@@ -514,7 +514,7 @@ typedef multi_index_container<change_recovery_account_request_object,
 
 FC_REFLECT( scorum::chain::account_object,
              (id)(name)(memo_key)(json_metadata)(proxy)(last_account_update)
-             (created)(initially_supplied)
+             (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
