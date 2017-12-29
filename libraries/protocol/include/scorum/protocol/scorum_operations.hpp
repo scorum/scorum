@@ -6,7 +6,6 @@
 #include <scorum/protocol/types.hpp>
 
 #include <fc/utf8.hpp>
-#include <fc/crypto/equihash.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -24,7 +23,7 @@ inline void validate_permlink(const std::string& permlink)
 
 struct account_create_operation : public base_operation
 {
-    asset fee;
+    asset fee = asset(0, SCORUM_SYMBOL);
     account_name_type creator;
     account_name_type new_account_name;
     authority owner;
@@ -42,8 +41,8 @@ struct account_create_operation : public base_operation
 
 struct account_create_with_delegation_operation : public base_operation
 {
-    asset fee;
-    asset delegation;
+    asset fee = asset(0, SCORUM_SYMBOL);
+    asset delegation = asset(0, VESTS_SYMBOL);
     account_name_type creator;
     account_name_type new_account_name;
     authority owner;
@@ -53,6 +52,23 @@ struct account_create_with_delegation_operation : public base_operation
     std::string json_metadata;
 
     extensions_type extensions;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+};
+
+struct account_create_by_committee_operation : public base_operation
+{
+    account_name_type creator;
+    account_name_type new_account_name;
+    authority owner;
+    authority active;
+    authority posting;
+    public_key_type memo_key;
+    std::string json_metadata;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -212,7 +228,7 @@ struct vote_operation : public base_operation
 /**
  * @ingroup operations
  *
- * @brief Transfers SCORUM from one account to another.
+ * @brief Transfers SCR from one account to another.
  */
 struct transfer_operation : public base_operation
 {
@@ -220,7 +236,7 @@ struct transfer_operation : public base_operation
     /// Account to transfer asset to
     account_name_type to;
     /// The amount of asset to transfer from @ref from to @ref to
-    asset amount;
+    asset amount = asset(0, SCORUM_SYMBOL);
 
     /// The memo is plain-text, any encryption on the memo is up to
     /// a higher level protocol.
@@ -260,7 +276,7 @@ struct escrow_transfer_operation : public base_operation
     uint32_t escrow_id = 30;
 
     asset scorum_amount = asset(0, SCORUM_SYMBOL);
-    asset fee;
+    asset fee = asset(0, SCORUM_SYMBOL);
 
     time_point_sec ratification_deadline;
     time_point_sec escrow_expiration;
@@ -346,7 +362,7 @@ struct escrow_release_operation : public base_operation
 };
 
 /**
- *  This operation converts SCORUM into VFS (Vesting Fund Shares) at
+ *  This operation converts SCR into SP at
  *  the current exchange rate. With this operation it is possible to
  *  give another account vesting shares so that faucets can
  *  pre-fund new accounts with vesting shares.
@@ -355,7 +371,7 @@ struct transfer_to_vesting_operation : public base_operation
 {
     account_name_type from;
     account_name_type to; ///< if null, then same as from
-    asset amount; ///< must be SCORUM
+    asset amount = asset(0, SCORUM_SYMBOL);
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -378,7 +394,7 @@ struct transfer_to_vesting_operation : public base_operation
 struct withdraw_vesting_operation : public base_operation
 {
     account_name_type account;
-    asset vesting_shares;
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -456,7 +472,8 @@ struct witness_update_operation : public base_operation
     std::string url;
     public_key_type block_signing_key;
     chain_properties props;
-    asset fee; ///< the fee paid to register a new witness, should be 10x current block production pay
+    asset fee = asset(
+        0, SCORUM_SYMBOL); ///< the fee paid to register a new witness, should be 10x current block production pay
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -722,8 +739,8 @@ struct decline_voting_rights_operation : public base_operation
 struct claim_reward_balance_operation : public base_operation
 {
     account_name_type account;
-    asset reward_scorum;
-    asset reward_vests;
+    asset reward_scorum = asset(0, SCORUM_SYMBOL);
+    asset reward_vests = asset(0, VESTS_SYMBOL);
 
     void get_required_posting_authorities(flat_set<account_name_type>& a) const
     {
@@ -739,13 +756,13 @@ struct claim_reward_balance_operation : public base_operation
  * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
  *
  * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
- * of VESTS from voting on the same content twice.
+ * of SP from voting on the same content twice.
  */
 struct delegate_vesting_shares_operation : public base_operation
 {
     account_name_type delegator; ///< The account delegating vesting shares
     account_name_type delegatee; ///< The account receiving vesting shares
-    asset vesting_shares; ///< The amount of vesting shares delegated
+    asset vesting_shares = asset(0, VESTS_SYMBOL); ///< The amount of vesting shares delegated
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -759,7 +776,7 @@ struct create_budget_operation : public base_operation
     account_name_type owner;
     std::string content_permlink;
 
-    asset balance;
+    asset balance = asset(0, SCORUM_SYMBOL);
     time_point_sec deadline;
 
     void validate() const;
@@ -840,6 +857,15 @@ FC_REFLECT( scorum::protocol::account_create_with_delegation_operation,
             (memo_key)
             (json_metadata)
             (extensions) )
+
+FC_REFLECT( scorum::protocol::account_create_by_committee_operation,
+            (creator)
+            (new_account_name)
+            (owner)
+            (active)
+            (posting)
+            (memo_key)
+            (json_metadata) )
 
 FC_REFLECT( scorum::protocol::account_update_operation,
             (account)

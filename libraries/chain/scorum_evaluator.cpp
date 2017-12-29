@@ -10,6 +10,8 @@
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/proposal_vote_object.hpp>
 
@@ -108,12 +110,9 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
     // check fee
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    FC_ASSERT(o.fee >= asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                             SCORUM_SYMBOL),
+    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
               "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f",
-               wso.median_props.account_creation_fee
-                   * asset(SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL))("p", o.fee));
+              ("f", wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER)("p", o.fee));
 
     // check accounts existence
 
@@ -181,6 +180,29 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     account_service.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                                    o.active, o.posting, o.fee, o.delegation);
+}
+
+void account_create_by_committee_evaluator::do_apply(const account_create_by_committee_operation& o)
+{
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(o.creator);
+
+    dbs_registration_committee& registration_committee_service = db().obtain_service<dbs_registration_committee>();
+    FC_ASSERT(registration_committee_service.member_exists(o.creator), "Account '${1}' is not committee member.",
+              ("1", o.creator));
+
+    dbs_registration_pool& registration_pool_service = db().obtain_service<dbs_registration_pool>();
+    asset bonus = registration_pool_service.allocate_cash(o.creator);
+
+    account_service.check_account_existence(o.owner.account_auths);
+
+    account_service.check_account_existence(o.active.account_auths);
+
+    account_service.check_account_existence(o.posting.account_auths);
+
+    account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+                                              o.active, o.posting, bonus);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -391,7 +413,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 parent_author = o.parent_author;
             }
 
-            account_service.add_post(auth, parent_author, now);
+            account_service.add_post(auth, parent_author);
 
             _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
                 validate_permlink_0_1(o.parent_permlink);
@@ -517,7 +539,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                     }
                 }
 #endif
-
             });
 
         } // end EDIT case
@@ -539,12 +560,13 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
                   "The escorw ratification deadline must be after head block time.");
         FC_ASSERT(o.escrow_expiration > _db.head_block_time(), "The escrow expiration must be after head block time.");
 
+        FC_ASSERT(o.fee.symbol == SCORUM_SYMBOL, "Fee must be in SCR.");
+
         asset scorum_spent = o.scorum_amount;
-        if (o.fee.symbol == SCORUM_SYMBOL)
-            scorum_spent += o.fee;
+        scorum_spent += o.fee;
 
         FC_ASSERT(from_account.balance >= scorum_spent,
-                  "Account cannot cover SCORUM costs of escrow. Required: ${r} Available: ${a}",
+                  "Account cannot cover SCR costs of escrow. Required: ${r} Available: ${a}",
                   ("r", scorum_spent)("a", from_account.balance));
 
         account_service.decrease_balance(from_account, scorum_spent);
@@ -725,7 +747,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     const auto& to_account = o.to.size() ? account_service.get_account(o.to) : from_account;
 
     FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
-              "Account does not have sufficient SCORUM for transfer.");
+              "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.create_vesting(to_account, o.amount);
 }
@@ -741,7 +763,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares,
               "Account does not have sufficient Scorum Power for withdraw.");
 
-    if (!account.mined)
+    if (!account.created_by_genesis)
     {
         const auto& props = _db.get_dynamic_global_properties();
         const witness_schedule_object& wso = _db.get_witness_schedule_object();
@@ -765,7 +787,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     else
     {
 
-        // SCORUM: We have to decide wether we use 13 weeks vesting period or low it down
+        // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
         int vesting_withdraw_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
 
         auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / vesting_withdraw_intervals, VESTS_SYMBOL);
@@ -1291,9 +1313,9 @@ void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operati
 
     const auto& acnt = account_service.get_account(op.account);
 
-    FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCORUM. Claim: ${c} Actual: ${a}",
+    FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCR. Claim: ${c} Actual: ${a}",
               ("c", op.reward_scorum)("a", acnt.reward_scorum_balance));
-    FC_ASSERT(op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much VESTS. Claim: ${c} Actual: ${a}",
+    FC_ASSERT(op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much SP. Claim: ${c} Actual: ${a}",
               ("c", op.reward_vests)("a", acnt.reward_vesting_balance));
 
     asset reward_vesting_scorum_to_move = asset(0, SCORUM_SYMBOL);

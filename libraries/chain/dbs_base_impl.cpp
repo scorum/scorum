@@ -35,20 +35,6 @@ const database& dbs_base::db_impl() const
     return _db_core;
 }
 
-time_point_sec dbs_base::_get_now(const optional<time_point_sec>& now)
-{
-    time_point_sec ret;
-    if (now.valid())
-    {
-        ret = (*now);
-    }
-    else
-    {
-        ret = db_impl().head_block_time();
-    }
-    return ret;
-}
-
 // dbservice
 
 dbservice_dbs_factory::dbservice_dbs_factory(database& db)

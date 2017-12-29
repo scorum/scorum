@@ -55,8 +55,8 @@ typedef multi_index_container<budget_object,
                                                                    &budget_object::owner>>>,
                               allocator<budget_object>>
     budget_index;
-}
-}
+} // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::budget_object,
            (id)(owner)(content_permlink)(created)(deadline)(balance)(per_block)(last_allocated_block))

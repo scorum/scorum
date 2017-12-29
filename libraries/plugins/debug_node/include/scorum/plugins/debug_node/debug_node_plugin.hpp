@@ -13,15 +13,15 @@ namespace protocol {
 struct chain_properties;
 struct pow2;
 struct signed_block;
-}
-}
+} // namespace protocol
+} // namespace scorum
 
 namespace graphene {
 namespace db {
 struct object_id_type;
 class object;
-}
-}
+} // namespace db
+} // namespace graphene
 
 namespace scorum {
 namespace plugin {
@@ -32,16 +32,23 @@ namespace detail {
 class debug_node_plugin_impl;
 }
 
+//////////////////////////////////////////////////////////////////////////
 class private_key_storage
 {
 public:
-    private_key_storage();
-    virtual ~private_key_storage();
+    private_key_storage()
+    {
+    }
+    virtual ~private_key_storage()
+    {
+    }
     virtual void maybe_get_private_key(fc::optional<fc::ecc::private_key>& result,
-        const scorum::chain::public_key_type& pubkey, const std::string& account_name)
+                                       const scorum::chain::public_key_type& pubkey,
+                                       const std::string& account_name)
         = 0;
 };
 
+//////////////////////////////////////////////////////////////////////////
 class debug_node_plugin : public scorum::app::plugin
 {
 public:
@@ -50,8 +57,8 @@ public:
 
     virtual std::string plugin_name() const override;
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
-    virtual void plugin_set_program_options(
-        boost::program_options::options_description& cli, boost::program_options::options_description& cfg) override;
+    virtual void plugin_set_program_options(boost::program_options::options_description& cli,
+                                            boost::program_options::options_description& cfg) override;
     virtual void plugin_startup() override;
     virtual void plugin_shutdown() override;
 
@@ -74,12 +81,16 @@ public:
         db.push_block(*head_block, skip);
     }
 
-    uint32_t debug_generate_blocks(const std::string& debug_key, uint32_t count,
-        uint32_t skip = scorum::chain::database::skip_nothing, uint32_t miss_blocks = 0,
-        private_key_storage* key_storage = nullptr);
-    uint32_t debug_generate_blocks_until(const std::string& debug_key, const fc::time_point_sec& head_block_time,
-        bool generate_sparsely, uint32_t skip = scorum::chain::database::skip_nothing,
-        private_key_storage* key_storage = nullptr);
+    uint32_t debug_generate_blocks(const std::string& debug_key,
+                                   uint32_t count,
+                                   uint32_t skip = scorum::chain::database::skip_nothing,
+                                   uint32_t miss_blocks = 0,
+                                   private_key_storage* key_storage = nullptr);
+    uint32_t debug_generate_blocks_until(const std::string& debug_key,
+                                         const fc::time_point_sec& head_block_time,
+                                         bool generate_sparsely,
+                                         uint32_t skip = scorum::chain::database::skip_nothing,
+                                         private_key_storage* key_storage = nullptr);
 
     void set_json_object_stream(const std::string& filename);
     void flush_json_object_stream();
@@ -98,17 +109,10 @@ private:
 
     std::map<protocol::public_key_type, fc::ecc::private_key> _private_keys;
 
-    std::shared_ptr<detail::debug_node_plugin_impl> _my;
-
-    // std::shared_ptr< std::ofstream > _json_object_stream;
     boost::signals2::scoped_connection _applied_block_conn;
-    boost::signals2::scoped_connection _changed_objects_conn;
-    boost::signals2::scoped_connection _removed_objects_conn;
 
-    std::vector<std::string> _edit_scripts;
-    // std::map< protocol::block_id_type, std::vector< fc::variant_object > > _debug_updates;
     std::map<protocol::block_id_type, std::vector<std::function<void(chain::database&)>>> _debug_updates;
 };
-}
-}
-}
+} // namespace debug_node
+} // namespace plugin
+} // namespace scorum

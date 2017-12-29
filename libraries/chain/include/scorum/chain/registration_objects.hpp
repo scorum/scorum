@@ -31,9 +31,9 @@ public:
 
     id_type id;
 
-    asset balance = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset balance = asset(0, SCORUM_SYMBOL);
 
-    asset maximum_bonus = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset maximum_bonus = asset(0, SCORUM_SYMBOL);
 
     uint64_t already_allocated_count = 0;
 
@@ -65,7 +65,7 @@ public:
 
     // temporary schedule info
 
-    asset already_allocated_cash = asset(0, REGISTRATION_BONUS_SYMBOL);
+    asset already_allocated_cash = asset(0, SCORUM_SYMBOL);
 
     uint32_t last_allocated_block = 0;
 
@@ -81,7 +81,6 @@ typedef multi_index_container<registration_pool_object,
     registration_pool_index;
 
 struct by_account_name;
-struct by_member_name;
 
 typedef multi_index_container<registration_committee_member_object,
                               indexed_by<ordered_unique<tag<by_id>,
@@ -94,7 +93,6 @@ typedef multi_index_container<registration_committee_member_object,
                                                                &registration_committee_member_object::account>>>,
                               allocator<registration_committee_member_object>>
     registration_committee_member_index;
-
 } // namespace chain
 } // namespace scorum
 

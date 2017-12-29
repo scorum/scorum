@@ -15,13 +15,14 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 using fc::string;
 
-class dbs_reward_fixture : public clean_database_fixture
+class dbs_reward_fixture : public database_fixture
 {
 public:
     dbs_reward_fixture()
         : reward_service(db.obtain_service<dbs_reward>())
         , budget_service(db.obtain_service<dbs_budget>())
     {
+        open_database();
     }
 
     dbs_reward& reward_service;
@@ -92,9 +93,9 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_balancing)
     {
         const reward_pool_object& pool = reward_service.get_pool();
 
-        BOOST_REQUIRE_GE(pool.balance.amount,
-                         pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                             * SCORUM_BLOCKS_PER_DAY);
+        BOOST_REQUIRE_EQUAL(pool.balance.amount,
+                            pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
+                                * SCORUM_BLOCKS_PER_DAY);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -136,10 +137,12 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_automatic_reward_increasing)
 
         asset initial_per_block_reward = pool.current_per_block_reward;
         asset threshold_balance(pool.current_per_block_reward.amount * SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS
-                                * SCORUM_BLOCKS_PER_DAY);
+                                    * SCORUM_BLOCKS_PER_DAY,
+                                SCORUM_SYMBOL);
 
-        BOOST_REQUIRE_EQUAL(reward_service.increase_pool_ballance(threshold_balance + asset(1) - pool.balance),
-                            threshold_balance + asset(1));
+        BOOST_REQUIRE_EQUAL(
+            reward_service.increase_pool_ballance(threshold_balance + asset(1, SCORUM_SYMBOL) - pool.balance),
+            threshold_balance + asset(1, SCORUM_SYMBOL));
 
         asset current_per_block_reward = reward_service.take_block_reward();
 
@@ -157,7 +160,8 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_automatic_reward_decreasing)
 
         asset initial_per_block_reward = pool.current_per_block_reward;
         asset threshold_balance(pool.current_per_block_reward.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                                * SCORUM_BLOCKS_PER_DAY);
+                                    * SCORUM_BLOCKS_PER_DAY,
+                                SCORUM_SYMBOL);
 
         while (pool.balance >= threshold_balance)
         {

@@ -270,8 +270,6 @@ SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
     BOOST_CHECK_THROW(apply(), fc::exception);
 }
 
-// TODO write tests for `check_quorum` function. test round.
-
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(test_get_quorum)

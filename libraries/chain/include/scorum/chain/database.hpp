@@ -156,11 +156,6 @@ public:
     const reward_fund_object& get_reward_fund(const comment_object& c) const override;
 
     /**
-     *  Deducts fee from the account and the share supply
-     */
-    void pay_fee(const account_object& a, asset fee);
-
-    /**
      *  Calculate the percent of block production slots that were missed in the
      *  past 128 blocks, not including the current block.
      */
@@ -291,14 +286,13 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    /** @return the sbd created and deposited to_account, may return SCORUM if there is no median feed */
+    /** @return the sbd created and deposited to_account, may return SCR if there is no median feed */
     asset create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance = false);
     void adjust_total_payout(const comment_object& a,
                              const asset& sbd,
                              const asset& curator_sbd_value,
                              const asset& beneficiary_value);
 
-    void adjust_supply(const asset& delta, bool adjust_vesting = false);
     void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
     asset get_balance(const account_object& a, asset_symbol_type symbol) const override;
@@ -325,7 +319,7 @@ public:
 
     uint16_t get_curation_rewards_percent(const comment_object& c) const override;
 
-    share_type pay_reward_funds(share_type reward);
+    const asset pay_reward_funds(const asset& reward);
 
     time_point_sec head_block_time() const override;
     uint32_t head_block_num() const;

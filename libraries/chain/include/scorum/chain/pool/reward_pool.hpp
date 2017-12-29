@@ -19,8 +19,8 @@ public:
 public:
     reward_pool_id_type id;
 
-    asset balance;
-    asset current_per_block_reward;
+    asset balance = asset(0, SCORUM_SYMBOL);
+    asset current_per_block_reward = asset(0, SCORUM_SYMBOL);
 };
 
 // clang-format off

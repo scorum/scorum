@@ -13,7 +13,7 @@ namespace chain {
 
 /** DB service for operations with registration_committee_* objects
  *  --------------------------------------------
-*/
+ */
 class dbs_registration_committee : public dbs_base
 {
     friend class dbservice_dbs_factory;
@@ -38,12 +38,12 @@ public:
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
     void update_member_info(const registration_committee_member_object&, member_info_modifier_type modifier);
 
-    size_t get_members_count() const;
+    bool member_exists(const account_name_type&) const;
 
     uint64_t get_quorum(uint64_t percent);
 
 private:
-    bool _member_exists(const account_name_type&) const;
+    uint64_t _get_members_count() const;
 
     const registration_committee_member_object& _add_member(const account_object&);
 
@@ -52,7 +52,7 @@ private:
 
 namespace utils {
 uint64_t get_quorum(size_t members_count, uint64_t percent);
-}
+} // namespace utils
 
 } // namespace chain
 } // namespace scorum

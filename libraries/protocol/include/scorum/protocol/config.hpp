@@ -13,11 +13,12 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
-#define REGISTRATION_BONUS_SYMBOL              SCORUM_SYMBOL
+// SCORUM = SCR with 3 digits of precision
+#define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
+// VESTS = SP with 6 digits of precision
+#define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
 #ifdef IS_TEST_NET
-#define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
-#define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('T') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< SCORUM with 3 digits of precision
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
@@ -40,13 +41,11 @@
 #define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
 #define SCORUM_BUDGET_LIMIT_API_LIST_SIZE         SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
 
-#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 10, REGISTRATION_BONUS_SYMBOL )
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 10, SCORUM_SYMBOL )
 
 #define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        1
 
 #else // IS LIVE SCORUM NETWORK
-#define VESTS_SYMBOL  (uint64_t(6) | (uint64_t('V') << 8) | (uint64_t('E') << 16) | (uint64_t('S') << 24) | (uint64_t('T') << 32) | (uint64_t('S') << 40)) ///< VESTS with 6 digits of precision
-#define SCORUM_SYMBOL (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('O') << 24) | (uint64_t('R') << 32) | (uint64_t('U') << 40) | (uint64_t('M') << 48)) ///< SCORUM with 3 digits of precision
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
