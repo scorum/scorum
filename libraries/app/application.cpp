@@ -1225,7 +1225,7 @@ const std::string application::print_config(const boost::program_options::variab
         try
         {
             auto vect = vm[it->first].as<std::vector<std::string>>();
-            uint i = 0;
+            auto i = 0;
             for (auto oit = vect.begin(); oit != vect.end(); ++oit, ++i)
             {
                 stream << "\r> " << it->first << "[" << i << "]=" << (*oit) << std::endl;

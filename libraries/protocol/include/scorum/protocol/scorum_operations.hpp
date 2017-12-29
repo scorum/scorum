@@ -4,7 +4,6 @@
 #include <scorum/protocol/asset.hpp>
 
 #include <fc/utf8.hpp>
-#include <fc/crypto/equihash.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
