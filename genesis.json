@@ -39,7 +39,7 @@
 
   "registration_committee": ["alice", "bob"],
   "registration_supply": "1.000 SCR",
-  "registration_maximum_bonus": "0.005 SCR",
+  "registration_bonus": "0.005 SCR",
 
   "registration_schedule": [{
     "stage": 1,
