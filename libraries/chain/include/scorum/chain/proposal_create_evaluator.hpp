@@ -7,6 +7,7 @@
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
 
 namespace scorum {
 namespace chain {
@@ -16,21 +17,24 @@ using namespace scorum::protocol;
 // clang-format off
  template <typename AccountService,
           typename ProposalService,
+          typename CommiteeService,
           typename OperationType = scorum::protocol::operation>
  class proposal_create_evaluator_t : public evaluator<OperationType>
 // clang-format on
 {
 public:
     //    typedef scorum::protocol::operation ;
-    typedef proposal_create_evaluator_t<AccountService, ProposalService> EvaluatorType;
+    typedef proposal_create_evaluator_t<AccountService, ProposalService, CommiteeService> EvaluatorType;
     typedef proposal_create_operation operation_type;
 
     proposal_create_evaluator_t(AccountService& account_service,
                                 ProposalService& proposal_service,
+                                CommiteeService& commitee_service,
                                 uint32_t lifetime_min,
                                 uint32_t lifetime_max)
         : _account_service(account_service)
         , _proposal_service(proposal_service)
+        , _commitee_service(commitee_service)
         , _lifetime_min(lifetime_min)
         , _lifetime_max(lifetime_max)
     {
@@ -54,6 +58,9 @@ public:
                   "Proposal life time is not in range of ${min} - ${max} seconds.",
                   ("min", _lifetime_min)("max", _lifetime_max));
 
+        FC_ASSERT(_commitee_service.member_exists(op.creator), "Account \"${account_name}\" is not in commitee.",
+                  ("account_name", op.creator));
+
         FC_ASSERT(_account_service.is_exists(op.creator), "Account \"${account_name}\" must exist.",
                   ("account_name", op.creator));
 
@@ -68,12 +75,13 @@ public:
 protected:
     AccountService& _account_service;
     ProposalService& _proposal_service;
+    CommiteeService& _commitee_service;
 
     const uint32_t _lifetime_min;
     const uint32_t _lifetime_max;
 };
 
-typedef proposal_create_evaluator_t<dbs_account, dbs_proposal> proposal_create_evaluator;
+typedef proposal_create_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee> proposal_create_evaluator;
 
 } // namespace chain
 } // namespace scorum

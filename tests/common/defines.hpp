@@ -50,6 +50,18 @@
          << req_throw_info << std::endl;                  \
 }*/
 
+#define SCORUM_CHECK_EXCEPTION(test_code, exception, message)                                                          \
+    try                                                                                                                \
+    {                                                                                                                  \
+        test_code;                                                                                                     \
+    }                                                                                                                  \
+    catch (exception & e)                                                                                              \
+    {                                                                                                                  \
+        BOOST_REQUIRE(e.get_log().size() == 1);                                                                        \
+        bool check_exception_message = e.get_log().front().get_message().find(message) != std::string::npos;           \
+        BOOST_CHECK(check_exception_message);                                                                          \
+    }
+
 #define SCORUM_REQUIRE_THROW(expr, exc_type) BOOST_REQUIRE_THROW(expr, exc_type);
 
 #define SCORUM_CHECK_THROW(expr, exc_type)                                                                             \

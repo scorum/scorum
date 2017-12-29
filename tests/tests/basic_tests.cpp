@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+#ifdef IS_TEST_NET
+
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/database.hpp>
@@ -375,3 +377,4 @@ BOOST_AUTO_TEST_CASE(format_string)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#endif

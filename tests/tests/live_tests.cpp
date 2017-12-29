@@ -1,3 +1,5 @@
+#ifdef IS_TEST_NET
+
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -15,8 +17,6 @@
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
-
-#ifndef IS_TEST_NET
 
 BOOST_FIXTURE_TEST_SUITE(live_tests, live_database_fixture)
 

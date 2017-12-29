@@ -99,10 +99,17 @@ public:
         excluded_members.push_back(account);
     }
 
-    uint64_t get_quorum(uint64_t percent)
+    uint64_t get_quorum(uint64_t)
     {
         return quorum_votes;
     }
+
+    bool member_exists(const account_name_type& account) const
+    {
+        return existent_accounts.count(account) == 1 ? true : false;
+    }
+
+    std::set<account_name_type> existent_accounts;
 
     std::vector<account_name_type> added_members;
     std::vector<account_name_type> excluded_members;
@@ -121,6 +128,9 @@ public:
     {
         account_service.existent_accounts.insert("alice");
         account_service.existent_accounts.insert("bob");
+
+        committee_service.existent_accounts.insert("alice");
+        committee_service.existent_accounts.insert("bob");
 
         proposal_vote_object proposal;
         proposal.creator = "alice";
@@ -167,29 +177,25 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(proposal_vote_evaluator_tests, proposal_vote_evaluator_fixture)
 
-SCORUM_TEST_CASE(throw_on_add_when_creator_account_does_not_exists)
+SCORUM_TEST_CASE(throw_when_creator_account_does_not_exists)
 {
     account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
 
-    proposal().action = proposal_action::invite;
-
-    BOOST_CHECK_THROW(apply(), fc::exception);
+    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" must exist.");
 }
 
-SCORUM_TEST_CASE(throw_on_drop_when_creator_account_does_not_exists)
+SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
 {
-    account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
+    committee_service.existent_accounts.erase(committee_service.existent_accounts.find("alice"));
 
-    proposal().action = proposal_action::dropout;
-
-    BOOST_CHECK_THROW(apply(), fc::exception);
+    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" is not in commitee.");
 }
 
 SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 {
     op.proposal_id = 100;
 
-    BOOST_CHECK_THROW(apply(), fc::exception);
+    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "There is no proposal with id '100'");
 }
 
 SCORUM_TEST_CASE(add_one_new_member)
@@ -268,6 +274,8 @@ SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
     proposal_service.expired.push_back(proposal().id);
 
     BOOST_CHECK_THROW(apply(), fc::exception);
+
+    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Proposal '1' is expired.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

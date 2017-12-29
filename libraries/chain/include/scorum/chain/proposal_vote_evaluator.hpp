@@ -54,6 +54,9 @@ public:
 
     void do_apply(const proposal_vote_operation& op)
     {
+        FC_ASSERT(_committee_service.member_exists(op.voting_account),
+                  "Account \"${account_name}\" is not in commitee.", ("account_name", op.voting_account));
+
         FC_ASSERT(_account_service.is_exists(op.voting_account), "Account \"${account_name}\" must exist.",
                   ("account_name", op.voting_account));
 
@@ -62,7 +65,7 @@ public:
 
         const proposal_vote_object& proposal = _proposal_service.get(op.proposal_id);
 
-        FC_ASSERT(!_proposal_service.is_expired(proposal), "This proposal is expired '${id}'", ("id", op.proposal_id));
+        FC_ASSERT(!_proposal_service.is_expired(proposal), "Proposal '${id}' is expired.", ("id", op.proposal_id));
 
         _proposal_service.vote_for(proposal);
 

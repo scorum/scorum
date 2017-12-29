@@ -1641,13 +1641,20 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
 
+    // clang-format off
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(
-        new proposal_create_evaluator(this->obtain_service<dbs_account>(), this->obtain_service<dbs_proposal>(),
-                                      SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS, SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
+        new proposal_create_evaluator(this->obtain_service<dbs_account>(),
+                                      this->obtain_service<dbs_proposal>(),
+                                      this->obtain_service<dbs_registration_committee>(),
+                                      SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS,
+                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
-    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(new proposal_vote_evaluator(
-        this->obtain_service<dbs_account>(), this->obtain_service<dbs_proposal>(),
-        this->obtain_service<dbs_registration_committee>(), SCORUM_COMMITTEE_QUORUM_PERCENT));
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
+        new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
+                                    this->obtain_service<dbs_proposal>(),
+                                    this->obtain_service<dbs_registration_committee>(),
+                                    SCORUM_COMMITTEE_QUORUM_PERCENT));
+    //clang-format on
 }
 
 void database::set_custom_operation_interpreter(const std::string& id,

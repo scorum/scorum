@@ -51,7 +51,18 @@ public:
     const fc::time_point_sec _head_block_time;
 };
 
-typedef scorum::chain::proposal_create_evaluator_t<account_service_mock, proposal_service_mock>
+class committee_service_mock
+{
+public:
+    bool member_exists(const account_name_type& account) const
+    {
+        return existent_accounts.count(account) == 1 ? true : false;
+    }
+
+    std::set<account_name_type> existent_accounts;
+};
+
+typedef scorum::chain::proposal_create_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
     proposal_create_evaluator_mocked;
 
 class proposal_create_evaluator_fixture
@@ -60,10 +71,13 @@ public:
     proposal_create_evaluator_fixture()
         : lifetime_min(5)
         , lifetime_max(10)
-        , evaluator(account_service, proposal_service, lifetime_min, lifetime_max)
+        , evaluator(account_service, proposal_service, committee_service, lifetime_min, lifetime_max)
     {
         account_service.existent_accounts.insert("alice");
         account_service.existent_accounts.insert("bob");
+
+        committee_service.existent_accounts.insert("alice");
+        committee_service.existent_accounts.insert("bob");
     }
 
     const uint32_t lifetime_min;
@@ -71,15 +85,10 @@ public:
 
     account_service_mock account_service;
     proposal_service_mock proposal_service;
+    committee_service_mock committee_service;
 
     proposal_create_evaluator_mocked evaluator;
 };
-
-std::string exception_to_string(fc::exception& e)
-{
-    BOOST_REQUIRE(e.get_log().size() == 1);
-    return e.get_log().front().get_message();
-}
 
 BOOST_FIXTURE_TEST_SUITE(proposal_create_evaluator_tests, proposal_create_evaluator_fixture)
 
@@ -91,15 +100,8 @@ SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_small)
     op.lifetime_sec = lifetime_min - 1;
     op.action = proposal_action::dropout;
 
-    try
-    {
-        evaluator.do_apply(op);
-    }
-    catch (fc::exception& e)
-    {
-        BOOST_CHECK(exception_to_string(e).find("Proposal life time is not in range of 5 - 10 seconds.")
-                    != std::string::npos);
-    }
+    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
+                           "Proposal life time is not in range of 5 - 10 seconds.");
 }
 
 SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_big)
@@ -109,15 +111,19 @@ SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_big)
     op.committee_member = "bob";
     op.lifetime_sec = lifetime_max + 1;
 
-    try
-    {
-        evaluator.do_apply(op);
-    }
-    catch (fc::exception& e)
-    {
-        BOOST_CHECK(exception_to_string(e).find("Proposal life time is not in range of 5 - 10 seconds.")
-                    != std::string::npos);
-    }
+    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
+                           "Proposal life time is not in range of 5 - 10 seconds.");
+}
+
+SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
+{
+    proposal_create_operation op;
+    op.creator = "joe";
+    op.committee_member = "bob";
+    op.lifetime_sec = lifetime_min + 1;
+    op.action = proposal_action::invite;
+
+    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"joe\" is not in commitee.");
 }
 
 SCORUM_TEST_CASE(create_one_invite_proposal)
@@ -167,14 +173,7 @@ BOOST_AUTO_TEST_CASE(throw_exception_if_creator_is_not_set)
 {
     proposal_create_operation op;
 
-    try
-    {
-        op.validate();
-    }
-    catch (fc::exception& e)
-    {
-        BOOST_CHECK(exception_to_string(e).find("Account name  is invalid") != std::string::npos);
-    }
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Account name  is invalid");
 }
 
 BOOST_AUTO_TEST_CASE(throw_exception_if_member_is_not_set)
@@ -182,14 +181,7 @@ BOOST_AUTO_TEST_CASE(throw_exception_if_member_is_not_set)
     proposal_create_operation op;
     op.creator = "alice";
 
-    try
-    {
-        op.validate();
-    }
-    catch (fc::exception& e)
-    {
-        BOOST_CHECK(exception_to_string(e).find("Account name  is invalid") != std::string::npos);
-    }
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Account name  is invalid");
 }
 
 BOOST_AUTO_TEST_CASE(throw_exception_if_action_is_not_set)
@@ -198,14 +190,17 @@ BOOST_AUTO_TEST_CASE(throw_exception_if_action_is_not_set)
     op.creator = "alice";
     op.committee_member = "bob";
 
-    try
-    {
-        op.validate();
-    }
-    catch (fc::exception& e)
-    {
-        BOOST_CHECK(exception_to_string(e).find("Proposal is not set.") != std::string::npos);
-    }
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Proposal is not set.");
+}
+
+BOOST_AUTO_TEST_CASE(pass_when_all_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.committee_member = "bob";
+    op.action = proposal_action::invite;
+
+    BOOST_CHECK_NO_THROW(op.validate());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

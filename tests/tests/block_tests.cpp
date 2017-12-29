@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #ifdef IS_TEST_NET
+
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
