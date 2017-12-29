@@ -233,26 +233,10 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
     increase_balance(account, -scorums);
 }
 
-void dbs_account::increase_reward_balance(const account_object& account, const asset& scorums)
-{
-    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& acnt) { acnt.reward_scorum_balance += scorums; });
-}
-
-void dbs_account::decrease_reward_balance(const account_object& account, const asset& scorums)
-{
-    increase_reward_balance(account, -scorums);
-}
-
-void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting, const asset& scorums)
+void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting)
 {
     FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) {
-        a.vesting_shares += vesting;
-        a.reward_vesting_balance -= vesting;
-        a.reward_vesting_scorum -= scorums;
-    });
+    db_impl().modify(account, [&](account_object& a) { a.vesting_shares += vesting; });
 }
 
 void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& vesting)
@@ -502,7 +486,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-const asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum, bool to_reward_balance)
+const asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum)
 {
     try
     {
@@ -521,34 +505,17 @@ const asset dbs_account::create_vesting(const account_object& to_account, const 
          *
          *  128 bit math is required due to multiplying of 64 bit numbers. This is done in asset and price.
          */
-        asset new_vesting
-            = scorum * (to_reward_balance ? cprops.get_reward_vesting_share_price() : cprops.get_vesting_share_price());
+        asset new_vesting = scorum * cprops.get_vesting_share_price();
 
-        db_impl().modify(to_account, [&](account_object& to) {
-            if (to_reward_balance)
-            {
-                to.reward_vesting_balance += new_vesting;
-                to.reward_vesting_scorum += scorum;
-            }
-            else
-                to.vesting_shares += new_vesting;
-        });
+        db_impl().modify(to_account, [&](account_object& to) { to.vesting_shares += new_vesting; });
 
         db_impl().modify(cprops, [&](dynamic_global_property_object& props) {
-            if (to_reward_balance)
-            {
-                props.pending_rewarded_vesting_shares += new_vesting;
-                props.pending_rewarded_vesting_scorum += scorum;
-            }
-            else
-            {
-                props.total_vesting_fund_scorum += scorum;
-                props.total_vesting_shares += new_vesting;
-            }
+            props.total_vesting_fund_scorum += scorum;
+            props.total_vesting_shares += new_vesting;
         });
 
-        if (!to_reward_balance)
-            adjust_proxied_witness_votes(to_account, new_vesting.amount);
+        // if (!to_reward_balance)
+        adjust_proxied_witness_votes(to_account, new_vesting.amount);
 
         return new_vesting;
     }

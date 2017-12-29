@@ -2040,24 +2040,6 @@ annotated_signed_transaction wallet_api::decline_voting_rights(const std::string
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::claim_reward_balance(const std::string& account,
-                                                              const asset& reward_scorum,
-                                                              const asset& reward_vests,
-                                                              bool broadcast)
-{
-    FC_ASSERT(!is_locked());
-    claim_reward_balance_operation op;
-    op.account = account;
-    op.reward_scorum = reward_scorum;
-    op.reward_vests = reward_vests;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
-
-    return my->sign_transaction(tx, broadcast);
-}
-
 std::map<uint32_t, applied_operation>
 wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
 {

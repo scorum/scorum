@@ -334,16 +334,6 @@ void decline_voting_rights_operation::validate() const
     validate_account_name(account);
 }
 
-void claim_reward_balance_operation::validate() const
-{
-    validate_account_name(account);
-    FC_ASSERT(is_asset_type(reward_scorum, SCORUM_SYMBOL), "Reward Scorum must be SCR");
-    FC_ASSERT(is_asset_type(reward_vests, VESTS_SYMBOL), "Reward Scorum must be SP");
-    FC_ASSERT(reward_scorum.amount >= 0, "Cannot claim a negative amount");
-    FC_ASSERT(reward_vests.amount >= 0, "Cannot claim a negative amount");
-    FC_ASSERT(reward_scorum.amount > 0 || reward_vests.amount > 0, "Must claim something.");
-}
-
 void delegate_vesting_shares_operation::validate() const
 {
     validate_account_name(delegator);
@@ -365,5 +355,5 @@ void close_budget_operation::validate() const
 {
     validate_account_name(owner);
 }
-}
-} // scorum::protocol
+} // namespace protocol
+} // namespace scorum
