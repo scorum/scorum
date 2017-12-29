@@ -67,9 +67,11 @@ get_contract_hash(const account_name_type& from, const account_name_type& to, co
     ret.data = boost::endian::big_to_native(ret.data);
 
 #ifdef IS_TEST_NET
-    std::cout << "Contract hash for ";
-    std::cout << from << "," << to << "," << secret_hash << " = ";
-    std::cout << get_contract_hash_hex(from, to, secret_hash) << std::endl;
+    std::stringstream print;
+    print << "Contract hash for ";
+    print << from << "," << to << "," << secret_hash << " = ";
+    print << get_contract_hash_hex(from, to, secret_hash);
+    ulog(print.str());
 #endif
     return ret;
 }
