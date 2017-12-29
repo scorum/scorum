@@ -16,7 +16,6 @@ public:
 
     proposal_vote_object()
         : action(scorum::protocol::proposal_action::invite)
-        , votes(0)
     {
     }
 
@@ -27,7 +26,7 @@ public:
     fc::time_point_sec expiration;
 
     scorum::protocol::proposal_action action;
-    uint32_t votes;
+    flat_set<account_name_type> voted_accounts;
 };
 
 struct by_member_name;
@@ -52,5 +51,5 @@ typedef multi_index_container<proposal_vote_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(action)(expiration)(votes))
+FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(action)(expiration)(voted_accounts))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_vote_object, scorum::chain::proposal_vote_index)

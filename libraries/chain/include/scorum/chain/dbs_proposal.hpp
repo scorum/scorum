@@ -27,7 +27,7 @@ public:
 
     const proposal_vote_object& get(proposal_id_type proposal_id);
 
-    void vote_for(const proposal_vote_object& proposal);
+    size_t vote_for(const account_name_type& voter, const proposal_vote_object& proposal);
 
     bool is_expired(const proposal_vote_object& proposal);
 

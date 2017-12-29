@@ -19,7 +19,6 @@ void dbs_proposal::create(const protocol::account_name_type& creator,
         proposal.creator = creator;
         proposal.member = member;
         proposal.action = action;
-        proposal.votes = 0;
         proposal.expiration = expiration;
     });
 }
@@ -43,9 +42,11 @@ const proposal_vote_object& dbs_proposal::get(proposal_id_type proposal_id)
     return *proposal;
 }
 
-void dbs_proposal::vote_for(const proposal_vote_object& proposal)
+size_t dbs_proposal::vote_for(const protocol::account_name_type& voter, const proposal_vote_object& proposal)
 {
-    db_impl().modify(proposal, [&](proposal_vote_object& p) { p.votes += 1; });
+    db_impl().modify(proposal, [&](proposal_vote_object& p) { p.voted_accounts.insert(voter); });
+
+    return proposal.voted_accounts.size();
 }
 
 bool dbs_proposal::is_expired(const proposal_vote_object& proposal)

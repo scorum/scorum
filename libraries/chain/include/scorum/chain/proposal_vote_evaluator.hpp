@@ -65,11 +65,14 @@ public:
 
         const proposal_vote_object& proposal = _proposal_service.get(op.proposal_id);
 
+        FC_ASSERT(proposal.voted_accounts.find(op.voting_account) == proposal.voted_accounts.end(),
+                  "Account \"${account}\" already voted", ("account", op.voting_account));
+
         FC_ASSERT(!_proposal_service.is_expired(proposal), "Proposal '${id}' is expired.", ("id", op.proposal_id));
 
-        _proposal_service.vote_for(proposal);
+        const size_t votes = _proposal_service.vote_for(op.voting_account, proposal);
 
-        if (proposal.votes >= _committee_service.get_quorum(_quorum_percent))
+        if (votes >= _committee_service.get_quorum(_quorum_percent))
         {
             if (proposal.action == invite)
             {
