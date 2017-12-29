@@ -203,6 +203,9 @@ public:
 
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 
+    atomicswap_contract_info_api_obj
+    get_atomicswap_contract(const std::string& from, const std::string& to, const std::string& secret_hash) const;
+
     std::vector<owner_authority_history_api_obj> get_owner_history(std::string account) const;
 
     optional<account_recovery_request_api_obj> get_recovery_request(std::string account) const;
@@ -515,6 +518,7 @@ FC_API(scorum::app::database_api,
 
     // Atomic Swap
    (get_atomicswap_contracts)
+   (get_atomicswap_contract)
 )
 
 // clang-format on

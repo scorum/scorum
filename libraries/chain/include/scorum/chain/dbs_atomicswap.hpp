@@ -24,16 +24,15 @@ public:
 
     atomicswap_contracts_refs_type get_contracts(const account_object& owner) const;
 
-    const atomicswap_contract_object& get_contract(const account_object& recipient,
-                                                   const std::string& secret_hash) const;
-
-    const atomicswap_contract_object& get_contract(atomicswap_contract_id_type id) const;
+    const atomicswap_contract_object&
+    get_contract(const account_object& from, const account_object& to, const std::string& secret_hash) const;
 
     const atomicswap_contract_object& create_contract(atomicswap_contract_type tp,
                                                       const account_object& owner,
                                                       const account_object& recipient,
                                                       const asset& amount,
-                                                      const std::string& secret_hash);
+                                                      const std::string& secret_hash,
+                                                      const optional<std::string>& metadata = optional<std::string>());
 
     void redeem_contract(const atomicswap_contract_object& contract, const std::string& secret);
 

@@ -28,40 +28,32 @@ dbs_atomicswap::atomicswap_contracts_refs_type dbs_atomicswap::get_contracts(con
     return ret;
 }
 
-const atomicswap_contract_object& dbs_atomicswap::get_contract(const account_object& recipient,
-                                                               const std::string& secret_hash) const
+const atomicswap_contract_object&
+dbs_atomicswap::get_contract(const account_object& from, const account_object& to, const std::string& secret_hash) const
 {
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");
 
     try
     {
-        atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(recipient.name, secret_hash);
+        atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(from.name, to.name, secret_hash);
         return db_impl().get<atomicswap_contract_object, by_contract_hash>(contract_hash);
     }
-    FC_CAPTURE_AND_RETHROW((recipient.name)(secret_hash))
-}
-
-const atomicswap_contract_object& dbs_atomicswap::get_contract(atomicswap_contract_id_type id) const
-{
-    try
-    {
-        return db_impl().get<atomicswap_contract_object>(id);
-    }
-    FC_CAPTURE_AND_RETHROW((id))
+    FC_CAPTURE_AND_RETHROW((from.name)(to.name)(secret_hash))
 }
 
 const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_contract_type tp,
                                                                   const account_object& owner,
                                                                   const account_object& recipient,
                                                                   const asset& amount,
-                                                                  const std::string& secret_hash)
+                                                                  const std::string& secret_hash,
+                                                                  const optional<std::string>& metadata)
 {
     FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(amount.amount > 0, "Invalid amount.");
     FC_ASSERT(owner.balance >= amount, "Insufficient funds.");
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");
 
-    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(recipient.name, secret_hash);
+    atomicswap::hash_index_type contract_hash = atomicswap::get_contract_hash(owner.name, recipient.name, secret_hash);
 
     FC_ASSERT((nullptr == db_impl().find<atomicswap_contract_object, by_contract_hash>(contract_hash)),
               "There is contract for '${a}' with same secret. Use another secret and try again.",
@@ -100,6 +92,10 @@ const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_con
               contract.deadline = deadline;
               fc::from_string(contract.secret_hash, secret_hash);
               contract.contract_hash = contract_hash;
+              if (metadata.valid())
+              {
+                  fc::from_string(contract.metadata, *metadata);
+              }
           });
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
@@ -123,8 +119,10 @@ void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract,
     else
     {
         // save secret for participant
-        db_impl().modify(contract,
-                         [&](atomicswap_contract_object& contract) { fc::from_string(contract.secret, secret); });
+        db_impl().modify(contract, [&](atomicswap_contract_object& contract) {
+            fc::from_string(contract.secret, secret);
+            contract.amount.amount = 0; // asset moved to 'to' balance
+        });
     }
 }
 

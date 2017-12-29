@@ -816,6 +816,8 @@ struct atomicswap_initiate_operation : public base_operation
 
     std::string secret_hash;
 
+    std::string metadata;
+
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -825,26 +827,28 @@ struct atomicswap_initiate_operation : public base_operation
 
 struct atomicswap_redeem_operation : public base_operation
 {
-    account_name_type recipient; // participant or initiator
+    account_name_type from;
+    account_name_type to; // participant or initiator
 
     std::string secret;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
-        a.insert(recipient);
+        a.insert(to);
     }
 };
 
 struct atomicswap_refund_operation : public base_operation
 {
-    int64_t contract_id;
-    account_name_type contract_owner;
+    account_name_type participant;
+    account_name_type initiator;
+    std::string secret_hash;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
-        a.insert(contract_owner);
+        a.insert(participant);
     }
 };
 
@@ -929,8 +933,8 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
-FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash) )
-FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (recipient)(secret) )
-FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (contract_id)(contract_owner) )
+FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
+FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
+FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 
 // clang-format on

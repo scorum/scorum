@@ -184,12 +184,12 @@ struct get_impacted_account_visitor
 
     void operator()(const atomicswap_redeem_operation& op)
     {
-        _impacted.insert(op.recipient);
+        _impacted.insert(op.to);
     }
 
     void operator()(const atomicswap_refund_operation& op)
     {
-        _impacted.insert(op.contract_owner);
+        _impacted.insert(op.participant);
     }
 
     // virtual operations

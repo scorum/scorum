@@ -720,6 +720,178 @@ public:
 
             return ss.str();
         };
+        m["atomicswap_initiate"] = [](variant result, const fc::variants& a) {
+            std::stringstream out;
+
+            auto rt = result.as<atomicswap_initiate_result_api_obj>();
+            if (rt.empty())
+            {
+                return result.get_string();
+            }
+            else
+            {
+                const size_t screen_w = (size_t)90;
+                size_t out_w;
+
+                out << std::left << std::string(screen_w, '-') << "\n";
+
+                const std::string owner_title = "From: ";
+                out << std::left << owner_title;
+                out_w = screen_w - owner_title.size();
+                out << std::right << std::setw(out_w) << rt.from << "\n";
+
+                const std::string recipient_title = "To: ";
+                out << std::left << recipient_title;
+                out_w = screen_w - recipient_title.size();
+                out << std::right << std::setw(out_w) << rt.to << "\n";
+
+                const std::string amount_title = "Amount: ";
+                out << std::left << amount_title;
+                out_w = screen_w - amount_title.size();
+                out << std::right << std::setw(out_w) << rt.amount << "\n";
+
+                out << std::left << std::string(screen_w, '-') << "\n";
+
+                const std::string secret_title = "SECRET: ";
+
+                out << std::left << secret_title;
+                out_w = screen_w - secret_title.size();
+                if (rt.secret.size() < out_w)
+                {
+                    out << std::right << std::setw(out_w) << rt.secret << "\n";
+                }
+                else
+                {
+                    out << "\n";
+                    out << std::left << rt.secret << "\n";
+                }
+
+                const std::string secret_hash_title = "Secret Hash: ";
+                out << std::left << secret_hash_title;
+                out_w = screen_w - secret_hash_title.size();
+                out << std::right << std::setw(out_w) << rt.secret_hash << "\n";
+
+                return out.str();
+            }
+        };
+        m["atomicswap_auditcontract"] = [](variant result, const fc::variants& a) {
+            std::stringstream out;
+
+            auto rt = result.as<atomicswap_contract_info_api_obj>();
+            if (rt.empty())
+            {
+                return result.get_string();
+            }
+            else
+            {
+                const size_t screen_w = (size_t)90;
+                size_t out_w;
+
+                out << std::left << std::string(screen_w, '-') << "\n";
+
+                const std::string owner_title = "From: ";
+                out << std::left << owner_title;
+                out_w = screen_w - owner_title.size();
+                out << std::right << std::setw(out_w) << rt.owner << "\n";
+
+                const std::string recipient_title = "To: ";
+                out << std::left << recipient_title;
+                out_w = screen_w - recipient_title.size();
+                out << std::right << std::setw(out_w) << rt.to << "\n";
+
+                const std::string amount_title = "Amount: ";
+                out << std::left << amount_title;
+                out_w = screen_w - amount_title.size();
+                out << std::right << std::setw(out_w) << rt.amount << "\n";
+
+                const std::string created_title = "Created: ";
+                out << std::left << created_title;
+                out_w = screen_w - created_title.size();
+                out << std::right << std::setw(out_w) << rt.created.to_iso_string() << "\n";
+
+                const std::string deadline_title = "Deadline: ";
+                out << std::left << deadline_title;
+                out_w = screen_w - deadline_title.size();
+                out << std::right << std::setw(out_w) << rt.deadline.to_iso_string() << "\n";
+
+                out << std::left << std::string(screen_w, '-') << "\n";
+
+                if (!rt.secret.empty())
+                {
+                    const std::string secret_title = "SECRET: ";
+
+                    out << std::left << secret_title;
+                    out_w = screen_w - secret_title.size();
+                    if (rt.secret.size() < out_w)
+                    {
+                        out << std::right << std::setw(out_w) << rt.secret << "\n";
+                    }
+                    else
+                    {
+                        out << "\n";
+                        out << std::left << rt.secret << "\n";
+                    }
+                }
+
+                const std::string secret_hash_title = "Secret Hash: ";
+                out << std::left << secret_hash_title;
+                out_w = screen_w - secret_hash_title.size();
+                out << std::right << std::setw(out_w) << rt.secret_hash << "\n";
+
+                if (!rt.metadata.empty())
+                {
+                    out << std::left << std::string(screen_w, '-') << "\n";
+
+                    const std::string metadata_title = "Metadata: ";
+
+                    out << std::left << metadata_title;
+                    out_w = screen_w - metadata_title.size();
+                    if (rt.metadata.size() < out_w)
+                    {
+                        out << std::right << std::setw(out_w) << rt.metadata << "\n";
+                    }
+                    else
+                    {
+                        out << "\n";
+                        out << std::left << rt.metadata << "\n";
+                    }
+                }
+
+                return out.str();
+            }
+        };
+        m["atomicswap_extractsecret"] = [](variant result, const fc::variants& a) {
+            std::stringstream out;
+
+            auto secret = result.as<std::string>();
+            if (secret.empty())
+            {
+                return result.get_string();
+            }
+            else
+            {
+                const size_t screen_w = (size_t)90;
+                size_t out_w;
+
+                out << std::left << std::string(screen_w, '-') << "\n";
+
+                const std::string secret_title = "SECRET: ";
+
+                out << std::left << secret_title;
+                out_w = screen_w - secret_title.size();
+                if (secret.size() < out_w)
+                {
+                    out << std::right << std::setw(out_w) << secret << "\n";
+                }
+                else
+                {
+                    out << "\n";
+                    out << std::left << secret << "\n";
+                }
+
+                return out.str();
+            }
+        };
 
         return m;
     }
@@ -2430,11 +2602,12 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& initiator,
-                                                             const std::string& participant,
-                                                             const asset& amount,
-                                                             const std::string& secret,
-                                                             const bool broadcast)
+atomicswap_initiate_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,
+                                                                   const std::string& participant,
+                                                                   const asset& amount,
+                                                                   const std::string& secret,
+                                                                   const std::string& metadata,
+                                                                   const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -2442,6 +2615,7 @@ annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& 
     if (_secret.empty())
     {
         _secret = scorum::wallet::suggest_brain_key().brain_priv_key;
+        _secret = atomicswap::get_secret_packed(_secret);
     }
     std::string secret_hash = atomicswap::get_secret_hash(_secret);
 
@@ -2452,26 +2626,32 @@ annotated_signed_transaction wallet_api::atomicswap_initiate(const std::string& 
     op.recipient = participant;
     op.secret_hash = secret_hash;
     op.amount = amount;
+    op.metadata = metadata;
 
     signed_transaction tx;
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret = my->sign_transaction(tx, broadcast);
-
-    if (secret.empty())
+    annotated_signed_transaction ret;
+    try
     {
-        ulog("Memorize Secret: ${s}", ("s", _secret));
-    }
-    ulog("Secret Hash: ${sh}", ("sh", secret_hash));
+        ret = my->sign_transaction(tx, broadcast);
 
-    return ret;
+        return { ret, _secret, secret_hash, initiator, participant, amount };
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't initiate Atomic Swap.");
+    }
+
+    return { ret, "", "", "", "", asset(0, amount.symbol) };
 }
 
 annotated_signed_transaction wallet_api::atomicswap_participate(const std::string& participant,
                                                                 const std::string& initiator,
                                                                 const asset& amount,
                                                                 const std::string& secret_hash,
+                                                                const std::string& metadata,
                                                                 const bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -2483,29 +2663,117 @@ annotated_signed_transaction wallet_api::atomicswap_participate(const std::strin
     op.recipient = initiator;
     op.secret_hash = secret_hash;
     op.amount = amount;
+    op.metadata = metadata;
 
     signed_transaction tx;
     tx.operations.push_back(op);
     tx.validate();
 
-    return my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't participate Atomic Swap.");
+    }
+
+    return ret;
 }
 
-annotated_signed_transaction
-wallet_api::atomicswap_redeem(const std::string& recipient, const std::string& secret, const bool broadcast)
+annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& from,
+                                                           const std::string& to,
+                                                           const std::string& secret,
+                                                           const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     atomicswap_redeem_operation op;
 
-    op.recipient = recipient;
+    op.from = from;
+    op.to = to;
     op.secret = secret;
 
     signed_transaction tx;
     tx.operations.push_back(op);
     tx.validate();
 
-    return my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't redeem Atomic Swap contract.");
+    }
+
+    return ret;
+}
+
+atomicswap_contract_info_api_obj
+wallet_api::atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash)
+{
+    atomicswap_contract_info_api_obj ret;
+    try
+    {
+        ret = my->_remote_db->get_atomicswap_contract(from, to, secret_hash);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't access to Atomic Swap contract.");
+    }
+    return ret;
+}
+
+std::string
+wallet_api::atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash)
+{
+    try
+    {
+        atomicswap_contract_info_api_obj contract_info = atomicswap_auditcontract(from, to, secret_hash);
+
+        FC_ASSERT(!contract_info.secret.empty(), "Contract is not redeemed.");
+
+        return contract_info.secret;
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't access to Atomic Swap contract secret.");
+    }
+
+    return "";
+}
+
+annotated_signed_transaction wallet_api::atomicswap_refund(const std::string& participant,
+                                                           const std::string& initiator,
+                                                           const std::string& secret_hash,
+                                                           const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_refund_operation op;
+
+    op.participant = participant;
+    op.initiator = initiator;
+    op.secret_hash = secret_hash;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't refund Atomic Swap contract.");
+    }
+
+    return ret;
 }
 
 std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
@@ -2515,23 +2783,6 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     result = my->_remote_db->get_atomicswap_contracts(owner);
 
     return result;
-}
-
-annotated_signed_transaction
-wallet_api::atomicswap_refund(const int64_t contract_id, const std::string& contract_owner, const bool broadcast)
-{
-    FC_ASSERT(!is_locked());
-
-    atomicswap_refund_operation op;
-
-    op.contract_id = contract_id;
-    op.contract_owner = contract_owner;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
-
-    return my->sign_transaction(tx, broadcast);
 }
 
 } // namespace wallet

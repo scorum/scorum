@@ -379,13 +379,16 @@ void atomicswap_initiate_operation::validate() const
 
 void atomicswap_redeem_operation::validate() const
 {
-    validate_account_name(recipient);
+    validate_account_name(from);
+    validate_account_name(to);
     FC_ASSERT(!secret.empty());
 }
 
 void atomicswap_refund_operation::validate() const
 {
-    validate_account_name(contract_owner);
+    validate_account_name(participant);
+    validate_account_name(initiator);
+    atomicswap::validate_secret_hash(secret_hash);
 }
 }
 } // scorum::protocol

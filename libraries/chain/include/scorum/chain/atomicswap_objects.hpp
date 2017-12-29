@@ -34,7 +34,8 @@ class atomicswap_contract_object : public object<atomicswap_contract_object_type
 public:
     template <typename Constructor, typename Allocator>
     atomicswap_contract_object(Constructor&& c, allocator<Allocator> a)
-        : secret_hash(a)
+        : metadata(a)
+        , secret_hash(a)
         , secret(a)
     {
         c(*this);
@@ -42,16 +43,18 @@ public:
 
     id_type id;
 
+    atomicswap_contract_type type = atomicswap_contract_initiator;
+
     account_name_type owner;
 
     account_name_type to;
     asset amount = asset(0, SCORUM_SYMBOL);
 
+    fc::shared_string metadata;
+
     fc::shared_string secret_hash;
     fc::shared_string secret;
     hash_index_type contract_hash;
-
-    atomicswap_contract_type type = atomicswap_contract_initiator;
 
     time_point_sec created = time_point_sec::min();
     time_point_sec deadline = time_point_sec::min();
@@ -87,6 +90,6 @@ FC_REFLECT_ENUM(scorum::chain::atomicswap_contract_type,
                 (atomicswap_contract_initiator)(atomicswap_contract_participant))
 
 FC_REFLECT(scorum::chain::atomicswap_contract_object,
-           (id)(owner)(to)(amount)(secret_hash)(secret)(contract_hash)(type)(created)(deadline))
+           (id)(type)(owner)(to)(amount)(metadata)(secret_hash)(secret)(contract_hash)(created)(deadline))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::atomicswap_contract_object, scorum::chain::atomicswap_contract_index)
