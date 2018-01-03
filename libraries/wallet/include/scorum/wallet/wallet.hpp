@@ -979,8 +979,7 @@ public:
     std::vector<budget_api_obj> get_budgets(const std::string& account_name);
 
     /**
-     *  This method will create new budget linked to owner account. The current account creation fee can be found with
-     * the 'info' wallet command.
+     *  This method will create new budget linked to owner account.
      *
      *  @warning The owner account must have sufficient balance for budget
      *
@@ -997,20 +996,20 @@ public:
                                                const bool broadcast);
 
     /**
-     *  Close the budget. The budget rest is returned to the owner's account
+     *  Closing the budget. The budget rest is returned to the owner's account
      */
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
-    /** Initiate Atomic Swap transfer from initiator to participant.
-     *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout
+    /** Initiating Atomic Swap transfer from initiator to participant.
+     *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout.
      *
      *  @warning If secret is not set, it is been generating. API prints secret string to memorize.
      *           API prints secret hash as well.
      *
      *  @param initiator the new contract owner
      *  @param participant
-     *  @param amount
-     *  @param secret the secret ("my secret") or empty string (generate secret)
+     *  @param amount SCR to transfer
+     *  @param secret the secret ("my secret") or empty string (to generate secret)
      *  @param metadata the additional contract info (obligations, courses)
      *  @param broadcast
      */
@@ -1021,15 +1020,14 @@ public:
                                                            const std::string& metadata,
                                                            const bool broadcast);
 
-    /** Initiate Atomic Swap transfer from participant to initiator.
-     *  Asset (amount) will be locked for 24 hours while is not redeemed or refund before redeem
+    /** Initiating Atomic Swap transfer from participant to initiator.
+     *  Asset (amount) will be locked for 24 hours while is not redeemed or refund before redeem.
      *
-     *  @warning If secret is not set, it is been generating. API prints secret string to memorize.
-     *           API prints secret hash as well.
+     *  @warning The secret hash is obtained from atomicswap_initiate operation.
      *
      *  @param participant the new contract owner
      *  @param initiator
-     *  @param amount
+     *  @param amount SCR to transfer
      *  @param secret_hash the secret hash (received from initiator)
      *  @param metadata the additional contract info (obligations, courses)
      *  @param broadcast
@@ -1041,27 +1039,20 @@ public:
                                                         const std::string& metadata,
                                                         const bool broadcast);
 
-    /** Atomic Swap helper to get contract info.
+    /** The Atomic Swap helper to get contract info.
      *
-     *  @param from the contract 'from' address
-     *  @param to the contract 'to' address
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
      *  @param secret_hash the secret hash
      */
     atomicswap_contract_info_api_obj
     atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash);
 
-    /** Redeem Atomic Swap contract by participant.
-     *  This API find and close contract
-     * (created initiator for participant by or
-     *  created participant for initiator by initiator)
-     *  and transfer asset to participant balance
+    /** Redeeming Atomic Swap contract.
+     *  This API transfers asset to participant balance and declassifies the secret.
      *
-     *  @warning Secret is extracted from other party blockchain after other party contract redeeming by our party.
-     *           Atomic Swap protocol guarantees that no ways to extract secret before redeeming.
-     *           Authority for 'to' account required.
-     *
-     *  @param from the contract 'from' address
-     *  @param to the contract 'to' address
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
      *  @param secret the secret ("my secret") that was set in atomicswap_initiate
      * API
      *  @param broadcast
@@ -1069,16 +1060,16 @@ public:
     annotated_signed_transaction
     atomicswap_redeem(const std::string& from, const std::string& to, const std::string& secret, const bool broadcast);
 
-    /** Extract secret from participant contract if it is redeemed by initiator.
+    /** Extracting secret from participant contract if it is redeemed by initiator.
      *
-     *  @param from the contract 'from' address
-     *  @param to the contract 'to' address
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
      *  @param secret_hash the secret hash
      */
     std::string
     atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash);
 
-    /** Refund contact by participant.
+    /** Refunding contact by participant.
      *
      *  @warning Can't refund initiator contract. It is refunded automatically in 48 hours.
      *
