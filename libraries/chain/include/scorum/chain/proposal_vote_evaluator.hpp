@@ -74,29 +74,48 @@ public:
 
         if (votes >= _committee_service.get_quorum(_quorum_percent))
         {
-            if (proposal.action == invite)
-            {
-                _committee_service.add_member(proposal.member);
-            }
-            else if (proposal.action == dropout)
-            {
-                _committee_service.exclude_member(proposal.member);
-            }
-            else
-            {
-                FC_ASSERT("Invalid proposal action type");
-            }
+            execute_proposal(proposal);
+        }
 
-            _proposal_service.remove(proposal);
+        while (!removed_members.empty())
+        {
+            account_name_type member = *removed_members.begin();
+
+            _proposal_service.foreach_p([&](proposal_vote_object& p) {
+                p.voted_accounts.erase(member);
+                execute_proposal(p);
+            });
+            removed_members.erase(member);
         }
     }
 
-protected:
+private:
+    void execute_proposal(const proposal_vote_object& proposal)
+    {
+        if (proposal.action == invite)
+        {
+            _committee_service.add_member(proposal.member);
+        }
+        else if (proposal.action == dropout)
+        {
+            _committee_service.exclude_member(proposal.member);
+            removed_members.insert(proposal.member);
+        }
+        else
+        {
+            FC_ASSERT("Invalid proposal action type");
+        }
+
+        _proposal_service.remove(proposal);
+    }
+
     AccountService& _account_service;
     ProposalService& _proposal_service;
     CommiteeService& _committee_service;
 
     uint32_t _quorum_percent;
+
+    flat_set<account_name_type> removed_members;
 };
 
 typedef proposal_vote_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee> proposal_vote_evaluator;
