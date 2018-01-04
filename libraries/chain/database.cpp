@@ -1216,7 +1216,7 @@ share_type database::cashout_comment_helper(const share_type& reward, const comm
             if (reward_tokens > 0)
             {
                 share_type curation_tokens
-                    = ((reward_tokens * get_curation_rewards_percent()) / SCORUM_100_PERCENT).to_uint64();
+                    = ((reward_tokens * SCORUM_CURATION_REWARD_PERCENT) / SCORUM_100_PERCENT).to_uint64();
                 share_type author_tokens = reward_tokens.to_uint64() - curation_tokens;
 
                 author_tokens += pay_curators(comment, curation_tokens);
@@ -1377,6 +1377,7 @@ void database::process_funds()
     dbs_budget& budget_service = obtain_service<dbs_budget>();
 
     const auto& props = get_dynamic_global_properties();
+    const auto& rf = get_reward_fund();
 
     // We don't have inflation.
     // We just get per block reward from reward pool and expect that after initial supply is handed out(fund budget is
@@ -1392,9 +1393,12 @@ void database::process_funds()
     auto total_block_reward = reward_service.take_block_reward();
     // clang-format off
     auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
-    content_reward = pay_reward_funds(content_reward); /// 75% to content creator
     auto vesting_reward = asset(total_block_reward.amount * SCORUM_VESTING_FUND_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol); /// 15% to vesting fund
     auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 10% to witness pay
+
+    modify(rf, [&](reward_fund_object& rfo) {
+        rfo.reward_balance += content_reward;
+    });
     // clang-format on
 
     modify(props, [&](dynamic_global_property_object& p) {
@@ -1411,30 +1415,6 @@ void database::process_funds()
 
     const auto producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
-}
-
-uint16_t database::get_curation_rewards_percent() const
-{
-    return get_reward_fund().percent_curation_rewards;
-}
-
-const asset database::pay_reward_funds(const asset& reward)
-{
-    const auto& rf = get_reward_fund();
-
-    // reward is a per block reward and the percents are 16-bit. This should never overflow
-    auto used_rewards = asset(reward.amount * rf.percent_content_rewards / SCORUM_100_PERCENT, reward.symbol);
-
-    // clang-format off
-    modify(rf, [&](reward_fund_object& rfo) { 
-        rfo.reward_balance += used_rewards;
-    });
-    // clang-format on
-
-    // Sanity check to ensure we aren't printing more SCR than has been allocated
-    FC_ASSERT(used_rewards <= reward);
-
-    return used_rewards;
 }
 
 void database::account_recovery_processing()

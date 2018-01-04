@@ -120,8 +120,6 @@ public:
     asset reward_balance = asset(0, SCORUM_SYMBOL);
     fc::uint128_t recent_claims = 0;
     time_point_sec last_update;
-    uint16_t percent_curation_rewards = 0;
-    uint16_t percent_content_rewards = 0;
     curve_id author_reward_curve;
     curve_id curation_reward_curve;
 };
@@ -270,8 +268,6 @@ FC_REFLECT( scorum::chain::reward_fund_object,
             (reward_balance)
             (recent_claims)
             (last_update)
-            (percent_curation_rewards)
-            (percent_content_rewards)
             (author_reward_curve)
             (curation_reward_curve)
          )

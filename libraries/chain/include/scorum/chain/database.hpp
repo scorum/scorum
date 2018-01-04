@@ -313,10 +313,6 @@ public:
     void process_decline_voting_rights();
     void update_median_feed();
 
-    uint16_t get_curation_rewards_percent() const override;
-
-    const asset pay_reward_funds(const asset& reward);
-
     time_point_sec head_block_time() const override;
     uint32_t head_block_num() const;
     block_id_type head_block_id() const;

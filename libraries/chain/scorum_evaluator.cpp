@@ -1077,8 +1077,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 cv.vote_percent = o.weight;
                 cv.last_update = _db.head_block_time();
 
-                bool curation_reward_eligible = rshares > 0 && (comment.last_payout == fc::time_point_sec())
-                    && comment.allow_curation_rewards && _db.get_curation_rewards_percent() > 0;
+                bool curation_reward_eligible
+                    = rshares > 0 && (comment.last_payout == fc::time_point_sec()) && comment.allow_curation_rewards;
 
                 if (curation_reward_eligible)
                 {

@@ -140,8 +140,6 @@ void db_genesis::init_rewards()
 {
     const auto& post_rf = _db.create<reward_fund_object>([&](reward_fund_object& rfo) {
         rfo.last_update = _db.head_block_time();
-        rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
-        rfo.percent_content_rewards = SCORUM_100_PERCENT;
         rfo.reward_balance = asset(0, SCORUM_SYMBOL);
         rfo.author_reward_curve = curve_id::linear;
         rfo.curation_reward_curve = curve_id::square_root;
