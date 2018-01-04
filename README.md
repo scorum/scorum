@@ -45,7 +45,7 @@ To run a p2p node (ca. 2GB of memory is required at the moment):
 ## Dockerized Full Node
 
 To run a node with *all* the data (e.g. for supporting a content website)
-that uses ca. 12GB of memory and growing:
+that uses ca. 14GB of memory and growing:
 
     docker run \
         --env USE_WAY_TOO_MUCH_RAM=1 --env USE_FULL_WEB_NODE=1 \
