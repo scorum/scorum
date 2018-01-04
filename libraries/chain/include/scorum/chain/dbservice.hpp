@@ -46,9 +46,9 @@ public:
 
     virtual const witness_schedule_object& get_witness_schedule_object() const = 0;
 
-    virtual uint16_t get_curation_rewards_percent(const comment_object& c) const = 0;
+    virtual const reward_fund_object& get_reward_fund() const = 0;
 
-    virtual const reward_fund_object& get_reward_fund(const comment_object& c) const = 0;
+    virtual uint16_t get_curation_rewards_percent() const = 0;
 
     virtual time_point_sec head_block_time() const = 0;
 

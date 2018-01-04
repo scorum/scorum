@@ -135,8 +135,6 @@
 #define SCORUM_MIN_PRODUCER_REWARD             SCORUM_MINING_REWARD
 #define SCORUM_MIN_POW_REWARD                  SCORUM_MINING_REWARD
 
-#define SCORUM_POST_REWARD_FUND_NAME           ("post")
-#define SCORUM_COMMENT_REWARD_FUND_NAME        ("comment")
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 

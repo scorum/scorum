@@ -1078,11 +1078,11 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 cv.last_update = _db.head_block_time();
 
                 bool curation_reward_eligible = rshares > 0 && (comment.last_payout == fc::time_point_sec())
-                    && comment.allow_curation_rewards && _db.get_curation_rewards_percent(comment) > 0;
+                    && comment.allow_curation_rewards && _db.get_curation_rewards_percent() > 0;
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = _db.get_reward_fund(comment);
+                    const auto& reward_fund = _db.get_reward_fund();
                     auto curve = reward_fund.curation_reward_curve;
                     uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
                     uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();

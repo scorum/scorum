@@ -35,10 +35,6 @@ class database_impl;
 class custom_operation_interpreter;
 struct genesis_state_type;
 
-namespace util {
-struct comment_reward_context;
-}
-
 /**
  *   @class database
  *   @brief tracks the blockchain state in an extensible manner
@@ -153,7 +149,7 @@ public:
     const hardfork_property_object& get_hardfork_property_object() const;
 
     const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const override;
-    const reward_fund_object& get_reward_fund(const comment_object& c) const override;
+    const reward_fund_object& get_reward_fund() const override;
 
     /**
      *  Calculate the percent of block production slots that were missed in the
@@ -308,7 +304,7 @@ public:
     void clear_witness_votes(const account_object& a);
     void process_vesting_withdrawals();
     share_type pay_curators(const comment_object& c, share_type& max_rewards);
-    share_type cashout_comment_helper(util::comment_reward_context& ctx, const comment_object& comment);
+    share_type cashout_comment_helper(const share_type& reward, const comment_object& comment);
     void process_comment_cashout();
     void process_funds();
     void process_conversions();
@@ -317,7 +313,7 @@ public:
     void process_decline_voting_rights();
     void update_median_feed();
 
-    uint16_t get_curation_rewards_percent(const comment_object& c) const override;
+    uint16_t get_curation_rewards_percent() const override;
 
     const asset pay_reward_funds(const asset& reward);
 

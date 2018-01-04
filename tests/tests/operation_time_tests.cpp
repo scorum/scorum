@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
 
         // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
-        const auto rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+        const auto& rf = db.get_reward_fund();
         BOOST_REQUIRE(rf.reward_balance == ASSET("0.001 SCR"));
 
         validate_database();
@@ -325,9 +325,8 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto alice_vshares = util::evaluate_reward_curve(
-            db.get_comment("alice", std::string("test")).net_rshares.value,
-            db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME).author_reward_curve);
+        auto alice_vshares = util::evaluate_reward_curve(db.get_comment("alice", std::string("test")).net_rshares.value,
+                                                         db.get_reward_fund().author_reward_curve);
 
         generate_blocks(5);
 
@@ -343,23 +342,22 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
 
         {
-            const auto& post_rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+            const auto& post_rf = db.get_reward_fund();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
             validate_database();
         }
 
         auto bob_cashout_time = db.get_comment("bob", std::string("test")).cashout_time;
-        auto bob_vshares = util::evaluate_reward_curve(
-            db.get_comment("bob", std::string("test")).net_rshares.value,
-            db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME).author_reward_curve);
+        auto bob_vshares = util::evaluate_reward_curve(db.get_comment("bob", std::string("test")).net_rshares.value,
+                                                       db.get_reward_fund().author_reward_curve);
 
         generate_block();
 
         while (db.head_block_time() < bob_cashout_time)
         {
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
-            const auto& post_rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+            const auto& post_rf = db.get_reward_fund();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
 
@@ -368,7 +366,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
 
         {
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
-            const auto& post_rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+            const auto& post_rf = db.get_reward_fund();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares + bob_vshares);
             validate_database();

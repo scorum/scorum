@@ -4,6 +4,8 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/account_object.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
@@ -115,7 +117,6 @@ public:
 
     id_type id;
 
-    reward_fund_name_type name;
     asset reward_balance = asset(0, SCORUM_SYMBOL);
     fc::uint128_t recent_claims = 0;
     time_point_sec last_update;
@@ -236,20 +237,13 @@ typedef multi_index_container<reward_fund_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<reward_fund_object,
                                                                reward_fund_id_type,
-                                                               &reward_fund_object::id>>,
-                                         ordered_unique<tag<by_name>,
-                                                        member<reward_fund_object,
-                                                               reward_fund_name_type,
-                                                               &reward_fund_object::name>>>,
+                                                               &reward_fund_object::id>>>,
                               allocator<reward_fund_object>>
     reward_fund_index;
 // clang-format on
 
 } // namespace chain
 } // namespace scorum
-
-#include <scorum/chain/comment_object.hpp>
-#include <scorum/chain/account_object.hpp>
 
 // clang-format off
 
@@ -273,7 +267,6 @@ CHAINBASE_SET_INDEX_TYPE( scorum::chain::decline_voting_rights_request_object, s
 
 FC_REFLECT( scorum::chain::reward_fund_object,
             (id)
-            (name)
             (reward_balance)
             (recent_claims)
             (last_update)

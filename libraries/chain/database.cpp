@@ -51,13 +51,6 @@ namespace chain {
 
 using boost::container::flat_set;
 
-struct reward_fund_context
-{
-    uint128_t recent_claims = 0;
-    asset reward_balance = asset(0, SCORUM_SYMBOL);
-    share_type scorum_awarded = 0;
-};
-
 class database_impl
 {
 public:
@@ -484,9 +477,9 @@ const time_point_sec database::calculate_discussion_payout_time(const comment_ob
     return comment.cashout_time;
 }
 
-const reward_fund_object& database::get_reward_fund(const comment_object& c) const
+const reward_fund_object& database::get_reward_fund() const
 {
-    return get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+    return get<reward_fund_object>();
 }
 
 uint32_t database::witness_participation_rate() const
@@ -1209,14 +1202,7 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
     FC_CAPTURE_AND_RETHROW()
 }
 
-void fill_comment_reward_context_local_state(util::comment_reward_context& ctx, const comment_object& comment)
-{
-    ctx.rshares = comment.net_rshares;
-    ctx.reward_weight = comment.reward_weight;
-    ctx.max_scr = comment.max_accepted_payout;
-}
-
-share_type database::cashout_comment_helper(util::comment_reward_context& ctx, const comment_object& comment)
+share_type database::cashout_comment_helper(const share_type& reward, const comment_object& comment)
 {
     dbs_account& account_service = obtain_service<dbs_account>();
     try
@@ -1225,18 +1211,12 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
 
         if (comment.net_rshares > 0)
         {
-            fill_comment_reward_context_local_state(ctx, comment);
-
-            const auto rf = get_reward_fund(comment);
-            ctx.reward_curve = rf.author_reward_curve;
-
-            const share_type reward = util::get_rshare_reward(ctx);
             uint128_t reward_tokens = uint128_t(reward.value);
 
             if (reward_tokens > 0)
             {
                 share_type curation_tokens
-                    = ((reward_tokens * get_curation_rewards_percent(comment)) / SCORUM_100_PERCENT).to_uint64();
+                    = ((reward_tokens * get_curation_rewards_percent()) / SCORUM_100_PERCENT).to_uint64();
                 share_type author_tokens = reward_tokens.to_uint64() - curation_tokens;
 
                 author_tokens += pay_curators(comment, curation_tokens);
@@ -1325,59 +1305,27 @@ share_type database::cashout_comment_helper(util::comment_reward_context& ctx, c
 
 void database::process_comment_cashout()
 {
-    // SCORUM: check next comment , we need to change first cashout time
-    /// don't allow any content to get paid out until the website is ready to launch
-    /// and people have had a week to start posting.  The first cashout will be the biggest because it
-    /// will represent 2+ months of rewards.
-    // if( !has_hardfork( SCORUM_FIRST_CASHOUT_TIME ) )
-    //   return;
+    const auto& rf = get_reward_fund();
 
-    util::comment_reward_context ctx;
-
-    std::vector<reward_fund_context> funds;
-    std::vector<share_type> scorum_awarded;
-    const auto& reward_idx = get_index<reward_fund_index, by_id>();
-
-    // Decay recent rshares of each fund
-    for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
-    {
-        // Add all reward funds to the local cache and decay their recent rshares
-        modify(*itr, [&](reward_fund_object& rfo) {
-            fc::microseconds decay_rate;
-            decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
-            rfo.recent_claims
-                -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
-            rfo.last_update = head_block_time();
-        });
-
-        reward_fund_context rf_ctx;
-        rf_ctx.recent_claims = itr->recent_claims;
-        rf_ctx.reward_balance = itr->reward_balance;
-
-        // The index is by ID, so the ID should be the current size of the vector (0, 1, 2, etc...)
-        assert((int64_t)funds.size() == itr->id._id);
-
-        funds.push_back(rf_ctx);
-    }
+    // Add all reward funds to the local cache and decay their recent rshares
+    modify(rf, [&](reward_fund_object& rfo) {
+        fc::microseconds decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
+        rfo.recent_claims
+            -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
+        rfo.last_update = head_block_time();
+    });
 
     const auto& cidx = get_index<comment_index>().indices().get<by_cashout_time>();
 
-    auto current = cidx.begin();
     //  add all rshares about to be cashed out to the reward funds. This ensures equal satoshi per rshare payment
-
-    while (current != cidx.end() && current->cashout_time <= head_block_time())
+    uint128_t recent_claims = rf.recent_claims;
+    for (auto current = cidx.begin(); current != cidx.end() && current->cashout_time <= head_block_time(); ++current)
     {
         if (current->net_rshares > 0)
         {
-            const auto& rf = get_reward_fund(*current);
-            funds[rf.id._id].recent_claims
-                += util::evaluate_reward_curve(current->net_rshares.value, rf.author_reward_curve);
+            recent_claims += util::evaluate_reward_curve(current->net_rshares.value, rf.author_reward_curve);
         }
-
-        ++current;
     }
-
-    current = cidx.begin();
 
     /*
      * Payout all comments
@@ -1388,30 +1336,34 @@ void database::process_comment_cashout()
      * global %, etc.
      *
      * Each context is used by get_rshare_reward to determine what part of each budget
-     * the comment is entitled to. Prior to hardfork 17, all payouts are done against
-     * the global state updated each payout. After the hardfork, each payout is done
+     * the comment is entitled to. Each payout is done
      * against a reward fund state that is snapshotted before all payouts in the block.
      */
-    while (current != cidx.end() && current->cashout_time <= head_block_time())
+    share_type scorum_awarded = 0;
+    for (auto current = cidx.begin(); current != cidx.end() && current->cashout_time <= head_block_time();)
     {
-        auto fund_id = get_reward_fund(*current).id._id;
-        ctx.total_reward_shares2 = funds[fund_id].recent_claims;
-        ctx.total_reward_fund_scorum = funds[fund_id].reward_balance;
-        funds[fund_id].scorum_awarded += cashout_comment_helper(ctx, *current);
-        current = cidx.begin();
+        const comment_object& comment = *current;
+
+        util::comment_reward_context ctx;
+        ctx.total_reward_shares2 = recent_claims;
+        ctx.total_reward_fund_scorum = rf.reward_balance;
+        ctx.reward_curve = rf.author_reward_curve;
+        ctx.rshares = comment.net_rshares;
+        ctx.reward_weight = comment.reward_weight;
+        ctx.max_scr = comment.max_accepted_payout;
+
+        const share_type reward = (comment.net_rshares > 0) ? util::get_rshare_reward(ctx) : 0;
+
+        scorum_awarded += cashout_comment_helper(reward, comment);
+
+        current = cidx.begin(); //??????? CHECK
     }
 
     // Write the cached fund state back to the database
-    if (funds.size())
-    {
-        for (size_t i = 0; i < funds.size(); i++)
-        {
-            modify(get<reward_fund_object, by_id>(reward_fund_id_type(i)), [&](reward_fund_object& rfo) {
-                rfo.recent_claims = funds[i].recent_claims;
-                rfo.reward_balance.amount -= funds[i].scorum_awarded;
-            });
-        }
-    }
+    modify(rf, [&](reward_fund_object& rfo) {
+        rfo.recent_claims = recent_claims;
+        rfo.reward_balance.amount -= scorum_awarded;
+    });
 }
 
 /**
@@ -1461,32 +1413,26 @@ void database::process_funds()
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 
-uint16_t database::get_curation_rewards_percent(const comment_object& c) const
+uint16_t database::get_curation_rewards_percent() const
 {
-    return get_reward_fund(c).percent_curation_rewards;
+    return get_reward_fund().percent_curation_rewards;
 }
 
 const asset database::pay_reward_funds(const asset& reward)
 {
-    const auto& reward_idx = get_index<reward_fund_index, by_id>();
-    asset used_rewards(0, reward.symbol);
+    const auto& rf = get_reward_fund();
 
-    for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
-    {
-        // reward is a per block reward and the percents are 16-bit. This should never overflow
-        auto r = asset(reward.amount * itr->percent_content_rewards / SCORUM_100_PERCENT, reward.symbol);
+    // reward is a per block reward and the percents are 16-bit. This should never overflow
+    auto used_rewards = asset(reward.amount * rf.percent_content_rewards / SCORUM_100_PERCENT, reward.symbol);
 
-        // clang-format off
-        modify(*itr, [&](reward_fund_object& rfo) { 
-            rfo.reward_balance += r; 
-        });
-        // clang-format on
+    // clang-format off
+    modify(rf, [&](reward_fund_object& rfo) { 
+        rfo.reward_balance += used_rewards;
+    });
+    // clang-format on
 
-        used_rewards += r;
-
-        // Sanity check to ensure we aren't printing more SCR than has been allocated through inflation
-        FC_ASSERT(used_rewards <= reward);
-    }
+    // Sanity check to ensure we aren't printing more SCR than has been allocated
+    FC_ASSERT(used_rewards <= reward);
 
     return used_rewards;
 }
@@ -2483,14 +2429,9 @@ void database::validate_invariants() const
             }
         }
 
-        const auto& reward_idx = get_index<reward_fund_index, by_id>();
+        total_supply += get_reward_fund().reward_balance;
 
-        for (auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr)
-        {
-            total_supply += itr->reward_balance;
-        }
-
-        total_supply += gpo.total_vesting_fund_scorum + gpo.total_reward_fund_scorum;
+        total_supply += gpo.total_vesting_fund_scorum;
 
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
