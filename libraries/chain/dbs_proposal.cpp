@@ -66,5 +66,15 @@ void dbs_proposal::clear_expired_proposals()
     }
 }
 
+// void dbs_proposal::remove_voter_in_proposals(const account_name_type& voter, auto )
+//{
+//    const auto& proposal_index = db_impl().get_index<proposal_vote_index>().indices().get<by_id>();
+
+//    for (auto p : proposal_index)
+//    {
+//        db_impl().modify(proposal, [&](proposal_vote_object& p) { p.voted_accounts.insert(voter); });
+//    }
+//}
+
 } // namespace scorum
 } // namespace chain

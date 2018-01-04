@@ -82,6 +82,10 @@ public:
         return false;
     }
 
+    template <typename Modifier> void foreach_p(Modifier&&)
+    {
+    }
+
     std::vector<proposal_vote_object> proposals;
 
     std::vector<proposal_id_type> removed_proposals;
