@@ -2605,19 +2605,17 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
 atomicswap_initiate_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,
                                                                    const std::string& participant,
                                                                    const asset& amount,
-                                                                   const std::string& secret,
                                                                    const std::string& metadata,
                                                                    const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
-    std::string _secret(secret);
-    if (_secret.empty())
-    {
-        _secret = scorum::wallet::suggest_brain_key().brain_priv_key;
-        _secret = atomicswap::get_secret_packed(_secret);
-    }
-    std::string secret_hash = atomicswap::get_secret_hash(_secret);
+    std::string secret;
+
+    secret = scorum::wallet::suggest_brain_key().brain_priv_key;
+    secret = atomicswap::get_secret_hex(secret);
+
+    std::string secret_hash = atomicswap::get_secret_hash(secret);
 
     atomicswap_initiate_operation op;
 
@@ -2637,7 +2635,7 @@ atomicswap_initiate_result_api_obj wallet_api::atomicswap_initiate(const std::st
     {
         ret = my->sign_transaction(tx, broadcast);
 
-        return { ret, _secret, secret_hash, initiator, participant, amount };
+        return { ret, secret, secret_hash, initiator, participant, amount };
     }
     catch (fc::exception& e)
     {
@@ -2647,10 +2645,10 @@ atomicswap_initiate_result_api_obj wallet_api::atomicswap_initiate(const std::st
     return { ret, "", "", "", "", asset(0, amount.symbol) };
 }
 
-annotated_signed_transaction wallet_api::atomicswap_participate(const std::string& participant,
+annotated_signed_transaction wallet_api::atomicswap_participate(const std::string& secret_hash,
+                                                                const std::string& participant,
                                                                 const std::string& initiator,
                                                                 const asset& amount,
-                                                                const std::string& secret_hash,
                                                                 const std::string& metadata,
                                                                 const bool broadcast)
 {

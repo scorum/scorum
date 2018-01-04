@@ -60,7 +60,7 @@ public:
     atomicswap_redeem_operation redeem_by_participant_op;
     atomicswap_refund_operation refund_op;
 
-    const std::string ALICE_SECRET = "Alice Secret";
+    const std::string ALICE_SECRET = "ab74c5c5";
     const asset ALICE_SHARE_FOR_BOB = asset(2, SCORUM_SYMBOL);
     const asset BOB_SHARE_FOR_ALICE = asset(3, SCORUM_SYMBOL);
 };

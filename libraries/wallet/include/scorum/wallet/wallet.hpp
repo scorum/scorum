@@ -1003,20 +1003,18 @@ public:
     /** Initiating Atomic Swap transfer from initiator to participant.
      *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout.
      *
-     *  @warning If secret is not set, it is been generating. API prints secret string to memorize.
+     *  @warning API prints secret string to memorize.
      *           API prints secret hash as well.
      *
      *  @param initiator the new contract owner
      *  @param participant
      *  @param amount SCR to transfer
-     *  @param secret the secret ("my secret") or empty string (to generate secret)
      *  @param metadata the additional contract info (obligations, courses)
      *  @param broadcast
      */
     atomicswap_initiate_result_api_obj atomicswap_initiate(const std::string& initiator,
                                                            const std::string& participant,
                                                            const asset& amount,
-                                                           const std::string& secret,
                                                            const std::string& metadata,
                                                            const bool broadcast);
 
@@ -1025,17 +1023,17 @@ public:
      *
      *  @warning The secret hash is obtained from atomicswap_initiate operation.
      *
+     *  @param secret_hash the secret hash (received from initiator)
      *  @param participant the new contract owner
      *  @param initiator
      *  @param amount SCR to transfer
-     *  @param secret_hash the secret hash (received from initiator)
      *  @param metadata the additional contract info (obligations, courses)
      *  @param broadcast
      */
-    annotated_signed_transaction atomicswap_participate(const std::string& participant,
+    annotated_signed_transaction atomicswap_participate(const std::string& secret_hash,
+                                                        const std::string& participant,
                                                         const std::string& initiator,
                                                         const asset& amount,
-                                                        const std::string& secret_hash,
                                                         const std::string& metadata,
                                                         const bool broadcast);
 

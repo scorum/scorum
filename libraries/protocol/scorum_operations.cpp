@@ -381,7 +381,7 @@ void atomicswap_redeem_operation::validate() const
 {
     validate_account_name(from);
     validate_account_name(to);
-    FC_ASSERT(!secret.empty());
+    atomicswap::validate_secret(secret);
 }
 
 void atomicswap_refund_operation::validate() const

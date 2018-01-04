@@ -60,7 +60,7 @@ public:
 
     std::string alice_secret_hash;
 
-    const std::string ALICE_SECRET = "CHOCHO GUNJ UNSOUR EARLY MUSHER ...";
+    const std::string ALICE_SECRET = "ab74c5c5";
     const asset ALICE_BALANCE = asset(2 * SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1, SCORUM_SYMBOL);
     const asset BOB_BALANCE = asset(3 * SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1, SCORUM_SYMBOL);
     const asset ALICE_SHARE_FOR_BOB = asset(2, SCORUM_SYMBOL);

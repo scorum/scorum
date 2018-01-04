@@ -11,9 +11,15 @@ namespace atomicswap {
 
 using hash_index_type = fc::fixed_string_32; // to pack 256-bit hash
 
-std::string get_secret_packed(const std::string& secret);
+// secret operations
+std::string get_secret_hex(const std::string& secret);
+std::string get_secret_hash(const std::string& secret_hex);
+
+//
+void validate_secret(const std::string& secret_hex);
 void validate_secret_hash(const std::string& secret_hash);
-std::string get_secret_hash(const std::string& secret);
+
+// contract hash operations
 fc::sha256
 get_contract_hash_obj(const account_name_type& from, const account_name_type& to, const std::string& secret_hash);
 std::string
