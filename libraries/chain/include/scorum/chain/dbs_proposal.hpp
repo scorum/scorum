@@ -19,7 +19,8 @@ public:
     void create(const account_name_type& creator,
                 const account_name_type& member,
                 scorum::protocol::proposal_action action,
-                fc::time_point_sec expiration);
+                fc::time_point_sec expiration,
+                uint64_t quorum);
 
     void remove(const proposal_vote_object& proposal);
 

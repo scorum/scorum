@@ -105,14 +105,17 @@ public:
         excluded_members.push_back(account);
     }
 
-    uint64_t get_quorum(uint64_t)
-    {
-        return quorum_votes;
-    }
-
     bool member_exists(const account_name_type& account) const
     {
         return existent_accounts.count(account) == 1 ? true : false;
+    }
+
+    uint64_t quorum_votes(uint64_t quorum_percent)
+    {
+        this->quorum_percent = quorum_percent;
+
+        BOOST_REQUIRE(needed_votes > 0);
+        return needed_votes;
     }
 
     std::set<account_name_type> existent_accounts;
@@ -120,7 +123,8 @@ public:
     std::vector<account_name_type> added_members;
     std::vector<account_name_type> excluded_members;
 
-    uint64_t quorum_votes = 1;
+    uint64_t needed_votes = 0;
+    uint64_t quorum_percent = 0;
 };
 
 typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
@@ -130,28 +134,8 @@ class proposal_vote_evaluator_fixture
 {
 public:
     proposal_vote_evaluator_fixture()
-        : evaluator(account_service, proposal_service, committee_service, committee_service.quorum_votes)
+        : evaluator(account_service, proposal_service, committee_service)
     {
-        account_service.existent_accounts.insert("alice");
-        account_service.existent_accounts.insert("bob");
-
-        committee_service.existent_accounts.insert("alice");
-        committee_service.existent_accounts.insert("bob");
-
-        proposal_vote_object proposal;
-        proposal.creator = "alice";
-        proposal.member = "bob";
-
-        add(proposal);
-
-        op.voting_account = "alice";
-        op.proposal_id = proposal.id._id;
-    }
-
-    void add(proposal_vote_object& p)
-    {
-        p.id = proposal_service.proposals.size() + 1;
-        proposal_service.proposals.push_back(p);
     }
 
     ~proposal_vote_evaluator_fixture()
@@ -163,12 +147,38 @@ public:
         evaluator.do_apply(op);
     }
 
-    proposal_vote_object& proposal(size_t index = 0)
+    proposal_vote_object& create_proposal(proposal_action action = proposal_action::invite)
     {
-        BOOST_REQUIRE(proposal_service.proposals.size() > 0);
-        BOOST_REQUIRE(index < proposal_service.proposals.size());
+        proposal_vote_object proposal;
+        proposal.creator = "alice";
+        proposal.member = "bob";
+        proposal.action = action;
 
-        return proposal_service.proposals[index];
+        proposal.id = proposal_service.proposals.size() + 1;
+        proposal_service.proposals.push_back(proposal);
+
+        account_service.existent_accounts.insert(proposal.creator);
+        account_service.existent_accounts.insert(proposal.member);
+
+        committee_service.existent_accounts.insert(proposal.creator);
+        committee_service.existent_accounts.insert(proposal.member);
+
+        op.voting_account = proposal.creator;
+        op.proposal_id = proposal.id._id;
+
+        return proposal_service.proposals[proposal_service.proposals.size() - 1];
+    }
+
+    void configure_quorum()
+    {
+        proposal_service.voted = 1;
+        committee_service.needed_votes = 1;
+    }
+
+    void configure_not_enough_quorum()
+    {
+        proposal_service.voted = 1;
+        committee_service.needed_votes = 2;
     }
 
     proposal_vote_operation op;
@@ -184,6 +194,8 @@ BOOST_FIXTURE_TEST_SUITE(proposal_vote_evaluator_tests, proposal_vote_evaluator_
 
 SCORUM_TEST_CASE(throw_when_creator_account_does_not_exists)
 {
+    create_proposal();
+
     account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
 
     SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" must exist.");
@@ -191,13 +203,17 @@ SCORUM_TEST_CASE(throw_when_creator_account_does_not_exists)
 
 SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
 {
+    create_proposal();
+
     committee_service.existent_accounts.erase(committee_service.existent_accounts.find("alice"));
 
-    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" is not in commitee.");
+    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" is not in committee.");
 }
 
 SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 {
+    create_proposal();
+
     op.proposal_id = 100;
 
     SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "There is no proposal with id '100'");
@@ -205,10 +221,9 @@ SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 
 SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
 {
-    proposal().action = proposal_action::invite;
+    create_proposal(proposal_action::invite);
 
-    proposal_service.voted = 0;
-    committee_service.quorum_votes = 1;
+    configure_not_enough_quorum();
 
     apply();
 
@@ -217,10 +232,9 @@ SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
 
 SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
 {
-    proposal().action = proposal_action::dropout;
+    create_proposal(proposal_action::dropout);
 
-    proposal_service.voted = 0;
-    committee_service.quorum_votes = 1;
+    configure_not_enough_quorum();
 
     apply();
 
@@ -229,10 +243,9 @@ SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
 
 SCORUM_TEST_CASE(dont_remove_members_during_adding)
 {
-    proposal().action = proposal_action::invite;
+    create_proposal(proposal_action::invite);
 
-    proposal_service.voted = 1;
-    committee_service.quorum_votes = 1;
+    configure_quorum();
 
     apply();
 
@@ -244,10 +257,9 @@ SCORUM_TEST_CASE(dont_remove_members_during_adding)
 
 SCORUM_TEST_CASE(dont_add_members_during_droping)
 {
-    proposal().action = proposal_action::dropout;
+    create_proposal(proposal_action::dropout);
 
-    proposal_service.voted = 1;
-    committee_service.quorum_votes = 1;
+    configure_quorum();
 
     apply();
 
@@ -259,10 +271,9 @@ SCORUM_TEST_CASE(dont_add_members_during_droping)
 
 SCORUM_TEST_CASE(validate_voter_name)
 {
-    proposal().action = proposal_action::dropout;
+    create_proposal(proposal_action::dropout);
 
-    proposal_service.voted = 1;
-    committee_service.quorum_votes = 1;
+    configure_quorum();
 
     apply();
 
@@ -273,10 +284,9 @@ SCORUM_TEST_CASE(validate_voter_name)
 
 SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 {
-    proposal().action = proposal_action::dropout;
+    create_proposal(proposal_action::dropout);
 
-    proposal_service.voted = 1;
-    committee_service.quorum_votes = 1;
+    configure_quorum();
 
     apply();
 
@@ -286,15 +296,18 @@ SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 
 SCORUM_TEST_CASE(throw_when_account_already_voted)
 {
-    op.voting_account = "alice";
-    proposal().voted_accounts.insert(op.voting_account);
+    proposal_vote_object& p = create_proposal();
+
+    p.voted_accounts.insert(op.voting_account);
 
     SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" already voted");
 }
 
 SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
 {
-    proposal_service.expired.push_back(proposal().id);
+    auto p = create_proposal();
+
+    proposal_service.expired.push_back(p.id);
 
     BOOST_CHECK_THROW(apply(), fc::exception);
 
@@ -307,7 +320,7 @@ BOOST_AUTO_TEST_SUITE(test_get_quorum)
 
 BOOST_AUTO_TEST_CASE(sixty_percent_from_ten_is_six_votes)
 {
-    BOOST_CHECK_EQUAL(6, scorum::chain::utils::get_quorum(10, 60 * SCORUM_1_PERCENT));
+    BOOST_CHECK_EQUAL(6, scorum::chain::utils::get_quorum(10, SCORUM_PERCENT(60)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

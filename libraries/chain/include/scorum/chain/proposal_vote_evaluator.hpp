@@ -19,24 +19,22 @@ using namespace scorum::protocol;
 // clang-format off
 template <typename AccountService,
           typename ProposalService,
-          typename CommiteeService,
+          typename CommitteeService,
           typename OperationType = scorum::protocol::operation>
 class proposal_vote_evaluator_t : public evaluator<OperationType>
 // clang-format on
 {
 public:
     //    typedef scorum::protocol::operation ;
-    typedef proposal_vote_evaluator_t<AccountService, ProposalService, CommiteeService> EvaluatorType;
+    typedef proposal_vote_evaluator_t<AccountService, ProposalService, CommitteeService> EvaluatorType;
     typedef proposal_vote_operation operation_type;
 
     proposal_vote_evaluator_t(AccountService& account_service,
                               ProposalService& proposal_service,
-                              CommiteeService& commitee_service,
-                              uint32_t quorum)
+                              CommitteeService& committee_service)
         : _account_service(account_service)
         , _proposal_service(proposal_service)
-        , _committee_service(commitee_service)
-        , _quorum_percent(quorum)
+        , _committee_service(committee_service)
     {
     }
 
@@ -55,7 +53,7 @@ public:
     void do_apply(const proposal_vote_operation& op)
     {
         FC_ASSERT(_committee_service.member_exists(op.voting_account),
-                  "Account \"${account_name}\" is not in commitee.", ("account_name", op.voting_account));
+                  "Account \"${account_name}\" is not in committee.", ("account_name", op.voting_account));
 
         FC_ASSERT(_account_service.is_exists(op.voting_account), "Account \"${account_name}\" must exist.",
                   ("account_name", op.voting_account));
@@ -72,7 +70,7 @@ public:
 
         const size_t votes = _proposal_service.vote_for(op.voting_account, proposal);
 
-        if (votes >= _committee_service.get_quorum(_quorum_percent))
+        if (votes >= _committee_service.quorum_votes(proposal.quorum_percent))
         {
             if (proposal.action == invite)
             {
@@ -94,9 +92,7 @@ public:
 protected:
     AccountService& _account_service;
     ProposalService& _proposal_service;
-    CommiteeService& _committee_service;
-
-    uint32_t _quorum_percent;
+    CommitteeService& _committee_service;
 };
 
 typedef proposal_vote_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee> proposal_vote_evaluator;

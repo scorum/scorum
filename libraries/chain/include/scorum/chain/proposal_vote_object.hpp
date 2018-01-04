@@ -25,6 +25,8 @@ public:
 
     fc::time_point_sec expiration;
 
+    uint64_t quorum_percent = 0;
+
     scorum::protocol::proposal_action action;
     flat_set<account_name_type> voted_accounts;
 };

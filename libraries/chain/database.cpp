@@ -1647,13 +1647,13 @@ void database::initialize_evaluators()
                                       this->obtain_service<dbs_proposal>(),
                                       this->obtain_service<dbs_registration_committee>(),
                                       SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS,
-                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
+                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS,
+                                      SCORUM_COMMITTEE_QUORUM_PERCENT));
 
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
         new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
                                     this->obtain_service<dbs_proposal>(),
-                                    this->obtain_service<dbs_registration_committee>(),
-                                    SCORUM_COMMITTEE_QUORUM_PERCENT));
+                                    this->obtain_service<dbs_registration_committee>()));
     //clang-format on
 }
 

@@ -113,9 +113,9 @@ uint64_t dbs_registration_committee::_get_members_count() const
     return db_impl().get_index<registration_committee_member_index>().indicies().size();
 }
 
-uint64_t dbs_registration_committee::get_quorum(uint64_t percent)
+uint64_t dbs_registration_committee::quorum_votes(uint64_t quorum_percent)
 {
-    return utils::get_quorum(_get_members_count(), percent);
+    return utils::get_quorum(_get_members_count(), quorum_percent);
 }
 
 bool dbs_registration_committee::member_exists(const account_name_type& account_name) const

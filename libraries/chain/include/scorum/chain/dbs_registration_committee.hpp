@@ -40,7 +40,7 @@ public:
 
     bool member_exists(const account_name_type&) const;
 
-    uint64_t get_quorum(uint64_t percent);
+    uint64_t quorum_votes(uint64_t quorum_percent);
 
 private:
     uint64_t _get_members_count() const;

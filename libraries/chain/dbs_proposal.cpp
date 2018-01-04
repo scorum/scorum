@@ -13,13 +13,15 @@ dbs_proposal::dbs_proposal(database& db)
 void dbs_proposal::create(const protocol::account_name_type& creator,
                           const protocol::account_name_type& member,
                           protocol::proposal_action action,
-                          fc::time_point_sec expiration)
+                          fc::time_point_sec expiration,
+                          uint64_t quorum)
 {
     db_impl().create<proposal_vote_object>([&](proposal_vote_object& proposal) {
         proposal.creator = creator;
         proposal.member = member;
         proposal.action = action;
         proposal.expiration = expiration;
+        proposal.quorum_percent = quorum;
     });
 }
 

@@ -114,6 +114,7 @@
 #define SCORUM_100_PERCENT                     10000
 #define SCORUM_1_PERCENT                       (SCORUM_100_PERCENT/100)
 #define SCORUM_1_TENTH_PERCENT                 (SCORUM_100_PERCENT/1000)
+#define SCORUM_PERCENT(X)                      (X*SCORUM_1_PERCENT)
 
 #define SCORUM_INFLATION_RATE_START_PERCENT    (978) // Fixes block 7,000,000 to 9.5%
 #define SCORUM_INFLATION_RATE_STOP_PERCENT     (95) // 0.95%

@@ -40,14 +40,20 @@ public:
         return _head_block_time;
     }
 
-    void create(const account_name_type&, const account_name_type&, proposal_action, fc::time_point_sec expiration)
+    void create(const account_name_type&,
+                const account_name_type&,
+                proposal_action,
+                fc::time_point_sec expiration,
+                uint64_t quorum)
     {
         ++proposals_created;
         this->expiration = expiration;
+        this->quorum = quorum;
     }
 
     uint32_t proposals_created = 0;
     fc::time_point_sec expiration;
+    uint64_t quorum;
     const fc::time_point_sec _head_block_time;
 };
 
@@ -59,7 +65,13 @@ public:
         return existent_accounts.count(account) == 1 ? true : false;
     }
 
+    uint64_t get_quorum(uint64_t)
+    {
+        return quorum_votes;
+    }
+
     std::set<account_name_type> existent_accounts;
+    uint64_t quorum_votes = 1;
 };
 
 typedef scorum::chain::proposal_create_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
@@ -71,7 +83,7 @@ public:
     proposal_create_evaluator_fixture()
         : lifetime_min(5)
         , lifetime_max(10)
-        , evaluator(account_service, proposal_service, committee_service, lifetime_min, lifetime_max)
+        , evaluator(account_service, proposal_service, committee_service, lifetime_min, lifetime_max, 1)
     {
         account_service.existent_accounts.insert("alice");
         account_service.existent_accounts.insert("bob");
@@ -123,7 +135,7 @@ SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::invite;
 
-    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"joe\" is not in commitee.");
+    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"joe\" is not in committee.");
 }
 
 SCORUM_TEST_CASE(create_one_invite_proposal)
