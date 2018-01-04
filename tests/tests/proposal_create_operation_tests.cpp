@@ -7,7 +7,7 @@
 
 #include <scorum/chain/proposal_create_evaluator.hpp>
 #include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
+#include <scorum/chain/proposal_object.hpp>
 
 #include "defines.hpp"
 

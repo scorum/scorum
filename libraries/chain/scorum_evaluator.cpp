@@ -13,7 +13,7 @@
 #include <scorum/chain/dbs_registration_pool.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
+#include <scorum/chain/proposal_object.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>

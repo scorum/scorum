@@ -2,8 +2,7 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 #include <scorum/protocol/types.hpp>
-//#include <scorum/chain/database.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
+#include <scorum/chain/proposal_object.hpp>
 
 namespace scorum {
 namespace chain {

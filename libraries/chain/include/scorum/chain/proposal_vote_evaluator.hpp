@@ -9,7 +9,7 @@
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
 
-#include <scorum/chain/proposal_vote_object.hpp>
+#include <scorum/chain/proposal_object.hpp>
 
 namespace scorum {
 namespace chain {

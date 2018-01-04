@@ -5,7 +5,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
+#include <scorum/chain/proposal_object.hpp>
 
 #include "defines.hpp"
 
@@ -270,6 +270,17 @@ SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
     SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Proposal '1' is expired.");
 }
 
+SCORUM_TEST_CASE(check_voter_name)
+{
+    auto p = create_proposal(proposal_action::dropout);
+
+    configure_quorum();
+
+    apply();
+
+    BOOST_CHECK(proposal_service.voters.count(op.voting_account) == 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(proposal_execute_tests, proposal_vote_evaluator_fixture)
@@ -322,19 +333,6 @@ SCORUM_TEST_CASE(dont_add_members_during_droping)
 
     BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
     BOOST_CHECK_EQUAL(committee_service.excluded_members.front(), "bob");
-}
-
-SCORUM_TEST_CASE(check_voter_name)
-{
-    auto p = create_proposal(proposal_action::dropout);
-
-    configure_quorum();
-
-    evaluator.execute_proposal(p);
-
-    BOOST_CHECK(proposal_service.voters.count(op.voting_account) == 1);
-
-    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
 }
 
 SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)

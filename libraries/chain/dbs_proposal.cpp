@@ -1,5 +1,5 @@
 #include <scorum/chain/dbs_proposal.hpp>
-#include <scorum/chain/proposal_vote_object.hpp>
+#include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/database.hpp>
 
 namespace scorum {
