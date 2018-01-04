@@ -75,23 +75,25 @@ public:
         update_proposals_voting_list_and_execute();
     }
 
-private:
-    void update_proposals_voting_list_and_execute()
+protected:
+    virtual void update_proposals_voting_list_and_execute()
     {
         while (!removed_members.empty())
         {
             account_name_type member = *removed_members.begin();
 
-            _proposal_service.foreach_proposal([&](proposal_vote_object& p) {
-                p.voted_accounts.erase(member);
+            auto updated_proposals = _proposal_service.for_all_proposals_remove_from_voting_list(member);
 
+            for (auto p : updated_proposals)
+            {
                 execute_proposal(p);
-            });
+            }
+
             removed_members.erase(member);
         }
     }
 
-    void execute_proposal(const proposal_vote_object& proposal)
+    virtual void execute_proposal(const proposal_vote_object& proposal)
     {
         const size_t votes = _proposal_service.get_votes(proposal);
         const size_t needed_votes = _committee_service.quorum_votes(proposal.quorum_percent);

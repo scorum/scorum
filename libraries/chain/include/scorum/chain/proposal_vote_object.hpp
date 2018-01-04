@@ -9,6 +9,8 @@ namespace chain {
 class proposal_vote_object : public object<proposal_vote_object_type, proposal_vote_object>
 {
 public:
+    using ref_type = std::reference_wrapper<const proposal_vote_object>;
+
     template <typename Constructor, typename Allocator> proposal_vote_object(Constructor&& c, allocator<Allocator>)
     {
         c(*this);

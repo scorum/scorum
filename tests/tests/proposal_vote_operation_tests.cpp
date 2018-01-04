@@ -40,14 +40,6 @@ public:
     void remove(const proposal_vote_object& proposal)
     {
         removed_proposals.push_back(proposal.id);
-
-        for (auto i = proposals.begin(); i != proposals.end();)
-        {
-            if (i->id == proposal.id)
-                proposals.erase(i);
-            else
-                ++i;
-        }
     }
 
     bool is_exist(const uint64_t id)
@@ -93,12 +85,11 @@ public:
         return false;
     }
 
-    template <typename Modifier> void foreach_proposal(Modifier&& constructor)
+    std::vector<proposal_vote_object::ref_type> for_all_proposals_remove_from_voting_list(const account_name_type&)
     {
-        for (proposal_vote_object& p : proposals)
-        {
-            constructor(p);
-        }
+        std::vector<proposal_vote_object::ref_type> updated_proposals;
+
+        return updated_proposals;
     }
 
     std::vector<proposal_vote_object> proposals;
@@ -147,7 +138,28 @@ public:
 };
 
 typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
-    evaluator_mocked;
+    evaluator_test_impl;
+
+class evaluator_mocked : public evaluator_test_impl
+{
+public:
+    evaluator_mocked(account_service_mock& account_service,
+                     proposal_service_mock& proposal_service,
+                     committee_service_mock& committee_service)
+        : evaluator_test_impl(account_service, proposal_service, committee_service)
+    {
+    }
+
+    void update_proposals_voting_list_and_execute()
+    {
+        evaluator_test_impl::update_proposals_voting_list_and_execute();
+    }
+
+    void execute_proposal(const proposal_vote_object& proposal)
+    {
+        evaluator_test_impl::execute_proposal(proposal);
+    }
+};
 
 class proposal_vote_evaluator_fixture
 {
@@ -238,81 +250,6 @@ SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
     SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "There is no proposal with id '100'");
 }
 
-SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
-{
-    create_proposal(proposal_action::invite);
-
-    configure_not_enough_quorum();
-
-    apply();
-
-    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 0);
-}
-
-SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
-{
-    create_proposal(proposal_action::dropout);
-
-    configure_not_enough_quorum();
-
-    apply();
-
-    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 0);
-}
-
-SCORUM_TEST_CASE(dont_remove_members_during_adding)
-{
-    create_proposal(proposal_action::invite);
-
-    configure_quorum();
-
-    apply();
-
-    BOOST_CHECK_EQUAL(committee_service.excluded_members.size(), 0);
-
-    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 1);
-    BOOST_CHECK_EQUAL(committee_service.added_members.front(), "bob");
-}
-
-SCORUM_TEST_CASE(dont_add_members_during_droping)
-{
-    create_proposal(proposal_action::dropout);
-
-    configure_quorum();
-
-    apply();
-
-    BOOST_CHECK_EQUAL(committee_service.added_members.size(), 0);
-
-    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
-    BOOST_CHECK_EQUAL(committee_service.excluded_members.front(), "bob");
-}
-
-SCORUM_TEST_CASE(validate_voter_name)
-{
-    create_proposal(proposal_action::dropout);
-
-    configure_quorum();
-
-    apply();
-
-    BOOST_CHECK(proposal_service.voters.count(op.voting_account) == 1);
-
-    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
-}
-
-SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
-{
-    create_proposal(proposal_action::dropout);
-
-    configure_quorum();
-
-    apply();
-
-    BOOST_REQUIRE_EQUAL(proposal_service.removed_proposals.size(), 1);
-    BOOST_CHECK_EQUAL(proposal_service.removed_proposals.front()._id, op.proposal_id);
-}
-
 SCORUM_TEST_CASE(throw_when_account_already_voted)
 {
     proposal_vote_object& p = create_proposal();
@@ -331,6 +268,85 @@ SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
     BOOST_CHECK_THROW(apply(), fc::exception);
 
     SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Proposal '1' is expired.");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(proposal_execute_tests, proposal_vote_evaluator_fixture)
+
+SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
+{
+    auto p = create_proposal(proposal_action::invite);
+
+    configure_not_enough_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 0);
+}
+
+SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
+{
+    auto p = create_proposal(proposal_action::dropout);
+
+    configure_not_enough_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 0);
+}
+
+SCORUM_TEST_CASE(dont_remove_members_during_adding)
+{
+    auto p = create_proposal(proposal_action::invite);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(committee_service.excluded_members.size(), 0);
+
+    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 1);
+    BOOST_CHECK_EQUAL(committee_service.added_members.front(), "bob");
+}
+
+SCORUM_TEST_CASE(dont_add_members_during_droping)
+{
+    auto p = create_proposal(proposal_action::dropout);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(committee_service.added_members.size(), 0);
+
+    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
+    BOOST_CHECK_EQUAL(committee_service.excluded_members.front(), "bob");
+}
+
+SCORUM_TEST_CASE(check_voter_name)
+{
+    auto p = create_proposal(proposal_action::dropout);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK(proposal_service.voters.count(op.voting_account) == 1);
+
+    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
+}
+
+SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
+{
+    auto p = create_proposal(proposal_action::dropout);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_REQUIRE_EQUAL(proposal_service.removed_proposals.size(), 1);
+    BOOST_CHECK_EQUAL(proposal_service.removed_proposals.front()._id, op.proposal_id);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

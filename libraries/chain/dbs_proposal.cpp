@@ -69,5 +69,27 @@ void dbs_proposal::clear_expired_proposals()
     }
 }
 
+std::vector<proposal_vote_object::ref_type>
+dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_type& member)
+{
+    std::vector<proposal_vote_object::ref_type> updated_proposals;
+
+    const auto& proposals = db_impl().get_index<proposal_vote_index>().indices().get<by_id>();
+
+    for (auto proposal : proposals)
+    {
+        db_impl().modify(proposal, [&](proposal_vote_object& p) {
+            if (p.voted_accounts.find(member) != p.voted_accounts.end())
+            {
+                p.voted_accounts.erase(member);
+
+                updated_proposals.push_back(std::cref(p));
+            }
+        });
+    }
+
+    return updated_proposals;
+}
+
 } // namespace scorum
 } // namespace chain

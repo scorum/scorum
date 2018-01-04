@@ -2,13 +2,11 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/database.hpp>
+//#include <scorum/chain/database.hpp>
 #include <scorum/chain/proposal_vote_object.hpp>
 
 namespace scorum {
 namespace chain {
-
-class proposal_vote_object;
 
 class dbs_proposal : public dbs_base
 {
@@ -40,15 +38,8 @@ public:
 
     void remove_voter_in_proposals(const account_name_type& voter);
 
-    template <typename Modifier> void foreach_proposal(Modifier&& m)
-    {
-        const auto& proposal_index = db_impl().get_index<proposal_vote_index>().indices().get<by_id>();
-
-        for (auto p : proposal_index)
-        {
-            db_impl().modify(p, m);
-        }
-    }
+    std::vector<proposal_vote_object::ref_type>
+    for_all_proposals_remove_from_voting_list(const account_name_type& member);
 };
 
 } // namespace scorum
