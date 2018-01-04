@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-
+#include <boost/range/algorithm/remove_if.hpp>
 #include <scorum/protocol/exceptions.hpp>
 
 #include <scorum/protocol/types.hpp>
@@ -40,6 +40,14 @@ public:
     void remove(const proposal_vote_object& proposal)
     {
         removed_proposals.push_back(proposal.id);
+
+        for (auto i = proposals.begin(); i != proposals.end();)
+        {
+            if (i->id == proposal.id)
+                proposals.erase(i);
+            else
+                ++i;
+        }
     }
 
     bool is_exist(const uint64_t id)
@@ -63,11 +71,14 @@ public:
         BOOST_THROW_EXCEPTION(std::out_of_range("no such proposal"));
     }
 
-    size_t vote_for(const account_name_type& account, const proposal_vote_object& proposal)
+    void vote_for(const account_name_type& account, const proposal_vote_object& proposal)
     {
         voted_proposal.push_back(proposal.id);
         voters.insert(account);
+    }
 
+    size_t get_votes(const proposal_vote_object&)
+    {
         return voted;
     }
 
@@ -82,8 +93,12 @@ public:
         return false;
     }
 
-    template <typename Modifier> void foreach_p(Modifier&&)
+    template <typename Modifier> void foreach_proposal(Modifier&& constructor)
     {
+        for (proposal_vote_object& p : proposals)
+        {
+            constructor(p);
+        }
     }
 
     std::vector<proposal_vote_object> proposals;

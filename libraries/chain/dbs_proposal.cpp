@@ -44,10 +44,13 @@ const proposal_vote_object& dbs_proposal::get(proposal_id_type proposal_id)
     return *proposal;
 }
 
-size_t dbs_proposal::vote_for(const protocol::account_name_type& voter, const proposal_vote_object& proposal)
+void dbs_proposal::vote_for(const protocol::account_name_type& voter, const proposal_vote_object& proposal)
 {
     db_impl().modify(proposal, [&](proposal_vote_object& p) { p.voted_accounts.insert(voter); });
+}
 
+size_t dbs_proposal::get_votes(const proposal_vote_object& proposal)
+{
     return proposal.voted_accounts.size();
 }
 
@@ -65,16 +68,6 @@ void dbs_proposal::clear_expired_proposals()
         db_impl().remove(*proposal_expiration_index.begin());
     }
 }
-
-// void dbs_proposal::remove_voter_in_proposals(const account_name_type& voter, auto )
-//{
-//    const auto& proposal_index = db_impl().get_index<proposal_vote_index>().indices().get<by_id>();
-
-//    for (auto p : proposal_index)
-//    {
-//        db_impl().modify(proposal, [&](proposal_vote_object& p) { p.voted_accounts.insert(voter); });
-//    }
-//}
 
 } // namespace scorum
 } // namespace chain

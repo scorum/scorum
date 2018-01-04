@@ -68,43 +68,52 @@ public:
 
         FC_ASSERT(!_proposal_service.is_expired(proposal), "Proposal '${id}' is expired.", ("id", op.proposal_id));
 
-        const size_t votes = _proposal_service.vote_for(op.voting_account, proposal);
+        _proposal_service.vote_for(op.voting_account, proposal);
 
-        if (votes >= _committee_service.quorum_votes(proposal.quorum_percent))
-        {
-            execute_proposal(proposal);
-        }
+        execute_proposal(proposal);
 
+        update_proposals_voting_list_and_execute();
+    }
+
+private:
+    void update_proposals_voting_list_and_execute()
+    {
         while (!removed_members.empty())
         {
             account_name_type member = *removed_members.begin();
 
-            _proposal_service.foreach_p([&](proposal_vote_object& p) {
+            _proposal_service.foreach_proposal([&](proposal_vote_object& p) {
                 p.voted_accounts.erase(member);
+
                 execute_proposal(p);
             });
             removed_members.erase(member);
         }
     }
 
-private:
     void execute_proposal(const proposal_vote_object& proposal)
     {
-        if (proposal.action == invite)
-        {
-            _committee_service.add_member(proposal.member);
-        }
-        else if (proposal.action == dropout)
-        {
-            _committee_service.exclude_member(proposal.member);
-            removed_members.insert(proposal.member);
-        }
-        else
-        {
-            FC_ASSERT("Invalid proposal action type");
-        }
+        const size_t votes = _proposal_service.get_votes(proposal);
+        const size_t needed_votes = _committee_service.quorum_votes(proposal.quorum_percent);
 
-        _proposal_service.remove(proposal);
+        if (votes >= needed_votes)
+        {
+            if (proposal.action == invite)
+            {
+                _committee_service.add_member(proposal.member);
+            }
+            else if (proposal.action == dropout)
+            {
+                _committee_service.exclude_member(proposal.member);
+                removed_members.insert(proposal.member);
+            }
+            else
+            {
+                FC_ASSERT("Invalid proposal action type");
+            }
+
+            _proposal_service.remove(proposal);
+        }
     }
 
     AccountService& _account_service;

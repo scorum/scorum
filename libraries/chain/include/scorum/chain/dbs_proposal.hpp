@@ -30,7 +30,9 @@ public:
 
     const proposal_vote_object& get(proposal_id_type proposal_id);
 
-    size_t vote_for(const account_name_type& voter, const proposal_vote_object& proposal);
+    void vote_for(const account_name_type& voter, const proposal_vote_object& proposal);
+
+    size_t get_votes(const proposal_vote_object& proposal);
 
     bool is_expired(const proposal_vote_object& proposal);
 
@@ -38,7 +40,7 @@ public:
 
     void remove_voter_in_proposals(const account_name_type& voter);
 
-    template <typename Modifier> void foreach_p(Modifier&& m)
+    template <typename Modifier> void foreach_proposal(Modifier&& m)
     {
         const auto& proposal_index = db_impl().get_index<proposal_vote_index>().indices().get<by_id>();
 
