@@ -61,7 +61,7 @@ public:
         FC_ASSERT(_proposal_service.is_exist(op.proposal_id), "There is no proposal with id '${id}'",
                   ("id", op.proposal_id));
 
-        const proposal_vote_object& proposal = _proposal_service.get(op.proposal_id);
+        const proposal_object& proposal = _proposal_service.get(op.proposal_id);
 
         FC_ASSERT(proposal.voted_accounts.find(op.voting_account) == proposal.voted_accounts.end(),
                   "Account \"${account}\" already voted", ("account", op.voting_account));
@@ -93,7 +93,7 @@ protected:
         }
     }
 
-    virtual void execute_proposal(const proposal_vote_object& proposal)
+    virtual void execute_proposal(const proposal_object& proposal)
     {
         const size_t votes = _proposal_service.get_votes(proposal);
         const size_t needed_votes = _committee_service.quorum_votes(proposal.quorum_percent);

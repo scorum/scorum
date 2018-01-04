@@ -13,7 +13,7 @@
 
 using scorum::protocol::proposal_action;
 using scorum::protocol::account_name_type;
-using scorum::chain::proposal_vote_object;
+using scorum::chain::proposal_object;
 using scorum::chain::proposal_create_operation;
 
 class account_service_mock

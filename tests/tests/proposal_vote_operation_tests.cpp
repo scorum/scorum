@@ -12,7 +12,7 @@
 namespace tests {
 
 using scorum::protocol::account_name_type;
-using scorum::chain::proposal_vote_object;
+using scorum::chain::proposal_object;
 using scorum::chain::proposal_vote_operation;
 using scorum::protocol::proposal_action;
 using scorum::chain::proposal_id_type;
@@ -37,7 +37,7 @@ public:
     {
     }
 
-    void remove(const proposal_vote_object& proposal)
+    void remove(const proposal_object& proposal)
     {
         removed_proposals.push_back(proposal.id);
     }
@@ -52,9 +52,9 @@ public:
         return false;
     }
 
-    const proposal_vote_object& get(const uint64_t id)
+    const proposal_object& get(const uint64_t id)
     {
-        for (proposal_vote_object& p : proposals)
+        for (proposal_object& p : proposals)
         {
             if (p.id == id)
                 return p;
@@ -63,18 +63,18 @@ public:
         BOOST_THROW_EXCEPTION(std::out_of_range("no such proposal"));
     }
 
-    void vote_for(const account_name_type& account, const proposal_vote_object& proposal)
+    void vote_for(const account_name_type& account, const proposal_object& proposal)
     {
         voted_proposal.push_back(proposal.id);
         voters.insert(account);
     }
 
-    size_t get_votes(const proposal_vote_object&)
+    size_t get_votes(const proposal_object&)
     {
         return voted;
     }
 
-    bool is_expired(const proposal_vote_object& proposal)
+    bool is_expired(const proposal_object& proposal)
     {
         for (proposal_id_type id : expired)
         {
@@ -85,14 +85,14 @@ public:
         return false;
     }
 
-    std::vector<proposal_vote_object::ref_type> for_all_proposals_remove_from_voting_list(const account_name_type&)
+    std::vector<proposal_object::ref_type> for_all_proposals_remove_from_voting_list(const account_name_type&)
     {
-        std::vector<proposal_vote_object::ref_type> updated_proposals;
+        std::vector<proposal_object::ref_type> updated_proposals;
 
         return updated_proposals;
     }
 
-    std::vector<proposal_vote_object> proposals;
+    std::vector<proposal_object> proposals;
 
     std::vector<proposal_id_type> removed_proposals;
     std::vector<proposal_id_type> voted_proposal;
@@ -155,7 +155,7 @@ public:
         evaluator_test_impl::update_proposals_voting_list_and_execute();
     }
 
-    void execute_proposal(const proposal_vote_object& proposal)
+    void execute_proposal(const proposal_object& proposal)
     {
         evaluator_test_impl::execute_proposal(proposal);
     }
@@ -178,9 +178,9 @@ public:
         evaluator.do_apply(op);
     }
 
-    proposal_vote_object& create_proposal(proposal_action action = proposal_action::invite)
+    proposal_object& create_proposal(proposal_action action = proposal_action::invite)
     {
-        proposal_vote_object proposal;
+        proposal_object proposal;
         proposal.creator = "alice";
         proposal.member = "bob";
         proposal.action = action;
@@ -252,7 +252,7 @@ SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 
 SCORUM_TEST_CASE(throw_when_account_already_voted)
 {
-    proposal_vote_object& p = create_proposal();
+    proposal_object& p = create_proposal();
 
     p.voted_accounts.insert(op.voting_account);
 

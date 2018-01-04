@@ -6,17 +6,17 @@
 namespace scorum {
 namespace chain {
 
-class proposal_vote_object : public object<proposal_vote_object_type, proposal_vote_object>
+class proposal_object : public object<proposal_object_type, proposal_object>
 {
 public:
-    using ref_type = std::reference_wrapper<const proposal_vote_object>;
+    using ref_type = std::reference_wrapper<const proposal_object>;
 
-    template <typename Constructor, typename Allocator> proposal_vote_object(Constructor&& c, allocator<Allocator>)
+    template <typename Constructor, typename Allocator> proposal_object(Constructor&& c, allocator<Allocator>)
     {
         c(*this);
     }
 
-    proposal_vote_object()
+    proposal_object()
         : action(scorum::protocol::proposal_action::invite)
     {
     }
@@ -36,24 +36,24 @@ public:
 struct by_member_name;
 struct by_expiration;
 
-typedef multi_index_container<proposal_vote_object,
+typedef multi_index_container<proposal_object,
                               indexed_by<ordered_unique<tag<by_id>,
-                                                        member<proposal_vote_object,
+                                                        member<proposal_object,
                                                                proposal_id_type,
-                                                               &proposal_vote_object::id>>,
+                                                               &proposal_object::id>>,
                                          ordered_unique<tag<by_member_name>,
-                                                        member<proposal_vote_object,
+                                                        member<proposal_object,
                                                                account_name_type,
-                                                               &proposal_vote_object::member>>,
+                                                               &proposal_object::member>>,
                                          ordered_unique<tag<by_expiration>,
-                                                        member<proposal_vote_object,
+                                                        member<proposal_object,
                                                                fc::time_point_sec,
-                                                               &proposal_vote_object::expiration>>>,
-                              allocator<proposal_vote_object>>
-    proposal_vote_index;
+                                                               &proposal_object::expiration>>>,
+                              allocator<proposal_object>>
+    proposal_object_index;
 
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_vote_object, (id)(creator)(member)(action)(expiration)(voted_accounts))
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_vote_object, scorum::chain::proposal_vote_index)
+FC_REFLECT(scorum::chain::proposal_object, (id)(creator)(member)(action)(expiration)(voted_accounts))
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_object, scorum::chain::proposal_object_index)

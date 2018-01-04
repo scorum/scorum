@@ -1704,7 +1704,7 @@ void database::initialize_indexes()
     add_index<budget_index>();
     add_index<registration_pool_index>();
     add_index<registration_committee_member_index>();
-    add_index<proposal_vote_index>();
+    add_index<proposal_object_index>();
 
     _plugin_index_signal();
 }
