@@ -182,17 +182,17 @@ public:
     {
         proposal_object proposal;
         proposal.creator = "alice";
-        proposal.member = "bob";
+        proposal.data = fc::variant("bob").as_string();
         proposal.action = action;
 
         proposal.id = proposal_service.proposals.size() + 1;
         proposal_service.proposals.push_back(proposal);
 
         account_service.existent_accounts.insert(proposal.creator);
-        account_service.existent_accounts.insert(proposal.member);
+        account_service.existent_accounts.insert("bob");
 
         committee_service.existent_accounts.insert(proposal.creator);
-        committee_service.existent_accounts.insert(proposal.member);
+        committee_service.existent_accounts.insert("bob");
 
         op.voting_account = proposal.creator;
         op.proposal_id = proposal.id._id;

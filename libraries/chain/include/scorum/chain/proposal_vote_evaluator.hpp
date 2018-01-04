@@ -98,16 +98,18 @@ protected:
         const size_t votes = _proposal_service.get_votes(proposal);
         const size_t needed_votes = _committee_service.quorum_votes(proposal.quorum_percent);
 
+        account_name_type member = proposal.data.as_string();
+
         if (votes >= needed_votes)
         {
             if (proposal.action == invite)
             {
-                _committee_service.add_member(proposal.member);
+                _committee_service.add_member(member);
             }
             else if (proposal.action == dropout)
             {
-                _committee_service.exclude_member(proposal.member);
-                removed_members.insert(proposal.member);
+                _committee_service.exclude_member(member);
+                removed_members.insert(member);
             }
             else
             {

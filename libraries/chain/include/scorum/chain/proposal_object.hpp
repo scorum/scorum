@@ -23,7 +23,7 @@ public:
 
     id_type id;
     account_name_type creator;
-    account_name_type member;
+    fc::variant data;
 
     fc::time_point_sec expiration;
 
@@ -33,7 +33,6 @@ public:
     flat_set<account_name_type> voted_accounts;
 };
 
-struct by_member_name;
 struct by_expiration;
 
 typedef multi_index_container<proposal_object,
@@ -41,10 +40,6 @@ typedef multi_index_container<proposal_object,
                                                         member<proposal_object,
                                                                proposal_id_type,
                                                                &proposal_object::id>>,
-                                         ordered_unique<tag<by_member_name>,
-                                                        member<proposal_object,
-                                                               account_name_type,
-                                                               &proposal_object::member>>,
                                          ordered_unique<tag<by_expiration>,
                                                         member<proposal_object,
                                                                fc::time_point_sec,
@@ -55,5 +50,5 @@ typedef multi_index_container<proposal_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_object, (id)(creator)(member)(action)(expiration)(voted_accounts))
+FC_REFLECT(scorum::chain::proposal_object, (id)(creator)(data)(action)(expiration)(voted_accounts))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_object, scorum::chain::proposal_object_index)

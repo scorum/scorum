@@ -18,7 +18,8 @@ void dbs_proposal::create(const protocol::account_name_type& creator,
 {
     db_impl().create<proposal_object>([&](proposal_object& proposal) {
         proposal.creator = creator;
-        proposal.member = member;
+        //        proposal.member = member;
+        proposal.data = fc::variant(member).as_string();
         proposal.action = action;
         proposal.expiration = expiration;
         proposal.quorum_percent = quorum;
