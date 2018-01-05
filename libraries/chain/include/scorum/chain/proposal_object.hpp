@@ -50,5 +50,5 @@ typedef multi_index_container<proposal_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_object, (id)(creator)(data)(action)(expiration)(voted_accounts))
+FC_REFLECT(scorum::chain::proposal_object, (id)(creator)(data)(expiration)(quorum_percent)(action)(voted_accounts))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_object, scorum::chain::proposal_object_index)
