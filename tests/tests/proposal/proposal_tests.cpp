@@ -49,8 +49,8 @@ public:
     }
 };
 
-// namespace scorum
-// namespace chain
+} // namespace scorum
+} // namespace chain
 
 #endif
 
