@@ -356,6 +356,21 @@ BOOST_AUTO_TEST_CASE(sixty_percent_from_ten_is_six_votes)
     BOOST_CHECK_EQUAL(6, scorum::chain::utils::get_quorum(10, SCORUM_PERCENT(60)));
 }
 
+BOOST_AUTO_TEST_CASE(sixty_percent_from_eight_is_four_votes)
+{
+    BOOST_CHECK_EQUAL(4, scorum::chain::utils::get_quorum(8, SCORUM_PERCENT(60)));
+}
+
+BOOST_AUTO_TEST_CASE(sixty_percent_from_six_is_three_votes)
+{
+    BOOST_CHECK_EQUAL(3, scorum::chain::utils::get_quorum(6, SCORUM_PERCENT(60)));
+}
+
+BOOST_AUTO_TEST_CASE(sixty_percent_from_four_is_two_votes)
+{
+    BOOST_CHECK_EQUAL(2, scorum::chain::utils::get_quorum(4, SCORUM_PERCENT(60)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace tests
