@@ -44,12 +44,37 @@ SCORUM_TEST_CASE(invalidate_secret)
 
     BOOST_CHECK_THROW(validate_secret(invalid_secret), fc::assert_exception);
 
-    invalid_secret = valid_secret.substr(0, valid_secret.size() - 1);
+    invalid_secret = valid_secret + std::string(SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH, 'f');
     BOOST_CHECK_THROW(validate_secret(invalid_secret), fc::assert_exception);
 
     invalid_secret = valid_secret;
     invalid_secret[valid_secret.size() / 2] = '?';
     BOOST_CHECK_THROW(validate_secret(invalid_secret), fc::exception);
+}
+
+SCORUM_TEST_CASE(invalidate_contact_metadata)
+{
+    const std::string valid_metadata = R"json(
+            {"owner": "Alice", "title": "Exchange operation", "from": "15 LTC", "to": "10 SCR"}
+                                       )json";
+
+    BOOST_REQUIRE_NO_THROW(validate_contract_metadata(valid_metadata));
+
+    std::string invalid_metadata;
+
+    invalid_metadata = valid_metadata + std::string(SCORUM_ATOMICSWAP_CONTRACT_METADATA_MAX_LENGTH, ' ');
+    BOOST_CHECK_THROW(validate_contract_metadata(invalid_metadata), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(secret_generator)
+{
+    std::string entropy(SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH * 10, ' ');
+
+    BOOST_CHECK_LE(get_secret_hex(entropy).size(), SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH);
+
+    entropy = std::string(SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 10, ' ');
+
+    BOOST_CHECK_LE(get_secret_hex(entropy).size(), SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH);
 }
 
 SCORUM_TEST_CASE(gen_secret_hash)

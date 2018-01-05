@@ -20,7 +20,14 @@ std::string get_secret_hex(const std::string& secret)
     ++entropy; // increase value for [entropy_percent + 1, 2*entropy_percent]
     fc::sha512 hash = fc::sha512().hash(secret);
     // devide to 2*entropy_percent to get coefficient in (0.5, 1]
-    return fc::to_hex(hash.data(), hash.data_size() * entropy / entropy_percent / (size_t)2);
+    std::size_t out_sz = hash.data_size() * entropy / entropy_percent / (size_t)2;
+    if (out_sz > SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2)
+    {
+        // Ensure out hex string less then SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH (length in hex view (two symbol per
+        // byte))
+        out_sz = SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2;
+    }
+    return fc::to_hex(hash.data(), out_sz);
 }
 
 std::string get_secret_hash(const std::string& secret_hex)
@@ -53,8 +60,7 @@ std::string get_secret_hash(const std::string& secret_hex)
 void validate_secret(const std::string& secret_hex)
 {
     FC_ASSERT(!secret_hex.empty(), "Empty secret.");
-    //сheck that the length is even 1 byte
-    FC_ASSERT(0 == secret_hex.size() % 2, "Invalid secret format.");
+    FC_ASSERT(secret_hex.size() < SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH, "Secret string is too long.");
     for (char ch : secret_hex)
     {
         fc::from_hex(ch);
@@ -64,12 +70,18 @@ void validate_secret(const std::string& secret_hex)
 void validate_secret_hash(const std::string& secret_hash)
 {
     fc::ripemd160 fmt;
-    FC_ASSERT(secret_hash.size() == fmt.data_size() * 2, "Invalid hash format. It must be in hex RIPEMD160 format");
+    FC_ASSERT(secret_hash.size() == fmt.data_size() * 2, "Invalid hash format. It must be in hex RIPEMD160 format.");
     try
     {
         fmt = fc::ripemd160(secret_hash);
     }
     FC_CAPTURE_AND_RETHROW((secret_hash))
+}
+
+void validate_contract_metadata(const std::string& metadata)
+{
+    FC_ASSERT(metadata.size() < SCORUM_ATOMICSWAP_CONTRACT_METADATA_MAX_LENGTH,
+              "Contract metadata string is too long.");
 }
 
 fc::sha256

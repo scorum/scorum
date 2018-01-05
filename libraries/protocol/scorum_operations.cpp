@@ -374,6 +374,7 @@ void atomicswap_initiate_operation::validate() const
     validate_account_name(recipient);
     FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCR");
     FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Amount must be positive");
+    atomicswap::validate_contract_metadata(metadata);
     atomicswap::validate_secret_hash(secret_hash);
 }
 

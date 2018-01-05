@@ -16,6 +16,9 @@
 // VESTS = SP with 6 digits of precision
 #define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
+#define SCORUM_ATOMICSWAP_CONTRACT_METADATA_MAX_LENGTH  10*1024
+#define SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH             1024
+
 #ifdef IS_TEST_NET
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
