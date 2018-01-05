@@ -47,6 +47,11 @@ public:
 
         return a;
     }
+
+    db_proposal_vote_fixture& check(const Actor& a)
+    {
+        return *this;
+    }
 };
 
 } // namespace scorum
