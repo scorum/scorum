@@ -1012,7 +1012,7 @@ public:
      *  @param metadata the additional contract info (obligations, courses)
      *  @param broadcast
      */
-    atomicswap_initiate_result_api_obj atomicswap_initiate(const std::string& initiator,
+    atomicswap_contract_result_api_obj atomicswap_initiate(const std::string& initiator,
                                                            const std::string& participant,
                                                            const asset& amount,
                                                            const std::string& metadata,
@@ -1030,12 +1030,12 @@ public:
      *  @param metadata the additional contract info (obligations, courses)
      *  @param broadcast
      */
-    annotated_signed_transaction atomicswap_participate(const std::string& secret_hash,
-                                                        const std::string& participant,
-                                                        const std::string& initiator,
-                                                        const asset& amount,
-                                                        const std::string& metadata,
-                                                        const bool broadcast);
+    atomicswap_contract_result_api_obj atomicswap_participate(const std::string& secret_hash,
+                                                              const std::string& participant,
+                                                              const std::string& initiator,
+                                                              const asset& amount,
+                                                              const std::string& metadata,
+                                                              const bool broadcast);
 
     /** The Atomic Swap helper to get contract info.
      *
@@ -1086,6 +1086,11 @@ public:
      *  @param owner
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
+
+    /** Close wallet application
+     *
+     */
+    void exit();
 
 public:
     fc::signal<void(bool)> lock_changed;
@@ -1211,6 +1216,8 @@ FC_API( scorum::wallet::wallet_api,
 
         (get_active_witnesses)
         (get_transaction)
+
+        (exit)
       )
 
 FC_REFLECT( scorum::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )

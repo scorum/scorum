@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <cstdlib>
 
 #include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
@@ -646,6 +647,123 @@ public:
         return tx;
     }
 
+    std::string print_atomicswap_secret(const std::string& secret, const size_t screen_w = (size_t)100) const
+    {
+        std::stringstream out;
+
+        size_t out_w;
+
+        out << std::left << std::string(screen_w, '-') << "\n";
+
+        const std::string secret_title = "SECRET: ";
+
+        out << std::left << secret_title;
+        out_w = screen_w - secret_title.size();
+        if (secret.size() < out_w)
+        {
+            out << std::right << std::setw(out_w) << secret << "\n";
+        }
+        else
+        {
+            out << "\n";
+            out << std::left << secret << "\n";
+        }
+
+        return out.str();
+    }
+
+    std::string print_atomicswap_contract(const atomicswap_contract_info_api_obj& rt,
+                                          const size_t screen_w = (size_t)100) const
+    {
+        std::stringstream out;
+
+        size_t out_w;
+
+        out << std::left << std::string(screen_w, '-') << "\n";
+
+        if (rt.contract_initiator)
+        {
+            out << std::left << "INITIATION CONTRACT";
+        }
+        else
+        {
+            out << std::left << "* PARTICIPATION CONTRACT";
+        }
+        out << "\n";
+
+        out << std::left << std::string(screen_w, '-') << "\n";
+
+        const std::string owner_title = "From: ";
+        out << std::left << owner_title;
+        out_w = screen_w - owner_title.size();
+        out << std::right << std::setw(out_w) << rt.owner << "\n";
+
+        const std::string recipient_title = "To: ";
+        out << std::left << recipient_title;
+        out_w = screen_w - recipient_title.size();
+        out << std::right << std::setw(out_w) << rt.to << "\n";
+
+        const std::string amount_title = "Amount: ";
+        out << std::left << amount_title;
+        out_w = screen_w - amount_title.size();
+        out << std::right << std::setw(out_w) << rt.amount << "\n";
+
+        if (rt.deadline.sec_since_epoch())
+        {
+            const std::string locktime_title = "Locktime: ";
+            out << std::left << locktime_title;
+            out_w = screen_w - locktime_title.size();
+            out << std::right << std::setw(out_w) << rt.deadline.to_iso_string() << "\n";
+
+            const std::string locktime_reached_title = "Locktime reached in: ";
+            out << std::left << locktime_reached_title;
+            out_w = screen_w - locktime_reached_title.size();
+            out << std::right << std::setw(out_w);
+            time_point_sec now = rt.deadline;
+            now -= fc::time_point::now().sec_since_epoch();
+            {
+                std::stringstream rest_time;
+                rest_time << now.sec_since_epoch() / 3600 << 'h';
+                rest_time << now.sec_since_epoch() % 3600 / 60 << 'm';
+                rest_time << now.sec_since_epoch() % 60 << 's';
+                out << rest_time.str() << "\n";
+            }
+        }
+
+        if (!rt.secret.empty())
+        {
+            out << print_atomicswap_secret(rt.secret, screen_w);
+        }
+
+        out << std::left << std::string(screen_w, '-') << "\n";
+
+        const std::string secret_hash_title = "Secret Hash: ";
+        out << std::left << secret_hash_title;
+        out_w = screen_w - secret_hash_title.size();
+        out << std::right << std::setw(out_w) << rt.secret_hash << "\n";
+
+        if (!rt.metadata.empty())
+        {
+            out << std::left << std::string(screen_w, '-') << "\n";
+
+            const std::string metadata_title = "Metadata: ";
+
+            out << std::left << metadata_title;
+            out_w = screen_w - metadata_title.size();
+            if (rt.metadata.size() < out_w)
+            {
+                out << std::right << std::setw(out_w) << rt.metadata << "\n";
+            }
+            else
+            {
+                out << "\n";
+                out << std::left << rt.metadata << "\n";
+            }
+        }
+
+        return out.str();
+    }
+
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const
     {
         std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> m;
@@ -720,176 +838,50 @@ public:
 
             return ss.str();
         };
-        m["atomicswap_initiate"] = [](variant result, const fc::variants& a) {
-            std::stringstream out;
-
-            auto rt = result.as<atomicswap_initiate_result_api_obj>();
+        m["atomicswap_initiate"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<atomicswap_contract_result_api_obj>();
             if (rt.empty())
             {
-                return result.get_string();
+                return "";
             }
             else
             {
-                const size_t screen_w = (size_t)90;
-                size_t out_w;
-
-                out << std::left << std::string(screen_w, '-') << "\n";
-
-                const std::string owner_title = "From: ";
-                out << std::left << owner_title;
-                out_w = screen_w - owner_title.size();
-                out << std::right << std::setw(out_w) << rt.from << "\n";
-
-                const std::string recipient_title = "To: ";
-                out << std::left << recipient_title;
-                out_w = screen_w - recipient_title.size();
-                out << std::right << std::setw(out_w) << rt.to << "\n";
-
-                const std::string amount_title = "Amount: ";
-                out << std::left << amount_title;
-                out_w = screen_w - amount_title.size();
-                out << std::right << std::setw(out_w) << rt.amount << "\n";
-
-                out << std::left << std::string(screen_w, '-') << "\n";
-
-                const std::string secret_title = "SECRET: ";
-
-                out << std::left << secret_title;
-                out_w = screen_w - secret_title.size();
-                if (rt.secret.size() < out_w)
-                {
-                    out << std::right << std::setw(out_w) << rt.secret << "\n";
-                }
-                else
-                {
-                    out << "\n";
-                    out << std::left << rt.secret << "\n";
-                }
-
-                const std::string secret_hash_title = "Secret Hash: ";
-                out << std::left << secret_hash_title;
-                out_w = screen_w - secret_hash_title.size();
-                out << std::right << std::setw(out_w) << rt.secret_hash << "\n";
-
-                return out.str();
+                return print_atomicswap_contract(rt.obj);
             }
         };
-        m["atomicswap_auditcontract"] = [](variant result, const fc::variants& a) {
-            std::stringstream out;
-
+        m["atomicswap_participate"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<atomicswap_contract_result_api_obj>();
+            if (rt.empty())
+            {
+                return "";
+            }
+            else
+            {
+                return print_atomicswap_contract(rt.obj);
+            }
+        };
+        m["atomicswap_auditcontract"] = [this](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<atomicswap_contract_info_api_obj>();
             if (rt.empty())
             {
-                return result.get_string();
+                return "Nothing to audit.";
             }
             else
             {
-                const size_t screen_w = (size_t)90;
-                size_t out_w;
-
-                out << std::left << std::string(screen_w, '-') << "\n";
-
-                const std::string owner_title = "From: ";
-                out << std::left << owner_title;
-                out_w = screen_w - owner_title.size();
-                out << std::right << std::setw(out_w) << rt.owner << "\n";
-
-                const std::string recipient_title = "To: ";
-                out << std::left << recipient_title;
-                out_w = screen_w - recipient_title.size();
-                out << std::right << std::setw(out_w) << rt.to << "\n";
-
-                const std::string amount_title = "Amount: ";
-                out << std::left << amount_title;
-                out_w = screen_w - amount_title.size();
-                out << std::right << std::setw(out_w) << rt.amount << "\n";
-
-                const std::string created_title = "Created: ";
-                out << std::left << created_title;
-                out_w = screen_w - created_title.size();
-                out << std::right << std::setw(out_w) << rt.created.to_iso_string() << "\n";
-
-                const std::string deadline_title = "Deadline: ";
-                out << std::left << deadline_title;
-                out_w = screen_w - deadline_title.size();
-                out << std::right << std::setw(out_w) << rt.deadline.to_iso_string() << "\n";
-
-                out << std::left << std::string(screen_w, '-') << "\n";
-
-                if (!rt.secret.empty())
-                {
-                    const std::string secret_title = "SECRET: ";
-
-                    out << std::left << secret_title;
-                    out_w = screen_w - secret_title.size();
-                    if (rt.secret.size() < out_w)
-                    {
-                        out << std::right << std::setw(out_w) << rt.secret << "\n";
-                    }
-                    else
-                    {
-                        out << "\n";
-                        out << std::left << rt.secret << "\n";
-                    }
-                }
-
-                const std::string secret_hash_title = "Secret Hash: ";
-                out << std::left << secret_hash_title;
-                out_w = screen_w - secret_hash_title.size();
-                out << std::right << std::setw(out_w) << rt.secret_hash << "\n";
-
-                if (!rt.metadata.empty())
-                {
-                    out << std::left << std::string(screen_w, '-') << "\n";
-
-                    const std::string metadata_title = "Metadata: ";
-
-                    out << std::left << metadata_title;
-                    out_w = screen_w - metadata_title.size();
-                    if (rt.metadata.size() < out_w)
-                    {
-                        out << std::right << std::setw(out_w) << rt.metadata << "\n";
-                    }
-                    else
-                    {
-                        out << "\n";
-                        out << std::left << rt.metadata << "\n";
-                    }
-                }
-
-                return out.str();
+                return print_atomicswap_contract(rt);
             }
         };
-        m["atomicswap_extractsecret"] = [](variant result, const fc::variants& a) {
+        m["atomicswap_extractsecret"] = [this](variant result, const fc::variants& a) -> std::string {
             std::stringstream out;
 
             auto secret = result.as<std::string>();
             if (secret.empty())
             {
-                return result.get_string();
+                return "";
             }
             else
             {
-                const size_t screen_w = (size_t)90;
-                size_t out_w;
-
-                out << std::left << std::string(screen_w, '-') << "\n";
-
-                const std::string secret_title = "SECRET: ";
-
-                out << std::left << secret_title;
-                out_w = screen_w - secret_title.size();
-                if (secret.size() < out_w)
-                {
-                    out << std::right << std::setw(out_w) << secret << "\n";
-                }
-                else
-                {
-                    out << "\n";
-                    out << std::left << secret << "\n";
-                }
-
-                return out.str();
+                return print_atomicswap_secret(secret);
             }
         };
 
@@ -2602,7 +2594,7 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
-atomicswap_initiate_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,
+atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,
                                                                    const std::string& participant,
                                                                    const asset& amount,
                                                                    const std::string& metadata,
@@ -2635,22 +2627,22 @@ atomicswap_initiate_result_api_obj wallet_api::atomicswap_initiate(const std::st
     {
         ret = my->sign_transaction(tx, broadcast);
 
-        return { ret, secret, secret_hash, initiator, participant, amount };
+        return atomicswap_contract_result_api_obj(ret, op, secret);
     }
     catch (fc::exception& e)
     {
         elog("Can't initiate Atomic Swap.");
     }
 
-    return { ret, "", "", "", "", asset(0, amount.symbol) };
+    return atomicswap_contract_result_api_obj(ret);
 }
 
-annotated_signed_transaction wallet_api::atomicswap_participate(const std::string& secret_hash,
-                                                                const std::string& participant,
-                                                                const std::string& initiator,
-                                                                const asset& amount,
-                                                                const std::string& metadata,
-                                                                const bool broadcast)
+atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std::string& secret_hash,
+                                                                      const std::string& participant,
+                                                                      const std::string& initiator,
+                                                                      const asset& amount,
+                                                                      const std::string& metadata,
+                                                                      const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -2671,13 +2663,15 @@ annotated_signed_transaction wallet_api::atomicswap_participate(const std::strin
     try
     {
         ret = my->sign_transaction(tx, broadcast);
+
+        return atomicswap_contract_result_api_obj(ret, op);
     }
     catch (fc::exception& e)
     {
         elog("Can't participate Atomic Swap.");
     }
 
-    return ret;
+    return atomicswap_contract_result_api_obj(ret);
 }
 
 annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& from,
@@ -2781,6 +2775,11 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     result = my->_remote_db->get_atomicswap_contracts(owner);
 
     return result;
+}
+
+void wallet_api::exit()
+{
+    std::exit(0);
 }
 
 } // namespace wallet

@@ -10,6 +10,7 @@
 #include <scorum/chain/budget_objects.hpp>
 #include <scorum/chain/atomicswap_objects.hpp>
 #include <scorum/protocol/transaction.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -477,6 +478,7 @@ struct atomicswap_contract_api_obj
 {
     atomicswap_contract_api_obj(const chain::atomicswap_contract_object& c)
         : id(c.id._id)
+        , contract_initiator(c.type == chain::atomicswap_contract_initiator)
         , owner(c.owner)
         , to(c.to)
         , amount(c.amount)
@@ -492,6 +494,8 @@ struct atomicswap_contract_api_obj
     }
 
     int64_t id;
+
+    bool contract_initiator;
 
     account_name_type owner;
 
@@ -523,22 +527,41 @@ struct atomicswap_contract_info_api_obj : public atomicswap_contract_api_obj
 
     bool empty() const
     {
-        return secret.empty() && secret_hash.empty();
+        return secret_hash.empty() || !owner.size() || !to.size() || amount.amount == 0;
     }
 };
 
-struct atomicswap_initiate_result_api_obj
+struct atomicswap_contract_result_api_obj
 {
+    atomicswap_contract_result_api_obj(const protocol::annotated_signed_transaction& _tr)
+        : tr(_tr)
+    {
+    }
+
+    atomicswap_contract_result_api_obj(const protocol::annotated_signed_transaction& _tr,
+                                       const protocol::atomicswap_initiate_operation& op,
+                                       const std::string& secret = "")
+        : tr(_tr)
+    {
+        obj.contract_initiator = (op.type == protocol::atomicswap_initiate_operation::initiate_by_initiator);
+        obj.owner = op.owner;
+        obj.to = op.recipient;
+        obj.amount = op.amount;
+        obj.metadata = op.metadata;
+        obj.secret_hash = op.secret_hash;
+        obj.secret = secret;
+    }
+
+    atomicswap_contract_result_api_obj()
+    {
+    }
+
     protocol::annotated_signed_transaction tr;
-    std::string secret;
-    std::string secret_hash;
-    std::string from;
-    std::string to;
-    asset amount;
+    atomicswap_contract_info_api_obj obj;
 
     bool empty() const
     {
-        return secret.empty() && secret_hash.empty() && from.empty() && to.empty() && amount.amount == 0;
+        return obj.empty();
     }
 };
 
@@ -636,6 +659,7 @@ FC_REFLECT( scorum::app::budget_api_obj,
 
 FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
             (id)
+            (contract_initiator)
             (owner)
             (to)
             (amount)
@@ -649,13 +673,9 @@ FC_REFLECT_DERIVED( scorum::app::atomicswap_contract_info_api_obj, (scorum::app:
                      (secret_hash)
                   )
 
-FC_REFLECT( scorum::app::atomicswap_initiate_result_api_obj,
+FC_REFLECT( scorum::app::atomicswap_contract_result_api_obj,
             (tr)
-            (secret)
-            (secret_hash)
-            (from)
-            (to)
-            (amount)
+            (obj)
           )
 
 // clang-format on
