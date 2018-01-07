@@ -37,8 +37,9 @@ public:
 
     void remove_voter_in_proposals(const account_name_type& voter);
 
-    std::vector<proposal_object::ref_type>
-    for_all_proposals_remove_from_voting_list(const account_name_type& member);
+    std::vector<proposal_object::ref_type> for_all_proposals_remove_from_voting_list(const account_name_type& member);
+
+    std::vector<proposal_object::ref_type> get_proposals();
 };
 
 } // namespace scorum

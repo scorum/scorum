@@ -35,7 +35,7 @@ bool dbs_proposal::is_exist(proposal_id_type proposal_id)
 {
     auto proposal = db_impl().find<proposal_object, by_id>(proposal_id);
 
-    return (proposal == nullptr) ? true : false;
+    return (proposal == nullptr) ? false : true;
 }
 
 const proposal_object& dbs_proposal::get(proposal_id_type proposal_id)
@@ -90,6 +90,22 @@ dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_type&
     }
 
     return updated_proposals;
+}
+
+std::vector<proposal_object::ref_type> dbs_proposal::get_proposals()
+{
+    std::vector<proposal_object::ref_type> ret;
+
+    const auto& idx = db_impl().get_index<proposal_object_index>().indicies();
+    auto it = idx.cbegin();
+    const auto it_end = idx.cend();
+    while (it != it_end)
+    {
+        ret.push_back(std::cref(*it));
+        ++it;
+    }
+
+    return ret;
 }
 
 } // namespace scorum

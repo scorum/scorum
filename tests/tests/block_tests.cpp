@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
         signed_block b;
 
         // TODO:  Don't generate this here
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         signed_block cutoff_block;
         {
             database db;
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(undo_block)
             fc::time_point_sec now(TEST_GENESIS_TIMESTAMP);
             std::vector<time_point_sec> time_stack;
 
-            auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+            auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
             for (uint32_t i = 0; i < 5; ++i)
             {
                 now = db.get_slot_time(1);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
         database db2;
         db_setup_and_open(db2, data_dir2.path());
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         for (uint32_t i = 0; i < 10; ++i)
         {
             auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         database db2;
         db_setup_and_open(db2, dir2.path());
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
         db1.get_index<account_index>();
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
 
         auto skip_sigs = database::skip_transaction_signatures | database::skip_authority_check;
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
 
         signed_transaction trx;
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(tapos)
         database db1;
         db_setup_and_open(db1, dir1.path());
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
 
         auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
@@ -555,7 +555,7 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
                                | database::skip_authority_check);
 
         // Sam is the creator of accounts
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         private_key_type sam_key = generate_private_key("sam");
         account_object sam_account_object = account_create("sam", sam_key.get_public_key());
 
