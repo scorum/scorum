@@ -151,10 +151,8 @@ void verify_authority(const std::vector<operation>& ops,
         // fetch all of the top level authorities
         for (auto id : required_active)
         {
-            auto b1 = s.check_authority(id);
-            auto b2 = s.check_authority(get_owner(id));
-            SCORUM_ASSERT(b1 || b2, tx_missing_active_auth, "Missing Active Authority ${id}",
-                          ("id", id)("auth", get_active(id))("owner", get_owner(id)));
+            SCORUM_ASSERT(s.check_authority(id) || s.check_authority(get_owner(id)), tx_missing_active_auth,
+                          "Missing Active Authority ${id}", ("id", id)("auth", get_active(id))("owner", get_owner(id)));
         }
 
         for (auto id : required_owner)

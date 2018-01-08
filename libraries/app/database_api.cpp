@@ -316,8 +316,9 @@ std::vector<std::set<std::string>> database_api::get_key_references(std::vector<
  */
 std::vector<std::set<std::string>> database_api_impl::get_key_references(std::vector<public_key_type> keys) const
 {
-    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
-                     "account_by_key_api::get_key_references instead.");
+    FC_ASSERT(false,
+              "database_api::get_key_references has been deprecated. Please use "
+              "account_by_key_api::get_key_references instead.");
     std::vector<std::set<std::string>> final_result;
     return final_result;
 }

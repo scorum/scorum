@@ -1,6 +1,6 @@
 {
   "initial_timestamp": "2017-11-29T10:03:00",
-  "init_accounts_supply": "1020.000 SCR",
+  "init_accounts_supply": "1000.000 SCR",
   "init_rewards_supply": "21024.000 SCR",
   "accounts": [
     {
@@ -14,14 +14,14 @@
       "name": "alice",
       "recovery_account": "",
       "public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
-      "scr_amount": "10.000 SCR",
+      "scr_amount": "0.000 SCR",
       "sp_amount": "0.000000 SP"
     },
     {
       "name": "bob",
       "recovery_account": "",
       "public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
-      "scr_amount": "10.000 SCR",
+      "scr_amount": "0.000 SCR",
       "sp_amount": "0.000000 SP"
     }
   ],

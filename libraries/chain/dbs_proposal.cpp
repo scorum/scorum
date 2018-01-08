@@ -33,7 +33,7 @@ void dbs_proposal::remove(const proposal_object& proposal)
     db_impl().remove(proposal);
 }
 
-bool dbs_proposal::is_exist(proposal_id_type proposal_id)
+bool dbs_proposal::is_exists(proposal_id_type proposal_id)
 {
     auto proposal = db_impl().find<proposal_object, by_id>(proposal_id);
 

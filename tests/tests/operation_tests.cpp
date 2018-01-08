@@ -856,8 +856,9 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             itr = vote_idx.find(std::make_tuple(bob_comment.id, alice.id));
 
             BOOST_REQUIRE(db.get_account("alice").voting_power
-                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
-                                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
+                          == old_voting_power
+                              - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
+                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
             BOOST_REQUIRE(bob_comment.net_rshares.value
                           == alice.vesting_shares.amount.value
                               * (old_voting_power - db.get_account("alice").voting_power) / SCORUM_100_PERCENT);
@@ -4153,9 +4154,10 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient fee fo reach target delegation.");
-        fund("alice", asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                            SCORUM_SYMBOL));
+        fund("alice",
+             asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                       * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                   SCORUM_SYMBOL));
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         validate_database();

@@ -23,7 +23,7 @@ public:
 
     void remove(const proposal_object& proposal);
 
-    bool is_exist(proposal_id_type proposal_id);
+    bool is_exists(proposal_id_type proposal_id);
 
     const proposal_object& get(proposal_id_type proposal_id);
 
