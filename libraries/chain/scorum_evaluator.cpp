@@ -269,7 +269,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
         _db._temporary_public_impl().remove(cur_vote);
     }
 
-    /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indicies
+    /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
     if (comment.parent_author != SCORUM_ROOT_POST_PARENT)
     {
         auto parent = &_db.get_comment(comment.parent_author, comment.parent_permlink);
@@ -457,7 +457,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #endif
             });
 
-            /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indicies
+            /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
             auto now = _db.head_block_time();
             while (parent)
             {

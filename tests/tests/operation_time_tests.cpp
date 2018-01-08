@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
 
         // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
         const auto& rf = db.get_reward_fund();
-        BOOST_REQUIRE(rf.reward_balance == ASSET("0.001 SCR"));
+        BOOST_REQUIRE_EQUAL(rf.reward_balance, ASSET("0.001 SCR"));
 
         validate_database();
 

@@ -1168,6 +1168,8 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
 
         if (!c.allow_curation_rewards)
         {
+            // TODO: if allow_curation_rewards == false we loose money, it brings us to break invariants - need to
+            // rework
             unclaimed_rewards = 0;
             max_rewards = 0;
         }
@@ -1202,105 +1204,59 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
     FC_CAPTURE_AND_RETHROW()
 }
 
-share_type database::cashout_comment_helper(const share_type& reward, const comment_object& comment)
+share_type database::cashout_comment_helper(const share_type& reward_tokens, const comment_object& comment)
 {
-    dbs_account& account_service = obtain_service<dbs_account>();
+    // clang-format off
     try
     {
-        share_type claimed_reward = 0;
-
-        if (comment.net_rshares > 0)
+        if (reward_tokens > 0)
         {
-            uint128_t reward_tokens = uint128_t(reward.value);
+            
+            dbs_account& account_service = obtain_service<dbs_account>();
 
-            if (reward_tokens > 0)
+            share_type curation_tokens = ((uint128_t(reward_tokens.value) * SCORUM_CURATION_REWARD_PERCENT) / SCORUM_100_PERCENT).to_uint64();
+            share_type author_tokens = reward_tokens - curation_tokens;
+
+            author_tokens += pay_curators(comment, curation_tokens); //curation_tokens can be changed inside pay_curators() 
+
+            share_type claimed_reward = author_tokens + curation_tokens;
+
+            share_type total_beneficiary = 0;
+            for (auto& b : comment.beneficiaries)
             {
-                share_type curation_tokens
-                    = ((reward_tokens * SCORUM_CURATION_REWARD_PERCENT) / SCORUM_100_PERCENT).to_uint64();
-                share_type author_tokens = reward_tokens.to_uint64() - curation_tokens;
+                auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
+                asset vest_created = account_service.create_vesting(get_account(b.account), asset(benefactor_tokens, SCORUM_SYMBOL));
+                push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), vest_created));
+                total_beneficiary += benefactor_tokens;
+            }
 
-                author_tokens += pay_curators(comment, curation_tokens);
-                share_type total_beneficiary = 0;
-                claimed_reward = author_tokens + curation_tokens;
+            author_tokens -= total_beneficiary;
 
-                for (auto& b : comment.beneficiaries)
-                {
-                    auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                    asset vest_created = account_service.create_vesting(get_account(b.account),
-                                                                        asset(benefactor_tokens, SCORUM_SYMBOL));
-                    push_virtual_operation(comment_benefactor_reward_operation(
-                        b.account, comment.author, fc::to_string(comment.permlink), vest_created));
-                    total_beneficiary += benefactor_tokens;
-                }
+            auto payout_scorum  = asset((author_tokens * comment.percent_scrs) / (2 * SCORUM_100_PERCENT), SCORUM_SYMBOL);
+            auto vesting_scorum = asset((author_tokens - payout_scorum.amount), SCORUM_SYMBOL);
 
-                author_tokens -= total_beneficiary;
+            const auto& author = get_account(comment.author);
+            account_service.increase_balance(author, payout_scorum);
+            asset vest_created = account_service.create_vesting(author, vesting_scorum);
+            
+            adjust_total_payout(comment, asset(author_tokens, SCORUM_SYMBOL), asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
 
-                auto scorum = (author_tokens * comment.percent_scrs) / (2 * SCORUM_100_PERCENT);
-                auto vesting_scorum = author_tokens - scorum;
-
-                const auto& author = get_account(comment.author);
-                asset vest_created = account_service.create_vesting(author, asset(vesting_scorum, SCORUM_SYMBOL));
-                auto scr_payout = asset(scorum, SCORUM_SYMBOL);
-
-                account_service.increase_balance(author, scr_payout);
-
-                adjust_total_payout(comment, scr_payout + asset(vesting_scorum, SCORUM_SYMBOL),
-                                    asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
-
-                push_virtual_operation(
-                    author_reward_operation(comment.author, fc::to_string(comment.permlink), scr_payout, vest_created));
-                push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink),
-                                                                asset(claimed_reward, SCORUM_SYMBOL)));
+            push_virtual_operation( author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, vest_created));
+            push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), asset(claimed_reward, SCORUM_SYMBOL)));
 
 #ifndef IS_LOW_MEM
-                modify(comment, [&](comment_object& c) { c.author_rewards += author_tokens; });
+            modify(comment, [&](comment_object& c) { c.author_rewards += author_tokens; });
 
-                modify(get_account(comment.author), [&](account_object& a) { a.posting_rewards += author_tokens; });
+            modify(author, [&](account_object& a) { a.posting_rewards += author_tokens; });
 #endif
-            }
+            return claimed_reward;
         }
 
-        modify(comment, [&](comment_object& c) {
-            /**
-             * A payout is only made for positive rshares, negative rshares hang around
-             * for the next time this post might get an upvote.
-             */
-            if (c.net_rshares > 0)
-            {
-                c.net_rshares = 0;
-            }
-            c.children_abs_rshares = 0;
-            c.abs_rshares = 0;
-            c.vote_rshares = 0;
-            c.total_vote_weight = 0;
-            c.max_cashout_time = fc::time_point_sec::maximum();
-            c.cashout_time = fc::time_point_sec::maximum();
-            c.last_payout = head_block_time();
-        });
-
-        push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
-
-        const auto& vote_idx = get_index<comment_vote_index>().indices().get<by_comment_voter>();
-        auto vote_itr = vote_idx.lower_bound(comment.id);
-        while (vote_itr != vote_idx.end() && vote_itr->comment == comment.id)
-        {
-            const auto& cur_vote = *vote_itr;
-            ++vote_itr;
-            if (calculate_discussion_payout_time(comment) != fc::time_point_sec::maximum())
-            {
-                modify(cur_vote, [&](comment_vote_object& cvo) { cvo.num_changes = -1; });
-            }
-            else
-            {
-#ifdef CLEAR_VOTES
-                remove(cur_vote);
-#endif
-            }
-        }
-
-        return claimed_reward;
+        return 0;
     }
     FC_CAPTURE_AND_RETHROW((comment))
+
+    // clang-format on    
 }
 
 void database::process_comment_cashout()
@@ -1310,8 +1266,7 @@ void database::process_comment_cashout()
     // Add all reward funds to the local cache and decay their recent rshares
     modify(rf, [&](reward_fund_object& rfo) {
         fc::microseconds decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
-        rfo.recent_claims
-            -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
+        rfo.recent_claims -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
         rfo.last_update = head_block_time();
     });
 
@@ -1331,7 +1286,6 @@ void database::process_comment_cashout()
      * Payout all comments
      *
      * Each payout follows a similar pattern, but for a different reason.
-     * Cashout comment helper does not know about the reward fund it is paying from.
      * The helper only does token allocation based on curation rewards and the SBD
      * global %, etc.
      *
@@ -1339,30 +1293,58 @@ void database::process_comment_cashout()
      * the comment is entitled to. Each payout is done
      * against a reward fund state that is snapshotted before all payouts in the block.
      */
-    share_type scorum_awarded = 0;
+    asset scorum_awarded = asset(0, SCORUM_SYMBOL);
     for (auto current = cidx.begin(); current != cidx.end() && current->cashout_time <= head_block_time();)
     {
-        const comment_object& comment = *current;
+        const comment_object& comment = *(current++);
 
-        util::comment_reward_context ctx;
-        ctx.total_reward_shares2 = recent_claims;
-        ctx.total_reward_fund_scorum = rf.reward_balance;
-        ctx.reward_curve = rf.author_reward_curve;
-        ctx.rshares = comment.net_rshares;
-        ctx.reward_weight = comment.reward_weight;
-        ctx.max_scr = comment.max_accepted_payout;
+        if (comment.net_rshares > 0)
+        {
+            util::comment_reward_context ctx;
+            ctx.total_reward_shares2 = recent_claims;
+            ctx.total_reward_fund_scorum = rf.reward_balance;
+            ctx.reward_curve = rf.author_reward_curve;
+            ctx.rshares = comment.net_rshares;
+            ctx.reward_weight = comment.reward_weight;
+            ctx.max_scr = comment.max_accepted_payout;
 
-        const share_type reward = (comment.net_rshares > 0) ? util::get_rshare_reward(ctx) : 0;
+            scorum_awarded.amount += cashout_comment_helper(util::get_rshare_reward(ctx), comment);
+        }
 
-        scorum_awarded += cashout_comment_helper(reward, comment);
+        modify(comment, [&](comment_object& c) {
+            /**
+            * A payout is only made for positive rshares, negative rshares hang around
+            * for the next time this post might get an upvote.
+            */
+            if (c.net_rshares > 0)
+            {
+                c.net_rshares = 0;
+            }
+            c.children_abs_rshares = 0;
+            c.abs_rshares = 0;
+            c.vote_rshares = 0;
+            c.total_vote_weight = 0;
+            c.max_cashout_time = fc::time_point_sec::maximum();
+            c.cashout_time = fc::time_point_sec::maximum();
+            c.last_payout = head_block_time();
+        });
 
-        current = cidx.begin(); //??????? CHECK
+        push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
+
+#ifdef CLEAR_VOTES
+        const auto& vote_idx = get_index<comment_vote_index>().indices().get<by_comment_voter>();
+        auto vote_itr = vote_idx.lower_bound(comment.id);
+        while (vote_itr != vote_idx.end() && vote_itr->comment == comment.id)
+        {
+            remove(*(vote_itr++));
+        }
+#endif
     }
 
     // Write the cached fund state back to the database
     modify(rf, [&](reward_fund_object& rfo) {
         rfo.recent_claims = recent_claims;
-        rfo.reward_balance.amount -= scorum_awarded;
+        rfo.reward_balance -= scorum_awarded;
     });
 }
 
@@ -1394,7 +1376,7 @@ void database::process_funds()
     // clang-format off
     auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
     auto vesting_reward = asset(total_block_reward.amount * SCORUM_VESTING_FUND_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol); /// 15% to vesting fund
-    auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 10% to witness pay
+    auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 15% to witness pay
 
     modify(rf, [&](reward_fund_object& rfo) {
         rfo.reward_balance += content_reward;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="scorum::protocol::asset">
+    <DisplayString>$amount SCR</DisplayString>
+    <Expand>
+      <Item Name="symbol" Condition="symbol == 1380143875">"SCR"</Item>
+      <Item Name="symbol" Condition="symbol == 5264134">"SP"</Item>
+      <Item Name="symbol" Condition="(symbol != 5264134)&amp;(symbol != 1380143875)">"UNKNOWN"</Item>
+      <ExpandedItem>amount</ExpandedItem>
+    </Expand>
+  </Type>
+  
+</AutoVisualizer>

@@ -17,8 +17,6 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::price;
 
-typedef fc::fixed_string_16 reward_fund_name_type;
-
 class escrow_object : public object<escrow_object_type, escrow_object>
 {
 public:
