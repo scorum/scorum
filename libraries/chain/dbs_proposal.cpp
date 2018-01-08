@@ -10,13 +10,13 @@ dbs_proposal::dbs_proposal(database& db)
 {
 }
 
-void dbs_proposal::create(const protocol::account_name_type& creator,
-                          const protocol::account_name_type& member,
-                          protocol::proposal_action action,
-                          fc::time_point_sec expiration,
-                          uint64_t quorum)
+const proposal_object& dbs_proposal::create(const protocol::account_name_type& creator,
+                                            const protocol::account_name_type& member,
+                                            protocol::proposal_action action,
+                                            fc::time_point_sec expiration,
+                                            uint64_t quorum)
 {
-    db_impl().create<proposal_object>([&](proposal_object& proposal) {
+    const auto& proposal = db_impl().create<proposal_object>([&](proposal_object& proposal) {
         proposal.creator = creator;
         //        proposal.member = member;
         proposal.data = fc::variant(member).as_string();
@@ -24,6 +24,8 @@ void dbs_proposal::create(const protocol::account_name_type& creator,
         proposal.expiration = expiration;
         proposal.quorum_percent = quorum;
     });
+
+    return proposal;
 }
 
 void dbs_proposal::remove(const proposal_object& proposal)
@@ -75,14 +77,17 @@ dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_type&
 {
     std::vector<proposal_object::ref_type> updated_proposals;
 
-    const auto& proposals = db_impl().get_index<proposal_object_index>().indices().get<by_id>();
+    auto& proposals = db_impl().get_index<proposal_object_index>().indices().get<by_id>();
 
-    for (auto proposal : proposals)
+    for (const proposal_object& proposal : proposals)
     {
         db_impl().modify(proposal, [&](proposal_object& p) {
-            if (p.voted_accounts.find(member) != p.voted_accounts.end())
+
+            auto it = p.voted_accounts.find(member);
+
+            if (it != p.voted_accounts.end())
             {
-                p.voted_accounts.erase(member);
+                p.voted_accounts.erase(it);
 
                 updated_proposals.push_back(std::cref(p));
             }

@@ -18,8 +18,7 @@ using stage = genesis_state_type::registration_schedule_item;
 class Genesis
 {
 private:
-    Genesis(Actors& actors)
-        : _accounts(actors)
+    Genesis()
     {
     }
 
@@ -43,9 +42,9 @@ private:
     }
 
 public:
-    static Genesis create(Actors& actors)
+    static Genesis create()
     {
-        Genesis g(actors);
+        Genesis g;
         return g;
     }
 
@@ -121,7 +120,7 @@ public:
         return genesis_state;
     }
 
-    Actors& _accounts;
+    Actors _accounts;
 
 private:
     genesis_state_type genesis_state;

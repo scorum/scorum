@@ -41,12 +41,12 @@ public:
             transfer_to_vest(a, ASSET("0.100 SCR"));
         }
 
-        proposal_id_type create_proposal(const Actor& invitee)
+        proposal_id_type create_proposal(const Actor& invitee, proposal_action action)
         {
             proposal_create_operation op;
             op.creator = actor.name;
             op.committee_member = invitee.name;
-            op.action = proposal_action::invite;
+            op.action = action;
             op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
 
             op.validate();
@@ -65,17 +65,23 @@ public:
             return f.get_proposal_id(invitee.name);
         }
 
-        void invite_in_to_committee(const Actor invitee)
+        uint64_t invite_in_to_committee(const Actor invitee)
         {
-            auto proposal = create_proposal(invitee);
-            vote_for(proposal);
+            auto proposal = create_proposal(invitee, proposal_action::invite);
+            return proposal._id;
         }
 
-        void vote_for(proposal_id_type proposal)
+        uint64_t dropout_from_committee(const Actor invitee)
+        {
+            auto proposal = create_proposal(invitee, proposal_action::dropout);
+            return proposal._id;
+        }
+
+        void vote_for(uint64_t proposal)
         {
             proposal_vote_operation op;
             op.voting_account = actor.name;
-            op.proposal_id = proposal._id;
+            op.proposal_id = proposal;
 
             op.validate();
 
@@ -123,7 +129,7 @@ public:
             }
         }
 
-        FC_ASSERT("no such proposal");
+        throw fc::exception(fc::exception_code::unspecified_exception_code, "", "no such proposal");
     }
 
     committee_members get_committee_members()
@@ -133,9 +139,10 @@ public:
         return committee_service.get_committee();
     }
 
-    bool is_in_committee(const Actor& a)
+    bool is_committee_member(const Actor& a)
     {
-        committee_members members = get_committee_members();
+        dbs_registration_committee& committee_service = chain().db.obtain_service<dbs_registration_committee>();
+        committee_members members = committee_service.get_committee();
 
         for (const registration_committee_member_object& member : members)
         {
@@ -156,9 +163,6 @@ public:
 
 private:
     chain_type_ptr _chain;
-
-protected:
-    Actors actors;
 };
 
 BOOST_FIXTURE_TEST_SUITE(proposal_operation_tests, proposal_fixture)
@@ -169,24 +173,81 @@ SCORUM_TEST_CASE(proposal)
     Actor initdelegate("initdelegate");
     Actor alice("alice");
     Actor bob("bob");
+    Actor jim("jim");
+    Actor joe("joe");
+    Actor hue("hue");
+    Actor liz("liz");
 
-    genesis = Genesis::create(actors)
-                            .accounts(bob, "jim", "joe", "hue", "liz")
+    genesis = Genesis::create()
+                            .accounts(bob, jim, joe, hue, liz)
                             .committee(alice)
                             .generate();
 
     chain().generate_block();
 
-    actor(initdelegate).give_power(actors["alice"]);
-    actor(initdelegate).give_power(actors["jim"]);
-    actor(initdelegate).give_power(actors["joe"]);
-    actor(initdelegate).give_power(actors["hue"]);
-    actor(initdelegate).give_power(actors["liz"]);
+    actor(initdelegate).give_power(alice);
+    actor(initdelegate).give_power(jim);
+    actor(initdelegate).give_power(joe);
+    actor(initdelegate).give_power(hue);
+    actor(initdelegate).give_power(liz);
 
-    actor(alice).invite_in_to_committee(bob);
+    // setup committee
+    auto jim_invitation = actor(alice).invite_in_to_committee(jim);
+    auto joe_invitation = actor(alice).invite_in_to_committee(joe);
+    auto hue_invitation = actor(alice).invite_in_to_committee(hue);
+    auto liz_invitation = actor(alice).invite_in_to_committee(liz);
 
-    BOOST_CHECK_EQUAL(2, get_committee_members().size());
-    BOOST_CHECK(is_in_committee(bob) == true);
+    {
+        actor(alice).vote_for(jim_invitation);
+        BOOST_CHECK_EQUAL(2, get_committee_members().size());
+        BOOST_CHECK(is_committee_member(jim) == true);
+    }
+
+    {
+        actor(alice).vote_for(joe_invitation);
+        BOOST_CHECK_EQUAL(3, get_committee_members().size());
+        BOOST_CHECK(is_committee_member(joe) == true);
+    }
+
+    {
+        actor(alice).vote_for(hue_invitation);
+        BOOST_CHECK_EQUAL(4, get_committee_members().size());
+        BOOST_CHECK(is_committee_member(hue) == true);
+    }
+
+    {
+        actor(alice).vote_for(liz_invitation);
+
+        // not enough votes to add liz
+        BOOST_CHECK_EQUAL(4, get_committee_members().size());
+
+        actor(jim).vote_for(liz_invitation);
+        BOOST_CHECK_EQUAL(5, get_committee_members().size());
+    }
+    // end setup committee
+
+    {
+        auto drop_hue = actor(alice).dropout_from_committee(hue);
+        actor(alice).vote_for(drop_hue);
+        actor(jim).vote_for(drop_hue);
+
+        // not enoght votes to drop hue
+        BOOST_CHECK_EQUAL(true, is_committee_member(hue));
+
+        auto drop_joe = actor(alice).dropout_from_committee(joe);
+        actor(alice).vote_for(drop_joe);
+        actor(jim).vote_for(drop_joe);
+        actor(liz).vote_for(drop_joe);
+
+        // three votes is enoght to dropout joe
+        BOOST_CHECK_EQUAL(false, is_committee_member(joe));
+
+        // We droped one member, amount of needed votes reduced and 'drop_hue' executed automatically
+        BOOST_CHECK_EQUAL(false, is_committee_member(hue));
+
+        BOOST_CHECK_EQUAL(3, get_committee_members().size());
+    }
+
 } // clang-format on
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -195,42 +256,3 @@ BOOST_AUTO_TEST_SUITE_END()
 } // namespace chain
 
 #endif
-
-// bob = create_account(bob);
-
-// alice = create_committee_member("alice")
-// liza = create_committee_member("liza")
-// jim = create_committee_member("jim")
-// joe = create_committee_member("joe")
-// hue = create_committee_member("hue")
-
-// commitee().quorum(60);
-
-// drop_hue = alice.create_proposal(hue, dropout)
-
-// alice.vote_for(drop_hue);
-// jim.vote_for(drop_hue);
-
-//// not enoght votes to drop hue
-// check(hue).is_in_committee();
-
-// drop_joe = alice.create_proposal(joe, dropout);
-
-// alice.vote_for(drop_joe);
-// jim.vote_for(drop_joe);
-// liza.vote_for(drop_joe);
-
-//// enoght votes to dropout joe
-// check(joe).is_not_in_committee();
-
-//// We drop one member, amount of needed votes reduced and we execute second drop
-// check(hue).is_not_in_committee();
-
-//{
-//	invite_bob = alice.create_proposal(bob, invite);
-
-//	alice.vote_for(invite_bob);
-//	jim.vote_for(invite_bob);
-
-//	check(bob).is_in_committee();
-//}

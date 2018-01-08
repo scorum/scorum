@@ -15,11 +15,11 @@ protected:
     explicit dbs_proposal(database& db);
 
 public:
-    void create(const account_name_type& creator,
-                const account_name_type& member,
-                scorum::protocol::proposal_action action,
-                fc::time_point_sec expiration,
-                uint64_t quorum);
+    const proposal_object& create(const account_name_type& creator,
+                                  const account_name_type& member,
+                                  scorum::protocol::proposal_action action,
+                                  fc::time_point_sec expiration,
+                                  uint64_t quorum);
 
     void remove(const proposal_object& proposal);
 

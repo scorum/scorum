@@ -34,18 +34,21 @@ public:
 };
 
 struct by_expiration;
+struct by_data;
 
+// clang-format off
 typedef multi_index_container<proposal_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<proposal_object,
                                                                proposal_id_type,
                                                                &proposal_object::id>>,
-                                         ordered_unique<tag<by_expiration>,
-                                                        member<proposal_object,
-                                                               fc::time_point_sec,
-                                                               &proposal_object::expiration>>>,
+                                         ordered_non_unique<tag<by_expiration>,
+                                                            member<proposal_object,
+                                                                   fc::time_point_sec,
+                                                                   &proposal_object::expiration>>>,
                               allocator<proposal_object>>
     proposal_object_index;
+// clang-format on
 
 } // namespace chain
 } // namespace scorum

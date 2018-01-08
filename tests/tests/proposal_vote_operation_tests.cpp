@@ -366,6 +366,11 @@ BOOST_AUTO_TEST_CASE(sixty_percent_from_six_is_three_votes)
     BOOST_CHECK_EQUAL(3, scorum::chain::utils::get_quorum(6, SCORUM_PERCENT(60)));
 }
 
+BOOST_AUTO_TEST_CASE(sixty_percent_from_five_is_three_votes)
+{
+    BOOST_CHECK_EQUAL(3, scorum::chain::utils::get_quorum(5, SCORUM_PERCENT(60)));
+}
+
 BOOST_AUTO_TEST_CASE(sixty_percent_from_four_is_two_votes)
 {
     BOOST_CHECK_EQUAL(2, scorum::chain::utils::get_quorum(4, SCORUM_PERCENT(60)));
