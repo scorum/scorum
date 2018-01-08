@@ -42,7 +42,7 @@ public:
         removed_proposals.push_back(proposal.id);
     }
 
-    bool is_exist(const uint64_t id)
+    bool is_exists(const uint64_t id)
     {
         for (size_t i = 0; i < proposals.size(); ++i)
         {

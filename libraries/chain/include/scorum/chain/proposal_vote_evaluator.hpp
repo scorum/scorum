@@ -58,7 +58,7 @@ public:
         FC_ASSERT(_account_service.is_exists(op.voting_account), "Account \"${account_name}\" must exist.",
                   ("account_name", op.voting_account));
 
-        FC_ASSERT(_proposal_service.is_exist(op.proposal_id), "There is no proposal with id '${id}'",
+        FC_ASSERT(_proposal_service.is_exists(op.proposal_id), "There is no proposal with id '${id}'",
                   ("id", op.proposal_id));
 
         const proposal_object& proposal = _proposal_service.get(op.proposal_id);
