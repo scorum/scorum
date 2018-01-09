@@ -294,6 +294,22 @@ struct account_api_obj
     time_point_sec last_root_post;
 };
 
+struct account_balance_info_api_obj
+{
+    account_balance_info_api_obj(const account_api_obj& a)
+        : balance(a.balance)
+        , vesting_shares(a.vesting_shares)
+    {
+    }
+
+    account_balance_info_api_obj()
+    {
+    }
+
+    asset balance = asset(0, SCORUM_SYMBOL);
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
+};
+
 struct owner_authority_history_api_obj
 {
     owner_authority_history_api_obj(const chain::owner_authority_history_object& o)
@@ -597,6 +613,9 @@ FC_REFLECT( scorum::app::account_api_obj,
              (average_market_bandwidth)(lifetime_market_bandwidth)(last_market_bandwidth_update)
              (last_post)(last_root_post)
           )
+
+FC_REFLECT (scorum::app::account_balance_info_api_obj,
+            (balance)(vesting_shares))
 
 FC_REFLECT( scorum::app::owner_authority_history_api_obj,
              (id)

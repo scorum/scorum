@@ -174,6 +174,13 @@ public:
      */
     account_api_obj get_account(const std::string& account_name) const;
 
+    /** Returns balance information about the given account.
+     *
+     * @param account_name the name of the account to provide information about
+     * @returns the public account data stored in the blockchain
+     */
+    account_balance_info_api_obj get_account_balance(const std::string& account_name) const;
+
     /** Returns the current wallet filename.
      *
      * This is the filename that will be used when automatically saving the wallet.
@@ -1145,6 +1152,7 @@ FC_API( scorum::wallet::wallet_api,
         (list_witnesses)
         (get_witness)
         (get_account)
+        (get_account_balance)
         (get_block)
         (get_ops_in_block)
         (get_account_history)
