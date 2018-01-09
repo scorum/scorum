@@ -294,7 +294,7 @@ reward_fund_api_obj database_api::get_reward_fund() const
 {
     return my->_db.with_read_lock([&]() {
         auto fund = my->_db.find<reward_fund_object>();
-        FC_ASSERT(fund != nullptr, "Invalid reward fund name");
+        FC_ASSERT(fund != nullptr, "reward fund object does not exist");
 
         return *fund;
     });
@@ -316,9 +316,8 @@ std::vector<std::set<std::string>> database_api::get_key_references(std::vector<
  */
 std::vector<std::set<std::string>> database_api_impl::get_key_references(std::vector<public_key_type> keys) const
 {
-    FC_ASSERT(false,
-              "database_api::get_key_references has been deprecated. Please use "
-              "account_by_key_api::get_key_references instead.");
+    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
+                     "account_by_key_api::get_key_references instead.");
     std::vector<std::set<std::string>> final_result;
     return final_result;
 }
