@@ -69,11 +69,6 @@ void database::update_witness_schedule()
 {
     database& _db = (*this);
 
-    //    const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    //
-    //    if( _db.head_block_num() == wso.next_shuffle_block_num )
-    //    {
-
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0) // wso.next_shuffle_block_num )
     {
         const witness_schedule_object& wso = _db.get_witness_schedule_object();
