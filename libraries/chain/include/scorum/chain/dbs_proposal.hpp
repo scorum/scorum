@@ -18,7 +18,7 @@ public:
     const proposal_object& create(const account_name_type& creator,
                                   const account_name_type& member,
                                   scorum::protocol::proposal_action action,
-                                  fc::time_point_sec expiration,
+                                  const fc::time_point_sec& expiration,
                                   uint64_t quorum);
 
     void remove(const proposal_object& proposal);
@@ -37,7 +37,7 @@ public:
 
     void remove_voter_in_proposals(const account_name_type& voter);
 
-    std::vector<proposal_object::ref_type> for_all_proposals_remove_from_voting_list(const account_name_type& member);
+    void for_all_proposals_remove_from_voting_list(const account_name_type& member);
 
     std::vector<proposal_object::ref_type> get_proposals();
 };

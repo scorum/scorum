@@ -153,6 +153,22 @@ public:
         return false;
     }
 
+    fc::optional<proposal_object::ref_type> get_proposal(int64_t id)
+    {
+        dbs_proposal& proposal_service = chain().db.obtain_service<dbs_proposal>();
+        std::vector<proposal_object::ref_type> proposals = proposal_service.get_proposals();
+
+        for (proposal_object::ref_type p : proposals)
+        {
+            if (p.get().id._id == id)
+            {
+                return fc::optional<proposal_object::ref_type>(p);
+            }
+        }
+
+        return fc::optional<proposal_object::ref_type>();
+    }
+
     actor_actions actor(const Actor& a)
     {
         actor_actions c(*this, a);
@@ -246,6 +262,18 @@ SCORUM_TEST_CASE(proposal)
         BOOST_CHECK_EQUAL(false, is_committee_member(hue));
 
         BOOST_CHECK_EQUAL(3, get_committee_members().size());
+    }
+
+    {
+        fc::time_point_sec expected_expiration = chain().db.head_block_time() + SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+
+        auto bob_invitation = actor(alice).invite_in_to_committee(bob);
+
+        auto p = get_proposal(bob_invitation);
+
+        BOOST_REQUIRE(p.valid());
+
+        BOOST_CHECK(expected_expiration == p->get().expiration);
     }
 
 } // clang-format on

@@ -43,7 +43,7 @@ public:
     void create(const account_name_type&,
                 const account_name_type&,
                 proposal_action,
-                fc::time_point_sec expiration,
+                const fc::time_point_sec& expiration,
                 uint64_t quorum)
     {
         ++proposals_created;

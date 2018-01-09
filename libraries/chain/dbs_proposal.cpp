@@ -13,7 +13,7 @@ dbs_proposal::dbs_proposal(database& db)
 const proposal_object& dbs_proposal::create(const protocol::account_name_type& creator,
                                             const protocol::account_name_type& member,
                                             protocol::proposal_action action,
-                                            fc::time_point_sec expiration,
+                                            const fc::time_point_sec& expiration,
                                             uint64_t quorum)
 {
     const auto& proposal = db_impl().create<proposal_object>([&](proposal_object& proposal) {
@@ -72,11 +72,8 @@ void dbs_proposal::clear_expired_proposals()
     }
 }
 
-std::vector<proposal_object::ref_type>
-dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_type& member)
+void dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_type& member)
 {
-    std::vector<proposal_object::ref_type> updated_proposals;
-
     auto& proposals = db_impl().get_index<proposal_object_index>().indices().get<by_id>();
 
     for (const proposal_object& proposal : proposals)
@@ -88,13 +85,9 @@ dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_type&
             if (it != p.voted_accounts.end())
             {
                 p.voted_accounts.erase(it);
-
-                updated_proposals.push_back(std::cref(p));
             }
         });
     }
-
-    return updated_proposals;
 }
 
 std::vector<proposal_object::ref_type> dbs_proposal::get_proposals()

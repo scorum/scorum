@@ -85,11 +85,14 @@ public:
         return false;
     }
 
-    std::vector<proposal_object::ref_type> for_all_proposals_remove_from_voting_list(const account_name_type&)
+    void for_all_proposals_remove_from_voting_list(const account_name_type&)
     {
-        std::vector<proposal_object::ref_type> updated_proposals;
+    }
 
-        return updated_proposals;
+    std::vector<proposal_object::ref_type> get_proposals()
+    {
+        std::vector<proposal_object::ref_type> p;
+        return p;
     }
 
     std::vector<proposal_object> proposals;

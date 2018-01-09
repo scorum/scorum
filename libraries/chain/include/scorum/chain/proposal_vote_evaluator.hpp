@@ -82,9 +82,11 @@ protected:
         {
             account_name_type member = *removed_members.begin();
 
-            auto updated_proposals = _proposal_service.for_all_proposals_remove_from_voting_list(member);
+            _proposal_service.for_all_proposals_remove_from_voting_list(member);
 
-            for (auto p : updated_proposals)
+            auto proposals = _proposal_service.get_proposals();
+
+            for (auto p : proposals)
             {
                 execute_proposal(p);
             }
