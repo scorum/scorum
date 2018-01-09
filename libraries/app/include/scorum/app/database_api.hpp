@@ -248,6 +248,10 @@ public:
      */
     std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
 
+    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+
+    std::vector<proposal_api_obj> lookup_proposals() const;
+
     /**
      * @brief Get the total number of witnesses registered with the blockchain
      */
@@ -381,15 +385,15 @@ private:
     void set_url(discussion& d) const;
     discussion get_discussion(comment_id_type, uint32_t truncate_body = 0) const;
 
-    static bool filter_default(const comment_api_obj& c)
+    static bool filter_default(const comment_api_obj&)
     {
         return false;
     }
-    static bool exit_default(const comment_api_obj& c)
+    static bool exit_default(const comment_api_obj&)
     {
         return false;
     }
-    static bool tag_exit_default(const tags::tag_object& c)
+    static bool tag_exit_default(const tags::tag_object&)
     {
         return false;
     }
@@ -502,6 +506,8 @@ FC_API(scorum::app::database_api,
    (get_witness_by_account)
    (get_witnesses_by_vote)
    (lookup_witness_accounts)
+   (lookup_committee_accounts)
+   (lookup_proposals)
    (get_witness_count)
    (get_active_witnesses)
 

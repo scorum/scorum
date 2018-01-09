@@ -22,8 +22,7 @@ protected:
     explicit dbs_registration_committee(database& db);
 
 public:
-    using registration_committee_member_refs_type
-        = std::vector<std::reference_wrapper<const registration_committee_member_object>>;
+    using registration_committee_member_refs_type = std::vector<registration_committee_member_object::cref_type>;
 
     registration_committee_member_refs_type get_committee() const;
 

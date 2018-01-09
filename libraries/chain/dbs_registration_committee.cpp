@@ -15,7 +15,7 @@ dbs_registration_committee::registration_committee_member_refs_type dbs_registra
 {
     registration_committee_member_refs_type ret;
 
-    const auto& idx = db_impl().get_index<registration_committee_member_index>().indicies();
+    const auto& idx = db_impl().get_index<registration_committee_member_index>().indicies().get<by_id>();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)
     {
         ret.push_back(std::cref(*it));

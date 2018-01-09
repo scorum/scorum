@@ -2483,5 +2483,15 @@ annotated_signed_transaction wallet_api::dropout_committee_member(const std::str
     return my->sign_transaction(tx, broadcast);
 }
 
+std::set<account_name_type> wallet_api::list_committee(const std::string& lowerbound, uint32_t limit)
+{
+    return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
+}
+
+std::vector<proposal_api_obj> wallet_api::list_proposals()
+{
+    return my->_remote_db->lookup_proposals();
+}
+
 } // namespace wallet
 } // namespace scorum

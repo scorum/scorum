@@ -1023,6 +1023,9 @@ public:
                                                           uint32_t lifetime_sec,
                                                           bool broadcast);
 
+    std::set<account_name_type> list_committee(const std::string& lowerbound, uint32_t limit);
+    std::vector<proposal_api_obj> list_proposals();
+
 public:
     fc::signal<void(bool)> lock_changed;
 
@@ -1072,6 +1075,8 @@ FC_API( scorum::wallet::wallet_api,
         (list_my_accounts)
         (list_accounts)
         (list_witnesses)
+        (list_committee)
+        (list_proposals)
         (get_witness)
         (get_account)
         (get_block)

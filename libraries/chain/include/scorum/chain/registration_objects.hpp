@@ -53,6 +53,8 @@ class registration_committee_member_object
     registration_committee_member_object() = delete;
 
 public:
+    typedef std::reference_wrapper<const registration_committee_member_object> cref_type;
+
     template <typename Constructor, typename Allocator>
     registration_committee_member_object(Constructor&& c, allocator<Allocator>)
     {
@@ -72,12 +74,12 @@ public:
     uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
-typedef multi_index_container<
-    registration_pool_object,
-    indexed_by<
-        ordered_unique<tag<by_id>,
-                       member<registration_pool_object, registration_pool_id_type, &registration_pool_object::id>>>,
-    allocator<registration_pool_object>>
+typedef multi_index_container<registration_pool_object,
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<registration_pool_object,
+                                                               registration_pool_id_type,
+                                                               &registration_pool_object::id>>>,
+                              allocator<registration_pool_object>>
     registration_pool_index;
 
 struct by_account_name;

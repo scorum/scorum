@@ -194,19 +194,19 @@
 #define SCORUM_MAX_FEED_AGE_SECONDS            (DAYS_TO_SECONDS(7))
 #define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
 
-#define SCORUM_MIN_UNDO_HISTORY                10
-#define SCORUM_MAX_UNDO_HISTORY                10000
+#define SCORUM_MIN_UNDO_HISTORY                 10
+#define SCORUM_MAX_UNDO_HISTORY                 10000
 
 #define SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT (SCORUM_BLOCK_INTERVAL * 5) // 5 transactions per block
 
-#define SCORUM_IRREVERSIBLE_THRESHOLD          (75 * SCORUM_1_PERCENT)
+#define SCORUM_IRREVERSIBLE_THRESHOLD           (75 * SCORUM_1_PERCENT)
 
-#define VIRTUAL_SCHEDULE_LAP_LENGTH ( fc::uint128::max_value() )
+#define VIRTUAL_SCHEDULE_LAP_LENGTH             ( fc::uint128::max_value() )
 
 #define SCORUM_COMMITTEE_QUORUM_PERCENT         (60 * SCORUM_1_PERCENT)
 
-#define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS            (DAYS_TO_SECONDS(1))
-#define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS            (DAYS_TO_SECONDS(10))
+#define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS    (DAYS_TO_SECONDS(1))
+#define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS    (DAYS_TO_SECONDS(10))
 
 /**
  *  Reserved Account IDs with special meaning
