@@ -147,6 +147,7 @@ public:
         _wallet.ws_server = initial_data.ws_server;
         _wallet.ws_user = initial_data.ws_user;
         _wallet.ws_password = initial_data.ws_password;
+        _wallet.chain_id = initial_data.chain_id;
     }
 
     virtual ~wallet_api_impl()
