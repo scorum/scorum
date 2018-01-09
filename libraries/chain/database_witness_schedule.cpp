@@ -69,12 +69,7 @@ void database::update_witness_schedule()
 {
     database& _db = (*this);
 
-    //    const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    //
-    //    if( _db.head_block_num() == wso.next_shuffle_block_num )
-    //    {
-
-    if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0) // wso.next_shuffle_block_num )
+    if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
         const witness_schedule_object& wso = _db.get_witness_schedule_object();
         std::vector<account_name_type> active_witnesses;
@@ -148,6 +143,10 @@ void database::update_witness_schedule()
         }
 
         size_t expected_active_witnesses = std::min(size_t(SCORUM_MAX_WITNESSES), widx.size());
+
+        dlog("expected_active_witnesses = ${eaw}, active_witnesses = ${aw}",
+             ("eaw", expected_active_witnesses)("aw", active_witnesses.size()));
+
         FC_ASSERT(active_witnesses.size() == expected_active_witnesses,
                   "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
                   ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
