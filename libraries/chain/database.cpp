@@ -1206,12 +1206,11 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
 
 share_type database::cashout_comment_helper(const share_type& reward_tokens, const comment_object& comment)
 {
-    // clang-format off
     try
     {
         if (reward_tokens > 0)
         {
-            
+            // clang-format off
             dbs_account& account_service = obtain_service<dbs_account>();
 
             share_type curation_tokens = ((uint128_t(reward_tokens.value) * SCORUM_CURATION_REWARD_PERCENT) / SCORUM_100_PERCENT).to_uint64();
@@ -1232,14 +1231,14 @@ share_type database::cashout_comment_helper(const share_type& reward_tokens, con
 
             author_tokens -= total_beneficiary;
 
+            adjust_total_payout(comment, asset(author_tokens, SCORUM_SYMBOL), asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
+
             auto payout_scorum  = asset((author_tokens * comment.percent_scrs) / (2 * SCORUM_100_PERCENT), SCORUM_SYMBOL);
             auto vesting_scorum = asset((author_tokens - payout_scorum.amount), SCORUM_SYMBOL);
 
             const auto& author = get_account(comment.author);
             account_service.increase_balance(author, payout_scorum);
             asset vest_created = account_service.create_vesting(author, vesting_scorum);
-            
-            adjust_total_payout(comment, asset(author_tokens, SCORUM_SYMBOL), asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
 
             push_virtual_operation( author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, vest_created));
             push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), asset(claimed_reward, SCORUM_SYMBOL)));
@@ -1250,13 +1249,12 @@ share_type database::cashout_comment_helper(const share_type& reward_tokens, con
             modify(author, [&](account_object& a) { a.posting_rewards += author_tokens; });
 #endif
             return claimed_reward;
+            // clang-format on 
         }
 
         return 0;
     }
     FC_CAPTURE_AND_RETHROW((comment))
-
-    // clang-format on    
 }
 
 void database::process_comment_cashout()

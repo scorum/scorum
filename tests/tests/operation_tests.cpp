@@ -4513,6 +4513,29 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_validate)
     FC_LOG_AND_RETHROW()
 }
 
+struct comment_benefactor_reward_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+
+    std::map<account_name_type, asset> reward_map;
+
+    comment_benefactor_reward_visitor(database& db)
+        : _db(db)
+    {
+    }
+
+    void operator()(const comment_benefactor_reward_operation& op)
+    {
+        reward_map.insert(std::make_pair(op.benefactor, op.reward));
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
 BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
 {
     try
@@ -4607,20 +4630,32 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
 
         generate_blocks(db.get_comment("alice", string("test")).cashout_time - SCORUM_BLOCK_INTERVAL);
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_dynamic_global_properties(), [=](dynamic_global_property_object& gpo) {
-                gpo.accounts_current_supply -= gpo.total_reward_fund_scorum;
-                gpo.total_reward_fund_scorum = ASSET("100.000 SCR");
-                gpo.accounts_current_supply += gpo.total_reward_fund_scorum;
-            });
-        });
+        BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, ASSET("0.000 SCR"));
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, ASSET("0.000 SCR"));
+
+        asset bob_vesting_before = db.get_account("bob").vesting_shares;
+        asset sam_vesting_before = db.get_account("sam").vesting_shares;
+
+        comment_benefactor_reward_visitor visitor(db);
+
+        db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
 
         generate_block();
 
-        // BOOST_REQUIRE(db.get_account("bob").reward_scorum_balance == ASSET("0.000 SCR"));
-        // BOOST_REQUIRE(db.get_account("bob").reward_vesting_scorum.amount
-        //                  + db.get_account("sam").reward_vesting_scorum.amount
-        //              == db.get_comment("alice", string("test")).beneficiary_payout_value.amount);
+        validate_database();
+
+        BOOST_REQUIRE_EQUAL(visitor.reward_map.size(), size_t(2));
+
+        BOOST_REQUIRE(visitor.reward_map.find("bob") != visitor.reward_map.end());
+        BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
+
+        BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"], (db.get_account("bob").vesting_shares - bob_vesting_before));
+        BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"], (db.get_account("sam").vesting_shares - sam_vesting_before));
+
+        // clang-format off
+        BOOST_REQUIRE_EQUAL(db.get_comment("alice", string("test")).beneficiary_payout_value * db.get_dynamic_global_properties().get_vesting_share_price(),
+                            (visitor.reward_map["sam"] + visitor.reward_map["bob"] + ASSET("0.000001 SP") /*add this because of operation accuracy*/));
+        // clang-format on
     }
     FC_LOG_AND_RETHROW()
 }
