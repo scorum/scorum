@@ -1010,12 +1010,14 @@ public:
      *  @param participant
      *  @param amount SCR to transfer
      *  @param metadata the additional contract info (obligations, courses)
+     *  @param secret_length the length of secret in bytes or 0 to choose length randomly
      *  @param broadcast
      */
     atomicswap_contract_result_api_obj atomicswap_initiate(const std::string& initiator,
                                                            const std::string& participant,
                                                            const asset& amount,
                                                            const std::string& metadata,
+                                                           const uint8_t secret_length,
                                                            const bool broadcast);
 
     /** Initiating Atomic Swap transfer from participant to initiator.

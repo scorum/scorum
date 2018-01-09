@@ -6,6 +6,8 @@
 
 #include <cstdlib>
 
+#include <fc/crypto/sha512.hpp>
+
 using namespace scorum::chain;
 using namespace scorum::protocol;
 using namespace scorum::protocol::atomicswap;
@@ -75,6 +77,16 @@ SCORUM_TEST_CASE(secret_generator)
     entropy = std::string(SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 10, ' ');
 
     BOOST_CHECK_LE(get_secret_hex(entropy).size(), SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH);
+
+    fc::sha512 hash;
+
+    BOOST_REQUIRE(hash.data_size() >= 32);
+
+    BOOST_CHECK_EQUAL(get_secret_hex(entropy, 32).size(), 32 * 2);
+
+    BOOST_CHECK_EQUAL(get_secret_hex(entropy, hash.data_size()).size(), hash.data_size() * 2);
+
+    BOOST_CHECK_THROW(get_secret_hex(entropy, hash.data_size() + 1), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(gen_secret_hash)

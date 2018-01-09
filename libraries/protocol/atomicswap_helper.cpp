@@ -10,22 +10,28 @@ namespace scorum {
 namespace protocol {
 namespace atomicswap {
 
-std::string get_secret_hex(const std::string& secret)
+std::string get_secret_hex(const std::string& secret, const uint8_t secret_length /*= 0*/)
 {
-    const size_t entropy_percent = (size_t)50;
-    FC_ASSERT(entropy_percent > 0);
-    size_t entropy = secret.size();
-    // get value in [entropy_percent, 2*entropy_percent - 1]
-    entropy = entropy_percent + entropy % entropy_percent;
-    ++entropy; // increase value for [entropy_percent + 1, 2*entropy_percent]
     fc::sha512 hash = fc::sha512().hash(secret);
-    // devide to 2*entropy_percent to get coefficient in (0.5, 1]
-    std::size_t out_sz = hash.data_size() * entropy / entropy_percent / (size_t)2;
-    if (out_sz > SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2)
+    FC_ASSERT(secret_length <= hash.data_size(), "Required secret string is too long. Use length less or equal ${1}",
+              ("1", hash.data_size()));
+    std::size_t out_sz = secret_length;
+    if (!out_sz)
     {
-        // Ensure out hex string less then SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH (length in hex view (two symbol per
-        // byte))
-        out_sz = SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2;
+        const size_t entropy_percent = (std::size_t)50;
+        FC_ASSERT(entropy_percent > 0);
+        std::size_t entropy = secret.size();
+        // get value in [entropy_percent, 2*entropy_percent - 1]
+        entropy = entropy_percent + entropy % entropy_percent;
+        ++entropy; // increase value for [entropy_percent + 1, 2*entropy_percent]
+        // devide to 2*entropy_percent to get coefficient in (0.5, 1]
+        out_sz = hash.data_size() * entropy / entropy_percent / (std::size_t)2;
+        if (out_sz > SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2)
+        {
+            // Ensure out hex string less then SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH (length in hex view (two symbol per
+            // byte))
+            out_sz = SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2;
+        }
     }
     return fc::to_hex(hash.data(), out_sz);
 }

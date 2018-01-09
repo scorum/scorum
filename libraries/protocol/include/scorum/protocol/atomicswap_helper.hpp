@@ -12,7 +12,7 @@ namespace atomicswap {
 using hash_index_type = fc::fixed_string_32; // to pack 256-bit hash
 
 // secret operations
-std::string get_secret_hex(const std::string& secret);
+std::string get_secret_hex(const std::string& secret, const uint8_t secret_length = 0);
 std::string get_secret_hash(const std::string& secret_hex);
 
 //

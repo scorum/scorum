@@ -2598,6 +2598,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
                                                                    const std::string& participant,
                                                                    const asset& amount,
                                                                    const std::string& metadata,
+                                                                   const uint8_t secret_length,
                                                                    const bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -2605,7 +2606,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
     std::string secret;
 
     secret = scorum::wallet::suggest_brain_key().brain_priv_key;
-    secret = atomicswap::get_secret_hex(secret);
+    secret = atomicswap::get_secret_hex(secret, secret_length);
 
     std::string secret_hash = atomicswap::get_secret_hash(secret);
 
