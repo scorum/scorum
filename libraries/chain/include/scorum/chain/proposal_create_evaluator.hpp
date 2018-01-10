@@ -44,14 +44,14 @@ public:
 
     virtual void apply(const OperationType& o) final override
     {
-        const auto& op = o.template get<typename EvaluatorType::operation_type>();
+        const auto& op = o.template get<operation_type>();
 
         this->do_apply(op);
     }
 
     virtual int get_type() const override
     {
-        return OperationType::template tag<typename EvaluatorType::operation_type>::value;
+        return OperationType::template tag<operation_type>::value;
     }
 
     void do_apply(const proposal_create_operation& op)
