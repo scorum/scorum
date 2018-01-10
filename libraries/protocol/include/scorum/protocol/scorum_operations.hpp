@@ -3,6 +3,8 @@
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
 
+#include <scorum/protocol/types.hpp>
+
 #include <fc/utf8.hpp>
 
 namespace scorum {
@@ -783,6 +785,37 @@ struct close_budget_operation : public base_operation
     }
 };
 
+struct proposal_vote_operation : public base_operation
+{
+    account_name_type voting_account;
+    int64_t proposal_id;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(voting_account);
+    }
+
+    void validate() const;
+};
+
+struct proposal_create_operation : public base_operation
+{
+    typedef scorum::protocol::proposal_action action_t;
+
+    account_name_type creator;
+    account_name_type committee_member;
+
+    fc::optional<fc::enum_type<uint8_t, action_t>> action;
+    uint32_t lifetime_sec = 0;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+
+    void validate() const;
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -862,5 +895,15 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
+
+FC_REFLECT( scorum::protocol::proposal_vote_operation,
+            (voting_account)
+            (proposal_id))
+
+FC_REFLECT( scorum::protocol::proposal_create_operation,
+            (creator)
+            (committee_member)
+            (action)
+            (lifetime_sec))
 
 // clang-format on

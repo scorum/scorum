@@ -177,6 +177,17 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const proposal_create_operation& op)
+    {
+        _impacted.insert(op.creator);
+        _impacted.insert(op.committee_member);
+    }
+
+    void operator()(const proposal_vote_operation& op)
+    {
+        _impacted.insert(op.voting_account);
+    }
+
     // virtual operations
 
     void operator()(const author_reward_operation& op)

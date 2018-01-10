@@ -31,6 +31,8 @@ public:
 
     dbservice& db();
 
+    time_point_sec head_block_time();
+
 protected:
     database& db_impl();
     const database& db_impl() const;

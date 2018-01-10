@@ -4,11 +4,17 @@
 
 #include <scorum/protocol/get_config.hpp>
 
+#include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
+#include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
+#include <scorum/chain/dbs_proposal.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/crypto/hex.hpp>
+#include <fc/container/utils.hpp>
 
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string.hpp>
@@ -17,8 +23,6 @@
 
 #include <cfenv>
 #include <iostream>
-
-#include <scorum/chain/dbs_budget.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -65,6 +69,10 @@ public:
     fc::optional<witness_api_obj> get_witness_by_account(const std::string& account_name) const;
     std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
     uint64_t get_witness_count() const;
+
+    // Committee
+    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+    std::vector<proposal_api_obj> lookup_proposals() const;
 
     // Authority / validation
     std::string get_transaction_hex(const signed_transaction& trx) const;
@@ -663,6 +671,52 @@ uint64_t database_api::get_witness_count() const
 uint64_t database_api_impl::get_witness_count() const
 {
     return _db.get_index<witness_index>().indices().size();
+}
+
+std::set<account_name_type> database_api::lookup_committee_accounts(const std::string& lower_bound_name,
+                                                                    uint32_t limit) const
+{
+    return my->_db.with_read_lock([&]() { return my->lookup_committee_accounts(lower_bound_name, limit); });
+}
+
+std::set<account_name_type> database_api_impl::lookup_committee_accounts(const std::string& lower_bound_name,
+                                                                         uint32_t limit) const
+{
+    FC_ASSERT(limit <= 1000);
+
+    auto& committee_service = _db.obtain_service<dbs_registration_committee>();
+    auto committee = committee_service.get_committee();
+
+    std::set<account_name_type> members_by_account_name;
+    for (const registration_committee_member_object& member : committee)
+    {
+        if (member.account >= lower_bound_name)
+        {
+            members_by_account_name.insert(member.account);
+        }
+    }
+
+    fc::limit_left_cut_right(members_by_account_name, limit);
+
+    return members_by_account_name;
+}
+
+std::vector<proposal_api_obj> database_api::lookup_proposals() const
+{
+    return my->_db.with_read_lock([&]() { return my->lookup_proposals(); });
+}
+
+std::vector<proposal_api_obj> database_api_impl::lookup_proposals() const
+{
+    const auto& proposals_by_id = _db.get_index<proposal_object_index>().indices().get<by_id>();
+
+    std::vector<proposal_api_obj> proposals;
+    for (const proposal_api_obj& obj : proposals_by_id)
+    {
+        proposals.push_back(obj);
+    }
+
+    return proposals;
 }
 
 //////////////////////////////////////////////////////////////////////

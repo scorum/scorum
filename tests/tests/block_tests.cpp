@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #ifdef IS_TEST_NET
+
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
         signed_block b;
 
         // TODO:  Don't generate this here
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         signed_block cutoff_block;
         {
             database db;
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(undo_block)
             fc::time_point_sec now(TEST_GENESIS_TIMESTAMP);
             std::vector<time_point_sec> time_stack;
 
-            auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+            auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
             for (uint32_t i = 0; i < 5; ++i)
             {
                 now = db.get_slot_time(1);
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
         database db2;
         db_setup_and_open(db2, data_dir2.path());
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         for (uint32_t i = 0; i < 10; ++i)
         {
             auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
@@ -256,7 +257,7 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         database db2;
         db_setup_and_open(db2, dir2.path());
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
         db1.get_index<account_index>();
 
@@ -325,7 +326,7 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
 
         auto skip_sigs = database::skip_transaction_signatures | database::skip_authority_check;
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
 
         signed_transaction trx;
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(tapos)
         database db1;
         db_setup_and_open(db1, dir1.path());
 
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         public_key_type init_account_pub_key = init_account_priv_key.get_public_key();
 
         auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
@@ -554,7 +555,7 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
                                | database::skip_authority_check);
 
         // Sam is the creator of accounts
-        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key")));
+        auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         private_key_type sam_key = generate_private_key("sam");
         account_object sam_account_object = account_create("sam", sam_key.get_public_key());
 
@@ -606,96 +607,82 @@ BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, clean_database_fixture)
         auto pct = [](uint32_t x) -> uint32_t { return uint64_t(SCORUM_100_PERCENT) * x / 128; };
 
         BOOST_TEST_MESSAGE("checking initial participation rate");
-        BOOST_CHECK_EQUAL(rsf(),
-                          "1111111111111111111111111111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "1111111111111111111111111111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), uint32_t(SCORUM_100_PERCENT));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 1");
         generate_block(~database::skip_fork_db, init_account_priv_key, 1);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0111111111111111111111111111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0111111111111111111111111111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(127));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 1");
         generate_block(~database::skip_fork_db, init_account_priv_key, 1);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0101111111111111111111111111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0101111111111111111111111111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(126));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 2");
         generate_block(~database::skip_fork_db, init_account_priv_key, 2);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0010101111111111111111111111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0010101111111111111111111111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(124));
 
         BOOST_TEST_MESSAGE("Generating a block for skipping 3");
         generate_block(~database::skip_fork_db, init_account_priv_key, 3);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0001001010111111111111111111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0001001010111111111111111111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(121));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 5");
         generate_block(~database::skip_fork_db, init_account_priv_key, 5);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0000010001001010111111111111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0000010001001010111111111111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(116));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 8");
         generate_block(~database::skip_fork_db, init_account_priv_key, 8);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0000000010000010001001010111111111111111111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0000000010000010001001010111111111111111111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(108));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 13");
         generate_block(~database::skip_fork_db, init_account_priv_key, 13);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0000000000000100000000100000100010010101111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0000000000000100000000100000100010010101111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
 
         BOOST_TEST_MESSAGE("Generating a block skipping none");
         generate_block();
-        BOOST_CHECK_EQUAL(rsf(),
-                          "1000000000000010000000010000010001001010111111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "1000000000000010000000010000010001001010111111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
 
         BOOST_TEST_MESSAGE("Generating a block");
         generate_block();
-        BOOST_CHECK_EQUAL(rsf(),
-                          "1100000000000001000000001000001000100101011111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "1100000000000001000000001000001000100101011111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
 
         generate_block();
-        BOOST_CHECK_EQUAL(rsf(),
-                          "1110000000000000100000000100000100010010101111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "1110000000000000100000000100000100010010101111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
 
         generate_block();
-        BOOST_CHECK_EQUAL(rsf(),
-                          "1111000000000000010000000010000010001001010111111111111111111111"
-                          "1111111111111111111111111111111111111111111111111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "1111000000000000010000000010000010001001010111111111111111111111"
+                                 "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
 
         generate_block(~database::skip_fork_db, init_account_priv_key, 64);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0000000000000000000000000000000000000000000000000000000000000000"
-                          "1111100000000000001000000001000001000100101011111111111111111111");
+        BOOST_CHECK_EQUAL(rsf(), "0000000000000000000000000000000000000000000000000000000000000000"
+                                 "1111100000000000001000000001000001000100101011111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(31));
 
         generate_block(~database::skip_fork_db, init_account_priv_key, 32);
-        BOOST_CHECK_EQUAL(rsf(),
-                          "0000000000000000000000000000000010000000000000000000000000000000"
-                          "0000000000000000000000000000000001111100000000000001000000001000");
+        BOOST_CHECK_EQUAL(rsf(), "0000000000000000000000000000000010000000000000000000000000000000"
+                                 "0000000000000000000000000000000001111100000000000001000000001000");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(8));
     }
     FC_LOG_AND_RETHROW()

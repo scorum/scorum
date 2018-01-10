@@ -24,22 +24,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/database.hpp>
 #include <scorum/protocol/protocol.hpp>
 
-#include <scorum/protocol/scorum_operations.hpp>
-
-#include <fc/crypto/digest.hpp>
-#include <fc/crypto/hex.hpp>
-#include <fc/string.hpp>
-
-#include <algorithm>
-#include <random>
-
-#include "database_fixture.hpp"
-
-using namespace scorum;
-using namespace scorum::chain;
 using namespace scorum::protocol;
 
 BOOST_AUTO_TEST_SUITE(type_operation_tests)
@@ -83,7 +69,7 @@ BOOST_AUTO_TEST_CASE(asset_operation_test)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(basic_tests, clean_database_fixture)
+BOOST_AUTO_TEST_SUITE(basic_tests)
 
 BOOST_AUTO_TEST_CASE(parse_size_test)
 {

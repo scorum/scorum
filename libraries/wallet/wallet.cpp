@@ -147,7 +147,9 @@ public:
         _wallet.ws_server = initial_data.ws_server;
         _wallet.ws_user = initial_data.ws_user;
         _wallet.ws_password = initial_data.ws_password;
+        _wallet.chain_id = initial_data.chain_id;
     }
+
     virtual ~wallet_api_impl()
     {
     }
@@ -2407,6 +2409,70 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     tx.validate();
 
     return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction
+wallet_api::vote_for_committee_proposal(const std::string& voting_account, int64_t proposal_id, bool broadcast)
+{
+    proposal_vote_operation op;
+    op.voting_account = voting_account;
+    op.proposal_id = proposal_id;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::invite_new_committee_member(const std::string& inviter,
+                                                                     const std::string& invitee,
+                                                                     uint32_t lifetime_sec,
+                                                                     bool broadcast)
+{
+    using scorum::protocol::proposal_action;
+
+    proposal_create_operation op;
+    op.creator = inviter;
+    op.committee_member = invitee;
+    op.action = proposal_action::invite;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::dropout_committee_member(const std::string& initiator,
+                                                                  const std::string& dropout,
+                                                                  uint32_t lifetime_sec,
+                                                                  bool broadcast)
+{
+    using scorum::protocol::proposal_action;
+
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.committee_member = dropout;
+    op.action = proposal_action::dropout;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+std::set<account_name_type> wallet_api::list_committee(const std::string& lowerbound, uint32_t limit)
+{
+    return my->_remote_db->lookup_committee_accounts(lowerbound, limit);
+}
+
+std::vector<proposal_api_obj> wallet_api::list_proposals()
+{
+    return my->_remote_db->lookup_proposals();
 }
 
 } // namespace wallet

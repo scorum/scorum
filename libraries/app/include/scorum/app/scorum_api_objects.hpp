@@ -8,6 +8,8 @@
 #include <scorum/chain/transaction_object.hpp>
 #include <scorum/chain/witness_objects.hpp>
 #include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/proposal_object.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -329,6 +331,36 @@ struct account_history_api_obj
 {
 };
 
+struct proposal_api_obj
+{
+    proposal_api_obj(const proposal_object& p)
+        : id(p.id)
+        , creator(p.creator)
+        , data(p.data)
+        , expiration(p.expiration)
+        , quorum_percent(p.quorum_percent)
+        , action(p.action)
+        , voted_accounts(p.voted_accounts)
+    {
+    }
+
+    proposal_api_obj()
+    {
+    }
+
+    proposal_object::id_type id;
+
+    account_name_type creator;
+    fc::variant data;
+
+    fc::time_point_sec expiration;
+
+    uint64_t quorum_percent = 0;
+
+    scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
+    flat_set<account_name_type> voted_accounts;
+};
+
 struct witness_api_obj
 {
     witness_api_obj(const chain::witness_object& w)
@@ -530,6 +562,16 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (last_work)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
+          )
+
+FC_REFLECT( scorum::app::proposal_api_obj,
+            (id)
+            (creator)
+            (expiration)
+            (voted_accounts)
+            (quorum_percent)
+            (action)
+            (data)
           )
 
 FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),

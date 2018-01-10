@@ -26,6 +26,15 @@
 
 #include <scorum/chain/pool/reward_pool.hpp>
 
+#include <scorum/chain/proposal_vote_evaluator.hpp>
+#include <scorum/chain/proposal_create_evaluator.hpp>
+
+#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_reward.hpp>
+#include <scorum/chain/dbs_registration_pool.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/container/deque.hpp>
@@ -39,12 +48,6 @@
 
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
-
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_witness.hpp>
-#include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_reward.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
 
 namespace scorum {
 namespace chain {
@@ -1216,7 +1219,7 @@ share_type database::cashout_comment_helper(const share_type& reward_tokens, con
             share_type curation_tokens = ((uint128_t(reward_tokens.value) * SCORUM_CURATION_REWARD_PERCENT) / SCORUM_100_PERCENT).to_uint64();
             share_type author_tokens = reward_tokens - curation_tokens;
 
-            author_tokens += pay_curators(comment, curation_tokens); //curation_tokens can be changed inside pay_curators() 
+            author_tokens += pay_curators(comment, curation_tokens); //curation_tokens can be changed inside pay_curators()
 
             share_type claimed_reward = author_tokens + curation_tokens;
 
@@ -1249,7 +1252,7 @@ share_type database::cashout_comment_helper(const share_type& reward_tokens, con
             modify(author, [&](account_object& a) { a.posting_rewards += author_tokens; });
 #endif
             return claimed_reward;
-            // clang-format on 
+            // clang-format on
         }
 
         return 0;
@@ -1264,7 +1267,8 @@ void database::process_comment_cashout()
     // Add all reward funds to the local cache and decay their recent rshares
     modify(rf, [&](reward_fund_object& rfo) {
         fc::microseconds decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
-        rfo.recent_claims -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
+        rfo.recent_claims
+            -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
         rfo.last_update = head_block_time();
     });
 
@@ -1542,6 +1546,21 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
+
+    // clang-format off
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(
+        new proposal_create_evaluator(this->obtain_service<dbs_account>(),
+                                      this->obtain_service<dbs_proposal>(),
+                                      this->obtain_service<dbs_registration_committee>(),
+                                      SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS,
+                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS,
+                                      SCORUM_COMMITTEE_QUORUM_PERCENT));
+
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
+        new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
+                                    this->obtain_service<dbs_proposal>(),
+                                    this->obtain_service<dbs_registration_committee>()));
+    //clang-format on
 }
 
 void database::set_custom_operation_interpreter(const std::string& id,
@@ -1591,6 +1610,7 @@ void database::initialize_indexes()
     add_index<budget_index>();
     add_index<registration_pool_index>();
     add_index<registration_committee_member_index>();
+    add_index<proposal_object_index>();
 
     _plugin_index_signal();
 }
@@ -1816,6 +1836,8 @@ void database::_apply_block(const signed_block& next_block)
         account_recovery_processing();
         expire_escrow_ratification();
         process_decline_voting_rights();
+
+        this->obtain_service<dbs_proposal>().clear_expired_proposals();
 
         process_hardforks();
 

@@ -24,7 +24,8 @@ namespace chain {
 
 void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
 {
-    private_key_type init_delegate_priv_key = private_key_type::regenerate(fc::sha256::hash(std::string("init_key")));
+    private_key_type init_delegate_priv_key
+        = private_key_type::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
     genesis_state.accounts.push_back({ TEST_INIT_DELEGATE_NAME, "null", init_public_key,
@@ -46,7 +47,7 @@ void create_default_genesis_state(genesis_state_type& genesis_state)
 database_fixture::database_fixture(const genesis_state_type& external_genesis_state)
     : app()
     , db(*app.chain_database())
-    , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(std::string("init_key"))))
+    , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY))))
     , init_account_pub_key(init_account_priv_key.get_public_key())
     , debug_key(graphene::utilities::key_to_wif(init_account_priv_key))
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
@@ -232,8 +233,9 @@ bool timed_blocks_database_fixture::_time_printed = false;
 
 private_key_type database_fixture::generate_private_key(const std::string& seed)
 {
-    static const private_key_type committee = private_key_type::regenerate(fc::sha256::hash(std::string("init_key")));
-    if (seed == "init_key")
+    static const private_key_type committee
+        = private_key_type::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
+    if (seed == TEST_INIT_KEY)
         return committee;
     return fc::ecc::private_key::regenerate(fc::sha256::hash(seed));
 }
