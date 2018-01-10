@@ -25,8 +25,6 @@ class proposal_vote_evaluator_t : public evaluator<OperationType>
 // clang-format on
 {
 public:
-    //    typedef scorum::protocol::operation ;
-    typedef proposal_vote_evaluator_t<AccountService, ProposalService, CommitteeService> EvaluatorType;
     typedef proposal_vote_operation operation_type;
 
     proposal_vote_evaluator_t(AccountService& account_service,
