@@ -63,11 +63,8 @@ public:
         FC_ASSERT(_committee_service.member_exists(op.creator), "Account \"${account_name}\" is not in committee.",
                   ("account_name", op.creator));
 
-        FC_ASSERT(_account_service.is_exists(op.creator), "Account \"${account_name}\" must exist.",
-                  ("account_name", op.creator));
-
-        FC_ASSERT(_account_service.is_exists(op.committee_member), "Account \"${account_name}\" must exist.",
-                  ("account_name", op.committee_member));
+        _account_service.check_account_existence(op.creator);
+        _account_service.check_account_existence(op.committee_member);
 
         fc::time_point_sec expiration = _proposal_service.head_block_time() + op.lifetime_sec;
 

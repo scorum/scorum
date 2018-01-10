@@ -18,7 +18,6 @@ const proposal_object& dbs_proposal::create(const protocol::account_name_type& c
 {
     const auto& proposal = db_impl().create<proposal_object>([&](proposal_object& proposal) {
         proposal.creator = creator;
-        //        proposal.member = member;
         proposal.data = fc::variant(member).as_string();
         proposal.action = action;
         proposal.expiration = expiration;
@@ -42,9 +41,7 @@ bool dbs_proposal::is_exists(proposal_id_type proposal_id)
 
 const proposal_object& dbs_proposal::get(proposal_id_type proposal_id)
 {
-    auto proposal = db_impl().find<proposal_object, by_id>(proposal_id);
-
-    return *proposal;
+    return db_impl().get<proposal_object, by_id>(proposal_id);
 }
 
 void dbs_proposal::vote_for(const protocol::account_name_type& voter, const proposal_object& proposal)
@@ -90,17 +87,15 @@ void dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_
     }
 }
 
-std::vector<proposal_object::ref_type> dbs_proposal::get_proposals()
+std::vector<proposal_object::cref_type> dbs_proposal::get_proposals()
 {
-    std::vector<proposal_object::ref_type> ret;
+    std::vector<proposal_object::cref_type> ret;
 
     const auto& idx = db_impl().get_index<proposal_object_index>().indicies();
-    auto it = idx.cbegin();
-    const auto it_end = idx.cend();
-    while (it != it_end)
+
+    for (auto it = idx.cbegin(); it != idx.end(); ++it)
     {
         ret.push_back(std::cref(*it));
-        ++it;
     }
 
     return ret;

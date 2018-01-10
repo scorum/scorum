@@ -40,9 +40,8 @@ public:
 
     virtual void apply(const OperationType& o) final override
     {
-        auto* eval = static_cast<EvaluatorType*>(this);
         const auto& op = o.template get<typename EvaluatorType::operation_type>();
-        eval->do_apply(op);
+        this->do_apply(op);
     }
 
     virtual int get_type() const override
@@ -55,8 +54,7 @@ public:
         FC_ASSERT(_committee_service.member_exists(op.voting_account),
                   "Account \"${account_name}\" is not in committee.", ("account_name", op.voting_account));
 
-        FC_ASSERT(_account_service.is_exists(op.voting_account), "Account \"${account_name}\" must exist.",
-                  ("account_name", op.voting_account));
+        _account_service.check_account_existence(op.voting_account);
 
         FC_ASSERT(_proposal_service.is_exists(op.proposal_id), "There is no proposal with id '${id}'",
                   ("id", op.proposal_id));
@@ -86,7 +84,7 @@ protected:
 
             auto proposals = _proposal_service.get_proposals();
 
-            for (auto p : proposals)
+            for (const auto& p : proposals)
             {
                 execute_proposal(p);
             }

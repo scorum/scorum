@@ -682,17 +682,21 @@ std::set<account_name_type> database_api_impl::lookup_committee_accounts(const s
                                                                          uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
-    //    const auto& members_by_id = _db.get_index<registration_committee_member_index>().indices().get<by_id>();
 
     auto& committee_service = _db.obtain_service<dbs_registration_committee>();
-    const auto& members_by_id = committee_service.get_committee();
+    auto committee = committee_service.get_committee();
 
     std::set<account_name_type> members_by_account_name;
-    for (const committee_member_api_obj& member : members_by_id)
+    for (const registration_committee_member_object& member : committee)
     {
         if (member.account >= lower_bound_name)
         {
             members_by_account_name.insert(member.account);
+        }
+
+        if (members_by_account_name.size() >= 1000)
+        {
+            break;
         }
     }
 

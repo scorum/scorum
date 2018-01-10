@@ -9,7 +9,7 @@ namespace chain {
 class proposal_object : public object<proposal_object_type, proposal_object>
 {
 public:
-    using ref_type = std::reference_wrapper<const proposal_object>;
+    using cref_type = std::reference_wrapper<const proposal_object>;
 
     template <typename Constructor, typename Allocator> proposal_object(Constructor&& c, allocator<Allocator>)
     {

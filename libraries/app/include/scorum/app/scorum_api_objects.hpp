@@ -338,34 +338,6 @@ struct account_history_api_obj
 {
 };
 
-struct committee_member_api_obj
-{
-    committee_member_api_obj(registration_committee_member_object::cref_type m)
-        : id(m.get().id)
-        , account(m.get().account)
-        , already_allocated_cash(m.get().already_allocated_cash)
-        , last_allocated_block(m.get().last_allocated_block)
-    {
-    }
-
-    committee_member_api_obj(const registration_committee_member_object& m)
-        : id(m.id)
-        , account(m.account)
-        , already_allocated_cash(m.already_allocated_cash)
-        , last_allocated_block(m.last_allocated_block)
-    {
-    }
-
-    committee_member_api_obj()
-    {
-    }
-
-    registration_committee_member_object::id_type id;
-    account_name_type account;
-    asset already_allocated_cash;
-    uint32_t last_allocated_block = 0;
-};
-
 struct proposal_api_obj
 {
     proposal_api_obj(const proposal_object& p)

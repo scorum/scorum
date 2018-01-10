@@ -20,12 +20,9 @@ using scorum::chain::proposal_id_type;
 class account_service_mock
 {
 public:
-    bool is_exists(const account_name_type& account)
+    void check_account_existence(const account_name_type&)
     {
-        return existent_accounts.count(account) == 1 ? true : false;
     }
-
-    std::set<account_name_type> existent_accounts;
 };
 
 class proposal_service_mock
@@ -89,9 +86,9 @@ public:
     {
     }
 
-    std::vector<proposal_object::ref_type> get_proposals()
+    std::vector<proposal_object::cref_type> get_proposals()
     {
-        std::vector<proposal_object::ref_type> p;
+        std::vector<proposal_object::cref_type> p;
         return p;
     }
 
@@ -191,9 +188,6 @@ public:
         proposal.id = proposal_service.proposals.size() + 1;
         proposal_service.proposals.push_back(proposal);
 
-        account_service.existent_accounts.insert(proposal.creator);
-        account_service.existent_accounts.insert("bob");
-
         committee_service.existent_accounts.insert(proposal.creator);
         committee_service.existent_accounts.insert("bob");
 
@@ -225,15 +219,6 @@ public:
 };
 
 BOOST_FIXTURE_TEST_SUITE(proposal_vote_evaluator_tests, proposal_vote_evaluator_fixture)
-
-SCORUM_TEST_CASE(throw_when_creator_account_does_not_exists)
-{
-    create_proposal();
-
-    account_service.existent_accounts.erase(account_service.existent_accounts.find("alice"));
-
-    SCORUM_CHECK_EXCEPTION(apply(), fc::exception, "Account \"alice\" must exist.");
-}
 
 SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
 {

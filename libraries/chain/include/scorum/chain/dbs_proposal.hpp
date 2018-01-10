@@ -39,7 +39,7 @@ public:
 
     void for_all_proposals_remove_from_voting_list(const account_name_type& member);
 
-    std::vector<proposal_object::ref_type> get_proposals();
+    std::vector<proposal_object::cref_type> get_proposals();
 };
 
 } // namespace scorum

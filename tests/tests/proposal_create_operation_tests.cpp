@@ -19,12 +19,9 @@ using scorum::chain::proposal_create_operation;
 class account_service_mock
 {
 public:
-    bool is_exists(const account_name_type& account)
+    void check_account_existence(const account_name_type&)
     {
-        return existent_accounts.count(account) == 1 ? true : false;
     }
-
-    std::set<account_name_type> existent_accounts;
 };
 
 class proposal_service_mock
@@ -85,9 +82,6 @@ public:
         , lifetime_max(10)
         , evaluator(account_service, proposal_service, committee_service, lifetime_min, lifetime_max, 1)
     {
-        account_service.existent_accounts.insert("alice");
-        account_service.existent_accounts.insert("bob");
-
         committee_service.existent_accounts.insert("alice");
         committee_service.existent_accounts.insert("bob");
     }

@@ -119,7 +119,7 @@ public:
     proposal_id_type get_proposal_id(const std::string& name)
     {
         dbs_proposal& proposal_service = chain().db.obtain_service<dbs_proposal>();
-        std::vector<proposal_object::ref_type> proposals = proposal_service.get_proposals();
+        std::vector<proposal_object::cref_type> proposals = proposal_service.get_proposals();
 
         for (const proposal_object& p : proposals)
         {
@@ -153,20 +153,20 @@ public:
         return false;
     }
 
-    fc::optional<proposal_object::ref_type> get_proposal(int64_t id)
+    fc::optional<proposal_object::cref_type> get_proposal(int64_t id)
     {
         dbs_proposal& proposal_service = chain().db.obtain_service<dbs_proposal>();
-        std::vector<proposal_object::ref_type> proposals = proposal_service.get_proposals();
+        std::vector<proposal_object::cref_type> proposals = proposal_service.get_proposals();
 
-        for (proposal_object::ref_type p : proposals)
+        for (proposal_object::cref_type p : proposals)
         {
             if (p.get().id._id == id)
             {
-                return fc::optional<proposal_object::ref_type>(p);
+                return fc::optional<proposal_object::cref_type>(p);
             }
         }
 
-        return fc::optional<proposal_object::ref_type>();
+        return fc::optional<proposal_object::cref_type>();
     }
 
     actor_actions actor(const Actor& a)
