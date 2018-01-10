@@ -96,8 +96,6 @@ void database::update_witness_schedule()
             _db.modify(*itr, [&](witness_object& wo) { wo.schedule = witness_object::top20; });
         }
 
-        auto num_elected = active_witnesses.size();
-
         /// Add the running witnesses in the lead
         fc::uint128 new_virtual_time = wso.current_virtual_time;
         const auto& schedule_idx = _db.get_index<witness_index>().indices().get<by_schedule_time>();
@@ -121,8 +119,6 @@ void database::update_witness_schedule()
                 ++witness_count;
             }
         }
-
-        auto num_timeshare = active_witnesses.size() - num_elected;
 
         /// Update virtual schedule of processed witnesses
         bool reset_virtual_time = false;
@@ -227,8 +223,6 @@ void database::update_witness_schedule()
             _db.modify(_db.get_hardfork_property_object(),
                        [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
         }
-
-        assert(num_elected + num_timeshare == active_witnesses.size());
 
         _db.modify(wso, [&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)

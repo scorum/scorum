@@ -15,7 +15,7 @@ dbs_registration_committee::registration_committee_member_refs_type dbs_registra
 {
     registration_committee_member_refs_type ret;
 
-    const auto& idx = db_impl().get_index<registration_committee_member_index>().indicies().get<by_id>();
+    const auto& idx = db_impl().get_index<registration_committee_member_index>().indices().get<by_id>();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)
     {
         ret.push_back(std::cref(*it));
@@ -110,7 +110,7 @@ void dbs_registration_committee::update_member_info(const registration_committee
 
 uint64_t dbs_registration_committee::_get_members_count() const
 {
-    return db_impl().get_index<registration_committee_member_index>().indicies().size();
+    return db_impl().get_index<registration_committee_member_index>().indices().size();
 }
 
 uint64_t dbs_registration_committee::quorum_votes(uint64_t quorum_percent)

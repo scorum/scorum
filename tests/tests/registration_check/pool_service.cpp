@@ -248,7 +248,7 @@ SCORUM_TEST_CASE(create_check)
 
     BOOST_CHECK_EQUAL(pool.balance, genesis_state.registration_supply);
     BOOST_CHECK_EQUAL(pool.maximum_bonus, genesis_state.registration_bonus);
-    BOOST_CHECK_EQUAL(pool.already_allocated_count, 0);
+    BOOST_CHECK_EQUAL(pool.already_allocated_count, uint64_t(0));
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
@@ -269,27 +269,27 @@ SCORUM_TEST_CASE(create_double_check)
 
 SCORUM_TEST_CASE(sin_f_check)
 {
-    BOOST_CHECK_EQUAL(get_sin_f(0, 10, 5), 0);
-    BOOST_CHECK_EQUAL(get_sin_f(1, 10, 5), 2);
-    BOOST_CHECK_EQUAL(get_sin_f(2, 10, 5), 3);
-    BOOST_CHECK_EQUAL(get_sin_f(3, 10, 5), 4);
-    BOOST_CHECK_EQUAL(get_sin_f(4, 10, 5), 5);
-    BOOST_CHECK_EQUAL(get_sin_f(5, 10, 5), 5);
-    BOOST_CHECK_EQUAL(get_sin_f(6, 10, 5), 4);
-    BOOST_CHECK_EQUAL(get_sin_f(7, 10, 5), 3);
-    BOOST_CHECK_EQUAL(get_sin_f(8, 10, 5), 2);
-    BOOST_CHECK_EQUAL(get_sin_f(9, 10, 5), 1);
+    BOOST_CHECK_EQUAL(get_sin_f(0, 10, 5), (uint64_t)0);
+    BOOST_CHECK_EQUAL(get_sin_f(1, 10, 5), (uint64_t)2);
+    BOOST_CHECK_EQUAL(get_sin_f(2, 10, 5), (uint64_t)3);
+    BOOST_CHECK_EQUAL(get_sin_f(3, 10, 5), (uint64_t)4);
+    BOOST_CHECK_EQUAL(get_sin_f(4, 10, 5), (uint64_t)5);
+    BOOST_CHECK_EQUAL(get_sin_f(5, 10, 5), (uint64_t)5);
+    BOOST_CHECK_EQUAL(get_sin_f(6, 10, 5), (uint64_t)4);
+    BOOST_CHECK_EQUAL(get_sin_f(7, 10, 5), (uint64_t)3);
+    BOOST_CHECK_EQUAL(get_sin_f(8, 10, 5), (uint64_t)2);
+    BOOST_CHECK_EQUAL(get_sin_f(9, 10, 5), (uint64_t)1);
 
-    BOOST_CHECK_EQUAL(get_sin_f(0, 5, 5), 0);
-    BOOST_CHECK_EQUAL(get_sin_f(1, 5, 5), 3);
-    BOOST_CHECK_EQUAL(get_sin_f(2, 5, 5), 5);
-    BOOST_CHECK_EQUAL(get_sin_f(3, 5, 5), 4);
-    BOOST_CHECK_EQUAL(get_sin_f(4, 5, 5), 2);
+    BOOST_CHECK_EQUAL(get_sin_f(0, 5, 5), (uint64_t)0);
+    BOOST_CHECK_EQUAL(get_sin_f(1, 5, 5), (uint64_t)3);
+    BOOST_CHECK_EQUAL(get_sin_f(2, 5, 5), (uint64_t)5);
+    BOOST_CHECK_EQUAL(get_sin_f(3, 5, 5), (uint64_t)4);
+    BOOST_CHECK_EQUAL(get_sin_f(4, 5, 5), (uint64_t)2);
 
-    BOOST_CHECK_EQUAL(get_sin_f(0, 4, 3), 0);
-    BOOST_CHECK_EQUAL(get_sin_f(1, 4, 3), 2);
-    BOOST_CHECK_EQUAL(get_sin_f(2, 4, 3), 3);
-    BOOST_CHECK_EQUAL(get_sin_f(3, 4, 3), 1);
+    BOOST_CHECK_EQUAL(get_sin_f(0, 4, 3), (uint64_t)0);
+    BOOST_CHECK_EQUAL(get_sin_f(1, 4, 3), (uint64_t)2);
+    BOOST_CHECK_EQUAL(get_sin_f(2, 4, 3), (uint64_t)3);
+    BOOST_CHECK_EQUAL(get_sin_f(3, 4, 3), (uint64_t)1);
 }
 
 SCORUM_TEST_CASE(predict_input_check)
@@ -332,11 +332,11 @@ SCORUM_TEST_CASE(predict_input_check)
 
     BOOST_REQUIRE(schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));
 
-    BOOST_REQUIRE_EQUAL(pos, 2); // pass only first stage of schedule
+    BOOST_REQUIRE_EQUAL(pos, (uint64_t)2); // pass only first stage of schedule
 
     BOOST_REQUIRE(schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));
 
-    BOOST_REQUIRE_EQUAL(pos, 7); // pass through 2 stages of schedule (1 and 2)
+    BOOST_REQUIRE_EQUAL(pos, (uint64_t)7); // pass through 2 stages of schedule (1 and 2)
 
     // limit is not reached (out of schedule)
     BOOST_REQUIRE(!schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));

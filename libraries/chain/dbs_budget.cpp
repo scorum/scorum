@@ -17,7 +17,7 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 {
     budget_refs_type ret;
 
-    const auto& idx = db_impl().get_index<budget_index>().indicies();
+    const auto& idx = db_impl().get_index<budget_index>().indices();
     auto it = idx.cbegin();
     const auto it_end = idx.cend();
     while (it != it_end)
@@ -57,7 +57,7 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& ow
 
     budget_refs_type ret;
 
-    auto it_pair = db_impl().get_index<budget_index>().indicies().get<by_owner_name>().equal_range(owner);
+    auto it_pair = db_impl().get_index<budget_index>().indices().get<by_owner_name>().equal_range(owner);
     auto it = it_pair.first;
     const auto it_end = it_pair.second;
     while (it != it_end)
@@ -311,7 +311,7 @@ void dbs_budget::_close_fund_budget(const budget_object& budget)
 
 uint64_t dbs_budget::_get_budget_count(const account_name_type& owner) const
 {
-    return db_impl().get_index<budget_index>().indicies().get<by_owner_name>().count(owner);
+    return db_impl().get_index<budget_index>().indices().get<by_owner_name>().count(owner);
 }
 
 } // namespace chain

@@ -125,7 +125,7 @@ struct operation_visitor
             {
                 meta = fc::json::from_string(fc::to_string(c.json_metadata)).as<comment_metadata>();
             }
-            catch (const fc::exception& e)
+            catch (const fc::exception&)
             {
                 // Do nothing on malformed json_metadata
             }
@@ -494,7 +494,7 @@ void tags_plugin_impl::on_operation(const operation_notification& note)
     }
 }
 
-} /// end detail namespace
+} // namespace detail
 
 tags_plugin::tags_plugin(application* app)
     : plugin(app)
@@ -528,7 +528,7 @@ void tags_plugin::plugin_initialize(const boost::program_options::variables_map&
 void tags_plugin::plugin_startup()
 {
 }
-}
-} /// scorum::tags
+} // namespace tags
+} // namespace scorum
 
 SCORUM_DEFINE_PLUGIN(tags, scorum::tags::tags_plugin)

@@ -736,19 +736,6 @@ struct decline_voting_rights_operation : public base_operation
     void validate() const;
 };
 
-struct claim_reward_balance_operation : public base_operation
-{
-    account_name_type account;
-    asset reward_scorum = asset(0, SCORUM_SYMBOL);
-    asset reward_vests = asset(0, VESTS_SYMBOL);
-
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(account);
-    }
-    void validate() const;
-};
-
 /**
  * Delegate vesting shares from one account to the other. The vesting shares are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
@@ -904,7 +891,6 @@ FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_acco
 FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) )
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
-FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_vests) )
 FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )

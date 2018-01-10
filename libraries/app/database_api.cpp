@@ -298,11 +298,11 @@ scheduled_hardfork database_api::get_next_scheduled_hardfork() const
     });
 }
 
-reward_fund_api_obj database_api::get_reward_fund(const std::string& name) const
+reward_fund_api_obj database_api::get_reward_fund() const
 {
     return my->_db.with_read_lock([&]() {
-        auto fund = my->_db.find<reward_fund_object, by_name>(name);
-        FC_ASSERT(fund != nullptr, "Invalid reward fund name");
+        auto fund = my->_db.find<reward_fund_object>();
+        FC_ASSERT(fund != nullptr, "reward fund object does not exist");
 
         return *fund;
     });
@@ -930,12 +930,12 @@ void database_api::set_pending_payout(discussion& d) const
     {
         d.promoted = asset(itr->promoted_balance, SCORUM_SYMBOL);
     }
-    asset pot = my->_db.get_reward_fund(my->_db.get_comment(d.author, d.permlink)).reward_balance;
-    u256 total_r2 = to256(my->_db.get_reward_fund(my->_db.get_comment(d.author, d.permlink)).recent_claims);
+    asset pot = my->_db.get_reward_fund().reward_balance;
+    u256 total_r2 = to256(my->_db.get_reward_fund().recent_claims);
     if (total_r2 > 0)
     {
         uint128_t vshares;
-        const auto& rf = my->_db.get_reward_fund(my->_db.get_comment(d.author, d.permlink));
+        const auto& rf = my->_db.get_reward_fund();
         vshares = d.net_rshares.value > 0
             ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, rf.author_reward_curve)
             : 0;
@@ -1803,7 +1803,6 @@ state database_api::get_state(std::string path) const
                         case operation::tag<escrow_approve_operation>::value:
                         case operation::tag<escrow_dispute_operation>::value:
                         case operation::tag<escrow_release_operation>::value:
-                        case operation::tag<claim_reward_balance_operation>::value:
                             eacnt.transfer_history[item.first] = item.second;
                             break;
                         case operation::tag<comment_operation>::value:

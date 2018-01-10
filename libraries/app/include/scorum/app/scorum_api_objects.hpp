@@ -174,9 +174,6 @@ struct account_api_obj
         , voting_power(a.voting_power)
         , last_vote_time(a.last_vote_time)
         , balance(a.balance)
-        , reward_scorum_balance(a.reward_scorum_balance)
-        , reward_vesting_balance(a.reward_vesting_balance)
-        , reward_vesting_scorum(a.reward_vesting_scorum)
         , curation_rewards(a.curation_rewards)
         , posting_rewards(a.posting_rewards)
         , vesting_shares(a.vesting_shares)
@@ -260,10 +257,6 @@ struct account_api_obj
     time_point_sec last_vote_time;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-
-    asset reward_scorum_balance = asset(0, SCORUM_SYMBOL);
-    asset reward_vesting_balance = asset(0, VESTS_SYMBOL);
-    asset reward_vesting_scorum = asset(0, SCORUM_SYMBOL);
 
     share_type curation_rewards;
     share_type posting_rewards;
@@ -526,7 +519,6 @@ FC_REFLECT( scorum::app::account_api_obj,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
              (posting_rewards)
