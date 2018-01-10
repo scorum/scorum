@@ -61,6 +61,8 @@
 #include <sys/stat.h>
 #endif
 
+#include <scorum/wallet/printer.hpp>
+
 namespace scorum {
 namespace wallet {
 
@@ -647,102 +649,63 @@ public:
         return tx;
     }
 
-    const size_t screen_w = (size_t)100;
-
-    template <typename T> void print_raw(std::stringstream& out, const T& val, bool end_line = true) const
+    std::string print_atomicswap_secret2str(const std::string& secret) const
     {
-        out << std::left;
-        out << val;
-        if (end_line)
-            out << "\n";
+        printer p;
+
+        p.print_line();
+        p.print_field("SECRET: ", secret);
+
+        return p.str();
     }
 
-    template <typename T>
-    void print_field(std::stringstream& out, const std::string& field_name, const T& field_val) const
+    std::string print_atomicswap_contract2str(const atomicswap_contract_info_api_obj& rt) const
     {
-        print_raw(out, field_name, false);
-        size_t out_w = screen_w - field_name.size();
-        out << std::right << std::setw(out_w) << field_val << "\n";
-    }
+        printer p;
 
-    void print_field(std::stringstream& out, const std::string& field_name, const std::string& field_val) const
-    {
-        print_raw(out, field_name, false);
-        size_t out_w = screen_w - field_name.size();
-        if (field_val.size() < out_w)
-        {
-            out << std::right << std::setw(out_w) << field_val << "\n";
-        }
-        else
-        {
-            out << "\n";
-            out << std::left << field_val << "\n";
-        }
-    }
-
-    void print_line(std::stringstream& out, const char symbol = '-') const
-    {
-        out << std::left << std::string(screen_w, symbol) << "\n";
-    }
-
-    std::string print_atomicswap_secret(const std::string& secret) const
-    {
-        std::stringstream out;
-
-        print_line(out);
-        print_field(out, "SECRET: ", secret);
-
-        return out.str();
-    }
-
-    std::string print_atomicswap_contract(const atomicswap_contract_info_api_obj& rt) const
-    {
-        std::stringstream out;
-
-        print_line(out);
+        p.print_line();
 
         if (rt.contract_initiator)
         {
-            print_raw(out, "INITIATION CONTRACT");
+            p.print_raw("INITIATION CONTRACT");
         }
         else
         {
-            print_raw(out, "* PARTICIPATION CONTRACT");
+            p.print_raw("* PARTICIPATION CONTRACT");
         }
 
-        print_line(out);
-        print_field(out, "From: ", rt.owner);
-        print_field(out, "To: ", rt.to);
-        print_field(out, "Amount: ", rt.amount);
+        p.print_line();
+        p.print_field("From: ", rt.owner);
+        p.print_field("To: ", rt.to);
+        p.print_field("Amount: ", rt.amount);
 
         if (rt.deadline.sec_since_epoch())
         {
-            print_field(out, "Locktime: ", rt.deadline.to_iso_string());
+            p.print_field("Locktime: ", rt.deadline.to_iso_string());
 
             time_point_sec now = rt.deadline;
             now -= fc::time_point::now().sec_since_epoch();
-            std::stringstream rest_time;
-            rest_time << now.sec_since_epoch() / 3600 << 'h';
-            rest_time << now.sec_since_epoch() % 3600 / 60 << 'm';
-            rest_time << now.sec_since_epoch() % 60 << 's';
-            print_field(out, "Locktime reached in: ", rest_time.str());
+            int h = now.sec_since_epoch() / 3600;
+            int m = now.sec_since_epoch() % 3600 / 60;
+            int s = now.sec_since_epoch() % 60;
+            p.print_field("Locktime reached in: ", p.print_sequence2str(h, 'h', m, 'm', s, 's'));
         }
 
         if (!rt.secret.empty())
         {
-            out << print_atomicswap_secret(rt.secret);
+            p.print_raw(print_atomicswap_secret2str(rt.secret));
         }
 
-        print_line(out);
-        print_field(out, "Secret Hash: ", rt.secret_hash);
+        p.print_line();
+        p.print_field("Secret Hash: ", rt.secret_hash);
 
         if (!rt.metadata.empty())
         {
-            print_line(out);
-            print_field(out, "Metadata: ", rt.metadata);
+            p.print_line();
+            p.print_field("Metadata: ", rt.metadata);
         }
 
-        return out.str();
+        return p.str();
     }
 
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const
@@ -753,70 +716,100 @@ public:
         m["gethelp"] = [](variant result, const fc::variants& a) { return result.get_string(); };
 
         m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
-            std::stringstream out;
-
             auto accounts = result.as<std::vector<account_api_obj>>();
+
+            printer p;
+
             asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
+
+            const size_t columns = 4;
+
             for (const auto& a : accounts)
             {
                 total_scorum += a.balance;
                 total_vest += a.vesting_shares;
-                out << std::left << std::setw(17) << std::string(a.name) << std::right << std::setw(18)
-                    << fc::variant(a.balance).as_string() << " " << std::right << std::setw(26)
-                    << fc::variant(a.vesting_shares).as_string() << "\n";
+                p.print_cell(a.name, 16, columns);
+                p.print_cell(a.balance, 20, columns);
+                p.print_cell("", 10, columns);
+                p.print_cell(a.vesting_shares, 20, columns);
             }
-            print_line(out);
-            out << std::left << std::setw(17) << "TOTAL" << std::right << std::setw(18)
-                << fc::variant(total_scorum).as_string() << " " << std::right << std::setw(26)
-                << fc::variant(total_vest).as_string() << "\n";
-            return out.str();
+            p.print_endl();
+            p.print_line('-', accounts.empty());
+            p.print_cell("TOTAL", 16, columns);
+            p.print_cell(total_scorum, 20, columns);
+            p.print_cell("", 10, columns);
+            p.print_cell(total_vest, 20, columns);
+
+            return p.str();
+        };
+        m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<account_balance_info_api_obj>();
+
+            printer p;
+
+            const size_t columns = 4;
+
+            p.print_line();
+            p.print_cell("Scorums:", 16, columns);
+            p.print_cell(rt.balance, 20, columns);
+            p.print_cell("Vests:", 10, columns);
+            p.print_cell(rt.vesting_shares, 20, columns);
+
+            return p.str();
         };
         m["get_account_history"] = [this](variant result, const fc::variants& a) {
-            std::stringstream out;
-
-            out << std::left << std::setw(5) << "#";
-            out << std::left << std::setw(10) << "BLOCK #";
-            out << std::left << std::setw(15) << "TRX ID";
-            out << std::left << std::setw(20) << "OPERATION";
-            out << std::right << std::setw(50) << "DETAILS"
-                << "\n";
-            print_line(out);
             const auto& results = result.get_array();
+
+            printer p;
+
+            const size_t columns = 5;
+
+            p.print_cell("#", 5, columns);
+            p.print_cell("BLOCK #", 10, columns);
+            p.print_cell("TRX ID", 15, columns);
+            p.print_cell("OPERATION", 20, columns);
+            p.print_cell("DETAILS", 50, columns);
+            p.print_endl();
+            p.print_line('-', false);
+
             for (const auto& item : results)
             {
-                out << std::left << " \n";
-                out << std::left << std::setw(5) << item.get_array()[0].as_string();
+                p.print_cell(item.get_array()[0].as_string(), 5, columns);
                 const auto& op = item.get_array()[1].get_object();
-                out << std::left << std::setw(10) << op["block"].as_string();
-                out << std::left << std::setw(15) << op["trx_id"].as_string();
+                p.print_cell(op["block"].as_string(), 10, columns);
+                p.print_cell(op["trx_id"].as_string(), 15, columns);
                 const auto& opop = op["op"].get_array();
-                out << std::left << std::setw(20) << opop[0].as_string();
-                out << std::right << std::setw(50) << fc::json::to_string(opop[1]);
+                p.print_cell(opop[0].as_string(), 20, columns);
+                p.print_cell(fc::json::to_string(opop[1]), 50, columns);
             }
-            return out.str();
+            return p.str();
         };
         m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
-            std::stringstream out;
 
-            out << ' ' << std::left << std::setw(20) << "From";
-            out << ' ' << std::left << std::setw(20) << "To";
-            out << ' ' << std::right << std::setw(8) << "Percent";
-            out << ' ' << std::right << std::setw(9) << "Auto-Vest";
-            out << "\n";
-            print_line(out, '=');
+            printer p;
+
+            const size_t columns = 4;
+
+            p.print_cell("From", 20, columns);
+            p.print_cell("To", 20, columns);
+            p.print_cell("Percent", 8, columns);
+            p.print_cell("Auto-Vest", 9, columns);
+            p.print_endl();
+            p.print_line('=', false);
 
             for (auto r : routes)
             {
-                out << ' ' << std::left << std::setw(20) << r.from_account;
-                out << ' ' << std::left << std::setw(20) << r.to_account;
-                out << ' ' << std::right << std::setw(8) << std::setprecision(2) << std::fixed
-                    << double(r.percent) / 100;
-                out << ' ' << std::right << std::setw(9) << (r.auto_vest ? "true" : "false") << std::endl;
+                p.print_cell(r.from_account, 20, columns);
+                p.print_cell(r.to_account, 20, columns);
+                std::stringstream tmp;
+                tmp << std::setprecision(2) << std::fixed << double(r.percent) / 100;
+                p.print_cell(tmp.str(), 8, columns);
+                p.print_cell((r.auto_vest ? "true" : "false"), 9, columns);
             }
 
-            return out.str();
+            return p.str();
         };
         m["atomicswap_initiate"] = [this](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<atomicswap_contract_result_api_obj>();
@@ -826,7 +819,7 @@ public:
             }
             else
             {
-                return print_atomicswap_contract(rt.obj);
+                return print_atomicswap_contract2str(rt.obj);
             }
         };
         m["atomicswap_participate"] = [this](variant result, const fc::variants& a) -> std::string {
@@ -837,7 +830,7 @@ public:
             }
             else
             {
-                return print_atomicswap_contract(rt.obj);
+                return print_atomicswap_contract2str(rt.obj);
             }
         };
         m["atomicswap_auditcontract"] = [this](variant result, const fc::variants& a) -> std::string {
@@ -848,7 +841,7 @@ public:
             }
             else
             {
-                return print_atomicswap_contract(rt);
+                return print_atomicswap_contract2str(rt);
             }
         };
         m["atomicswap_extractsecret"] = [this](variant result, const fc::variants& a) -> std::string {
@@ -859,19 +852,8 @@ public:
             }
             else
             {
-                return print_atomicswap_secret(secret);
+                return print_atomicswap_secret2str(secret);
             }
-        };
-        m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
-            auto rt = result.as<account_balance_info_api_obj>();
-            std::stringstream out;
-
-            print_line(out);
-
-            print_field(out, "Scorums: ", rt.balance);
-            print_field(out, "Vests: ", rt.vesting_shares);
-
-            return out.str();
         };
 
         return m;
