@@ -44,9 +44,9 @@ public:
 
     virtual void apply(const OperationType& o) final override
     {
-        auto* eval = static_cast<EvaluatorType*>(this);
         const auto& op = o.template get<typename EvaluatorType::operation_type>();
-        eval->do_apply(op);
+
+        this->do_apply(op);
     }
 
     virtual int get_type() const override
