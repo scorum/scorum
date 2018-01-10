@@ -20,9 +20,12 @@ using scorum::chain::proposal_id_type;
 class account_service_mock
 {
 public:
-    void check_account_existence(const account_name_type&)
+    void check_account_existence(const account_name_type& a)
     {
+        checked_accounts.push_back(a);
     }
+
+    std::vector<account_name_type> checked_accounts;
 };
 
 class proposal_service_mock
@@ -267,6 +270,15 @@ SCORUM_TEST_CASE(check_voter_name)
     apply();
 
     BOOST_CHECK(proposal_service.voters.count(op.voting_account) == 1);
+}
+
+SCORUM_TEST_CASE(check_account_existence_for_voter_name)
+{
+    auto p = create_proposal(proposal_action::invite);
+    configure_quorum();
+    apply();
+
+    BOOST_CHECK_EQUAL(account_service.checked_accounts[0], "alice");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

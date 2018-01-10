@@ -212,6 +212,16 @@ SCORUM_TEST_CASE(proposal)
     auto joe_invitation = actor(alice).invite_in_to_committee(joe);
     auto hue_invitation = actor(alice).invite_in_to_committee(hue);
     auto liz_invitation = actor(alice).invite_in_to_committee(liz);
+    auto bob_invitation = actor(alice).invite_in_to_committee(bob);
+
+    {
+        fc::time_point_sec expected_expiration = chain().db.head_block_time() + SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+
+        auto p = get_proposal(bob_invitation);
+
+        BOOST_REQUIRE(p.valid());
+        BOOST_CHECK(expected_expiration == p->get().expiration);
+    }
 
     {
         actor(alice).vote_for(jim_invitation);
@@ -242,6 +252,18 @@ SCORUM_TEST_CASE(proposal)
     }
     // end setup committee
 
+    // check that voted_accounts list changed
+    {
+        actor(joe).vote_for(bob_invitation);
+        auto p = get_proposal(bob_invitation);
+
+        BOOST_REQUIRE(p.valid());
+
+        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), 1);
+        BOOST_CHECK_EQUAL(p->get().voted_accounts.count("joe"), static_cast<std::size_t>(1));
+    }
+
+    // check that drop_hue proposal executed with drop_joe because of committee members size change
     {
         auto drop_hue = actor(alice).dropout_from_committee(hue);
         actor(alice).vote_for(drop_hue);
@@ -264,16 +286,13 @@ SCORUM_TEST_CASE(proposal)
         BOOST_CHECK_EQUAL(3, get_committee_members().size());
     }
 
+    // check that member removed from voted_accounts after committee member removing
     {
-        fc::time_point_sec expected_expiration = chain().db.head_block_time() + SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
-
-        auto bob_invitation = actor(alice).invite_in_to_committee(bob);
-
         auto p = get_proposal(bob_invitation);
 
         BOOST_REQUIRE(p.valid());
 
-        BOOST_CHECK(expected_expiration == p->get().expiration);
+        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), 0);
     }
 
 } // clang-format on

@@ -14,6 +14,7 @@
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/crypto/hex.hpp>
+#include <fc/container/utils.hpp>
 
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string.hpp>
@@ -693,19 +694,9 @@ std::set<account_name_type> database_api_impl::lookup_committee_accounts(const s
         {
             members_by_account_name.insert(member.account);
         }
-
-        if (members_by_account_name.size() >= 1000)
-        {
-            break;
-        }
     }
 
-    auto end_iter = members_by_account_name.begin();
-    while (end_iter != members_by_account_name.end() && limit--)
-    {
-        ++end_iter;
-    }
-    members_by_account_name.erase(end_iter, members_by_account_name.end());
+    fc::limit_left_cut_right(members_by_account_name, limit);
 
     return members_by_account_name;
 }
