@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <memory>
+#include <vector>
 
 namespace scorum {
 namespace wallet {
@@ -31,6 +32,9 @@ public:
 
     void clear()
     {
+        _end_print_sequence();
+        _cell_ctx.reset();
+        _table_ctx.reset();
         std::stringstream empty;
         _out.swap(empty);
     }
@@ -197,6 +201,58 @@ public:
         }
     }
 
+    template <typename... Types> bool create_table(const size_t& w, const Types&... ws) const
+    {
+        if (_table_ctx.is_init())
+        {
+            _cell_ctx.reset();
+            _table_ctx.reset();
+        }
+        _table_ctx.ws.push_back(w);
+        bool ret = true;
+        ret &= create_table(ws...);
+        return ret;
+    }
+
+    bool create_table() const
+    {
+        size_t table_w = 0;
+        for (size_t w : _table_ctx.ws)
+        {
+            table_w += w;
+        }
+        if (table_w > screen_w)
+        {
+            _table_ctx.reset();
+            return false;
+        }
+        _table_ctx.saved = true;
+        return _table_ctx.is_init();
+    }
+
+    template <typename T> bool print_cell(const T& val) const
+    {
+        if (_table_ctx.is_init())
+        {
+            if (!_table_ctx.opened)
+            {
+                _cell_ctx.reset();
+                _table_ctx.opened = true;
+            }
+            if (_cell_ctx.current >= _table_ctx.ws.size())
+            {
+                print_endl();
+                _cell_ctx.reset();
+            }
+            print_cell(val, _table_ctx.ws[_cell_ctx.current], _table_ctx.ws.size());
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
 private:
     using stringstream_type = std::unique_ptr<std::stringstream>;
 
@@ -253,6 +309,26 @@ private:
         }
     };
     mutable cell_context _cell_ctx;
+
+    struct table_context
+    {
+        std::vector<size_t> ws;
+        bool saved = false;
+        bool opened = false;
+
+        bool is_init() const
+        {
+            return saved && !ws.empty();
+        }
+
+        void reset()
+        {
+            ws.clear();
+            saved = false;
+            opened = false;
+        }
+    };
+    mutable table_context _table_ctx;
 };
 }
 }

@@ -723,23 +723,23 @@ public:
             asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
 
-            const size_t columns = 4;
+            p.create_table(16, 20, 10, 20);
 
             for (const auto& a : accounts)
             {
                 total_scorum += a.balance;
                 total_vest += a.vesting_shares;
-                p.print_cell(a.name, 16, columns);
-                p.print_cell(a.balance, 20, columns);
-                p.print_cell("", 10, columns);
-                p.print_cell(a.vesting_shares, 20, columns);
+                p.print_cell(a.name);
+                p.print_cell(a.balance);
+                p.print_cell("");
+                p.print_cell(a.vesting_shares);
             }
             p.print_endl();
             p.print_line('-', accounts.empty());
-            p.print_cell("TOTAL", 16, columns);
-            p.print_cell(total_scorum, 20, columns);
-            p.print_cell("", 10, columns);
-            p.print_cell(total_vest, 20, columns);
+            p.print_cell("TOTAL");
+            p.print_cell(total_scorum);
+            p.print_cell("");
+            p.print_cell(total_vest);
 
             return p.str();
         };
@@ -748,13 +748,13 @@ public:
 
             printer p;
 
-            const size_t columns = 4;
+            p.create_table(16, 20, 10, 20);
 
             p.print_line();
-            p.print_cell("Scorums:", 16, columns);
-            p.print_cell(rt.balance, 20, columns);
-            p.print_cell("Vests:", 10, columns);
-            p.print_cell(rt.vesting_shares, 20, columns);
+            p.print_cell("Scorums:");
+            p.print_cell(rt.balance);
+            p.print_cell("Vests:");
+            p.print_cell(rt.vesting_shares);
 
             return p.str();
         };
@@ -763,25 +763,25 @@ public:
 
             printer p;
 
-            const size_t columns = 5;
+            p.create_table(5, 10, 15, 20, 50);
 
-            p.print_cell("#", 5, columns);
-            p.print_cell("BLOCK #", 10, columns);
-            p.print_cell("TRX ID", 15, columns);
-            p.print_cell("OPERATION", 20, columns);
-            p.print_cell("DETAILS", 50, columns);
+            p.print_cell("#");
+            p.print_cell("BLOCK #");
+            p.print_cell("TRX ID");
+            p.print_cell("OPERATION");
+            p.print_cell("DETAILS");
             p.print_endl();
             p.print_line('-', false);
 
             for (const auto& item : results)
             {
-                p.print_cell(item.get_array()[0].as_string(), 5, columns);
+                p.print_cell(item.get_array()[0].as_string());
                 const auto& op = item.get_array()[1].get_object();
-                p.print_cell(op["block"].as_string(), 10, columns);
-                p.print_cell(op["trx_id"].as_string(), 15, columns);
+                p.print_cell(op["block"].as_string());
+                p.print_cell(op["trx_id"].as_string());
                 const auto& opop = op["op"].get_array();
-                p.print_cell(opop[0].as_string(), 20, columns);
-                p.print_cell(fc::json::to_string(opop[1]), 50, columns);
+                p.print_cell(opop[0].as_string());
+                p.print_cell(fc::json::to_string(opop[1]));
             }
             return p.str();
         };
@@ -790,23 +790,23 @@ public:
 
             printer p;
 
-            const size_t columns = 4;
+            p.create_table(20, 20, 8, 9);
 
-            p.print_cell("From", 20, columns);
-            p.print_cell("To", 20, columns);
-            p.print_cell("Percent", 8, columns);
-            p.print_cell("Auto-Vest", 9, columns);
+            p.print_cell("From");
+            p.print_cell("To");
+            p.print_cell("Percent");
+            p.print_cell("Auto-Vest");
             p.print_endl();
             p.print_line('=', false);
 
             for (auto r : routes)
             {
-                p.print_cell(r.from_account, 20, columns);
-                p.print_cell(r.to_account, 20, columns);
+                p.print_cell(r.from_account);
+                p.print_cell(r.to_account);
                 std::stringstream tmp;
                 tmp << std::setprecision(2) << std::fixed << double(r.percent) / 100;
-                p.print_cell(tmp.str(), 8, columns);
-                p.print_cell((r.auto_vest ? "true" : "false"), 9, columns);
+                p.print_cell(tmp.str());
+                p.print_cell((r.auto_vest ? "true" : "false"));
             }
 
             return p.str();
