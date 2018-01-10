@@ -114,8 +114,9 @@
 #define SCORUM_INFLATION_RATE_START_PERCENT    (978) // Fixes block 7,000,000 to 9.5%
 #define SCORUM_INFLATION_RATE_STOP_PERCENT     (95) // 0.95%
 #define SCORUM_INFLATION_NARROWING_PERIOD      (250000) // Narrow 0.01% every 250k blocks
-#define SCORUM_CONTENT_REWARD_PERCENT          (75*SCORUM_1_PERCENT) //75% of inflation, 7.125% inflation
-#define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT) //15% of inflation, 1.425% inflation
+#define SCORUM_CONTENT_REWARD_PERCENT          (75*SCORUM_1_PERCENT)
+#define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT)
+#define SCORUM_CURATION_REWARD_PERCENT         (25*SCORUM_1_PERCENT)
 
 #define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (60*60*24*7) ///< 1 week
 #define SCORUM_BANDWIDTH_PRECISION              (uint64_t(1000000)) ///< 1 million
@@ -135,8 +136,6 @@
 #define SCORUM_MIN_PRODUCER_REWARD             SCORUM_MINING_REWARD
 #define SCORUM_MIN_POW_REWARD                  SCORUM_MINING_REWARD
 
-#define SCORUM_POST_REWARD_FUND_NAME           ("post")
-#define SCORUM_COMMENT_REWARD_FUND_NAME        ("comment")
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 

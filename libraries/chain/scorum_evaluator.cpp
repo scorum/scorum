@@ -269,7 +269,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
         _db._temporary_public_impl().remove(cur_vote);
     }
 
-    /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indicies
+    /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
     if (comment.parent_author != SCORUM_ROOT_POST_PARENT)
     {
         auto parent = &_db.get_comment(comment.parent_author, comment.parent_permlink);
@@ -457,7 +457,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #endif
             });
 
-            /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indicies
+            /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
             auto now = _db.head_block_time();
             while (parent)
             {
@@ -1077,12 +1077,12 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 cv.vote_percent = o.weight;
                 cv.last_update = _db.head_block_time();
 
-                bool curation_reward_eligible = rshares > 0 && (comment.last_payout == fc::time_point_sec())
-                    && comment.allow_curation_rewards && _db.get_curation_rewards_percent(comment) > 0;
+                bool curation_reward_eligible
+                    = rshares > 0 && (comment.last_payout == fc::time_point_sec()) && comment.allow_curation_rewards;
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = _db.get_reward_fund(comment);
+                    const auto& reward_fund = _db.get_reward_fund();
                     auto curve = reward_fund.curation_reward_curve;
                     uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
                     uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
@@ -1303,42 +1303,6 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
         FC_ASSERT(itr != request_idx.end(), "Cannot cancel the request because it does not exist.");
         _db._temporary_public_impl().remove(*itr);
     }
-}
-
-void claim_reward_balance_evaluator::do_apply(const claim_reward_balance_operation& op)
-{
-    dbs_account& account_service = _db.obtain_service<dbs_account>();
-
-    const auto& acnt = account_service.get_account(op.account);
-
-    FC_ASSERT(op.reward_scorum <= acnt.reward_scorum_balance, "Cannot claim that much SCR. Claim: ${c} Actual: ${a}",
-              ("c", op.reward_scorum)("a", acnt.reward_scorum_balance));
-    FC_ASSERT(op.reward_vests <= acnt.reward_vesting_balance, "Cannot claim that much SP. Claim: ${c} Actual: ${a}",
-              ("c", op.reward_vests)("a", acnt.reward_vesting_balance));
-
-    asset reward_vesting_scorum_to_move = asset(0, SCORUM_SYMBOL);
-    if (op.reward_vests == acnt.reward_vesting_balance)
-        reward_vesting_scorum_to_move = acnt.reward_vesting_scorum;
-    else
-        reward_vesting_scorum_to_move
-            = asset(((uint128_t(op.reward_vests.amount.value) * uint128_t(acnt.reward_vesting_scorum.amount.value))
-                     / uint128_t(acnt.reward_vesting_balance.amount.value))
-                        .to_uint64(),
-                    SCORUM_SYMBOL);
-
-    account_service.increase_balance(acnt, op.reward_scorum);
-    account_service.decrease_reward_balance(acnt, op.reward_scorum);
-    account_service.increase_vesting_shares(acnt, op.reward_vests, reward_vesting_scorum_to_move);
-
-    _db._temporary_public_impl().modify(_db.get_dynamic_global_properties(), [&](dynamic_global_property_object& gpo) {
-        gpo.total_vesting_shares += op.reward_vests;
-        gpo.total_vesting_fund_scorum += reward_vesting_scorum_to_move;
-
-        gpo.pending_rewarded_vesting_shares -= op.reward_vests;
-        gpo.pending_rewarded_vesting_scorum -= reward_vesting_scorum_to_move;
-    });
-
-    account_service.adjust_proxied_witness_votes(acnt, op.reward_vests.amount);
 }
 
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)

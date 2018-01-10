@@ -18,6 +18,7 @@ namespace chain {
 
 using scorum::protocol::authority;
 
+// clang-format off
 class account_object : public object<account_object_type, account_object>
 {
     account_object() = delete;
@@ -41,10 +42,10 @@ public:
 
     time_point_sec created;
     bool created_by_genesis = false;
-    bool owner_challenged = false;
-    bool active_challenged = false;
-    time_point_sec last_owner_proved = time_point_sec::min();
-    time_point_sec last_active_proved = time_point_sec::min();
+    bool owner_challenged   = false;
+    bool active_challenged  = false;
+    time_point_sec last_owner_proved    = time_point_sec::min();
+    time_point_sec last_active_proved   = time_point_sec::min();
     account_name_type recovery_account;
     time_point_sec last_account_recovery;
     uint32_t comment_count = 0;
@@ -53,35 +54,25 @@ public:
 
     bool can_vote = true;
     uint16_t voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
-    time_point_sec
-        last_vote_time; ///< used to increase the voting power of this account the longer it goes without voting.
+    time_point_sec last_vote_time;              ///< used to increase the voting power of this account the longer it goes without voting.
 
-    asset balance = asset(0, SCORUM_SYMBOL); ///< total liquid shares held by this account
-
-    asset reward_scorum_balance = asset(0, SCORUM_SYMBOL);
-    asset reward_vesting_balance = asset(0, VESTS_SYMBOL);
-    asset reward_vesting_scorum = asset(0, SCORUM_SYMBOL);
+    asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
 
     share_type curation_rewards = 0;
     share_type posting_rewards = 0;
 
-    asset vesting_shares
-        = asset(0, VESTS_SYMBOL); ///< total vesting shares held by this account, controls its voting power
-    asset delegated_vesting_shares = asset(0, VESTS_SYMBOL);
-    asset received_vesting_shares = asset(0, VESTS_SYMBOL);
+    asset vesting_shares =              asset(0, VESTS_SYMBOL); ///< total vesting shares held by this account, controls its voting power
+    asset delegated_vesting_shares =    asset(0, VESTS_SYMBOL);
+    asset received_vesting_shares =     asset(0, VESTS_SYMBOL);
 
-    asset vesting_withdraw_rate
-        = asset(0, VESTS_SYMBOL); ///< at the time this is updated it can be at most vesting_shares/104
-    time_point_sec next_vesting_withdrawal
-        = fc::time_point_sec::maximum(); ///< after every withdrawal this is incremented by 1 week
+    asset vesting_withdraw_rate =       asset(0, VESTS_SYMBOL); ///< at the time this is updated it can be at most vesting_shares/104
+    time_point_sec next_vesting_withdrawal = fc::time_point_sec::maximum(); ///< after every withdrawal this is incremented by 1 week
     share_type withdrawn = 0; /// Track how many shares have been withdrawn
     share_type to_withdraw = 0; /// Might be able to look this up with operation history.
     uint16_t withdraw_routes = 0;
 
-    fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes; // = std::vector<share_type>(
-    // SCORUM_MAX_PROXY_RECURSION_DEPTH, 0 );
-    // ///< the total VFS votes proxied to
-    // this account
+    fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes; // = std::vector<share_type>(SCORUM_MAX_PROXY_RECURSION_DEPTH, 0 );
+                                                                               ///< the total VFS votes proxied to this account
 
     uint16_t witnesses_voted_for = 0;
 
@@ -104,6 +95,7 @@ public:
         return vesting_shares - delegated_vesting_shares + received_vesting_shares;
     }
 };
+// clang-format on
 
 class account_authority_object : public object<account_authority_object_type, account_authority_object>
 {
@@ -518,7 +510,6 @@ FC_REFLECT( scorum::chain::account_object,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)
              (vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)

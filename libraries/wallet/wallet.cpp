@@ -212,8 +212,7 @@ public:
             = fc::get_approximate_relative_time_string(dynamic_props.time, time_point_sec(time_point::now()), " old");
         result["participation"] = (100 * dynamic_props.recent_slots_filled.popcount()) / 128.0;
         result["account_creation_fee"] = _remote_db->get_chain_properties().account_creation_fee;
-        result["post_reward_fund"]
-            = fc::variant(_remote_db->get_reward_fund(SCORUM_POST_REWARD_FUND_NAME)).get_object();
+        result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund()).get_object();
         return result;
     }
 
@@ -2032,24 +2031,6 @@ annotated_signed_transaction wallet_api::decline_voting_rights(const std::string
     decline_voting_rights_operation op;
     op.account = account;
     op.decline = decline;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
-
-    return my->sign_transaction(tx, broadcast);
-}
-
-annotated_signed_transaction wallet_api::claim_reward_balance(const std::string& account,
-                                                              const asset& reward_scorum,
-                                                              const asset& reward_vests,
-                                                              bool broadcast)
-{
-    FC_ASSERT(!is_locked());
-    claim_reward_balance_operation op;
-    op.account = account;
-    op.reward_scorum = reward_scorum;
-    op.reward_vests = reward_vests;
 
     signed_transaction tx;
     tx.operations.push_back(op);
