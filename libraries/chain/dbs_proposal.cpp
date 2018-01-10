@@ -91,7 +91,7 @@ std::vector<proposal_object::cref_type> dbs_proposal::get_proposals()
 {
     std::vector<proposal_object::cref_type> ret;
 
-    const auto& idx = db_impl().get_index<proposal_object_index>().indicies();
+    const auto& idx = db_impl().get_index<proposal_object_index>().indices();
 
     for (auto it = idx.cbegin(); it != idx.end(); ++it)
     {
