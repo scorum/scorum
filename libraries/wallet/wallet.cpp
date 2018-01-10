@@ -723,7 +723,7 @@ public:
             asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
 
-            p.create_table(16, 20, 10, 20);
+            FC_ASSERT(p.create_table(16, 20, 10, 20));
 
             for (const auto& a : accounts)
             {
@@ -748,7 +748,7 @@ public:
 
             printer p;
 
-            p.create_table(16, 20, 10, 20);
+            FC_ASSERT(p.create_table(16, 20, 10, 20));
 
             p.print_line();
             p.print_cell("Scorums:");
@@ -763,7 +763,7 @@ public:
 
             printer p;
 
-            p.create_table(5, 10, 15, 20, 50);
+            FC_ASSERT(p.create_table(5, 10, 15, 20, 50));
 
             p.print_cell("#");
             p.print_cell("BLOCK #");
@@ -790,7 +790,7 @@ public:
 
             printer p;
 
-            p.create_table(20, 20, 8, 9);
+            FC_ASSERT(p.create_table(20, 20, 8, 9));
 
             p.print_cell("From");
             p.print_cell("To");
