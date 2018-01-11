@@ -91,8 +91,6 @@ void database::update_witness_schedule()
             _db.modify(*itr, [&](witness_object& wo) { wo.schedule = witness_object::top20; });
         }
 
-        auto num_elected = active_witnesses.size();
-
         /// Add the running witnesses in the lead
         fc::uint128 new_virtual_time = wso.current_virtual_time;
         const auto& schedule_idx = _db.get_index<witness_index>().indices().get<by_schedule_time>();
@@ -116,8 +114,6 @@ void database::update_witness_schedule()
                 ++witness_count;
             }
         }
-
-        auto num_timeshare = active_witnesses.size() - num_elected;
 
         /// Update virtual schedule of processed witnesses
         bool reset_virtual_time = false;
@@ -144,13 +140,12 @@ void database::update_witness_schedule()
 
         size_t expected_active_witnesses = std::min(size_t(SCORUM_MAX_WITNESSES), widx.size());
 
-        dlog("expected_active_witnesses = ${eaw}, active_witnesses = ${aw}",
-             ("eaw", expected_active_witnesses)("aw", active_witnesses.size()));
-
-        FC_ASSERT(active_witnesses.size() == expected_active_witnesses,
-                  "number of active witnesses does not equal expected_active_witnesses=${expected_active_witnesses}",
-                  ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
-                      "expected_active_witnesses", expected_active_witnesses));
+        FC_ASSERT(
+            active_witnesses.size() == expected_active_witnesses, "number of active witnesses (${active_witnesses}) "
+                                                                  "does not equal expected_active_witnesses "
+                                                                  "(${expected_active_witnesses})",
+            ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
+                "active_witnesses", active_witnesses.size())("expected_active_witnesses", expected_active_witnesses));
 
         auto majority_version = wso.majority_version;
 
@@ -226,8 +221,6 @@ void database::update_witness_schedule()
             _db.modify(_db.get_hardfork_property_object(),
                        [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
         }
-
-        assert(num_elected + num_timeshare == active_witnesses.size());
 
         _db.modify(wso, [&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)

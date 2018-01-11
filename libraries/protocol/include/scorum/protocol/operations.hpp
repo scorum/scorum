@@ -43,7 +43,6 @@ typedef fc::static_variant<vote_operation,
 
                            custom_binary_operation,
                            decline_voting_rights_operation,
-                           claim_reward_balance_operation,
                            delegate_vesting_shares_operation,
                            account_create_with_delegation_operation,
 
@@ -51,6 +50,9 @@ typedef fc::static_variant<vote_operation,
                            close_budget_operation,
 
                            account_create_by_committee_operation,
+
+                           proposal_vote_operation,
+                           proposal_create_operation,
 
                            atomicswap_initiate_operation,
                            atomicswap_redeem_operation,

@@ -152,7 +152,9 @@ public:
         _wallet.ws_server = initial_data.ws_server;
         _wallet.ws_user = initial_data.ws_user;
         _wallet.ws_password = initial_data.ws_password;
+        _wallet.chain_id = initial_data.chain_id;
     }
+
     virtual ~wallet_api_impl()
     {
     }
@@ -217,8 +219,7 @@ public:
             = fc::get_approximate_relative_time_string(dynamic_props.time, time_point_sec(time_point::now()), " old");
         result["participation"] = (100 * dynamic_props.recent_slots_filled.popcount()) / 128.0;
         result["account_creation_fee"] = _remote_db->get_chain_properties().account_creation_fee;
-        result["post_reward_fund"]
-            = fc::variant(_remote_db->get_reward_fund(SCORUM_POST_REWARD_FUND_NAME)).get_object();
+        result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund()).get_object();
         return result;
     }
 
@@ -1069,7 +1070,7 @@ account_api_obj wallet_api::get_account(const std::string& account_name) const
 
 account_balance_info_api_obj wallet_api::get_account_balance(const std::string& account_name) const
 {
-    return account_balance_info_api_obj(my->get_account(account_name));
+    return my->get_account(account_name);
 }
 
 bool wallet_api::import_key(const std::string& wif_key)
@@ -2182,24 +2183,6 @@ annotated_signed_transaction wallet_api::decline_voting_rights(const std::string
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::claim_reward_balance(const std::string& account,
-                                                              const asset& reward_scorum,
-                                                              const asset& reward_vests,
-                                                              bool broadcast)
-{
-    FC_ASSERT(!is_locked());
-    claim_reward_balance_operation op;
-    op.account = account;
-    op.reward_scorum = reward_scorum;
-    op.reward_vests = reward_vests;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
-
-    return my->sign_transaction(tx, broadcast);
-}
-
 std::map<uint32_t, applied_operation>
 wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
 {
@@ -2568,6 +2551,70 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     tx.validate();
 
     return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction
+wallet_api::vote_for_committee_proposal(const std::string& voting_account, int64_t proposal_id, bool broadcast)
+{
+    proposal_vote_operation op;
+    op.voting_account = voting_account;
+    op.proposal_id = proposal_id;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::invite_new_committee_member(const std::string& inviter,
+                                                                     const std::string& invitee,
+                                                                     uint32_t lifetime_sec,
+                                                                     bool broadcast)
+{
+    using scorum::protocol::proposal_action;
+
+    proposal_create_operation op;
+    op.creator = inviter;
+    op.committee_member = invitee;
+    op.action = proposal_action::invite;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::dropout_committee_member(const std::string& initiator,
+                                                                  const std::string& dropout,
+                                                                  uint32_t lifetime_sec,
+                                                                  bool broadcast)
+{
+    using scorum::protocol::proposal_action;
+
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.committee_member = dropout;
+    op.action = proposal_action::dropout;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+std::set<account_name_type> wallet_api::list_committee(const std::string& lowerbound, uint32_t limit)
+{
+    return my->_remote_db->lookup_committee_accounts(lowerbound, limit);
+}
+
+std::vector<proposal_api_obj> wallet_api::list_proposals()
+{
+    return my->_remote_db->lookup_proposals();
 }
 
 atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,

@@ -8,6 +8,8 @@
 #include <scorum/chain/transaction_object.hpp>
 #include <scorum/chain/witness_objects.hpp>
 #include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/atomicswap_objects.hpp>
 #include <scorum/protocol/transaction.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -175,9 +177,6 @@ struct account_api_obj
         , voting_power(a.voting_power)
         , last_vote_time(a.last_vote_time)
         , balance(a.balance)
-        , reward_scorum_balance(a.reward_scorum_balance)
-        , reward_vesting_balance(a.reward_vesting_balance)
-        , reward_vesting_scorum(a.reward_vesting_scorum)
         , curation_rewards(a.curation_rewards)
         , posting_rewards(a.posting_rewards)
         , vesting_shares(a.vesting_shares)
@@ -261,10 +260,6 @@ struct account_api_obj
     time_point_sec last_vote_time;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-
-    asset reward_scorum_balance = asset(0, SCORUM_SYMBOL);
-    asset reward_vesting_balance = asset(0, VESTS_SYMBOL);
-    asset reward_vesting_scorum = asset(0, SCORUM_SYMBOL);
 
     share_type curation_rewards;
     share_type posting_rewards;
@@ -353,6 +348,36 @@ struct account_recovery_request_api_obj
 
 struct account_history_api_obj
 {
+};
+
+struct proposal_api_obj
+{
+    proposal_api_obj(const proposal_object& p)
+        : id(p.id)
+        , creator(p.creator)
+        , data(p.data)
+        , expiration(p.expiration)
+        , quorum_percent(p.quorum_percent)
+        , action(p.action)
+        , voted_accounts(p.voted_accounts)
+    {
+    }
+
+    proposal_api_obj()
+    {
+    }
+
+    proposal_object::id_type id;
+
+    account_name_type creator;
+    fc::variant data;
+
+    fc::time_point_sec expiration;
+
+    uint64_t quorum_percent = 0;
+
+    scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
+    flat_set<account_name_type> voted_accounts;
 };
 
 struct witness_api_obj
@@ -604,7 +629,6 @@ FC_REFLECT( scorum::app::account_api_obj,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
              (posting_rewards)
@@ -651,6 +675,16 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (last_work)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
+          )
+
+FC_REFLECT( scorum::app::proposal_api_obj,
+            (id)
+            (creator)
+            (expiration)
+            (voted_accounts)
+            (quorum_percent)
+            (action)
+            (data)
           )
 
 FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),

@@ -47,7 +47,7 @@ struct database_fixture
     void open_database();
 
     void generate_block(uint32_t skip = 0,
-                        const private_key_type& key = generate_private_key("init_key"),
+                        const private_key_type& key = generate_private_key(TEST_INIT_KEY),
                         int miss_blocks = 0);
 
     /**

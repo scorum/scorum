@@ -336,16 +336,6 @@ void decline_voting_rights_operation::validate() const
     validate_account_name(account);
 }
 
-void claim_reward_balance_operation::validate() const
-{
-    validate_account_name(account);
-    FC_ASSERT(is_asset_type(reward_scorum, SCORUM_SYMBOL), "Reward Scorum must be SCR");
-    FC_ASSERT(is_asset_type(reward_vests, VESTS_SYMBOL), "Reward Scorum must be SP");
-    FC_ASSERT(reward_scorum.amount >= 0, "Cannot claim a negative amount");
-    FC_ASSERT(reward_vests.amount >= 0, "Cannot claim a negative amount");
-    FC_ASSERT(reward_scorum.amount > 0 || reward_vests.amount > 0, "Must claim something.");
-}
-
 void delegate_vesting_shares_operation::validate() const
 {
     validate_account_name(delegator);
@@ -391,5 +381,19 @@ void atomicswap_refund_operation::validate() const
     validate_account_name(initiator);
     atomicswap::validate_secret_hash(secret_hash);
 }
+
+void proposal_vote_operation::validate() const
+{
+    validate_account_name(voting_account);
 }
-} // scorum::protocol
+
+void proposal_create_operation::validate() const
+{
+    validate_account_name(creator);
+    validate_account_name(committee_member);
+
+    FC_ASSERT(action.valid(), "Proposal is not set.");
+}
+
+} // namespace protocol
+} // namespace scorum

@@ -965,11 +965,6 @@ public:
 
     annotated_signed_transaction decline_voting_rights(const std::string& account, bool decline, bool broadcast);
 
-    annotated_signed_transaction claim_reward_balance(const std::string& account,
-                                                      const asset& reward_scorum,
-                                                      const asset& reward_vests,
-                                                      bool broadcast);
-
     /**
      *  Gets the budget information for all my budgets (list_my_accounts)
      */
@@ -1006,6 +1001,31 @@ public:
      *  Closing the budget. The budget rest is returned to the owner's account
      */
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
+
+    /**
+     * Vote for registration committee proposal
+     */
+    annotated_signed_transaction
+    vote_for_committee_proposal(const std::string& account_to_vote_with, int64_t proposal_id, bool broadcast);
+
+    /**
+     * Create proposal for inviting new member in to the registration commmittee
+     */
+    annotated_signed_transaction invite_new_committee_member(const std::string& inviter,
+                                                             const std::string& invitee,
+                                                             uint32_t lifetime_sec,
+                                                             bool broadcast);
+
+    /**
+     * Create proposal for droping out registration committee member
+     */
+    annotated_signed_transaction dropout_committee_member(const std::string& initiator,
+                                                          const std::string& dropout,
+                                                          uint32_t lifetime_sec,
+                                                          bool broadcast);
+
+    std::set<account_name_type> list_committee(const std::string& lowerbound, uint32_t limit);
+    std::vector<proposal_api_obj> list_proposals();
 
     /** Initiating Atomic Swap transfer from initiator to participant.
      *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout.
@@ -1150,6 +1170,8 @@ FC_API( scorum::wallet::wallet_api,
         (list_my_accounts)
         (list_accounts)
         (list_witnesses)
+        (list_committee)
+        (list_proposals)
         (get_witness)
         (get_account)
         (get_account_balance)
@@ -1198,9 +1220,11 @@ FC_API( scorum::wallet::wallet_api,
         (get_encrypted_memo)
         (decrypt_memo)
         (decline_voting_rights)
-        (claim_reward_balance)
         (create_budget)
         (close_budget)
+        (vote_for_committee_proposal)
+        (invite_new_committee_member)
+        (dropout_committee_member)
 
         //Atomic Swap API
         (atomicswap_initiate)

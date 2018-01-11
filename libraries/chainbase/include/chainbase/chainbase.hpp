@@ -219,6 +219,11 @@ public:
         return _indices;
     }
 
+    int64_t revision() const
+    {
+        return _revision;
+    }
+
     class session
     {
     public:
@@ -301,15 +306,6 @@ public:
         {
             return session(*this, -1);
         }
-    }
-
-    const index_type& indicies() const
-    {
-        return _indices;
-    }
-    int64_t revision() const
-    {
-        return _revision;
     }
 
     /**
@@ -960,7 +956,7 @@ public:
     }
 
     template <typename MultiIndexType, typename ByIndex>
-    auto get_index() const -> decltype(((generic_index<MultiIndexType>*)(nullptr))->indicies().template get<ByIndex>())
+    auto get_index() const -> decltype(((generic_index<MultiIndexType>*)(nullptr))->indices().template get<ByIndex>())
     {
         CHAINBASE_REQUIRE_READ_LOCK("get_index", typename MultiIndexType::value_type);
         typedef generic_index<MultiIndexType> index_type;
@@ -972,7 +968,7 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return index_type_ptr(_index_map[index_type::value_type::type_id]->get())->indicies().template get<ByIndex>();
+        return index_type_ptr(_index_map[index_type::value_type::type_id]->get())->indices().template get<ByIndex>();
     }
 
     template <typename MultiIndexType> generic_index<MultiIndexType>& get_mutable_index()
@@ -995,7 +991,7 @@ public:
     {
         CHAINBASE_REQUIRE_READ_LOCK("find", ObjectType);
         typedef typename get_index_type<ObjectType>::type index_type;
-        const auto& idx = get_index<index_type>().indicies().template get<IndexedByType>();
+        const auto& idx = get_index<index_type>().indices().template get<IndexedByType>();
         auto itr = idx.find(std::forward<CompatibleKey>(key));
         if (itr == idx.end())
             return nullptr;
@@ -1124,7 +1120,7 @@ private:
     bip::file_lock _flock;
 
     /**
-     * This is a sparse list of known indicies kept to accelerate creation of undo sessions
+     * This is a sparse list of known indices kept to accelerate creation of undo sessions
      */
     std::vector<abstract_index*> _index_list;
 

@@ -3,6 +3,8 @@
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
 
+#include <scorum/protocol/types.hpp>
+
 #include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
@@ -735,19 +737,6 @@ struct decline_voting_rights_operation : public base_operation
     void validate() const;
 };
 
-struct claim_reward_balance_operation : public base_operation
-{
-    account_name_type account;
-    asset reward_scorum = asset(0, SCORUM_SYMBOL);
-    asset reward_vests = asset(0, VESTS_SYMBOL);
-
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(account);
-    }
-    void validate() const;
-};
-
 /**
  * Delegate vesting shares from one account to the other. The vesting shares are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
@@ -795,6 +784,19 @@ struct close_budget_operation : public base_operation
     {
         a.insert(owner);
     }
+};
+
+struct proposal_vote_operation : public base_operation
+{
+    account_name_type voting_account;
+    int64_t proposal_id;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(voting_account);
+    }
+
+    void validate() const;
 };
 
 struct atomicswap_initiate_operation : public base_operation
@@ -849,6 +851,24 @@ struct atomicswap_refund_operation : public base_operation
     {
         a.insert(participant);
     }
+};
+
+struct proposal_create_operation : public base_operation
+{
+    typedef scorum::protocol::proposal_action action_t;
+
+    account_name_type creator;
+    account_name_type committee_member;
+
+    fc::optional<fc::enum_type<uint8_t, action_t>> action;
+    uint32_t lifetime_sec = 0;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+
+    void validate() const;
 };
 
 } // namespace protocol
@@ -926,7 +946,6 @@ FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_acco
 FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) )
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
-FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_vests) )
 FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
@@ -935,5 +954,15 @@ FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
+
+FC_REFLECT( scorum::protocol::proposal_vote_operation,
+            (voting_account)
+            (proposal_id))
+
+FC_REFLECT( scorum::protocol::proposal_create_operation,
+            (creator)
+            (committee_member)
+            (action)
+            (lifetime_sec))
 
 // clang-format on

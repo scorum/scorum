@@ -43,7 +43,7 @@ SCORUM_TEST_CASE(create_check)
     using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
     const committee_members& members = registration_committee_service.get_committee();
 
-    BOOST_REQUIRE_EQUAL(members.size(), 2);
+    BOOST_REQUIRE_EQUAL(members.size(), size_t(2));
 
     const char* input[] = { "alice", "bob" };
     std::size_t ci = 0;

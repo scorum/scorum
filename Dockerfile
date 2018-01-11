@@ -98,6 +98,9 @@ RUN \
         .. \
     && \
     make -j$(nproc) && \
+    ./tests/chain_test && \
+    ./tests/wallet_tests && \
+    ./programs/util/test_fixed_string && \
     make install && \
     cd .. && \
     ( /usr/local/scorumd-default/bin/scorumd --version \

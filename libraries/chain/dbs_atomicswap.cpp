@@ -19,7 +19,7 @@ dbs_atomicswap::atomicswap_contracts_refs_type dbs_atomicswap::get_contracts(con
     atomicswap_contracts_refs_type ret;
 
     const auto& idx
-        = db_impl().get_index<atomicswap_contract_index>().indicies().get<by_owner_name>().equal_range(owner.name);
+        = db_impl().get_index<atomicswap_contract_index>().indices().get<by_owner_name>().equal_range(owner.name);
     for (auto it = idx.first; it != idx.second; ++it)
     {
         ret.push_back(std::cref(*it));
@@ -141,7 +141,7 @@ void dbs_atomicswap::check_contracts_expiration()
 {
     atomicswap_contracts_refs_type contracts;
 
-    const auto& idx = db_impl().get_index<atomicswap_contract_index>().indicies().get<by_owner_name>();
+    const auto& idx = db_impl().get_index<atomicswap_contract_index>().indices().get<by_owner_name>();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)
     {
         contracts.push_back(std::cref(*it));
@@ -169,7 +169,7 @@ void dbs_atomicswap::check_contracts_expiration()
 std::size_t dbs_atomicswap::_contracts_per_recipient(const account_name_type& owner,
                                                      const account_name_type& recipient) const
 {
-    return db_impl().get_index<atomicswap_contract_index>().indicies().get<by_recipient_name>().count(recipient);
+    return db_impl().get_index<atomicswap_contract_index>().indices().get<by_recipient_name>().count(recipient);
 }
 
 } // namespace chain

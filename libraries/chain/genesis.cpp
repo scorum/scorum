@@ -91,7 +91,7 @@ void db_genesis::init_accounts()
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
         account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
-                                               account.recovery_account, "{created_at: 'GENESIS'}");
+                                               account.recovery_account, "{\"created_at\": \"GENESIS\"}");
     }
 }
 
@@ -132,22 +132,15 @@ void db_genesis::init_global_property_object()
         gpo.total_supply
             = gpo.accounts_current_supply + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
         gpo.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
-
-        gpo.total_reward_fund_scorum = asset(0, SCORUM_SYMBOL);
         gpo.total_reward_shares2 = 0;
     });
 }
 
 void db_genesis::init_rewards()
 {
-    const auto& gpo = _db.get_dynamic_global_properties();
-
-    auto post_rf = _db.create<reward_fund_object>([&](reward_fund_object& rfo) {
-        rfo.name = SCORUM_POST_REWARD_FUND_NAME;
+    const auto& post_rf = _db.create<reward_fund_object>([&](reward_fund_object& rfo) {
         rfo.last_update = _db.head_block_time();
-        rfo.percent_curation_rewards = SCORUM_1_PERCENT * 25;
-        rfo.percent_content_rewards = SCORUM_100_PERCENT;
-        rfo.reward_balance = gpo.total_reward_fund_scorum;
+        rfo.reward_balance = asset(0, SCORUM_SYMBOL);
         rfo.author_reward_curve = curve_id::linear;
         rfo.curation_reward_curve = curve_id::square_root;
     });

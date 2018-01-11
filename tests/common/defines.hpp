@@ -9,7 +9,9 @@
 #define TEST_REWARD_INITIAL_SUPPLY                                                                                     \
     asset(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS* SCORUM_BLOCKS_PER_DAY * 10, SCORUM_SYMBOL)
 #define TEST_GENESIS_TIMESTAMP (1431700000)
+
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
+#define TEST_INIT_KEY TEST_INIT_DELEGATE_NAME
 
 #define PUSH_TX scorum::chain::test::_push_transaction
 
@@ -49,6 +51,18 @@
       std::cout << "SCORUM_REQUIRE_THROW end "          \
          << req_throw_info << std::endl;                  \
 }*/
+
+#define SCORUM_CHECK_EXCEPTION(test_code, exception, message)                                                          \
+    try                                                                                                                \
+    {                                                                                                                  \
+        test_code;                                                                                                     \
+    }                                                                                                                  \
+    catch (exception & e)                                                                                              \
+    {                                                                                                                  \
+        BOOST_REQUIRE(e.get_log().size() == 1);                                                                        \
+        bool check_exception_message = e.get_log().front().get_message().find(message) != std::string::npos;           \
+        BOOST_CHECK(check_exception_message);                                                                          \
+    }
 
 #define SCORUM_REQUIRE_THROW(expr, exc_type) BOOST_REQUIRE_THROW(expr, exc_type);
 

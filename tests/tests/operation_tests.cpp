@@ -856,9 +856,8 @@ BOOST_AUTO_TEST_CASE(vote_apply)
             itr = vote_idx.find(std::make_tuple(bob_comment.id, alice.id));
 
             BOOST_REQUIRE(db.get_account("alice").voting_power
-                          == old_voting_power
-                              - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
-                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
+                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
+                                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
             BOOST_REQUIRE(bob_comment.net_rshares.value
                           == alice.vesting_shares.amount.value
                               * (old_voting_power - db.get_account("alice").voting_power) / SCORUM_100_PERCENT);
@@ -3943,62 +3942,6 @@ BOOST_AUTO_TEST_CASE(account_bandwidth)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(claim_reward_balance_validate)
-{
-    try
-    {
-        claim_reward_balance_operation op;
-        op.account = "alice";
-        op.reward_scorum = ASSET("0.000 SCR");
-        op.reward_vests = ASSET("0.000000 SP");
-
-        BOOST_TEST_MESSAGE("Testing all 0 amounts");
-        SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("Testing single reward claims");
-        op.reward_scorum.amount = 1000;
-        op.validate();
-
-        BOOST_TEST_MESSAGE("Testing wrong SCR symbol");
-        op.reward_scorum = ASSET("1.000 WRONG");
-        SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("Testing wrong SP symbol");
-        op.reward_vests = ASSET("1.000000 WRONG");
-        SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("Testing a single negative amount");
-        op.reward_scorum.amount = -1000;
-        SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
-    }
-    FC_LOG_AND_RETHROW()
-}
-
-BOOST_AUTO_TEST_CASE(claim_reward_balance_authorities)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Testing: decline_voting_rights_authorities");
-
-        claim_reward_balance_operation op;
-        op.account = "alice";
-
-        flat_set<account_name_type> auths;
-        flat_set<account_name_type> expected;
-
-        op.get_required_owner_authorities(auths);
-        BOOST_REQUIRE(auths == expected);
-
-        op.get_required_active_authorities(auths);
-        BOOST_REQUIRE(auths == expected);
-
-        expected.insert("alice");
-        op.get_required_posting_authorities(auths);
-        BOOST_REQUIRE(auths == expected);
-    }
-    FC_LOG_AND_RETHROW()
-}
-
 BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
 {
     try
@@ -4154,10 +4097,9 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient fee fo reach target delegation.");
-        fund("alice",
-             asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
-                       * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                   SCORUM_SYMBOL));
+        fund("alice", asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                            SCORUM_SYMBOL));
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         validate_database();
@@ -4179,88 +4121,6 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_REQUIRE(itr->delegator == "alice");
         BOOST_REQUIRE(itr->vesting_shares == del_amt);
         BOOST_REQUIRE(itr->expiration == exp_time);
-        validate_database();
-    }
-    FC_LOG_AND_RETHROW()
-}
-
-BOOST_AUTO_TEST_CASE(claim_reward_balance_apply)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Testing: claim_reward_balance_apply");
-        BOOST_TEST_MESSAGE("--- Setting up test state");
-
-        ACTORS((alice))
-        generate_block();
-        generate_blocks(SCORUM_BLOCKS_PER_HOUR);
-
-        db_plugin->debug_update([](database& db) {
-            db.modify(db.get_account("alice"), [](account_object& a) {
-                a.reward_scorum_balance = ASSET("10.000 SCR");
-                a.reward_vesting_balance = ASSET("10.000000 SP");
-                a.reward_vesting_scorum = ASSET("10.000 SCR");
-            });
-
-            db.modify(db.get_dynamic_global_properties(), [](dynamic_global_property_object& gpo) {
-                gpo.total_supply += ASSET("20.000 SCR");
-                gpo.accounts_current_supply += ASSET("20.000 SCR");
-                gpo.pending_rewarded_vesting_shares += ASSET("10.000000 SP");
-                gpo.pending_rewarded_vesting_scorum += ASSET("10.000 SCR");
-            });
-        });
-
-        generate_block();
-        validate_database();
-
-        auto alice_scorum = db.get_account("alice").balance;
-        auto alice_vests = db.get_account("alice").vesting_shares;
-
-        BOOST_TEST_MESSAGE("--- Attempting to claim more SCORUM than exists in the reward balance.");
-
-        claim_reward_balance_operation op;
-        signed_transaction tx;
-
-        op.account = "alice";
-        op.reward_scorum = ASSET("20.000 SCR");
-        op.reward_vests = ASSET("0.000000 SP");
-
-        tx.operations.push_back(op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("--- Claiming a partial reward balance");
-
-        op.reward_scorum = ASSET("0.000 SCR");
-        op.reward_vests = ASSET("5.000000 SP");
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_account("alice").balance == alice_scorum + op.reward_scorum);
-        BOOST_REQUIRE(db.get_account("alice").reward_scorum_balance == ASSET("10.000 SCR"));
-        BOOST_REQUIRE(db.get_account("alice").vesting_shares == alice_vests + op.reward_vests);
-        BOOST_REQUIRE(db.get_account("alice").reward_vesting_balance == ASSET("5.000000 SP"));
-        BOOST_REQUIRE(db.get_account("alice").reward_vesting_scorum == ASSET("5.000 SCR"));
-        validate_database();
-
-        alice_vests += op.reward_vests;
-
-        BOOST_TEST_MESSAGE("--- Claiming the full reward balance");
-
-        op.reward_scorum = ASSET("10.000 SCR");
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_account("alice").balance == alice_scorum + op.reward_scorum);
-        BOOST_REQUIRE(db.get_account("alice").reward_scorum_balance == ASSET("0.000 SCR"));
-        BOOST_REQUIRE(db.get_account("alice").vesting_shares == alice_vests + op.reward_vests);
-        BOOST_REQUIRE(db.get_account("alice").reward_vesting_balance == ASSET("0.000000 SP"));
-        BOOST_REQUIRE(db.get_account("alice").reward_vesting_scorum == ASSET("0.000 SCR"));
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -4653,6 +4513,29 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_validate)
     FC_LOG_AND_RETHROW()
 }
 
+struct comment_benefactor_reward_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+
+    std::map<account_name_type, asset> reward_map;
+
+    comment_benefactor_reward_visitor(database& db)
+        : _db(db)
+    {
+    }
+
+    void operator()(const comment_benefactor_reward_operation& op)
+    {
+        reward_map.insert(std::make_pair(op.benefactor, op.reward));
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
 BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
 {
     try
@@ -4747,20 +4630,32 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
 
         generate_blocks(db.get_comment("alice", string("test")).cashout_time - SCORUM_BLOCK_INTERVAL);
 
-        db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_dynamic_global_properties(), [=](dynamic_global_property_object& gpo) {
-                gpo.accounts_current_supply -= gpo.total_reward_fund_scorum;
-                gpo.total_reward_fund_scorum = ASSET("100.000 SCR");
-                gpo.accounts_current_supply += gpo.total_reward_fund_scorum;
-            });
-        });
+        BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, ASSET("0.000 SCR"));
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, ASSET("0.000 SCR"));
+
+        asset bob_vesting_before = db.get_account("bob").vesting_shares;
+        asset sam_vesting_before = db.get_account("sam").vesting_shares;
+
+        comment_benefactor_reward_visitor visitor(db);
+
+        db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
 
         generate_block();
 
-        BOOST_REQUIRE(db.get_account("bob").reward_scorum_balance == ASSET("0.000 SCR"));
-        BOOST_REQUIRE(db.get_account("bob").reward_vesting_scorum.amount
-                          + db.get_account("sam").reward_vesting_scorum.amount
-                      == db.get_comment("alice", string("test")).beneficiary_payout_value.amount);
+        validate_database();
+
+        BOOST_REQUIRE_EQUAL(visitor.reward_map.size(), size_t(2));
+
+        BOOST_REQUIRE(visitor.reward_map.find("bob") != visitor.reward_map.end());
+        BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
+
+        BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"], (db.get_account("bob").vesting_shares - bob_vesting_before));
+        BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"], (db.get_account("sam").vesting_shares - sam_vesting_before));
+
+        // clang-format off
+        BOOST_REQUIRE_EQUAL(db.get_comment("alice", string("test")).beneficiary_payout_value * db.get_dynamic_global_properties().get_vesting_share_price(),
+                            (visitor.reward_map["sam"] + visitor.reward_map["bob"] + ASSET("0.000001 SP") /*add this because of operation accuracy*/));
+        // clang-format on
     }
     FC_LOG_AND_RETHROW()
 }

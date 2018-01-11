@@ -4,11 +4,17 @@
 
 #include <scorum/protocol/get_config.hpp>
 
+#include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
+#include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/dbs_registration_committee.hpp>
+#include <scorum/chain/dbs_proposal.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/crypto/hex.hpp>
+#include <fc/container/utils.hpp>
 
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string.hpp>
@@ -19,9 +25,7 @@
 #include <iostream>
 
 #include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_atomicswap.hpp>
-
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace scorum {
@@ -72,6 +76,10 @@ public:
     fc::optional<witness_api_obj> get_witness_by_account(const std::string& account_name) const;
     std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
     uint64_t get_witness_count() const;
+
+    // Committee
+    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+    std::vector<proposal_api_obj> lookup_proposals() const;
 
     // Authority / validation
     std::string get_transaction_hex(const signed_transaction& trx) const;
@@ -297,11 +305,11 @@ scheduled_hardfork database_api::get_next_scheduled_hardfork() const
     });
 }
 
-reward_fund_api_obj database_api::get_reward_fund(const std::string& name) const
+reward_fund_api_obj database_api::get_reward_fund() const
 {
     return my->_db.with_read_lock([&]() {
-        auto fund = my->_db.find<reward_fund_object, by_name>(name);
-        FC_ASSERT(fund != nullptr, "Invalid reward fund name");
+        auto fund = my->_db.find<reward_fund_object>();
+        FC_ASSERT(fund != nullptr, "reward fund object does not exist");
 
         return *fund;
     });
@@ -323,9 +331,8 @@ std::vector<std::set<std::string>> database_api::get_key_references(std::vector<
  */
 std::vector<std::set<std::string>> database_api_impl::get_key_references(std::vector<public_key_type> keys) const
 {
-    FC_ASSERT(false,
-              "database_api::get_key_references has been deprecated. Please use "
-              "account_by_key_api::get_key_references instead.");
+    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
+                     "account_by_key_api::get_key_references instead.");
     std::vector<std::set<std::string>> final_result;
     return final_result;
 }
@@ -673,6 +680,52 @@ uint64_t database_api_impl::get_witness_count() const
     return _db.get_index<witness_index>().indices().size();
 }
 
+std::set<account_name_type> database_api::lookup_committee_accounts(const std::string& lower_bound_name,
+                                                                    uint32_t limit) const
+{
+    return my->_db.with_read_lock([&]() { return my->lookup_committee_accounts(lower_bound_name, limit); });
+}
+
+std::set<account_name_type> database_api_impl::lookup_committee_accounts(const std::string& lower_bound_name,
+                                                                         uint32_t limit) const
+{
+    FC_ASSERT(limit <= 1000);
+
+    auto& committee_service = _db.obtain_service<dbs_registration_committee>();
+    auto committee = committee_service.get_committee();
+
+    std::set<account_name_type> members_by_account_name;
+    for (const registration_committee_member_object& member : committee)
+    {
+        if (member.account >= lower_bound_name)
+        {
+            members_by_account_name.insert(member.account);
+        }
+    }
+
+    fc::limit_left_cut_right(members_by_account_name, limit);
+
+    return members_by_account_name;
+}
+
+std::vector<proposal_api_obj> database_api::lookup_proposals() const
+{
+    return my->_db.with_read_lock([&]() { return my->lookup_proposals(); });
+}
+
+std::vector<proposal_api_obj> database_api_impl::lookup_proposals() const
+{
+    const auto& proposals_by_id = _db.get_index<proposal_object_index>().indices().get<by_id>();
+
+    std::vector<proposal_api_obj> proposals;
+    for (const proposal_api_obj& obj : proposals_by_id)
+    {
+        proposals.push_back(obj);
+    }
+
+    return proposals;
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Authority / validation                                           //
@@ -884,12 +937,12 @@ void database_api::set_pending_payout(discussion& d) const
     {
         d.promoted = asset(itr->promoted_balance, SCORUM_SYMBOL);
     }
-    asset pot = my->_db.get_reward_fund(my->_db.get_comment(d.author, d.permlink)).reward_balance;
-    u256 total_r2 = to256(my->_db.get_reward_fund(my->_db.get_comment(d.author, d.permlink)).recent_claims);
+    asset pot = my->_db.get_reward_fund().reward_balance;
+    u256 total_r2 = to256(my->_db.get_reward_fund().recent_claims);
     if (total_r2 > 0)
     {
         uint128_t vshares;
-        const auto& rf = my->_db.get_reward_fund(my->_db.get_comment(d.author, d.permlink));
+        const auto& rf = my->_db.get_reward_fund();
         vshares = d.net_rshares.value > 0
             ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, rf.author_reward_curve)
             : 0;
@@ -1809,7 +1862,6 @@ state database_api::get_state(std::string path) const
                         case operation::tag<escrow_approve_operation>::value:
                         case operation::tag<escrow_dispute_operation>::value:
                         case operation::tag<escrow_release_operation>::value:
-                        case operation::tag<claim_reward_balance_operation>::value:
                             eacnt.transfer_history[item.first] = item.second;
                             break;
                         case operation::tag<comment_operation>::value:

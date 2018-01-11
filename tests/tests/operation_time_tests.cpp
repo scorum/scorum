@@ -212,8 +212,8 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
 
         // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
-        const auto rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
-        BOOST_REQUIRE(rf.reward_balance == ASSET("0.001 SCR"));
+        const auto& rf = db.get_reward_fund();
+        BOOST_REQUIRE_EQUAL(rf.reward_balance, ASSET("0.001 SCR"));
 
         validate_database();
 
@@ -222,79 +222,101 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
     FC_LOG_AND_RETHROW()
 }
 
-/*
-BOOST_AUTO_TEST_CASE( reward_funds )
+BOOST_AUTO_TEST_CASE(reward_fund)
 {
-   try
-   {
-      BOOST_TEST_MESSAGE( "Testing: reward_funds" );
+    try
+    {
+        BOOST_TEST_MESSAGE("Testing: reward_fund");
 
-      ACTORS( (alice)(bob) )
-      generate_block();
+        ACTORS((alice)(bob))
+        generate_block();
 
-      set_price_feed( price( ASSET( "1.000 SCR" ), ASSET( "1.000 TBD" ) ) );
-      generate_block();
+        const asset account_initial_vest_supply = ASSET("50000.000000 SP");
+        const auto blocks_between_comments = 5;
 
-      comment_operation comment;
-      vote_operation vote;
-      signed_transaction tx;
+        BOOST_REQUIRE_EQUAL(db.get_account("alice").balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(db.get_account("alice").vesting_shares, account_initial_vest_supply);
+        BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares, account_initial_vest_supply);
 
-      comment.author = "alice";
-      comment.permlink = "test";
-      comment.parent_permlink = "test";
-      comment.title = "foo";
-      comment.body = "bar";
-      vote.voter = "alice";
-      vote.author = "alice";
-      vote.permlink = "test";
-      vote.weight = SCORUM_100_PERCENT;
-      tx.operations.push_back( comment );
-      tx.operations.push_back( vote );
-      tx.set_expiration( db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION );
-      tx.sign( alice_private_key, db.get_chain_id() );
-      db.push_transaction( tx, 0 );
+        comment_operation comment;
+        vote_operation vote;
+        signed_transaction tx;
 
-      generate_blocks( 5 );
+        comment.author = "alice";
+        comment.permlink = "test";
+        comment.parent_permlink = "test";
+        comment.title = "foo";
+        comment.body = "bar";
+        vote.voter = "alice";
+        vote.author = "alice";
+        vote.permlink = "test";
+        vote.weight = SCORUM_100_PERCENT;
+        tx.operations.push_back(comment);
+        tx.operations.push_back(vote);
+        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+        tx.sign(alice_private_key, db.get_chain_id());
+        db.push_transaction(tx, 0);
 
-      comment.author = "bob";
-      comment.parent_author = "alice";
-      vote.voter = "bob";
-      vote.author = "bob";
-      tx.clear();
-      tx.operations.push_back( comment );
-      tx.operations.push_back( vote );
-      tx.sign( bob_private_key, db.get_chain_id() );
-      db.push_transaction( tx, 0 );
+        generate_blocks(blocks_between_comments);
 
-      generate_blocks( db.get_comment( "alice", std::string( "test" ) ).cashout_time );
+        comment.author = "bob";
+        comment.parent_author = "alice";
+        vote.voter = "bob";
+        vote.author = "bob";
+        tx.clear();
+        tx.operations.push_back(comment);
+        tx.operations.push_back(vote);
+        tx.sign(bob_private_key, db.get_chain_id());
+        db.push_transaction(tx, 0);
 
-      {
-         const auto& post_rf = db.get< reward_fund_object, by_name >( SCORUM_POST_REWARD_FUND_NAME );
-         const auto& comment_rf = db.get< reward_fund_object, by_name >( SCORUM_COMMENT_REWARD_FUND_NAME );
+        const auto& fund = db.get_reward_fund();
 
-         BOOST_REQUIRE( post_rf.reward_balance.amount == 0 );
-         BOOST_REQUIRE( comment_rf.reward_balance.amount > 0 );
-         BOOST_REQUIRE( db.get_account( "alice" ).reward_sbd_balance.amount > 0 );
-         BOOST_REQUIRE( db.get_account( "bob" ).reward_sbd_balance.amount == 0 );
-         validate_database();
-      }
+        BOOST_REQUIRE_GT(fund.reward_balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), uint64_t(0));
 
-      generate_blocks( db.get_comment( "bob", std::string( "test" ) ).cashout_time );
+        share_type alice_comment_net_rshares = db.get_comment("alice", std::string("test")).net_rshares;
+        share_type bob_comment_net_rshares = db.get_comment("bob", std::string("test")).net_rshares;
 
-      {
-         const auto& post_rf = db.get< reward_fund_object, by_name >( SCORUM_POST_REWARD_FUND_NAME );
-         const auto& comment_rf = db.get< reward_fund_object, by_name >( SCORUM_COMMENT_REWARD_FUND_NAME );
+        {
+            generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
 
-         BOOST_REQUIRE( post_rf.reward_balance.amount > 0 );
-         BOOST_REQUIRE( comment_rf.reward_balance.amount == 0 );
-         BOOST_REQUIRE( db.get_account( "alice" ).reward_sbd_balance.amount > 0 );
-         BOOST_REQUIRE( db.get_account( "bob" ).reward_sbd_balance.amount > 0 );
-         validate_database();
-      }
-   }
-   FC_LOG_AND_RETHROW()
+            BOOST_REQUIRE_EQUAL(fund.reward_balance, ASSET("0.000 SCR"));
+            BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
+
+            // clang-format off
+            BOOST_REQUIRE_GT   (db.get_account("alice").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(db.get_account("alice").vesting_shares,
+                                account_initial_vest_supply + db.get_account("alice").balance * db.get_dynamic_global_properties().get_vesting_share_price());
+
+            BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares,
+                                account_initial_vest_supply + db.get_account("bob").balance * db.get_dynamic_global_properties().get_vesting_share_price());
+            // clang-format on
+
+            validate_database();
+        }
+
+        {
+            generate_blocks(blocks_between_comments);
+
+            // clang-format off
+            for (auto i=0; i<blocks_between_comments; ++i)
+            {
+                alice_comment_net_rshares -= alice_comment_net_rshares * SCORUM_BLOCK_INTERVAL / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
+            }
+            BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
+            BOOST_REQUIRE_GT(fund.reward_balance, ASSET("0.000 SCR"));
+
+            BOOST_REQUIRE_GT(db.get_account("alice").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_GT(db.get_account("bob").vesting_shares, account_initial_vest_supply);
+            // clang-format on
+
+            validate_database();
+        }
+    }
+    FC_LOG_AND_RETHROW()
 }
-*/
 
 BOOST_AUTO_TEST_CASE(recent_claims_decay)
 {
@@ -325,9 +347,8 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto alice_vshares = util::evaluate_reward_curve(
-            db.get_comment("alice", std::string("test")).net_rshares.value,
-            db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME).author_reward_curve);
+        auto alice_vshares = util::evaluate_reward_curve(db.get_comment("alice", std::string("test")).net_rshares.value,
+                                                         db.get_reward_fund().author_reward_curve);
 
         generate_blocks(5);
 
@@ -343,23 +364,22 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
 
         {
-            const auto& post_rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+            const auto& post_rf = db.get_reward_fund();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
             validate_database();
         }
 
         auto bob_cashout_time = db.get_comment("bob", std::string("test")).cashout_time;
-        auto bob_vshares = util::evaluate_reward_curve(
-            db.get_comment("bob", std::string("test")).net_rshares.value,
-            db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME).author_reward_curve);
+        auto bob_vshares = util::evaluate_reward_curve(db.get_comment("bob", std::string("test")).net_rshares.value,
+                                                       db.get_reward_fund().author_reward_curve);
 
         generate_block();
 
         while (db.head_block_time() < bob_cashout_time)
         {
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
-            const auto& post_rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+            const auto& post_rf = db.get_reward_fund();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
 
@@ -368,7 +388,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
 
         {
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
-            const auto& post_rf = db.get<reward_fund_object, by_name>(SCORUM_POST_REWARD_FUND_NAME);
+            const auto& post_rf = db.get_reward_fund();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares + bob_vshares);
             validate_database();

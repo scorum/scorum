@@ -22,8 +22,7 @@ protected:
     explicit dbs_registration_committee(database& db);
 
 public:
-    using registration_committee_member_refs_type
-        = std::vector<std::reference_wrapper<const registration_committee_member_object>>;
+    using registration_committee_member_refs_type = std::vector<registration_committee_member_object::cref_type>;
 
     registration_committee_member_refs_type get_committee() const;
 
@@ -40,12 +39,19 @@ public:
 
     bool member_exists(const account_name_type&) const;
 
+    uint64_t quorum_votes(uint64_t quorum_percent);
+
 private:
-    uint64_t _get_member_count() const;
+    uint64_t _get_members_count() const;
 
     const registration_committee_member_object& _add_member(const account_object&);
 
     void _exclude_member(const account_object&);
 };
+
+namespace utils {
+uint64_t get_quorum(size_t members_count, uint64_t percent);
+} // namespace utils
+
 } // namespace chain
 } // namespace scorum

@@ -20,6 +20,11 @@ dbservice& dbs_base::db()
     return static_cast<dbservice&>(_db_core);
 }
 
+fc::time_point_sec dbs_base::head_block_time()
+{
+    return db_impl().head_block_time();
+}
+
 database& dbs_base::db_impl()
 {
     return _db_core;
