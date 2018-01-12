@@ -816,6 +816,35 @@ struct proposal_create_operation : public base_operation
     void validate() const;
 };
 
+struct proposal_cr_operation : public base_operation
+{
+    account_name_type creator;
+};
+
+struct proposal_vt_operation : public base_operation
+{
+};
+
+struct committee_member_create_operation : public base_operation
+{
+};
+
+struct committee_member_dropout_operation : public base_operation
+{
+};
+
+struct change_invite_quorum_operation : public base_operation
+{
+};
+
+struct change_dropout_quorum_operation : public base_operation
+{
+};
+
+struct change_quorum_for_changing_quorum : public base_operation
+{
+};
+
 } // namespace protocol
 } // namespace scorum
 
