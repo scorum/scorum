@@ -2475,5 +2475,32 @@ std::vector<proposal_api_obj> wallet_api::list_proposals()
     return my->_remote_db->lookup_proposals();
 }
 
+annotated_signed_transaction wallet_api::propose_new_invite_quorum(const std::string& creator,
+                                                                   uint64_t quorum_percent,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast)
+{
+    signed_transaction tx;
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::propose_new_dropout_quorum(const std::string& creator,
+                                                                    uint64_t quorum_percent,
+                                                                    uint32_t lifetime_sec,
+                                                                    bool broadcast)
+{
+    signed_transaction tx;
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::propose_new_quorum_for_quorum_change(const std::string& creator,
+                                                                              uint64_t quorum_percent,
+                                                                              uint32_t lifetime_sec,
+                                                                              bool broadcast)
+{
+    signed_transaction tx;
+    return my->sign_transaction(tx, broadcast);
+}
+
 } // namespace wallet
 } // namespace scorum

@@ -1021,6 +1021,21 @@ public:
     std::set<account_name_type> list_committee(const std::string& lowerbound, uint32_t limit);
     std::vector<proposal_api_obj> list_proposals();
 
+    annotated_signed_transaction propose_new_invite_quorum(const std::string& creator,
+                                                           uint64_t quorum_percent,
+                                                           uint32_t lifetime_sec,
+                                                           bool broadcast);
+
+    annotated_signed_transaction propose_new_dropout_quorum(const std::string& creator,
+                                                            uint64_t quorum_percent,
+                                                            uint32_t lifetime_sec,
+                                                            bool broadcast);
+
+    annotated_signed_transaction propose_new_quorum_for_quorum_change(const std::string& creator,
+                                                                      uint64_t quorum_percent,
+                                                                      uint32_t lifetime_sec,
+                                                                      bool broadcast);
+
 public:
     fc::signal<void(bool)> lock_changed;
 
