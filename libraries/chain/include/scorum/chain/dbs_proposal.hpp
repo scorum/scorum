@@ -16,7 +16,7 @@ protected:
 
 public:
     const proposal_object& create(const account_name_type& creator,
-                                  const account_name_type& member,
+                                  const fc::variant& data,
                                   scorum::protocol::proposal_action action,
                                   const fc::time_point_sec& expiration,
                                   uint64_t quorum);

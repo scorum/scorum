@@ -11,14 +11,14 @@ dbs_proposal::dbs_proposal(database& db)
 }
 
 const proposal_object& dbs_proposal::create(const protocol::account_name_type& creator,
-                                            const protocol::account_name_type& member,
+                                            const fc::variant& data,
                                             protocol::proposal_action action,
                                             const fc::time_point_sec& expiration,
                                             uint64_t quorum)
 {
     const auto& proposal = db_impl().create<proposal_object>([&](proposal_object& proposal) {
         proposal.creator = creator;
-        proposal.data = fc::variant(member).as_string();
+        proposal.data = data;
         proposal.action = action;
         proposal.expiration = expiration;
         proposal.quorum_percent = quorum;

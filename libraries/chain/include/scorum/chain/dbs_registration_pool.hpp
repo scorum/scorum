@@ -31,6 +31,10 @@ public:
 
     asset allocate_cash(const account_name_type& committee_member);
 
+    void set_invite_quorum(uint64_t quorum);
+    void set_dropout_quorum(uint64_t quorum);
+    void set_quorum(uint64_t quorum);
+
 private:
     asset _calculate_per_reg();
 

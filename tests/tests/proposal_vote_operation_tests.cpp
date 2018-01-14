@@ -140,6 +140,22 @@ public:
     uint64_t quorum_percent = 0;
 };
 
+class pool_service_mock
+{
+public:
+    void set_invite_quorum(uint64_t quorum)
+    {
+    }
+
+    void set_dropout_quorum(uint64_t quorum)
+    {
+    }
+
+    void set_quorum(uint64_t quorum)
+    {
+    }
+};
+
 typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
     evaluator_test_impl;
 
@@ -148,7 +164,8 @@ class evaluator_mocked : public evaluator_test_impl
 public:
     evaluator_mocked(account_service_mock& account_service,
                      proposal_service_mock& proposal_service,
-                     committee_service_mock& committee_service)
+                     committee_service_mock& committee_service,
+                     pool_service_mock& pool_service)
         : evaluator_test_impl(account_service, proposal_service, committee_service)
     {
     }
@@ -168,7 +185,7 @@ class proposal_vote_evaluator_fixture
 {
 public:
     proposal_vote_evaluator_fixture()
-        : evaluator(account_service, proposal_service, committee_service)
+        : evaluator(account_service, proposal_service, committee_service, pool_service)
     {
     }
 
@@ -217,6 +234,7 @@ public:
     account_service_mock account_service;
     proposal_service_mock proposal_service;
     committee_service_mock committee_service;
+    pool_service_mock pool_service;
 
     evaluator_mocked evaluator;
 };

@@ -1,4 +1,7 @@
-file(GLOB HEADERS "include/scorum/chain/*.hpp" "include/scorum/chain/util/*.hpp")
+file(GLOB HEADERS "include/scorum/chain/*.hpp"
+                  "include/scorum/chain/util/*.hpp"
+                  "include/scorum/chain/pool/*.hpp"
+                  "include/scorum/chain/proposal/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )

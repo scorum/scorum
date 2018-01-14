@@ -2434,7 +2434,7 @@ annotated_signed_transaction wallet_api::invite_new_committee_member(const std::
 
     proposal_create_operation op;
     op.creator = inviter;
-    op.committee_member = invitee;
+    op.data = invitee;
     op.action = proposal_action::invite;
     op.lifetime_sec = lifetime_sec;
 
@@ -2454,7 +2454,7 @@ annotated_signed_transaction wallet_api::dropout_committee_member(const std::str
 
     proposal_create_operation op;
     op.creator = initiator;
-    op.committee_member = dropout;
+    op.data = dropout;
     op.action = proposal_action::dropout;
     op.lifetime_sec = lifetime_sec;
 
@@ -2480,7 +2480,16 @@ annotated_signed_transaction wallet_api::propose_new_invite_quorum(const std::st
                                                                    uint32_t lifetime_sec,
                                                                    bool broadcast)
 {
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.data = quorum_percent;
+    op.action = proposal_action::change_invite_quorum;
+    op.lifetime_sec = lifetime_sec;
+
     signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
     return my->sign_transaction(tx, broadcast);
 }
 
@@ -2489,7 +2498,16 @@ annotated_signed_transaction wallet_api::propose_new_dropout_quorum(const std::s
                                                                     uint32_t lifetime_sec,
                                                                     bool broadcast)
 {
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.data = quorum_percent;
+    op.action = proposal_action::change_dropout_quorum;
+    op.lifetime_sec = lifetime_sec;
+
     signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
     return my->sign_transaction(tx, broadcast);
 }
 
@@ -2498,7 +2516,16 @@ annotated_signed_transaction wallet_api::propose_new_quorum_for_quorum_change(co
                                                                               uint32_t lifetime_sec,
                                                                               bool broadcast)
 {
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.data = quorum_percent;
+    op.action = proposal_action::change_quorum;
+    op.lifetime_sec = lifetime_sec;
+
     signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
     return my->sign_transaction(tx, broadcast);
 }
 

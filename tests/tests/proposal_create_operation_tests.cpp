@@ -8,6 +8,7 @@
 #include <scorum/chain/proposal_create_evaluator.hpp>
 #include <scorum/chain/proposal_vote_evaluator.hpp>
 #include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/registration_objects.hpp>
 
 #include "defines.hpp"
 
@@ -71,8 +72,20 @@ public:
     uint64_t quorum_votes = 1;
 };
 
-typedef scorum::chain::proposal_create_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock>
-    proposal_create_evaluator_mocked;
+class pool_service_mock
+{
+public:
+    const registration_pool_object& get_pool() const
+    {
+        return pool;
+    }
+
+    registration_pool_object pool;
+};
+
+typedef scorum::chain::
+    proposal_create_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock, pool_service_mock>
+        proposal_create_evaluator_mocked;
 
 class proposal_create_evaluator_fixture
 {
@@ -80,7 +93,7 @@ public:
     proposal_create_evaluator_fixture()
         : lifetime_min(5)
         , lifetime_max(10)
-        , evaluator(account_service, proposal_service, committee_service, lifetime_min, lifetime_max, 1)
+        , evaluator(account_service, proposal_service, committee_service, pool_service, lifetime_min, lifetime_max)
     {
         committee_service.existent_accounts.insert("alice");
         committee_service.existent_accounts.insert("bob");
@@ -92,6 +105,7 @@ public:
     account_service_mock account_service;
     proposal_service_mock proposal_service;
     committee_service_mock committee_service;
+    pool_service_mock pool_service;
 
     proposal_create_evaluator_mocked evaluator;
 };

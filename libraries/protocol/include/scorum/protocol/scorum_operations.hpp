@@ -803,7 +803,7 @@ struct proposal_create_operation : public base_operation
     typedef scorum::protocol::proposal_action action_t;
 
     account_name_type creator;
-    account_name_type committee_member;
+    fc::variant data;
 
     fc::optional<fc::enum_type<uint8_t, action_t>> action;
     uint32_t lifetime_sec = 0;
@@ -814,35 +814,6 @@ struct proposal_create_operation : public base_operation
     }
 
     void validate() const;
-};
-
-struct proposal_cr_operation : public base_operation
-{
-    account_name_type creator;
-};
-
-struct proposal_vt_operation : public base_operation
-{
-};
-
-struct committee_member_create_operation : public base_operation
-{
-};
-
-struct committee_member_dropout_operation : public base_operation
-{
-};
-
-struct change_invite_quorum_operation : public base_operation
-{
-};
-
-struct change_dropout_quorum_operation : public base_operation
-{
-};
-
-struct change_quorum_for_changing_quorum : public base_operation
-{
 };
 
 } // namespace protocol
@@ -931,7 +902,7 @@ FC_REFLECT( scorum::protocol::proposal_vote_operation,
 
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
-            (committee_member)
+            (data)
             (action)
             (lifetime_sec))
 
