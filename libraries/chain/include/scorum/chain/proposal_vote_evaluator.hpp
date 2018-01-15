@@ -69,15 +69,15 @@ public:
         , _pool_service(pool_service)
     {
         evaluators.set(proposal_action::invite,
-                       std::bind(&EvaluatorType::invite_evaluator, *this, std::placeholders::_1));
+                       std::bind(&EvaluatorType::invite_evaluator, this, std::placeholders::_1));
         evaluators.set(proposal_action::dropout,
-                       std::bind(&EvaluatorType::dropout_evaluator, *this, std::placeholders::_1));
+                       std::bind(&EvaluatorType::dropout_evaluator, this, std::placeholders::_1));
         evaluators.set(proposal_action::change_invite_quorum,
-                       std::bind(&EvaluatorType::change_invite_quorum_evaluator, *this, std::placeholders::_1));
+                       std::bind(&EvaluatorType::change_invite_quorum_evaluator, this, std::placeholders::_1));
         evaluators.set(proposal_action::change_dropout_quorum,
-                       std::bind(&EvaluatorType::change_dropout_quorum_evaluator, *this, std::placeholders::_1));
+                       std::bind(&EvaluatorType::change_dropout_quorum_evaluator, this, std::placeholders::_1));
         evaluators.set(proposal_action::change_quorum,
-                       std::bind(&EvaluatorType::change_quorum_evaluator, *this, std::placeholders::_1));
+                       std::bind(&EvaluatorType::change_quorum_evaluator, this, std::placeholders::_1));
     }
 
     virtual void apply(const OperationType& o) final override
