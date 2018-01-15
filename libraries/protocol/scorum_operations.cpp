@@ -364,9 +364,13 @@ void proposal_vote_operation::validate() const
 void proposal_create_operation::validate() const
 {
     validate_account_name(creator);
-    //    validate_account_name(committee_member);
 
     FC_ASSERT(action.valid(), "Proposal is not set.");
+
+    if (action == action_t::dropout || action == action_t::invite)
+    {
+        validate_account_name(data.as_string());
+    }
 }
 
 } // namespace protocol

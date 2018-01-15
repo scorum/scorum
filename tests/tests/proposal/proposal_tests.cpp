@@ -45,7 +45,7 @@ public:
         {
             proposal_create_operation op;
             op.creator = actor.name;
-            op.committee_member = invitee.name;
+            op.data = invitee.name;
             op.action = action;
             op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
 

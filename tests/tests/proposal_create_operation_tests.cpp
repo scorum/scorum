@@ -1,5 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+
 #include <scorum/protocol/exceptions.hpp>
 
 #include <scorum/protocol/types.hpp>
@@ -16,6 +19,9 @@ using scorum::protocol::proposal_action;
 using scorum::protocol::account_name_type;
 using scorum::chain::proposal_object;
 using scorum::chain::proposal_create_operation;
+using scorum::chain::registration_pool_object;
+
+namespace bip = boost::interprocess;
 
 class account_service_mock
 {
@@ -39,7 +45,7 @@ public:
     }
 
     void create(const account_name_type&,
-                const account_name_type&,
+                const fc::variant&,
                 proposal_action,
                 const fc::time_point_sec& expiration,
                 uint64_t quorum)
@@ -75,11 +81,33 @@ public:
 class pool_service_mock
 {
 public:
+    pool_service_mock()
+        : segment(bip::create_only, "TestSharedMemory", 65536)
+        , allocator(segment.get_segment_manager())
+        , pool([](const registration_pool_object&) {}, allocator)
+    {
+    }
+
     const registration_pool_object& get_pool() const
     {
         return pool;
     }
 
+private:
+    struct shm_remove
+    {
+        shm_remove()
+        {
+            bip::shared_memory_object::remove("TestSharedMemory");
+        }
+        ~shm_remove()
+        {
+            bip::shared_memory_object::remove("TestSharedMemory");
+        }
+    } remover;
+
+    bip::managed_shared_memory segment;
+    scorum::chain::allocator<registration_pool_object> allocator;
     registration_pool_object pool;
 };
 
@@ -116,7 +144,7 @@ SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_small)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.lifetime_sec = lifetime_min - 1;
     op.action = proposal_action::dropout;
 
@@ -128,7 +156,7 @@ SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_big)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.lifetime_sec = lifetime_max + 1;
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
@@ -139,7 +167,7 @@ SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
 {
     proposal_create_operation op;
     op.creator = "joe";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::invite;
 
@@ -150,7 +178,7 @@ SCORUM_TEST_CASE(create_one_invite_proposal)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::invite;
 
@@ -163,7 +191,7 @@ SCORUM_TEST_CASE(create_one_dropout_proposal)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::invite;
 
@@ -176,7 +204,7 @@ SCORUM_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::invite;
 
@@ -200,6 +228,7 @@ BOOST_AUTO_TEST_CASE(throw_exception_if_member_is_not_set)
 {
     proposal_create_operation op;
     op.creator = "alice";
+    op.action = proposal_action::invite;
 
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Account name  is invalid");
 }
@@ -208,7 +237,6 @@ BOOST_AUTO_TEST_CASE(throw_exception_if_action_is_not_set)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
 
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Proposal is not set.");
 }
@@ -217,7 +245,7 @@ BOOST_AUTO_TEST_CASE(pass_when_all_set)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.committee_member = "bob";
+    op.data = "bob";
     op.action = proposal_action::invite;
 
     BOOST_CHECK_NO_THROW(op.validate());
