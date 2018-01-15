@@ -1,7 +1,4 @@
 #include <chainbase/chainbase.hpp>
-#include <boost/array.hpp>
-
-#include <iostream>
 
 namespace chainbase {
 
@@ -99,16 +96,14 @@ void database::open(const bfs::path& dir, uint32_t flags, uint64_t shared_file_s
     {
         _meta.reset(new bip::managed_mapped_file(bip::open_only, abs_path.generic_string().c_str()));
 
-        _rw_manager = _meta->find<read_write_mutex_manager>("rw_manager").first;
-        if (!_rw_manager)
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not find read write lock manager"));
+        set_read_write_mutex_manager(_meta->find<read_write_mutex_manager>("rw_manager").first);
     }
     else
     {
         _meta.reset(new bip::managed_mapped_file(bip::create_only, abs_path.generic_string().c_str(),
                                                  sizeof(read_write_mutex_manager) * 2));
 
-        _rw_manager = _meta->find_or_construct<read_write_mutex_manager>("rw_manager")();
+        set_read_write_mutex_manager(_meta->find_or_construct<read_write_mutex_manager>("rw_manager")());
     }
 
     if (write)
@@ -141,71 +136,9 @@ void database::wipe(const bfs::path& dir)
     bfs::remove_all(dir / "shared_memory.bin");
     bfs::remove_all(dir / "shared_memory.meta");
     _data_dir = bfs::path();
-    _index_list.clear();
     _index_map.clear();
-}
 
-void database::set_require_locking(bool enable_require_locking)
-{
-    _enable_require_locking = enable_require_locking;
-}
-
-void database::require_lock_fail(const char* method, const char* lock_type, const char* tname) const
-{
-    std::string err_msg = "database::" + std::string(method) + " require_" + std::string(lock_type)
-        + "_lock() failed on type " + std::string(tname);
-    std::cerr << err_msg << std::endl;
-    BOOST_THROW_EXCEPTION(std::runtime_error(err_msg));
-}
-
-void database::undo()
-{
-    for (auto& item : _index_list)
-    {
-        item->undo();
-    }
-}
-
-void database::squash()
-{
-    for (auto& item : _index_list)
-    {
-        item->squash();
-    }
-}
-
-void database::commit(int64_t revision)
-{
-    for (auto& item : _index_list)
-    {
-        item->commit(revision);
-    }
-}
-
-void database::undo_all()
-{
-    for (auto& item : _index_list)
-    {
-        item->undo_all();
-    }
-}
-
-database::session database::start_undo_session(bool enabled)
-{
-    if (enabled)
-    {
-        std::vector<std::unique_ptr<abstract_session>> _sub_sessions;
-        _sub_sessions.reserve(_index_list.size());
-        for (auto& item : _index_list)
-        {
-            _sub_sessions.push_back(item->start_undo_session(enabled));
-        }
-        return session(std::move(_sub_sessions));
-    }
-    else
-    {
-        return session();
-    }
+    clear_session_index();
 }
 
 } // namespace chainbase

@@ -48,6 +48,7 @@
 
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 namespace scorum {
 namespace chain {
@@ -1516,36 +1517,36 @@ uint32_t database::last_non_undoable_block_num() const
 
 void database::initialize_evaluators()
 {
-    _my->_evaluator_registry.register_evaluator<vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_witness_vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
-    _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
-    _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
-    _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_witness_vote_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_evaluator>();
+    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<custom_binary_evaluator>();
+    _my->_evaluator_registry.register_evaluator<custom_evaluator>();
     _my->_evaluator_registry.register_evaluator<custom_json_evaluator>();
-    _my->_evaluator_registry.register_evaluator<prove_authority_evaluator>();
-    _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
-    _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<escrow_transfer_evaluator>();
+    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_dispute_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_release_evaluator>();
-    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
+    _my->_evaluator_registry.register_evaluator<escrow_transfer_evaluator>();
+    _my->_evaluator_registry.register_evaluator<prove_authority_evaluator>();
+    _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_evaluator>();
+    _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
+    _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
     // clang-format off
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(
@@ -1583,34 +1584,34 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 
 void database::initialize_indexes()
 {
-    add_index<dynamic_global_property_index>();
-    add_index<chain_property_index>();
-    add_index<account_index>();
     add_index<account_authority_index>();
-    add_index<witness_index>();
-    add_index<transaction_index>();
+    add_index<account_history_index>();
+    add_index<account_index>();
+    add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
-    add_index<witness_schedule_index>();
+    add_index<budget_index>();
+    add_index<chain_property_index>();
+    add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
     add_index<comment_vote_index>();
-    add_index<witness_vote_index>();
-    add_index<operation_index>();
-    add_index<account_history_index>();
-    add_index<hardfork_property_index>();
-    add_index<withdraw_vesting_route_index>();
-    add_index<owner_authority_history_index>();
-    add_index<account_recovery_request_index>();
-    add_index<change_recovery_account_request_index>();
-    add_index<escrow_index>();
     add_index<decline_voting_rights_request_index>();
+    add_index<dynamic_global_property_index>();
+    add_index<escrow_index>();
+    add_index<hardfork_property_index>();
+    add_index<operation_index>();
+    add_index<owner_authority_history_index>();
+    add_index<proposal_object_index>();
+    add_index<registration_committee_member_index>();
+    add_index<registration_pool_index>();
     add_index<reward_fund_index>();
     add_index<reward_pool_index>();
-    add_index<vesting_delegation_index>();
+    add_index<transaction_index>();
     add_index<vesting_delegation_expiration_index>();
-    add_index<budget_index>();
-    add_index<registration_pool_index>();
-    add_index<registration_committee_member_index>();
-    add_index<proposal_object_index>();
+    add_index<vesting_delegation_index>();
+    add_index<withdraw_vesting_route_index>();
+    add_index<witness_index>();
+    add_index<witness_schedule_index>();
+    add_index<witness_vote_index>();
 
     _plugin_index_signal();
 }
@@ -2558,3 +2559,6 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+

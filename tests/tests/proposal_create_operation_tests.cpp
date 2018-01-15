@@ -142,7 +142,7 @@ SCORUM_TEST_CASE(create_one_invite_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_CHECK_EQUAL(proposal_service.proposals_created, 1);
+    BOOST_CHECK_EQUAL(proposal_service.proposals_created, (uint32_t)1);
 }
 
 SCORUM_TEST_CASE(create_one_dropout_proposal)
@@ -155,7 +155,7 @@ SCORUM_TEST_CASE(create_one_dropout_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals_created, 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals_created, (uint32_t)1);
 }
 
 SCORUM_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime)
