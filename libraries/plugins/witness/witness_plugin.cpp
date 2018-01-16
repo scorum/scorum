@@ -522,7 +522,7 @@ void witness_plugin::plugin_shutdown()
     return;
 }
 
-void witness_plugin::schedule_production_loop(block_production_condition::block_production_condition_enum last_result)
+void witness_plugin::schedule_production_loop()
 {
     static const int64_t ONE_SECOND_MS = 1000000;
     // Schedule for the next second's tick regardless of chain state
@@ -536,8 +536,6 @@ void witness_plugin::schedule_production_loop(block_production_condition::block_
 
     fc::time_point next_wakeup(fc_now + fc::microseconds(time_to_next_second));
 
-    dlog("last_result = ${r}", ("r", last_result));
-
     // wdump( (now.time_since_epoch().count())(next_wakeup.time_since_epoch().count()) );
     _block_production_task = fc::schedule([this] { block_production_loop(); }, next_wakeup, "Witness Block Production");
 }
@@ -549,7 +547,7 @@ void witness_plugin::block_production_loop()
     if (fc::time_point::now() < genesis_time)
     {
         wlog("waiting until genesis time to produce block: ${t}", ("t", genesis_time));
-        schedule_production_loop(block_production_condition::wait_for_genesis);
+        schedule_production_loop();
         return;
     }
 
@@ -615,7 +613,8 @@ void witness_plugin::block_production_loop()
         break;
     }
 
-    schedule_production_loop(result);
+    dlog("result = ${r}", ("r", result));
+    schedule_production_loop();
 }
 
 block_production_condition::block_production_condition_enum

@@ -9,6 +9,7 @@
 
 #include <fc/real128.hpp>
 #include <fc/crypto/base58.hpp>
+#include <fc/rpc/cli.hpp>
 
 using namespace scorum::app;
 using namespace scorum::chain;
@@ -82,9 +83,13 @@ class wallet_api_impl;
  */
 class wallet_api
 {
+    using wallet_cli_type = std::shared_ptr<fc::rpc::cli>;
+
 public:
     wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi);
     virtual ~wallet_api();
+
+    void set_wallet_cli(const wallet_cli_type &);
 
     bool copy_wallet_file(const std::string& destination_filename);
 
@@ -1126,6 +1131,7 @@ public:
 
 private:
     std::shared_ptr<detail::wallet_api_impl> my;
+    std::weak_ptr<fc::rpc::cli> wallet_cli;
 };
 
 struct plain_keys

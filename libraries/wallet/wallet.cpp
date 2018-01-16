@@ -994,6 +994,11 @@ wallet_api::~wallet_api()
 {
 }
 
+void wallet_api::set_wallet_cli(const wallet_cli_type &pwallet_cli)
+{
+    wallet_cli = pwallet_cli;
+}
+
 bool wallet_api::copy_wallet_file(const std::string& destination_filename)
 {
     return my->copy_wallet_file(destination_filename);
@@ -2803,7 +2808,11 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
 
 void wallet_api::exit()
 {
-    std::exit(0);
+    wallet_cli_type pwallet_cli = wallet_cli.lock();
+    if (pwallet_cli)
+    {
+        pwallet_cli->stop();
+    }
 }
 
 } // namespace wallet

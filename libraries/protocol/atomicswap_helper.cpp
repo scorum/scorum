@@ -24,7 +24,7 @@ std::string get_secret_hex(const std::string& secret, const uint8_t secret_lengt
         // get value in [entropy_percent, 2*entropy_percent - 1]
         entropy = entropy_percent + entropy % entropy_percent;
         ++entropy; // increase value for [entropy_percent + 1, 2*entropy_percent]
-        // devide to 2*entropy_percent to get coefficient in (0.5, 1]
+        // divide to 2*entropy_percent to get coefficient in (0.5, 1]
         out_sz = hash.data_size() * entropy / entropy_percent / (std::size_t)2;
         if (out_sz > SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH / 2)
         {
@@ -117,13 +117,6 @@ get_contract_hash(const account_name_type& from, const account_name_type& to, co
 
     ret.data = boost::endian::big_to_native(ret.data);
 
-#ifdef IS_TEST_NET
-    std::stringstream print;
-    print << "Contract hash for ";
-    print << from << "," << to << "," << secret_hash << " = ";
-    print << get_contract_hash_hex(from, to, secret_hash);
-    ulog(print.str());
-#endif
     return ret;
 }
 }

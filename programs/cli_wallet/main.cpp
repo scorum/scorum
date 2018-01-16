@@ -264,6 +264,7 @@ int main(int argc, char** argv)
         if (!options.count("daemon"))
         {
             wallet_cli->register_api(wapi);
+            wapiptr->set_wallet_cli(wallet_cli);
             wallet_cli->start();
             wallet_cli->wait();
         }

@@ -80,8 +80,7 @@ public:
     virtual void plugin_shutdown() override;
 
 private:
-    void schedule_production_loop(block_production_condition::block_production_condition_enum last_result
-                                  = block_production_condition::produced);
+    void schedule_production_loop();
     void block_production_loop();
     block_production_condition::block_production_condition_enum
     maybe_produce_block(fc::mutable_variant_object& capture);
