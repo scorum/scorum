@@ -987,6 +987,7 @@ public:
 
 wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
     : my(new detail::wallet_api_impl(*this, initial_data, rapi))
+    , exit_func([]() { FC_ASSERT(false, "Operation valid only in console mode."); })
 {
 }
 
@@ -994,9 +995,9 @@ wallet_api::~wallet_api()
 {
 }
 
-void wallet_api::set_wallet_cli(const wallet_cli_type &pwallet_cli)
+void wallet_api::set_exit_func(exit_func_type fn)
 {
-    wallet_cli = pwallet_cli;
+    exit_func = fn;
 }
 
 bool wallet_api::copy_wallet_file(const std::string& destination_filename)
@@ -2808,11 +2809,7 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
 
 void wallet_api::exit()
 {
-    wallet_cli_type pwallet_cli = wallet_cli.lock();
-    if (pwallet_cli)
-    {
-        pwallet_cli->stop();
-    }
+    exit_func();
 }
 
 } // namespace wallet
