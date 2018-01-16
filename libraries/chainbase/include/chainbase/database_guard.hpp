@@ -23,6 +23,7 @@ typedef boost::interprocess::interprocess_sharable_mutex read_write_mutex;
 typedef boost::interprocess::sharable_lock<read_write_mutex> read_lock;
 typedef boost::unique_lock<read_write_mutex> write_lock;
 
+//////////////////////////////////////////////////////////////////////////
 class read_write_mutex_manager
 {
 public:
@@ -38,6 +39,7 @@ private:
     std::atomic<uint32_t> _current_lock;
 };
 
+//////////////////////////////////////////////////////////////////////////
 class database_guard
 {
 protected:

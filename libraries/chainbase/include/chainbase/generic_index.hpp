@@ -31,6 +31,7 @@ template <typename MultiIndexType> class base_index
 {
 public:
     using value_type = typename MultiIndexType::value_type;
+    using allocator_type = typename MultiIndexType::allocator_type;
 
 protected:
     typename value_type::id_type _next_id = 0;
@@ -38,13 +39,8 @@ protected:
     uint32_t _size_of_value_type = 0;
     uint32_t _size_of_this = 0;
 
-protected:
-    virtual void on_create(const value_type& v) = 0;
-    virtual void on_remove(const value_type& v) = 0;
-    virtual void on_modify(const value_type& v) = 0;
-
 public:
-    base_index(allocator<value_type> a)
+    base_index(const allocator<value_type>& a)
         : _indices(a)
         , _size_of_value_type(sizeof(typename MultiIndexType::node_type))
         , _size_of_this(sizeof(*this))
@@ -55,6 +51,11 @@ public:
     {
         if (sizeof(typename MultiIndexType::node_type) != _size_of_value_type || sizeof(*this) != _size_of_this)
             BOOST_THROW_EXCEPTION(std::runtime_error("content of memory does not match data expected by executable"));
+    }
+
+    const MultiIndexType& indices() const
+    {
+        return _indices;
     }
 
     /**
@@ -70,32 +71,19 @@ public:
             c(v);
         };
 
-        auto insert_result = _indices.emplace(constructor, _indices.get_allocator());
-
-        if (!insert_result.second)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("could not insert object, most likely a uniqueness constraint was violated"));
-        }
+        const auto& val = emplace_(constructor, get_allocator());
 
         ++_next_id;
-        on_create(*insert_result.first);
-        return *insert_result.first;
+
+        return val;
     }
 
     template <typename Modifier> void modify(const value_type& obj, Modifier&& m)
     {
-        on_modify(obj);
         auto ok = _indices.modify(_indices.iterator_to(obj), m);
         if (!ok)
             BOOST_THROW_EXCEPTION(
                 std::logic_error("Could not modify object, most likely a uniqueness constraint was violated"));
-    }
-
-    void remove(const value_type& obj)
-    {
-        on_remove(obj);
-        _indices.erase(_indices.iterator_to(obj));
     }
 
     template <typename CompatibleKey> const value_type* find(CompatibleKey&& key) const
@@ -114,17 +102,28 @@ public:
         return *ptr;
     }
 
-    const MultiIndexType& indices() const
+    void remove(const value_type& obj)
     {
-        return _indices;
+        _indices.erase(_indices.iterator_to(obj));
     }
 
-    void remove_object(int64_t id)
+protected:
+    allocator_type get_allocator() const noexcept
     {
-        const value_type* val = find(typename value_type::id_type(id));
-        if (!val)
-            BOOST_THROW_EXCEPTION(std::out_of_range(boost::lexical_cast<std::string>(id)));
-        remove(*val);
+        return _indices.get_allocator();
+    }
+
+    template <class... Args> const value_type& emplace_(Args&&... args)
+    {
+        auto insert_result = _indices.emplace(args...);
+
+        if (!insert_result.second)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("could not insert object, most likely a uniqueness constraint was violated"));
+        }
+
+        return *insert_result.first;
     }
 };
 
@@ -138,7 +137,7 @@ public:
     using id_allocator_type = allocator<id_type>;
 
     template <typename T>
-    undo_state(allocator<T> al)
+    undo_state(const allocator<T>& al)
         : old_values(id_value_allocator_type(al.get_segment_manager()))
         , removed_values(id_value_allocator_type(al.get_segment_manager()))
         , new_ids(id_allocator_type(al.get_segment_manager()))
@@ -164,6 +163,7 @@ public:
     using allocator_type = allocator<generic_index>;
     using value_type = typename MultiIndexType::value_type;
     using undo_state_type = undo_state<value_type>;
+    using base_index_type = base_index<MultiIndexType>;
 
 private:
     /**
@@ -177,8 +177,8 @@ private:
     boost::interprocess::deque<undo_state_type, allocator<undo_state_type>> _stack;
 
 public:
-    generic_index(allocator<value_type> a)
-        : base_index<MultiIndexType>(a)
+    generic_index(const allocator<value_type>& a)
+        : base_index_type(a)
         , _stack(a)
     {
     }
@@ -261,7 +261,7 @@ public:
     {
         if (enabled)
         {
-            _stack.emplace_back(this->_indices.get_allocator());
+            _stack.emplace_back(this->get_allocator());
             _stack.back().old_next_id = this->_next_id;
             _stack.back().revision = ++_revision;
             return session(*this, _revision);
@@ -285,25 +285,19 @@ public:
 
         for (auto& item : head.old_values)
         {
-            auto ok = this->_indices.modify(this->_indices.find(item.second.id),
-                                            [&](value_type& v) { v = std::move(item.second); });
-            if (!ok)
-                BOOST_THROW_EXCEPTION(
-                    std::logic_error("Could not modify object, most likely a uniqueness constraint was violated"));
+            base_index_type::modify(this->get(item.second.id), [&](value_type& v) { v = std::move(item.second); });
         }
 
         for (auto id : head.new_ids)
         {
-            this->_indices.erase(this->_indices.find(id));
+            base_index_type::remove(this->get(id));
         }
+
         this->_next_id = head.old_next_id;
 
         for (auto& item : head.removed_values)
         {
-            bool ok = this->_indices.emplace(std::move(item.second)).second;
-            if (!ok)
-                BOOST_THROW_EXCEPTION(
-                    std::logic_error("Could not restore object, most likely a uniqueness constraint was violated"));
+            base_index_type::emplace_(std::move(item.second));
         }
 
         _stack.pop_back();
@@ -453,13 +447,38 @@ public:
         _revision = revision;
     }
 
+    template <typename Constructor> const value_type& emplace(Constructor&& c)
+    {
+        const value_type& value = base_index_type::emplace(c);
+
+        on_create(value);
+
+        return value;
+    }
+
+    template <typename Modifier> void modify(const value_type& obj, Modifier&& m)
+    {
+        auto unmodified_copy = obj;
+
+        base_index_type::modify(obj, m);
+
+        on_modify(unmodified_copy);
+    }
+
+    void remove(const value_type& obj)
+    {
+        base_index_type::remove(obj);
+
+        on_remove(obj);
+    }
+
 private:
     bool enabled() const
     {
         return _stack.size();
     }
 
-    void on_modify(const value_type& v) override
+    void on_modify(const value_type& v)
     {
         if (!enabled())
             return;
@@ -476,7 +495,7 @@ private:
         head.old_values.emplace(std::pair<typename value_type::id_type, const value_type&>(v.id, v));
     }
 
-    void on_remove(const value_type& v) override
+    void on_remove(const value_type& v)
     {
         if (!enabled())
             return;
@@ -502,7 +521,7 @@ private:
         head.removed_values.emplace(std::pair<typename value_type::id_type, const value_type&>(v.id, v));
     }
 
-    void on_create(const value_type& v) override
+    void on_create(const value_type& v)
     {
         if (!enabled())
             return;

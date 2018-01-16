@@ -50,9 +50,6 @@ public:
     virtual void undo_all() const = 0;
 
     virtual void* get() const = 0;
-
-    virtual uint32_t type_id() const = 0;
-    virtual void remove_object(int64_t id) = 0;
 };
 
 template <typename BaseIndex> class index_impl : public abstract_index
@@ -92,15 +89,6 @@ public:
     virtual void undo_all() const override
     {
         _base.undo_all();
-    }
-    virtual uint32_t type_id() const override
-    {
-        return BaseIndex::value_type::type_id;
-    }
-
-    virtual void remove_object(int64_t id) override
-    {
-        return _base.remove_object(id);
     }
 
     virtual void* get() const
