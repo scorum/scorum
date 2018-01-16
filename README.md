@@ -1,4 +1,4 @@
-# Introducing Scorum
+# Introducing Scorum.
 
 Scorum is an spots media blockchain with Delegated Proof of Stake consensus
 algorithm.
