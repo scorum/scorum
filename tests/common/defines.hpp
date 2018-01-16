@@ -131,6 +131,8 @@
     validate_database();
 
 #define ASSET(s) asset::from_string(s)
+#define ASSET_NULL_SCR asset(0, SCORUM_SYMBOL)
+#define ASSET_NULL_SP asset(0, VESTS_SYMBOL)
 
 // test case defines
 #if BOOST_VERSION >= 106000 // boost ver. >= 1.60.0

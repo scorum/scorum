@@ -12,6 +12,8 @@
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
 
+#include <scorum/protocol/atomicswap_helper.hpp>
+
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -20,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <cstdlib>
 
 #include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
@@ -57,6 +60,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+
+#include <scorum/wallet/printer.hpp>
 
 namespace scorum {
 namespace wallet {
@@ -645,6 +650,65 @@ public:
         return tx;
     }
 
+    std::string print_atomicswap_secret2str(const std::string& secret) const
+    {
+        printer p;
+
+        p.print_line();
+        p.print_field("SECRET: ", secret);
+
+        return p.str();
+    }
+
+    std::string print_atomicswap_contract2str(const atomicswap_contract_info_api_obj& rt) const
+    {
+        printer p;
+
+        p.print_line();
+
+        if (rt.contract_initiator)
+        {
+            p.print_raw("INITIATION CONTRACT");
+        }
+        else
+        {
+            p.print_raw("* PARTICIPATION CONTRACT");
+        }
+
+        p.print_line();
+        p.print_field("From: ", rt.owner);
+        p.print_field("To: ", rt.to);
+        p.print_field("Amount: ", rt.amount);
+
+        if (rt.deadline.sec_since_epoch())
+        {
+            p.print_field("Locktime: ", rt.deadline.to_iso_string());
+
+            time_point_sec now = rt.deadline;
+            now -= fc::time_point::now().sec_since_epoch();
+            int h = now.sec_since_epoch() / 3600;
+            int m = now.sec_since_epoch() % 3600 / 60;
+            int s = now.sec_since_epoch() % 60;
+            p.print_field("Locktime reached in: ", p.print_sequence2str(h, 'h', m, 'm', s, 's'));
+        }
+
+        if (!rt.secret.empty())
+        {
+            p.print_raw(print_atomicswap_secret2str(rt.secret));
+        }
+
+        p.print_line();
+        p.print_field("Secret Hash: ", rt.secret_hash);
+
+        if (!rt.metadata.empty())
+        {
+            p.print_line();
+            p.print_field("Metadata: ", rt.metadata);
+        }
+
+        return p.str();
+    }
+
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const
     {
         std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> m;
@@ -652,72 +716,145 @@ public:
 
         m["gethelp"] = [](variant result, const fc::variants& a) { return result.get_string(); };
 
-        m["list_my_accounts"] = [](variant result, const fc::variants& a) {
-            std::stringstream out;
-
+        m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
             auto accounts = result.as<std::vector<account_api_obj>>();
+
+            printer p;
+
             asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
+
+            FC_ASSERT(p.create_table(16, 20, 10, 20));
+
             for (const auto& a : accounts)
             {
                 total_scorum += a.balance;
                 total_vest += a.vesting_shares;
-                out << std::left << std::setw(17) << std::string(a.name) << std::right << std::setw(18)
-                    << fc::variant(a.balance).as_string() << " " << std::right << std::setw(26)
-                    << fc::variant(a.vesting_shares).as_string() << "\n";
+                p.print_cell(a.name);
+                p.print_cell(a.balance);
+                p.print_cell("");
+                p.print_cell(a.vesting_shares);
             }
-            out << "-------------------------------------------------------------------------\n";
-            out << std::left << std::setw(17) << "TOTAL" << std::right << std::setw(18)
-                << fc::variant(total_scorum).as_string() << " " << std::right << std::setw(26)
-                << fc::variant(total_vest).as_string() << "\n";
-            return out.str();
+            p.print_endl();
+            p.print_line('-', accounts.empty());
+            p.print_cell("TOTAL");
+            p.print_cell(total_scorum);
+            p.print_cell("");
+            p.print_cell(total_vest);
+
+            return p.str();
         };
-        m["get_account_history"] = [](variant result, const fc::variants& a) {
-            std::stringstream ss;
-            ss << std::left << std::setw(5) << "#"
-               << " ";
-            ss << std::left << std::setw(10) << "BLOCK #"
-               << " ";
-            ss << std::left << std::setw(15) << "TRX ID"
-               << " ";
-            ss << std::left << std::setw(20) << "OPERATION"
-               << " ";
-            ss << std::left << std::setw(50) << "DETAILS"
-               << "\n";
-            ss << "-------------------------------------------------------------------------------\n";
+        m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<account_balance_info_api_obj>();
+
+            printer p;
+
+            FC_ASSERT(p.create_table(16, 20, 10, 20));
+
+            p.print_line();
+            p.print_cell("Scorums:");
+            p.print_cell(rt.balance);
+            p.print_cell("Vests:");
+            p.print_cell(rt.vesting_shares);
+
+            return p.str();
+        };
+        m["get_account_history"] = [this](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
+
+            printer p;
+
+            FC_ASSERT(p.create_table(5, 10, 15, 20, 50));
+
+            p.print_cell("#");
+            p.print_cell("BLOCK #");
+            p.print_cell("TRX ID");
+            p.print_cell("OPERATION");
+            p.print_cell("DETAILS");
+            p.print_endl();
+            p.print_line('-', false);
+
             for (const auto& item : results)
             {
-                ss << std::left << std::setw(5) << item.get_array()[0].as_string() << " ";
+                p.print_cell(item.get_array()[0].as_string());
                 const auto& op = item.get_array()[1].get_object();
-                ss << std::left << std::setw(10) << op["block"].as_string() << " ";
-                ss << std::left << std::setw(15) << op["trx_id"].as_string() << " ";
+                p.print_cell(op["block"].as_string());
+                p.print_cell(op["trx_id"].as_string());
                 const auto& opop = op["op"].get_array();
-                ss << std::left << std::setw(20) << opop[0].as_string() << " ";
-                ss << std::left << std::setw(50) << fc::json::to_string(opop[1]) << "\n ";
+                p.print_cell(opop[0].as_string());
+                p.print_cell(fc::json::to_string(opop[1]));
             }
-            return ss.str();
+            return p.str();
         };
-        m["get_withdraw_routes"] = [](variant result, const fc::variants& a) {
+        m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
-            std::stringstream ss;
 
-            ss << ' ' << std::left << std::setw(20) << "From";
-            ss << ' ' << std::left << std::setw(20) << "To";
-            ss << ' ' << std::right << std::setw(8) << "Percent";
-            ss << ' ' << std::right << std::setw(9) << "Auto-Vest";
-            ss << "\n==============================================================\n";
+            printer p;
+
+            FC_ASSERT(p.create_table(20, 20, 8, 9));
+
+            p.print_cell("From");
+            p.print_cell("To");
+            p.print_cell("Percent");
+            p.print_cell("Auto-Vest");
+            p.print_endl();
+            p.print_line('=', false);
 
             for (auto r : routes)
             {
-                ss << ' ' << std::left << std::setw(20) << r.from_account;
-                ss << ' ' << std::left << std::setw(20) << r.to_account;
-                ss << ' ' << std::right << std::setw(8) << std::setprecision(2) << std::fixed
-                   << double(r.percent) / 100;
-                ss << ' ' << std::right << std::setw(9) << (r.auto_vest ? "true" : "false") << std::endl;
+                p.print_cell(r.from_account);
+                p.print_cell(r.to_account);
+                std::stringstream tmp;
+                tmp << std::setprecision(2) << std::fixed << double(r.percent) / 100;
+                p.print_cell(tmp.str());
+                p.print_cell((r.auto_vest ? "true" : "false"));
             }
 
-            return ss.str();
+            return p.str();
+        };
+        m["atomicswap_initiate"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<atomicswap_contract_result_api_obj>();
+            if (rt.empty())
+            {
+                return "";
+            }
+            else
+            {
+                return print_atomicswap_contract2str(rt.obj);
+            }
+        };
+        m["atomicswap_participate"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<atomicswap_contract_result_api_obj>();
+            if (rt.empty())
+            {
+                return "";
+            }
+            else
+            {
+                return print_atomicswap_contract2str(rt.obj);
+            }
+        };
+        m["atomicswap_auditcontract"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto rt = result.as<atomicswap_contract_info_api_obj>();
+            if (rt.empty())
+            {
+                return "Nothing to audit.";
+            }
+            else
+            {
+                return print_atomicswap_contract2str(rt);
+            }
+        };
+        m["atomicswap_extractsecret"] = [this](variant result, const fc::variants& a) -> std::string {
+            auto secret = result.as<std::string>();
+            if (secret.empty())
+            {
+                return "";
+            }
+            else
+            {
+                return print_atomicswap_secret2str(secret);
+            }
         };
 
         return m;
@@ -850,11 +987,17 @@ public:
 
 wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
     : my(new detail::wallet_api_impl(*this, initial_data, rapi))
+    , exit_func([]() { FC_ASSERT(false, "Operation valid only in console mode."); })
 {
 }
 
 wallet_api::~wallet_api()
 {
+}
+
+void wallet_api::set_exit_func(exit_func_type fn)
+{
+    exit_func = fn;
 }
 
 bool wallet_api::copy_wallet_file(const std::string& destination_filename)
@@ -927,6 +1070,11 @@ std::string wallet_api::get_wallet_filename() const
 }
 
 account_api_obj wallet_api::get_account(const std::string& account_name) const
+{
+    return my->get_account(account_name);
+}
+
+account_balance_info_api_obj wallet_api::get_account_balance(const std::string& account_name) const
 {
     return my->get_account(account_name);
 }
@@ -2527,6 +2675,195 @@ annotated_signed_transaction wallet_api::propose_new_quorum_for_quorum_change(co
     tx.validate();
 
     return my->sign_transaction(tx, broadcast);
+}
+
+atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,
+                                                                   const std::string& participant,
+                                                                   const asset& amount,
+                                                                   const std::string& metadata,
+                                                                   const uint8_t secret_length,
+                                                                   const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    std::string secret;
+
+    secret = scorum::wallet::suggest_brain_key().brain_priv_key;
+    secret = atomicswap::get_secret_hex(secret, secret_length);
+
+    std::string secret_hash = atomicswap::get_secret_hash(secret);
+
+    atomicswap_initiate_operation op;
+
+    op.type = atomicswap_by_initiator;
+    op.owner = initiator;
+    op.recipient = participant;
+    op.secret_hash = secret_hash;
+    op.amount = amount;
+    op.metadata = metadata;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+
+        return atomicswap_contract_result_api_obj(ret, op, secret);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't initiate Atomic Swap.");
+    }
+
+    return atomicswap_contract_result_api_obj(ret);
+}
+
+atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std::string& secret_hash,
+                                                                      const std::string& participant,
+                                                                      const std::string& initiator,
+                                                                      const asset& amount,
+                                                                      const std::string& metadata,
+                                                                      const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_initiate_operation op;
+
+    op.type = atomicswap_by_participant;
+    op.owner = participant;
+    op.recipient = initiator;
+    op.secret_hash = secret_hash;
+    op.amount = amount;
+    op.metadata = metadata;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+
+        return atomicswap_contract_result_api_obj(ret, op);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't participate Atomic Swap.");
+    }
+
+    return atomicswap_contract_result_api_obj(ret);
+}
+
+annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& from,
+                                                           const std::string& to,
+                                                           const std::string& secret,
+                                                           const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_redeem_operation op;
+
+    op.from = from;
+    op.to = to;
+    op.secret = secret;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't redeem Atomic Swap contract.");
+    }
+
+    return ret;
+}
+
+atomicswap_contract_info_api_obj
+wallet_api::atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash)
+{
+    atomicswap_contract_info_api_obj ret;
+    try
+    {
+        ret = my->_remote_db->get_atomicswap_contract(from, to, secret_hash);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't access to Atomic Swap contract.");
+    }
+    return ret;
+}
+
+std::string
+wallet_api::atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash)
+{
+    try
+    {
+        atomicswap_contract_info_api_obj contract_info = atomicswap_auditcontract(from, to, secret_hash);
+
+        FC_ASSERT(!contract_info.secret.empty(), "Contract is not redeemed.");
+
+        return contract_info.secret;
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't access to Atomic Swap contract secret.");
+    }
+
+    return "";
+}
+
+annotated_signed_transaction wallet_api::atomicswap_refund(const std::string& participant,
+                                                           const std::string& initiator,
+                                                           const std::string& secret_hash,
+                                                           const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    atomicswap_refund_operation op;
+
+    op.participant = participant;
+    op.initiator = initiator;
+    op.secret_hash = secret_hash;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't refund Atomic Swap contract.");
+    }
+
+    return ret;
+}
+
+std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
+{
+    std::vector<atomicswap_contract_api_obj> result;
+
+    result = my->_remote_db->get_atomicswap_contracts(owner);
+
+    return result;
+}
+
+void wallet_api::exit()
+{
+    exit_func();
 }
 
 } // namespace wallet

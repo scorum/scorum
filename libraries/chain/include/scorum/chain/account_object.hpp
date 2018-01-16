@@ -227,6 +227,7 @@ struct by_scorum_balance;
 struct by_smp_balance;
 struct by_post_count;
 struct by_vote_count;
+struct by_created_by_genesis;
 
 /**
  * @ingroup object_index
@@ -238,6 +239,10 @@ typedef multi_index_container<account_object,
                                                         member<account_object,
                                                                account_name_type,
                                                                &account_object::name>>,
+                                         ordered_non_unique<tag<by_created_by_genesis>,
+                                                            member<account_object,
+                                                                   bool,
+                                                                   &account_object::created_by_genesis>>,
                                          ordered_unique<tag<by_proxy>,
                                                         composite_key<account_object,
                                                                       member<account_object,

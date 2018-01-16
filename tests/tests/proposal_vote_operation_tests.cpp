@@ -340,7 +340,7 @@ SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 0);
+    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), (size_t)0);
 }
 
 SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
@@ -351,7 +351,7 @@ SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 0);
+    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), (size_t)0);
 }
 
 SCORUM_TEST_CASE(dont_remove_members_during_adding)
@@ -362,9 +362,9 @@ SCORUM_TEST_CASE(dont_remove_members_during_adding)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(committee_service.excluded_members.size(), 0);
+    BOOST_CHECK_EQUAL(committee_service.excluded_members.size(), (size_t)0);
 
-    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), 1);
+    BOOST_REQUIRE_EQUAL(committee_service.added_members.size(), (size_t)1);
     BOOST_CHECK_EQUAL(committee_service.added_members.front(), "bob");
 }
 
@@ -376,9 +376,9 @@ SCORUM_TEST_CASE(dont_add_members_during_droping)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(committee_service.added_members.size(), 0);
+    BOOST_CHECK_EQUAL(committee_service.added_members.size(), (size_t)0);
 
-    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), 1);
+    BOOST_REQUIRE_EQUAL(committee_service.excluded_members.size(), (size_t)1);
     BOOST_CHECK_EQUAL(committee_service.excluded_members.front(), "bob");
 }
 
@@ -390,7 +390,7 @@ SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 
     evaluator.execute_proposal(p);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.removed_proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.removed_proposals.size(), (size_t)1);
     BOOST_CHECK_EQUAL(proposal_service.removed_proposals.front()._id, op.proposal_id);
 }
 
@@ -466,27 +466,27 @@ BOOST_AUTO_TEST_SUITE(test_get_quorum)
 
 BOOST_AUTO_TEST_CASE(sixty_percent_from_ten_is_six_votes)
 {
-    BOOST_CHECK_EQUAL(6, scorum::chain::utils::get_quorum(10, SCORUM_PERCENT(60)));
+    BOOST_CHECK_EQUAL((uint64_t)6, scorum::chain::utils::get_quorum(10, SCORUM_PERCENT(60)));
 }
 
 BOOST_AUTO_TEST_CASE(sixty_percent_from_eight_is_four_votes)
 {
-    BOOST_CHECK_EQUAL(4, scorum::chain::utils::get_quorum(8, SCORUM_PERCENT(60)));
+    BOOST_CHECK_EQUAL((uint64_t)4, scorum::chain::utils::get_quorum(8, SCORUM_PERCENT(60)));
 }
 
 BOOST_AUTO_TEST_CASE(sixty_percent_from_six_is_three_votes)
 {
-    BOOST_CHECK_EQUAL(3, scorum::chain::utils::get_quorum(6, SCORUM_PERCENT(60)));
+    BOOST_CHECK_EQUAL((uint64_t)3, scorum::chain::utils::get_quorum(6, SCORUM_PERCENT(60)));
 }
 
 BOOST_AUTO_TEST_CASE(sixty_percent_from_five_is_three_votes)
 {
-    BOOST_CHECK_EQUAL(3, scorum::chain::utils::get_quorum(5, SCORUM_PERCENT(60)));
+    BOOST_CHECK_EQUAL((uint64_t)3, scorum::chain::utils::get_quorum(5, SCORUM_PERCENT(60)));
 }
 
 BOOST_AUTO_TEST_CASE(sixty_percent_from_four_is_two_votes)
 {
-    BOOST_CHECK_EQUAL(2, scorum::chain::utils::get_quorum(4, SCORUM_PERCENT(60)));
+    BOOST_CHECK_EQUAL((uint64_t)2, scorum::chain::utils::get_quorum(4, SCORUM_PERCENT(60)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

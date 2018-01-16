@@ -1,7 +1,6 @@
 file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/util/*.hpp"
-                  "include/scorum/chain/pool/*.hpp"
-                  "include/scorum/chain/proposal/*.hpp")
+                  "include/scorum/chain/pool/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -34,6 +33,7 @@ add_library( scorum_chain
              dbs_registration_pool.cpp
              dbs_registration_committee.cpp
              dbs_proposal.cpp
+             dbs_atomicswap.cpp
              dbs_dynamic_global_property.cpp
 
              scorum_evaluator.cpp

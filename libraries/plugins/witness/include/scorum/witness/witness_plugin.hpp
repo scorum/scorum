@@ -27,6 +27,7 @@
 #include <scorum/chain/database.hpp>
 
 #include <fc/thread/future.hpp>
+#include <fc/api.hpp>
 
 #define RESERVE_RATIO_PRECISION ((int64_t)10000)
 #define RESERVE_RATIO_MIN_INCREMENT ((int64_t)5000)
@@ -80,9 +81,9 @@ public:
 
 private:
     void schedule_production_loop();
-    block_production_condition::block_production_condition_enum block_production_loop();
-    block_production_condition::block_production_condition_enum maybe_produce_block(
-        fc::mutable_variant_object& capture);
+    void block_production_loop();
+    block_production_condition::block_production_condition_enum
+    maybe_produce_block(fc::mutable_variant_object& capture);
 
     boost::program_options::variables_map _options;
     bool _production_enabled = false;
@@ -101,3 +102,7 @@ private:
 };
 }
 } // scorum::witness
+
+FC_REFLECT_ENUM(scorum::witness::block_production_condition::block_production_condition_enum,
+                (produced)(not_synced)(not_my_turn)(not_time_yet)(no_private_key)(low_participation)(lag)(consecutive)(
+                    wait_for_genesis)(exception_producing_block))

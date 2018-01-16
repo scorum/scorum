@@ -243,6 +243,24 @@ void account_by_key_plugin::plugin_initialize(const boost::program_options::vari
 void account_by_key_plugin::plugin_startup()
 {
     app().register_api_factory<account_by_key_api>("account_by_key_api");
+
+    chain::database& db = database();
+
+    auto it_pair = db.get_index<account_index>().indices().get<by_created_by_genesis>().equal_range(true);
+    auto it = it_pair.first;
+    const auto it_end = it_pair.second;
+    while (it != it_end)
+    {
+        auto it_2_pair = db.get_index<account_authority_index>().indices().get<by_account>().equal_range(it->name);
+        auto it_2 = it_2_pair.first;
+        const auto it_2_end = it_2_pair.second;
+        while (it_2 != it_2_end)
+        {
+            my->update_key_lookup(*it_2);
+            ++it_2;
+        }
+        ++it;
+    }
 }
 }
 } // scorum::account_by_key

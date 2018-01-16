@@ -275,19 +275,19 @@ SCORUM_TEST_CASE(proposal)
 
     {
         actor(alice).vote_for(jim_invitation);
-        BOOST_CHECK_EQUAL(2, get_committee_members().size());
+        BOOST_CHECK_EQUAL((size_t)2, get_committee_members().size());
         BOOST_CHECK(is_committee_member(jim) == true);
     }
 
     {
         actor(alice).vote_for(joe_invitation);
-        BOOST_CHECK_EQUAL(3, get_committee_members().size());
+        BOOST_CHECK_EQUAL((size_t)3, get_committee_members().size());
         BOOST_CHECK(is_committee_member(joe) == true);
     }
 
     {
         actor(alice).vote_for(hue_invitation);
-        BOOST_CHECK_EQUAL(4, get_committee_members().size());
+        BOOST_CHECK_EQUAL((size_t)4, get_committee_members().size());
         BOOST_CHECK(is_committee_member(hue) == true);
     }
 
@@ -295,10 +295,10 @@ SCORUM_TEST_CASE(proposal)
         actor(alice).vote_for(liz_invitation);
 
         // not enough votes to add liz
-        BOOST_CHECK_EQUAL(4, get_committee_members().size());
+        BOOST_CHECK_EQUAL((size_t)4, get_committee_members().size());
 
         actor(jim).vote_for(liz_invitation);
-        BOOST_CHECK_EQUAL(5, get_committee_members().size());
+        BOOST_CHECK_EQUAL((size_t)5, get_committee_members().size());
     }
     // end setup committee
 
@@ -309,7 +309,7 @@ SCORUM_TEST_CASE(proposal)
 
         BOOST_REQUIRE(p.valid());
 
-        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), 1);
+        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), static_cast<std::size_t>(1));
         BOOST_CHECK_EQUAL(p->get().voted_accounts.count("joe"), static_cast<std::size_t>(1));
     }
 
@@ -333,7 +333,7 @@ SCORUM_TEST_CASE(proposal)
         // We droped one member, amount of needed votes reduced and 'drop_hue' executed automatically
         BOOST_CHECK_EQUAL(false, is_committee_member(hue));
 
-        BOOST_CHECK_EQUAL(3, get_committee_members().size());
+        BOOST_CHECK_EQUAL((size_t)3, get_committee_members().size());
     }
 
     // check that member removed from voted_accounts after committee member removing
@@ -342,7 +342,7 @@ SCORUM_TEST_CASE(proposal)
 
         BOOST_REQUIRE(p.valid());
 
-        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), 0);
+        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), (size_t)0);
     }
 
     // check default value

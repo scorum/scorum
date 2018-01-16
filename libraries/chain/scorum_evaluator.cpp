@@ -12,6 +12,7 @@
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_registration_pool.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
+#include <scorum/chain/dbs_atomicswap.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -1421,6 +1422,76 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
     const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
 
     budget_service.close_budget(budget);
+}
+
+void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation& op)
+{
+    dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.owner);
+    account_service.check_account_existence(op.recipient);
+
+    const auto& owner = account_service.get_account(op.owner);
+    const auto& recipient = account_service.get_account(op.recipient);
+
+    optional<std::string> metadata;
+    if (!op.metadata.empty())
+    {
+        metadata = op.metadata;
+    }
+
+    switch (op.type)
+    {
+    case atomicswap_by_initiator:
+        atomicswap_service.create_contract(atomicswap_contract_initiator, owner, recipient, op.amount, op.secret_hash,
+                                           metadata);
+        break;
+    case atomicswap_by_participant:
+        atomicswap_service.create_contract(atomicswap_contract_participant, owner, recipient, op.amount, op.secret_hash,
+                                           metadata);
+        break;
+    default:
+        FC_ASSERT(false, "Invalid operation type.");
+    }
+}
+
+void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op)
+{
+    dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.from);
+    account_service.check_account_existence(op.to);
+
+    const auto& from = account_service.get_account(op.from);
+    const auto& to = account_service.get_account(op.to);
+
+    std::string secret_hash = atomicswap::get_secret_hash(op.secret);
+
+    const auto& contract = atomicswap_service.get_contract(from, to, secret_hash);
+
+    atomicswap_service.redeem_contract(contract, op.secret);
+}
+
+void atomicswap_refund_evaluator::do_apply(const atomicswap_refund_operation& op)
+{
+    dbs_atomicswap& atomicswap_service = _db.obtain_service<dbs_atomicswap>();
+    dbs_account& account_service = _db.obtain_service<dbs_account>();
+
+    account_service.check_account_existence(op.participant);
+    account_service.check_account_existence(op.initiator);
+
+    const auto& from = account_service.get_account(op.participant);
+    const auto& to = account_service.get_account(op.initiator);
+
+    const auto& contract = atomicswap_service.get_contract(from, to, op.secret_hash);
+
+    FC_ASSERT(contract.type != atomicswap_contract_initiator,
+              "Can't refund initiator contract. It is locked on ${h} hours.",
+              ("h", SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS / 3600));
+
+    atomicswap_service.refund_contract(contract);
 }
 
 } // namespace chain
