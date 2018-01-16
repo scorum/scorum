@@ -130,24 +130,6 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     return per_reg;
 }
 
-void dbs_registration_pool::set_invite_quorum(uint64_t quorum)
-{
-    const registration_pool_object& pool = get_pool();
-    db_impl().modify(pool, [&](registration_pool_object& pool) { pool.invite_quorum = quorum; });
-}
-
-void dbs_registration_pool::set_dropout_quorum(uint64_t quorum)
-{
-    const registration_pool_object& pool = get_pool();
-    db_impl().modify(pool, [&](registration_pool_object& pool) { pool.dropout_quorum = quorum; });
-}
-
-void dbs_registration_pool::set_quorum(uint64_t quorum)
-{
-    const registration_pool_object& pool = get_pool();
-    db_impl().modify(pool, [&](registration_pool_object& pool) { pool.change_quorum = quorum; });
-}
-
 asset dbs_registration_pool::_decrease_balance(const asset& balance)
 {
     FC_ASSERT(balance.amount > 0, "Invalid balance.");

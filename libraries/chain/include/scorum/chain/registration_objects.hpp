@@ -47,10 +47,6 @@ public:
     };
 
     fc::shared_vector<schedule_item> schedule_items;
-
-    uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 class registration_committee_member_object

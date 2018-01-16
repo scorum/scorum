@@ -25,7 +25,7 @@ class dynamic_global_property_object
 {
 public:
     template <typename Constructor, typename Allocator>
-    dynamic_global_property_object(Constructor&& c, allocator<Allocator> a)
+    dynamic_global_property_object(Constructor&& c, allocator<Allocator>)
     {
         c(*this);
     }
@@ -87,6 +87,10 @@ public:
      * their votes reduced.
      */
     uint32_t vote_power_reserve_rate = 40;
+
+    uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 typedef multi_index_container<dynamic_global_property_object,

@@ -4,13 +4,15 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
+#include <scorum/chain/global_property_object.hpp>
+
 #include <scorum/chain/evaluator.hpp>
 #include <scorum/chain/dbservice.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_dynamic_global_property.hpp>
 
 #include <scorum/chain/proposal_object.hpp>
 
@@ -23,14 +25,18 @@ using namespace scorum::protocol;
 template <typename AccountService,
           typename ProposalService,
           typename CommitteeService,
-          typename PoolService,
+          typename PropertiesService,
           typename OperationType = scorum::protocol::operation>
 class proposal_vote_evaluator_t : public evaluator<OperationType>
 // clang-format on
 {
 public:
     typedef proposal_vote_operation operation_type;
-    typedef proposal_vote_evaluator_t<AccountService, ProposalService, CommitteeService, PoolService, OperationType>
+    typedef proposal_vote_evaluator_t<AccountService,
+                                      ProposalService,
+                                      CommitteeService,
+                                      PropertiesService,
+                                      OperationType>
         EvaluatorType;
 
     using evaluator_callback = std::function<void(const proposal_object&)>;
@@ -62,11 +68,11 @@ public:
     proposal_vote_evaluator_t(AccountService& account_service,
                               ProposalService& proposal_service,
                               CommitteeService& committee_service,
-                              PoolService& pool_service)
+                              PropertiesService& pool_service)
         : _account_service(account_service)
         , _proposal_service(proposal_service)
         , _committee_service(committee_service)
-        , _pool_service(pool_service)
+        , _properties_service(pool_service)
     {
         evaluators.set(proposal_action::invite,
                        std::bind(&EvaluatorType::invite_evaluator, this, std::placeholders::_1));
@@ -168,25 +174,25 @@ protected:
     void change_invite_quorum_evaluator(const proposal_object& proposal)
     {
         uint64_t quorum = proposal.data.as_uint64();
-        _pool_service.set_invite_quorum(quorum);
+        _properties_service.set_invite_quorum(quorum);
     }
 
     void change_dropout_quorum_evaluator(const proposal_object& proposal)
     {
         uint64_t quorum = proposal.data.as_uint64();
-        _pool_service.set_dropout_quorum(quorum);
+        _properties_service.set_dropout_quorum(quorum);
     }
 
     void change_quorum_evaluator(const proposal_object& proposal)
     {
         uint64_t quorum = proposal.data.as_uint64();
-        _pool_service.set_quorum(quorum);
+        _properties_service.set_quorum(quorum);
     }
 
     AccountService& _account_service;
     ProposalService& _proposal_service;
     CommitteeService& _committee_service;
-    PoolService& _pool_service;
+    PropertiesService& _properties_service;
 
     fc::flat_set<account_name_type> removed_members;
 
@@ -194,7 +200,7 @@ private:
     proposal_evaluators_register evaluators;
 };
 
-typedef proposal_vote_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee, dbs_registration_pool>
+typedef proposal_vote_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee, dbs_dynamic_global_property>
     proposal_vote_evaluator;
 
 } // namespace chain

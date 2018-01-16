@@ -2,13 +2,15 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
+#include <scorum/chain/global_property_object.hpp>
+
 #include <scorum/chain/evaluator.hpp>
 #include <scorum/chain/dbservice.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_dynamic_global_property.hpp>
 
 namespace scorum {
 namespace chain {
@@ -19,7 +21,7 @@ using namespace scorum::protocol;
  template <typename AccountService,
           typename ProposalService,
           typename CommitteeService,
-          typename PoolService,
+          typename PropertiesService,
           typename OperationType = scorum::protocol::operation>
  class proposal_create_evaluator_t : public evaluator<OperationType>
 // clang-format on
@@ -30,13 +32,13 @@ public:
     proposal_create_evaluator_t(AccountService& account_service,
                                 ProposalService& proposal_service,
                                 CommitteeService& committee_service,
-                                PoolService& pool_service,
+                                PropertiesService& properties_service,
                                 uint32_t lifetime_min,
                                 uint32_t lifetime_max)
         : _account_service(account_service)
         , _proposal_service(proposal_service)
         , _committee_service(committee_service)
-        , _pool_service(pool_service)
+        , _properties_service(properties_service)
         , _lifetime_min(lifetime_min)
         , _lifetime_max(lifetime_max)
     {
@@ -72,20 +74,20 @@ public:
 
     uint64_t get_quorum(proposal_action action)
     {
-        const registration_pool_object& pool = _pool_service.get_pool();
+        const dynamic_global_property_object& properties = _properties_service.get_dynamic_global_properties();
 
         switch (action)
         {
         case proposal_action::invite:
-            return pool.invite_quorum;
+            return properties.invite_quorum;
 
         case proposal_action::dropout:
-            return pool.dropout_quorum;
+            return properties.dropout_quorum;
 
         case proposal_action::change_invite_quorum:
         case proposal_action::change_dropout_quorum:
         case proposal_action::change_quorum:
-            return pool.change_quorum;
+            return properties.change_quorum;
 
         default:
             FC_ASSERT("invalid action type.");
@@ -98,13 +100,13 @@ protected:
     AccountService& _account_service;
     ProposalService& _proposal_service;
     CommitteeService& _committee_service;
-    PoolService& _pool_service;
+    PropertiesService& _properties_service;
 
     const uint32_t _lifetime_min;
     const uint32_t _lifetime_max;
 };
 
-typedef proposal_create_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee, dbs_registration_pool>
+typedef proposal_create_evaluator_t<dbs_account, dbs_proposal, dbs_registration_committee, dbs_dynamic_global_property>
     proposal_create_evaluator;
 
 } // namespace chain

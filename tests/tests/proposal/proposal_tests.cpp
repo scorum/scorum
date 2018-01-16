@@ -7,7 +7,7 @@
 
 #include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_dynamic_global_property.hpp>
 
 #include "actor.hpp"
 #include "genesis.hpp"
@@ -194,29 +194,29 @@ public:
 
     uint64_t get_invite_quorum()
     {
-        dbs_registration_pool& pool_service = chain().db.obtain_service<dbs_registration_pool>();
+        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
 
-        auto& pool = pool_service.get_pool();
+        auto& prop = prop_service.get_dynamic_global_properties();
 
-        return pool.invite_quorum;
+        return prop.invite_quorum;
     }
 
     uint64_t get_dropout_quorum()
     {
-        dbs_registration_pool& pool_service = chain().db.obtain_service<dbs_registration_pool>();
+        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
 
-        auto& pool = pool_service.get_pool();
+        auto& prop = prop_service.get_dynamic_global_properties();
 
-        return pool.dropout_quorum;
+        return prop.dropout_quorum;
     }
 
     uint64_t get_change_quorum()
     {
-        dbs_registration_pool& pool_service = chain().db.obtain_service<dbs_registration_pool>();
+        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
 
-        auto& pool = pool_service.get_pool();
+        auto& prop = prop_service.get_dynamic_global_properties();
 
-        return pool.change_quorum;
+        return prop.change_quorum;
     }
 
     actor_actions actor(const Actor& a)

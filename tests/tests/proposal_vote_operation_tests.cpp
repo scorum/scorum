@@ -141,7 +141,7 @@ public:
     uint64_t quorum_percent = 0;
 };
 
-class pool_service_mock
+class properties_service_mock
 {
 public:
     void set_invite_quorum(uint64_t quorum)
@@ -164,9 +164,11 @@ public:
     uint64_t new_change_quorum = 0;
 };
 
-typedef scorum::chain::
-    proposal_vote_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock, pool_service_mock>
-        evaluator_test_impl;
+typedef scorum::chain::proposal_vote_evaluator_t<account_service_mock,
+                                                 proposal_service_mock,
+                                                 committee_service_mock,
+                                                 properties_service_mock>
+    evaluator_test_impl;
 
 class evaluator_mocked : public evaluator_test_impl
 {
@@ -174,8 +176,8 @@ public:
     evaluator_mocked(account_service_mock& account_service,
                      proposal_service_mock& proposal_service,
                      committee_service_mock& committee_service,
-                     pool_service_mock& pool_service)
-        : evaluator_test_impl(account_service, proposal_service, committee_service, pool_service)
+                     properties_service_mock& properties_service)
+        : evaluator_test_impl(account_service, proposal_service, committee_service, properties_service)
     {
     }
 
@@ -194,7 +196,7 @@ class proposal_vote_evaluator_fixture
 {
 public:
     proposal_vote_evaluator_fixture()
-        : evaluator(account_service, proposal_service, committee_service, pool_service)
+        : evaluator(account_service, proposal_service, committee_service, properties_service)
     {
     }
 
@@ -261,7 +263,7 @@ public:
     account_service_mock account_service;
     proposal_service_mock proposal_service;
     committee_service_mock committee_service;
-    pool_service_mock pool_service;
+    properties_service_mock properties_service;
 
     evaluator_mocked evaluator;
 };
@@ -400,7 +402,7 @@ SCORUM_TEST_CASE(change_invite_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(pool_service.new_invite_quorum, SCORUM_PERCENT(60));
+    BOOST_CHECK_EQUAL(properties_service.new_invite_quorum, SCORUM_PERCENT(60));
 }
 
 SCORUM_TEST_CASE(change_dropout_quorum)
@@ -411,7 +413,7 @@ SCORUM_TEST_CASE(change_dropout_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(pool_service.new_dropout_quorum, SCORUM_PERCENT(60));
+    BOOST_CHECK_EQUAL(properties_service.new_dropout_quorum, SCORUM_PERCENT(60));
 }
 
 SCORUM_TEST_CASE(change_quorum)
@@ -422,7 +424,7 @@ SCORUM_TEST_CASE(change_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(pool_service.new_change_quorum, SCORUM_PERCENT(60));
+    BOOST_CHECK_EQUAL(properties_service.new_change_quorum, SCORUM_PERCENT(60));
 }
 
 SCORUM_TEST_CASE(dont_change_invite_quorum)
@@ -433,7 +435,7 @@ SCORUM_TEST_CASE(dont_change_invite_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(pool_service.new_invite_quorum, 0);
+    BOOST_CHECK_EQUAL(properties_service.new_invite_quorum, 0);
 }
 
 SCORUM_TEST_CASE(dont_change_dropout_quorum)
@@ -444,7 +446,7 @@ SCORUM_TEST_CASE(dont_change_dropout_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(pool_service.new_dropout_quorum, 0);
+    BOOST_CHECK_EQUAL(properties_service.new_dropout_quorum, 0);
 }
 
 SCORUM_TEST_CASE(dont_change_quorum)
@@ -455,7 +457,7 @@ SCORUM_TEST_CASE(dont_change_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(pool_service.new_change_quorum, 0);
+    BOOST_CHECK_EQUAL(properties_service.new_change_quorum, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

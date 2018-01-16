@@ -12,6 +12,7 @@
 #include <scorum/chain/proposal_vote_evaluator.hpp>
 #include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/global_property_object.hpp>
 
 #include "defines.hpp"
 
@@ -19,7 +20,7 @@ using scorum::protocol::proposal_action;
 using scorum::protocol::account_name_type;
 using scorum::chain::proposal_object;
 using scorum::chain::proposal_create_operation;
-using scorum::chain::registration_pool_object;
+using scorum::chain::dynamic_global_property_object;
 
 namespace bip = boost::interprocess;
 
@@ -84,24 +85,24 @@ public:
     uint64_t quorum_votes = 1;
 };
 
-class pool_service_mock
+class properties_service_mock
 {
 public:
-    pool_service_mock()
+    properties_service_mock()
         : segment(bip::create_only, "TestSharedMemory", 65536)
         , allocator(segment.get_segment_manager())
-        , pool([](const registration_pool_object&) {}, allocator)
+        , properties([](const dynamic_global_property_object&) {}, allocator)
     {
     }
 
-    const registration_pool_object& get_pool() const
+    const dynamic_global_property_object& get_dynamic_global_properties() const
     {
-        return pool;
+        return properties;
     }
 
     template <typename C> void modify(C&& c)
     {
-        c(pool);
+        c(properties);
     }
 
 private:
@@ -118,13 +119,15 @@ private:
     } remover;
 
     bip::managed_shared_memory segment;
-    scorum::chain::allocator<registration_pool_object> allocator;
-    registration_pool_object pool;
+    scorum::chain::allocator<dynamic_global_property_object> allocator;
+    dynamic_global_property_object properties;
 };
 
-typedef scorum::chain::
-    proposal_create_evaluator_t<account_service_mock, proposal_service_mock, committee_service_mock, pool_service_mock>
-        proposal_create_evaluator_mocked;
+typedef scorum::chain::proposal_create_evaluator_t<account_service_mock,
+                                                   proposal_service_mock,
+                                                   committee_service_mock,
+                                                   properties_service_mock>
+    proposal_create_evaluator_mocked;
 
 class proposal_create_evaluator_fixture
 {
@@ -132,7 +135,8 @@ public:
     proposal_create_evaluator_fixture()
         : lifetime_min(5)
         , lifetime_max(10)
-        , evaluator(account_service, proposal_service, committee_service, pool_service, lifetime_min, lifetime_max)
+        , evaluator(
+              account_service, proposal_service, committee_service, properties_service, lifetime_min, lifetime_max)
     {
         committee_service.existent_accounts.insert("alice");
         committee_service.existent_accounts.insert("bob");
@@ -144,7 +148,7 @@ public:
     account_service_mock account_service;
     proposal_service_mock proposal_service;
     committee_service_mock committee_service;
-    pool_service_mock pool_service;
+    properties_service_mock properties_service;
 
     proposal_create_evaluator_mocked evaluator;
 };
@@ -246,7 +250,7 @@ SCORUM_TEST_CASE(create_one_change_invite_quorum_proposal)
 SCORUM_TEST_CASE(change_default_invite_quorum)
 {
     const uint64_t expected_quorum = SCORUM_PERCENT(80);
-    BOOST_REQUIRE_NE(pool_service.get_pool().change_quorum, expected_quorum);
+    BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
     op.creator = "alice";
@@ -254,7 +258,7 @@ SCORUM_TEST_CASE(change_default_invite_quorum)
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::invite;
 
-    pool_service.modify([](registration_pool_object& pool) { pool.invite_quorum = expected_quorum; });
+    properties_service.modify([](dynamic_global_property_object& p) { p.invite_quorum = expected_quorum; });
 
     evaluator.do_apply(op);
 
@@ -266,7 +270,7 @@ SCORUM_TEST_CASE(change_default_invite_quorum)
 SCORUM_TEST_CASE(change_default_dropout_quorum)
 {
     const uint64_t expected_quorum = SCORUM_PERCENT(80);
-    BOOST_REQUIRE_NE(pool_service.get_pool().change_quorum, expected_quorum);
+    BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
     op.creator = "alice";
@@ -274,7 +278,7 @@ SCORUM_TEST_CASE(change_default_dropout_quorum)
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::dropout;
 
-    pool_service.modify([](registration_pool_object& pool) { pool.dropout_quorum = expected_quorum; });
+    properties_service.modify([](dynamic_global_property_object& p) { p.dropout_quorum = expected_quorum; });
 
     evaluator.do_apply(op);
 
@@ -286,7 +290,7 @@ SCORUM_TEST_CASE(change_default_dropout_quorum)
 SCORUM_TEST_CASE(change_default_change_quorum)
 {
     const uint64_t expected_quorum = SCORUM_PERCENT(80);
-    BOOST_REQUIRE_NE(pool_service.get_pool().change_quorum, expected_quorum);
+    BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
     op.creator = "alice";
@@ -294,7 +298,7 @@ SCORUM_TEST_CASE(change_default_change_quorum)
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_invite_quorum;
 
-    pool_service.modify([](registration_pool_object& pool) { pool.change_quorum = expected_quorum; });
+    properties_service.modify([](dynamic_global_property_object& p) { p.change_quorum = expected_quorum; });
 
     evaluator.do_apply(op);
 
