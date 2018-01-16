@@ -308,6 +308,10 @@ public:
     {
         std::cout << "    " << name << ": " << js_name<Member>::name() << "\n";
     }
+
+    void operator()(const char*, const int64_t) const
+    {
+    }
 };
 
 template <typename T> struct serializer<T, false>
@@ -475,6 +479,10 @@ public:
     {
         serializer<Member>::init();
     }
+
+    void operator()(const char*, const int64_t) const
+    {
+    }
 };
 
 template <typename T, bool reflected> struct serializer
@@ -485,7 +493,8 @@ template <typename T, bool reflected> struct serializer
         auto name = js_name<T>::name();
         if (st.find(name) == st.end())
         {
-            fc::reflector<T>::visit(register_member_visitor());
+            register_member_visitor v;
+            fc::reflector<T>::visit(v);
             register_serializer(name, [=]() { generate(); });
         }
     }

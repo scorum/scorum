@@ -584,7 +584,7 @@ struct atomicswap_contract_result_api_obj
                                        const std::string& secret = "")
         : tr(_tr)
     {
-        obj.contract_initiator = (op.type == protocol::atomicswap_initiate_operation::initiate_by_initiator);
+        obj.contract_initiator = (op.type == protocol::atomicswap_by_initiator);
         obj.owner = op.owner;
         obj.to = op.recipient;
         obj.amount = op.amount;

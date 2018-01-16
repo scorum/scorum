@@ -1443,11 +1443,11 @@ void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation
 
     switch (op.type)
     {
-    case atomicswap_initiate_operation::initiate_by_initiator:
+    case atomicswap_by_initiator:
         atomicswap_service.create_contract(atomicswap_contract_initiator, owner, recipient, op.amount, op.secret_hash,
                                            metadata);
         break;
-    case atomicswap_initiate_operation::initiate_by_participant:
+    case atomicswap_by_participant:
         atomicswap_service.create_contract(atomicswap_contract_participant, owner, recipient, op.amount, op.secret_hash,
                                            metadata);
         break;

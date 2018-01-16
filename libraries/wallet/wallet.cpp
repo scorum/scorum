@@ -2635,7 +2635,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
 
     atomicswap_initiate_operation op;
 
-    op.type = atomicswap_initiate_operation::initiate_by_initiator;
+    op.type = atomicswap_by_initiator;
     op.owner = initiator;
     op.recipient = participant;
     op.secret_hash = secret_hash;
@@ -2672,7 +2672,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std:
 
     atomicswap_initiate_operation op;
 
-    op.type = atomicswap_initiate_operation::initiate_by_participant;
+    op.type = atomicswap_by_participant;
     op.owner = participant;
     op.recipient = initiator;
     op.secret_hash = secret_hash;

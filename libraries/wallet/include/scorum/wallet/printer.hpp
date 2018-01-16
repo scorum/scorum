@@ -28,8 +28,6 @@ public:
     {
     }
 
-    const size_t screen_w;
-
     void clear()
     {
         _end_print_sequence();
@@ -106,8 +104,6 @@ public:
         if (end_line)
             print_endl();
     }
-
-    const char* wrap_symbol = "> ";
 
     template <typename T> void print_cell(const T& val, size_t w, size_t cell_count) const
     {
@@ -254,12 +250,6 @@ public:
     }
 
 private:
-    using stringstream_type = std::unique_ptr<std::stringstream>;
-
-    stringstream_type _own_out;
-    std::stringstream& _out;
-    mutable stringstream_type _sequence_ctx;
-
     void _start_print_sequence() const
     {
         if (!_sequence_ctx)
@@ -278,6 +268,8 @@ private:
             _sequence_ctx.reset();
         }
     }
+
+    using stringstream_type = std::unique_ptr<std::stringstream>;
 
     struct cell_context
     {
@@ -308,7 +300,6 @@ private:
             splitted = false;
         }
     };
-    mutable cell_context _cell_ctx;
 
     struct table_context
     {
@@ -328,6 +319,16 @@ private:
             opened = false;
         }
     };
+
+public:
+    const size_t screen_w;
+    const char* wrap_symbol = "> ";
+
+private:
+    stringstream_type _own_out;
+    std::stringstream& _out;
+    mutable stringstream_type _sequence_ctx;
+    mutable cell_context _cell_ctx;
     mutable table_context _table_ctx;
 };
 }

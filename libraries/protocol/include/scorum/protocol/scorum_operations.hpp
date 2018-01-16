@@ -799,16 +799,15 @@ struct proposal_vote_operation : public base_operation
     void validate() const;
 };
 
+enum atomicswap_initiate_type
+{
+    atomicswap_by_initiator = 0,
+    atomicswap_by_participant,
+};
+
 struct atomicswap_initiate_operation : public base_operation
 {
-    enum initiate_type
-    {
-        initiate_by_initiator = 0,
-        initiate_by_participant,
-    };
-    // TODO: Fix DEFINE_OPERATION_TYPE to use initiate_type instead int
-    //      (FC_REFLECT_ENUM does not work)
-    int type = initiate_by_initiator;
+    atomicswap_initiate_type type = atomicswap_by_initiator;
 
     account_name_type owner;
     account_name_type recipient;
@@ -952,6 +951,8 @@ FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
+FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_type,
+                (atomicswap_by_initiator)(atomicswap_by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 

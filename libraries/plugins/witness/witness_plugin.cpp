@@ -524,7 +524,7 @@ void witness_plugin::plugin_shutdown()
 
 void witness_plugin::schedule_production_loop(block_production_condition::block_production_condition_enum last_result)
 {
-    const int64_t ONE_SECOND_MS = 1000000;
+    static const int64_t ONE_SECOND_MS = 1000000;
     // Schedule for the next second's tick regardless of chain state
     // If we would wait less than 50ms, wait for the whole second.
     fc::time_point fc_now = fc::time_point::now();

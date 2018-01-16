@@ -18,7 +18,7 @@ std::string get_secret_hex(const std::string& secret, const uint8_t secret_lengt
     std::size_t out_sz = secret_length;
     if (!out_sz)
     {
-        const size_t entropy_percent = (std::size_t)50;
+        static const size_t entropy_percent = (std::size_t)50;
         FC_ASSERT(entropy_percent > 0);
         std::size_t entropy = secret.size();
         // get value in [entropy_percent, 2*entropy_percent - 1]
