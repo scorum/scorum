@@ -375,7 +375,7 @@ void proposal_create_operation::validate() const
     {
         uint64_t quorum = data.as_uint64();
 
-        FC_ASSERT(quorum > SCORUM_MIN_QUORUM_VALUE_PERCENT, "Quorum is to small.");
+        FC_ASSERT(quorum >= SCORUM_MIN_QUORUM_VALUE_PERCENT, "Quorum is to small.");
 
         FC_ASSERT(quorum <= SCORUM_MAX_QUORUM_VALUE_PERCENT, "Quorum is to large.");
     }

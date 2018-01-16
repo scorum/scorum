@@ -159,9 +159,9 @@ public:
         new_change_quorum = quorum;
     }
 
-    uint64_t new_invite_quorum;
-    uint64_t new_dropout_quorum;
-    uint64_t new_change_quorum;
+    uint64_t new_invite_quorum = 0;
+    uint64_t new_dropout_quorum = 0;
+    uint64_t new_change_quorum = 0;
 };
 
 typedef scorum::chain::
@@ -207,7 +207,7 @@ public:
         evaluator.do_apply(op);
     }
 
-    proposal_object& create_proposal(proposal_action action = proposal_action::invite)
+    proposal_object& create_committee_proposal(proposal_action action = proposal_action::invite)
     {
         proposal_object proposal;
         proposal.creator = "alice";
@@ -219,6 +219,24 @@ public:
 
         committee_service.existent_accounts.insert(proposal.creator);
         committee_service.existent_accounts.insert("bob");
+
+        op.voting_account = proposal.creator;
+        op.proposal_id = proposal.id._id;
+
+        return proposal_service.proposals[proposal_service.proposals.size() - 1];
+    }
+
+    proposal_object& create_quorum_change_proposal(uint64_t quorum, proposal_action action)
+    {
+        proposal_object proposal;
+        proposal.creator = "alice";
+        proposal.data = fc::variant(SCORUM_PERCENT(quorum)).as_uint64();
+        proposal.action = action;
+
+        proposal.id = proposal_service.proposals.size() + 1;
+        proposal_service.proposals.push_back(proposal);
+
+        committee_service.existent_accounts.insert(proposal.creator);
 
         op.voting_account = proposal.creator;
         op.proposal_id = proposal.id._id;
@@ -252,7 +270,7 @@ BOOST_FIXTURE_TEST_SUITE(proposal_vote_evaluator_tests, proposal_vote_evaluator_
 
 SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
 {
-    create_proposal();
+    create_committee_proposal();
 
     committee_service.existent_accounts.erase(committee_service.existent_accounts.find("alice"));
 
@@ -261,7 +279,7 @@ SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
 
 SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 {
-    create_proposal();
+    create_committee_proposal();
 
     op.proposal_id = 100;
 
@@ -270,7 +288,7 @@ SCORUM_TEST_CASE(throw_when_proposal_does_not_exists)
 
 SCORUM_TEST_CASE(throw_when_account_already_voted)
 {
-    proposal_object& p = create_proposal();
+    proposal_object& p = create_committee_proposal();
 
     p.voted_accounts.insert(op.voting_account);
 
@@ -279,7 +297,7 @@ SCORUM_TEST_CASE(throw_when_account_already_voted)
 
 SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
 {
-    auto p = create_proposal();
+    auto p = create_committee_proposal();
 
     proposal_service.expired.push_back(p.id);
 
@@ -290,7 +308,7 @@ SCORUM_TEST_CASE(throw_exception_if_proposal_expired)
 
 SCORUM_TEST_CASE(check_voter_name)
 {
-    auto p = create_proposal(proposal_action::dropout);
+    auto p = create_committee_proposal(proposal_action::dropout);
 
     configure_quorum();
 
@@ -301,7 +319,7 @@ SCORUM_TEST_CASE(check_voter_name)
 
 SCORUM_TEST_CASE(check_account_existence_for_voter_name)
 {
-    auto p = create_proposal(proposal_action::invite);
+    auto p = create_committee_proposal(proposal_action::invite);
     configure_quorum();
     apply();
 
@@ -314,7 +332,7 @@ BOOST_FIXTURE_TEST_SUITE(proposal_execute_tests, proposal_vote_evaluator_fixture
 
 SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
 {
-    auto p = create_proposal(proposal_action::invite);
+    auto p = create_committee_proposal(proposal_action::invite);
 
     configure_not_enough_quorum();
 
@@ -325,7 +343,7 @@ SCORUM_TEST_CASE(dont_add_member_if_not_enough_quorum)
 
 SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
 {
-    auto p = create_proposal(proposal_action::dropout);
+    auto p = create_committee_proposal(proposal_action::dropout);
 
     configure_not_enough_quorum();
 
@@ -336,7 +354,7 @@ SCORUM_TEST_CASE(dont_dropout_if_not_enough_quorum)
 
 SCORUM_TEST_CASE(dont_remove_members_during_adding)
 {
-    auto p = create_proposal(proposal_action::invite);
+    auto p = create_committee_proposal(proposal_action::invite);
 
     configure_quorum();
 
@@ -350,7 +368,7 @@ SCORUM_TEST_CASE(dont_remove_members_during_adding)
 
 SCORUM_TEST_CASE(dont_add_members_during_droping)
 {
-    auto p = create_proposal(proposal_action::dropout);
+    auto p = create_committee_proposal(proposal_action::dropout);
 
     configure_quorum();
 
@@ -364,7 +382,7 @@ SCORUM_TEST_CASE(dont_add_members_during_droping)
 
 SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 {
-    auto p = create_proposal(proposal_action::dropout);
+    auto p = create_committee_proposal(proposal_action::dropout);
 
     configure_quorum();
 
@@ -372,6 +390,72 @@ SCORUM_TEST_CASE(proposal_removed_after_droping_out_member)
 
     BOOST_REQUIRE_EQUAL(proposal_service.removed_proposals.size(), 1);
     BOOST_CHECK_EQUAL(proposal_service.removed_proposals.front()._id, op.proposal_id);
+}
+
+SCORUM_TEST_CASE(change_invite_quorum)
+{
+    auto p = create_quorum_change_proposal(60, proposal_action::change_invite_quorum);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(pool_service.new_invite_quorum, SCORUM_PERCENT(60));
+}
+
+SCORUM_TEST_CASE(change_dropout_quorum)
+{
+    auto p = create_quorum_change_proposal(60, proposal_action::change_dropout_quorum);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(pool_service.new_dropout_quorum, SCORUM_PERCENT(60));
+}
+
+SCORUM_TEST_CASE(change_quorum)
+{
+    auto p = create_quorum_change_proposal(60, proposal_action::change_quorum);
+
+    configure_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(pool_service.new_change_quorum, SCORUM_PERCENT(60));
+}
+
+SCORUM_TEST_CASE(dont_change_invite_quorum)
+{
+    auto p = create_quorum_change_proposal(60, proposal_action::change_invite_quorum);
+
+    configure_not_enough_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(pool_service.new_invite_quorum, 0);
+}
+
+SCORUM_TEST_CASE(dont_change_dropout_quorum)
+{
+    auto p = create_quorum_change_proposal(60, proposal_action::change_dropout_quorum);
+
+    configure_not_enough_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(pool_service.new_dropout_quorum, 0);
+}
+
+SCORUM_TEST_CASE(dont_change_quorum)
+{
+    auto p = create_quorum_change_proposal(60, proposal_action::change_quorum);
+
+    configure_not_enough_quorum();
+
+    evaluator.execute_proposal(p);
+
+    BOOST_CHECK_EQUAL(pool_service.new_change_quorum, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

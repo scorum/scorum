@@ -7,6 +7,7 @@
 
 #include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_proposal.hpp>
+#include <scorum/chain/dbs_registration_pool.hpp>
 
 #include "actor.hpp"
 #include "genesis.hpp"
@@ -41,11 +42,21 @@ public:
             transfer_to_vest(a, ASSET("0.100 SCR"));
         }
 
-        proposal_id_type create_proposal(const Actor& invitee, proposal_action action)
+        proposal_id_type create_committee_proposal(const Actor& a, proposal_action action)
+        {
+            return create_proposal(action, fc::variant(a.name).as_string());
+        }
+
+        proposal_id_type create_quorum_change_proposal(uint64_t q, proposal_action action)
+        {
+            return create_proposal(action, fc::variant(SCORUM_PERCENT(q)).as_uint64());
+        }
+
+        proposal_id_type create_proposal(proposal_action action, const fc::variant& data)
         {
             proposal_create_operation op;
             op.creator = actor.name;
-            op.data = invitee.name;
+            op.data = data;
             op.action = action;
             op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
 
@@ -62,18 +73,36 @@ public:
 
             f.chain().validate_database();
 
-            return f.get_proposal_id(invitee.name);
+            return f.get_last_proposal_id();
         }
 
-        uint64_t invite_in_to_committee(const Actor invitee)
+        uint64_t invite_in_to_committee(const Actor& invitee)
         {
-            auto proposal = create_proposal(invitee, proposal_action::invite);
+            auto proposal = create_committee_proposal(invitee, proposal_action::invite);
             return proposal._id;
         }
 
-        uint64_t dropout_from_committee(const Actor invitee)
+        uint64_t dropout_from_committee(const Actor& invitee)
         {
-            auto proposal = create_proposal(invitee, proposal_action::dropout);
+            auto proposal = create_committee_proposal(invitee, proposal_action::dropout);
+            return proposal._id;
+        }
+
+        uint64_t change_invite_quorum(uint64_t quorum)
+        {
+            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_invite_quorum);
+            return proposal._id;
+        }
+
+        uint64_t change_dropout_quorum(uint64_t quorum)
+        {
+            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_dropout_quorum);
+            return proposal._id;
+        }
+
+        uint64_t change_quorum(uint64_t quorum)
+        {
+            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_quorum);
             return proposal._id;
         }
 
@@ -116,20 +145,14 @@ public:
         return *_chain;
     }
 
-    proposal_id_type get_proposal_id(const std::string& name)
+    proposal_id_type get_last_proposal_id()
     {
         dbs_proposal& proposal_service = chain().db.obtain_service<dbs_proposal>();
         std::vector<proposal_object::cref_type> proposals = proposal_service.get_proposals();
 
-        for (const proposal_object& p : proposals)
-        {
-            if (p.data.as_string() == name)
-            {
-                return p.id;
-            }
-        }
+        BOOST_REQUIRE_GT(proposals.size(), 0);
 
-        throw fc::exception(fc::exception_code::unspecified_exception_code, "", "no such proposal");
+        return proposals[proposals.size() - 1].get().id;
     }
 
     committee_members get_committee_members()
@@ -167,6 +190,33 @@ public:
         }
 
         return fc::optional<proposal_object::cref_type>();
+    }
+
+    uint64_t get_invite_quorum()
+    {
+        dbs_registration_pool& pool_service = chain().db.obtain_service<dbs_registration_pool>();
+
+        auto& pool = pool_service.get_pool();
+
+        return pool.invite_quorum;
+    }
+
+    uint64_t get_dropout_quorum()
+    {
+        dbs_registration_pool& pool_service = chain().db.obtain_service<dbs_registration_pool>();
+
+        auto& pool = pool_service.get_pool();
+
+        return pool.dropout_quorum;
+    }
+
+    uint64_t get_change_quorum()
+    {
+        dbs_registration_pool& pool_service = chain().db.obtain_service<dbs_registration_pool>();
+
+        auto& pool = pool_service.get_pool();
+
+        return pool.change_quorum;
     }
 
     actor_actions actor(const Actor& a)
@@ -293,6 +343,28 @@ SCORUM_TEST_CASE(proposal)
         BOOST_REQUIRE(p.valid());
 
         BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), 0);
+    }
+
+    // check default value
+    {
+        BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_QUORUM_PERCENT, get_invite_quorum());
+        BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_QUORUM_PERCENT, get_dropout_quorum());
+        BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_QUORUM_PERCENT, get_change_quorum());
+    }
+
+    {
+        auto proposal = actor(alice).change_invite_quorum(50);
+        actor(alice).vote_for(proposal);
+
+        proposal = actor(alice).change_dropout_quorum(51);
+        actor(alice).vote_for(proposal);
+
+        proposal = actor(alice).change_quorum(100);
+        actor(alice).vote_for(proposal);
+
+        BOOST_CHECK_EQUAL(SCORUM_PERCENT(50), get_invite_quorum());
+        BOOST_CHECK_EQUAL(SCORUM_PERCENT(51), get_dropout_quorum());
+        BOOST_CHECK_EQUAL(SCORUM_PERCENT(100), get_change_quorum());
     }
 
 } // clang-format on

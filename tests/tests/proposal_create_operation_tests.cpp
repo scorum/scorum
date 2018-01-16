@@ -99,6 +99,11 @@ public:
         return pool;
     }
 
+    template <typename C> void modify(C&& c)
+    {
+        c(pool);
+    }
+
 private:
     struct shm_remove
     {
@@ -236,6 +241,66 @@ SCORUM_TEST_CASE(create_one_change_invite_quorum_proposal)
 
     BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_invite_quorum);
+}
+
+SCORUM_TEST_CASE(change_default_invite_quorum)
+{
+    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    BOOST_REQUIRE_NE(pool_service.get_pool().change_quorum, expected_quorum);
+
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = "bob";
+    op.lifetime_sec = lifetime_min + 1;
+    op.action = proposal_action::invite;
+
+    pool_service.modify([](registration_pool_object& pool) { pool.invite_quorum = expected_quorum; });
+
+    evaluator.do_apply(op);
+
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+
+    BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
+}
+
+SCORUM_TEST_CASE(change_default_dropout_quorum)
+{
+    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    BOOST_REQUIRE_NE(pool_service.get_pool().change_quorum, expected_quorum);
+
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = "bob";
+    op.lifetime_sec = lifetime_min + 1;
+    op.action = proposal_action::dropout;
+
+    pool_service.modify([](registration_pool_object& pool) { pool.dropout_quorum = expected_quorum; });
+
+    evaluator.do_apply(op);
+
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+
+    BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
+}
+
+SCORUM_TEST_CASE(change_default_change_quorum)
+{
+    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    BOOST_REQUIRE_NE(pool_service.get_pool().change_quorum, expected_quorum);
+
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = SCORUM_PERCENT(60);
+    op.lifetime_sec = lifetime_min + 1;
+    op.action = proposal_action::change_invite_quorum;
+
+    pool_service.modify([](registration_pool_object& pool) { pool.change_quorum = expected_quorum; });
+
+    evaluator.do_apply(op);
+
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+
+    BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
 
 SCORUM_TEST_CASE(create_one_change_dropout_quorum_proposal)

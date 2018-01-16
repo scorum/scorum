@@ -20,6 +20,7 @@ const proposal_object& dbs_proposal::create(const protocol::account_name_type& c
         proposal.creator = creator;
         proposal.data = data;
         proposal.action = action;
+        proposal.created = db_impl().head_block_time();
         proposal.expiration = expiration;
         proposal.quorum_percent = quorum;
     });
@@ -91,7 +92,7 @@ std::vector<proposal_object::cref_type> dbs_proposal::get_proposals()
 {
     std::vector<proposal_object::cref_type> ret;
 
-    const auto& idx = db_impl().get_index<proposal_object_index>().indices();
+    const auto& idx = db_impl().get_index<proposal_object_index>().indices().get<by_created>();
 
     for (auto it = idx.cbegin(); it != idx.end(); ++it)
     {
