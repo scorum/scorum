@@ -90,7 +90,7 @@ SCORUM_TEST_CASE(create_initiator_contract_check_get_contracts)
     BOOST_REQUIRE_NO_THROW(atomicswap_service.create_contract(
         atomicswap_contract_initiator, alice, bob, ALICE_SHARE_FOR_BOB, atomicswap::get_secret_hash(ALICE_SECRET)));
 
-    BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), 1);
+    BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), (size_t)1);
 }
 
 SCORUM_TEST_CASE(create_initiator_contract_check_get_contract)
@@ -137,7 +137,7 @@ SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_owner)
     }
 
     BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(),
-                        SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER);
+                        (size_t)SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER);
 
     BOOST_REQUIRE_THROW(atomicswap_service.create_contract(atomicswap_contract_initiator, alice,
                                                            account_service.get_account(people[ci]), ALICE_SHARE_FOR_BOB,
@@ -183,7 +183,7 @@ BOOST_FIXTURE_TEST_SUITE(atomicswap_service_redeem_alice_contract_check,
 
 SCORUM_TEST_CASE(create_redeem_close_contract)
 {
-    BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), 1);
+    BOOST_REQUIRE_EQUAL(atomicswap_service.get_contracts(alice).size(), (size_t)1);
 
     BOOST_REQUIRE_NO_THROW(
         atomicswap_service.redeem_contract(atomicswap_service.get_contracts(alice)[0], ALICE_SECRET));

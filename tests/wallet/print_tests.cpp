@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_SUITE(printer_cell_tests, printer_cell_tests_fixture)
 
 BOOST_AUTO_TEST_CASE(check_print_cell)
 {
-    BOOST_REQUIRE_EQUAL(width(), p.screen_w);
+    BOOST_REQUIRE_EQUAL((size_t)width(), p.screen_w);
 
     print();
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(check_print_cell)
 
 BOOST_AUTO_TEST_CASE(check_print_cell_wrap)
 {
-    BOOST_REQUIRE_EQUAL(width(), p.screen_w);
+    BOOST_REQUIRE_EQUAL((size_t)width(), p.screen_w);
     BOOST_REQUIRE_NE(std::string(1, fill_char), p.wrap_symbol);
 
     for (int ci = 0; ci < count(); ++ci)
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(check_print_table)
 {
     BOOST_REQUIRE(p.create_table(ws[0], ws[1], ws[2], ws[3], ws[4]));
 
-    BOOST_REQUIRE_EQUAL(width(), p.screen_w);
+    BOOST_REQUIRE_EQUAL((size_t)width(), p.screen_w);
 
     print_table();
 
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(check_print_table_with_cells)
 {
     BOOST_REQUIRE(p.create_table(ws[0], ws[1], ws[2], ws[3], ws[4]));
 
-    BOOST_REQUIRE_EQUAL(width(), p.screen_w);
+    BOOST_REQUIRE_EQUAL((size_t)width(), p.screen_w);
 
     print();
 
