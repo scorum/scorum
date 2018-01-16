@@ -43,7 +43,7 @@ public:
      */
     budget_refs_type get_budgets(const account_name_type& owner) const;
 
-    /** Lists all fund budgets
+    /** Gets the fund budget
      */
     const budget_object& get_fund_budget() const;
 
@@ -51,21 +51,21 @@ public:
      */
     const budget_object& get_budget(budget_id_type id) const;
 
-    /** Create fund budget (non any owner).
+    /** Creates fund budget (no owners).
      *
      * @warning count of fund budgets must be less or equal than SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER.
      *
-     * @param balance the total balance (use SCORUM_SYMBOL)
+     * @param balance the total balance (in SCR)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
     const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline);
 
-    /** Create budget.
+    /** Creates budget.
      *  The owner has abilities for all operations (for update, close and schedule operations).
      *
      * @param owner the name of the owner
-     * @param balance the total balance (use SCORUM_SYMBOL)
+     * @param balance the total balance (in SCR)
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @param content_permlink the budget target identity (post or other)
      * @returns a budget object
@@ -75,8 +75,8 @@ public:
                                        const time_point_sec& deadline,
                                        const optional<std::string>& content_permlink = optional<std::string>());
 
-    /** Close budget.
-     *  Delete the budget, cash back from budget to owner account.
+    /** Closing budget.
+     *  To delete the budget, to cash back from budget to owner account.
      *
      * @warning It is not allowed for fund budget.
      *
@@ -84,7 +84,7 @@ public:
      */
     void close_budget(const budget_object& budget);
 
-    /** Distribute asset from budget.
+    /** Distributes asset from budget.
      *  This operation takes into account the deadline and last block number
      *
      * @param budget the budget that is distributed

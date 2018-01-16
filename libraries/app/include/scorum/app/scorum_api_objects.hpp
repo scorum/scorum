@@ -10,6 +10,9 @@
 #include <scorum/chain/budget_objects.hpp>
 #include <scorum/chain/registration_objects.hpp>
 #include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/atomicswap_objects.hpp>
+#include <scorum/protocol/transaction.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -286,6 +289,22 @@ struct account_api_obj
     time_point_sec last_root_post;
 };
 
+struct account_balance_info_api_obj
+{
+    account_balance_info_api_obj(const account_api_obj& a)
+        : balance(a.balance)
+        , vesting_shares(a.vesting_shares)
+    {
+    }
+
+    account_balance_info_api_obj()
+    {
+    }
+
+    asset balance = asset(0, SCORUM_SYMBOL);
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
+};
+
 struct owner_authority_history_api_obj
 {
     owner_authority_history_api_obj(const chain::owner_authority_history_object& o)
@@ -496,6 +515,97 @@ struct budget_api_obj
     uint32_t last_allocated_block;
 };
 
+struct atomicswap_contract_api_obj
+{
+    atomicswap_contract_api_obj(const chain::atomicswap_contract_object& c)
+        : id(c.id._id)
+        , contract_initiator(c.type == chain::atomicswap_contract_initiator)
+        , owner(c.owner)
+        , to(c.to)
+        , amount(c.amount)
+        , created(c.created)
+        , deadline(c.deadline)
+        , metadata(fc::to_string(c.metadata))
+    {
+    }
+
+    // because fc::variant require for temporary object
+    atomicswap_contract_api_obj()
+    {
+    }
+
+    int64_t id;
+
+    bool contract_initiator;
+
+    account_name_type owner;
+
+    account_name_type to;
+    asset amount = asset(0, SCORUM_SYMBOL);
+
+    time_point_sec created;
+    time_point_sec deadline;
+
+    std::string metadata;
+};
+
+struct atomicswap_contract_info_api_obj : public atomicswap_contract_api_obj
+{
+    atomicswap_contract_info_api_obj(const chain::atomicswap_contract_object& c)
+        : atomicswap_contract_api_obj(c)
+        , secret(fc::to_string(c.secret))
+        , secret_hash(fc::to_string(c.secret_hash))
+    {
+    }
+
+    // because fc::variant require for temporary object
+    atomicswap_contract_info_api_obj()
+    {
+    }
+
+    std::string secret;
+    std::string secret_hash;
+
+    bool empty() const
+    {
+        return secret_hash.empty() || !owner.size() || !to.size() || amount.amount == 0;
+    }
+};
+
+struct atomicswap_contract_result_api_obj
+{
+    atomicswap_contract_result_api_obj(const protocol::annotated_signed_transaction& _tr)
+        : tr(_tr)
+    {
+    }
+
+    atomicswap_contract_result_api_obj(const protocol::annotated_signed_transaction& _tr,
+                                       const protocol::atomicswap_initiate_operation& op,
+                                       const std::string& secret = "")
+        : tr(_tr)
+    {
+        obj.contract_initiator = (op.type == protocol::atomicswap_by_initiator);
+        obj.owner = op.owner;
+        obj.to = op.recipient;
+        obj.amount = op.amount;
+        obj.metadata = op.metadata;
+        obj.secret_hash = op.secret_hash;
+        obj.secret = secret;
+    }
+
+    atomicswap_contract_result_api_obj()
+    {
+    }
+
+    protocol::annotated_signed_transaction tr;
+    atomicswap_contract_info_api_obj obj;
+
+    bool empty() const
+    {
+        return obj.empty();
+    }
+};
+
 } // namespace app
 } // namespace scorum
 
@@ -527,6 +637,9 @@ FC_REFLECT( scorum::app::account_api_obj,
              (average_market_bandwidth)(lifetime_market_bandwidth)(last_market_bandwidth_update)
              (last_post)(last_root_post)
           )
+
+FC_REFLECT (scorum::app::account_balance_info_api_obj,
+            (balance)(vesting_shares))
 
 FC_REFLECT( scorum::app::owner_authority_history_api_obj,
              (id)
@@ -587,7 +700,7 @@ FC_REFLECT_DERIVED( scorum::app::dynamic_global_property_api_obj, (scorum::chain
                   )
 
 FC_REFLECT( scorum::app::budget_api_obj,
-             (id)
+            (id)
             (owner)
             (content_permlink)
             (created)
@@ -595,6 +708,27 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (balance)
             (per_block)
             (last_allocated_block)
+          )
+
+FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
+            (id)
+            (contract_initiator)
+            (owner)
+            (to)
+            (amount)
+            (created)
+            (deadline)
+            (metadata)
+          )
+
+FC_REFLECT_DERIVED( scorum::app::atomicswap_contract_info_api_obj, (scorum::app::atomicswap_contract_api_obj),
+                     (secret)
+                     (secret_hash)
+                  )
+
+FC_REFLECT( scorum::app::atomicswap_contract_result_api_obj,
+            (tr)
+            (obj)
           )
 
 // clang-format on

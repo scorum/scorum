@@ -10,6 +10,8 @@
 #include <fc/real128.hpp>
 #include <fc/crypto/base58.hpp>
 
+#include <functional>
+
 using namespace scorum::app;
 using namespace scorum::chain;
 
@@ -85,6 +87,10 @@ class wallet_api
 public:
     wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi);
     virtual ~wallet_api();
+
+    using exit_func_type = std::function<void()>;
+
+    void set_exit_func(exit_func_type);
 
     bool copy_wallet_file(const std::string& destination_filename);
 
@@ -173,6 +179,13 @@ public:
      * @returns the public account data stored in the blockchain
      */
     account_api_obj get_account(const std::string& account_name) const;
+
+    /** Returns balance information about the given account.
+     *
+     * @param account_name the name of the account to provide information about
+     * @returns the public account data stored in the blockchain
+     */
+    account_balance_info_api_obj get_account_balance(const std::string& account_name) const;
 
     /** Returns the current wallet filename.
      *
@@ -974,8 +987,7 @@ public:
     std::vector<budget_api_obj> get_budgets(const std::string& account_name);
 
     /**
-     *  This method will create new budget linked to owner account. The current account creation fee can be found with
-     * the 'info' wallet command.
+     *  This method will create new budget linked to owner account.
      *
      *  @warning The owner account must have sufficient balance for budget
      *
@@ -992,7 +1004,7 @@ public:
                                                const bool broadcast);
 
     /**
-     *  Close the budget. The budget rest is returned to the owner's account
+     *  Closing the budget. The budget rest is returned to the owner's account
      */
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
@@ -1021,11 +1033,106 @@ public:
     std::set<account_name_type> list_committee(const std::string& lowerbound, uint32_t limit);
     std::vector<proposal_api_obj> list_proposals();
 
+    /** Initiating Atomic Swap transfer from initiator to participant.
+     *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout.
+     *
+     *  @warning API prints secret string to memorize.
+     *           API prints secret hash as well.
+     *
+     *  @param initiator the new contract owner
+     *  @param participant
+     *  @param amount SCR to transfer
+     *  @param metadata the additional contract info (obligations, courses)
+     *  @param secret_length the length of secret in bytes or 0 to choose length randomly
+     *  @param broadcast
+     */
+    atomicswap_contract_result_api_obj atomicswap_initiate(const std::string& initiator,
+                                                           const std::string& participant,
+                                                           const asset& amount,
+                                                           const std::string& metadata,
+                                                           const uint8_t secret_length,
+                                                           const bool broadcast);
+
+    /** Initiating Atomic Swap transfer from participant to initiator.
+     *  Asset (amount) will be locked for 24 hours while is not redeemed or refund before redeem.
+     *
+     *  @warning The secret hash is obtained from atomicswap_initiate operation.
+     *
+     *  @param secret_hash the secret hash (received from initiator)
+     *  @param participant the new contract owner
+     *  @param initiator
+     *  @param amount SCR to transfer
+     *  @param metadata the additional contract info (obligations, courses)
+     *  @param broadcast
+     */
+    atomicswap_contract_result_api_obj atomicswap_participate(const std::string& secret_hash,
+                                                              const std::string& participant,
+                                                              const std::string& initiator,
+                                                              const asset& amount,
+                                                              const std::string& metadata,
+                                                              const bool broadcast);
+
+    /** The Atomic Swap helper to get contract info.
+     *
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
+     *  @param secret_hash the secret hash
+     */
+    atomicswap_contract_info_api_obj
+    atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash);
+
+    /** Redeeming Atomic Swap contract.
+     *  This API transfers asset to participant balance and declassifies the secret.
+     *
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
+     *  @param secret the secret ("my secret") that was set in atomicswap_initiate
+     * API
+     *  @param broadcast
+     */
+    annotated_signed_transaction
+    atomicswap_redeem(const std::string& from, const std::string& to, const std::string& secret, const bool broadcast);
+
+    /** Extracting secret from participant contract if it is redeemed by initiator.
+     *
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
+     *  @param secret_hash the secret hash
+     */
+    std::string
+    atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash);
+
+    /** Refunding contact by participant.
+     *
+     *  @warning Can't refund initiator contract. It is refunded automatically in 48 hours.
+     *
+     *  @param participant the refunded contract owner
+     *  @param initiator the initiator of Atomic Swap
+     *  @param secret_hash the secret hash (that was set in atomicswap_participate)
+     *  @param broadcast
+     */
+    annotated_signed_transaction atomicswap_refund(const std::string& participant,
+                                                   const std::string& initiator,
+                                                   const std::string& secret_hash,
+                                                   const bool broadcast);
+
+    /** Atomic Swap helper to get list of contract info.
+     *
+     *  @param owner
+     */
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
+
+    /** Close wallet application
+     *
+     */
+    void exit();
+
 public:
     fc::signal<void(bool)> lock_changed;
 
 private:
     std::shared_ptr<detail::wallet_api_impl> my;
+    exit_func_type exit_func;
 };
 
 struct plain_keys
@@ -1074,6 +1181,7 @@ FC_API( scorum::wallet::wallet_api,
         (list_proposals)
         (get_witness)
         (get_account)
+        (get_account_balance)
         (get_block)
         (get_ops_in_block)
         (get_account_history)
@@ -1125,6 +1233,15 @@ FC_API( scorum::wallet::wallet_api,
         (invite_new_committee_member)
         (dropout_committee_member)
 
+        //Atomic Swap API
+        (atomicswap_initiate)
+        (atomicswap_participate)
+        (atomicswap_redeem)
+        (atomicswap_auditcontract)
+        (atomicswap_extractsecret)
+        (atomicswap_refund)
+        (get_atomicswap_contracts)
+
         // private message api
         (send_private_message)
         (get_inbox)
@@ -1140,6 +1257,8 @@ FC_API( scorum::wallet::wallet_api,
 
         (get_active_witnesses)
         (get_transaction)
+
+        (exit)
       )
 
 FC_REFLECT( scorum::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )
