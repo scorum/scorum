@@ -33,6 +33,8 @@ add_library( scorum_chain
              dbs_proposal.cpp
              dbs_atomicswap.cpp
 
+             data_service_factory.cpp
+
              scorum_evaluator.cpp
 
              scorum_objects.cpp
