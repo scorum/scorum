@@ -12,6 +12,8 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+#include <chainbase/abstract_undo_session.hpp>
+
 namespace chainbase {
 
 namespace bip = boost::interprocess;
@@ -33,13 +35,6 @@ public:
     using value_type = typename MultiIndexType::value_type;
     using allocator_type = typename MultiIndexType::allocator_type;
 
-protected:
-    typename value_type::id_type _next_id = 0;
-    MultiIndexType _indices;
-    uint32_t _size_of_value_type = 0;
-    uint32_t _size_of_this = 0;
-
-public:
     base_index(const allocator<value_type>& a)
         : _indices(a)
         , _size_of_value_type(sizeof(typename MultiIndexType::node_type))
@@ -125,35 +120,15 @@ protected:
 
         return *insert_result.first;
     }
+
+protected:
+    typename value_type::id_type _next_id = 0;
+    MultiIndexType _indices;
+    uint32_t _size_of_value_type = 0;
+    uint32_t _size_of_this = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <typename value_type> class undo_state
-{
-public:
-    using id_type = typename value_type::id_type;
-    using id_value_allocator_type = allocator<std::pair<const id_type, value_type>>;
-    using id_allocator_type = allocator<id_type>;
-
-    template <typename T>
-    undo_state(const allocator<T>& al)
-        : old_values(id_value_allocator_type(al.get_segment_manager()))
-        , removed_values(id_value_allocator_type(al.get_segment_manager()))
-        , new_ids(id_allocator_type(al.get_segment_manager()))
-    {
-    }
-
-    using id_value_type_map
-        = boost::interprocess::map<id_type, value_type, std::less<id_type>, id_value_allocator_type>;
-    using id_type_set = boost::interprocess::set<id_type, std::less<id_type>, id_allocator_type>;
-
-    id_value_type_map old_values;
-    id_value_type_map removed_values;
-    id_type_set new_ids;
-    id_type old_next_id = 0;
-    int64_t revision = 0;
-};
 
 //------------------------------------------------------------------------------------------------------//
 
@@ -162,35 +137,46 @@ template <typename MultiIndexType> class generic_index : public base_index<Multi
 public:
     using allocator_type = allocator<generic_index>;
     using value_type = typename MultiIndexType::value_type;
-    using undo_state_type = undo_state<value_type>;
     using base_index_type = base_index<MultiIndexType>;
 
 private:
-    /**
-    *  Each new session increments the revision, a squash will decrement the revision by combining
-    *  the two most recent revisions into one revision.
-    *
-    *  Commit will discard all revisions prior to the committed revision.
-    */
-    int64_t _revision = 0;
-
-    boost::interprocess::deque<undo_state_type, allocator<undo_state_type>> _stack;
-
-public:
-    generic_index(const allocator<value_type>& a)
-        : base_index_type(a)
-        , _stack(a)
-    {
-    }
-
-    int64_t revision() const
-    {
-        return _revision;
-    }
-
-    class session
+    //------------------------------------------//
+    class undo_state
     {
     public:
+        using id_type = typename value_type::id_type;
+        using id_value_allocator_type = allocator<std::pair<const id_type, value_type>>;
+        using id_allocator_type = allocator<id_type>;
+
+        using id_type_set = boost::interprocess::set<id_type, std::less<id_type>, id_allocator_type>;
+        using id_value_type_map
+            = boost::interprocess::map<id_type, value_type, std::less<id_type>, id_value_allocator_type>;
+
+        template <typename T>
+        undo_state(const allocator<T>& al)
+            : old_values(id_value_allocator_type(al.get_segment_manager()))
+            , removed_values(id_value_allocator_type(al.get_segment_manager()))
+            , new_ids(id_allocator_type(al.get_segment_manager()))
+        {
+        }
+
+        id_value_type_map old_values;
+        id_value_type_map removed_values;
+        id_type_set new_ids;
+        id_type old_next_id = 0;
+        int64_t revision = 0;
+    };
+
+    //------------------------------------------//
+    class session : public abstract_undo_session
+    {
+    public:
+        session(generic_index& idx, int64_t revision)
+            : _index(idx)
+            , _revision(revision)
+        {
+        }
+
         session(session&& mv)
             : _index(mv._index)
             , _apply(mv._apply)
@@ -206,25 +192,6 @@ public:
             }
         }
 
-        /** leaves the UNDO state on the stack when session goes out of scope */
-        void push()
-        {
-            _apply = false;
-        }
-        /** combines this session with the prior session */
-        void squash()
-        {
-            if (_apply)
-                _index.squash();
-            _apply = false;
-        }
-        void undo()
-        {
-            if (_apply)
-                _index.undo();
-            _apply = false;
-        }
-
         session& operator=(session&& mv)
         {
             if (this == &mv)
@@ -236,40 +203,50 @@ public:
             return *this;
         }
 
-        int64_t revision() const
+        /** leaves the UNDO state on the stack when session goes out of scope */
+        void push() override
+        {
+            _apply = false;
+        }
+        /** combines this session with the prior session */
+        void squash() override
+        {
+            if (_apply)
+                _index.squash();
+            _apply = false;
+        }
+        void undo() override
+        {
+            if (_apply)
+                _index.undo();
+            _apply = false;
+        }
+
+        int64_t revision() const override
         {
             return _revision;
         }
 
     private:
-        friend class generic_index;
-
-        session(generic_index& idx, int64_t revision)
-            : _index(idx)
-            , _revision(revision)
-        {
-            if (revision == -1)
-                _apply = false;
-        }
-
         generic_index& _index;
-        bool _apply = true;
         int64_t _revision = 0;
+        bool _apply = true;
     };
 
-    session start_undo_session(bool enabled)
+public:
+    generic_index(const allocator<value_type>& a)
+        : base_index_type(a)
+        , _stack(a)
     {
-        if (enabled)
-        {
-            _stack.emplace_back(this->get_allocator());
-            _stack.back().old_next_id = this->_next_id;
-            _stack.back().revision = ++_revision;
-            return session(*this, _revision);
-        }
-        else
-        {
-            return session(*this, -1);
-        }
+    }
+
+    abstract_undo_session_ptr start_undo_session()
+    {
+        _stack.emplace_back(this->get_allocator());
+        _stack.back().old_next_id = this->_next_id;
+        _stack.back().revision = ++_revision;
+
+        return std::move(abstract_undo_session_ptr(new session(*this, _revision)));
     }
 
     /**
@@ -447,6 +424,11 @@ public:
         _revision = revision;
     }
 
+    int64_t revision() const
+    {
+        return _revision;
+    }
+
     template <typename Constructor> const value_type& emplace(Constructor&& c)
     {
         const value_type& value = base_index_type::emplace(c);
@@ -467,15 +449,15 @@ public:
 
     void remove(const value_type& obj)
     {
-        base_index_type::remove(obj);
+        on_remove(obj); // after base_index_type::remove(obj); obj is invalid, so do this call here
 
-        on_remove(obj);
+        base_index_type::remove(obj);
     }
 
 private:
     bool enabled() const
     {
-        return _stack.size();
+        return !_stack.empty();
     }
 
     void on_modify(const value_type& v)
@@ -529,6 +511,17 @@ private:
 
         head.new_ids.insert(v.id);
     }
+
+private:
+    /**
+    *  Each new session increments the revision, a squash will decrement the revision by combining
+    *  the two most recent revisions into one revision.
+    *
+    *  Commit will discard all revisions prior to the committed revision.
+    */
+    int64_t _revision = 0;
+
+    boost::interprocess::deque<undo_state, allocator<undo_state>> _stack;
 };
 
 } // namespace chainbase

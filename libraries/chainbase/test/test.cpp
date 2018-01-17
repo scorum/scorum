@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         BOOST_REQUIRE_EQUAL(new_book.b, copy_new_book.b);
 
         {
-            auto session = db.start_undo_session(true);
+            auto session = db.start_undo_session();
             db.modify(new_book, [&](book& b) {
                 b.a = 7;
                 b.b = 8;
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         BOOST_REQUIRE_EQUAL(new_book.b, 6);
 
         {
-            auto session = db.start_undo_session(true);
+            auto session = db.start_undo_session();
             const auto& book2 = db.create<book>([&](book& b) {
                 b.a = 9;
                 b.b = 10;
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         BOOST_REQUIRE_EQUAL(new_book.b, 6);
 
         {
-            auto session = db.start_undo_session(true);
+            auto session = db.start_undo_session();
             db.modify(new_book, [&](book& b) {
                 b.a = 7;
                 b.b = 8;
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
 
             BOOST_REQUIRE_EQUAL(new_book.a, 7);
             BOOST_REQUIRE_EQUAL(new_book.b, 8);
-            session.push();
+            session->push();
         }
         BOOST_REQUIRE_EQUAL(new_book.a, 7);
         BOOST_REQUIRE_EQUAL(new_book.b, 8);

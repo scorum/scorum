@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <array>
+#include <typeinfo>
 
 #include <boost/interprocess/sync/interprocess_sharable_mutex.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>

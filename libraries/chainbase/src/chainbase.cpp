@@ -138,7 +138,7 @@ void database::wipe(const bfs::path& dir)
     _data_dir = bfs::path();
     _index_map.clear();
 
-    clear_session_index();
+    clear_undo_session();
 }
 
 } // namespace chainbase

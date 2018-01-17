@@ -1,10 +1,7 @@
 #pragma once
 
-#include <typeindex>
-#include <typeinfo>
-
 #include <chainbase/chain_object.hpp>
-#include <chainbase/session_index.hpp>
+#include <chainbase/undo_db_state.hpp>
 #include <chainbase/generic_index.hpp>
 
 namespace chainbase {
@@ -33,17 +30,16 @@ template <typename T> struct get_index_type
         c(*this);                                                                                                      \
     }
 
-class abstract_index
+struct extended_abstract_undo_session
 {
-public:
-    virtual ~abstract_index()
+    virtual ~extended_abstract_undo_session()
     {
     }
 
     virtual int64_t revision() const = 0;
     virtual void set_revision(int64_t revision) = 0;
 
-    virtual std::unique_ptr<abstract_session> start_undo_session(bool enabled) = 0;
+    virtual abstract_undo_session_ptr start_undo_session() = 0;
     virtual void undo() const = 0;
     virtual void squash() const = 0;
     virtual void commit(int64_t revision) const = 0;
@@ -52,18 +48,17 @@ public:
     virtual void* get() const = 0;
 };
 
-template <typename BaseIndex> class index_impl : public abstract_index
+template <typename BaseIndex> class undo_session_impl : public extended_abstract_undo_session
 {
 public:
-    index_impl(BaseIndex& base)
+    undo_session_impl(BaseIndex& base)
         : _base(base)
     {
     }
 
-    virtual std::unique_ptr<abstract_session> start_undo_session(bool enabled) override
+    virtual abstract_undo_session_ptr start_undo_session() override
     {
-        return std::unique_ptr<abstract_session>(
-            new session_impl<typename BaseIndex::session>(_base.start_undo_session(enabled)));
+        return std::move(_base.start_undo_session());
     }
 
     virtual void set_revision(int64_t revision) override
@@ -103,7 +98,7 @@ private:
 /**
 *  This class
 */
-class database_index : public session_index
+class database_index : public undo_db_state
 {
 protected:
     database_index()
@@ -154,9 +149,9 @@ public:
         if (type_id >= _index_map.size())
             _index_map.resize(type_id + 1);
 
-        auto new_index = new index_impl<index_type>(*idx_ptr);
+        auto new_index = new undo_session_impl<index_type>(*idx_ptr);
         _index_map[type_id].reset(new_index);
-        add_session_index(new_index);
+        add_undo_session(new_index);
     }
 
     template <typename MultiIndexType> bool has_index() const
@@ -282,6 +277,6 @@ protected:
     /**
     * This is a full map (size 2^16) of all possible index designed for constant time lookup
     */
-    std::vector<std::unique_ptr<abstract_index>> _index_map;
+    std::vector<std::unique_ptr<extended_abstract_undo_session>> _index_map;
 };
 }
