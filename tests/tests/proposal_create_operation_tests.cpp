@@ -239,7 +239,7 @@ SCORUM_TEST_CASE(create_one_change_invite_quorum_proposal)
     op.creator = "alice";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_invite_quorum;
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     evaluator.do_apply(op);
 
@@ -249,7 +249,7 @@ SCORUM_TEST_CASE(create_one_change_invite_quorum_proposal)
 
 SCORUM_TEST_CASE(change_default_invite_quorum)
 {
-    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    const uint64_t expected_quorum = 80;
     BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
@@ -269,7 +269,7 @@ SCORUM_TEST_CASE(change_default_invite_quorum)
 
 SCORUM_TEST_CASE(change_default_dropout_quorum)
 {
-    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    const uint64_t expected_quorum = 80;
     BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
@@ -289,12 +289,12 @@ SCORUM_TEST_CASE(change_default_dropout_quorum)
 
 SCORUM_TEST_CASE(change_default_change_quorum)
 {
-    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    const uint64_t expected_quorum = 80;
     BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
     op.creator = "alice";
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_invite_quorum;
 
@@ -313,7 +313,7 @@ SCORUM_TEST_CASE(create_one_change_dropout_quorum_proposal)
     op.creator = "alice";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_dropout_quorum;
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     evaluator.do_apply(op);
 
@@ -327,7 +327,7 @@ SCORUM_TEST_CASE(create_one_change_quorum_proposal)
     op.creator = "alice";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_quorum;
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     evaluator.do_apply(op);
 
@@ -431,7 +431,7 @@ SCORUM_TEST_CASE(pass_when_change_quorum_and_data_is_uint64)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     op.action = proposal_action::change_quorum;
     BOOST_CHECK_NO_THROW(op.validate());

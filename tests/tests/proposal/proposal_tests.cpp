@@ -49,7 +49,7 @@ public:
 
         proposal_id_type create_quorum_change_proposal(uint64_t q, proposal_action action)
         {
-            return create_proposal(action, fc::variant(SCORUM_PERCENT(q)).as_uint64());
+            return create_proposal(action, fc::variant(q).as_uint64());
         }
 
         proposal_id_type create_proposal(proposal_action action, const fc::variant& data)
@@ -276,19 +276,19 @@ SCORUM_TEST_CASE(proposal)
     {
         actor(alice).vote_for(jim_invitation);
         BOOST_CHECK_EQUAL(2u, get_committee_members().size());
-        BOOST_CHECK(is_committee_member(jim) == true);
+        BOOST_CHECK_EQUAL(true, is_committee_member(jim));
     }
 
     {
         actor(alice).vote_for(joe_invitation);
         BOOST_CHECK_EQUAL(3u, get_committee_members().size());
-        BOOST_CHECK(is_committee_member(joe) == true);
+        BOOST_CHECK_EQUAL(true, is_committee_member(joe));
     }
 
     {
         actor(alice).vote_for(hue_invitation);
         BOOST_CHECK_EQUAL(4u, get_committee_members().size());
-        BOOST_CHECK(is_committee_member(hue) == true);
+        BOOST_CHECK_EQUAL(true, is_committee_member(hue));
     }
 
     {
@@ -342,7 +342,7 @@ SCORUM_TEST_CASE(proposal)
 
         BOOST_REQUIRE(p.valid());
 
-        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), 0u);
+        BOOST_CHECK_EQUAL(0u, p->get().voted_accounts.size());
     }
 
     // check default value
@@ -362,9 +362,9 @@ SCORUM_TEST_CASE(proposal)
         proposal = actor(alice).change_quorum(100);
         actor(alice).vote_for(proposal);
 
-        BOOST_CHECK_EQUAL(SCORUM_PERCENT(50), get_invite_quorum());
-        BOOST_CHECK_EQUAL(SCORUM_PERCENT(51), get_dropout_quorum());
-        BOOST_CHECK_EQUAL(SCORUM_PERCENT(100), get_change_quorum());
+        BOOST_CHECK_EQUAL(50u, get_invite_quorum());
+        BOOST_CHECK_EQUAL(51u, get_dropout_quorum());
+        BOOST_CHECK_EQUAL(100u, get_change_quorum());
     }
 
 } // clang-format on
