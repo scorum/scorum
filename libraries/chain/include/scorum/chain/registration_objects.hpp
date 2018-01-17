@@ -17,6 +17,8 @@ namespace chain {
 
 using scorum::protocol::asset;
 
+typedef std::allocator<registration_pool_object> PoolAllocator;
+
 class registration_pool_object : public object<registration_pool_object_type, registration_pool_object>
 {
     registration_pool_object() = delete;

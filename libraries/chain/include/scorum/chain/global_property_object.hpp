@@ -25,7 +25,7 @@ class dynamic_global_property_object
 {
 public:
     template <typename Constructor, typename Allocator>
-    dynamic_global_property_object(Constructor&& c, allocator<Allocator> a)
+    dynamic_global_property_object(Constructor&& c, allocator<Allocator>)
     {
         c(*this);
     }
@@ -87,6 +87,10 @@ public:
      * their votes reduced.
      */
     uint32_t vote_power_reserve_rate = 40;
+
+    uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 typedef multi_index_container<dynamic_global_property_object,
@@ -99,9 +103,28 @@ typedef multi_index_container<dynamic_global_property_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(
-    scorum::chain::dynamic_global_property_object,
-    (id)(head_block_number)(head_block_id)(time)(current_witness)(total_supply)(accounts_current_supply)(
-        confidential_supply)(total_vesting_fund_scorum)(total_vesting_shares)(total_reward_shares2)(maximum_block_size)(
-        current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(vote_power_reserve_rate))
+// clang-format off
+FC_REFLECT(scorum::chain::dynamic_global_property_object,
+          (id)
+          (head_block_number)
+          (head_block_id)
+          (time)
+          (current_witness)
+          (total_supply)
+          (accounts_current_supply)
+          (confidential_supply)
+          (total_vesting_fund_scorum)
+          (total_vesting_shares)
+          (total_reward_shares2)
+          (maximum_block_size)
+          (current_aslot)
+          (recent_slots_filled)
+          (participation_count)
+          (last_irreversible_block_num)
+          (vote_power_reserve_rate)
+          (invite_quorum)
+          (dropout_quorum)
+          (change_quorum))
+// clang-format on
+
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)

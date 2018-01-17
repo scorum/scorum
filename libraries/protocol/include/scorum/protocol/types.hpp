@@ -143,7 +143,10 @@ struct extended_private_key_type
 enum proposal_action
 {
     invite,
-    dropout
+    dropout,
+    change_invite_quorum,
+    change_dropout_quorum,
+    change_quorum
 };
 
 } // namespace protocol
@@ -169,4 +172,5 @@ FC_REFLECT_TYPENAME(scorum::protocol::share_type)
 
 FC_REFLECT(scorum::void_t, )
 
-FC_REFLECT_ENUM(scorum::protocol::proposal_action, (invite)(dropout))
+FC_REFLECT_ENUM(scorum::protocol::proposal_action,
+                (invite)(dropout)(change_invite_quorum)(change_dropout_quorum)(change_quorum))

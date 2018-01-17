@@ -857,7 +857,7 @@ struct proposal_create_operation : public base_operation
     typedef scorum::protocol::proposal_action action_t;
 
     account_name_type creator;
-    account_name_type committee_member;
+    fc::variant data;
 
     fc::optional<fc::enum_type<uint8_t, action_t>> action;
     uint32_t lifetime_sec = 0;
@@ -962,7 +962,7 @@ FC_REFLECT( scorum::protocol::proposal_vote_operation,
 
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
-            (committee_member)
+            (data)
             (action)
             (lifetime_sec))
 
