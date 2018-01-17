@@ -19,8 +19,7 @@ template <typename OperationType = scorum::protocol::operation>
 class proposal_create_evaluator_new : public evaluator<OperationType>
 {
 public:
-    //    typedef sp::proposal_create_operation OperationType;
-    typedef sp::proposal_create_operation operation_type;
+    using operation_type = scorum::protocol::proposal_create_operation;
 
     proposal_create_evaluator_new(scorum::chain::data_service_factory_i& services)
         : _services(services)
@@ -44,7 +43,6 @@ public:
         scorum::chain::account_service_i& account_service = _services.account_service();
         scorum::chain::proposal_service_i& proposal_service = _services.proposal_service();
         scorum::chain::committee_service_i& committee_service = _services.committee_service();
-        //        scorum::chain::property_service_i& property_service = _services.property_service();
 
         FC_ASSERT((op.lifetime_sec <= SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS
                    && op.lifetime_sec >= SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS),
@@ -55,13 +53,38 @@ public:
                   ("account_name", op.creator));
 
         account_service.check_account_existence(op.creator);
-        account_service.check_account_existence(op.committee_member);
 
         fc::time_point_sec expiration = _services.head_block_time() + op.lifetime_sec;
 
-        proposal_service.create(op.creator, op.committee_member, *op.action, expiration,
-                                SCORUM_COMMITTEE_QUORUM_PERCENT);
+        //        proposal_service.create(op.creator, op.data, *op.action, expiration, get_quorum(*op.action));
+        proposal_service.create(op.creator, op.data, *op.action, expiration, SCORUM_COMMITTEE_QUORUM_PERCENT);
     }
+
+    //    uint64_t get_quorum(sp::proposal_action action)
+    //    {
+    //        scorum::chain::property_service_i& property_service = _services.property_service();
+
+    //        const dynamic_global_property_object& properties = property_service.get_dynamic_global_properties();
+
+    //        switch (action)
+    //        {
+    //        case sp::proposal_action::invite:
+    //            return properties.invite_quorum;
+
+    //        case sp::proposal_action::dropout:
+    //            return properties.dropout_quorum;
+
+    //        case sp::proposal_action::change_invite_quorum:
+    //        case sp::proposal_action::change_dropout_quorum:
+    //        case sp::proposal_action::change_quorum:
+    //            return properties.change_quorum;
+
+    //        default:
+    //            FC_ASSERT("invalid action type.");
+    //        }
+
+    //        return SCORUM_COMMITTEE_QUORUM_PERCENT;
+    //    }
 
 private:
     scorum::chain::data_service_factory_i& _services;

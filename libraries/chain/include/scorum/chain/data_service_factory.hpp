@@ -25,7 +25,7 @@ class proposal_service_i
 {
 public:
     virtual void create(const sp::account_name_type& creator,
-                        const sp::account_name_type& member,
+                        const fc::variant& data,
                         sp::proposal_action action,
                         const fc::time_point_sec& expiration,
                         uint64_t quorum)
