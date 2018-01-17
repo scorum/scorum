@@ -435,7 +435,7 @@ SCORUM_TEST_CASE(dont_change_invite_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(properties_service.new_invite_quorum, 0);
+    BOOST_CHECK_EQUAL(properties_service.new_invite_quorum, 0u);
 }
 
 SCORUM_TEST_CASE(dont_change_dropout_quorum)
@@ -446,7 +446,7 @@ SCORUM_TEST_CASE(dont_change_dropout_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(properties_service.new_dropout_quorum, 0);
+    BOOST_CHECK_EQUAL(properties_service.new_dropout_quorum, 0u);
 }
 
 SCORUM_TEST_CASE(dont_change_quorum)
@@ -457,7 +457,7 @@ SCORUM_TEST_CASE(dont_change_quorum)
 
     evaluator.execute_proposal(p);
 
-    BOOST_CHECK_EQUAL(properties_service.new_change_quorum, 0);
+    BOOST_CHECK_EQUAL(properties_service.new_change_quorum, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

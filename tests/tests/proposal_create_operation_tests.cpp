@@ -229,7 +229,7 @@ SCORUM_TEST_CASE(create_one_dropout_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::dropout);
 }
 
@@ -243,7 +243,7 @@ SCORUM_TEST_CASE(create_one_change_invite_quorum_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_invite_quorum);
 }
 
@@ -262,7 +262,7 @@ SCORUM_TEST_CASE(change_default_invite_quorum)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
@@ -282,7 +282,7 @@ SCORUM_TEST_CASE(change_default_dropout_quorum)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
@@ -302,7 +302,7 @@ SCORUM_TEST_CASE(change_default_change_quorum)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
@@ -317,7 +317,7 @@ SCORUM_TEST_CASE(create_one_change_dropout_quorum_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_dropout_quorum);
 }
 
@@ -331,7 +331,7 @@ SCORUM_TEST_CASE(create_one_change_quorum_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_quorum);
 }
 
@@ -345,7 +345,7 @@ SCORUM_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK(proposal_service.proposals[0].expiration == (proposal_service._head_block_time + op.lifetime_sec));
 }
