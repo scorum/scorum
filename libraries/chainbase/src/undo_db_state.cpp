@@ -72,9 +72,9 @@ int64_t session_container::revision() const
 }
 
 //////////////////////////////////////////////////////////////////////////
-void undo_db_state::add_undo_session(extended_abstract_undo_session* new_session)
+void undo_db_state::add_undo_session(std::unique_ptr<extended_abstract_undo_session>&& new_session)
 {
-    _undo_session_list.push_back(new_session);
+    _undo_session_list.push_back(std::move(new_session));
 }
 
 void undo_db_state::clear_undo_session()

@@ -3,13 +3,13 @@
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 
-#include <chainbase/database_index.hpp>
+#include <chainbase/undo_db_state.hpp>
 
 namespace chainbase {
 
 namespace bfs = boost::filesystem;
 
-class database : public database_index
+class database : public undo_db_state
 {
     bip::file_lock _flock;
 

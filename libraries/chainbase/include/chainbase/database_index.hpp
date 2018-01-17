@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chainbase/chain_object.hpp>
-#include <chainbase/undo_db_state.hpp>
+#include <chainbase/database_guard.hpp>
 #include <chainbase/generic_index.hpp>
 
 namespace chainbase {
@@ -30,75 +30,10 @@ template <typename T> struct get_index_type
         c(*this);                                                                                                      \
     }
 
-struct extended_abstract_undo_session
-{
-    virtual ~extended_abstract_undo_session()
-    {
-    }
-
-    virtual int64_t revision() const = 0;
-    virtual void set_revision(int64_t revision) = 0;
-
-    virtual abstract_undo_session_ptr start_undo_session() = 0;
-    virtual void undo() const = 0;
-    virtual void squash() const = 0;
-    virtual void commit(int64_t revision) const = 0;
-    virtual void undo_all() const = 0;
-
-    virtual void* get() const = 0;
-};
-
-template <typename BaseIndex> class undo_session_impl : public extended_abstract_undo_session
-{
-public:
-    undo_session_impl(BaseIndex& base)
-        : _base(base)
-    {
-    }
-
-    virtual abstract_undo_session_ptr start_undo_session() override
-    {
-        return std::move(_base.start_undo_session());
-    }
-
-    virtual void set_revision(int64_t revision) override
-    {
-        _base.set_revision(revision);
-    }
-    virtual int64_t revision() const override
-    {
-        return _base.revision();
-    }
-    virtual void undo() const override
-    {
-        _base.undo();
-    }
-    virtual void squash() const override
-    {
-        _base.squash();
-    }
-    virtual void commit(int64_t revision) const override
-    {
-        _base.commit(revision);
-    }
-    virtual void undo_all() const override
-    {
-        _base.undo_all();
-    }
-
-    virtual void* get() const
-    {
-        return &_base;
-    }
-
-private:
-    BaseIndex& _base;
-};
-
 /**
 *  This class
 */
-class database_index : public undo_db_state
+class database_index : public database_guard
 {
 protected:
     database_index()
@@ -116,12 +51,12 @@ public:
         return _segment->get_segment_manager()->get_free_memory();
     }
 
-    template <typename MultiIndexType> void add_index()
+    template <typename MultiIndexType> const generic_index<MultiIndexType>& add_index()
     {
-
-        const uint16_t type_id = generic_index<MultiIndexType>::value_type::type_id;
         typedef generic_index<MultiIndexType> index_type;
         typedef typename index_type::allocator_type index_alloc;
+
+        const uint16_t type_id = index_type::value_type::type_id;
 
         std::string type_name = boost::core::demangle(typeid(typename index_type::value_type).name());
 
@@ -149,9 +84,9 @@ public:
         if (type_id >= _index_map.size())
             _index_map.resize(type_id + 1);
 
-        auto new_index = new undo_session_impl<index_type>(*idx_ptr);
-        _index_map[type_id].reset(new_index);
-        add_undo_session(new_index);
+        _index_map[type_id] = idx_ptr;
+
+        return *idx_ptr;
     }
 
     template <typename MultiIndexType> bool has_index() const
@@ -173,7 +108,7 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return *index_type_ptr(_index_map[index_type::value_type::type_id]->get());
+        return *index_type_ptr(_index_map[index_type::value_type::type_id]);
     }
 
     template <typename MultiIndexType, typename ByIndex>
@@ -189,7 +124,7 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return index_type_ptr(_index_map[index_type::value_type::type_id]->get())->indices().template get<ByIndex>();
+        return index_type_ptr(_index_map[index_type::value_type::type_id])->indices().template get<ByIndex>();
     }
 
     template <typename MultiIndexType> generic_index<MultiIndexType>& get_mutable_index()
@@ -204,7 +139,7 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return *index_type_ptr(_index_map[index_type::value_type::type_id]->get());
+        return *index_type_ptr(_index_map[index_type::value_type::type_id]);
     }
 
     template <typename ObjectType, typename IndexedByType, typename CompatibleKey>
@@ -277,6 +212,6 @@ protected:
     /**
     * This is a full map (size 2^16) of all possible index designed for constant time lookup
     */
-    std::vector<std::unique_ptr<extended_abstract_undo_session>> _index_map;
+    std::vector<void*> _index_map;
 };
 }
