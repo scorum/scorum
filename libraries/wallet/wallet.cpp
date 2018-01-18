@@ -2582,7 +2582,7 @@ annotated_signed_transaction wallet_api::invite_new_committee_member(const std::
 
     proposal_create_operation op;
     op.creator = inviter;
-    op.committee_member = invitee;
+    op.data = invitee;
     op.action = proposal_action::invite;
     op.lifetime_sec = lifetime_sec;
 
@@ -2602,7 +2602,7 @@ annotated_signed_transaction wallet_api::dropout_committee_member(const std::str
 
     proposal_create_operation op;
     op.creator = initiator;
-    op.committee_member = dropout;
+    op.data = dropout;
     op.action = proposal_action::dropout;
     op.lifetime_sec = lifetime_sec;
 
@@ -2621,6 +2621,60 @@ std::set<account_name_type> wallet_api::list_committee(const std::string& lowerb
 std::vector<proposal_api_obj> wallet_api::list_proposals()
 {
     return my->_remote_db->lookup_proposals();
+}
+
+annotated_signed_transaction wallet_api::propose_new_invite_quorum(const std::string& initiator,
+                                                                   uint64_t quorum_percent,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast)
+{
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.data = quorum_percent;
+    op.action = proposal_action::change_invite_quorum;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::propose_new_dropout_quorum(const std::string& initiator,
+                                                                    uint64_t quorum_percent,
+                                                                    uint32_t lifetime_sec,
+                                                                    bool broadcast)
+{
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.data = quorum_percent;
+    op.action = proposal_action::change_dropout_quorum;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::propose_new_quorum_for_quorum_change(const std::string& initiator,
+                                                                              uint64_t quorum_percent,
+                                                                              uint32_t lifetime_sec,
+                                                                              bool broadcast)
+{
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.data = quorum_percent;
+    op.action = proposal_action::change_quorum;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 
 atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,

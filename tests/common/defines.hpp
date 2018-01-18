@@ -3,6 +3,8 @@
 #include <boost/version.hpp>
 #include <scorum/protocol/config.hpp>
 
+#include <fc/io/json.hpp>
+
 #define TEST_CHAIN_ID fc::sha256::hash("testnet")
 #define TEST_SHARED_MEM_SIZE_8MB (1024 * 1024 * 8)
 #define TEST_ACCOUNTS_INITIAL_SUPPLY asset(10000000000ll, SCORUM_SYMBOL)

@@ -149,7 +149,7 @@ namespace utils {
 
 uint64_t get_quorum(size_t members_count, uint64_t percent)
 {
-    const uint32_t needed_votes = (members_count * percent) / SCORUM_100_PERCENT;
+    const uint32_t needed_votes = (members_count * SCORUM_PERCENT(percent)) / SCORUM_100_PERCENT;
 
     return needed_votes;
 }

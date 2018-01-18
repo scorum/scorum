@@ -180,7 +180,6 @@ struct get_impacted_account_visitor
     void operator()(const proposal_create_operation& op)
     {
         _impacted.insert(op.creator);
-        _impacted.insert(op.committee_member);
     }
 
     void operator()(const proposal_vote_operation& op)
