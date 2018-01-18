@@ -155,57 +155,6 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(proposal_create_evaluator_tests, proposal_create_evaluator_fixture)
 
-SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_small)
-{
-    proposal_create_operation op;
-    op.creator = "alice";
-    op.data = "bob";
-    op.lifetime_sec = lifetime_min - 1;
-
-    auto test = [&](proposal_action action) {
-        op.action = action;
-
-        SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
-                               "Proposal life time is not in range of 5 - 10 seconds.");
-    };
-
-    test(proposal_action::invite);
-    test(proposal_action::dropout);
-    test(proposal_action::change_quorum);
-    test(proposal_action::change_invite_quorum);
-    test(proposal_action::change_dropout_quorum);
-}
-
-SCORUM_TEST_CASE(throw_exception_if_lifetime_is_to_big)
-{
-    proposal_create_operation op;
-    op.creator = "alice";
-    op.data = "bob";
-    op.lifetime_sec = lifetime_max + 1;
-
-    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
-                           "Proposal life time is not in range of 5 - 10 seconds.");
-}
-
-SCORUM_TEST_CASE(throw_when_creator_is_not_in_committee)
-{
-    proposal_create_operation op;
-    op.creator = "joe";
-    op.data = "bob";
-    op.lifetime_sec = lifetime_min + 1;
-
-    auto test = [&](proposal_action action) {
-        op.action = action;
-        SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"joe\" is not in committee.");
-    };
-
-    test(proposal_action::invite);
-    test(proposal_action::dropout);
-    test(proposal_action::change_quorum);
-    test(proposal_action::change_invite_quorum);
-    test(proposal_action::change_dropout_quorum);
-}
-
 SCORUM_TEST_CASE(create_one_invite_proposal)
 {
     proposal_create_operation op;

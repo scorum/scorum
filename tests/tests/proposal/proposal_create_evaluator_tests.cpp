@@ -14,7 +14,7 @@
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-struct proposal_create_fixture
+struct proposal_create_evaluator_fixture
 {
     MockRepository mocks;
 
@@ -25,21 +25,29 @@ struct proposal_create_fixture
     committee_service_i* committee_service = mocks.Mock<committee_service_i>();
     property_service_i* property_service = mocks.Mock<property_service_i>();
 
+    proposal_create_evaluator_fixture()
+    {
+        mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
+        mocks.ExpectCall(services, data_service_factory_i::proposal_service).ReturnByRef(*proposal_service);
+        mocks.ExpectCall(services, data_service_factory_i::committee_service).ReturnByRef(*committee_service);
+        mocks.ExpectCall(services, data_service_factory_i::property_service).ReturnByRef(*property_service);
+    }
+};
+
+struct create_proposal_fixture : public proposal_create_evaluator_fixture
+{
     proposal_object proposal;
     dynamic_global_property_object global_property;
 
     const fc::time_point_sec current_time = fc::time_point_sec();
 
-    proposal_create_fixture()
+    proposal_create_operation op;
+
+    create_proposal_fixture()
     {
         global_property.invite_quorum = 71u;
         global_property.dropout_quorum = 72u;
         global_property.change_quorum = 73u;
-
-        mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
-        mocks.ExpectCall(services, data_service_factory_i::proposal_service).ReturnByRef(*proposal_service);
-        mocks.ExpectCall(services, data_service_factory_i::committee_service).ReturnByRef(*committee_service);
-        mocks.ExpectCall(services, data_service_factory_i::property_service).ReturnByRef(*property_service);
     }
 
     void create_expectations(const proposal_create_operation& op)
@@ -66,9 +74,8 @@ struct proposal_create_fixture
 
 BOOST_AUTO_TEST_SUITE(proposal_create_evaluator_new_tests)
 
-BOOST_FIXTURE_TEST_CASE(create_proposal, proposal_create_fixture)
+BOOST_FIXTURE_TEST_CASE(create_invite_proposal, create_proposal_fixture)
 {
-    proposal_create_operation op;
     op.creator = "alice";
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
     op.action = proposal_action::invite;
@@ -81,7 +88,7 @@ BOOST_FIXTURE_TEST_CASE(create_proposal, proposal_create_fixture)
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }
 
-BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create_fixture)
+BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create_evaluator_fixture)
 {
     proposal_create_operation op;
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS - 1;
@@ -92,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create
                            "Proposal life time is not in range of 86400 - 864000 seconds.");
 }
 
-BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_big, proposal_create_fixture)
+BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_big, proposal_create_evaluator_fixture)
 {
     proposal_create_operation op;
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS + 1;
@@ -101,6 +108,19 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_big, proposal_create_f
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
                            "Proposal life time is not in range of 86400 - 864000 seconds.");
+}
+
+BOOST_FIXTURE_TEST_CASE(throw_when_creator_is_not_in_committee, proposal_create_evaluator_fixture)
+{
+    proposal_create_operation op;
+    op.creator = "sam";
+    op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
+
+    mocks.ExpectCall(committee_service, committee_service_i::member_exists).With(op.creator).Return(false);
+
+    proposal_create_evaluator_new evaluator(*services);
+
+    SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"sam\" is not in committee.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
