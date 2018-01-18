@@ -35,6 +35,7 @@
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_reward.hpp>
 #include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_dynamic_global_property.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -1557,14 +1558,15 @@ void database::initialize_evaluators()
         new proposal_create_evaluator(this->obtain_service<dbs_account>(),
                                       this->obtain_service<dbs_proposal>(),
                                       this->obtain_service<dbs_registration_committee>(),
+                                      this->obtain_service<dbs_dynamic_global_property>(),
                                       SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS,
-                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS,
-                                      SCORUM_COMMITTEE_QUORUM_PERCENT));
+                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
         new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
                                     this->obtain_service<dbs_proposal>(),
-                                    this->obtain_service<dbs_registration_committee>()));
+                                    this->obtain_service<dbs_registration_committee>(),
+                                    this->obtain_service<dbs_dynamic_global_property>()));
     //clang-format on
 }
 

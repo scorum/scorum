@@ -6,7 +6,7 @@
 
 #pragma once
 
-#define DAYS_TO_SECONDS(X)                     (60*60*24*X)
+#define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 1) )
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
@@ -217,10 +217,13 @@
 
 #define VIRTUAL_SCHEDULE_LAP_LENGTH             ( fc::uint128::max_value() )
 
-#define SCORUM_COMMITTEE_QUORUM_PERCENT         (60 * SCORUM_1_PERCENT)
+#define SCORUM_COMMITTEE_QUORUM_PERCENT         (60u)
 
-#define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS    (DAYS_TO_SECONDS(1))
-#define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS    (DAYS_TO_SECONDS(10))
+#define SCORUM_MIN_QUORUM_VALUE_PERCENT         (50u)
+#define SCORUM_MAX_QUORUM_VALUE_PERCENT         (100u)
+
+#define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS    (DAYS_TO_SECONDS(1u))
+#define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS    (DAYS_TO_SECONDS(10u))
 
 /**
  *  Reserved Account IDs with special meaning
