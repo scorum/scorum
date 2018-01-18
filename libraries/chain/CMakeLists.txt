@@ -38,6 +38,8 @@ add_library( scorum_chain
              dbs_comment.cpp
              dbs_comment_vote.cpp
 
+             data_service_factory.cpp
+
              scorum_evaluator.cpp
 
              scorum_objects.cpp

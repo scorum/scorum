@@ -29,6 +29,7 @@
 
 #include <scorum/chain/proposal_vote_evaluator.hpp>
 #include <scorum/chain/proposal_create_evaluator.hpp>
+#include <scorum/chain/proposal_create_evaluator_new.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
@@ -75,6 +76,7 @@ database_impl::database_impl(database& self)
 database::database()
     : chainbase::database()
     , dbservice(*this)
+    , data_service_factory(*this)
     , _my(new database_impl(*this))
 {
 }
@@ -1553,15 +1555,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
 
-    // clang-format off
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(
-        new proposal_create_evaluator(this->obtain_service<dbs_account>(),
-                                      this->obtain_service<dbs_proposal>(),
-                                      this->obtain_service<dbs_registration_committee>(),
-                                      this->obtain_service<dbs_dynamic_global_property>(),
-                                      SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS,
-                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator_new>(
+        new proposal_create_evaluator_new(*this));
 
+    // clang-format off
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
         new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
                                     this->obtain_service<dbs_proposal>(),
