@@ -95,7 +95,7 @@ public:
     void increase_witnesses_voted_for(const account_object& account);
     void decrease_witnesses_voted_for(const account_object& account);
 
-    void add_post(const account_object& author_account, const optional<account_name_type>& parent_author_name);
+    void add_post(const account_object& author_account, const account_name_type& parent_author_name);
 
     void update_voting_power(const account_object& account, uint16_t voting_power);
 

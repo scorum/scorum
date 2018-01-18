@@ -318,12 +318,12 @@ void dbs_account::decrease_witnesses_voted_for(const account_object& account)
     db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for--; });
 }
 
-void dbs_account::add_post(const account_object& author_account, const optional<account_name_type>& parent_author_name)
+void dbs_account::add_post(const account_object& author_account, const account_name_type& parent_author_name)
 {
     time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(author_account, [&](account_object& a) {
-        if (!parent_author_name.valid())
+        if (parent_author_name == SCORUM_ROOT_POST_PARENT)
         {
             a.last_root_post = t;
         }

@@ -32,6 +32,8 @@ add_library( scorum_chain
              dbs_registration_committee.cpp
              dbs_proposal.cpp
              dbs_atomicswap.cpp
+             dbs_comment.cpp
+             dbs_comment_vote.cpp
 
              scorum_evaluator.cpp
 
