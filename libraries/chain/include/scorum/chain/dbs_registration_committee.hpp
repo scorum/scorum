@@ -11,10 +11,15 @@
 namespace scorum {
 namespace chain {
 
+struct committee_service_i
+{
+    virtual bool member_exists(const account_name_type&) const = 0;
+};
+
 /** DB service for operations with registration_committee_* objects
  *  --------------------------------------------
  */
-class dbs_registration_committee : public dbs_base
+class dbs_registration_committee : public committee_service_i, public dbs_base
 {
     friend class dbservice_dbs_factory;
 
