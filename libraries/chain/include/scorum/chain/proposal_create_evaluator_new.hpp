@@ -27,8 +27,8 @@ public:
         : _services(services)
         , account_service(_services.account_service())
         , proposal_service(_services.proposal_service())
-        , committee_service(_services.committee_service())
-        , property_service(_services.property_service())
+        , committee_service(_services.registration_committee_service())
+        , property_service(_services.dynamic_global_property_service())
     {
     }
 
@@ -90,8 +90,8 @@ private:
 
     scorum::chain::account_service_i& account_service;
     scorum::chain::proposal_service_i& proposal_service;
-    scorum::chain::committee_service_i& committee_service;
-    scorum::chain::property_service_i& property_service;
+    scorum::chain::registration_committee_service_i& committee_service;
+    scorum::chain::dynamic_global_property_service_i& property_service;
 };
 
 } // namespace chain
