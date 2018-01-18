@@ -39,6 +39,8 @@ add_library( scorum_chain
              dbs_comment_vote.cpp
              dbs_escrow.cpp
 
+             data_service_factory.cpp
+
              scorum_evaluator.cpp
 
              scorum_objects.cpp
