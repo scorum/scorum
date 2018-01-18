@@ -41,7 +41,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
     const fc::time_point_sec current_time = fc::time_point_sec();
 
-    proposal_create_operation op;
+    uint64_t expected_quorum = 0;
 
     create_proposal_fixture()
     {
@@ -52,8 +52,6 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
     void create_expectations(const proposal_create_operation& op)
     {
-        const fc::time_point_sec expected_expiration = current_time + op.lifetime_sec;
-
         mocks.ExpectCall(committee_service, committee_service_i::member_exists).With(op.creator).Return(true);
 
         mocks.ExpectCall(account_service, account_service_i::check_account_existence)
@@ -63,29 +61,109 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
         mocks.ExpectCall(property_service, property_service_i::get_dynamic_global_properties)
             .ReturnByRef(global_property);
+    }
 
-        proposal_action action = *op.action;
+    void create_proposal(proposal_action expected_action)
+    {
+        proposal_create_operation op;
+        op.creator = "alice";
+        op.data = "bob";
+        op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
+        op.action = expected_action;
+
+        create_expectations(op);
 
         mocks.ExpectCall(proposal_service, proposal_service_i::create)
-            .With(op.creator, _, action, expected_expiration, global_property.invite_quorum)
+            .With(_, _, expected_action, _, _)
             .ReturnByRef(proposal);
+
+        proposal_create_evaluator_new evaluator(*services);
+
+        evaluator.do_apply(op);
+    }
+
+    uint64_t get_quorum(proposal_action action)
+    {
+        mocks.ExpectCall(property_service, property_service_i::get_dynamic_global_properties)
+            .ReturnByRef(global_property);
+
+        proposal_create_evaluator_new evaluator(*services);
+
+        return evaluator.get_quorum(action);
     }
 };
 
 BOOST_AUTO_TEST_SUITE(proposal_create_evaluator_new_tests)
 
-BOOST_FIXTURE_TEST_CASE(create_invite_proposal, create_proposal_fixture)
+BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, create_proposal_fixture)
 {
+    proposal_create_operation op;
     op.creator = "alice";
-    op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
-    op.action = proposal_action::invite;
     op.data = "bob";
+    op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
+    op.action = proposal_action::invite;
 
     create_expectations(op);
 
+    const fc::time_point_sec expected_expiration = current_time + op.lifetime_sec;
+
+    mocks.ExpectCall(proposal_service, proposal_service_i::create)
+        .With(_, _, _, expected_expiration, _)
+        .ReturnByRef(proposal);
+
     proposal_create_evaluator_new evaluator(*services);
 
-    BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
+    evaluator.do_apply(op);
+}
+
+BOOST_FIXTURE_TEST_CASE(get_quorum_for_invite_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_EQUAL(global_property.invite_quorum, get_quorum(proposal_action::invite));
+}
+
+BOOST_FIXTURE_TEST_CASE(get_quorum_for_dropout_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_EQUAL(global_property.dropout_quorum, get_quorum(proposal_action::dropout));
+}
+
+BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_invite_quorum_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_invite_quorum));
+}
+
+BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_dropout_quorum_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_dropout_quorum));
+}
+
+BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_quorum_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_quorum));
+}
+
+BOOST_FIXTURE_TEST_CASE(create_invite_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::invite));
+}
+
+BOOST_FIXTURE_TEST_CASE(create_dropout_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::dropout));
+}
+
+BOOST_FIXTURE_TEST_CASE(create_change_invite_quorum_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_invite_quorum));
+}
+
+BOOST_FIXTURE_TEST_CASE(create_change_dropout_quorum_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_dropout_quorum));
+}
+
+BOOST_FIXTURE_TEST_CASE(create_change_quorum_proposal, create_proposal_fixture)
+{
+    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_quorum));
 }
 
 BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create_evaluator_fixture)
@@ -121,6 +199,147 @@ BOOST_FIXTURE_TEST_CASE(throw_when_creator_is_not_in_committee, proposal_create_
     proposal_create_evaluator_new evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"sam\" is not in committee.");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(proposal_create_operation_validate_tests)
+
+BOOST_AUTO_TEST_CASE(throw_exception_if_creator_is_not_set)
+{
+    proposal_create_operation op;
+
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Account name  is invalid");
+}
+
+BOOST_AUTO_TEST_CASE(throw_exception_if_member_is_not_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+
+    auto test = [&](proposal_action action) {
+        op.action = action;
+        SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Account name  is invalid");
+    };
+
+    test(proposal_action::invite);
+    test(proposal_action::dropout);
+}
+
+BOOST_AUTO_TEST_CASE(throw_exception_if_action_is_not_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, "Proposal is not set.");
+}
+
+BOOST_AUTO_TEST_CASE(pass_when_all_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = "bob";
+
+    op.action = proposal_action::invite;
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.action = proposal_action::dropout;
+    BOOST_CHECK_NO_THROW(op.validate());
+}
+
+BOOST_AUTO_TEST_CASE(throw_when_change_quorum_and_data_is_not_set)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+
+    op.action = proposal_action::change_quorum;
+    BOOST_CHECK_THROW(op.validate(), fc::exception);
+
+    op.action = proposal_action::change_invite_quorum;
+    BOOST_CHECK_THROW(op.validate(), fc::exception);
+
+    op.action = proposal_action::change_dropout_quorum;
+    BOOST_CHECK_THROW(op.validate(), fc::exception);
+}
+
+BOOST_AUTO_TEST_CASE(throw_when_change_quorum_and_data_is_not_uint64)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = "bob";
+
+    op.action = proposal_action::change_quorum;
+    SCORUM_CHECK_THROW(op.validate(), fc::exception);
+
+    op.action = proposal_action::change_invite_quorum;
+    SCORUM_CHECK_THROW(op.validate(), fc::exception);
+
+    op.action = proposal_action::change_dropout_quorum;
+    SCORUM_CHECK_THROW(op.validate(), fc::exception);
+}
+
+SCORUM_TEST_CASE(pass_when_change_quorum_and_data_is_uint64)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = 60;
+
+    op.action = proposal_action::change_quorum;
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.action = proposal_action::change_invite_quorum;
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.action = proposal_action::change_dropout_quorum;
+    BOOST_CHECK_NO_THROW(op.validate());
+}
+
+SCORUM_TEST_CASE(throw_when_quorum_is_to_small)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = SCORUM_MIN_QUORUM_VALUE_PERCENT;
+
+    op.action = proposal_action::change_quorum;
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Quorum is to small.");
+
+    op.action = proposal_action::change_invite_quorum;
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Quorum is to small.");
+
+    op.action = proposal_action::change_dropout_quorum;
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Quorum is to small.");
+}
+
+SCORUM_TEST_CASE(validate_fail_on_max_quorum_value)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = SCORUM_MAX_QUORUM_VALUE_PERCENT;
+
+    op.action = proposal_action::change_quorum;
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.action = proposal_action::change_invite_quorum;
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.action = proposal_action::change_dropout_quorum;
+    BOOST_CHECK_NO_THROW(op.validate());
+}
+
+SCORUM_TEST_CASE(throw_when_quorum_is_to_large)
+{
+    proposal_create_operation op;
+    op.creator = "alice";
+    op.data = SCORUM_MAX_QUORUM_VALUE_PERCENT + 1;
+
+    op.action = proposal_action::change_quorum;
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Quorum is to large.");
+
+    op.action = proposal_action::change_invite_quorum;
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Quorum is to large.");
+
+    op.action = proposal_action::change_dropout_quorum;
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Quorum is to large.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
