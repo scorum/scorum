@@ -85,7 +85,7 @@ int main(int argc, char** argv)
                 ("rpc-http-endpoint,H",   bpo::value<string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
                 ("daemon,d", "Run the wallet in daemon mode")
                 ("rpc-http-allowip",      bpo::value<vector<string>>()->multitoken(),             "Allows only specified IPs to connect to the HTTP endpoint")
-                ("wallet-file,w",         bpo::value<string>()->implicit_value("wallet.json"),    "wallet to load")
+                ("wallet-file,w",         bpo::value<string>()->default_value("wallet.json"),    "wallet to load")
                 ("chain-id",              bpo::value<string>(),                                   "chain ID to connect to");
         // clang-format on
 
@@ -94,6 +94,40 @@ int main(int argc, char** argv)
         bpo::variables_map options;
 
         bpo::store(bpo::parse_command_line(argc, argv, opts), options);
+
+#ifdef DEBUG
+
+#define OUT_OPT_DEBUG std::cout << "D: "
+
+        for (int carg = 1; carg < argc; ++carg)
+        {
+            OUT_OPT_DEBUG << "argv[" << carg << "] = " << argv[carg] << "\n";
+        }
+
+#define PRINT_OPT(name)                                                                                                \
+    if (options.count(name))                                                                                           \
+    {                                                                                                                  \
+        OUT_OPT_DEBUG << "Opt '" << name << "':";                                                                      \
+        std::cout << " '" << options[name].as<std::string>() << "'";                                                   \
+        std::cout << "\n";                                                                                             \
+    }
+
+        PRINT_OPT("help");
+        PRINT_OPT("server-rpc-endpoint");
+        PRINT_OPT("server-rpc-user");
+        PRINT_OPT("server-rpc-password");
+        PRINT_OPT("cert-authority");
+        PRINT_OPT("rpc-endpoint");
+        PRINT_OPT("rpc-tls-endpoint");
+        PRINT_OPT("rpc-tls-certificate");
+        PRINT_OPT("rpc-http-endpoint");
+        PRINT_OPT("daemon");
+        PRINT_OPT("rpc-http-allowip");
+        PRINT_OPT("wallet-file");
+        PRINT_OPT("chain-id");
+
+        OUT_OPT_DEBUG << std::endl;
+#endif
 
         if (options.count("help"))
         {
@@ -117,7 +151,7 @@ int main(int argc, char** argv)
         ac.rotation_interval = fc::hours(1);
         ac.rotation_limit = fc::days(1);
 
-        std::cout << "Logging RPC to file: " << (data_dir / ac.filename).preferred_string() << "\n";
+        std::cout << "Logging RPC to file: " << ac.filename.string() << std::endl;
 
         cfg.appenders.push_back(fc::appender_config("default", "console", fc::variant(fc::console_appender::config())));
         cfg.appenders.push_back(fc::appender_config("rpc", "file", fc::variant(ac)));
@@ -137,6 +171,9 @@ int main(int argc, char** argv)
         wallet_data wdata;
 
         fc::path wallet_file(options.count("wallet-file") ? options.at("wallet-file").as<string>() : "wallet.json");
+
+        std::cout << "Wallet file: " << wallet_file.string() << std::endl;
+
         if (fc::exists(wallet_file))
         {
             wdata = fc::json::from_file(wallet_file).as<wallet_data>();

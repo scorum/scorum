@@ -35,6 +35,8 @@ add_library( scorum_chain
              dbs_proposal.cpp
              dbs_atomicswap.cpp
              dbs_dynamic_global_property.cpp
+             dbs_comment.cpp
+             dbs_comment_vote.cpp
 
              scorum_evaluator.cpp
 

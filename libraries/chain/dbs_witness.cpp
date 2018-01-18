@@ -1,7 +1,6 @@
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/database.hpp>
 
-#include <scorum/chain/witness_objects.hpp>
 #include <scorum/chain/account_object.hpp>
 
 namespace scorum {
@@ -12,13 +11,18 @@ dbs_witness::dbs_witness(database& db)
 {
 }
 
-const witness_object& dbs_witness::get_witness(const account_name_type& name) const
+const witness_object& dbs_witness::get(const account_name_type& name) const
 {
     try
     {
         return db_impl().get<witness_object, by_name>(name);
     }
     FC_CAPTURE_AND_RETHROW((name))
+}
+
+bool dbs_witness::is_exists(const account_name_type& name) const
+{
+    return nullptr != db_impl().find<witness_object, by_name>(name);
 }
 
 const witness_schedule_object& dbs_witness::get_witness_schedule_object() const
@@ -35,6 +39,37 @@ const witness_object& dbs_witness::get_top_witness() const
     const auto& idx = db_impl().get_index<witness_index>().indices().get<by_vote_name>();
     FC_ASSERT(idx.begin() != idx.end(), "Empty witness_index by_vote_name.");
     return (*idx.begin());
+}
+
+const witness_object& dbs_witness::create_witness(const account_name_type& owner,
+                                                  const std::string& url,
+                                                  const public_key_type& block_signing_key,
+                                                  const chain_properties& props)
+{
+    const auto& dprops = db_impl().get_dynamic_global_properties();
+
+    const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
+        w.owner = owner;
+        fc::from_string(w.url, url);
+        w.signing_key = block_signing_key;
+        w.created = dprops.time;
+        w.props = props;
+        w.hardfork_time_vote = db_impl().get_genesis_time();
+    });
+
+    return new_witness;
+}
+
+void dbs_witness::update_witness(const witness_object& witness,
+                                 const std::string& url,
+                                 const public_key_type& block_signing_key,
+                                 const chain_properties& props)
+{
+    db_impl().modify(witness, [&](witness_object& w) {
+        fc::from_string(w.url, url);
+        w.signing_key = block_signing_key;
+        w.props = props;
+    });
 }
 
 void dbs_witness::adjust_witness_votes(const account_object& account, const share_type& delta)

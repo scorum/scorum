@@ -19,6 +19,8 @@ protected:
 public:
     const account_object& get_account(const account_name_type&) const;
 
+    static asset get_balance(const account_object& account, asset_symbol_type symbol);
+
     const account_authority_object& get_account_authority(const account_name_type&) const;
 
     void check_account_existence(const account_name_type&,
@@ -95,7 +97,7 @@ public:
     void increase_witnesses_voted_for(const account_object& account);
     void decrease_witnesses_voted_for(const account_object& account);
 
-    void add_post(const account_object& author_account, const optional<account_name_type>& parent_author_name);
+    void add_post(const account_object& author_account, const account_name_type& parent_author_name);
 
     void update_voting_power(const account_object& account, uint16_t voting_power);
 
