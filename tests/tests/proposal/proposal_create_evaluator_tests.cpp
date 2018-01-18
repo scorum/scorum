@@ -22,8 +22,8 @@ struct proposal_create_fixture
 
     account_service_i* account_service = mocks.Mock<account_service_i>();
     proposal_service_i* proposal_service = mocks.Mock<proposal_service_i>();
-    committee_service_i* committee_service = mocks.Mock<committee_service_i>();
-    property_service_i* property_service = mocks.Mock<property_service_i>();
+    registration_committee_service_i* committee_service = mocks.Mock<registration_committee_service_i>();
+    dynamic_global_property_service_i* property_service = mocks.Mock<dynamic_global_property_service_i>();
 
     proposal_object proposal;
     dynamic_global_property_object global_property;
@@ -38,22 +38,26 @@ struct proposal_create_fixture
 
         mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
         mocks.ExpectCall(services, data_service_factory_i::proposal_service).ReturnByRef(*proposal_service);
-        mocks.ExpectCall(services, data_service_factory_i::committee_service).ReturnByRef(*committee_service);
-        mocks.ExpectCall(services, data_service_factory_i::property_service).ReturnByRef(*property_service);
+        mocks.ExpectCall(services, data_service_factory_i::registration_committee_service)
+            .ReturnByRef(*committee_service);
+        mocks.ExpectCall(services, data_service_factory_i::dynamic_global_property_service)
+            .ReturnByRef(*property_service);
     }
 
     void create_expectations(const proposal_create_operation& op)
     {
         const fc::time_point_sec expected_expiration = current_time + op.lifetime_sec;
 
-        mocks.ExpectCall(committee_service, committee_service_i::member_exists).With(op.creator).Return(true);
+        mocks.ExpectCall(committee_service, registration_committee_service_i::member_exists)
+            .With(op.creator)
+            .Return(true);
 
         mocks.ExpectCall(account_service, account_service_i::check_account_existence)
             .With(op.creator, fc::optional<const char*>());
 
-        mocks.ExpectCall(property_service, property_service_i::head_block_time).Return(current_time);
+        mocks.ExpectCall(property_service, dynamic_global_property_service_i::head_block_time).Return(current_time);
 
-        mocks.ExpectCall(property_service, property_service_i::get_dynamic_global_properties)
+        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get_dynamic_global_properties)
             .ReturnByRef(global_property);
 
         proposal_action action = *op.action;
