@@ -6,7 +6,6 @@ namespace scorum {
 namespace chain {
 
 class dynamic_global_property_object;
-class database;
 
 struct property_service_i
 {
@@ -25,6 +24,8 @@ public:
     virtual const dynamic_global_property_object& get_dynamic_global_properties() const;
 
     virtual fc::time_point_sec head_block_time();
+
+    time_point_sec head_block_time() const;
 
     void set_invite_quorum(uint64_t quorum);
     void set_dropout_quorum(uint64_t quorum);

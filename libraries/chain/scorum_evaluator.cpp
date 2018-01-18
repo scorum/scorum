@@ -9,10 +9,13 @@
 #include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_comment.hpp>
+#include <scorum/chain/dbs_comment_vote.hpp>
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_registration_pool.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_atomicswap.hpp>
+#include <scorum/chain/dbs_dynamic_global_property.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -66,38 +69,28 @@ struct strcmp_equal
 void witness_update_evaluator::do_apply(const witness_update_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
 
     account_service.check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
     FC_ASSERT(o.props.account_creation_fee.symbol == SCORUM_SYMBOL);
 
-    const auto& by_witness_name_idx = _db._temporary_public_impl().get_index<witness_index>().indices().get<by_name>();
-    auto wit_itr = by_witness_name_idx.find(o.owner);
-    if (wit_itr != by_witness_name_idx.end())
+    if (!witness_service.is_exists(o.owner))
     {
-        _db._temporary_public_impl().modify(*wit_itr, [&](witness_object& w) {
-            fc::from_string(w.url, o.url);
-            w.signing_key = o.block_signing_key;
-            w.props = o.props;
-        });
+        witness_service.create_witness(o.owner, o.url, o.block_signing_key, o.props);
     }
     else
     {
-        _db._temporary_public_impl().create<witness_object>([&](witness_object& w) {
-            w.owner = o.owner;
-            fc::from_string(w.url, o.url);
-            w.signing_key = o.block_signing_key;
-            w.created = _db.head_block_time();
-            w.props = o.props;
-            w.hardfork_time_vote = _db.get_genesis_time();
-        });
+        const auto& witness = witness_service.get(o.owner);
+        witness_service.update_witness(witness, o.url, o.block_signing_key, o.props);
     }
 }
 
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -108,7 +101,7 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     // check fee
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
     FC_ASSERT(o.fee >= wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
               "Insufficient Fee: ${f} required, ${p} provided.",
               ("f", wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER)("p", o.fee));
@@ -129,13 +122,15 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
 {
-    const auto& props = _db.get_dynamic_global_properties();
-
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+
+    const auto& props = dprops_service.get_dynamic_global_properties();
 
     const auto& creator = account_service.get_account(o.creator);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
 
     // check creator balance
 
@@ -217,7 +212,7 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     if (o.owner)
     {
 #ifndef IS_TEST_NET
-        FC_ASSERT(_db.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
+        FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
 #endif
         account_service.check_account_existence(o.owner->account_auths);
@@ -244,12 +239,15 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
 void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_comment& comment_service = _db.obtain_service<dbs_comment>();
+    dbs_comment_vote& comment_vote_service = _db.obtain_service<dbs_comment_vote>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     const auto& auth = account_service.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
               "Operation cannot be processed because account is currently challenged.");
 
-    const auto& comment = _db.get_comment(o.author, o.permlink);
+    const auto& comment = comment_service.get(o.author, o.permlink);
     FC_ASSERT(comment.children == 0, "Cannot delete a comment with replies.");
 
     FC_ASSERT(comment.cashout_time != fc::time_point_sec::maximum());
@@ -259,38 +257,31 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     if (comment.net_rshares > 0)
         return;
 
-    const auto& vote_idx
-        = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
+    comment_vote_service.remove(comment_id_type(comment.id));
 
-    auto vote_itr = vote_idx.lower_bound(comment_id_type(comment.id));
-    while (vote_itr != vote_idx.end() && vote_itr->comment == comment.id)
-    {
-        const auto& cur_vote = *vote_itr;
-        ++vote_itr;
-        _db._temporary_public_impl().remove(cur_vote);
-    }
-
+    account_name_type parent_author = comment.parent_author;
+    std::string parent_permlink = fc::to_string(comment.parent_permlink);
     /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
-    if (comment.parent_author != SCORUM_ROOT_POST_PARENT)
+    while (parent_author != SCORUM_ROOT_POST_PARENT)
     {
-        auto parent = &_db.get_comment(comment.parent_author, comment.parent_permlink);
-        auto now = _db.head_block_time();
-        while (parent)
-        {
-            _db._temporary_public_impl().modify(*parent, [&](comment_object& p) {
-                p.children--;
-                p.active = now;
-            });
-#ifndef IS_LOW_MEM
-            if (parent->parent_author != SCORUM_ROOT_POST_PARENT)
-                parent = &_db.get_comment(parent->parent_author, parent->parent_permlink);
-            else
+        const comment_object& parent = comment_service.get(parent_author, parent_permlink);
+
+        parent_author = parent.parent_author;
+        parent_permlink = fc::to_string(parent.parent_permlink);
+
+        auto now = dprops_service.head_block_time();
+
+        comment_service.update(parent, [&](comment_object& p) {
+            p.children--;
+            p.active = now;
+        });
+
+#ifdef IS_LOW_MEM
+        break;
 #endif
-                parent = nullptr;
-        }
     }
 
-    _db._temporary_public_impl().remove(comment);
+    comment_service.remove(comment);
 }
 
 struct comment_options_extension_visitor
@@ -299,6 +290,7 @@ struct comment_options_extension_visitor
         : _c(c)
         , _db(db)
         , _account_service(_db.obtain_service<dbs_account>())
+        , _comment_service(_db.obtain_service<dbs_comment>())
     {
     }
 
@@ -307,13 +299,14 @@ struct comment_options_extension_visitor
     const comment_object& _c;
     dbservice& _db;
     dbs_account& _account_service;
+    dbs_comment& _comment_service;
 
     void operator()(const comment_payout_beneficiaries& cpb) const
     {
         FC_ASSERT(_c.beneficiaries.size() == 0, "Comment already has beneficiaries specified.");
         FC_ASSERT(_c.abs_rshares == 0, "Comment must not have been voted on before specifying beneficiaries.");
 
-        _db._temporary_public_impl().modify(_c, [&](comment_object& c) {
+        _comment_service.update(_c, [&](comment_object& c) {
             for (auto& b : cpb.beneficiaries)
             {
                 _account_service.check_account_existence(b.account, "Beneficiary");
@@ -326,12 +319,13 @@ struct comment_options_extension_visitor
 void comment_options_evaluator::do_apply(const comment_options_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_comment& comment_service = _db.obtain_service<dbs_comment>();
 
     const auto& auth = account_service.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
               "Operation cannot be processed because account is currently challenged.");
 
-    const auto& comment = _db.get_comment(o.author, o.permlink);
+    const auto& comment = comment_service.get(o.author, o.permlink);
     if (!o.allow_curation_rewards || !o.allow_votes || o.max_accepted_payout < comment.max_accepted_payout)
         FC_ASSERT(comment.abs_rshares == 0,
                   "One of the included comment options requires the comment to have no rshares allocated to it.");
@@ -341,7 +335,7 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
     FC_ASSERT(comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout.");
     FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent SBD.");
 
-    _db._temporary_public_impl().modify(comment, [&](comment_object& c) {
+    comment_service.update(comment, [&](comment_object& c) {
         c.max_accepted_payout = o.max_accepted_payout;
         c.percent_scrs = o.percent_scrs;
         c.allow_votes = o.allow_votes;
@@ -357,6 +351,8 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
 void comment_evaluator::do_apply(const comment_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_comment& comment_service = _db.obtain_service<dbs_comment>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     try
     {
@@ -364,38 +360,36 @@ void comment_evaluator::do_apply(const comment_operation& o)
         FC_ASSERT(o.title.size() + o.body.size() + o.json_metadata.size(),
                   "Cannot update comment because nothing appears to be changing.");
 
-        const auto& by_permlink_idx
-            = _db._temporary_public_impl().get_index<comment_index>().indices().get<by_permlink>();
-        auto itr = by_permlink_idx.find(boost::make_tuple(o.author, o.permlink));
-
         const auto& auth = account_service.get_account(o.author); /// prove it exists
 
         FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
                   "Operation cannot be processed because account is currently challenged.");
 
-        const comment_object* parent = nullptr;
-        if (o.parent_author != SCORUM_ROOT_POST_PARENT)
+        account_name_type parent_author = o.parent_author;
+        std::string parent_permlink = o.parent_permlink;
+        if (parent_author != SCORUM_ROOT_POST_PARENT)
         {
-            parent = &_db.get_comment(o.parent_author, o.parent_permlink);
-            FC_ASSERT(parent->depth < SCORUM_MAX_COMMENT_DEPTH,
+            const comment_object& parent = comment_service.get(parent_author, parent_permlink);
+            FC_ASSERT(parent.depth < SCORUM_MAX_COMMENT_DEPTH,
                       "Comment is nested ${x} posts deep, maximum depth is ${y}.",
-                      ("x", parent->depth)("y", SCORUM_MAX_COMMENT_DEPTH));
+                      ("x", parent.depth)("y", SCORUM_MAX_COMMENT_DEPTH));
         }
 
         if (o.json_metadata.size())
             FC_ASSERT(fc::is_utf8(o.json_metadata), "JSON Metadata must be UTF-8");
 
-        auto now = _db.head_block_time();
+        auto now = dprops_service.head_block_time();
 
-        if (itr == by_permlink_idx.end())
+        if (!comment_service.is_exists(o.author, o.permlink))
         {
-            if (o.parent_author != SCORUM_ROOT_POST_PARENT)
+            if (parent_author != SCORUM_ROOT_POST_PARENT)
             {
-                FC_ASSERT(_db._temporary_public_impl().get(parent->root_comment).allow_replies,
+                const comment_object& parent = comment_service.get(parent_author, parent_permlink);
+                FC_ASSERT(comment_service.get(parent.root_comment).allow_replies,
                           "The parent comment has disabled replies.");
             }
 
-            if (o.parent_author == SCORUM_ROOT_POST_PARENT)
+            if (parent_author == SCORUM_ROOT_POST_PARENT)
                 FC_ASSERT((now - auth.last_root_post) > SCORUM_MIN_ROOT_COMMENT_INTERVAL,
                           "You may only post once every 5 minutes.",
                           ("now", now)("last_root_post", auth.last_root_post));
@@ -406,41 +400,51 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
             uint16_t reward_weight = SCORUM_100_PERCENT;
 
-            optional<account_name_type> parent_author;
-            if (o.parent_author != SCORUM_ROOT_POST_PARENT)
-            {
-                parent_author = o.parent_author;
-            }
-
             account_service.add_post(auth, parent_author);
 
-            _db._temporary_public_impl().create<comment_object>([&](comment_object& com) {
-                validate_permlink_0_1(o.parent_permlink);
-                validate_permlink_0_1(o.permlink);
+            validate_permlink_0_1(parent_permlink);
+            validate_permlink_0_1(o.permlink);
+
+            account_name_type pr_parent_author;
+            std::string pr_parent_permlink;
+            uint16_t pr_depth = 0;
+            std::string pr_category;
+            comment_id_type pr_root_comment;
+            if (parent_author != SCORUM_ROOT_POST_PARENT)
+            {
+                const comment_object& parent = comment_service.get(parent_author, parent_permlink);
+                pr_parent_author = parent.author;
+                pr_parent_permlink = fc::to_string(parent.permlink);
+                pr_depth = parent.depth + 1;
+                pr_category = fc::to_string(parent.category);
+                pr_root_comment = parent.root_comment;
+            }
+
+            comment_service.create([&](comment_object& com) {
 
                 com.author = o.author;
                 fc::from_string(com.permlink, o.permlink);
-                com.last_update = _db.head_block_time();
+                com.last_update = now;
                 com.created = com.last_update;
                 com.active = com.last_update;
                 com.last_payout = fc::time_point_sec::min();
                 com.max_cashout_time = fc::time_point_sec::maximum();
                 com.reward_weight = reward_weight;
 
-                if (o.parent_author == SCORUM_ROOT_POST_PARENT)
+                if (parent_author == SCORUM_ROOT_POST_PARENT)
                 {
                     com.parent_author = "";
-                    fc::from_string(com.parent_permlink, o.parent_permlink);
-                    fc::from_string(com.category, o.parent_permlink);
+                    fc::from_string(com.parent_permlink, parent_permlink);
+                    fc::from_string(com.category, parent_permlink);
                     com.root_comment = com.id;
                 }
                 else
                 {
-                    com.parent_author = parent->author;
-                    com.parent_permlink = parent->permlink;
-                    com.depth = parent->depth + 1;
-                    com.category = parent->category;
-                    com.root_comment = parent->root_comment;
+                    com.parent_author = pr_parent_author;
+                    fc::from_string(com.parent_permlink, pr_parent_permlink);
+                    com.depth = pr_depth + 1;
+                    fc::from_string(com.category, pr_category);
+                    com.root_comment = pr_root_comment;
                 }
 
                 com.cashout_time = com.created + SCORUM_CASHOUT_WINDOW_SECONDS;
@@ -459,41 +463,40 @@ void comment_evaluator::do_apply(const comment_operation& o)
             });
 
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
-            auto now = _db.head_block_time();
-            while (parent)
+            while (parent_author != SCORUM_ROOT_POST_PARENT)
             {
-                _db._temporary_public_impl().modify(*parent, [&](comment_object& p) {
+                const comment_object& parent = comment_service.get(parent_author, parent_permlink);
+
+                parent_author = parent.parent_author;
+                parent_permlink = fc::to_string(parent.parent_permlink);
+
+                comment_service.update(parent, [&](comment_object& p) {
                     p.children++;
                     p.active = now;
                 });
-#ifndef IS_LOW_MEM
-                if (parent->parent_author != SCORUM_ROOT_POST_PARENT)
-                    parent = &_db.get_comment(parent->parent_author, parent->parent_permlink);
-                else
+#ifdef IS_LOW_MEM
+                break;
 #endif
-                    parent = nullptr;
             }
         }
         else // start edit case
         {
-            const auto& comment = *itr;
+            const comment_object& comment = comment_service.get(o.author, o.permlink);
 
-            _db._temporary_public_impl().modify(comment, [&](comment_object& com) {
-                com.last_update = _db.head_block_time();
+            comment_service.update(comment, [&](comment_object& com) {
+                com.last_update = dprops_service.head_block_time();
                 com.active = com.last_update;
                 strcmp_equal equal;
 
-                if (!parent)
+                if (parent_author == SCORUM_ROOT_POST_PARENT)
                 {
                     FC_ASSERT(com.parent_author == account_name_type(), "The parent of a comment cannot be changed.");
-                    FC_ASSERT(equal(com.parent_permlink, o.parent_permlink),
-                              "The permlink of a comment cannot change.");
+                    FC_ASSERT(equal(com.parent_permlink, parent_permlink), "The permlink of a comment cannot change.");
                 }
                 else
                 {
                     FC_ASSERT(com.parent_author == o.parent_author, "The parent of a comment cannot be changed.");
-                    FC_ASSERT(equal(com.parent_permlink, o.parent_permlink),
-                              "The permlink of a comment cannot change.");
+                    FC_ASSERT(equal(com.parent_permlink, parent_permlink), "The permlink of a comment cannot change.");
                 }
 
 #ifndef IS_LOW_MEM
@@ -548,6 +551,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
 void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     try
     {
@@ -555,9 +559,10 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
         account_service.check_account_existence(o.to);
         account_service.check_account_existence(o.agent);
 
-        FC_ASSERT(o.ratification_deadline > _db.head_block_time(),
+        FC_ASSERT(o.ratification_deadline > dprops_service.head_block_time(),
                   "The escorw ratification deadline must be after head block time.");
-        FC_ASSERT(o.escrow_expiration > _db.head_block_time(), "The escrow expiration must be after head block time.");
+        FC_ASSERT(o.escrow_expiration > dprops_service.head_block_time(),
+                  "The escrow expiration must be after head block time.");
 
         FC_ASSERT(o.fee.symbol == SCORUM_SYMBOL, "Fee must be in SCR.");
 
@@ -587,6 +592,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     try
     {
@@ -597,7 +603,7 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
                   ("o", o.to)("e", escrow.to));
         FC_ASSERT(escrow.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).",
                   ("o", o.agent)("e", escrow.agent));
-        FC_ASSERT(escrow.ratification_deadline >= _db.head_block_time(),
+        FC_ASSERT(escrow.ratification_deadline >= dprops_service.head_block_time(),
                   "The escrow ratification deadline has passed. Escrow can no longer be ratified.");
 
         bool reject_escrow = !o.approve;
@@ -644,13 +650,15 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     try
     {
         account_service.check_account_existence(o.from);
 
         const auto& e = _db.get_escrow(o.from, o.escrow_id);
-        FC_ASSERT(_db.head_block_time() < e.escrow_expiration, "Disputing the escrow must happen before expiration.");
+        FC_ASSERT(dprops_service.head_block_time() < e.escrow_expiration,
+                  "Disputing the escrow must happen before expiration.");
         FC_ASSERT(e.to_approved && e.agent_approved,
                   "The escrow must be approved by all parties before a dispute can be raised.");
         FC_ASSERT(!e.disputed, "The escrow is already under dispute.");
@@ -666,6 +674,7 @@ void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     try
     {
@@ -694,7 +703,7 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
                       "Only 'from' (${f}) and 'to' (${t}) can release funds from a non-disputed escrow",
                       ("f", e.from)("t", e.to));
 
-            if (e.escrow_expiration > _db.head_block_time())
+            if (e.escrow_expiration > dprops_service.head_block_time())
             {
                 // If there is no dispute and escrow has not expired, either party can release funds to the other.
                 if (o.who == e.from)
@@ -732,7 +741,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
 
     account_service.drop_challenged(from_account);
 
-    FC_ASSERT(_db.get_balance(from_account, o.amount.symbol) >= o.amount,
+    FC_ASSERT(dbs_account::get_balance(from_account, o.amount.symbol) >= o.amount,
               "Account does not have sufficient funds for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.increase_balance(to_account, o.amount);
@@ -745,7 +754,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     const auto& from_account = account_service.get_account(o.from);
     const auto& to_account = o.to.size() ? account_service.get_account(o.to) : from_account;
 
-    FC_ASSERT(_db.get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
+    FC_ASSERT(dbs_account::get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
               "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.create_vesting(to_account, o.amount);
@@ -754,6 +763,8 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
 void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     const auto& account = account_service.get_account(o.account);
 
@@ -764,8 +775,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
     if (!account.created_by_genesis)
     {
-        const auto& props = _db.get_dynamic_global_properties();
-        const witness_schedule_object& wso = _db.get_witness_schedule_object();
+        const auto& props = dprops_service.get_dynamic_global_properties();
+        const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
 
         asset min_vests = wso.median_props.account_creation_fee * props.get_vesting_share_price();
         min_vests.amount.value *= 10;
@@ -798,7 +809,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
                   "This operation would not change the vesting withdraw rate.");
 
         account_service.update_withdraw(account, new_vesting_withdraw_rate,
-                                        _db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
+                                        dprops_service.head_block_time()
+                                            + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
                                         o.vesting_shares.amount);
     }
 }
@@ -890,7 +902,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
     if (o.approve)
         FC_ASSERT(voter.can_vote, "Account has declined its voting rights.");
 
-    const auto& witness = _db.get_witness(o.witness);
+    const auto& witness = witness_service.get(o.witness);
 
     const auto& by_account_witness_idx
         = _db._temporary_public_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
@@ -926,10 +938,13 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 void vote_evaluator::do_apply(const vote_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_comment& comment_service = _db.obtain_service<dbs_comment>();
+    dbs_comment_vote& comment_vote_service = _db.obtain_service<dbs_comment_vote>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     try
     {
-        const auto& comment = _db.get_comment(o.author, o.permlink);
+        const auto& comment = comment_service.get(o.author, o.permlink);
         const auto& voter = account_service.get_account(o.voter);
 
         FC_ASSERT(!(voter.owner_challenged || voter.active_challenged),
@@ -943,31 +958,28 @@ void vote_evaluator::do_apply(const vote_operation& o)
         if (_db.calculate_discussion_payout_time(comment) == fc::time_point_sec::maximum())
         {
 #ifndef CLEAR_VOTES
-            const auto& comment_vote_idx
-                = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
-            auto itr = comment_vote_idx.find(std::make_tuple(comment.id, voter.id));
-
-            if (itr == comment_vote_idx.end())
-                _db._temporary_public_impl().create<comment_vote_object>([&](comment_vote_object& cvo) {
+            if (!comment_vote_service.is_exists(comment.id, voter.id))
+            {
+                comment_vote_service.create([&](comment_vote_object& cvo) {
                     cvo.voter = voter.id;
                     cvo.comment = comment.id;
                     cvo.vote_percent = o.weight;
-                    cvo.last_update = _db.head_block_time();
+                    cvo.last_update = dprops_service.head_block_time();
                 });
+            }
             else
-                _db._temporary_public_impl().modify(*itr, [&](comment_vote_object& cvo) {
+            {
+                const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
+                comment_vote_service.update(comment_vote, [&](comment_vote_object& cvo) {
                     cvo.vote_percent = o.weight;
-                    cvo.last_update = _db.head_block_time();
+                    cvo.last_update = dprops_service.head_block_time();
                 });
+            }
 #endif
             return;
         }
 
-        const auto& comment_vote_idx
-            = _db._temporary_public_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
-        auto itr = comment_vote_idx.find(std::make_tuple(comment.id, voter.id));
-
-        int64_t elapsed_seconds = (_db.head_block_time() - voter.last_vote_time).to_seconds();
+        int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
 
 #ifndef IS_TEST_NET
         FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
@@ -980,11 +992,11 @@ void vote_evaluator::do_apply(const vote_operation& o)
         int64_t abs_weight = abs(o.weight);
         int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
 
-        const dynamic_global_property_object& dgpo = _db.get_dynamic_global_properties();
+        const auto& props = dprops_service.get_dynamic_global_properties();
 
         // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
         // The second multiplication is rounded up as of HF 259
-        int64_t max_vote_denom = dgpo.vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24);
+        int64_t max_vote_denom = props.vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24);
         FC_ASSERT(max_vote_denom > 0);
 
         used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
@@ -998,10 +1010,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || o.weight == 0,
                   "Voting weight is too small, please accumulate more voting power or scorum power.");
 
-        FC_ASSERT(itr == comment_vote_idx.end() || itr->num_changes != -1,
-                  "Cannot vote again on a comment after payout.");
-
-        if (itr == comment_vote_idx.end())
+        if (!comment_vote_service.is_exists(comment.id, voter.id))
         {
             FC_ASSERT(o.weight != 0, "Vote weight cannot be 0.");
             /// this is the rshares voting for or against the post
@@ -1009,7 +1018,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             if (rshares > 0)
             {
-                FC_ASSERT(_db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
+                FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
@@ -1022,7 +1031,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
             /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
             /// total rshares^2
             fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
-            const auto& root = _db._temporary_public_impl().get(comment.root_comment);
+            const auto& root_comment = comment_service.get(comment.root_comment);
 
             fc::uint128_t avg_cashout_sec;
 
@@ -1030,7 +1039,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             auto old_vote_rshares = comment.vote_rshares;
 
-            _db._temporary_public_impl().modify(comment, [&](comment_object& c) {
+            comment_service.update(comment, [&](comment_object& c) {
                 c.net_rshares += rshares;
                 c.abs_rshares += abs_rshares;
                 if (rshares > 0)
@@ -1041,8 +1050,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     c.net_votes--;
             });
 
-            _db._temporary_public_impl().modify(root,
-                                                [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
 
@@ -1071,12 +1079,12 @@ void vote_evaluator::do_apply(const vote_operation& o)
              *integer.
              *
              **/
-            _db._temporary_public_impl().create<comment_vote_object>([&](comment_vote_object& cv) {
+            comment_vote_service.create([&](comment_vote_object& cv) {
                 cv.voter = voter.id;
                 cv.comment = comment.id;
                 cv.rshares = rshares;
                 cv.vote_percent = o.weight;
-                cv.last_update = _db.head_block_time();
+                cv.last_update = dprops_service.head_block_time();
 
                 bool curation_reward_eligible
                     = rshares > 0 && (comment.last_payout == fc::time_point_sec()) && comment.allow_curation_rewards;
@@ -1108,23 +1116,26 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             if (max_vote_weight) // Optimization
             {
-                _db._temporary_public_impl().modify(comment,
-                                                    [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
+                comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
             }
         }
         else
         {
-            FC_ASSERT(itr->num_changes < SCORUM_MAX_VOTE_CHANGES,
+            const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
+
+            FC_ASSERT(comment_vote.num_changes != -1, "Cannot vote again on a comment after payout.");
+
+            FC_ASSERT(comment_vote.num_changes < SCORUM_MAX_VOTE_CHANGES,
                       "Voter has used the maximum number of vote changes on this comment.");
 
-            FC_ASSERT(itr->vote_percent != o.weight, "You have already voted in a similar way.");
+            FC_ASSERT(comment_vote.vote_percent != o.weight, "You have already voted in a similar way.");
 
             /// this is the rshares voting for or against the post
             int64_t rshares = o.weight < 0 ? -abs_rshares : abs_rshares;
 
-            if (itr->rshares < rshares)
+            if (comment_vote.rshares < rshares)
             {
-                FC_ASSERT(_db.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
+                FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
@@ -1133,32 +1144,31 @@ void vote_evaluator::do_apply(const vote_operation& o)
             /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
             /// total rshares^2
             fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
-            const auto& root = _db._temporary_public_impl().get(comment.root_comment);
+            const auto& root_comment = comment_service.get(comment.root_comment);
 
             fc::uint128_t avg_cashout_sec;
 
-            _db._temporary_public_impl().modify(comment, [&](comment_object& c) {
-                c.net_rshares -= itr->rshares;
+            comment_service.update(comment, [&](comment_object& c) {
+                c.net_rshares -= comment_vote.rshares;
                 c.net_rshares += rshares;
                 c.abs_rshares += abs_rshares;
 
                 /// TODO: figure out how to handle remove a vote (rshares == 0 )
-                if (rshares > 0 && itr->rshares < 0)
+                if (rshares > 0 && comment_vote.rshares < 0)
                     c.net_votes += 2;
-                else if (rshares > 0 && itr->rshares == 0)
+                else if (rshares > 0 && comment_vote.rshares == 0)
                     c.net_votes += 1;
-                else if (rshares == 0 && itr->rshares < 0)
+                else if (rshares == 0 && comment_vote.rshares < 0)
                     c.net_votes += 1;
-                else if (rshares == 0 && itr->rshares > 0)
+                else if (rshares == 0 && comment_vote.rshares > 0)
                     c.net_votes -= 1;
-                else if (rshares < 0 && itr->rshares == 0)
+                else if (rshares < 0 && comment_vote.rshares == 0)
                     c.net_votes -= 1;
-                else if (rshares < 0 && itr->rshares > 0)
+                else if (rshares < 0 && comment_vote.rshares > 0)
                     c.net_votes -= 2;
             });
 
-            _db._temporary_public_impl().modify(root,
-                                                [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
 
@@ -1166,13 +1176,12 @@ void vote_evaluator::do_apply(const vote_operation& o)
             new_rshares = util::evaluate_reward_curve(new_rshares);
             old_rshares = util::evaluate_reward_curve(old_rshares);
 
-            _db._temporary_public_impl().modify(comment,
-                                                [&](comment_object& c) { c.total_vote_weight -= itr->weight; });
+            comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
 
-            _db._temporary_public_impl().modify(*itr, [&](comment_vote_object& cv) {
+            comment_vote_service.update(comment_vote, [&](comment_vote_object& cv) {
                 cv.rshares = rshares;
                 cv.vote_percent = o.weight;
-                cv.last_update = _db.head_block_time();
+                cv.last_update = dprops_service.head_block_time();
                 cv.weight = 0;
                 cv.num_changes += 1;
             });
@@ -1261,10 +1270,11 @@ void request_account_recovery_evaluator::do_apply(const request_account_recovery
 void recover_account_evaluator::do_apply(const recover_account_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     const auto& account_to_recover = account_service.get_account(o.account_to_recover);
 
-    FC_ASSERT(_db.head_block_time() - account_to_recover.last_account_recovery > SCORUM_OWNER_UPDATE_LIMIT,
+    FC_ASSERT(dprops_service.head_block_time() - account_to_recover.last_account_recovery > SCORUM_OWNER_UPDATE_LIMIT,
               "Owner authority can only be updated once an hour.");
 
     account_service.submit_account_recovery(account_to_recover, o.new_owner_authority, o.recent_owner_authority);
@@ -1283,6 +1293,7 @@ void change_recovery_account_evaluator::do_apply(const change_recovery_account_o
 void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     const auto& account = account_service.get_account(o.account);
     const auto& request_idx
@@ -1296,7 +1307,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
         _db._temporary_public_impl().create<decline_voting_rights_request_object>(
             [&](decline_voting_rights_request_object& req) {
                 req.account = account.id;
-                req.effective_date = _db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
+                req.effective_date = dprops_service.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
             });
     }
     else
@@ -1309,6 +1320,8 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
+    dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
+    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
@@ -1318,11 +1331,11 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
 
-    const auto& wso = _db.get_witness_schedule_object();
-    const auto& gpo = _db.get_dynamic_global_properties();
+    const auto& wso = witness_service.get_witness_schedule_object();
+    const auto& props = dprops_service.get_dynamic_global_properties();
     auto min_delegation
-        = asset(wso.median_props.account_creation_fee.amount * 10, SCORUM_SYMBOL) * gpo.get_vesting_share_price();
-    auto min_update = wso.median_props.account_creation_fee * gpo.get_vesting_share_price();
+        = asset(wso.median_props.account_creation_fee.amount * 10, SCORUM_SYMBOL) * props.get_vesting_share_price();
+    auto min_update = wso.median_props.account_creation_fee * props.get_vesting_share_price();
 
     // If delegation doesn't exist, create it
     if (delegation == nullptr)
@@ -1335,7 +1348,7 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
             obj.delegator = op.delegator;
             obj.delegatee = op.delegatee;
             obj.vesting_shares = op.vesting_shares;
-            obj.min_delegation_time = _db.head_block_time();
+            obj.min_delegation_time = dprops_service.head_block_time();
         });
 
         account_service.increase_delegated_vesting_shares(delegator, op.vesting_shares);
@@ -1379,8 +1392,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
             [&](vesting_delegation_expiration_object& obj) {
                 obj.delegator = op.delegator;
                 obj.vesting_shares = delta;
-                obj.expiration
-                    = std::max(_db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS, delegation->min_delegation_time);
+                obj.expiration = std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
+                                          delegation->min_delegation_time);
             });
 
         account_service.decrease_received_vesting_shares(delegatee, delta);
