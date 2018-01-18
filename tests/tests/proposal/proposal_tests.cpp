@@ -49,7 +49,7 @@ public:
 
         proposal_id_type create_quorum_change_proposal(uint64_t q, proposal_action action)
         {
-            return create_proposal(action, fc::variant(SCORUM_PERCENT(q)).as_uint64());
+            return create_proposal(action, fc::variant(q).as_uint64());
         }
 
         proposal_id_type create_proposal(proposal_action action, const fc::variant& data)
@@ -150,7 +150,7 @@ public:
         dbs_proposal& proposal_service = chain().db.obtain_service<dbs_proposal>();
         std::vector<proposal_object::cref_type> proposals = proposal_service.get_proposals();
 
-        BOOST_REQUIRE_GT(proposals.size(), 0);
+        BOOST_REQUIRE_GT(proposals.size(), static_cast<size_t>(0));
 
         return proposals[proposals.size() - 1].get().id;
     }
@@ -275,30 +275,30 @@ SCORUM_TEST_CASE(proposal)
 
     {
         actor(alice).vote_for(jim_invitation);
-        BOOST_CHECK_EQUAL((size_t)2, get_committee_members().size());
-        BOOST_CHECK(is_committee_member(jim) == true);
+        BOOST_CHECK_EQUAL(2u, get_committee_members().size());
+        BOOST_CHECK_EQUAL(true, is_committee_member(jim));
     }
 
     {
         actor(alice).vote_for(joe_invitation);
-        BOOST_CHECK_EQUAL((size_t)3, get_committee_members().size());
-        BOOST_CHECK(is_committee_member(joe) == true);
+        BOOST_CHECK_EQUAL(3u, get_committee_members().size());
+        BOOST_CHECK_EQUAL(true, is_committee_member(joe));
     }
 
     {
         actor(alice).vote_for(hue_invitation);
-        BOOST_CHECK_EQUAL((size_t)4, get_committee_members().size());
-        BOOST_CHECK(is_committee_member(hue) == true);
+        BOOST_CHECK_EQUAL(4u, get_committee_members().size());
+        BOOST_CHECK_EQUAL(true, is_committee_member(hue));
     }
 
     {
         actor(alice).vote_for(liz_invitation);
 
         // not enough votes to add liz
-        BOOST_CHECK_EQUAL((size_t)4, get_committee_members().size());
+        BOOST_CHECK_EQUAL(4u, get_committee_members().size());
 
         actor(jim).vote_for(liz_invitation);
-        BOOST_CHECK_EQUAL((size_t)5, get_committee_members().size());
+        BOOST_CHECK_EQUAL(5u, get_committee_members().size());
     }
     // end setup committee
 
@@ -309,8 +309,8 @@ SCORUM_TEST_CASE(proposal)
 
         BOOST_REQUIRE(p.valid());
 
-        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), static_cast<std::size_t>(1));
-        BOOST_CHECK_EQUAL(p->get().voted_accounts.count("joe"), static_cast<std::size_t>(1));
+        BOOST_CHECK_EQUAL(1u, p->get().voted_accounts.size());
+        BOOST_CHECK_EQUAL(1u, p->get().voted_accounts.count("joe"));
     }
 
     // check that drop_hue proposal executed with drop_joe because of committee members size change
@@ -333,7 +333,7 @@ SCORUM_TEST_CASE(proposal)
         // We droped one member, amount of needed votes reduced and 'drop_hue' executed automatically
         BOOST_CHECK_EQUAL(false, is_committee_member(hue));
 
-        BOOST_CHECK_EQUAL((size_t)3, get_committee_members().size());
+        BOOST_CHECK_EQUAL(3u, get_committee_members().size());
     }
 
     // check that member removed from voted_accounts after committee member removing
@@ -342,7 +342,7 @@ SCORUM_TEST_CASE(proposal)
 
         BOOST_REQUIRE(p.valid());
 
-        BOOST_CHECK_EQUAL(p->get().voted_accounts.size(), (size_t)0);
+        BOOST_CHECK_EQUAL(0u, p->get().voted_accounts.size());
     }
 
     // check default value
@@ -362,9 +362,9 @@ SCORUM_TEST_CASE(proposal)
         proposal = actor(alice).change_quorum(100);
         actor(alice).vote_for(proposal);
 
-        BOOST_CHECK_EQUAL(SCORUM_PERCENT(50), get_invite_quorum());
-        BOOST_CHECK_EQUAL(SCORUM_PERCENT(51), get_dropout_quorum());
-        BOOST_CHECK_EQUAL(SCORUM_PERCENT(100), get_change_quorum());
+        BOOST_CHECK_EQUAL(50u, get_invite_quorum());
+        BOOST_CHECK_EQUAL(51u, get_dropout_quorum());
+        BOOST_CHECK_EQUAL(100u, get_change_quorum());
     }
 
 } // clang-format on

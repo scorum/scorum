@@ -229,7 +229,7 @@ SCORUM_TEST_CASE(create_one_dropout_proposal)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::dropout);
 }
 
@@ -239,17 +239,17 @@ SCORUM_TEST_CASE(create_one_change_invite_quorum_proposal)
     op.creator = "alice";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_invite_quorum;
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_invite_quorum);
 }
 
 SCORUM_TEST_CASE(change_default_invite_quorum)
 {
-    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    const uint64_t expected_quorum = 80;
     BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
@@ -262,14 +262,14 @@ SCORUM_TEST_CASE(change_default_invite_quorum)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
 
 SCORUM_TEST_CASE(change_default_dropout_quorum)
 {
-    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    const uint64_t expected_quorum = 80;
     BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
@@ -282,19 +282,19 @@ SCORUM_TEST_CASE(change_default_dropout_quorum)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
 
 SCORUM_TEST_CASE(change_default_change_quorum)
 {
-    const uint64_t expected_quorum = SCORUM_PERCENT(80);
+    const uint64_t expected_quorum = 80;
     BOOST_REQUIRE_NE(properties_service.get_dynamic_global_properties().change_quorum, expected_quorum);
 
     proposal_create_operation op;
     op.creator = "alice";
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_invite_quorum;
 
@@ -302,7 +302,7 @@ SCORUM_TEST_CASE(change_default_change_quorum)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].quorum, expected_quorum);
 }
@@ -313,11 +313,11 @@ SCORUM_TEST_CASE(create_one_change_dropout_quorum_proposal)
     op.creator = "alice";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_dropout_quorum;
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_dropout_quorum);
 }
 
@@ -327,11 +327,11 @@ SCORUM_TEST_CASE(create_one_change_quorum_proposal)
     op.creator = "alice";
     op.lifetime_sec = lifetime_min + 1;
     op.action = proposal_action::change_quorum;
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
     BOOST_CHECK_EQUAL(proposal_service.proposals[0].action, proposal_action::change_quorum);
 }
 
@@ -345,7 +345,7 @@ SCORUM_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime)
 
     evaluator.do_apply(op);
 
-    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1);
+    BOOST_REQUIRE_EQUAL(proposal_service.proposals.size(), 1u);
 
     BOOST_CHECK(proposal_service.proposals[0].expiration == (proposal_service._head_block_time + op.lifetime_sec));
 }
@@ -431,7 +431,7 @@ SCORUM_TEST_CASE(pass_when_change_quorum_and_data_is_uint64)
 {
     proposal_create_operation op;
     op.creator = "alice";
-    op.data = SCORUM_PERCENT(60);
+    op.data = 60;
 
     op.action = proposal_action::change_quorum;
     BOOST_CHECK_NO_THROW(op.validate());

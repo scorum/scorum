@@ -62,7 +62,7 @@ public:
         }
 
     private:
-        std::map<proposal_action, evaluator_callback> _register;
+        fc::flat_map<proposal_action, evaluator_callback> _register;
     };
 
     proposal_vote_evaluator_t(AccountService& account_service,
