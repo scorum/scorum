@@ -37,6 +37,7 @@ add_library( scorum_chain
              dbs_dynamic_global_property.cpp
              dbs_comment.cpp
              dbs_comment_vote.cpp
+             dbs_escrow.cpp
 
              scorum_evaluator.cpp
 
