@@ -7,9 +7,8 @@
 namespace scorum {
 namespace chain {
 
-class account_service_i
+struct account_service_i
 {
-public:
     virtual void check_account_existence(const account_name_type&,
                                          const fc::optional<const char*>& context_type_name
                                          = fc::optional<const char*>()) const = 0;

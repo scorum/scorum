@@ -7,9 +7,8 @@
 namespace scorum {
 namespace chain {
 
-class proposal_service_i
+struct proposal_service_i
 {
-public:
     virtual const proposal_object& create(const account_name_type& creator,
                                           const fc::variant& data,
                                           scorum::protocol::proposal_action action,

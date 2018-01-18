@@ -8,9 +8,8 @@ namespace chain {
 class dynamic_global_property_object;
 class database;
 
-class property_service_i
+struct property_service_i
 {
-public:
     virtual const dynamic_global_property_object& get_dynamic_global_properties() const = 0;
     virtual fc::time_point_sec head_block_time() = 0;
 };

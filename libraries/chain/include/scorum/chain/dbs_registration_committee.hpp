@@ -11,9 +11,8 @@
 namespace scorum {
 namespace chain {
 
-class committee_service_i
+struct committee_service_i
 {
-public:
     virtual bool member_exists(const account_name_type&) const = 0;
 };
 
