@@ -7,7 +7,18 @@
 namespace scorum {
 namespace chain {
 
-class dbs_proposal : public dbs_base
+class proposal_service_i
+{
+public:
+    virtual const proposal_object& create(const account_name_type& creator,
+                                          const fc::variant& data,
+                                          scorum::protocol::proposal_action action,
+                                          const fc::time_point_sec& expiration,
+                                          uint64_t quorum)
+        = 0;
+};
+
+class dbs_proposal : public proposal_service_i, public dbs_base
 {
     friend class dbservice_dbs_factory;
 
@@ -15,11 +26,11 @@ protected:
     explicit dbs_proposal(database& db);
 
 public:
-    const proposal_object& create(const account_name_type& creator,
-                                  const fc::variant& data,
-                                  scorum::protocol::proposal_action action,
-                                  const fc::time_point_sec& expiration,
-                                  uint64_t quorum);
+    virtual const proposal_object& create(const account_name_type& creator,
+                                          const fc::variant& data,
+                                          scorum::protocol::proposal_action action,
+                                          const fc::time_point_sec& expiration,
+                                          uint64_t quorum);
 
     void remove(const proposal_object& proposal);
 

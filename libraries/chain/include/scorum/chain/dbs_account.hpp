@@ -7,9 +7,17 @@
 namespace scorum {
 namespace chain {
 
+class account_service_i
+{
+public:
+    virtual void check_account_existence(const account_name_type&,
+                                         const fc::optional<const char*>& context_type_name
+                                         = fc::optional<const char*>()) const = 0;
+};
+
 // DB operations with account_*** objects
 //
-class dbs_account : public dbs_base
+class dbs_account : public account_service_i, public dbs_base
 {
     friend class dbservice_dbs_factory;
 
@@ -21,8 +29,9 @@ public:
 
     const account_authority_object& get_account_authority(const account_name_type&) const;
 
-    void check_account_existence(const account_name_type&,
-                                 const optional<const char*>& context_type_name = optional<const char*>()) const;
+    virtual void check_account_existence(const account_name_type&,
+                                         const optional<const char*>& context_type_name
+                                         = optional<const char*>()) const;
 
     void check_account_existence(const account_authority_map&,
                                  const optional<const char*>& context_type_name = optional<const char*>()) const;

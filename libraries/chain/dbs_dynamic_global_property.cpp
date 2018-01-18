@@ -13,7 +13,16 @@ dbs_dynamic_global_property::dbs_dynamic_global_property(database& db)
 
 const dynamic_global_property_object& dbs_dynamic_global_property::get_dynamic_global_properties() const
 {
-    return db_impl().get_dynamic_global_properties();
+    try
+    {
+        return db_impl().get<dynamic_global_property_object>();
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
+fc::time_point_sec dbs_dynamic_global_property::head_block_time()
+{
+    return get_dynamic_global_properties().time;
 }
 
 void dbs_dynamic_global_property::set_invite_quorum(uint64_t quorum)
