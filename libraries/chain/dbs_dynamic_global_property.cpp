@@ -16,6 +16,11 @@ const dynamic_global_property_object& dbs_dynamic_global_property::get_dynamic_g
     return db_impl().get_dynamic_global_properties();
 }
 
+time_point_sec dbs_dynamic_global_property::head_block_time() const
+{
+    return get_dynamic_global_properties().time;
+}
+
 void dbs_dynamic_global_property::set_invite_quorum(uint64_t quorum)
 {
     const dynamic_global_property_object& properties = get_dynamic_global_properties();

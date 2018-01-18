@@ -19,6 +19,8 @@ protected:
 public:
     const account_object& get_account(const account_name_type&) const;
 
+    static asset get_balance(const account_object& account, asset_symbol_type symbol);
+
     const account_authority_object& get_account_authority(const account_name_type&) const;
 
     void check_account_existence(const account_name_type&,
