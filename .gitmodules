@@ -1,6 +1,6 @@
 [submodule "libraries/fc"]
 	path = libraries/fc
 	url = https://github.com/scorum/fc
-[submodule "tests/hippomocks"]
+[submodule "hippomocks"]
 	path = tests/hippomocks
-	url = https://github.com/dascandy/hippomocks
+	url = https://github.com/scorum/hippomocks
