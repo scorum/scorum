@@ -21,6 +21,7 @@
 #include <scorum/chain/dbs_decline_voting_rights_request.hpp>
 #include <scorum/chain/dbs_withdraw_vesting_route.hpp>
 #include <scorum/chain/dbs_vesting_delegation.hpp>
+#include <scorum/chain/dbs_reward_fund.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -937,7 +938,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         if (o.weight > 0)
             FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 
-        if (_db.calculate_discussion_payout_time(comment) == fc::time_point_sec::maximum())
+        if (comment.cashout_time == fc::time_point_sec::maximum())
         {
 #ifndef CLEAR_VOTES
             if (!comment_vote_service.is_exists(comment.id, voter.id))
@@ -1073,7 +1074,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = _db.get_reward_fund();
+                    const auto& reward_fund = _db.obtain_service<dbs_reward_fund>().get_reward_fund();
                     auto curve = reward_fund.curation_reward_curve;
                     uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
                     uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();

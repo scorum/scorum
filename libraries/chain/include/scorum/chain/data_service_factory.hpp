@@ -13,5 +13,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (witness_vote)
         (withdraw_vesting_route)
         (vesting_delegation)
+        (reward_fund)
         )
 // clang-format on
