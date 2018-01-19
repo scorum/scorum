@@ -81,7 +81,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
             .With(_, _, expected_action, _, _)
             .ReturnByRef(proposal);
 
-        proposal_create_evaluator_new evaluator(*services);
+        proposal_create_evaluator evaluator(*services);
 
         evaluator.do_apply(op);
     }
@@ -91,13 +91,13 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
         mocks.ExpectCall(property_service, dynamic_global_property_service_i::get_dynamic_global_properties)
             .ReturnByRef(global_property);
 
-        proposal_create_evaluator_new evaluator(*services);
+        proposal_create_evaluator evaluator(*services);
 
         return evaluator.get_quorum(action);
     }
 };
 
-BOOST_AUTO_TEST_SUITE(proposal_create_evaluator_new_tests)
+BOOST_AUTO_TEST_SUITE(proposal_create_evaluator_tests)
 
 BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, create_proposal_fixture)
 {
@@ -115,7 +115,7 @@ BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, 
         .With(_, _, _, expected_expiration, _)
         .ReturnByRef(proposal);
 
-    proposal_create_evaluator_new evaluator(*services);
+    proposal_create_evaluator evaluator(*services);
 
     evaluator.do_apply(op);
 }
@@ -175,7 +175,7 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create
     proposal_create_operation op;
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS - 1;
 
-    proposal_create_evaluator_new evaluator(*services);
+    proposal_create_evaluator evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
                            "Proposal life time is not in range of 86400 - 864000 seconds.");
@@ -186,7 +186,7 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_big, proposal_create_e
     proposal_create_operation op;
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS + 1;
 
-    proposal_create_evaluator_new evaluator(*services);
+    proposal_create_evaluator evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
                            "Proposal life time is not in range of 86400 - 864000 seconds.");
@@ -200,7 +200,7 @@ BOOST_FIXTURE_TEST_CASE(throw_when_creator_is_not_in_committee, proposal_create_
 
     mocks.ExpectCall(committee_service, registration_committee_service_i::member_exists).With(op.creator).Return(false);
 
-    proposal_create_evaluator_new evaluator(*services);
+    proposal_create_evaluator evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"sam\" is not in committee.");
 }

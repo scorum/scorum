@@ -18,12 +18,12 @@ namespace chain {
 
 namespace sp = scorum::protocol;
 
-class proposal_create_evaluator_new : public evaluator<scorum::protocol::operation>
+class proposal_create_evaluator : public evaluator<scorum::protocol::operation>
 {
 public:
     using operation_type = scorum::protocol::proposal_create_operation;
 
-    proposal_create_evaluator_new(scorum::chain::data_service_factory_i& services)
+    proposal_create_evaluator(scorum::chain::data_service_factory_i& services)
         : _services(services)
         , account_service(_services.account_service())
         , proposal_service(_services.proposal_service())
