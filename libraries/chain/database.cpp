@@ -28,7 +28,7 @@
 #include <scorum/chain/pool/reward_pool.hpp>
 
 #include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_create_evaluator_new.hpp>
+#include <scorum/chain/proposal_create_evaluator.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>

@@ -5,7 +5,7 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/proposal_create_evaluator_new.hpp>
+#include <scorum/chain/proposal_create_evaluator.hpp>
 #include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
