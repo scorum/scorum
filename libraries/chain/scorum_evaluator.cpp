@@ -17,6 +17,7 @@
 #include <scorum/chain/dbs_atomicswap.hpp>
 #include <scorum/chain/dbs_dynamic_global_property.hpp>
 #include <scorum/chain/dbs_escrow.hpp>
+#include <scorum/chain/dbs_decline_voting_rights_request.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -213,6 +214,8 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     if (o.owner)
     {
 #ifndef IS_TEST_NET
+        dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+
         FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
 #endif
@@ -1290,27 +1293,21 @@ void change_recovery_account_evaluator::do_apply(const change_recovery_account_o
 void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
-    dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+    dbs_decline_voting_rights_request& dvrr_service = _db.obtain_service<dbs_decline_voting_rights_request>();
 
     const auto& account = account_service.get_account(o.account);
-    const auto& request_idx
-        = _db._temporary_public_impl().get_index<decline_voting_rights_request_index>().indices().get<by_account>();
-    auto itr = request_idx.find(account.id);
 
     if (o.decline)
     {
-        FC_ASSERT(itr == request_idx.end(), "Cannot create new request because one already exists.");
+        FC_ASSERT(!dvrr_service.is_exists(account.id), "Cannot create new request because one already exists.");
 
-        _db._temporary_public_impl().create<decline_voting_rights_request_object>(
-            [&](decline_voting_rights_request_object& req) {
-                req.account = account.id;
-                req.effective_date = dprops_service.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD;
-            });
+        dvrr_service.create(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
     }
     else
     {
-        FC_ASSERT(itr != request_idx.end(), "Cannot cancel the request because it does not exist.");
-        _db._temporary_public_impl().remove(*itr);
+        const auto& request = dvrr_service.get(account.id);
+
+        dvrr_service.remove(request);
     }
 }
 
