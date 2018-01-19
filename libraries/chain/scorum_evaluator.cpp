@@ -16,6 +16,7 @@
 #include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_atomicswap.hpp>
 #include <scorum/chain/dbs_dynamic_global_property.hpp>
+#include <scorum/chain/dbs_escrow.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -552,6 +553,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+    dbs_escrow& escrow_service = _db.obtain_service<dbs_escrow>();
 
     try
     {
@@ -575,16 +577,8 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 
         account_service.decrease_balance(from_account, scorum_spent);
 
-        _db._temporary_public_impl().create<escrow_object>([&](escrow_object& esc) {
-            esc.escrow_id = o.escrow_id;
-            esc.from = o.from;
-            esc.to = o.to;
-            esc.agent = o.agent;
-            esc.ratification_deadline = o.ratification_deadline;
-            esc.escrow_expiration = o.escrow_expiration;
-            esc.scorum_balance = o.scorum_amount;
-            esc.pending_fee = o.fee;
-        });
+        escrow_service.create(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
+                              o.scorum_amount, o.fee);
     }
     FC_CAPTURE_AND_RETHROW((o))
 }
@@ -593,11 +587,12 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+    dbs_escrow& escrow_service = _db.obtain_service<dbs_escrow>();
 
     try
     {
 
-        const auto& escrow = _db.get_escrow(o.from, o.escrow_id);
+        const auto& escrow = escrow_service.get(o.from, o.escrow_id);
 
         FC_ASSERT(escrow.to == o.to, "Operation 'to' (${o}) does not match escrow 'to' (${e}).",
                   ("o", o.to)("e", escrow.to));
@@ -614,7 +609,7 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 
             if (!reject_escrow)
             {
-                _db._temporary_public_impl().modify(escrow, [&](escrow_object& esc) { esc.to_approved = true; });
+                escrow_service.update(escrow, [&](escrow_object& esc) { esc.to_approved = true; });
             }
         }
         if (o.who == o.agent)
@@ -624,7 +619,7 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 
             if (!reject_escrow)
             {
-                _db._temporary_public_impl().modify(escrow, [&](escrow_object& esc) { esc.agent_approved = true; });
+                escrow_service.update(escrow, [&](escrow_object& esc) { esc.agent_approved = true; });
             }
         }
 
@@ -634,14 +629,14 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
             account_service.increase_balance(from_account, escrow.scorum_balance);
             account_service.increase_balance(from_account, escrow.pending_fee);
 
-            _db._temporary_public_impl().remove(escrow);
+            escrow_service.remove(escrow);
         }
         else if (escrow.to_approved && escrow.agent_approved)
         {
             const auto& agent_account = account_service.get_account(o.agent);
             account_service.increase_balance(agent_account, escrow.pending_fee);
 
-            _db._temporary_public_impl().modify(escrow, [&](escrow_object& esc) { esc.pending_fee.amount = 0; });
+            escrow_service.update(escrow, [&](escrow_object& esc) { esc.pending_fee.amount = 0; });
         }
     }
     FC_CAPTURE_AND_RETHROW((o))
@@ -651,12 +646,13 @@ void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+    dbs_escrow& escrow_service = _db.obtain_service<dbs_escrow>();
 
     try
     {
         account_service.check_account_existence(o.from);
 
-        const auto& e = _db.get_escrow(o.from, o.escrow_id);
+        const auto& e = escrow_service.get(o.from, o.escrow_id);
         FC_ASSERT(dprops_service.head_block_time() < e.escrow_expiration,
                   "Disputing the escrow must happen before expiration.");
         FC_ASSERT(e.to_approved && e.agent_approved,
@@ -666,7 +662,7 @@ void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
         FC_ASSERT(e.agent == o.agent, "Operation 'agent' (${a}) does not match escrow 'agent' (${e}).",
                   ("o", o.agent)("e", e.agent));
 
-        _db._temporary_public_impl().modify(e, [&](escrow_object& esc) { esc.disputed = true; });
+        escrow_service.update(e, [&](escrow_object& esc) { esc.disputed = true; });
     }
     FC_CAPTURE_AND_RETHROW((o))
 }
@@ -675,13 +671,14 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+    dbs_escrow& escrow_service = _db.obtain_service<dbs_escrow>();
 
     try
     {
         account_service.check_account_existence(o.from);
         const auto& receiver_account = account_service.get_account(o.receiver);
 
-        const auto& e = _db.get_escrow(o.from, o.escrow_id);
+        const auto& e = escrow_service.get(o.from, o.escrow_id);
         FC_ASSERT(e.scorum_balance >= o.scorum_amount,
                   "Release amount exceeds escrow balance. Amount: ${a}, Balance: ${b}",
                   ("a", o.scorum_amount)("b", e.scorum_balance));
@@ -722,11 +719,11 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 
         account_service.increase_balance(receiver_account, o.scorum_amount);
 
-        _db._temporary_public_impl().modify(e, [&](escrow_object& esc) { esc.scorum_balance -= o.scorum_amount; });
+        escrow_service.update(e, [&](escrow_object& esc) { esc.scorum_balance -= o.scorum_amount; });
 
         if (e.scorum_balance.amount == 0)
         {
-            _db._temporary_public_impl().remove(e);
+            escrow_service.remove(e);
         }
     }
     FC_CAPTURE_AND_RETHROW((o))
