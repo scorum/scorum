@@ -6,5 +6,16 @@
 #include <scorum/chain/dbs_proposal.hpp>
 #include <scorum/chain/dbs_registration_committee.hpp>
 #include <scorum/chain/dbs_dynamic_global_property.hpp>
+#include <scorum/chain/dbs_comment.hpp>
+#include <scorum/chain/dbs_decline_voting_rights_request.hpp>
 
-DATA_SERVICE_FACTORY_IMPL((account)(proposal)(registration_committee)(dynamic_global_property))
+// clang-format off
+DATA_SERVICE_FACTORY_IMPL(
+        (account)
+        (proposal)
+        (registration_committee)
+        (dynamic_global_property)
+        (comment)
+        (decline_voting_rights_request)
+        )
+// clang-format on
