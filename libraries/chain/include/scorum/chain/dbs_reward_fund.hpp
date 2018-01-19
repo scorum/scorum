@@ -5,6 +5,8 @@
 namespace scorum {
 namespace chain {
 
+class reward_fund_object;
+
 struct reward_fund_service_i
 {
     virtual const reward_fund_object& get_reward_fund() const = 0;
