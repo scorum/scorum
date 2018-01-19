@@ -25,10 +25,10 @@ public:
 
     proposal_create_evaluator(scorum::chain::data_service_factory_i& services)
         : _services(services)
-        , account_service(_services.account_service())
-        , proposal_service(_services.proposal_service())
-        , committee_service(_services.registration_committee_service())
-        , property_service(_services.dynamic_global_property_service())
+        , _account_service(_services.account_service())
+        , _proposal_service(_services.proposal_service())
+        , _committee_service(_services.registration_committee_service())
+        , _property_service(_services.dynamic_global_property_service())
     {
     }
 
@@ -51,19 +51,19 @@ public:
                   "Proposal life time is not in range of ${min} - ${max} seconds.",
                   ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
-        FC_ASSERT(committee_service.member_exists(op.creator), "Account \"${account_name}\" is not in committee.",
+        FC_ASSERT(_committee_service.member_exists(op.creator), "Account \"${account_name}\" is not in committee.",
                   ("account_name", op.creator));
 
-        account_service.check_account_existence(op.creator);
+        _account_service.check_account_existence(op.creator);
 
-        fc::time_point_sec expiration = property_service.head_block_time() + op.lifetime_sec;
+        fc::time_point_sec expiration = _property_service.head_block_time() + op.lifetime_sec;
 
-        proposal_service.create(op.creator, op.data, *op.action, expiration, get_quorum(*op.action));
+        _proposal_service.create(op.creator, op.data, *op.action, expiration, get_quorum(*op.action));
     }
 
     uint64_t get_quorum(sp::proposal_action action)
     {
-        const dynamic_global_property_object& properties = property_service.get_dynamic_global_properties();
+        const dynamic_global_property_object& properties = _property_service.get_dynamic_global_properties();
 
         switch (action)
         {
@@ -88,10 +88,10 @@ public:
 private:
     scorum::chain::data_service_factory_i& _services;
 
-    scorum::chain::account_service_i& account_service;
-    scorum::chain::proposal_service_i& proposal_service;
-    scorum::chain::registration_committee_service_i& committee_service;
-    scorum::chain::dynamic_global_property_service_i& property_service;
+    scorum::chain::account_service_i& _account_service;
+    scorum::chain::proposal_service_i& _proposal_service;
+    scorum::chain::registration_committee_service_i& _committee_service;
+    scorum::chain::dynamic_global_property_service_i& _property_service;
 };
 
 } // namespace chain
