@@ -214,6 +214,8 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     if (o.owner)
     {
 #ifndef IS_TEST_NET
+        dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
+
         FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
 #endif
