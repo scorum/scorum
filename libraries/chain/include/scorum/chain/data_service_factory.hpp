@@ -12,5 +12,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (decline_voting_rights_request)
         (witness_vote)
         (withdraw_vesting_route)
+        (vesting_delegation)
         )
 // clang-format on
