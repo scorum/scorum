@@ -9,9 +9,10 @@ namespace chain {
 
 struct witness_vote_service_i
 {
-    virtual void create(witness_id_type witness_id, account_id_type vouter_id) = 0;
-    virtual bool is_exists(witness_id_type witness_id, account_id_type vouter_id) const = 0;
-    virtual void remove(witness_id_type witness_id, account_id_type vouter_id) = 0;
+    virtual void create(witness_id_type witness_id, account_id_type voter_id) = 0;
+    virtual bool is_exists(witness_id_type witness_id, account_id_type voter_id) const = 0;
+    virtual const witness_vote_object& get(witness_id_type witness_id, account_id_type voter_id) = 0;
+    virtual void remove(const witness_vote_object& witness_vote) = 0;
 };
 
 class dbs_witness_vote : public witness_vote_service_i, public dbs_base
@@ -22,9 +23,10 @@ protected:
     explicit dbs_witness_vote(database& db);
 
 public:
-    virtual void create(witness_id_type witness_id, account_id_type vouter_id) override;
-    virtual bool is_exists(witness_id_type witness_id, account_id_type vouter_id) const override;
-    virtual void remove(witness_id_type witness_id, account_id_type vouter_id) override;
+    virtual void create(witness_id_type witness_id, account_id_type voter_id) override;
+    virtual bool is_exists(witness_id_type witness_id, account_id_type voter_id) const override;
+    virtual const witness_vote_object& get(witness_id_type witness_id, account_id_type voter_id) override;
+    virtual void remove(const witness_vote_object& witness_vote) override;
 };
 
 } // namespace chain
