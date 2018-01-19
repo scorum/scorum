@@ -29,7 +29,6 @@
 
 #include <scorum/chain/proposal_vote_evaluator.hpp>
 #include <scorum/chain/proposal_create_evaluator.hpp>
-#include <scorum/chain/proposal_create_evaluator_new.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
@@ -1555,8 +1554,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
 
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator_new>(
-        new proposal_create_evaluator_new(*this));
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
 
     // clang-format off
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
