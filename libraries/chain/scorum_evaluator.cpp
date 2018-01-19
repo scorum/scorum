@@ -9,6 +9,7 @@
 #include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
+#include <scorum/chain/dbs_witness_vote.hpp>
 #include <scorum/chain/dbs_comment.hpp>
 #include <scorum/chain/dbs_comment_vote.hpp>
 #include <scorum/chain/dbs_budget.hpp>
@@ -892,6 +893,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
+    dbs_witness_vote& witness_vote_service = _db.obtain_service<dbs_witness_vote>();
 
     const auto& voter = account_service.get_account(o.account);
     FC_ASSERT(voter.proxy.size() == 0, "A proxy is currently set, please clear the proxy before voting for a witness.");
@@ -901,21 +903,14 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
     const auto& witness = witness_service.get(o.witness);
 
-    const auto& by_account_witness_idx
-        = _db._temporary_public_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
-    auto itr = by_account_witness_idx.find(boost::make_tuple(voter.id, witness.id));
-
-    if (itr == by_account_witness_idx.end())
+    if (witness_vote_service.is_exists(witness.id, voter.id))
     {
         FC_ASSERT(o.approve, "Vote doesn't exist, user must indicate a desire to approve witness.");
 
         FC_ASSERT(voter.witnesses_voted_for < SCORUM_MAX_ACCOUNT_WITNESS_VOTES,
                   "Account has voted for too many witnesses."); // TODO: Remove after hardfork 2
 
-        _db._temporary_public_impl().create<witness_vote_object>([&](witness_vote_object& v) {
-            v.witness = witness.id;
-            v.account = voter.id;
-        });
+        witness_vote_service.create(witness.id, voter.id);
 
         witness_service.adjust_witness_vote(witness, voter.witness_vote_weight());
 
@@ -928,7 +923,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
         witness_service.adjust_witness_vote(witness, -voter.witness_vote_weight());
 
         account_service.decrease_witnesses_voted_for(voter);
-        _db._temporary_public_impl().remove(*itr);
+        witness_vote_service.remove(witness.id, voter.id);
     }
 }
 
