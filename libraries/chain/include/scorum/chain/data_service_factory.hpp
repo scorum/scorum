@@ -10,5 +10,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (dynamic_global_property)
         (comment)
         (decline_voting_rights_request)
+        (vesting_delegation)
         )
 // clang-format on

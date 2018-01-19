@@ -18,6 +18,7 @@
 #include <scorum/chain/dbs_dynamic_global_property.hpp>
 #include <scorum/chain/dbs_escrow.hpp>
 #include <scorum/chain/dbs_decline_voting_rights_request.hpp>
+#include <scorum/chain/dbs_vesting_delegation.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -1315,12 +1316,11 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
 {
     dbs_account& account_service = _db.obtain_service<dbs_account>();
     dbs_witness& witness_service = _db.obtain_service<dbs_witness>();
+    dbs_vesting_delegation& vd_service = _db.obtain_service<dbs_vesting_delegation>();
     dbs_dynamic_global_property& dprops_service = _db.obtain_service<dbs_dynamic_global_property>();
 
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
-    auto delegation = _db._temporary_public_impl().find<vesting_delegation_object, by_delegation>(
-        boost::make_tuple(op.delegator, op.delegatee));
 
     auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
@@ -1332,74 +1332,70 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     auto min_update = wso.median_props.account_creation_fee * props.get_vesting_share_price();
 
     // If delegation doesn't exist, create it
-    if (delegation == nullptr)
+    if (!vd_service.is_exists(op.delegator, op.delegatee))
     {
         FC_ASSERT(available_shares >= op.vesting_shares, "Account does not have enough vesting shares to delegate.");
         FC_ASSERT(op.vesting_shares >= min_delegation, "Account must delegate a minimum of ${v}",
                   ("v", min_delegation));
 
-        _db._temporary_public_impl().create<vesting_delegation_object>([&](vesting_delegation_object& obj) {
-            obj.delegator = op.delegator;
-            obj.delegatee = op.delegatee;
-            obj.vesting_shares = op.vesting_shares;
-            obj.min_delegation_time = dprops_service.head_block_time();
-        });
+        vd_service.create(op.delegator, op.delegatee, op.vesting_shares);
 
         account_service.increase_delegated_vesting_shares(delegator, op.vesting_shares);
         account_service.increase_received_vesting_shares(delegatee, op.vesting_shares);
     }
-    // Else if the delegation is increasing
-    else if (op.vesting_shares >= delegation->vesting_shares)
+    else
     {
-        auto delta = op.vesting_shares - delegation->vesting_shares;
+        const auto& delegation = vd_service.get(op.delegator, op.delegatee);
 
-        FC_ASSERT(delta >= min_update, "Scorum Power increase is not enough of a difference. min_update: ${min}",
-                  ("min", min_update));
-        FC_ASSERT(available_shares >= op.vesting_shares - delegation->vesting_shares,
-                  "Account does not have enough vesting shares to delegate.");
-
-        account_service.increase_delegated_vesting_shares(delegator, delta);
-        account_service.increase_received_vesting_shares(delegatee, delta);
-
-        _db._temporary_public_impl().modify(
-            *delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
-    }
-    // Else the delegation is decreasing
-    else /* delegation->vesting_shares > op.vesting_shares */
-    {
-        auto delta = delegation->vesting_shares - op.vesting_shares;
-
-        if (op.vesting_shares.amount > 0)
+        // Else if the delegation is increasing
+        if (op.vesting_shares >= delegation.vesting_shares)
         {
-            FC_ASSERT(delta >= min_update, "Scorum Power decrease is not enough of a difference. min_update: ${min}",
+            auto delta = op.vesting_shares - delegation.vesting_shares;
+
+            FC_ASSERT(delta >= min_update, "Scorum Power increase is not enough of a difference. min_update: ${min}",
                       ("min", min_update));
-            FC_ASSERT(op.vesting_shares >= min_delegation,
-                      "Delegation must be removed or leave minimum delegation amount of ${v}", ("v", min_delegation));
-        }
-        else
-        {
-            FC_ASSERT(delegation->vesting_shares.amount > 0,
-                      "Delegation would set vesting_shares to zero, but it is already zero");
-        }
+            FC_ASSERT(available_shares >= op.vesting_shares - delegation.vesting_shares,
+                      "Account does not have enough vesting shares to delegate.");
 
-        _db._temporary_public_impl().create<vesting_delegation_expiration_object>(
-            [&](vesting_delegation_expiration_object& obj) {
-                obj.delegator = op.delegator;
-                obj.vesting_shares = delta;
-                obj.expiration = std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
-                                          delegation->min_delegation_time);
-            });
+            account_service.increase_delegated_vesting_shares(delegator, delta);
+            account_service.increase_received_vesting_shares(delegatee, delta);
 
-        account_service.decrease_received_vesting_shares(delegatee, delta);
-
-        if (op.vesting_shares.amount > 0)
-        {
-            _db._temporary_public_impl().modify(
-                *delegation, [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
+            vd_service.update(delegation, op.vesting_shares);
         }
-        else
+        // Else the delegation is decreasing
+        else /* delegation.vesting_shares > op.vesting_shares */
         {
-            _db._temporary_public_impl().remove(*delegation);
+            auto delta = delegation.vesting_shares - op.vesting_shares;
+
+            if (op.vesting_shares.amount > 0)
+            {
+                FC_ASSERT(delta >= min_update,
+                          "Scorum Power decrease is not enough of a difference. min_update: ${min}",
+                          ("min", min_update));
+                FC_ASSERT(op.vesting_shares >= min_delegation,
+                          "Delegation must be removed or leave minimum delegation amount of ${v}",
+                          ("v", min_delegation));
+            }
+            else
+            {
+                FC_ASSERT(delegation.vesting_shares.amount > 0,
+                          "Delegation would set vesting_shares to zero, but it is already zero");
+            }
+
+            vd_service.create_expiration(op.delegator, delta,
+                                         std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
+                                                  delegation.min_delegation_time));
+
+            account_service.decrease_received_vesting_shares(delegatee, delta);
+
+            if (op.vesting_shares.amount > 0)
+            {
+                vd_service.update(delegation, op.vesting_shares);
+            }
+            else
+            {
+                vd_service.remove(delegation);
+            }
         }
     }
 }

@@ -8,6 +8,7 @@
 #include <scorum/chain/dbs_dynamic_global_property.hpp>
 #include <scorum/chain/dbs_comment.hpp>
 #include <scorum/chain/dbs_decline_voting_rights_request.hpp>
+#include <scorum/chain/dbs_vesting_delegation.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -17,5 +18,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (dynamic_global_property)
         (comment)
         (decline_voting_rights_request)
+        (vesting_delegation)
         )
 // clang-format on
