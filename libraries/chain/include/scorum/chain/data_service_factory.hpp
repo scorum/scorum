@@ -11,5 +11,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (comment)
         (decline_voting_rights_request)
         (witness_vote)
+        (withdraw_vesting_route)
         )
 // clang-format on

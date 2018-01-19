@@ -40,6 +40,7 @@ add_library( scorum_chain
              dbs_escrow.cpp
              dbs_witness_vote.cpp
              dbs_decline_voting_rights_request.cpp
+             dbs_withdraw_vesting_route.cpp
 
              data_service_factory.cpp
 
