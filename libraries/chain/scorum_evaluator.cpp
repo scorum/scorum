@@ -827,7 +827,7 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
         const auto& from_account = account_service.get_account(o.from_account);
         const auto& to_account = account_service.get_account(o.to_account);
 
-        if (withdraw_route_service.is_exists(from_account.id, to_account.id))
+        if (!withdraw_route_service.is_exists(from_account.id, to_account.id))
         {
             FC_ASSERT(o.percent != 0, "Cannot create a 0% destination.");
             FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
@@ -890,7 +890,7 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
     const auto& witness = witness_service.get(o.witness);
 
-    if (witness_vote_service.is_exists(witness.id, voter.id))
+    if (!witness_vote_service.is_exists(witness.id, voter.id))
     {
         FC_ASSERT(o.approve, "Vote doesn't exist, user must indicate a desire to approve witness.");
 
