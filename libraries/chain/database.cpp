@@ -484,6 +484,11 @@ const reward_fund_object& database::get_reward_fund() const
     return get<reward_fund_object>();
 }
 
+const time_point_sec database::calculate_discussion_payout_time(const comment_object& comment) const
+{
+    return comment.cashout_time;
+}
+
 uint32_t database::witness_participation_rate() const
 {
     const dynamic_global_property_object& dpo = get_dynamic_global_properties();

@@ -11,6 +11,7 @@
 #include <scorum/chain/dbs_witness_vote.hpp>
 #include <scorum/chain/dbs_withdraw_vesting_route.hpp>
 #include <scorum/chain/dbs_vesting_delegation.hpp>
+#include <scorum/chain/dbs_reward_fund.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(

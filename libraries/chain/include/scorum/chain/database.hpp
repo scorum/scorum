@@ -151,6 +151,8 @@ public:
 
     const reward_fund_object& get_reward_fund() const override;
 
+    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const override;
+
     /**
      *  Calculate the percent of block production slots that were missed in the
      *  past 128 blocks, not including the current block.
