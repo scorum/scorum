@@ -12,7 +12,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-#include <chainbase/abstract_undo_session.hpp>
+#include <chainbase/undo_session.hpp>
 
 namespace chainbase {
 
@@ -53,6 +53,23 @@ public:
         return _indices;
     }
 
+    template <typename CompatibleKey> const value_type* find(CompatibleKey&& key) const
+    {
+        auto itr = _indices.find(std::forward<CompatibleKey>(key));
+        if (itr != _indices.end())
+            return &*itr;
+        return nullptr;
+    }
+
+    template <typename CompatibleKey> const value_type& get(CompatibleKey&& key) const
+    {
+        auto ptr = find(key);
+        if (!ptr)
+            BOOST_THROW_EXCEPTION(std::out_of_range("key not found"));
+        return *ptr;
+    }
+
+protected:
     /**
     * Construct a new element in the multi_index_container.
     * Set the ID to the next available ID, then increment _next_id and fire off on_create().
@@ -81,28 +98,11 @@ public:
                 std::logic_error("Could not modify object, most likely a uniqueness constraint was violated"));
     }
 
-    template <typename CompatibleKey> const value_type* find(CompatibleKey&& key) const
-    {
-        auto itr = _indices.find(std::forward<CompatibleKey>(key));
-        if (itr != _indices.end())
-            return &*itr;
-        return nullptr;
-    }
-
-    template <typename CompatibleKey> const value_type& get(CompatibleKey&& key) const
-    {
-        auto ptr = find(key);
-        if (!ptr)
-            BOOST_THROW_EXCEPTION(std::out_of_range("key not found"));
-        return *ptr;
-    }
-
     void remove(const value_type& obj)
     {
         _indices.erase(_indices.iterator_to(obj));
     }
 
-protected:
     allocator_type get_allocator() const noexcept
     {
         return _indices.get_allocator();
@@ -128,11 +128,10 @@ protected:
     uint32_t _size_of_this = 0;
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //------------------------------------------------------------------------------------------------------//
 
-template <typename MultiIndexType> class generic_index : public base_index<MultiIndexType>
+template <typename MultiIndexType>
+class generic_index : public abstract_generic_index, public base_index<MultiIndexType>
 {
 public:
     using allocator_type = allocator<generic_index>;
@@ -167,72 +166,6 @@ private:
         int64_t revision = 0;
     };
 
-    //------------------------------------------//
-    class session : public abstract_undo_session
-    {
-    public:
-        session(generic_index& idx, int64_t revision)
-            : _index(idx)
-            , _revision(revision)
-        {
-        }
-
-        session(session&& mv)
-            : _index(mv._index)
-            , _apply(mv._apply)
-        {
-            mv._apply = false;
-        }
-
-        ~session()
-        {
-            if (_apply)
-            {
-                _index.undo();
-            }
-        }
-
-        session& operator=(session&& mv)
-        {
-            if (this == &mv)
-                return *this;
-            if (_apply)
-                _index.undo();
-            _apply = mv._apply;
-            mv._apply = false;
-            return *this;
-        }
-
-        /** leaves the UNDO state on the stack when session goes out of scope */
-        void push() override
-        {
-            _apply = false;
-        }
-        /** combines this session with the prior session */
-        void squash() override
-        {
-            if (_apply)
-                _index.squash();
-            _apply = false;
-        }
-        void undo() override
-        {
-            if (_apply)
-                _index.undo();
-            _apply = false;
-        }
-
-        int64_t revision() const override
-        {
-            return _revision;
-        }
-
-    private:
-        generic_index& _index;
-        int64_t _revision = 0;
-        bool _apply = true;
-    };
-
 public:
     generic_index(const allocator<value_type>& a)
         : base_index_type(a)
@@ -240,20 +173,47 @@ public:
     {
     }
 
-    abstract_undo_session_ptr start_undo_session()
+    template <typename Constructor> const value_type& emplace(Constructor&& c)
+    {
+        const value_type& value = base_index_type::emplace(c);
+
+        on_create(value);
+
+        return value;
+    }
+
+    template <typename Modifier> void modify(const value_type& obj, Modifier&& m)
+    {
+        auto unmodified_copy = obj;
+
+        base_index_type::modify(obj, m);
+
+        on_modify(unmodified_copy);
+    }
+
+    void remove(const value_type& obj)
+    {
+        on_remove(obj); // after base_index_type::remove(obj); obj is invalid, so do this call here
+
+        base_index_type::remove(obj);
+    }
+
+private:
+    // abstract_generic_index interface
+    abstract_undo_session_ptr start_undo_session() override
     {
         _stack.emplace_back(this->get_allocator());
         _stack.back().old_next_id = this->_next_id;
         _stack.back().revision = ++_revision;
 
-        return std::move(abstract_undo_session_ptr(new session(*this, _revision)));
+        return std::move(abstract_undo_session_ptr(new session(*this)));
     }
 
     /**
     *  Restores the state to how it was prior to the current session discarding all changes
     *  made between the last revision and the current revision.
     */
-    void undo()
+    void undo() override
     {
         if (!enabled())
             return;
@@ -287,7 +247,7 @@ public:
     *
     *  This method does not change the state of the index, only the state of the undo buffer.
     */
-    void squash()
+    void squash() override
     {
         if (!enabled())
             return;
@@ -400,7 +360,7 @@ public:
     /**
     * Discards all undo history prior to revision
     */
-    void commit(int64_t revision)
+    void commit(int64_t revision) override
     {
         while (_stack.size() && _stack[0].revision <= revision)
         {
@@ -411,50 +371,25 @@ public:
     /**
     * Unwinds all undo states
     */
-    void undo_all()
+    void undo_all() override
     {
         while (enabled())
             undo();
     }
 
-    void set_revision(int64_t revision)
+    void set_revision(int64_t revision) override
     {
         if (_stack.size() != 0)
             BOOST_THROW_EXCEPTION(std::logic_error("cannot set revision while there is an existing undo stack"));
         _revision = revision;
     }
 
-    int64_t revision() const
+    int64_t revision() const override
     {
         return _revision;
     }
 
-    template <typename Constructor> const value_type& emplace(Constructor&& c)
-    {
-        const value_type& value = base_index_type::emplace(c);
-
-        on_create(value);
-
-        return value;
-    }
-
-    template <typename Modifier> void modify(const value_type& obj, Modifier&& m)
-    {
-        auto unmodified_copy = obj;
-
-        base_index_type::modify(obj, m);
-
-        on_modify(unmodified_copy);
-    }
-
-    void remove(const value_type& obj)
-    {
-        on_remove(obj); // after base_index_type::remove(obj); obj is invalid, so do this call here
-
-        base_index_type::remove(obj);
-    }
-
-private:
+    //////////////////////////////////////////////////////////////////////////
     bool enabled() const
     {
         return !_stack.empty();

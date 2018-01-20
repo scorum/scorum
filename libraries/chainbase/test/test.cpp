@@ -46,7 +46,7 @@ public:
 
     void undo()
     {
-        _Base::undo();
+        for_each_index([&](chainbase::abstract_generic_index& item) { item.undo(); });
     }
 
     // TODO (if chainbase::database became private)

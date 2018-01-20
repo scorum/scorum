@@ -137,8 +137,6 @@ void database::wipe(const bfs::path& dir)
     bfs::remove_all(dir / "shared_memory.meta");
     _data_dir = bfs::path();
     _index_map.clear();
-
-    clear_undo_session();
 }
 
 } // namespace chainbase

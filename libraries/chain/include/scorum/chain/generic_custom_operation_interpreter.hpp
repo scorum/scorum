@@ -64,7 +64,8 @@ public:
             this->get_evaluator(inner_o).apply(inner_o);
         }
 
-        plugin_session->squash();
+        this->_db.for_each_index([&](chainbase::abstract_generic_index& item) { item.squash(); });
+        plugin_session->push();
     }
 
     virtual void apply(const protocol::custom_json_operation& outer_o) override

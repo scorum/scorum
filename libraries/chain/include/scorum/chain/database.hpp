@@ -116,8 +116,6 @@ public:
      */
     bool is_known_block(const block_id_type& id) const;
     bool is_known_transaction(const transaction_id_type& id) const;
-    fc::sha256 get_pow_target() const;
-    uint32_t get_pow_summary_target() const;
     block_id_type find_block_id_for_num(uint32_t block_num) const;
     block_id_type get_block_id_for_num(uint32_t block_num) const;
     optional<signed_block> fetch_block_by_id(const block_id_type& id) const;
@@ -299,17 +297,14 @@ public:
      * witness vote totals.  Vote totals should be updated first via a call to
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
      */
-    void clear_witness_votes(const account_object& a);
     void process_vesting_withdrawals();
     share_type pay_curators(const comment_object& c, share_type& max_rewards);
     share_type cashout_comment_helper(const share_type& reward, const comment_object& comment);
     void process_comment_cashout();
     void process_funds();
-    void process_conversions();
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();
-    void update_median_feed();
 
     time_point_sec head_block_time() const override;
     uint32_t head_block_num() const;
@@ -377,8 +372,6 @@ private:
     void _update_median_witness_props();
 
 protected:
-    // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
-    // void pop_undo() { object_database::pop_undo(); }
     void notify_changed_objects();
 
     void set_producing(bool p)

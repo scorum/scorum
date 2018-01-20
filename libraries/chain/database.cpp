@@ -111,9 +111,14 @@ void database::open(const fc::path& data_dir,
 
             // Rewind all undo state. This should return us to the state at the last irreversible block.
             with_write_lock([&]() {
-                undo_all();
-                FC_ASSERT(revision() == head_block_num(), "Chainbase revision does not match head block num",
-                          ("rev", revision())("head_block", head_block_num()));
+
+                for_each_index([&](chainbase::abstract_generic_index& item) { item.undo_all(); });
+
+                for_each_index([&](chainbase::abstract_generic_index& item) {
+                    FC_ASSERT(item.revision() == head_block_num(), "Chainbase revision does not match head block num",
+                              ("rev", item.revision())("head_block", head_block_num()));
+                });
+
                 validate_invariants();
             });
 
@@ -173,7 +178,8 @@ void database::reindex(const fc::path& data_dir,
             }
 
             apply_block(itr.first, skip_flags);
-            set_revision(head_block_num());
+
+            for_each_index([&](chainbase::abstract_generic_index& item) { item.set_revision(head_block_num()); });
         });
 
         if (_block_log.head()->block_num())
@@ -700,7 +706,8 @@ void database::_push_transaction(const signed_transaction& trx)
 
     notify_changed_objects();
     // The transaction applied successfully. Merge its changes into the pending block session.
-    temp_session->squash();
+    for_each_index([&](chainbase::abstract_generic_index& item) { item.squash(); });
+    temp_session->push();
 
     // notify anyone listening to pending transactions
     notify_on_pending_transaction(trx);
@@ -786,7 +793,8 @@ signed_block database::_generate_block(fc::time_point_sec when,
             {
                 auto temp_session = start_undo_session();
                 _apply_transaction(tx);
-                temp_session->squash();
+                for_each_index([&](chainbase::abstract_generic_index& item) { item.squash(); });
+                temp_session->push();
 
                 total_block_size += fc::raw::pack_size(tx);
                 pending_block.transactions.push_back(tx);
@@ -878,7 +886,8 @@ void database::pop_block()
         SCORUM_ASSERT(head_block.valid(), pop_empty_chain, "there are no blocks to pop");
 
         _fork_db.pop_block();
-        undo();
+
+        for_each_index([&](chainbase::abstract_generic_index& item) { item.undo(); });
 
         _popped_tx.insert(_popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end());
     }
@@ -1621,7 +1630,6 @@ void database::validate_transaction(const signed_transaction& trx)
     database::with_write_lock([&]() {
         auto session = start_undo_session();
         _apply_transaction(trx);
-        session->undo();
     });
 }
 
@@ -2177,11 +2185,11 @@ void database::update_last_irreversible_block()
             }
         }
 
-        commit(dpo.last_irreversible_block_num);
+        for_each_index([&](chainbase::abstract_generic_index& item) { item.commit(dpo.last_irreversible_block_num); });
 
         if (!(get_node_properties().skip_flags & skip_block_log))
         {
-            // output to block log based on new last irreverisible block num
+            // output to block log based on new last irreversible block num
             const auto& tmp_head = _block_log.head();
             uint64_t log_head_num = 0;
 
@@ -2559,6 +2567,16 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
+
+
+
+
+
+
+
 
 
 

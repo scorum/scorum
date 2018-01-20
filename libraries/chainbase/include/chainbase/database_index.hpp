@@ -6,7 +6,7 @@
 
 namespace chainbase {
 
-/** this class is ment to be specified to enable lookup of index type by object type using
+/** this class is meant to be specified to enable lookup of index type by object type using
 * the SET_INDEX_TYPE macro.
 **/
 template <typename T> struct get_index_type
