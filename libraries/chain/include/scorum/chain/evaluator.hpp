@@ -5,6 +5,7 @@
 namespace scorum {
 namespace chain {
 
+class data_service_factory_i;
 class dbservice;
 
 template <typename OperationType = scorum::protocol::operation> class evaluator
@@ -14,14 +15,11 @@ public:
     virtual int get_type() const = 0;
 };
 
-template <typename EvaluatorType, typename OperationType = scorum::protocol::operation>
+template <typename DataService, typename EvaluatorType, typename OperationType = scorum::protocol::operation>
 class evaluator_impl : public evaluator<OperationType>
 {
 public:
-    typedef OperationType operation_sv_type;
-    // typedef typename EvaluatorType::operation_type op_type;
-
-    evaluator_impl(dbservice& d)
+    evaluator_impl(DataService& d)
         : _db(d)
     {
     }
@@ -38,25 +36,40 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    dbservice& db()
+    DataService& db()
     {
         return _db;
     }
 
 protected:
-    dbservice& _db;
+    DataService& _db;
 };
-}
-}
+
+} // namespace scorum
+} // namespace chain
 
 #define DEFINE_EVALUATOR(X)                                                                                            \
-    class X##_evaluator : public scorum::chain::evaluator_impl<X##_evaluator>                                          \
+    class X##_evaluator : public scorum::chain::evaluator_impl<data_service_factory_i, X##_evaluator>                  \
+    {                                                                                                                  \
+    public:                                                                                                            \
+        typedef X##_operation operation_type;                                                                          \
+                                                                                                                       \
+        X##_evaluator(data_service_factory_i& db)                                                                      \
+            : scorum::chain::evaluator_impl<data_service_factory_i, X##_evaluator>(db)                                 \
+        {                                                                                                              \
+        }                                                                                                              \
+                                                                                                                       \
+        void do_apply(const X##_operation& o);                                                                         \
+    };
+
+#define DEFINE_EVALUATOR_DEPRECATED(X)                                                                                 \
+    class X##_evaluator : public scorum::chain::evaluator_impl<dbservice, X##_evaluator>                               \
     {                                                                                                                  \
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
         X##_evaluator(dbservice& db)                                                                                   \
-            : scorum::chain::evaluator_impl<X##_evaluator>(db)                                                         \
+            : scorum::chain::evaluator_impl<dbservice, X##_evaluator>(db)                                              \
         {                                                                                                              \
         }                                                                                                              \
                                                                                                                        \
