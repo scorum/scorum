@@ -149,8 +149,9 @@ public:
     const witness_schedule_object& get_witness_schedule_object() const override;
     const hardfork_property_object& get_hardfork_property_object() const;
 
-    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const override;
     const reward_fund_object& get_reward_fund() const override;
+
+    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const override;
 
     /**
      *  Calculate the percent of block production slots that were missed in the

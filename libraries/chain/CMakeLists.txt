@@ -42,6 +42,7 @@ add_library( scorum_chain
              dbs_decline_voting_rights_request.cpp
              dbs_withdraw_vesting_route.cpp
              dbs_vesting_delegation.cpp
+             dbs_reward_fund.cpp
 
              data_service_factory.cpp
 
