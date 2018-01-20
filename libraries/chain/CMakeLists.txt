@@ -48,6 +48,8 @@ add_library( scorum_chain
 
              scorum_evaluator.cpp
 
+             proposal_create_evaluator.cpp
+
              scorum_objects.cpp
              shared_authority.cpp
              block_log.cpp
