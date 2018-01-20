@@ -299,18 +299,10 @@ struct comment_options_extension_visitor
 {
     comment_options_extension_visitor(const comment_object& c, data_service_factory_i& db)
         : _c(c)
-        , _db(db)
-        , _account_service(_db.account_service())
-        , _comment_service(_db.comment_service())
+        , _account_service(db.account_service())
+        , _comment_service(db.comment_service())
     {
     }
-
-    typedef void result_type;
-
-    const comment_object& _c;
-    data_service_factory_i& _db;
-    account_service_i& _account_service;
-    comment_service_i& _comment_service;
 
     void operator()(const comment_payout_beneficiaries& cpb) const
     {
@@ -325,6 +317,12 @@ struct comment_options_extension_visitor
             }
         });
     }
+
+    typedef void result_type;
+
+    const comment_object& _c;
+    account_service_i& _account_service;
+    comment_service_i& _comment_service;
 };
 
 void comment_options_evaluator::do_apply(const comment_options_operation& o)
@@ -1176,53 +1174,50 @@ void vote_evaluator::do_apply(const vote_operation& o)
     FC_CAPTURE_AND_RETHROW((o))
 }
 
-void custom_evaluator::do_apply(const custom_operation& o)
+void custom_evaluator::do_apply(const custom_operation&)
 {
 }
 
 void custom_json_evaluator::do_apply(const custom_json_operation& o)
 {
-    //    dbservice& d = db();
-    //    std::shared_ptr<custom_operation_interpreter> eval = d.get_custom_json_evaluator(o.id);
-    //    if (!eval)
-    //        return;
+    std::shared_ptr<custom_operation_interpreter> eval = _db.get_custom_json_evaluator(o.id);
+    if (!eval)
+        return;
 
-    //    try
-    //    {
-    //        eval->apply(o);
-    //    }
-    //    catch (const fc::exception& e)
-    //    {
-    //        if (d.is_producing())
-    //            throw e;
-    //    }
-    //    catch (...)
-    //    {
-    //        elog("Unexpected exception applying custom json evaluator.");
-    //    }
+    try
+    {
+        eval->apply(o);
+    }
+    catch (const fc::exception& e)
+    {
+        if (_db.is_producing())
+            throw e;
+    }
+    catch (...)
+    {
+        elog("Unexpected exception applying custom json evaluator.");
+    }
 }
 
 void custom_binary_evaluator::do_apply(const custom_binary_operation& o)
 {
-    //    dbservice& d = db();
+    std::shared_ptr<custom_operation_interpreter> eval = _db.get_custom_json_evaluator(o.id);
+    if (!eval)
+        return;
 
-    //    std::shared_ptr<custom_operation_interpreter> eval = d.get_custom_json_evaluator(o.id);
-    //    if (!eval)
-    //        return;
-
-    //    try
-    //    {
-    //        eval->apply(o);
-    //    }
-    //    catch (const fc::exception& e)
-    //    {
-    //        if (d.is_producing())
-    //            throw e;
-    //    }
-    //    catch (...)
-    //    {
-    //        elog("Unexpected exception applying custom json evaluator.");
-    //    }
+    try
+    {
+        eval->apply(o);
+    }
+    catch (const fc::exception& e)
+    {
+        if (_db.is_producing())
+            throw e;
+    }
+    catch (...)
+    {
+        elog("Unexpected exception applying custom json evaluator.");
+    }
 }
 
 void prove_authority_evaluator::do_apply(const prove_authority_operation& o)
