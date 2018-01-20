@@ -10,10 +10,31 @@
 namespace scorum {
 namespace chain {
 
-/** DB service for operations with budget_object
- *  --------------------------------------------
+struct budget_service_i
+{
+    using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
+
+    virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
+                                                       uint32_t limit) const = 0;
+    virtual budget_refs_type get_budgets() const = 0;
+    virtual budget_refs_type get_budgets(const account_name_type& owner) const = 0;
+    virtual const budget_object& get_fund_budget() const = 0;
+    virtual const budget_object& get_budget(budget_id_type id) const = 0;
+    virtual const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline) = 0;
+    virtual const budget_object& create_budget(const account_object& owner,
+                                               const asset& balance,
+                                               const time_point_sec& deadline,
+                                               const optional<std::string>& content_permlink = optional<std::string>())
+        = 0;
+
+    virtual void close_budget(const budget_object& budget) = 0;
+    virtual asset allocate_cash(const budget_object& budget) = 0;
+};
+
+/**
+ * DB service for operations with budget_object
  */
-class dbs_budget : public dbs_base
+class dbs_budget : public budget_service_i, public dbs_base
 {
     friend class dbservice_dbs_factory;
 
@@ -21,35 +42,34 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
-    using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
-
     /** Lists all budget owners.
      *
      *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.
      *
      */
-    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const;
+    virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
+                                                       uint32_t limit) const override;
 
     /** Lists all budgets.
      *
      * @returns a list of budget objects
      */
-    budget_refs_type get_budgets() const;
+    virtual budget_refs_type get_budgets() const override;
 
     /** Lists all budgets registered for owner.
      *
      * @param owner the name of the owner
      * @returns a list of budget objects
      */
-    budget_refs_type get_budgets(const account_name_type& owner) const;
+    virtual budget_refs_type get_budgets(const account_name_type& owner) const override;
 
     /** Gets the fund budget
      */
-    const budget_object& get_fund_budget() const;
+    virtual const budget_object& get_fund_budget() const override;
 
     /** Get budget by id
      */
-    const budget_object& get_budget(budget_id_type id) const;
+    virtual const budget_object& get_budget(budget_id_type id) const override;
 
     /** Creates fund budget (no owners).
      *
@@ -59,7 +79,7 @@ public:
      * @param deadline the deadline time to close budget (even if there is rest of balance)
      * @returns fund budget object
      */
-    const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline);
+    virtual const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline) override;
 
     /** Creates budget.
      *  The owner has abilities for all operations (for update, close and schedule operations).
@@ -70,10 +90,11 @@ public:
      * @param content_permlink the budget target identity (post or other)
      * @returns a budget object
      */
-    const budget_object& create_budget(const account_object& owner,
-                                       const asset& balance,
-                                       const time_point_sec& deadline,
-                                       const optional<std::string>& content_permlink = optional<std::string>());
+    virtual const budget_object& create_budget(const account_object& owner,
+                                               const asset& balance,
+                                               const time_point_sec& deadline,
+                                               const optional<std::string>& content_permlink
+                                               = optional<std::string>()) override;
 
     /** Closing budget.
      *  To delete the budget, to cash back from budget to owner account.
@@ -82,14 +103,14 @@ public:
      *
      * @param budget the budget to close
      */
-    void close_budget(const budget_object& budget);
+    virtual void close_budget(const budget_object& budget);
 
     /** Distributes asset from budget.
      *  This operation takes into account the deadline and last block number
      *
      * @param budget the budget that is distributed
      */
-    asset allocate_cash(const budget_object& budget);
+    virtual asset allocate_cash(const budget_object& budget) override;
 
 private:
     share_type
