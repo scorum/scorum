@@ -15,6 +15,8 @@ class database : public undo_db_state
 
     bfs::path _data_dir;
 
+    std::unique_ptr<bip::managed_mapped_file> _meta;
+
 public:
     virtual ~database();
 

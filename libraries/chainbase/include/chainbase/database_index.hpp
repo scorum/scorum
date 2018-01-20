@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+
 #include <chainbase/chain_object.hpp>
 #include <chainbase/database_guard.hpp>
 #include <chainbase/generic_index.hpp>
@@ -60,7 +62,7 @@ public:
 
         std::string type_name = boost::core::demangle(typeid(typename index_type::value_type).name());
 
-        if (!(_index_map.size() <= type_id || _index_map[type_id] == nullptr))
+        if (_index_map.find(type_id) != _index_map.end())
         {
             BOOST_THROW_EXCEPTION(std::logic_error(type_name + "::type_id is already in use"));
         }
@@ -81,9 +83,6 @@ public:
 
         idx_ptr->validate();
 
-        if (type_id >= _index_map.size())
-            _index_map.resize(type_id + 1);
-
         _index_map[type_id] = idx_ptr;
 
         return *idx_ptr;
@@ -93,7 +92,7 @@ public:
     {
         CHAINBASE_REQUIRE_READ_LOCK(typename MultiIndexType::value_type);
         typedef generic_index<MultiIndexType> index_type;
-        return _index_map.size() > index_type::value_type::type_id && _index_map[index_type::value_type::type_id];
+        return _index_map.find((uint16_t)index_type::value_type::type_id) != _index_map.end();
     }
 
     template <typename MultiIndexType> const generic_index<MultiIndexType>& get_index() const
@@ -108,7 +107,7 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return *index_type_ptr(_index_map[index_type::value_type::type_id]);
+        return *index_type_ptr(_index_map.find((uint16_t)index_type::value_type::type_id)->second);
     }
 
     template <typename MultiIndexType, typename ByIndex>
@@ -124,7 +123,9 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return index_type_ptr(_index_map[index_type::value_type::type_id])->indices().template get<ByIndex>();
+        return index_type_ptr(_index_map.find((uint16_t)index_type::value_type::type_id)->second)
+            ->indices()
+            .template get<ByIndex>();
     }
 
     template <typename MultiIndexType> generic_index<MultiIndexType>& get_mutable_index()
@@ -139,7 +140,7 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in database"));
         }
 
-        return *index_type_ptr(_index_map[index_type::value_type::type_id]);
+        return *index_type_ptr(_index_map.find((uint16_t)index_type::value_type::type_id)->second);
     }
 
     template <typename ObjectType, typename IndexedByType, typename CompatibleKey>
@@ -207,11 +208,10 @@ public:
 
 protected:
     std::unique_ptr<bip::managed_mapped_file> _segment;
-    std::unique_ptr<bip::managed_mapped_file> _meta;
 
     /**
     * This is a full map (size 2^16) of all possible index designed for constant time lookup
     */
-    std::vector<void*> _index_map;
+    boost::container::flat_map<uint16_t, void*> _index_map;
 };
 }
