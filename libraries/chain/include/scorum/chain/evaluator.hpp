@@ -5,7 +5,7 @@
 namespace scorum {
 namespace chain {
 
-class dbservice;
+class data_service_factory_i;
 
 template <typename OperationType = scorum::protocol::operation> class evaluator
 {
@@ -18,10 +18,7 @@ template <typename EvaluatorType, typename OperationType = scorum::protocol::ope
 class evaluator_impl : public evaluator<OperationType>
 {
 public:
-    typedef OperationType operation_sv_type;
-    // typedef typename EvaluatorType::operation_type op_type;
-
-    evaluator_impl(dbservice& d)
+    evaluator_impl(data_service_factory_i& d)
         : _db(d)
     {
     }
@@ -38,13 +35,13 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    dbservice& db()
+    data_service_factory_i& db()
     {
         return _db;
     }
 
 protected:
-    dbservice& _db;
+    data_service_factory_i& _db;
 };
 }
 }
@@ -55,7 +52,7 @@ protected:
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
-        X##_evaluator(dbservice& db)                                                                                   \
+        X##_evaluator(data_service_factory_i& db)                                                                      \
             : scorum::chain::evaluator_impl<X##_evaluator>(db)                                                         \
         {                                                                                                              \
         }                                                                                                              \
