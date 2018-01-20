@@ -45,6 +45,9 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
     uint64_t expected_quorum = 0;
 
+    typedef void (account_service_i::*check_account_existence_signature)(const account_name_type& a,
+                                                                         const fc::optional<const char*>& b) const;
+
     create_proposal_fixture()
     {
         global_property.invite_quorum = 71u;
@@ -58,8 +61,10 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
             .With(op.creator)
             .Return(true);
 
-        mocks.ExpectCall(account_service, account_service_i::check_account_existence)
-            .With(op.creator, fc::optional<const char*>());
+        mocks
+            .ExpectCallOverload(account_service,
+                                (check_account_existence_signature)&account_service_i::check_account_existence)
+            .With(op.creator, _);
 
         mocks.ExpectCall(property_service, dynamic_global_property_service_i::head_block_time).Return(current_time);
 
