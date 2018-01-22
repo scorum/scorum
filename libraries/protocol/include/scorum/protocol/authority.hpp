@@ -102,4 +102,3 @@ bool operator==(const authority& a, const authority& b);
 FC_REFLECT_TYPENAME(scorum::protocol::account_authority_map)
 FC_REFLECT_TYPENAME(scorum::protocol::authority::key_authority_map)
 FC_REFLECT(scorum::protocol::authority, (weight_threshold)(account_auths)(key_auths))
-FC_REFLECT_ENUM(scorum::protocol::authority::classification, (owner)(active)(key)(posting))

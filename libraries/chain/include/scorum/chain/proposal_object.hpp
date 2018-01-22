@@ -25,6 +25,7 @@ public:
     account_name_type creator;
     fc::variant data;
 
+    fc::time_point_sec created;
     fc::time_point_sec expiration;
 
     uint64_t quorum_percent = 0;
@@ -35,6 +36,7 @@ public:
 
 struct by_expiration;
 struct by_data;
+struct by_created;
 
 // clang-format off
 typedef multi_index_container<proposal_object,
@@ -45,7 +47,11 @@ typedef multi_index_container<proposal_object,
                                          ordered_non_unique<tag<by_expiration>,
                                                             member<proposal_object,
                                                                    fc::time_point_sec,
-                                                                   &proposal_object::expiration>>>,
+                                                                   &proposal_object::expiration>>,
+                                         ordered_non_unique<tag<by_created>,
+                                                            member<proposal_object,
+                                                                   fc::time_point_sec,
+                                                                   &proposal_object::created>>>,
                               allocator<proposal_object>>
     proposal_object_index;
 // clang-format on
@@ -53,5 +59,6 @@ typedef multi_index_container<proposal_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::proposal_object, (id)(creator)(data)(expiration)(quorum_percent)(action)(voted_accounts))
+FC_REFLECT(scorum::chain::proposal_object,
+           (id)(creator)(data)(created)(expiration)(quorum_percent)(action)(voted_accounts))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_object, scorum::chain::proposal_object_index)

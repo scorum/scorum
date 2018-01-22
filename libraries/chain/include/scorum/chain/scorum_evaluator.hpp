@@ -15,6 +15,9 @@ DEFINE_EVALUATOR(account_create_with_delegation)
 DEFINE_EVALUATOR(account_update)
 DEFINE_EVALUATOR(account_witness_proxy)
 DEFINE_EVALUATOR(account_witness_vote)
+DEFINE_EVALUATOR(atomicswap_initiate)
+DEFINE_EVALUATOR(atomicswap_redeem)
+DEFINE_EVALUATOR(atomicswap_refund)
 DEFINE_EVALUATOR(change_recovery_account)
 DEFINE_EVALUATOR(close_budget)
 DEFINE_EVALUATOR(comment)
@@ -39,6 +42,5 @@ DEFINE_EVALUATOR(transfer_to_vesting)
 DEFINE_EVALUATOR(vote)
 DEFINE_EVALUATOR(withdraw_vesting)
 DEFINE_EVALUATOR(witness_update)
-
 } // namespace chain
 } // namespace scorum

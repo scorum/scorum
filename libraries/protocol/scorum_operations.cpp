@@ -3,6 +3,8 @@
 
 #include <locale>
 
+#include <scorum/protocol/atomicswap_helper.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -356,6 +358,30 @@ void close_budget_operation::validate() const
     validate_account_name(owner);
 }
 
+void atomicswap_initiate_operation::validate() const
+{
+    validate_account_name(owner);
+    validate_account_name(recipient);
+    FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCR");
+    FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Amount must be positive");
+    atomicswap::validate_contract_metadata(metadata);
+    atomicswap::validate_secret_hash(secret_hash);
+}
+
+void atomicswap_redeem_operation::validate() const
+{
+    validate_account_name(from);
+    validate_account_name(to);
+    atomicswap::validate_secret(secret);
+}
+
+void atomicswap_refund_operation::validate() const
+{
+    validate_account_name(participant);
+    validate_account_name(initiator);
+    atomicswap::validate_secret_hash(secret_hash);
+}
+
 void proposal_vote_operation::validate() const
 {
     validate_account_name(voting_account);
@@ -364,9 +390,21 @@ void proposal_vote_operation::validate() const
 void proposal_create_operation::validate() const
 {
     validate_account_name(creator);
-    validate_account_name(committee_member);
 
     FC_ASSERT(action.valid(), "Proposal is not set.");
+
+    if (action == action_t::dropout || action == action_t::invite)
+    {
+        validate_account_name(data.as_string());
+    }
+    else
+    {
+        uint64_t quorum = data.as_uint64();
+
+        FC_ASSERT(quorum >= SCORUM_MIN_QUORUM_VALUE_PERCENT, "Quorum is to small.");
+
+        FC_ASSERT(quorum <= SCORUM_MAX_QUORUM_VALUE_PERCENT, "Quorum is to large.");
+    }
 }
 
 } // namespace protocol

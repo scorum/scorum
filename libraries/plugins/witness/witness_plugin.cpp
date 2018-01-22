@@ -524,13 +524,14 @@ void witness_plugin::plugin_shutdown()
 
 void witness_plugin::schedule_production_loop()
 {
+    static const int64_t ONE_SECOND_MS = 1000000;
     // Schedule for the next second's tick regardless of chain state
     // If we would wait less than 50ms, wait for the whole second.
     fc::time_point fc_now = fc::time_point::now();
-    int64_t time_to_next_second = 1000000 - (fc_now.time_since_epoch().count() % 1000000);
+    int64_t time_to_next_second = ONE_SECOND_MS - (fc_now.time_since_epoch().count() % ONE_SECOND_MS);
     if (time_to_next_second < 50000) // we must sleep for at least 50ms
     {
-        time_to_next_second += 1000000;
+        time_to_next_second += ONE_SECOND_MS;
     }
 
     fc::time_point next_wakeup(fc_now + fc::microseconds(time_to_next_second));
@@ -539,7 +540,7 @@ void witness_plugin::schedule_production_loop()
     _block_production_task = fc::schedule([this] { block_production_loop(); }, next_wakeup, "Witness Block Production");
 }
 
-block_production_condition::block_production_condition_enum witness_plugin::block_production_loop()
+void witness_plugin::block_production_loop()
 {
     const fc::time_point genesis_time = database().get_genesis_time();
 
@@ -547,7 +548,7 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
     {
         wlog("waiting until genesis time to produce block: ${t}", ("t", genesis_time));
         schedule_production_loop();
-        return block_production_condition::wait_for_genesis;
+        return;
     }
 
     block_production_condition::block_production_condition_enum result;
@@ -612,8 +613,8 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
         break;
     }
 
+    dlog("result = ${r}", ("r", result));
     schedule_production_loop();
-    return result;
 }
 
 block_production_condition::block_production_condition_enum
@@ -683,7 +684,11 @@ witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
         return block_production_condition::low_participation;
     }
 
-    if (llabs((scheduled_time - now).count()) > fc::milliseconds(500).count())
+    fc::microseconds dlt = scheduled_time - now;
+    dlog("scheduled_time (${s} s) - now (${n} s) = ${d} ms",
+         ("s", scheduled_time.sec_since_epoch())("n", now.sec_since_epoch())("d", dlt.count()));
+
+    if (llabs(dlt.count()) > fc::milliseconds(500).count())
     {
         capture("scheduled_time", scheduled_time)("now", now);
         return block_production_condition::lag;

@@ -239,21 +239,21 @@ void dbs_account::increase_vesting_shares(const account_object& account, const a
     db_impl().modify(account, [&](account_object& a) { a.vesting_shares += vesting; });
 }
 
-void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += vesting; });
+    FC_ASSERT(amount.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += amount; });
 }
 
-void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.received_vesting_shares += vesting; });
+    FC_ASSERT(amount.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.received_vesting_shares += amount; });
 }
 
-void dbs_account::decrease_received_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::decrease_received_vesting_shares(const account_object& account, const asset& amount)
 {
-    increase_received_vesting_shares(account, -vesting);
+    increase_received_vesting_shares(account, -amount);
 }
 
 void dbs_account::drop_challenged(const account_object& account)

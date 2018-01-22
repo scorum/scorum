@@ -69,15 +69,15 @@ public:
                        const optional<authority>& active,
                        const optional<authority>& posting);
 
-    void increase_balance(const account_object& account, const asset& scorums);
-    void decrease_balance(const account_object& account, const asset& scorums);
+    void increase_balance(const account_object& account, const asset& amount);
+    void decrease_balance(const account_object& account, const asset& amount);
 
     void increase_vesting_shares(const account_object& account, const asset& vesting);
 
-    void increase_delegated_vesting_shares(const account_object& account, const asset& vesting);
+    void increase_delegated_vesting_shares(const account_object& account, const asset& amount);
 
-    void increase_received_vesting_shares(const account_object& account, const asset& vesting);
-    void decrease_received_vesting_shares(const account_object& account, const asset& vesting);
+    void increase_received_vesting_shares(const account_object& account, const asset& amount);
+    void decrease_received_vesting_shares(const account_object& account, const asset& amount);
 
     void drop_challenged(const account_object& account);
 

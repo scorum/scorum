@@ -6,6 +6,7 @@
 #include <scorum/protocol/types.hpp>
 
 #include <fc/utf8.hpp>
+#include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -798,12 +799,65 @@ struct proposal_vote_operation : public base_operation
     void validate() const;
 };
 
+enum atomicswap_initiate_type
+{
+    atomicswap_by_initiator = 0,
+    atomicswap_by_participant,
+};
+
+struct atomicswap_initiate_operation : public base_operation
+{
+    atomicswap_initiate_type type = atomicswap_by_initiator;
+
+    account_name_type owner;
+    account_name_type recipient;
+
+    asset amount = asset(0, SCORUM_SYMBOL);
+
+    std::string secret_hash;
+
+    std::string metadata;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct atomicswap_redeem_operation : public base_operation
+{
+    account_name_type from;
+    account_name_type to; // participant or initiator
+
+    std::string secret;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(to);
+    }
+};
+
+struct atomicswap_refund_operation : public base_operation
+{
+    account_name_type participant;
+    account_name_type initiator;
+    std::string secret_hash;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(participant);
+    }
+};
+
 struct proposal_create_operation : public base_operation
 {
     typedef scorum::protocol::proposal_action action_t;
 
     account_name_type creator;
-    account_name_type committee_member;
+    fc::variant data;
 
     fc::optional<fc::enum_type<uint8_t, action_t>> action;
     uint32_t lifetime_sec = 0;
@@ -896,13 +950,19 @@ FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(del
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
+FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
+FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_type,
+                (atomicswap_by_initiator)(atomicswap_by_participant))
+FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
+FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
+
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
             (proposal_id))
 
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
-            (committee_member)
+            (data)
             (action)
             (lifetime_sec))
 

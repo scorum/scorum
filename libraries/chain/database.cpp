@@ -17,6 +17,7 @@
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/budget_objects.hpp>
 #include <scorum/chain/registration_objects.hpp>
+#include <scorum/chain/atomicswap_objects.hpp>
 
 #include <scorum/chain/genesis_state.hpp>
 
@@ -34,6 +35,7 @@
 #include <scorum/chain/dbs_budget.hpp>
 #include <scorum/chain/dbs_reward.hpp>
 #include <scorum/chain/dbs_registration_pool.hpp>
+#include <scorum/chain/dbs_dynamic_global_property.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -50,6 +52,7 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/core/ignore_unused.hpp>
 
+#include <scorum/chain/dbs_atomicswap.hpp>
 namespace scorum {
 namespace chain {
 
@@ -1527,20 +1530,29 @@ uint32_t database::last_non_undoable_block_num() const
 void database::initialize_evaluators()
 {
     _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_witness_vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<atomicswap_initiate_evaluator>();
+    _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
+    _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
+    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<custom_binary_evaluator>();
     _my->_evaluator_registry.register_evaluator<custom_evaluator>();
     _my->_evaluator_registry.register_evaluator<custom_json_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
+    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
@@ -1562,14 +1574,15 @@ void database::initialize_evaluators()
         new proposal_create_evaluator(this->obtain_service<dbs_account>(),
                                       this->obtain_service<dbs_proposal>(),
                                       this->obtain_service<dbs_registration_committee>(),
+                                      this->obtain_service<dbs_dynamic_global_property>(),
                                       SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS,
-                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS,
-                                      SCORUM_COMMITTEE_QUORUM_PERCENT));
+                                      SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
         new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
                                     this->obtain_service<dbs_proposal>(),
-                                    this->obtain_service<dbs_registration_committee>()));
+                                    this->obtain_service<dbs_registration_committee>(),
+                                    this->obtain_service<dbs_dynamic_global_property>()));
     //clang-format on
 }
 
@@ -1621,7 +1634,8 @@ void database::initialize_indexes()
     add_index<witness_index>();
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
-
+    add_index<atomicswap_contract_index>();
+    
     _plugin_index_signal();
 }
 
@@ -1838,6 +1852,7 @@ void database::_apply_block(const signed_block& next_block)
         update_witness_schedule();
 
         process_funds();
+        obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
         process_comment_cashout();
         process_vesting_withdrawals();
@@ -2431,6 +2446,13 @@ void database::validate_invariants() const
         }
         total_supply += obtain_service<dbs_registration_pool>().get_pool().balance;
 
+        const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
+
+        for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
+        {
+            total_supply += itr->amount;
+        }
+
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
         FC_ASSERT(gpo.total_vesting_shares == total_vesting, "",
@@ -2567,6 +2589,7 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
 
 
 

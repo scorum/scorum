@@ -24,6 +24,8 @@
 #include <cfenv>
 #include <iostream>
 
+#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/dbs_atomicswap.hpp>
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace scorum {
@@ -63,6 +65,11 @@ public:
     // Budgets
     std::vector<budget_api_obj> get_budgets(const std::set<std::string>& names) const;
     std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
+
+    // Atomic Swap
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
+    atomicswap_contract_info_api_obj
+    get_atomicswap_contract(const std::string& from, const std::string& to, const std::string& secret_hash) const;
 
     // Witnesses
     std::vector<optional<witness_api_obj>> get_witnesses(const std::vector<witness_id_type>& witness_ids) const;
@@ -1039,6 +1046,58 @@ std::set<std::string> database_api_impl::lookup_budget_owners(const std::string&
     chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 
     return budget_service.lookup_budget_owners(lower_bound_name, limit);
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// Atomic Swap                                                      //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+std::vector<atomicswap_contract_api_obj> database_api::get_atomicswap_contracts(const std::string& owner) const
+{
+    return my->_db.with_read_lock([&]() { return my->get_atomicswap_contracts(owner); });
+}
+
+std::vector<atomicswap_contract_api_obj> database_api_impl::get_atomicswap_contracts(const std::string& owner) const
+{
+    std::vector<atomicswap_contract_api_obj> results;
+
+    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
+    const chain::account_object& owner_obj = account_service.get_account(owner);
+
+    chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
+
+    auto contracts = atomicswap_service.get_contracts(owner_obj);
+    for (const chain::atomicswap_contract_object& contract : contracts)
+    {
+        results.push_back(atomicswap_contract_api_obj(contract));
+    }
+
+    return results;
+}
+
+atomicswap_contract_info_api_obj database_api::get_atomicswap_contract(const std::string& from,
+                                                                       const std::string& to,
+                                                                       const std::string& secret_hash) const
+{
+    return my->_db.with_read_lock([&]() { return my->get_atomicswap_contract(from, to, secret_hash); });
+}
+
+atomicswap_contract_info_api_obj database_api_impl::get_atomicswap_contract(const std::string& from,
+                                                                            const std::string& to,
+                                                                            const std::string& secret_hash) const
+{
+    atomicswap_contract_info_api_obj result;
+
+    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
+    const chain::account_object& from_obj = account_service.get_account(from);
+    const chain::account_object& to_obj = account_service.get_account(to);
+
+    chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
+
+    const chain::atomicswap_contract_object& contract = atomicswap_service.get_contract(from_obj, to_obj, secret_hash);
+
+    return atomicswap_contract_info_api_obj(contract);
 }
 
 /**
