@@ -15,12 +15,12 @@ public:
     virtual int get_type() const = 0;
 };
 
-template <typename DataService, typename EvaluatorType, typename OperationType = scorum::protocol::operation>
+template <typename DataServices, typename EvaluatorType, typename OperationType = scorum::protocol::operation>
 class evaluator_impl : public evaluator<OperationType>
 {
 public:
-    evaluator_impl(DataService& d)
-        : _db(d)
+    evaluator_impl(DataServices& d)
+        : _services(d)
     {
     }
 
@@ -36,13 +36,13 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    DataService& db()
+    DataServices& db()
     {
-        return _db;
+        return _services;
     }
 
 protected:
-    DataService& _db;
+    DataServices& _services;
 };
 
 } // namespace scorum
