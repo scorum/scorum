@@ -1,8 +1,8 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/dbs_atomicswap.hpp>
-#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <sstream>
 

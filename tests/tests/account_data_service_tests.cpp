@@ -2,7 +2,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/account_object.hpp>
-#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include "database_fixture.hpp"
 

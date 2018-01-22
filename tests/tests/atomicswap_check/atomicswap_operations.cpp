@@ -6,8 +6,8 @@
 #include "database_fixture.hpp"
 
 #include <scorum/protocol/atomicswap_helper.hpp>
-#include <scorum/chain/dbs_atomicswap.hpp>
-#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <functional>
 #include <map>

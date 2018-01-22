@@ -24,24 +24,24 @@ add_library( scorum_chain
              fork_database.cpp
              database_witness_schedule.cpp
 
-             dbs_base_impl.cpp
-             dbs_account.cpp
-             dbs_reward.cpp
-             dbs_witness.cpp
-             dbs_budget.cpp
-             dbs_registration_pool.cpp
-             dbs_registration_committee.cpp
-             dbs_proposal.cpp
-             dbs_atomicswap.cpp
-             dbs_dynamic_global_property.cpp
-             dbs_comment.cpp
-             dbs_comment_vote.cpp
-             dbs_escrow.cpp
-             dbs_witness_vote.cpp
-             dbs_decline_voting_rights_request.cpp
-             dbs_withdraw_vesting_route.cpp
-             dbs_vesting_delegation.cpp
-             dbs_reward_fund.cpp
+             services/base_service.cpp
+             services/account.cpp
+             services/reward.cpp
+             services/witness.cpp
+             services/budget.cpp
+             services/registration_pool.cpp
+             services/registration_committee.cpp
+             services/proposal.cpp
+             services/atomicswap.cpp
+             services/dynamic_global_property.cpp
+             services/comment.cpp
+             services/comment_vote.cpp
+             services/escrow.cpp
+             services/witness_vote.cpp
+             services/decline_voting_rights_request.cpp
+             services/withdraw_vesting_route.cpp
+             services/vesting_delegation.cpp
+             services/reward_fund.cpp
 
              data_service_factory.cpp
 
@@ -49,7 +49,6 @@ add_library( scorum_chain
 
              proposal_create_evaluator.cpp
 
-             scorum_objects.cpp
              shared_authority.cpp
              block_log.cpp
 

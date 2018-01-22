@@ -3,8 +3,8 @@
 
 #include <scorum/chain/scorum_objects.hpp>
 
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_budget.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/budget.hpp>
 
 #include "database_fixture.hpp"
 

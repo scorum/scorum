@@ -7,9 +7,9 @@
 #include <scorum/chain/registration_objects.hpp>
 #include <scorum/chain/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
-#include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_proposal.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/proposal.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -24,8 +24,8 @@
 #include <cfenv>
 #include <iostream>
 
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_atomicswap.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace scorum {

@@ -8,21 +8,21 @@
 
 #include <scorum/chain/database.hpp> //remove after get_custom_json_evaluator, is_producing removing
 
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_witness.hpp>
-#include <scorum/chain/dbs_witness_vote.hpp>
-#include <scorum/chain/dbs_comment.hpp>
-#include <scorum/chain/dbs_comment_vote.hpp>
-#include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
-#include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_atomicswap.hpp>
-#include <scorum/chain/dbs_dynamic_global_property.hpp>
-#include <scorum/chain/dbs_escrow.hpp>
-#include <scorum/chain/dbs_decline_voting_rights_request.hpp>
-#include <scorum/chain/dbs_withdraw_vesting_route.hpp>
-#include <scorum/chain/dbs_vesting_delegation.hpp>
-#include <scorum/chain/dbs_reward_fund.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_vote.hpp>
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_vote.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/decline_voting_rights_request.hpp>
+#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/vesting_delegation.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -192,7 +192,7 @@ void account_create_by_committee_evaluator::do_apply(const account_create_by_com
     account_service.check_account_existence(o.creator);
 
     registration_committee_service_i& registration_committee_service = db().registration_committee_service();
-    FC_ASSERT(registration_committee_service.member_exists(o.creator), "Account '${1}' is not committee member.",
+    FC_ASSERT(registration_committee_service.is_exists(o.creator), "Account '${1}' is not committee member.",
               ("1", o.creator));
 
     registration_pool_service_i& registration_pool_service = db().registration_pool_service();

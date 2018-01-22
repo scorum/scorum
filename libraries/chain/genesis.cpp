@@ -1,10 +1,10 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/genesis_state.hpp>
-#include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_reward.hpp>
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
-#include <scorum/chain/dbs_registration_committee.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
 
 #include <scorum/chain/account_object.hpp>
 #include <scorum/chain/block_summary_object.hpp>

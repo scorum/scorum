@@ -5,9 +5,9 @@
 #include "database_fixture.hpp"
 #include "defines.hpp"
 
-#include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_proposal.hpp>
-#include <scorum/chain/dbs_dynamic_global_property.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include "actor.hpp"
 #include "genesis.hpp"
