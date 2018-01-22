@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/base_service.hpp>
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
 
 namespace scorum {
 namespace chain {

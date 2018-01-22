@@ -9,8 +9,8 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 #include <graphene/schema/schema.hpp>
 #include <graphene/schema/schema_impl.hpp>

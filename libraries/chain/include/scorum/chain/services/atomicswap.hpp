@@ -4,7 +4,7 @@
 #include <vector>
 #include <functional>
 
-#include <scorum/chain/atomicswap_objects.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
 
 namespace scorum {
 namespace chain {

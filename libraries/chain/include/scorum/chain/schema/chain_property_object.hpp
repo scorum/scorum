@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
 
 namespace scorum {
 namespace chain {

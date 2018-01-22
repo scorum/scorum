@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 
 namespace scorum {
 namespace chain {

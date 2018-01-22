@@ -5,7 +5,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
 
 #include "defines.hpp"
 

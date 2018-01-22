@@ -1,23 +1,23 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/block_summary_object.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/compound.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/db_with.hpp>
 #include <scorum/chain/evaluator_registry.hpp>
-#include <scorum/chain/global_property_object.hpp>
-#include <scorum/chain/chain_property_object.hpp>
-#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
+#include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/scorum_evaluator.hpp>
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/transaction_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/budget_objects.hpp>
-#include <scorum/chain/registration_objects.hpp>
-#include <scorum/chain/atomicswap_objects.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
 
 #include <scorum/chain/genesis_state.hpp>
 

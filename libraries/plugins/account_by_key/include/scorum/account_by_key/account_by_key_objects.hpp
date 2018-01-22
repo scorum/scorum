@@ -1,5 +1,5 @@
 #pragma once
-#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 

@@ -49,7 +49,7 @@ add_library( scorum_chain
 
              proposal_create_evaluator.cpp
 
-             shared_authority.cpp
+             schema/shared_authority.cpp
              block_log.cpp
 
              genesis.cpp

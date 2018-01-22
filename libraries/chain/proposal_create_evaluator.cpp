@@ -6,7 +6,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 namespace scorum {
 namespace chain {

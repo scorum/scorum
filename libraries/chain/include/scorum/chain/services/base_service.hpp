@@ -8,7 +8,7 @@
 #include <boost/config.hpp>
 #include <boost/type_index.hpp>
 
-#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/protocol/asset.hpp>
 
 namespace scorum {

@@ -1,4 +1,4 @@
-#include <scorum/chain/shared_authority.hpp>
+#include <scorum/chain/schema/shared_authority.hpp>
 
 namespace scorum {
 namespace chain {

@@ -5,8 +5,8 @@
 #include <set>
 #include <functional>
 
-#include <scorum/chain/registration_objects.hpp>
-#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 
 namespace scorum {
 namespace chain {

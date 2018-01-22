@@ -5,7 +5,7 @@
 #include <set>
 #include <functional>
 
-#include <scorum/chain/budget_objects.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
 
 namespace scorum {
 namespace chain {

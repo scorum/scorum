@@ -4,7 +4,7 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include <scorum/chain/evaluator.hpp>
 
@@ -13,7 +13,7 @@
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
 
 namespace scorum {
 namespace chain {

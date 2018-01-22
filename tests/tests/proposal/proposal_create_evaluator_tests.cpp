@@ -6,8 +6,8 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/proposal_create_evaluator.hpp>
-#include <scorum/chain/proposal_object.hpp>
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <scorum/chain/services/registration_committee.hpp>

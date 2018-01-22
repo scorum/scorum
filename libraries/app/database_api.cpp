@@ -4,8 +4,8 @@
 
 #include <scorum/protocol/get_config.hpp>
 
-#include <scorum/chain/registration_objects.hpp>
-#include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/registration_committee.hpp>

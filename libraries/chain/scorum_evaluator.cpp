@@ -1,8 +1,8 @@
 #include <scorum/chain/scorum_evaluator.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/witness_objects.hpp>
-#include <scorum/chain/block_summary_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
 
 #include <scorum/chain/util/reward.hpp>
 

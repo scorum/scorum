@@ -1,7 +1,7 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 #include "database_fixture.hpp"
 

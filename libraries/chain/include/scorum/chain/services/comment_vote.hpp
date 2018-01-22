@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 #include <functional>
 

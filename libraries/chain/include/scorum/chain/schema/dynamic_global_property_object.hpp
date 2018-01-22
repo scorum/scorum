@@ -1,7 +1,7 @@
 #pragma once
 #include <fc/uint128.hpp>
 
-#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <scorum/protocol/asset.hpp>
 

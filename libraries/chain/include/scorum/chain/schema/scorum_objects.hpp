@@ -3,9 +3,9 @@
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/scorum_object_types.hpp>
-#include <scorum/chain/comment_object.hpp>
-#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multiprecision/cpp_int.hpp>

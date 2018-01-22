@@ -6,10 +6,10 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/block_summary_object.hpp>
-#include <scorum/chain/chain_property_object.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <scorum/chain/pool/reward_pool.hpp>
 

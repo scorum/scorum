@@ -5,9 +5,9 @@
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/scorum_object_types.hpp>
-#include <scorum/chain/witness_objects.hpp>
-#include <scorum/chain/shared_authority.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/schema/shared_authority.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 

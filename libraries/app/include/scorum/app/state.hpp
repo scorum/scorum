@@ -2,9 +2,9 @@
 #include <scorum/app/applied_operation.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
-#include <scorum/chain/global_property_object.hpp>
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 namespace scorum {
 namespace app {

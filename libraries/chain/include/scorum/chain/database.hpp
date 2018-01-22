@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/node_property_object.hpp>
 #include <scorum/chain/fork_database.hpp>

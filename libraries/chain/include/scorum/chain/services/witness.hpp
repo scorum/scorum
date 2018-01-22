@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 namespace scorum {
 namespace chain {

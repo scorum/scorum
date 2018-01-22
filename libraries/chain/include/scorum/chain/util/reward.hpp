@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/chain/util/asset.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/config.hpp>
