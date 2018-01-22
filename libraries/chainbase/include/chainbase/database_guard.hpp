@@ -50,8 +50,6 @@ protected:
     int32_t _write_lock_count = 0;
     bool _enable_require_locking = false;
 
-    bool _read_only = false;
-
 public:
     virtual ~database_guard();
 
@@ -90,8 +88,8 @@ public:
     template <typename Lambda>
     auto with_write_lock(Lambda&& callback, uint64_t wait_micro = 1000000) -> decltype((*(Lambda*)nullptr)())
     {
-        if (_read_only)
-            BOOST_THROW_EXCEPTION(std::logic_error("cannot acquire write lock on read-only process"));
+        // if (_read_only)
+        //    BOOST_THROW_EXCEPTION(std::logic_error("cannot acquire write lock on read-only process"));
 
         FC_ASSERT(_rw_manager);
 

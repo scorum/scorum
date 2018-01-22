@@ -2,10 +2,11 @@
 
 #include <chainbase/abstract_interfaces.hpp>
 #include <chainbase/database_index.hpp>
+#include <chainbase/segment_manager.hpp>
 
 namespace chainbase {
 
-class undo_db_state : public database_index
+class undo_db_state : public database_index<segment_manager>
 {
 public:
     template <typename Lambda> void for_each_index(Lambda&& functor)

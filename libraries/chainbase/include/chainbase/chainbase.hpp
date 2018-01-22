@@ -17,6 +17,10 @@ class database : public undo_db_state
 
     std::unique_ptr<bip::managed_mapped_file> _meta;
 
+private:
+    void check_dir_existance(const bfs::path& dir, bool read_only);
+    void create_meta_file(const bfs::path& file);
+
 public:
     virtual ~database();
 
@@ -29,7 +33,7 @@ public:
     void open(const bfs::path& dir, uint32_t write = read_only, uint64_t shared_file_size = 0);
     void close();
     void flush();
-    void wipe(const bfs::path& dir);
+    void wipe();
 };
 
 } // namespace chainbase

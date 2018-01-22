@@ -196,7 +196,7 @@ void database::reindex(const fc::path& data_dir,
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
 {
     close();
-    chainbase::database::wipe(shared_mem_dir);
+    chainbase::database::wipe();
     if (include_blocks)
     {
         fc::remove_all(data_dir / "block_log");
@@ -2567,6 +2567,7 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
 
 
 

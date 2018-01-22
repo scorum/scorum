@@ -8,34 +8,10 @@
 
 namespace chainbase {
 
-/** this class is meant to be specified to enable lookup of index type by object type using
-* the SET_INDEX_TYPE macro.
-**/
-template <typename T> struct get_index_type
-{
-};
-
-/**
-*  This macro must be used at global scope and OBJECT_TYPE and INDEX_TYPE must be fully qualified
-*/
-#define CHAINBASE_SET_INDEX_TYPE(OBJECT_TYPE, INDEX_TYPE)                                                              \
-    namespace chainbase {                                                                                              \
-    template <> struct get_index_type<OBJECT_TYPE>                                                                     \
-    {                                                                                                                  \
-        typedef INDEX_TYPE type;                                                                                       \
-    };                                                                                                                 \
-    }
-
-#define CHAINBASE_DEFAULT_CONSTRUCTOR(OBJECT_TYPE)                                                                     \
-    template <typename Constructor, typename Allocator> OBJECT_TYPE(Constructor&& c, Allocator&&)                      \
-    {                                                                                                                  \
-        c(*this);                                                                                                      \
-    }
-
 /**
 *  This class
 */
-class database_index : public database_guard
+template <typename segment_manager> class database_index : public segment_manager, public database_guard
 {
 protected:
     database_index()
@@ -43,43 +19,19 @@ protected:
     }
 
 public:
-    auto get_segment_manager() -> decltype(((bip::managed_mapped_file*)nullptr)->get_segment_manager())
-    {
-        return _segment->get_segment_manager();
-    }
-
-    size_t get_free_memory() const
-    {
-        return _segment->get_segment_manager()->get_free_memory();
-    }
-
     template <typename MultiIndexType> const generic_index<MultiIndexType>& add_index()
     {
         typedef generic_index<MultiIndexType> index_type;
-        typedef typename index_type::allocator_type index_alloc;
 
         const uint16_t type_id = index_type::value_type::type_id;
 
-        std::string type_name = boost::core::demangle(typeid(typename index_type::value_type).name());
-
         if (_index_map.find(type_id) != _index_map.end())
         {
+            std::string type_name = boost::core::demangle(typeid(typename index_type::value_type).name());
             BOOST_THROW_EXCEPTION(std::logic_error(type_name + "::type_id is already in use"));
         }
 
-        // clang-format off
-        index_type* idx_ptr = nullptr;
-        if (!_read_only)
-        {
-            idx_ptr = _segment->find_or_construct<index_type>(type_name.c_str())(index_alloc(_segment->get_segment_manager()));
-        }
-        else
-        {
-            idx_ptr = _segment->find<index_type>(type_name.c_str()).first;
-            if (!idx_ptr)
-                BOOST_THROW_EXCEPTION(std::runtime_error("unable to find index for " + type_name + " in read only database"));
-        }
-        // clang-format on
+        index_type* idx_ptr = this->template allocate_index<MultiIndexType>();
 
         idx_ptr->validate();
 
@@ -207,8 +159,6 @@ public:
     }
 
 protected:
-    std::unique_ptr<bip::managed_mapped_file> _segment;
-
     /**
     * This is a full map (size 2^16) of all possible index designed for constant time lookup
     */

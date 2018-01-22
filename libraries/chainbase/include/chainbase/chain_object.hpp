@@ -48,6 +48,12 @@ namespace chainbase {
         static const uint16_t type_id = TypeNumber;
     };
 
+#define CHAINBASE_DEFAULT_CONSTRUCTOR(OBJECT_TYPE)                                                                     \
+    template <typename Constructor, typename Allocator> OBJECT_TYPE(Constructor&& c, Allocator&&)                      \
+    {                                                                                                                  \
+        c(*this);                                                                                                      \
+    }
+
 } // namespace chainbase
 
 namespace fc {
