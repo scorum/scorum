@@ -41,7 +41,7 @@ public:
         return _services;
     }
 
-protected:
+private:
     DataServices& _services;
 };
 
