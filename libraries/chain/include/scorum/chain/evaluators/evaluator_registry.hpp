@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/evaluators/evaluator.hpp>
 
 namespace scorum {
 namespace chain {

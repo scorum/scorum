@@ -11,7 +11,7 @@
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 
-#include <scorum/chain/pool/reward_pool.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
 
 #include <scorum/chain/genesis.hpp>
 

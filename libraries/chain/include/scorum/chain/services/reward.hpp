@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/pool/reward_pool.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
 
 namespace scorum {
 namespace chain {

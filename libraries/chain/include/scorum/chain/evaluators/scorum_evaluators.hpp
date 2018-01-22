@@ -2,7 +2,7 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/evaluators/evaluator.hpp>
 
 namespace scorum {
 namespace chain {

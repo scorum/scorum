@@ -1,7 +1,7 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/pool/reward_pool.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/protocol/config.hpp>

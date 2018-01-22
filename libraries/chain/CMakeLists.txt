@@ -1,6 +1,8 @@
 file(GLOB HEADERS "include/scorum/chain/*.hpp"
-                  "include/scorum/chain/util/*.hpp"
-                  "include/scorum/chain/pool/*.hpp")
+                  "include/scorum/chain/evaluators/*.hpp"
+                  "include/scorum/chain/schema/*.hpp"
+                  "include/scorum/chain/services/*.hpp"
+                  "include/scorum/chain/util/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -45,9 +47,8 @@ add_library( scorum_chain
 
              data_service_factory.cpp
 
-             scorum_evaluator.cpp
-
-             proposal_create_evaluator.cpp
+             evaluators/scorum_evaluators.cpp
+             evaluators/proposal_create_evaluator.cpp
 
              schema/shared_authority.cpp
              block_log.cpp

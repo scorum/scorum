@@ -6,11 +6,11 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/db_with.hpp>
-#include <scorum/chain/evaluator_registry.hpp>
+#include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
-#include <scorum/chain/scorum_evaluator.hpp>
+#include <scorum/chain/evaluators/scorum_evaluators.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
@@ -25,10 +25,10 @@
 #include <scorum/chain/util/reward.hpp>
 #include <scorum/chain/util/uint256.hpp>
 
-#include <scorum/chain/pool/reward_pool.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
 
-#include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_create_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>

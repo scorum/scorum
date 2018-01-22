@@ -6,7 +6,7 @@
 
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
-#include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/evaluators/evaluator.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/proposal.hpp>
