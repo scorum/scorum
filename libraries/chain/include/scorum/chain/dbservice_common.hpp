@@ -6,7 +6,7 @@
 namespace scorum {
 namespace chain {
 
-class dbservice;
+class dbservice_dbs_factory;
 class database;
 
 using scorum::protocol::authority;

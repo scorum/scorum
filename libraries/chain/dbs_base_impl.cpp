@@ -15,9 +15,9 @@ dbs_base::~dbs_base()
 {
 }
 
-dbservice& dbs_base::db()
+dbservice_dbs_factory& dbs_base::db()
 {
-    return static_cast<dbservice&>(_db_core);
+    return static_cast<dbservice_dbs_factory&>(_db_core);
 }
 
 fc::time_point_sec dbs_base::head_block_time()
@@ -35,7 +35,7 @@ const database& dbs_base::db_impl() const
     return _db_core;
 }
 
-// dbservice
+// dbservice_dbs_factory
 
 dbservice_dbs_factory::dbservice_dbs_factory(database& db)
     : _db_core(db)

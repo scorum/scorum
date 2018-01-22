@@ -13,7 +13,7 @@
 namespace scorum {
 namespace chain {
 
-class dbservice;
+class dbservice_dbs_factory;
 class database;
 
 struct dbs_base
@@ -29,7 +29,7 @@ protected:
 public:
     virtual ~dbs_base();
 
-    dbservice& db();
+    dbservice_dbs_factory& db();
 
     time_point_sec head_block_time();
 

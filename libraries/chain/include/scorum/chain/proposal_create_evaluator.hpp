@@ -3,7 +3,6 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/evaluator.hpp>
-#include <scorum/chain/dbservice.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_proposal.hpp>

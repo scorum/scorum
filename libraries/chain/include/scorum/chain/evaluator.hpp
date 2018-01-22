@@ -6,7 +6,7 @@ namespace scorum {
 namespace chain {
 
 class data_service_factory_i;
-class dbservice;
+class database;
 
 template <typename OperationType = scorum::protocol::operation> class evaluator
 {
@@ -63,13 +63,13 @@ protected:
     };
 
 #define DEFINE_EVALUATOR_DEPRECATED(X)                                                                                 \
-    class X##_evaluator : public scorum::chain::evaluator_impl<dbservice, X##_evaluator>                               \
+    class X##_evaluator : public scorum::chain::evaluator_impl<database, X##_evaluator>                                \
     {                                                                                                                  \
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
-        X##_evaluator(dbservice& db)                                                                                   \
-            : scorum::chain::evaluator_impl<dbservice, X##_evaluator>(db)                                              \
+        X##_evaluator(database& db)                                                                                    \
+            : scorum::chain::evaluator_impl<database, X##_evaluator>(db)                                               \
         {                                                                                                              \
         }                                                                                                              \
                                                                                                                        \
