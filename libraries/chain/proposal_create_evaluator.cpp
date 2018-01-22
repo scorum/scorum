@@ -13,10 +13,10 @@ namespace chain {
 
 proposal_create_evaluator::proposal_create_evaluator(data_service_factory_i& services)
     : evaluator_impl<data_service_factory_i, proposal_create_evaluator>(services)
-    , _account_service(_db.account_service())
-    , _proposal_service(_db.proposal_service())
-    , _committee_service(_db.registration_committee_service())
-    , _property_service(_db.dynamic_global_property_service())
+    , _account_service(db().account_service())
+    , _proposal_service(db().proposal_service())
+    , _committee_service(db().registration_committee_service())
+    , _property_service(db().dynamic_global_property_service())
 {
 }
 
