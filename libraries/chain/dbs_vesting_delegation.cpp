@@ -1,8 +1,6 @@
 #include <scorum/chain/dbs_vesting_delegation.hpp>
 #include <scorum/chain/database.hpp>
 
-#include <scorum/chain/account_object.hpp>
-
 #include <tuple>
 
 using namespace scorum::protocol;

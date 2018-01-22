@@ -94,7 +94,7 @@ void private_message_evaluator::do_apply(const private_message_operation& pm)
         || (to_itr != tracked_accounts.end() && pm.to >= to_itr->first && pm.to <= to_itr->second)
         || (from_itr != tracked_accounts.end() && pm.from >= from_itr->first && pm.from <= from_itr->second))
     {
-        _db._temporary_public_impl().create<message_object>([&](message_object& pmo) {
+        _db.create<message_object>([&](message_object& pmo) {
             pmo.from = pm.from;
             pmo.to = pm.to;
             pmo.from_memo_key = pm.from_memo_key;

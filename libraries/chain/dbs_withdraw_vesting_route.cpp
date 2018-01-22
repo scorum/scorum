@@ -1,7 +1,6 @@
 #include <scorum/chain/dbs_withdraw_vesting_route.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/scorum_objects.hpp>
 
 namespace scorum {
 namespace chain {

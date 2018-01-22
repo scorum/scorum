@@ -12,11 +12,5 @@ dbservice::dbservice(database& db)
 dbservice::~dbservice()
 {
 }
-
-// for TODO only:
-chainbase::database& dbservice::_temporary_public_impl()
-{
-    return dynamic_cast<chainbase::database&>(*this);
-}
 }
 }

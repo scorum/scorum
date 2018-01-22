@@ -2,6 +2,8 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 
+#include <scorum/chain/pool/reward_pool.hpp>
+
 namespace scorum {
 namespace chain {
 

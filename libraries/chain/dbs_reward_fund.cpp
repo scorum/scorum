@@ -1,6 +1,5 @@
 #include <scorum/chain/dbs_reward_fund.hpp>
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/scorum_objects.hpp>
 
 namespace scorum {
 namespace chain {

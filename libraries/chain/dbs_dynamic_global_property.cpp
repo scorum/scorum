@@ -1,6 +1,5 @@
 #include <scorum/chain/dbs_dynamic_global_property.hpp>
 
-#include <scorum/chain/global_property_object.hpp>
 #include <scorum/chain/database.hpp>
 
 namespace scorum {

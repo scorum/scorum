@@ -6,7 +6,8 @@
 
 #include <scorum/chain/util/reward.hpp>
 
-#include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
+#include <scorum/chain/database.hpp> //replace to dbservice after get_custom_json_evaluator, is_producing remove
+
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_witness_vote.hpp>
