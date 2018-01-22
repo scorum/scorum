@@ -6,7 +6,7 @@ namespace scorum {
 namespace chain {
 
 class data_service_factory_i;
-class dbservice;
+class database;
 
 template <typename OperationType = scorum::protocol::operation> class evaluator
 {
@@ -15,12 +15,12 @@ public:
     virtual int get_type() const = 0;
 };
 
-template <typename DataService, typename EvaluatorType, typename OperationType = scorum::protocol::operation>
+template <typename DataServices, typename EvaluatorType, typename OperationType = scorum::protocol::operation>
 class evaluator_impl : public evaluator<OperationType>
 {
 public:
-    evaluator_impl(DataService& d)
-        : _db(d)
+    evaluator_impl(DataServices& d)
+        : _services(d)
     {
     }
 
@@ -36,13 +36,13 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    DataService& db()
+    DataServices& db()
     {
-        return _db;
+        return _services;
     }
 
-protected:
-    DataService& _db;
+private:
+    DataServices& _services;
 };
 
 } // namespace scorum
@@ -63,13 +63,13 @@ protected:
     };
 
 #define DEFINE_EVALUATOR_DEPRECATED(X)                                                                                 \
-    class X##_evaluator : public scorum::chain::evaluator_impl<dbservice, X##_evaluator>                               \
+    class X##_evaluator : public scorum::chain::evaluator_impl<database, X##_evaluator>                                \
     {                                                                                                                  \
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
-        X##_evaluator(dbservice& db)                                                                                   \
-            : scorum::chain::evaluator_impl<dbservice, X##_evaluator>(db)                                              \
+        X##_evaluator(database& db)                                                                                    \
+            : scorum::chain::evaluator_impl<database, X##_evaluator>(db)                                               \
         {                                                                                                              \
         }                                                                                                              \
                                                                                                                        \

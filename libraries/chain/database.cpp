@@ -74,7 +74,7 @@ database_impl::database_impl(database& self)
 
 database::database()
     : chainbase::database()
-    , dbservice(*this)
+    , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
     , _my(new database_impl(*this))
 {

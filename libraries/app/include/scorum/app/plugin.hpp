@@ -161,22 +161,14 @@ template <typename T> T dejsonify(const std::string& s)
     }                                                                                                                  \
     }
 
-namespace scorum {
-namespace chain {
-
-class dbservice;
-
-} // namespace scorum
-} // namespace chain
-
 #define DEFINE_PLUGIN_EVALUATOR(PLUGIN, OPERATION, X)                                                                  \
-    class X##_evaluator : public scorum::chain::evaluator_impl<scorum::chain::dbservice, X##_evaluator, OPERATION>     \
+    class X##_evaluator : public scorum::chain::evaluator_impl<scorum::chain::database, X##_evaluator, OPERATION>      \
     {                                                                                                                  \
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
         X##_evaluator(database& db, PLUGIN* plugin)                                                                    \
-            : scorum::chain::evaluator_impl<scorum::chain::dbservice, X##_evaluator, OPERATION>(db)                    \
+            : scorum::chain::evaluator_impl<scorum::chain::database, X##_evaluator, OPERATION>(db)                     \
             , _plugin(plugin)                                                                                          \
         {                                                                                                              \
         }                                                                                                              \

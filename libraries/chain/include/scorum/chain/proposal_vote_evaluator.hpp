@@ -7,7 +7,6 @@
 #include <scorum/chain/global_property_object.hpp>
 
 #include <scorum/chain/evaluator.hpp>
-#include <scorum/chain/dbservice.hpp>
 
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_proposal.hpp>

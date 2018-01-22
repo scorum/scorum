@@ -3,6 +3,7 @@
 #include <scorum/chain/dbs_base_impl.hpp>
 
 #include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/scorum_objects.hpp>
 
 namespace scorum {
 namespace chain {

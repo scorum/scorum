@@ -1,7 +1,6 @@
 #include <scorum/chain/dbs_witness_vote.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/witness_objects.hpp>
 
 namespace scorum {
 namespace chain {

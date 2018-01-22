@@ -6,7 +6,8 @@
 
 #include <scorum/chain/util/reward.hpp>
 
-#include <scorum/chain/database.hpp> //replace to dbservice after _temporary_public_impl remove
+#include <scorum/chain/database.hpp> //remove after get_custom_json_evaluator, is_producing removing
+
 #include <scorum/chain/dbs_account.hpp>
 #include <scorum/chain/dbs_witness.hpp>
 #include <scorum/chain/dbs_witness_vote.hpp>
@@ -76,8 +77,8 @@ struct strcmp_equal
 
 void witness_update_evaluator::do_apply(const witness_update_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
 
     account_service.check_account_existence(o.owner);
 
@@ -97,8 +98,8 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
 
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -130,9 +131,9 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& props = dprops_service.get_dynamic_global_properties();
 
@@ -186,15 +187,15 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
 void account_create_by_committee_evaluator::do_apply(const account_create_by_committee_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     account_service.check_account_existence(o.creator);
 
-    registration_committee_service_i& registration_committee_service = _db.registration_committee_service();
+    registration_committee_service_i& registration_committee_service = db().registration_committee_service();
     FC_ASSERT(registration_committee_service.member_exists(o.creator), "Account '${1}' is not committee member.",
               ("1", o.creator));
 
-    registration_pool_service_i& registration_pool_service = _db.registration_pool_service();
+    registration_pool_service_i& registration_pool_service = db().registration_pool_service();
 
     asset bonus = registration_pool_service.allocate_cash(o.creator);
 
@@ -213,7 +214,7 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     if (o.posting)
         o.posting->validate();
 
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     const auto& account = account_service.get_account(o.account);
     const auto& account_auth = account_service.get_account_authority(o.account);
@@ -221,7 +222,7 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
     if (o.owner)
     {
 #ifndef IS_TEST_NET
-        dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+        dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
         FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
@@ -249,10 +250,10 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
  */
 void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    comment_service_i& comment_service = _db.comment_service();
-    comment_vote_service_i& comment_vote_service = _db.comment_vote_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    comment_service_i& comment_service = db().comment_service();
+    comment_vote_service_i& comment_vote_service = db().comment_vote_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& auth = account_service.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
@@ -327,8 +328,8 @@ struct comment_options_extension_visitor
 
 void comment_options_evaluator::do_apply(const comment_options_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    comment_service_i& comment_service = _db.comment_service();
+    account_service_i& account_service = db().account_service();
+    comment_service_i& comment_service = db().comment_service();
 
     const auto& auth = account_service.get_account(o.author);
     FC_ASSERT(!(auth.owner_challenged || auth.active_challenged),
@@ -353,15 +354,15 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
 
     for (auto& e : o.extensions)
     {
-        e.visit(comment_options_extension_visitor(comment, _db));
+        e.visit(comment_options_extension_visitor(comment, db()));
     }
 }
 
 void comment_evaluator::do_apply(const comment_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    comment_service_i& comment_service = _db.comment_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    comment_service_i& comment_service = db().comment_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     try
     {
@@ -559,9 +560,9 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
 void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
-    escrow_service_i& escrow_service = _db.escrow_service();
+    account_service_i& account_service = db().account_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+    escrow_service_i& escrow_service = db().escrow_service();
 
     try
     {
@@ -593,9 +594,9 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 
 void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
-    escrow_service_i& escrow_service = _db.escrow_service();
+    account_service_i& account_service = db().account_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+    escrow_service_i& escrow_service = db().escrow_service();
 
     try
     {
@@ -652,9 +653,9 @@ void escrow_approve_evaluator::do_apply(const escrow_approve_operation& o)
 
 void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
-    escrow_service_i& escrow_service = _db.escrow_service();
+    account_service_i& account_service = db().account_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+    escrow_service_i& escrow_service = db().escrow_service();
 
     try
     {
@@ -677,9 +678,9 @@ void escrow_dispute_evaluator::do_apply(const escrow_dispute_operation& o)
 
 void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
-    escrow_service_i& escrow_service = _db.escrow_service();
+    account_service_i& account_service = db().account_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+    escrow_service_i& escrow_service = db().escrow_service();
 
     try
     {
@@ -739,7 +740,7 @@ void escrow_release_evaluator::do_apply(const escrow_release_operation& o)
 
 void transfer_evaluator::do_apply(const transfer_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     const auto& from_account = account_service.get_account(o.from);
     const auto& to_account = account_service.get_account(o.to);
@@ -754,7 +755,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
 
 void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     const auto& from_account = account_service.get_account(o.from);
     const auto& to_account = o.to.size() ? account_service.get_account(o.to) : from_account;
@@ -767,9 +768,9 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
 
 void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& account = account_service.get_account(o.account);
 
@@ -822,8 +823,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
 void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_route_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    withdraw_vesting_route_service_i& withdraw_route_service = _db.withdraw_vesting_route_service();
+    account_service_i& account_service = db().account_service();
+    withdraw_vesting_route_service_i& withdraw_route_service = db().withdraw_vesting_route_service();
 
     try
     {
@@ -864,7 +865,7 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
 
 void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     const auto& account = account_service.get_account(o.account);
     FC_ASSERT(account.proxy != o.proxy, "Proxy must change.");
@@ -881,9 +882,9 @@ void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_opera
 
 void account_witness_vote_evaluator::do_apply(const account_witness_vote_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
-    witness_vote_service_i& witness_vote_service = _db.witness_vote_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
+    witness_vote_service_i& witness_vote_service = db().witness_vote_service();
 
     const auto& voter = account_service.get_account(o.account);
     FC_ASSERT(voter.proxy.size() == 0, "A proxy is currently set, please clear the proxy before voting for a witness.");
@@ -921,10 +922,10 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 
 void vote_evaluator::do_apply(const vote_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    comment_service_i& comment_service = _db.comment_service();
-    comment_vote_service_i& comment_vote_service = _db.comment_vote_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    comment_service_i& comment_service = db().comment_service();
+    comment_vote_service_i& comment_vote_service = db().comment_vote_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     try
     {
@@ -1075,7 +1076,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = _db.reward_fund_service().get_reward_fund();
+                    const auto& reward_fund = db().reward_fund_service().get_reward_fund();
                     auto curve = reward_fund.curation_reward_curve;
                     uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
                     uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
@@ -1180,7 +1181,7 @@ void custom_evaluator::do_apply(const custom_operation&)
 
 void custom_json_evaluator::do_apply(const custom_json_operation& o)
 {
-    std::shared_ptr<custom_operation_interpreter> eval = _db.get_custom_json_evaluator(o.id);
+    std::shared_ptr<custom_operation_interpreter> eval = db().get_custom_json_evaluator(o.id);
     if (!eval)
         return;
 
@@ -1190,7 +1191,7 @@ void custom_json_evaluator::do_apply(const custom_json_operation& o)
     }
     catch (const fc::exception& e)
     {
-        if (_db.is_producing())
+        if (db().is_producing())
             throw e;
     }
     catch (...)
@@ -1201,7 +1202,7 @@ void custom_json_evaluator::do_apply(const custom_json_operation& o)
 
 void custom_binary_evaluator::do_apply(const custom_binary_operation& o)
 {
-    std::shared_ptr<custom_operation_interpreter> eval = _db.get_custom_json_evaluator(o.id);
+    std::shared_ptr<custom_operation_interpreter> eval = db().get_custom_json_evaluator(o.id);
     if (!eval)
         return;
 
@@ -1211,7 +1212,7 @@ void custom_binary_evaluator::do_apply(const custom_binary_operation& o)
     }
     catch (const fc::exception& e)
     {
-        if (_db.is_producing())
+        if (db().is_producing())
             throw e;
     }
     catch (...)
@@ -1222,7 +1223,7 @@ void custom_binary_evaluator::do_apply(const custom_binary_operation& o)
 
 void prove_authority_evaluator::do_apply(const prove_authority_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     const auto& challenged = account_service.get_account(o.challenged);
     FC_ASSERT(challenged.owner_challenged || challenged.active_challenged,
@@ -1233,8 +1234,8 @@ void prove_authority_evaluator::do_apply(const prove_authority_operation& o)
 
 void request_account_recovery_evaluator::do_apply(const request_account_recovery_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
 
     const auto& account_to_recover = account_service.get_account(o.account_to_recover);
 
@@ -1250,8 +1251,8 @@ void request_account_recovery_evaluator::do_apply(const request_account_recovery
 
 void recover_account_evaluator::do_apply(const recover_account_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& account_to_recover = account_service.get_account(o.account_to_recover);
 
@@ -1263,7 +1264,7 @@ void recover_account_evaluator::do_apply(const recover_account_operation& o)
 
 void change_recovery_account_evaluator::do_apply(const change_recovery_account_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
+    account_service_i& account_service = db().account_service();
 
     account_service.check_account_existence(o.new_recovery_account); // Simply validate account exists
     const auto& account_to_recover = account_service.get_account(o.account_to_recover);
@@ -1273,8 +1274,8 @@ void change_recovery_account_evaluator::do_apply(const change_recovery_account_o
 
 void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_operation& o)
 {
-    account_service_i& account_service = _db.account_service();
-    decline_voting_rights_request_service_i& dvrr_service = _db.decline_voting_rights_request_service();
+    account_service_i& account_service = db().account_service();
+    decline_voting_rights_request_service_i& dvrr_service = db().decline_voting_rights_request_service();
 
     const auto& account = account_service.get_account(o.account);
 
@@ -1294,10 +1295,10 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
 {
-    account_service_i& account_service = _db.account_service();
-    witness_service_i& witness_service = _db.witness_service();
-    vesting_delegation_service_i& vd_service = _db.vesting_delegation_service();
-    dynamic_global_property_service_i& dprops_service = _db.dynamic_global_property_service();
+    account_service_i& account_service = db().account_service();
+    witness_service_i& witness_service = db().witness_service();
+    vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
@@ -1382,8 +1383,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
 
 void create_budget_evaluator::do_apply(const create_budget_operation& op)
 {
-    budget_service_i& budget_service = _db.budget_service();
-    account_service_i& account_service = _db.account_service();
+    budget_service_i& budget_service = db().budget_service();
+    account_service_i& account_service = db().account_service();
 
     account_service.check_account_existence(op.owner);
 
@@ -1400,7 +1401,7 @@ void create_budget_evaluator::do_apply(const create_budget_operation& op)
 
 void close_budget_evaluator::do_apply(const close_budget_operation& op)
 {
-    budget_service_i& budget_service = _db.budget_service();
+    budget_service_i& budget_service = db().budget_service();
 
     const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
 
@@ -1409,8 +1410,8 @@ void close_budget_evaluator::do_apply(const close_budget_operation& op)
 
 void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation& op)
 {
-    atomicswap_service_i& atomicswap_service = _db.atomicswap_service();
-    account_service_i& account_service = _db.account_service();
+    atomicswap_service_i& atomicswap_service = db().atomicswap_service();
+    account_service_i& account_service = db().account_service();
 
     account_service.check_account_existence(op.owner);
     account_service.check_account_existence(op.recipient);
@@ -1441,8 +1442,8 @@ void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation
 
 void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op)
 {
-    atomicswap_service_i& atomicswap_service = _db.atomicswap_service();
-    account_service_i& account_service = _db.account_service();
+    atomicswap_service_i& atomicswap_service = db().atomicswap_service();
+    account_service_i& account_service = db().account_service();
 
     account_service.check_account_existence(op.from);
     account_service.check_account_existence(op.to);
@@ -1459,8 +1460,8 @@ void atomicswap_redeem_evaluator::do_apply(const atomicswap_redeem_operation& op
 
 void atomicswap_refund_evaluator::do_apply(const atomicswap_refund_operation& op)
 {
-    atomicswap_service_i& atomicswap_service = _db.atomicswap_service();
-    account_service_i& account_service = _db.account_service();
+    atomicswap_service_i& atomicswap_service = db().atomicswap_service();
+    account_service_i& account_service = db().account_service();
 
     account_service.check_account_existence(op.participant);
     account_service.check_account_existence(op.initiator);

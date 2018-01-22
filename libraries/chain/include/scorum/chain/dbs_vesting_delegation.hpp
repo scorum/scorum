@@ -2,6 +2,8 @@
 
 #include <scorum/chain/dbs_base_impl.hpp>
 
+#include <scorum/chain/account_object.hpp>
+
 namespace scorum {
 namespace chain {
 
