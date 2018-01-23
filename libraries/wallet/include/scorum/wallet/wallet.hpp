@@ -1211,6 +1211,7 @@ FC_API( scorum::wallet::wallet_api,
         (create_account_with_keys)
         (create_account_delegated)
         (create_account_with_keys_delegated)
+        (create_account_by_committee)
         (update_account)
         (update_account_auth_key)
         (update_account_auth_account)
