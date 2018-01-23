@@ -216,7 +216,14 @@ void database::close()
         // DB state (issue #336).
         clear_pending();
 
-        chainbase::database::flush();
+        try
+        {
+            chainbase::database::flush();
+        }
+        catch (...)
+        {
+        }
+
         chainbase::database::close();
 
         _block_log.close();
@@ -2589,6 +2596,7 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
 
 
 
