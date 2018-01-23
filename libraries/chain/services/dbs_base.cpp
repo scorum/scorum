@@ -1,5 +1,4 @@
-#include <scorum/chain/services/base_service.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/services/dbs_base.hpp>
 
 namespace scorum {
 namespace chain {
@@ -33,17 +32,6 @@ database& dbs_base::db_impl()
 const database& dbs_base::db_impl() const
 {
     return _db_core;
-}
-
-// dbservice_dbs_factory
-
-dbservice_dbs_factory::dbservice_dbs_factory(database& db)
-    : _db_core(db)
-{
-}
-
-dbservice_dbs_factory::~dbservice_dbs_factory()
-{
 }
 }
 }

@@ -26,7 +26,8 @@ add_library( scorum_chain
              fork_database.cpp
              database_witness_schedule.cpp
 
-             services/base_service.cpp
+             services/dbs_base.cpp
+             services/dbservice_dbs_factory.cpp
              services/account.cpp
              services/reward.cpp
              services/witness.cpp

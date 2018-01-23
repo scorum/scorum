@@ -12,7 +12,7 @@
 
 #include <scorum/protocol/protocol.hpp>
 
-#include <scorum/chain/services/base_service.hpp>
+#include <scorum/chain/services/dbservice_dbs_factory.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <fc/signals.hpp>

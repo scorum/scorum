@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/chain/services/base_service.hpp>
+#include <scorum/chain/services/dbs_base.hpp>
 
 #include <functional>
 
