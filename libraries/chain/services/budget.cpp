@@ -1,7 +1,9 @@
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/services/account.hpp>
+
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
 
 #include <tuple>
 

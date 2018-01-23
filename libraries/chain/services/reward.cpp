@@ -1,6 +1,8 @@
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/database.hpp>
 
+#include <scorum/chain/schema/reward_pool_object.hpp>
+
 namespace scorum {
 namespace chain {
 

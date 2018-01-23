@@ -2,10 +2,10 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/schema/dynamic_global_property_object.hpp>
-
 namespace scorum {
 namespace chain {
+
+class dynamic_global_property_object;
 
 struct dynamic_global_property_service_i
 {

@@ -6,6 +6,8 @@
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/protocol/config.hpp>
 
+#include <scorum/chain/schema/budget_object.hpp>
+
 #include "../common/database_fixture.hpp"
 
 #include <limits>

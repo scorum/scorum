@@ -1,13 +1,15 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/schema/scorum_objects.hpp>
-
 #include "database_fixture.hpp"
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/account.hpp>
+
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
 
 #include <functional>
 #include <map>

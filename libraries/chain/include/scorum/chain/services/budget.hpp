@@ -1,14 +1,15 @@
 #pragma once
 
 #include <scorum/chain/services/base_service.hpp>
+
+#include <functional>
 #include <vector>
 #include <set>
-#include <functional>
-
-#include <scorum/chain/schema/budget_object.hpp>
 
 namespace scorum {
 namespace chain {
+
+class budget_object;
 
 struct budget_service_i
 {

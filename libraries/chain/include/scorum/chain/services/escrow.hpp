@@ -2,8 +2,6 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/schema/scorum_objects.hpp>
-
 #include <functional>
 
 namespace scorum {

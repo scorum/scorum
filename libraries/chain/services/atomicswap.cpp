@@ -1,7 +1,10 @@
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/services/account.hpp>
+
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
+
 #include <scorum/protocol/atomicswap_helper.hpp>
 
 using namespace scorum::protocol;

@@ -2,12 +2,12 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/schema/comment_objects.hpp>
-
 #include <functional>
 
 namespace scorum {
 namespace chain {
+
+class comment_vote_object;
 
 struct comment_vote_service_i
 {

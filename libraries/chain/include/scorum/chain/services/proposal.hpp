@@ -1,7 +1,10 @@
 #pragma once
 
 #include <scorum/chain/services/base_service.hpp>
-#include <scorum/protocol/types.hpp>
+
+#include <functional>
+#include <vector>
+
 #include <scorum/chain/schema/proposal_object.hpp>
 
 namespace scorum {

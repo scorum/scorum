@@ -2,6 +2,8 @@
 
 #include <scorum/chain/database.hpp>
 
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+
 namespace scorum {
 namespace chain {
 

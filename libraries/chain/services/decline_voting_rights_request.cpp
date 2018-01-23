@@ -1,6 +1,8 @@
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/database.hpp>
 
+#include <scorum/chain/schema/scorum_objects.hpp>
+
 #include <tuple>
 
 using namespace scorum::protocol;

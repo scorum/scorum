@@ -3,6 +3,8 @@
 
 #include <scorum/chain/services/witness.hpp>
 
+#include <scorum/chain/schema/account_objects.hpp>
+
 namespace scorum {
 namespace chain {
 

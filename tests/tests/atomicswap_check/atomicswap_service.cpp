@@ -4,6 +4,9 @@
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/account.hpp>
 
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
+
 #include <sstream>
 
 #include <fc/time.hpp>

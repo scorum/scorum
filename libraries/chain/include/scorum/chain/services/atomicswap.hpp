@@ -1,13 +1,16 @@
 #pragma once
 
 #include <scorum/chain/services/base_service.hpp>
-#include <vector>
-#include <functional>
 
-#include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <functional>
+#include <vector>
 
 namespace scorum {
 namespace chain {
+
+class account_object;
+class atomicswap_contract_object;
+enum atomicswap_contract_type : bool;
 
 struct atomicswap_service_i
 {

@@ -21,7 +21,7 @@ namespace chain {
 using scorum::protocol::asset;
 using scorum::protocol::atomicswap::hash_index_type;
 
-enum atomicswap_contract_type
+enum atomicswap_contract_type : bool
 {
     atomicswap_contract_initiator = 0,
     atomicswap_contract_participant,

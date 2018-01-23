@@ -2,6 +2,9 @@
 #include <scorum/chain/database.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
+
+#include <scorum/protocol/scorum_operations.hpp>
 
 namespace scorum {
 namespace chain {

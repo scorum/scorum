@@ -3,6 +3,8 @@
 
 #include <tuple>
 
+#include <scorum/chain/schema/account_objects.hpp>
+
 using namespace scorum::protocol;
 
 namespace scorum {

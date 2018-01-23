@@ -2,12 +2,8 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/schema/reward_pool_object.hpp>
-
 namespace scorum {
 namespace chain {
-
-using scorum::protocol::asset;
 
 class reward_pool_object;
 

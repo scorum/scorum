@@ -3,6 +3,9 @@
 
 #include <scorum/chain/services/account.hpp>
 
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+
 namespace scorum {
 namespace chain {
 

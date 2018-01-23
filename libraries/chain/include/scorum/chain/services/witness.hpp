@@ -2,12 +2,17 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/schema/witness_objects.hpp>
-
 namespace scorum {
+namespace protocol {
+class chain_properties;
+}
 namespace chain {
 
 class account_object;
+class witness_object;
+class witness_schedule_object;
+
+using chain_properties = scorum::protocol::chain_properties;
 
 struct witness_service_i
 {

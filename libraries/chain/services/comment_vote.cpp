@@ -1,6 +1,8 @@
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/database.hpp>
 
+#include <scorum/chain/schema/comment_objects.hpp>
+
 #include <tuple>
 
 using namespace scorum::protocol;

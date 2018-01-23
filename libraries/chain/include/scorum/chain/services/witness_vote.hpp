@@ -2,10 +2,10 @@
 
 #include <scorum/chain/services/base_service.hpp>
 
-#include <scorum/chain/schema/witness_objects.hpp>
-
 namespace scorum {
 namespace chain {
+
+class witness_vote_object;
 
 struct witness_vote_service_i
 {
