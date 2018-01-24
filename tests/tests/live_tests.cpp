@@ -4,7 +4,7 @@
 
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/hardfork.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <fc/crypto/digest.hpp>
 

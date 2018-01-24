@@ -2,40 +2,42 @@
 
 #include <scorum/chain/database.hpp>
 
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_proposal.hpp>
-#include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_dynamic_global_property.hpp>
-#include <scorum/chain/dbs_comment.hpp>
-#include <scorum/chain/dbs_decline_voting_rights_request.hpp>
-#include <scorum/chain/dbs_witness_vote.hpp>
-#include <scorum/chain/dbs_withdraw_vesting_route.hpp>
-#include <scorum/chain/dbs_vesting_delegation.hpp>
-#include <scorum/chain/dbs_reward_fund.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
-#include <scorum/chain/dbs_witness.hpp>
-#include <scorum/chain/dbs_comment_vote.hpp>
-#include <scorum/chain/dbs_escrow.hpp>
-#include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_atomicswap.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_vote.hpp>
+#include <scorum/chain/services/decline_voting_rights_request.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/vesting_delegation.hpp>
+#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_vote.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
         (account)
+        (atomicswap)
+        (budget)
+        (comment)
+        (comment_vote)
+        (decline_voting_rights_request)
+        (dynamic_global_property)
+        (escrow)
         (proposal)
         (registration_committee)
-        (dynamic_global_property)
-        (comment)
-        (witness)
-        (decline_voting_rights_request)
-        (vesting_delegation)
-        (witness_vote)
-        (withdraw_vesting_route)
-        (reward_fund)
         (registration_pool)
-        (comment_vote)
-        (escrow)
-        (budget)
-        (atomicswap)
+        (reward)
+        (reward_fund)
+        (vesting_delegation)
+        (withdraw_vesting_route)
+        (witness)
+        (witness_vote)
         )
 // clang-format on

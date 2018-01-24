@@ -2,7 +2,7 @@
 
 #include <scorum/app/plugin.hpp>
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 

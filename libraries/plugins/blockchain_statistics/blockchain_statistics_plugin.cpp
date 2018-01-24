@@ -1,9 +1,9 @@
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
 
 #include <scorum/app/impacted.hpp>
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/comment_object.hpp>
-#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/history_objects.hpp>
 
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/operation_notification.hpp>

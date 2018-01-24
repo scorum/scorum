@@ -1,6 +1,8 @@
 file(GLOB HEADERS "include/scorum/chain/*.hpp"
-                  "include/scorum/chain/util/*.hpp"
-                  "include/scorum/chain/pool/*.hpp")
+                  "include/scorum/chain/evaluators/*.hpp"
+                  "include/scorum/chain/schema/*.hpp"
+                  "include/scorum/chain/services/*.hpp"
+                  "include/scorum/chain/util/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -24,33 +26,32 @@ add_library( scorum_chain
              fork_database.cpp
              database_witness_schedule.cpp
 
-             dbs_base_impl.cpp
-             dbs_account.cpp
-             dbs_reward.cpp
-             dbs_witness.cpp
-             dbs_budget.cpp
-             dbs_registration_pool.cpp
-             dbs_registration_committee.cpp
-             dbs_proposal.cpp
-             dbs_atomicswap.cpp
-             dbs_dynamic_global_property.cpp
-             dbs_comment.cpp
-             dbs_comment_vote.cpp
-             dbs_escrow.cpp
-             dbs_witness_vote.cpp
-             dbs_decline_voting_rights_request.cpp
-             dbs_withdraw_vesting_route.cpp
-             dbs_vesting_delegation.cpp
-             dbs_reward_fund.cpp
+             services/dbs_base.cpp
+             services/dbservice_dbs_factory.cpp
+             services/account.cpp
+             services/reward.cpp
+             services/witness.cpp
+             services/budget.cpp
+             services/registration_pool.cpp
+             services/registration_committee.cpp
+             services/proposal.cpp
+             services/atomicswap.cpp
+             services/dynamic_global_property.cpp
+             services/comment.cpp
+             services/comment_vote.cpp
+             services/escrow.cpp
+             services/witness_vote.cpp
+             services/decline_voting_rights_request.cpp
+             services/withdraw_vesting_route.cpp
+             services/vesting_delegation.cpp
+             services/reward_fund.cpp
 
              data_service_factory.cpp
 
-             scorum_evaluator.cpp
+             evaluators/scorum_evaluators.cpp
+             evaluators/proposal_create_evaluator.cpp
 
-             proposal_create_evaluator.cpp
-
-             scorum_objects.cpp
-             shared_authority.cpp
+             schema/shared_authority.cpp
              block_log.cpp
 
              genesis.cpp
@@ -72,7 +73,7 @@ if(MSVC)
 endif(MSVC)
 
 if(UNIX)
-  set_source_files_properties( scorum_evaluator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
+  set_source_files_properties( evaluators/scorum_evaluators.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
 endif(UNIX)
 
 INSTALL( TARGETS

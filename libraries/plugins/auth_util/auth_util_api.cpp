@@ -5,7 +5,7 @@
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/sign_state.hpp>
 
-#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/database.hpp>
 
 #include <scorum/plugins/auth_util/auth_util_api.hpp>

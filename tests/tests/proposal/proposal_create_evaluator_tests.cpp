@@ -5,15 +5,15 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/proposal_create_evaluator.hpp>
-#include <scorum/chain/proposal_object.hpp>
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
-#include <scorum/chain/dbs_registration_committee.hpp>
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_dynamic_global_property.hpp>
-#include <scorum/chain/dbs_proposal.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/proposal.hpp>
 
 #include <hippomocks.h>
 
@@ -63,9 +63,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
     void create_expectations(const proposal_create_operation& op)
     {
-        mocks.ExpectCall(committee_service, registration_committee_service_i::member_exists)
-            .With(op.creator)
-            .Return(true);
+        mocks.ExpectCall(committee_service, registration_committee_service_i::is_exists).With(op.creator).Return(true);
 
         mocks
             .ExpectCallOverload(account_service,
@@ -209,7 +207,7 @@ BOOST_FIXTURE_TEST_CASE(throw_when_creator_is_not_in_committee, proposal_create_
     op.creator = "sam";
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
 
-    mocks.ExpectCall(committee_service, registration_committee_service_i::member_exists).With(op.creator).Return(false);
+    mocks.ExpectCall(committee_service, registration_committee_service_i::is_exists).With(op.creator).Return(false);
 
     proposal_create_evaluator evaluator(*services);
 

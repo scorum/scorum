@@ -1,23 +1,23 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/block_summary_object.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/compound.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/db_with.hpp>
-#include <scorum/chain/evaluator_registry.hpp>
-#include <scorum/chain/global_property_object.hpp>
-#include <scorum/chain/chain_property_object.hpp>
-#include <scorum/chain/history_object.hpp>
-#include <scorum/chain/scorum_evaluator.hpp>
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/transaction_object.hpp>
+#include <scorum/chain/evaluators/evaluator_registry.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
+#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/evaluators/scorum_evaluators.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/budget_objects.hpp>
-#include <scorum/chain/registration_objects.hpp>
-#include <scorum/chain/atomicswap_objects.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
 
 #include <scorum/chain/genesis_state.hpp>
 
@@ -25,17 +25,17 @@
 #include <scorum/chain/util/reward.hpp>
 #include <scorum/chain/util/uint256.hpp>
 
-#include <scorum/chain/pool/reward_pool.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
 
-#include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_create_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
-#include <scorum/chain/dbs_account.hpp>
-#include <scorum/chain/dbs_witness.hpp>
-#include <scorum/chain/dbs_budget.hpp>
-#include <scorum/chain/dbs_reward.hpp>
-#include <scorum/chain/dbs_registration_pool.hpp>
-#include <scorum/chain/dbs_dynamic_global_property.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -51,7 +51,7 @@
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include <scorum/chain/dbs_atomicswap.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
 namespace scorum {
 namespace chain {
 

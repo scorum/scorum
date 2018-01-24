@@ -1,8 +1,8 @@
 #include <scorum/follow/follow_operations.hpp>
 #include <scorum/follow/follow_objects.hpp>
 
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 namespace scorum {
 namespace follow {

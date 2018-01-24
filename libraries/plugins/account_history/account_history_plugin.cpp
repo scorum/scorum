@@ -6,7 +6,7 @@
 
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/schema/history_objects.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>

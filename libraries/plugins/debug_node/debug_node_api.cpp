@@ -9,9 +9,9 @@
 #include <scorum/protocol/block.hpp>
 
 #include <scorum/chain/block_log.hpp>
-#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
 
