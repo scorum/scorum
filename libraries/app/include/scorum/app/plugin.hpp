@@ -25,7 +25,7 @@
 
 #include <scorum/app/application.hpp>
 
-#include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/evaluators/evaluator.hpp>
 #include <scorum/chain/database.hpp>
 
 #include <boost/program_options.hpp>
@@ -162,13 +162,13 @@ template <typename T> T dejsonify(const std::string& s)
     }
 
 #define DEFINE_PLUGIN_EVALUATOR(PLUGIN, OPERATION, X)                                                                  \
-    class X##_evaluator : public scorum::chain::evaluator_impl<X##_evaluator, OPERATION>                               \
+    class X##_evaluator : public scorum::chain::evaluator_impl<scorum::chain::database, X##_evaluator, OPERATION>      \
     {                                                                                                                  \
     public:                                                                                                            \
         typedef X##_operation operation_type;                                                                          \
                                                                                                                        \
         X##_evaluator(database& db, PLUGIN* plugin)                                                                    \
-            : scorum::chain::evaluator_impl<X##_evaluator, OPERATION>(db)                                              \
+            : scorum::chain::evaluator_impl<scorum::chain::database, X##_evaluator, OPERATION>(db)                     \
             , _plugin(plugin)                                                                                          \
         {                                                                                                              \
         }                                                                                                              \

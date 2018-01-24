@@ -31,8 +31,8 @@
 #include <scorum/protocol/get_config.hpp>
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/transaction_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
 #include <fc/time.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>

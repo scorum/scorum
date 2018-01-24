@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/chain/evaluator.hpp>
+#include <scorum/chain/evaluators/evaluator.hpp>
 
 #include <scorum/private_message/private_message_operations.hpp>
 #include <scorum/private_message/private_message_plugin.hpp>

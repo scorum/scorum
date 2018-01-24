@@ -1,6 +1,6 @@
 
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include <scorum/plugins/block_info/block_info.hpp>
 #include <scorum/plugins/block_info/block_info_api.hpp>

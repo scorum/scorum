@@ -3,12 +3,12 @@
 
 #include <graphene/utilities/tempdir.hpp>
 
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/account_history/account_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis_state.hpp>
-#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>

@@ -3,9 +3,9 @@
 #include <scorum/protocol/exceptions.hpp>
 
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/dbs_proposal.hpp>
-#include <scorum/chain/proposal_vote_evaluator.hpp>
-#include <scorum/chain/proposal_object.hpp>
+#include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
 
 #include "defines.hpp"
 
@@ -119,7 +119,7 @@ public:
         excluded_members.push_back(account);
     }
 
-    bool member_exists(const account_name_type& account) const
+    bool is_exists(const account_name_type& account) const
     {
         return existent_accounts.count(account) == 1 ? true : false;
     }

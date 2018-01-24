@@ -1,4 +1,4 @@
-#include <scorum/chain/account_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 
 #include <scorum/follow/follow_api.hpp>
 

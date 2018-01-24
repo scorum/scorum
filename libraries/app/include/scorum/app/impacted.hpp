@@ -26,7 +26,7 @@
 #include <fc/container/flat.hpp>
 #include <scorum/protocol/operations.hpp>
 #include <scorum/protocol/transaction.hpp>
-#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <fc/string.hpp>
 
