@@ -4,8 +4,8 @@
 #include <scorum/protocol/scorum_operations.hpp>
 #include <scorum/protocol/operation_util_impl.hpp>
 
-#include <scorum/chain/evaluator.hpp>
-#include <scorum/chain/evaluator_registry.hpp>
+#include <scorum/chain/evaluators/evaluator.hpp>
+#include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
 
 #include <graphene/schema/schema.hpp>

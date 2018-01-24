@@ -799,7 +799,7 @@ struct proposal_vote_operation : public base_operation
     void validate() const;
 };
 
-enum atomicswap_initiate_type
+enum atomicswap_initiate_type : bool
 {
     atomicswap_by_initiator = 0,
     atomicswap_by_participant,

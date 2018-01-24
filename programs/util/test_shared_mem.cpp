@@ -13,7 +13,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/authority.hpp>
 
-#include <scorum/chain/shared_authority.hpp>
+#include <scorum/chain/schema/shared_authority.hpp>
 
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>

@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/node_property_object.hpp>
 #include <scorum/chain/fork_database.hpp>
@@ -12,7 +12,8 @@
 
 #include <scorum/protocol/protocol.hpp>
 
-#include <scorum/chain/dbservice.hpp>
+#include <scorum/chain/services/dbservice_dbs_factory.hpp>
+#include <scorum/chain/data_service_factory.hpp>
 
 #include <fc/signals.hpp>
 #include <fc/shared_string.hpp>
@@ -39,14 +40,14 @@ struct genesis_state_type;
  *   @class database
  *   @brief tracks the blockchain state in an extensible manner
  */
-class database : public chainbase::database, public dbservice
+class database : public chainbase::database, public dbservice_dbs_factory, public data_service_factory
 {
 
 public:
     database();
     virtual ~database();
 
-    bool is_producing() const override
+    bool is_producing() const
     {
         return _is_producing;
     }
@@ -106,7 +107,7 @@ public:
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
     void close();
 
-    time_point_sec get_genesis_time() const override;
+    time_point_sec get_genesis_time() const;
 
     //////////////////// db_block.cpp ////////////////////
 
@@ -125,29 +126,29 @@ public:
 
     chain_id_type get_chain_id() const;
 
-    const witness_object& get_witness(const account_name_type& name) const override;
+    const witness_object& get_witness(const account_name_type& name) const;
     const witness_object* find_witness(const account_name_type& name) const;
 
-    const account_object& get_account(const account_name_type& name) const override;
+    const account_object& get_account(const account_name_type& name) const;
     const account_object* find_account(const account_name_type& name) const;
 
-    const comment_object& get_comment(const account_name_type& author,
-                                      const fc::shared_string& permlink) const override;
+    const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
-    const comment_object& get_comment(const account_name_type& author, const std::string& permlink) const override;
+    const comment_object& get_comment(const account_name_type& author, const std::string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const std::string& permlink) const;
 
-    const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const override;
+    const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const;
     const escrow_object* find_escrow(const account_name_type& name, uint32_t escrow_id) const;
 
-    const dynamic_global_property_object& get_dynamic_global_properties() const override;
+    const dynamic_global_property_object& get_dynamic_global_properties() const;
     const node_property_object& get_node_properties() const;
-    const witness_schedule_object& get_witness_schedule_object() const override;
+    const witness_schedule_object& get_witness_schedule_object() const;
     const hardfork_property_object& get_hardfork_property_object() const;
 
-    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const override;
-    const reward_fund_object& get_reward_fund() const override;
+    const reward_fund_object& get_reward_fund() const;
+
+    const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const;
 
     /**
      *  Calculate the percent of block production slots that were missed in the
@@ -287,8 +288,8 @@ public:
 
     void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
-    asset get_balance(const account_object& a, asset_symbol_type symbol) const override;
-    asset get_balance(const std::string& aname, asset_symbol_type symbol) const override
+    asset get_balance(const account_object& a, asset_symbol_type symbol) const;
+    asset get_balance(const std::string& aname, asset_symbol_type symbol) const
     {
         return get_balance(get_account(aname), symbol);
     }
@@ -306,7 +307,7 @@ public:
     void expire_escrow_ratification();
     void process_decline_voting_rights();
 
-    time_point_sec head_block_time() const override;
+    time_point_sec head_block_time() const;
     uint32_t head_block_num() const;
     block_id_type head_block_id() const;
 
@@ -318,7 +319,7 @@ public:
     void initialize_evaluators();
     void set_custom_operation_interpreter(const std::string& id,
                                           std::shared_ptr<custom_operation_interpreter> registry);
-    std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const std::string& id) override;
+    std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const std::string& id);
 
     /// Reset the object graph in-memory
     void initialize_indexes();

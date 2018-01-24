@@ -52,7 +52,7 @@ RUN \
         -DCLEAR_VOTES=ON \
         -DSKIP_BY_TX_ID=ON \
         .. && \
-    make -j$(nproc) wallet_tests chain_test test_fixed_string && \
+    make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
@@ -76,7 +76,7 @@ RUN \
         -DCLEAR_VOTES=ON \
         -DSKIP_BY_TX_ID=ON \
         .. && \
-    make -j$(nproc) wallet_tests chain_test && \
+    make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \

@@ -50,10 +50,7 @@ public:
 
     price get_vesting_share_price() const
     {
-        if (total_vesting_fund_scorum.amount == 0 || total_vesting_shares.amount == 0)
-            return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
-
-        return price(total_vesting_shares, total_vesting_fund_scorum);
+        return price(asset(1000, SCORUM_SYMBOL), asset(1000, VESTS_SYMBOL));
     }
 
     /**

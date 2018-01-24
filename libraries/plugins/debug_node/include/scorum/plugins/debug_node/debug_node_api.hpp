@@ -10,7 +10,7 @@
 
 #include <scorum/protocol/block.hpp>
 
-#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 namespace scorum {
 namespace app {

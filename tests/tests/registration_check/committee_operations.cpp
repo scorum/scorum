@@ -5,7 +5,7 @@
 
 #include "registration_check_common.hpp"
 
-#include <scorum/chain/dbs_account.hpp>
+#include <scorum/chain/services/account.hpp>
 
 //
 // usage for all budget tests 'chain_test  -t registration_*'
