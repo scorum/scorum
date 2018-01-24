@@ -25,7 +25,7 @@ struct escrow_service_i
                                         const asset& pending_fee)
         = 0;
 
-    virtual void update(const escrow_object& escrow, modifier_type modifier) = 0;
+    virtual void update(const escrow_object& escrow, const modifier_type& modifier) = 0;
 
     virtual void remove(const escrow_object& escrow) = 0;
 };
@@ -49,7 +49,7 @@ public:
                                 const asset& scorum_amount,
                                 const asset& pending_fee) override;
 
-    void update(const escrow_object& escrow, modifier_type modifier) override;
+    void update(const escrow_object& escrow, const modifier_type& modifier) override;
 
     void remove(const escrow_object& escrow) override;
 };

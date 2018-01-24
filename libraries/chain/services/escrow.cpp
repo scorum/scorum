@@ -47,7 +47,7 @@ const escrow_object& dbs_escrow::create(uint32_t escrow_id,
     return new_escrow;
 }
 
-void dbs_escrow::update(const escrow_object& escrow, modifier_type modifier)
+void dbs_escrow::update(const escrow_object& escrow, const modifier_type& modifier)
 {
     db_impl().modify(escrow, [&](escrow_object& e) { modifier(e); });
 }

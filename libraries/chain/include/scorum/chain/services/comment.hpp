@@ -18,9 +18,9 @@ struct comment_service_i
 
     using modifier_type = std::function<void(comment_object&)>;
 
-    virtual const comment_object& create(modifier_type modifier) = 0;
+    virtual const comment_object& create(const modifier_type& modifier) = 0;
 
-    virtual void update(const comment_object& comment, modifier_type modifier) = 0;
+    virtual void update(const comment_object& comment, const modifier_type& modifier) = 0;
 
     virtual void remove(const comment_object& comment) = 0;
 };
@@ -38,9 +38,9 @@ public:
 
     bool is_exists(const account_name_type& author, const std::string& permlink) const override;
 
-    const comment_object& create(modifier_type modifier) override;
+    const comment_object& create(const modifier_type& modifier) override;
 
-    void update(const comment_object& comment, modifier_type modifier) override;
+    void update(const comment_object& comment, const modifier_type& modifier) override;
 
     void remove(const comment_object& comment) override;
 };

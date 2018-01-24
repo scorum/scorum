@@ -106,7 +106,7 @@ void dbs_registration_committee::exclude_member(const account_name_type& account
 }
 
 void dbs_registration_committee::update_member_info(const registration_committee_member_object& member,
-                                                    member_info_modifier_type modifier)
+                                                    const member_info_modifier_type& modifier)
 {
     db_impl().modify(member, [&](registration_committee_member_object& m) { modifier(m); });
 }

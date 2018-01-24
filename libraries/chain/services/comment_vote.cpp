@@ -30,7 +30,7 @@ bool dbs_comment_vote::is_exists(const comment_id_type& comment_id, const accoun
     return nullptr != db_impl().find<comment_vote_object, by_comment_voter>(std::make_tuple(comment_id, voter_id));
 }
 
-const comment_vote_object& dbs_comment_vote::create(modifier_type modifier)
+const comment_vote_object& dbs_comment_vote::create(const modifier_type& modifier)
 {
     const auto& new_comment_vote
         = db_impl().create<comment_vote_object>([&](comment_vote_object& cvo) { modifier(cvo); });
@@ -38,7 +38,7 @@ const comment_vote_object& dbs_comment_vote::create(modifier_type modifier)
     return new_comment_vote;
 }
 
-void dbs_comment_vote::update(const comment_vote_object& comment_vote, modifier_type modifier)
+void dbs_comment_vote::update(const comment_vote_object& comment_vote, const modifier_type& modifier)
 {
     db_impl().modify(comment_vote, [&](comment_vote_object& cvo) { modifier(cvo); });
 }

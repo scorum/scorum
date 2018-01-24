@@ -38,14 +38,14 @@ bool dbs_comment::is_exists(const account_name_type& author, const std::string& 
     return nullptr != db_impl().find<comment_object, by_permlink>(std::make_tuple(author, permlink));
 }
 
-const comment_object& dbs_comment::create(modifier_type modifier)
+const comment_object& dbs_comment::create(const modifier_type& modifier)
 {
     const auto& new_comment = db_impl().create<comment_object>([&](comment_object& c) { modifier(c); });
 
     return new_comment;
 }
 
-void dbs_comment::update(const comment_object& comment, modifier_type modifier)
+void dbs_comment::update(const comment_object& comment, const modifier_type& modifier)
 {
     db_impl().modify(comment, [&](comment_object& c) { modifier(c); });
 }

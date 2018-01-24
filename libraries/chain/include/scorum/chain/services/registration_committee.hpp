@@ -26,7 +26,8 @@ struct registration_committee_service_i
     virtual void exclude_member(const account_name_type&) = 0;
 
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
-    virtual void update_member_info(const registration_committee_member_object&, member_info_modifier_type modifier)
+    virtual void update_member_info(const registration_committee_member_object&,
+                                    const member_info_modifier_type& modifier)
         = 0;
 
     virtual bool is_exists(const account_name_type&) const = 0;
@@ -58,7 +59,8 @@ public:
     void exclude_member(const account_name_type&) override;
 
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
-    void update_member_info(const registration_committee_member_object&, member_info_modifier_type modifier) override;
+    void update_member_info(const registration_committee_member_object&,
+                            const member_info_modifier_type& modifier) override;
 
     bool is_exists(const account_name_type&) const override;
 

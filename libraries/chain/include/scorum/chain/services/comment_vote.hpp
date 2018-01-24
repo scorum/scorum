@@ -17,8 +17,8 @@ struct comment_vote_service_i
                                            const account_id_type& voter_id) const = 0;
     virtual bool is_exists(const comment_id_type& comment_id, const account_id_type& voter_id) const = 0;
 
-    virtual const comment_vote_object& create(modifier_type modifier) = 0;
-    virtual void update(const comment_vote_object& comment_vote, modifier_type modifier) = 0;
+    virtual const comment_vote_object& create(const modifier_type& modifier) = 0;
+    virtual void update(const comment_vote_object& comment_vote, const modifier_type& modifier) = 0;
     virtual void remove(const comment_id_type& comment_id) = 0;
 };
 
@@ -34,9 +34,9 @@ public:
 
     bool is_exists(const comment_id_type& comment_id, const account_id_type& voter_id) const override;
 
-    const comment_vote_object& create(modifier_type modifier) override;
+    const comment_vote_object& create(const modifier_type& modifier) override;
 
-    void update(const comment_vote_object& comment_vote, modifier_type modifier) override;
+    void update(const comment_vote_object& comment_vote, const modifier_type& modifier) override;
 
     void remove(const comment_id_type& comment_id) override;
 };
