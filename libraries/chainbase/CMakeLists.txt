@@ -62,7 +62,7 @@ endif()
 
 
 file(GLOB HEADERS "include/*.hpp")
-file(GLOB SRC_FILES src/*.cpp)
+file(GLOB SRC_FILES *.cpp)
 add_library( chainbase ${SRC_FILES} ${HEADERS} )
 target_link_libraries( chainbase fc ${Boost_LIBRARIES} )
 target_include_directories( chainbase PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"  ${Boost_INCLUDE_DIR} )

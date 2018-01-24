@@ -131,7 +131,7 @@ protected:
 //------------------------------------------------------------------------------------------------------//
 
 template <typename MultiIndexType>
-class generic_index : public abstract_generic_index, public base_index<MultiIndexType>
+class generic_index : public abstract_generic_index_i, public base_index<MultiIndexType>
 {
 public:
     using allocator_type = allocator<generic_index>;
@@ -199,7 +199,7 @@ public:
     }
 
 private:
-    // abstract_generic_index interface
+    // abstract_generic_index_i interface
     abstract_undo_session_ptr start_undo_session() override
     {
         _stack.emplace_back(this->get_allocator());

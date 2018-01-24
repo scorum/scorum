@@ -13,7 +13,7 @@ public:
     {
         for (auto& item : _index_map)
         {
-            abstract_generic_index* index = static_cast<abstract_generic_index*>(item.second);
+            abstract_generic_index_i* index = static_cast<abstract_generic_index_i*>(item.second);
             functor(*index);
         }
     }

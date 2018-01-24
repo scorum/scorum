@@ -17,9 +17,9 @@ using abstract_undo_session_ptr = std::unique_ptr<abstract_undo_session>;
 using abstract_undo_session_list = std::vector<abstract_undo_session_ptr>;
 
 //------------------------------------------------------------------------------------------------------//
-struct abstract_generic_index
+struct abstract_generic_index_i
 {
-    virtual ~abstract_generic_index(){};
+    virtual ~abstract_generic_index_i(){};
 
     virtual abstract_undo_session_ptr start_undo_session() = 0;
 

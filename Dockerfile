@@ -53,6 +53,7 @@ RUN \
         -DSKIP_BY_TX_ID=ON \
         .. && \
     make -j$(nproc) wallet_tests chain_test test_fixed_string && \
+    ./libraries/chainbase/test/chainbase_test && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
@@ -76,6 +77,7 @@ RUN \
         -DSKIP_BY_TX_ID=ON \
         .. && \
     make -j$(nproc) wallet_tests chain_test && \
+    ./libraries/chainbase/test/chainbase_test && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
     mkdir -p /var/cobertura && \
@@ -98,6 +100,7 @@ RUN \
         .. \
     && \
     make -j$(nproc) && \
+    ./libraries/chainbase/test/chainbase_test && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
     ./programs/util/test_fixed_string && \

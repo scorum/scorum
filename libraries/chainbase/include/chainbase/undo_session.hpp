@@ -36,7 +36,7 @@ class session : public abstract_undo_session
     }
 
 public:
-    session(abstract_generic_index& idx)
+    session(abstract_generic_index_i& idx)
         : _index(idx)
     {
         transit2<undo_state>();
@@ -54,7 +54,7 @@ public:
     }
 
 private:
-    abstract_generic_index& _index;
+    abstract_generic_index_i& _index;
     empty_state* _state;
 };
 }

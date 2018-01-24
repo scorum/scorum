@@ -64,7 +64,7 @@ public:
             this->get_evaluator(inner_o).apply(inner_o);
         }
 
-        this->_db.for_each_index([&](chainbase::abstract_generic_index& item) { item.squash(); });
+        this->_db.for_each_index([&](chainbase::abstract_generic_index_i& item) { item.squash(); });
         plugin_session->push();
     }
 
