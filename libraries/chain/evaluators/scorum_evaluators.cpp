@@ -346,7 +346,7 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
     FC_ASSERT(comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled.");
     FC_ASSERT(comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled.");
     FC_ASSERT(comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout.");
-    FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent SBD.");
+    FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent.");
 
     comment_service.update(comment, [&](comment_object& c) {
         c.max_accepted_payout = o.max_accepted_payout;

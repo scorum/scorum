@@ -5,7 +5,9 @@
 namespace scorum {
 namespace protocol {
 
-typedef uint64_t asset_symbol_type;
+using asset_symbol_type = uint64_t;
+using share_value_type = int64_t;
+using share_type = safe<share_value_type>;
 
 struct asset
 {
@@ -24,6 +26,15 @@ struct asset
 
     share_type amount;
     asset_symbol_type symbol;
+
+    static asset maximum(asset_symbol_type id)
+    {
+        return asset(SCORUM_MAX_SHARE_SUPPLY, id);
+    }
+    static asset min(asset_symbol_type id)
+    {
+        return asset(0, id);
+    }
 
     double to_real() const
     {
@@ -218,6 +229,8 @@ inline void from_variant(const fc::variant& var, scorum::protocol::asset& vo)
 }
 
 } // namespace fc
+
+FC_REFLECT_TYPENAME(scorum::protocol::share_type)
 
 FC_REFLECT(scorum::protocol::asset, (amount)(symbol))
 FC_REFLECT(scorum::protocol::price, (base)(quote))

@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
                                             "name":"user",
                                             "recovery_account":"admin",
                                             "public_key":"SCR1111111111111111111111111111111114T1Anm",
-                                            "scr_amount":"1.000 SCR",
+                                            "scr_amount":"0.001000 SCR",
                                             "sp_amount":"1.000000 SP"
                                         }]
                                     }
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(check_initial_timestamp)
 
 BOOST_AUTO_TEST_CASE(check_initial_supply)
 {
-    std::string genesis_str = R"json({ "init_accounts_supply": "1000.000 SCR"})json";
+    std::string genesis_str = R"json({ "init_accounts_supply": "1.000000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(check_initial_supply)
 
 BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
 {
-    std::string genesis_str = R"json({ "init_rewards_supply": "1000.000 SCR"})json";
+    std::string genesis_str = R"json({ "init_rewards_supply": "1.000000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 

@@ -1292,7 +1292,7 @@ void database::process_comment_cashout()
      * Payout all comments
      *
      * Each payout follows a similar pattern, but for a different reason.
-     * The helper only does token allocation based on curation rewards and the SBD
+     * The helper only does token allocation based on curation rewards and the SCR
      * global %, etc.
      *
      * Each context is used by get_rshare_reward to determine what part of each budget

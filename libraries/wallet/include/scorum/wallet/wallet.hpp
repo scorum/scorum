@@ -641,11 +641,11 @@ public:
                                                   bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another. SCR and SBD can be transferred.
+     * Transfer funds from one account to another.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
-     * @param amount The funds being transferred. i.e. "100.000 SCR"
+     * @param amount The funds being transferred. i.e. "100.000000 SCR"
      * @param memo A memo for the transactionm, encrypted with the to account's public memo key
      * @param broadcast true if you wish to broadcast the transaction
      */
@@ -656,7 +656,7 @@ public:
                                           bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another using escrow. SCR and SBD can be transferred.
+     * Transfer funds from one account to another using escrow.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
@@ -745,7 +745,7 @@ public:
      *
      * @param from The account the SCR is coming from
      * @param to The account getting the SP
-     * @param amount The amount of SCR to vest i.e. "100.00 SCR"
+     * @param amount The amount of SCR to vest i.e. "100.000000 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction

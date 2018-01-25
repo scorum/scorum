@@ -8,6 +8,8 @@
 #include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
+#include <limits>
+
 namespace scorum {
 namespace protocol {
 
@@ -167,7 +169,7 @@ struct comment_options_operation : public base_operation
     std::string permlink;
 
     asset max_accepted_payout
-        = asset(1000000000, SCORUM_SYMBOL); /// SBD value of the maximum payout this post will receive
+        = asset::maximum(SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
     uint16_t percent_scrs
         = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
     bool allow_votes = true; /// allows a post to receive votes;

@@ -5,6 +5,8 @@
 
 #include <scorum/protocol/asset.hpp>
 
+#include <cmath>
+
 namespace scorum {
 namespace chain {
 
@@ -51,7 +53,8 @@ public:
     price get_vesting_share_price() const
     {
         if (total_vesting_fund_scorum.amount == 0 || total_vesting_shares.amount == 0)
-            return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
+            return price(asset(std::pow(10, SCORUM_CURRENCY_PRECISION), SCORUM_SYMBOL),
+                         asset(std::pow(10, SCORUM_CURRENCY_PRECISION), VESTS_SYMBOL));
 
         return price(total_vesting_shares, total_vesting_fund_scorum);
     }

@@ -41,7 +41,7 @@ public:
 
         void give_power(const Actor& a)
         {
-            transfer_to_vest(a, ASSET("0.100 SCR"));
+            transfer_to_vest(a, ASSET_SCR(100));
         }
 
         proposal_id_type create_committee_proposal(const Actor& a, proposal_action action)

@@ -13,10 +13,12 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
+#define SCORUM_CURRENCY_PRECISION  6
+
 // SCORUM = SCR with 3 digits of precision
-#define SCORUM_SYMBOL  (uint64_t(3) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
+#define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
 // VESTS = SP with 6 digits of precision
-#define VESTS_SYMBOL   (uint64_t(6) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
+#define VESTS_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
 #define SCORUM_ATOMICSWAP_CONTRACT_METADATA_MAX_LENGTH  10*1024
 #define SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH             1024
@@ -117,7 +119,9 @@
 #define SCORUM_MAX_VOTE_CHANGES                5
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (60*30) /// 30 minutes
 #define SCORUM_MIN_VOTE_INTERVAL_SEC           3
-#define SCORUM_VOTE_DUST_THRESHOLD             (50000000)
+#define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50000)
+
+#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999999e+6) //100 billion - 1
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
@@ -199,7 +203,6 @@
 #define SCORUM_MAX_PERMLINK_LENGTH             256
 #define SCORUM_MAX_WITNESS_URL_LENGTH          2048
 
-#define SCORUM_MAX_SHARE_SUPPLY                int64_t(1000000000000000ll)
 #define SCORUM_MAX_SIG_CHECK_DEPTH             2
 
 #define SCORUM_MAX_TRANSACTION_SIZE            (1024*64)

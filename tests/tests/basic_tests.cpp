@@ -26,9 +26,49 @@
 
 #include <scorum/protocol/protocol.hpp>
 
+#include <limits>
+
 using namespace scorum::protocol;
 
 BOOST_AUTO_TEST_SUITE(type_operation_tests)
+
+BOOST_AUTO_TEST_CASE(check_asset_limits)
+{
+    BOOST_CHECK_GT(SCORUM_MAX_SHARE_SUPPLY, 0);
+
+    BOOST_CHECK_LE(SCORUM_MAX_SHARE_SUPPLY, std::numeric_limits<share_value_type>::max());
+
+    BOOST_CHECK_GE(asset::maximum(SCORUM_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
+
+    BOOST_CHECK_GE(asset::maximum(VESTS_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
+
+    BOOST_CHECK_GT(asset::maximum(SCORUM_SYMBOL), asset::min(SCORUM_SYMBOL));
+
+    BOOST_CHECK_GT(asset::maximum(VESTS_SYMBOL), asset::min(VESTS_SYMBOL));
+}
+
+BOOST_AUTO_TEST_CASE(check_asset_value_transformations)
+{
+    auto ordinary_input_value = 1.5;
+
+    BOOST_CHECK_EQUAL((share_value_type)ordinary_input_value, 1ll);
+
+    ordinary_input_value = 1.5e+1;
+
+    BOOST_CHECK_EQUAL((share_value_type)ordinary_input_value, 15ll);
+
+    ordinary_input_value = 12.345e+5;
+
+    BOOST_CHECK_EQUAL((share_value_type)ordinary_input_value, 1234500ll);
+
+    ordinary_input_value = 12e+3;
+
+    BOOST_CHECK_EQUAL((share_value_type)ordinary_input_value, 12000ll);
+
+    auto max_input_value = 99999999999e+6;
+
+    BOOST_CHECK_EQUAL((share_value_type)max_input_value, SCORUM_MAX_SHARE_SUPPLY);
+}
 
 BOOST_AUTO_TEST_CASE(asset_operation_test)
 {

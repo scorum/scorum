@@ -134,6 +134,9 @@
 #define ASSET_NULL_SCR asset(0, SCORUM_SYMBOL)
 #define ASSET_NULL_SP asset(0, VESTS_SYMBOL)
 
+#define ASSET_SCR(s) asset((share_value_type)s, SCORUM_SYMBOL)
+#define ASSET_SP(s) asset((share_value_type)s, VESTS_SYMBOL)
+
 // test case defines
 #if BOOST_VERSION >= 106000 // boost ver. >= 1.60.0
 
