@@ -50,6 +50,7 @@
 
 #include <openssl/md5.h>
 #include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <scorum/chain/services/atomicswap.hpp>
 namespace scorum {
@@ -114,9 +115,14 @@ void database::open(const fc::path& data_dir,
 
             // Rewind all undo state. This should return us to the state at the last irreversible block.
             with_write_lock([&]() {
-                undo_all();
-                FC_ASSERT(revision() == head_block_num(), "Chainbase revision does not match head block num",
-                          ("rev", revision())("head_block", head_block_num()));
+
+                for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo_all(); });
+
+                for_each_index([&](chainbase::abstract_generic_index_i& item) {
+                    FC_ASSERT(item.revision() == head_block_num(), "Chainbase revision does not match head block num",
+                              ("rev", item.revision())("head_block", head_block_num()));
+                });
+
                 validate_invariants();
             });
 
@@ -176,7 +182,8 @@ void database::reindex(const fc::path& data_dir,
             }
 
             apply_block(itr.first, skip_flags);
-            set_revision(head_block_num());
+
+            for_each_index([&](chainbase::abstract_generic_index_i& item) { item.set_revision(head_block_num()); });
         });
 
         if (_block_log.head()->block_num())
@@ -193,7 +200,7 @@ void database::reindex(const fc::path& data_dir,
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
 {
     close();
-    chainbase::database::wipe(shared_mem_dir);
+    chainbase::database::wipe();
     if (include_blocks)
     {
         fc::remove_all(data_dir / "block_log");
@@ -210,7 +217,14 @@ void database::close()
         // DB state (issue #336).
         clear_pending();
 
-        chainbase::database::flush();
+        try
+        {
+            chainbase::database::flush();
+        }
+        catch (...)
+        {
+        }
+
         chainbase::database::close();
 
         _block_log.close();
@@ -591,9 +605,9 @@ bool database::_push_block(const signed_block& new_block)
                         optional<fc::exception> except;
                         try
                         {
-                            auto session = start_undo_session(true);
+                            auto session = start_undo_session();
                             apply_block((*ritr)->data, skip);
-                            session.push();
+                            session->push();
                         }
                         catch (const fc::exception& e)
                         {
@@ -619,9 +633,9 @@ bool database::_push_block(const signed_block& new_block)
                             // restore all blocks from the good fork
                             for (auto ritr = branches.second.rbegin(); ritr != branches.second.rend(); ++ritr)
                             {
-                                auto session = start_undo_session(true);
+                                auto session = start_undo_session();
                                 apply_block((*ritr)->data, skip);
-                                session.push();
+                                session->push();
                             }
                             throw * except;
                         }
@@ -637,9 +651,9 @@ bool database::_push_block(const signed_block& new_block)
 
         try
         {
-            auto session = start_undo_session(true);
+            auto session = start_undo_session();
             apply_block(new_block, skip);
-            session.push();
+            session->push();
         }
         catch (const fc::exception& e)
         {
@@ -689,7 +703,7 @@ void database::_push_transaction(const signed_transaction& trx)
     // This allows us to quickly rewind to the clean state of the head block, in case a new block arrives.
     if (!_pending_tx_session.valid())
     {
-        _pending_tx_session = start_undo_session(true);
+        _pending_tx_session = start_undo_session();
     }
 
     // Create a temporary undo session as a child of _pending_tx_session.
@@ -697,13 +711,14 @@ void database::_push_transaction(const signed_transaction& trx)
     // _apply_transaction fails.  If we make it to merge(), we
     // apply the changes.
 
-    auto temp_session = start_undo_session(true);
+    auto temp_session = start_undo_session();
     _apply_transaction(trx);
     _pending_tx.push_back(trx);
 
     notify_changed_objects();
     // The transaction applied successfully. Merge its changes into the pending block session.
-    temp_session.squash();
+    for_each_index([&](chainbase::abstract_generic_index_i& item) { item.squash(); });
+    temp_session->push();
 
     // notify anyone listening to pending transactions
     notify_on_pending_transaction(trx);
@@ -762,7 +777,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
         // re-apply pending transactions in this method.
         //
         _pending_tx_session.reset();
-        _pending_tx_session = start_undo_session(true);
+        _pending_tx_session = start_undo_session();
 
         uint64_t postponed_tx_count = 0;
         // pop pending state (reset to head block state)
@@ -787,9 +802,10 @@ signed_block database::_generate_block(fc::time_point_sec when,
 
             try
             {
-                auto temp_session = start_undo_session(true);
+                auto temp_session = start_undo_session();
                 _apply_transaction(tx);
-                temp_session.squash();
+                for_each_index([&](chainbase::abstract_generic_index_i& item) { item.squash(); });
+                temp_session->push();
 
                 total_block_size += fc::raw::pack_size(tx);
                 pending_block.transactions.push_back(tx);
@@ -881,7 +897,8 @@ void database::pop_block()
         SCORUM_ASSERT(head_block.valid(), pop_empty_chain, "there are no blocks to pop");
 
         _fork_db.pop_block();
-        undo();
+
+        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo(); });
 
         _popped_tx.insert(_popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end());
     }
@@ -1520,39 +1537,45 @@ uint32_t database::last_non_undoable_block_num() const
 
 void database::initialize_evaluators()
 {
-    _my->_evaluator_registry.register_evaluator<vote_evaluator>();
-    _my->_evaluator_registry.register_evaluator<comment_evaluator>();
-    _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
-    _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
-    _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
-    _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_witness_vote_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_binary_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_json_evaluator>();
-    _my->_evaluator_registry.register_evaluator<prove_authority_evaluator>();
-    _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
-    _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<escrow_transfer_evaluator>();
-    _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
-    _my->_evaluator_registry.register_evaluator<escrow_dispute_evaluator>();
-    _my->_evaluator_registry.register_evaluator<escrow_release_evaluator>();
-    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
+    _my->_evaluator_registry.register_evaluator<account_witness_vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_initiate_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
+    _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<comment_evaluator>();
+    _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
+    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<custom_binary_evaluator>();
+    _my->_evaluator_registry.register_evaluator<custom_evaluator>();
+    _my->_evaluator_registry.register_evaluator<custom_json_evaluator>();
+    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
+    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
+    _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
+    _my->_evaluator_registry.register_evaluator<escrow_dispute_evaluator>();
+    _my->_evaluator_registry.register_evaluator<escrow_release_evaluator>();
+    _my->_evaluator_registry.register_evaluator<escrow_transfer_evaluator>();
+    _my->_evaluator_registry.register_evaluator<prove_authority_evaluator>();
+    _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_evaluator>();
+    _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
+    _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
 
@@ -1585,34 +1608,34 @@ std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluato
 
 void database::initialize_indexes()
 {
-    add_index<dynamic_global_property_index>();
-    add_index<chain_property_index>();
-    add_index<account_index>();
     add_index<account_authority_index>();
-    add_index<witness_index>();
-    add_index<transaction_index>();
+    add_index<account_history_index>();
+    add_index<account_index>();
+    add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
-    add_index<witness_schedule_index>();
+    add_index<budget_index>();
+    add_index<chain_property_index>();
+    add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
     add_index<comment_vote_index>();
-    add_index<witness_vote_index>();
-    add_index<operation_index>();
-    add_index<account_history_index>();
-    add_index<hardfork_property_index>();
-    add_index<withdraw_vesting_route_index>();
-    add_index<owner_authority_history_index>();
-    add_index<account_recovery_request_index>();
-    add_index<change_recovery_account_request_index>();
-    add_index<escrow_index>();
     add_index<decline_voting_rights_request_index>();
+    add_index<dynamic_global_property_index>();
+    add_index<escrow_index>();
+    add_index<hardfork_property_index>();
+    add_index<operation_index>();
+    add_index<owner_authority_history_index>();
+    add_index<proposal_object_index>();
+    add_index<registration_committee_member_index>();
+    add_index<registration_pool_index>();
     add_index<reward_fund_index>();
     add_index<reward_pool_index>();
-    add_index<vesting_delegation_index>();
+    add_index<transaction_index>();
     add_index<vesting_delegation_expiration_index>();
-    add_index<budget_index>();
-    add_index<registration_pool_index>();
-    add_index<registration_committee_member_index>();
-    add_index<proposal_object_index>();
+    add_index<vesting_delegation_index>();
+    add_index<withdraw_vesting_route_index>();
+    add_index<witness_index>();
+    add_index<witness_schedule_index>();
+    add_index<witness_vote_index>();
     add_index<atomicswap_contract_index>();
     
     _plugin_index_signal();
@@ -1621,9 +1644,8 @@ void database::initialize_indexes()
 void database::validate_transaction(const signed_transaction& trx)
 {
     database::with_write_lock([&]() {
-        auto session = start_undo_session(true);
+        auto session = start_undo_session();
         _apply_transaction(trx);
-        session.undo();
     });
 }
 
@@ -2180,11 +2202,11 @@ void database::update_last_irreversible_block()
             }
         }
 
-        commit(dpo.last_irreversible_block_num);
+        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
 
         if (!(get_node_properties().skip_flags & skip_block_log))
         {
-            // output to block log based on new last irreverisible block num
+            // output to block log based on new last irreversible block num
             const auto& tmp_head = _block_log.head();
             uint64_t log_head_num = 0;
 
@@ -2569,3 +2591,23 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

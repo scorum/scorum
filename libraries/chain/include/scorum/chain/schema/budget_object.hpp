@@ -46,11 +46,14 @@ public:
 
 struct by_owner_name;
 
-typedef multi_index_container<
-    budget_object,
-    indexed_by<ordered_unique<tag<by_id>, member<budget_object, budget_id_type, &budget_object::id>>,
-               ordered_non_unique<tag<by_owner_name>, member<budget_object, account_name_type, &budget_object::owner>>>,
-    allocator<budget_object>>
+typedef multi_index_container<budget_object,
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<budget_object, budget_id_type, &budget_object::id>>,
+                                         ordered_non_unique<tag<by_owner_name>,
+                                                            member<budget_object,
+                                                                   account_name_type,
+                                                                   &budget_object::owner>>>,
+                              allocator<budget_object>>
     budget_index;
 } // namespace chain
 } // namespace scorum
