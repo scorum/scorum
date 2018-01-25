@@ -4002,6 +4002,9 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
 
 BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 {
+    const asset DELEGATED_ASSET = ASSET("100.000000 SP");
+    const asset NULL_ASSET = ASSET("0.000000 SP");
+
     try
     {
         BOOST_TEST_MESSAGE("Testing: account_create_with_delegation_apply");
@@ -4032,7 +4035,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         withdraw.vesting_shares = db.get_account("alice").vesting_shares;
         account_create_with_delegation_operation op;
         op.fee = ASSET("10.000 SCR");
-        op.delegation = ASSET("100000000.000000 SP");
+        op.delegation = DELEGATED_ASSET;
         op.creator = "alice";
         op.new_account_name = "bob";
         op.owner = authority(1, priv_key.get_public_key(), 1);
@@ -4053,19 +4056,20 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         const account_object& bob_acc = db.get_account("bob");
         const account_object& alice_acc = db.get_account("alice");
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET("100000000.000000 SP"));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET("100000000.000000 SP"));
-        BOOST_REQUIRE(bob_acc.effective_vesting_shares()
-                      == bob_acc.vesting_shares - bob_acc.delegated_vesting_shares + bob_acc.received_vesting_shares);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(bob_acc.effective_vesting_shares(),
+                            bob_acc.vesting_shares - bob_acc.delegated_vesting_shares
+                                + bob_acc.received_vesting_shares);
 
         BOOST_TEST_MESSAGE("--- Test delegator object integrety. ");
         auto delegation
             = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.creator, op.new_account_name));
 
         BOOST_REQUIRE(delegation != nullptr);
-        BOOST_REQUIRE(delegation->delegator == op.creator);
-        BOOST_REQUIRE(delegation->delegatee == op.new_account_name);
-        BOOST_REQUIRE(delegation->vesting_shares == ASSET("100000000.000000 SP"));
+        BOOST_REQUIRE_EQUAL(delegation->delegator, op.creator);
+        BOOST_REQUIRE_EQUAL(delegation->delegatee, op.new_account_name);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, DELEGATED_ASSET);
         BOOST_REQUIRE(delegation->min_delegation_time == db.head_block_time() + SCORUM_CREATE_ACCOUNT_DELEGATION_TIME);
         auto del_amt = delegation->vesting_shares;
         auto exp_time = delegation->min_delegation_time;
@@ -4088,7 +4092,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_TEST_MESSAGE("--- Test failure when insufficient funds to process transaction.");
         tx.clear();
         op.fee = ASSET("10.000 SCR");
-        op.delegation = ASSET("0.000000 SP");
+        op.delegation = NULL_ASSET;
         op.new_account_name = "pam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
@@ -4109,7 +4113,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         delegate_vesting_shares_operation delegate;
         delegate.delegator = "alice";
         delegate.delegatee = "bob";
-        delegate.vesting_shares = ASSET("0.000000 SP");
+        delegate.vesting_shares = NULL_ASSET;
         tx.operations.push_back(delegate);
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4149,7 +4153,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
         ACTORS((alice)(bob))
 
         delegate_vesting_shares_operation op;
-        op.vesting_shares = ASSET("300.000000 SP");
+        op.vesting_shares = ASSET("0.003000 SP");
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4189,6 +4193,9 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
 
 BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 {
+    const asset DELEGATED_ASSET = ASSET("10.000000 SP");
+    const asset NULL_ASSET = ASSET("0.000000 SP");
+
     try
     {
         BOOST_TEST_MESSAGE("Testing: delegate_vesting_shares_apply");
@@ -4211,7 +4218,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         generate_block();
 
         delegate_vesting_shares_operation op;
-        op.vesting_shares = ASSET("10000000.000000 SP");
+        op.vesting_shares = DELEGATED_ASSET;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4223,20 +4230,20 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         const account_object& alice_acc = db.get_account("alice");
         const account_object& bob_acc = db.get_account("bob");
 
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET("10000000.000000 SP"));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET("10000000.000000 SP"));
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET);
 
         BOOST_TEST_MESSAGE("--- Test that the delegation object is correct. ");
         auto delegation
             = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
 
         BOOST_REQUIRE(delegation != nullptr);
-        BOOST_REQUIRE(delegation->delegator == op.delegator);
-        BOOST_REQUIRE(delegation->vesting_shares == ASSET("10000000.000000 SP"));
+        BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, DELEGATED_ASSET);
 
         validate_database();
         tx.clear();
-        op.vesting_shares = ASSET("20000000.000000 SP");
+        op.vesting_shares = DELEGATED_ASSET * 2;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
@@ -4244,10 +4251,10 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         generate_blocks(1);
 
         BOOST_REQUIRE(delegation != nullptr);
-        BOOST_REQUIRE(delegation->delegator == op.delegator);
-        BOOST_REQUIRE(delegation->vesting_shares == ASSET("20000000.000000 SP"));
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET("20000000.000000 SP"));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET("20000000.000000 SP"));
+        BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, DELEGATED_ASSET * 2);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET * 2);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET * 2);
 
         BOOST_TEST_MESSAGE("--- Test that effective vesting shares is accurate and being applied.");
         tx.operations.clear();
@@ -4282,12 +4289,12 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         auto& alice_comment = db.get_comment("alice", string("foo"));
         auto itr = vote_idx.find(std::make_tuple(alice_comment.id, bob_acc.id));
-        BOOST_REQUIRE(alice_comment.net_rshares.value
-                      == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
-                          / SCORUM_100_PERCENT);
-        BOOST_REQUIRE(itr->rshares
-                      == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
-                          / SCORUM_100_PERCENT);
+        BOOST_REQUIRE_EQUAL(alice_comment.net_rshares.value,
+                            bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
+                                / SCORUM_100_PERCENT);
+        BOOST_REQUIRE_EQUAL(itr->rshares,
+                            bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
+                                / SCORUM_100_PERCENT);
 
         generate_block();
         ACTORS((sam)(dave))
@@ -4331,7 +4338,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
 
         tx.clear();
-        withdraw.vesting_shares = ASSET("0.000000 SP");
+        withdraw.vesting_shares = NULL_ASSET;
         tx.operations.push_back(withdraw);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4352,7 +4359,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         BOOST_TEST_MESSAGE("--- Remove a delegation and ensure it is returned after 1 week");
         tx.clear();
-        op.vesting_shares = ASSET("0.000000 SP");
+        op.vesting_shares = NULL_ASSET;
         tx.operations.push_back(op);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4375,13 +4382,15 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj == end);
-        BOOST_REQUIRE(db.get_account("sam").delegated_vesting_shares == ASSET("0.000000 SP"));
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").delegated_vesting_shares, NULL_ASSET);
     }
     FC_LOG_AND_RETHROW()
 }
 
 BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 {
+    const asset DELEGATED_ASSET = ASSET("10.000000 SP");
+    const asset NULL_ASSET = ASSET("0.000000 SP");
     // This is a regression test specifically for issue #971
     try
     {
@@ -4405,7 +4414,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         signed_transaction tx;
         delegate_vesting_shares_operation op;
-        op.vesting_shares = ASSET("10000000.000000 SP");
+        op.vesting_shares = DELEGATED_ASSET;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4417,8 +4426,8 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         const account_object& alice_acc = db.get_account("alice");
         const account_object& bob_acc = db.get_account("bob");
 
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET("10000000.000000 SP"));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET("10000000.000000 SP"));
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET);
 
         generate_block();
 
@@ -4429,7 +4438,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         generate_block();
 
-        op.vesting_shares = ASSET("0.000000 SP");
+        op.vesting_shares = NULL_ASSET;
 
         tx.clear();
         tx.operations.push_back(op);
@@ -4437,8 +4446,8 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         db.push_transaction(tx, 0);
         generate_block();
 
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET("10000000.000000 SP"));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET("0.000000 SP"));
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, NULL_ASSET);
     }
     FC_LOG_AND_RETHROW()
 }
