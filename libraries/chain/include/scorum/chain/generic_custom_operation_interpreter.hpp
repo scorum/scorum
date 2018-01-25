@@ -32,7 +32,7 @@ public:
 
     void apply_operations(const std::vector<CustomOperationType>& custom_operations, const operation& outer_o)
     {
-        auto plugin_session = this->_db.start_undo_session(true);
+        auto plugin_session = this->_db.start_undo_session();
 
         flat_set<account_name_type> outer_active;
         flat_set<account_name_type> outer_owner;
@@ -64,7 +64,8 @@ public:
             this->get_evaluator(inner_o).apply(inner_o);
         }
 
-        plugin_session.squash();
+        this->_db.for_each_index([&](chainbase::abstract_generic_index_i& item) { item.squash(); });
+        plugin_session->push();
     }
 
     virtual void apply(const protocol::custom_json_operation& outer_o) override
