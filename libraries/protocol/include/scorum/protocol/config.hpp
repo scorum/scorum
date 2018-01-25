@@ -185,7 +185,7 @@
 #define SCORUM_PRODUCER_APR_PERCENT             750
 #define SCORUM_POW_APR_PERCENT                  750
 
-#define SCORUM_MIN_PAYOUT                  (asset(5000, SCORUM_SYMBOL))
+#define SCORUM_MIN_PAYOUT                  (asset(5, SCORUM_SYMBOL))
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
 #define SCORUM_MAX_ACCOUNT_NAME_LENGTH         16
