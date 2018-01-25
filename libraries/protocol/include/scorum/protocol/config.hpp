@@ -35,7 +35,6 @@
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::seconds(0)
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 
-#define SCORUM_REWARDS_INITIAL_SUPPLY                   asset( 1000000, SCORUM_SYMBOL )
 #define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS    5
 
 #define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   2
@@ -66,7 +65,6 @@
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::minutes(60)
 #define SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 3186477
 
-#define SCORUM_REWARDS_INITIAL_SUPPLY                   asset( 2300000000, SCORUM_SYMBOL )
 #define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS    (2 * 365)
 
 #define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   30
@@ -151,13 +149,6 @@
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
 
-#define SCORUM_DEFAULT_REWARD                  asset( 1000, SCORUM_SYMBOL )
-
-#define SCORUM_MIN_CONTENT_REWARD              SCORUM_DEFAULT_REWARD
-#define SCORUM_MIN_CURATE_REWARD               SCORUM_DEFAULT_REWARD
-#define SCORUM_MIN_PRODUCER_REWARD             SCORUM_DEFAULT_REWARD
-#define SCORUM_MIN_POW_REWARD                  SCORUM_DEFAULT_REWARD
-
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 
@@ -194,7 +185,7 @@
 #define SCORUM_PRODUCER_APR_PERCENT             750
 #define SCORUM_POW_APR_PERCENT                  750
 
-#define SCORUM_MIN_PAYOUT                  (asset(5,SCORUM_SYMBOL))
+#define SCORUM_MIN_PAYOUT                  (asset(5000, SCORUM_SYMBOL))
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
 #define SCORUM_MAX_ACCOUNT_NAME_LENGTH         16

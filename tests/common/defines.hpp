@@ -15,6 +15,8 @@
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
 #define TEST_INIT_KEY TEST_INIT_DELEGATE_NAME
 
+#define SCORUM_MIN_PRODUCER_REWARD asset(1000, SCORUM_SYMBOL)
+
 #define PUSH_TX scorum::chain::test::_push_transaction
 
 #define PUSH_BLOCK scorum::chain::test::_push_block
