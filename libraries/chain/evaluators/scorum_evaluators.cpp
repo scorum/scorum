@@ -930,252 +930,248 @@ void vote_evaluator::do_apply(const vote_operation& o)
     comment_vote_service_i& comment_vote_service = db().comment_vote_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
-    try
+    const auto& comment = comment_service.get(o.author, o.permlink);
+    const auto& voter = account_service.get_account(o.voter);
+
+    FC_ASSERT(!(voter.owner_challenged || voter.active_challenged),
+              "Operation cannot be processed because the account is currently challenged.");
+
+    FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
+
+    int64_t weight = o.weight * SCORUM_1_PERCENT;
+    if (weight > 0)
+        FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
+
+    if (comment.cashout_time == fc::time_point_sec::maximum())
     {
-        const auto& comment = comment_service.get(o.author, o.permlink);
-        const auto& voter = account_service.get_account(o.voter);
-
-        FC_ASSERT(!(voter.owner_challenged || voter.active_challenged),
-                  "Operation cannot be processed because the account is currently challenged.");
-
-        FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
-
-        if (o.weight > 0)
-            FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
-
-        if (comment.cashout_time == fc::time_point_sec::maximum())
-        {
 #ifndef CLEAR_VOTES
-            if (!comment_vote_service.is_exists(comment.id, voter.id))
-            {
-                comment_vote_service.create([&](comment_vote_object& cvo) {
-                    cvo.voter = voter.id;
-                    cvo.comment = comment.id;
-                    cvo.vote_percent = o.weight;
-                    cvo.last_update = dprops_service.head_block_time();
-                });
-            }
-            else
-            {
-                const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
-                comment_vote_service.update(comment_vote, [&](comment_vote_object& cvo) {
-                    cvo.vote_percent = o.weight;
-                    cvo.last_update = dprops_service.head_block_time();
-                });
-            }
-#endif
-            return;
-        }
-
-        int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
-
-#ifndef IS_TEST_NET
-        FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
-#endif
-
-        int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / SCORUM_VOTE_REGENERATION_SECONDS;
-        int64_t current_power = std::min(int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
-        FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
-
-        int64_t abs_weight = abs(o.weight);
-        int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
-
-        const auto& props = dprops_service.get_dynamic_global_properties();
-
-        // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
-        // The second multiplication is rounded up as of HF 259
-        int64_t max_vote_denom = props.vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24);
-        FC_ASSERT(max_vote_denom > 0);
-
-        used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
-
-        FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
-
-        int64_t abs_rshares
-            = ((uint128_t(voter.effective_vesting_shares().amount.value) * used_power) / (SCORUM_100_PERCENT))
-                  .to_uint64();
-
-        FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || o.weight == 0,
-                  "Voting weight is too small, please accumulate more voting power or scorum power.");
-
         if (!comment_vote_service.is_exists(comment.id, voter.id))
         {
-            FC_ASSERT(o.weight != 0, "Vote weight cannot be 0.");
-            /// this is the rshares voting for or against the post
-            int64_t rshares = o.weight < 0 ? -abs_rshares : abs_rshares;
-
-            if (rshares > 0)
-            {
-                FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
-                          "Cannot increase payout within last twelve hours before payout.");
-            }
-
-            // used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread
-            // their votes around over 50+ posts day for a week
-            // if( used_power == 0 ) used_power = 1;
-
-            account_service.update_voting_power(voter, current_power - used_power);
-
-            /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
-            /// total rshares^2
-            fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
-            const auto& root_comment = comment_service.get(comment.root_comment);
-
-            fc::uint128_t avg_cashout_sec;
-
-            FC_ASSERT(abs_rshares > 0, "Cannot vote with 0 rshares.");
-
-            auto old_vote_rshares = comment.vote_rshares;
-
-            comment_service.update(comment, [&](comment_object& c) {
-                c.net_rshares += rshares;
-                c.abs_rshares += abs_rshares;
-                if (rshares > 0)
-                    c.vote_rshares += rshares;
-                if (rshares > 0)
-                    c.net_votes++;
-                else
-                    c.net_votes--;
+            comment_vote_service.create([&](comment_vote_object& cvo) {
+                cvo.voter = voter.id;
+                cvo.comment = comment.id;
+                cvo.vote_percent = weight;
+                cvo.last_update = dprops_service.head_block_time();
             });
-
-            comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
-
-            fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
-
-            /// calculate rshares2 value
-            new_rshares = util::evaluate_reward_curve(new_rshares);
-            old_rshares = util::evaluate_reward_curve(old_rshares);
-
-            uint64_t max_vote_weight = 0;
-
-            /** this verifies uniqueness of voter
-             *
-             *  cv.weight / c.total_vote_weight ==> % of rshares increase that is accounted for by the vote
-             *
-             *  W(R) = B * R / ( R + 2S )
-             *  W(R) is bounded above by B. B is fixed at 2^64 - 1, so all weights fit in a 64 bit integer.
-             *
-             *  The equation for an individual vote is:
-             *    W(R_N) - W(R_N-1), which is the delta increase of proportional weight
-             *
-             *  c.total_vote_weight =
-             *    W(R_1) - W(R_0) +
-             *    W(R_2) - W(R_1) + ...
-             *    W(R_N) - W(R_N-1) = W(R_N) - W(R_0)
-             *
-             *  Since W(R_0) = 0, c.total_vote_weight is also bounded above by B and will always fit in a 64 bit
-             *integer.
-             *
-             **/
-            comment_vote_service.create([&](comment_vote_object& cv) {
-                cv.voter = voter.id;
-                cv.comment = comment.id;
-                cv.rshares = rshares;
-                cv.vote_percent = o.weight;
-                cv.last_update = dprops_service.head_block_time();
-
-                bool curation_reward_eligible
-                    = rshares > 0 && (comment.last_payout == fc::time_point_sec()) && comment.allow_curation_rewards;
-
-                if (curation_reward_eligible)
-                {
-                    const auto& reward_fund = db().reward_fund_service().get_reward_fund();
-                    auto curve = reward_fund.curation_reward_curve;
-                    uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
-                    uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
-                    cv.weight = new_weight - old_weight;
-
-                    max_vote_weight = cv.weight;
-
-                    /// discount weight by time
-                    uint128_t w(max_vote_weight);
-                    uint64_t delta_t = std::min(uint64_t((cv.last_update - comment.created).to_seconds()),
-                                                uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS));
-
-                    w *= delta_t;
-                    w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-                    cv.weight = w.to_uint64();
-                }
-                else
-                {
-                    cv.weight = 0;
-                }
-            });
-
-            if (max_vote_weight) // Optimization
-            {
-                comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
-            }
         }
         else
         {
             const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
-
-            FC_ASSERT(comment_vote.num_changes != -1, "Cannot vote again on a comment after payout.");
-
-            FC_ASSERT(comment_vote.num_changes < SCORUM_MAX_VOTE_CHANGES,
-                      "Voter has used the maximum number of vote changes on this comment.");
-
-            FC_ASSERT(comment_vote.vote_percent != o.weight, "You have already voted in a similar way.");
-
-            /// this is the rshares voting for or against the post
-            int64_t rshares = o.weight < 0 ? -abs_rshares : abs_rshares;
-
-            if (comment_vote.rshares < rshares)
-            {
-                FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
-                          "Cannot increase payout within last twelve hours before payout.");
-            }
-
-            account_service.update_voting_power(voter, current_power - used_power);
-
-            /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
-            /// total rshares^2
-            fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
-            const auto& root_comment = comment_service.get(comment.root_comment);
-
-            fc::uint128_t avg_cashout_sec;
-
-            comment_service.update(comment, [&](comment_object& c) {
-                c.net_rshares -= comment_vote.rshares;
-                c.net_rshares += rshares;
-                c.abs_rshares += abs_rshares;
-
-                /// TODO: figure out how to handle remove a vote (rshares == 0 )
-                if (rshares > 0 && comment_vote.rshares < 0)
-                    c.net_votes += 2;
-                else if (rshares > 0 && comment_vote.rshares == 0)
-                    c.net_votes += 1;
-                else if (rshares == 0 && comment_vote.rshares < 0)
-                    c.net_votes += 1;
-                else if (rshares == 0 && comment_vote.rshares > 0)
-                    c.net_votes -= 1;
-                else if (rshares < 0 && comment_vote.rshares == 0)
-                    c.net_votes -= 1;
-                else if (rshares < 0 && comment_vote.rshares > 0)
-                    c.net_votes -= 2;
-            });
-
-            comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
-
-            fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
-
-            /// calculate rshares2 value
-            new_rshares = util::evaluate_reward_curve(new_rshares);
-            old_rshares = util::evaluate_reward_curve(old_rshares);
-
-            comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
-
-            comment_vote_service.update(comment_vote, [&](comment_vote_object& cv) {
-                cv.rshares = rshares;
-                cv.vote_percent = o.weight;
-                cv.last_update = dprops_service.head_block_time();
-                cv.weight = 0;
-                cv.num_changes += 1;
+            comment_vote_service.update(comment_vote, [&](comment_vote_object& cvo) {
+                cvo.vote_percent = weight;
+                cvo.last_update = dprops_service.head_block_time();
             });
         }
+#endif
+        return;
     }
-    FC_CAPTURE_AND_RETHROW((o))
+
+    int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
+
+#ifndef IS_TEST_NET
+    FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
+#endif
+
+    int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / SCORUM_VOTE_REGENERATION_SECONDS;
+    int64_t current_power = std::min(int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
+    FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
+
+    int64_t abs_weight = abs(weight);
+    int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
+
+    const auto& props = dprops_service.get_dynamic_global_properties();
+
+    // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
+    // The second multiplication is rounded up as of HF 259
+    int64_t max_vote_denom = props.vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24);
+    FC_ASSERT(max_vote_denom > 0);
+
+    used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
+
+    FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
+
+    int64_t abs_rshares
+        = ((uint128_t(voter.effective_vesting_shares().amount.value) * used_power) / (SCORUM_100_PERCENT)).to_uint64();
+
+    FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || weight == 0,
+              "Voting weight is too small, please accumulate more voting power or scorum power.");
+
+    if (!comment_vote_service.is_exists(comment.id, voter.id))
+    {
+        FC_ASSERT(weight != 0, "Vote weight cannot be 0.");
+        /// this is the rshares voting for or against the post
+        int64_t rshares = weight < 0 ? -abs_rshares : abs_rshares;
+
+        if (rshares > 0)
+        {
+            FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
+                      "Cannot increase payout within last twelve hours before payout.");
+        }
+
+        // used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread
+        // their votes around over 50+ posts day for a week
+        // if( used_power == 0 ) used_power = 1;
+
+        account_service.update_voting_power(voter, current_power - used_power);
+
+        /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
+        /// total rshares^2
+        fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
+        const auto& root_comment = comment_service.get(comment.root_comment);
+
+        fc::uint128_t avg_cashout_sec;
+
+        FC_ASSERT(abs_rshares > 0, "Cannot vote with 0 rshares.");
+
+        auto old_vote_rshares = comment.vote_rshares;
+
+        comment_service.update(comment, [&](comment_object& c) {
+            c.net_rshares += rshares;
+            c.abs_rshares += abs_rshares;
+            if (rshares > 0)
+                c.vote_rshares += rshares;
+            if (rshares > 0)
+                c.net_votes++;
+            else
+                c.net_votes--;
+        });
+
+        comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+
+        fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
+
+        /// calculate rshares2 value
+        new_rshares = util::evaluate_reward_curve(new_rshares);
+        old_rshares = util::evaluate_reward_curve(old_rshares);
+
+        uint64_t max_vote_weight = 0;
+
+        /** this verifies uniqueness of voter
+         *
+         *  cv.weight / c.total_vote_weight ==> % of rshares increase that is accounted for by the vote
+         *
+         *  W(R) = B * R / ( R + 2S )
+         *  W(R) is bounded above by B. B is fixed at 2^64 - 1, so all weights fit in a 64 bit integer.
+         *
+         *  The equation for an individual vote is:
+         *    W(R_N) - W(R_N-1), which is the delta increase of proportional weight
+         *
+         *  c.total_vote_weight =
+         *    W(R_1) - W(R_0) +
+         *    W(R_2) - W(R_1) + ...
+         *    W(R_N) - W(R_N-1) = W(R_N) - W(R_0)
+         *
+         *  Since W(R_0) = 0, c.total_vote_weight is also bounded above by B and will always fit in a 64 bit
+         *integer.
+         *
+         **/
+        comment_vote_service.create([&](comment_vote_object& cv) {
+            cv.voter = voter.id;
+            cv.comment = comment.id;
+            cv.rshares = rshares;
+            cv.vote_percent = weight;
+            cv.last_update = dprops_service.head_block_time();
+
+            bool curation_reward_eligible
+                = rshares > 0 && (comment.last_payout == fc::time_point_sec()) && comment.allow_curation_rewards;
+
+            if (curation_reward_eligible)
+            {
+                const auto& reward_fund = db().reward_fund_service().get_reward_fund();
+                auto curve = reward_fund.curation_reward_curve;
+                uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
+                uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
+                cv.weight = new_weight - old_weight;
+
+                max_vote_weight = cv.weight;
+
+                /// discount weight by time
+                uint128_t w(max_vote_weight);
+                uint64_t delta_t = std::min(uint64_t((cv.last_update - comment.created).to_seconds()),
+                                            uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS));
+
+                w *= delta_t;
+                w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
+                cv.weight = w.to_uint64();
+            }
+            else
+            {
+                cv.weight = 0;
+            }
+        });
+
+        if (max_vote_weight) // Optimization
+        {
+            comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
+        }
+    }
+    else
+    {
+        const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
+
+        FC_ASSERT(comment_vote.num_changes != -1, "Cannot vote again on a comment after payout.");
+
+        FC_ASSERT(comment_vote.num_changes < SCORUM_MAX_VOTE_CHANGES,
+                  "Voter has used the maximum number of vote changes on this comment.");
+
+        FC_ASSERT(comment_vote.vote_percent != weight, "You have already voted in a similar way.");
+
+        /// this is the rshares voting for or against the post
+        int64_t rshares = weight < 0 ? -abs_rshares : abs_rshares;
+
+        if (comment_vote.rshares < rshares)
+        {
+            FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
+                      "Cannot increase payout within last twelve hours before payout.");
+        }
+
+        account_service.update_voting_power(voter, current_power - used_power);
+
+        /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
+        /// total rshares^2
+        fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
+        const auto& root_comment = comment_service.get(comment.root_comment);
+
+        fc::uint128_t avg_cashout_sec;
+
+        comment_service.update(comment, [&](comment_object& c) {
+            c.net_rshares -= comment_vote.rshares;
+            c.net_rshares += rshares;
+            c.abs_rshares += abs_rshares;
+
+            /// TODO: figure out how to handle remove a vote (rshares == 0 )
+            if (rshares > 0 && comment_vote.rshares < 0)
+                c.net_votes += 2;
+            else if (rshares > 0 && comment_vote.rshares == 0)
+                c.net_votes += 1;
+            else if (rshares == 0 && comment_vote.rshares < 0)
+                c.net_votes += 1;
+            else if (rshares == 0 && comment_vote.rshares > 0)
+                c.net_votes -= 1;
+            else if (rshares < 0 && comment_vote.rshares == 0)
+                c.net_votes -= 1;
+            else if (rshares < 0 && comment_vote.rshares > 0)
+                c.net_votes -= 2;
+        });
+
+        comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+
+        fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
+
+        /// calculate rshares2 value
+        new_rshares = util::evaluate_reward_curve(new_rshares);
+        old_rshares = util::evaluate_reward_curve(old_rshares);
+
+        comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
+
+        comment_vote_service.update(comment_vote, [&](comment_vote_object& cv) {
+            cv.rshares = rshares;
+            cv.vote_percent = weight;
+            cv.last_update = dprops_service.head_block_time();
+            cv.weight = 0;
+            cv.num_changes += 1;
+        });
+    }
 }
 
 void custom_evaluator::do_apply(const custom_operation&)

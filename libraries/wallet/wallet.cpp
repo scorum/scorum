@@ -2253,7 +2253,7 @@ annotated_signed_transaction wallet_api::vote(
     op.voter = voter;
     op.author = author;
     op.permlink = permlink;
-    op.weight = weight * SCORUM_1_PERCENT;
+    op.weight = weight;
 
     signed_transaction tx;
     tx.operations.push_back(op);
