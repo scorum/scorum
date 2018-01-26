@@ -171,7 +171,7 @@ void vote_operation::validate() const
 {
     validate_account_name(voter);
     validate_account_name(author);
-    FC_ASSERT(abs(weight) <= 100u, "Weight is not a SCORUM percentage");
+    FC_ASSERT(abs(weight) <= 100, "Weight is not a SCORUM percentage");
     validate_permlink(permlink);
 }
 
