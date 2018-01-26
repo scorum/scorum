@@ -89,7 +89,7 @@ public:
      * "wasting" voting power through spillover; any user voting faster than this rate will have
      * their votes reduced.
      */
-    uint32_t vote_power_reserve_rate = 40;
+    uint32_t vote_power_reserve_rate = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
 
     uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;

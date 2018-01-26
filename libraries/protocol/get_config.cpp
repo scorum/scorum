@@ -132,6 +132,8 @@ fc::variant_object get_config()
 
     result["SCORUM_CURRENCY_PRECISION"] = SCORUM_CURRENCY_PRECISION;
 
+    result["SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE"] = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
+
     return result;
 }
 } // namespace protocol
