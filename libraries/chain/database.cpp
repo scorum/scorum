@@ -1228,7 +1228,7 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
     FC_CAPTURE_AND_RETHROW()
 }
 
-share_type database::cashout_comment_helper(const share_type& reward_tokens, const comment_object& comment)
+share_type database::pay_for_post(const share_type& reward_tokens, const comment_object& comment)
 {
     try
     {
@@ -1281,7 +1281,7 @@ share_type database::cashout_comment_helper(const share_type& reward_tokens, con
     FC_CAPTURE_AND_RETHROW((comment))
 }
 
-void database::process_comment_cashout()
+void database::process_posts_cashout()
 {
     const auto& rf = get_reward_fund();
 
@@ -1331,7 +1331,7 @@ void database::process_comment_cashout()
             ctx.reward_weight = comment.reward_weight;
             ctx.max_scr = comment.max_accepted_payout;
 
-            scorum_awarded.amount += cashout_comment_helper(util::get_rshare_reward(ctx), comment);
+            scorum_awarded.amount += pay_for_post(util::get_rshare_reward(ctx), comment);
         }
 
         modify(comment, [&](comment_object& c) {
@@ -1856,7 +1856,7 @@ void database::_apply_block(const signed_block& next_block)
         process_funds();
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
-        process_comment_cashout();
+        process_posts_cashout();
         process_vesting_withdrawals();
 
         account_recovery_processing();

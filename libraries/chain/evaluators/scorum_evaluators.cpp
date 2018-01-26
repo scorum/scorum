@@ -976,7 +976,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
     int64_t current_power = std::min(int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
     FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
-    int64_t abs_weight = abs(weight);
+    int64_t abs_weight = std::abs(weight);
     int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
 
     const auto& props = dprops_service.get_dynamic_global_properties();
