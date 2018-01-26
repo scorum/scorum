@@ -4663,7 +4663,7 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
 
         // clang-format off
         BOOST_REQUIRE_EQUAL(db.get_comment("alice", string("test")).beneficiary_payout_value * db.get_dynamic_global_properties().get_vesting_share_price(),
-                            (visitor.reward_map["sam"] + visitor.reward_map["bob"] + ASSET("0.000001 SP") /*add this because of operation accuracy*/));
+                            (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
         // clang-format on
     }
     FC_LOG_AND_RETHROW()

@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         ACTORS((alice)(bob))
         generate_block();
 
-        const asset account_initial_vest_supply = ASSET("0.050000 SP");
+        const asset account_initial_vest_supply = ASSET("0.100000 SP");
         const auto blocks_between_comments = 5;
 
         BOOST_REQUIRE_EQUAL(db.get_account("alice").balance, asset(0, SCORUM_SYMBOL));

@@ -1383,18 +1383,17 @@ void database::process_funds()
     auto total_block_reward = reward_service.take_block_reward();
     // clang-format off
     auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
-    auto vesting_reward = asset(total_block_reward.amount * SCORUM_VESTING_FUND_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol); /// 15% to vesting fund
-    auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 15% to witness pay
+    auto witness_reward = total_block_reward - content_reward; /// Remaining 5% to witness pay
 
     modify(rf, [&](reward_fund_object& rfo) {
         rfo.reward_balance += content_reward;
     });
-    // clang-format on
-
+    
     modify(props, [&](dynamic_global_property_object& p) {
-        p.total_vesting_fund_scorum += vesting_reward;
+        // p.total_vesting_fund_scorum += vesting_reward;
         p.accounts_current_supply += total_block_reward;
     });
+    // clang-format on
 
     const auto& cwit = get_witness(props.current_witness);
 
@@ -2522,6 +2521,10 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
+
 
 
 
