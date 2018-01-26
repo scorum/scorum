@@ -336,7 +336,6 @@ public:
      * can be reapplied at the proper time */
     std::deque<signed_transaction> _popped_tx;
 
-    void perform_vesting_share_split(uint32_t magnitude);
     void retally_comment_children();
     void retally_witness_votes();
 

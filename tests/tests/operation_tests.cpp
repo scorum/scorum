@@ -17,6 +17,7 @@
 #include "database_fixture.hpp"
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment_vote.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -733,377 +734,9 @@ BOOST_AUTO_TEST_CASE(vote_authorities)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(vote_apply)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Testing: vote_apply");
+BOOST_AUTO_TEST_SUITE_END()
 
-        ACTORS((alice)(bob)(sam)(dave))
-        generate_block();
-
-        vest("alice", ASSET_SCR(10e+3));
-        validate_database();
-        vest("bob", ASSET_SCR(10e+3));
-        vest("sam", ASSET_SCR(10e+3));
-        vest("dave", ASSET_SCR(10e+3));
-        generate_block();
-
-        const auto& vote_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-
-        {
-            const auto& alice = db.get_account("alice");
-
-            signed_transaction tx;
-            comment_operation comment_op;
-            comment_op.author = "alice";
-            comment_op.permlink = "foo";
-            comment_op.parent_permlink = "test";
-            comment_op.title = "bar";
-            comment_op.body = "foo bar";
-            tx.operations.push_back(comment_op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            BOOST_TEST_MESSAGE("--- Testing voting on a non-existent comment");
-
-            tx.operations.clear();
-            tx.signatures.clear();
-
-            vote_operation op;
-            op.voter = "alice";
-            op.author = "bob";
-            op.permlink = "foo";
-            op.weight = SCORUM_100_PERCENT;
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Testing voting with a weight of 0");
-
-            op.weight = (int16_t)0;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Testing success");
-
-            auto old_voting_power = alice.voting_power;
-
-            op.weight = SCORUM_100_PERCENT;
-            op.author = "alice";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            db.push_transaction(tx, 0);
-
-            auto& alice_comment = db.get_comment("alice", string("foo"));
-            auto itr = vote_idx.find(std::make_tuple(alice_comment.id, alice.id));
-            int64_t max_vote_denom
-                = (db.get_dynamic_global_properties().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
-                / (60 * 60 * 24);
-
-            BOOST_REQUIRE(alice.voting_power
-                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) / max_vote_denom));
-            BOOST_REQUIRE(alice.last_vote_time == db.head_block_time());
-            BOOST_REQUIRE(alice_comment.net_rshares.value
-                          == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power)
-                              / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(alice_comment.cashout_time == alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr->rshares
-                          == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power)
-                              / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test reduced power for quick voting");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            old_voting_power = db.get_account("alice").voting_power;
-
-            comment_op.author = "bob";
-            comment_op.permlink = "foo";
-            comment_op.title = "bar";
-            comment_op.body = "foo bar";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(comment_op);
-            tx.sign(bob_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            op.weight = SCORUM_100_PERCENT / 2;
-            op.voter = "alice";
-            op.author = "bob";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            const auto& bob_comment = db.get_comment("bob", string("foo"));
-            itr = vote_idx.find(std::make_tuple(bob_comment.id, alice.id));
-
-            BOOST_REQUIRE(db.get_account("alice").voting_power
-                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
-                                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
-            BOOST_REQUIRE(bob_comment.net_rshares.value
-                          == alice.vesting_shares.amount.value
-                              * (old_voting_power - db.get_account("alice").voting_power) / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(bob_comment.cashout_time == bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test payout time extension on vote");
-
-            old_voting_power = db.get_account("bob").voting_power;
-            auto old_abs_rshares = db.get_comment("alice", string("foo")).abs_rshares.value;
-
-            generate_blocks(db.head_block_time() + fc::seconds((SCORUM_CASHOUT_WINDOW_SECONDS / 2)), true);
-
-            const auto& new_bob = db.get_account("bob");
-            const auto& new_alice_comment = db.get_comment("alice", string("foo"));
-
-            op.weight = SCORUM_100_PERCENT;
-            op.voter = "bob";
-            op.author = "alice";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(bob_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            itr = vote_idx.find(std::make_tuple(new_alice_comment.id, new_bob.id));
-            uint128_t new_cashout_time = db.head_block_time().sec_since_epoch() + SCORUM_CASHOUT_WINDOW_SECONDS;
-
-            BOOST_REQUIRE(new_bob.voting_power
-                          == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / max_vote_denom));
-            BOOST_REQUIRE(new_alice_comment.net_rshares.value
-                          == old_abs_rshares
-                              + new_bob.vesting_shares.amount.value * (old_voting_power - new_bob.voting_power)
-                                  / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(new_alice_comment.cashout_time == new_alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test negative vote");
-
-            const auto& new_sam = db.get_account("sam");
-            const auto& new_bob_comment = db.get_comment("bob", string("foo"));
-
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-
-            op.weight = -1 * SCORUM_100_PERCENT / 2;
-            op.voter = "sam";
-            op.author = "bob";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(sam_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            itr = vote_idx.find(std::make_tuple(new_bob_comment.id, new_sam.id));
-            new_cashout_time = db.head_block_time().sec_since_epoch() + SCORUM_CASHOUT_WINDOW_SECONDS;
-            auto sam_weight /*= ( ( uint128_t( new_sam.vesting_shares.amount.value ) ) / 400 + 1 ).to_uint64();*/
-                = ((uint128_t(new_sam.vesting_shares.amount.value)
-                    * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
-                   / SCORUM_100_PERCENT)
-                      .to_uint64();
-
-            BOOST_REQUIRE(new_sam.voting_power
-                          == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)));
-            BOOST_REQUIRE(new_bob_comment.net_rshares.value == static_cast<int64_t>(old_abs_rshares - sam_weight));
-            BOOST_REQUIRE(new_bob_comment.abs_rshares.value == static_cast<int64_t>(old_abs_rshares + sam_weight));
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test nested voting on nested comments");
-
-            old_abs_rshares = new_alice_comment.children_abs_rshares.value;
-            int64_t regenerated_power
-                = (SCORUM_100_PERCENT * (db.head_block_time() - db.get_account("alice").last_vote_time).to_seconds())
-                / SCORUM_VOTE_REGENERATION_SECONDS;
-            int64_t used_power
-                = (db.get_account("alice").voting_power + regenerated_power + max_vote_denom - 1) / max_vote_denom;
-
-            comment_op.author = "sam";
-            comment_op.permlink = "foo";
-            comment_op.title = "bar";
-            comment_op.body = "foo bar";
-            comment_op.parent_author = "alice";
-            comment_op.parent_permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(comment_op);
-            tx.sign(sam_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            op.weight = SCORUM_100_PERCENT;
-            op.voter = "alice";
-            op.author = "sam";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            auto new_rshares = ((fc::uint128_t(db.get_account("alice").vesting_shares.amount.value) * used_power)
-                                / SCORUM_100_PERCENT)
-                                   .to_uint64();
-
-            BOOST_REQUIRE(db.get_comment("alice", string("foo")).cashout_time
-                          == db.get_comment("alice", string("foo")).created + SCORUM_CASHOUT_WINDOW_SECONDS);
-
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test increasing vote rshares");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            auto new_alice = db.get_account("alice");
-            auto alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-            auto old_vote_rshares = alice_bob_vote->rshares;
-            auto old_net_rshares = new_bob_comment.net_rshares.value;
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-            used_power = ((SCORUM_1_PERCENT * 25 * (new_alice.voting_power) / SCORUM_100_PERCENT) + max_vote_denom - 1)
-                / max_vote_denom;
-            auto alice_voting_power = new_alice.voting_power - used_power;
-
-            op.voter = "alice";
-            op.weight = SCORUM_1_PERCENT * 25;
-            op.author = "bob";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-
-            new_rshares = ((fc::uint128_t(new_alice.vesting_shares.amount.value) * used_power) / SCORUM_100_PERCENT)
-                              .to_uint64();
-
-            BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares + new_rshares);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares + new_rshares);
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == static_cast<int64_t>(new_rshares));
-            BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
-            BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
-            BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test decreasing vote rshares");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            old_vote_rshares = new_rshares;
-            old_net_rshares = new_bob_comment.net_rshares.value;
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-            used_power = (uint64_t(SCORUM_1_PERCENT) * 75 * uint64_t(alice_voting_power)) / SCORUM_100_PERCENT;
-            used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
-            alice_voting_power -= used_power;
-
-            op.weight = SCORUM_1_PERCENT * -75;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-
-            new_rshares = ((fc::uint128_t(new_alice.vesting_shares.amount.value) * used_power) / SCORUM_100_PERCENT)
-                              .to_uint64();
-
-            BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares - new_rshares);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares + new_rshares);
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == static_cast<int64_t>(-1 * new_rshares));
-            BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
-            BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
-            BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test changing a vote to 0 weight (aka: removing a vote)");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            old_vote_rshares = alice_bob_vote->rshares;
-            old_net_rshares = new_bob_comment.net_rshares.value;
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-
-            op.weight = 0;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-
-            BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares);
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == 0);
-            BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
-            BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
-            BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test failure when increasing rshares within lockout period");
-
-            generate_blocks(fc::time_point_sec((new_bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
-                                               + SCORUM_BLOCK_INTERVAL),
-                            true);
-
-            op.weight = SCORUM_100_PERCENT;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test success when reducing rshares within lockout period");
-
-            op.weight = -1 * SCORUM_100_PERCENT;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test failure with a new vote within lockout period");
-
-            op.weight = SCORUM_100_PERCENT;
-            op.voter = "dave";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(dave_private_key, db.get_chain_id());
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-            validate_database();
-        }
-    }
-    FC_LOG_AND_RETHROW()
-}
+BOOST_FIXTURE_TEST_SUITE(operation_tests, clean_database_fixture)
 
 BOOST_AUTO_TEST_CASE(transfer_validate)
 {
@@ -3970,6 +3603,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
 
 BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 {
+    const asset to_delegate = ASSET_SP(100e+3);
+
     try
     {
         BOOST_TEST_MESSAGE("Testing: account_create_with_delegation_apply");
@@ -3982,7 +3617,6 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         const auto& account_service = db.account_service();
 
-        asset to_delegate = ASSET_SP(100e+9);
         const account_object& alice_vested = account_service.get_account("alice");
         BOOST_REQUIRE_GE(alice_vested.vesting_shares, to_delegate);
 
@@ -4026,19 +3660,20 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         const account_object& bob_acc = account_service.get_account("bob");
         const account_object& alice_acc = account_service.get_account("alice");
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == to_delegate);
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == to_delegate);
-        BOOST_REQUIRE(bob_acc.effective_vesting_shares()
-                      == bob_acc.vesting_shares - bob_acc.delegated_vesting_shares + bob_acc.received_vesting_shares);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.effective_vesting_shares(),
+                            bob_acc.vesting_shares - bob_acc.delegated_vesting_shares
+                                + bob_acc.received_vesting_shares);
 
         BOOST_TEST_MESSAGE("--- Test delegator object integrety. ");
         auto delegation
             = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.creator, op.new_account_name));
 
         BOOST_REQUIRE(delegation != nullptr);
-        BOOST_REQUIRE(delegation->delegator == op.creator);
-        BOOST_REQUIRE(delegation->delegatee == op.new_account_name);
-        BOOST_REQUIRE(delegation->vesting_shares == to_delegate);
+        BOOST_REQUIRE_EQUAL(delegation->delegator, op.creator);
+        BOOST_REQUIRE_EQUAL(delegation->delegatee, op.new_account_name);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, to_delegate);
         BOOST_REQUIRE(delegation->min_delegation_time == db.head_block_time() + SCORUM_CREATE_ACCOUNT_DELEGATION_TIME);
         auto del_amt = delegation->vesting_shares;
         auto exp_time = delegation->min_delegation_time;
@@ -4061,7 +3696,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_TEST_MESSAGE("--- Test failure when insufficient funds to process transaction.");
         tx.clear();
         op.fee = ASSET_SCR(10e+3);
-        op.delegation = ASSET_SP(0);
+        op.delegation = ASSET_NULL_SP;
         op.new_account_name = "pam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
@@ -4082,7 +3717,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         delegate_vesting_shares_operation delegate;
         delegate.delegator = "alice";
         delegate.delegatee = "bob";
-        delegate.vesting_shares = ASSET_SP(0);
+        delegate.vesting_shares = ASSET_NULL_SP;
         tx.operations.push_back(delegate);
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4115,6 +3750,8 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_validate)
 
 BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
 {
+    asset to_delegate = ASSET_SP(300e+3);
+
     try
     {
         BOOST_TEST_MESSAGE("Testing: delegate_vesting_shares_authorities");
@@ -4123,7 +3760,6 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
 
         const auto& account_service = db.account_service();
 
-        asset to_delegate = ASSET_SP(300e+3);
         const account_object& alice_vested = account_service.get_account("alice");
         BOOST_REQUIRE_GE(alice_vested.vesting_shares, to_delegate);
 
@@ -4168,6 +3804,8 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
 
 BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 {
+    const asset to_delegate = ASSET_SP(10e+6);
+
     try
     {
         BOOST_TEST_MESSAGE("Testing: delegate_vesting_shares_apply");
@@ -4189,7 +3827,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         generate_block();
 
         delegate_vesting_shares_operation op;
-        op.vesting_shares = ASSET_SP(10e+12);
+        op.vesting_shares = to_delegate;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4201,20 +3839,20 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         const account_object& alice_acc = db.get_account("alice");
         const account_object& bob_acc = db.get_account("bob");
 
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET_SP(10e+12));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET_SP(10e+12));
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
 
         BOOST_TEST_MESSAGE("--- Test that the delegation object is correct. ");
         auto delegation
             = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
 
         BOOST_REQUIRE(delegation != nullptr);
-        BOOST_REQUIRE(delegation->delegator == op.delegator);
-        BOOST_REQUIRE(delegation->vesting_shares == ASSET_SP(10e+12));
+        BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, to_delegate);
 
         validate_database();
         tx.clear();
-        op.vesting_shares = ASSET_SP(20e+12);
+        op.vesting_shares = to_delegate * 2;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
@@ -4222,10 +3860,10 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         generate_blocks(1);
 
         BOOST_REQUIRE(delegation != nullptr);
-        BOOST_REQUIRE(delegation->delegator == op.delegator);
-        BOOST_REQUIRE(delegation->vesting_shares == ASSET_SP(20e+12));
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET_SP(20e+12));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET_SP(20e+12));
+        BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, to_delegate * 2);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate * 2);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate * 2);
 
         BOOST_TEST_MESSAGE("--- Test that effective vesting shares is accurate and being applied.");
         tx.operations.clear();
@@ -4260,12 +3898,12 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         auto& alice_comment = db.get_comment("alice", string("foo"));
         auto itr = vote_idx.find(std::make_tuple(alice_comment.id, bob_acc.id));
-        BOOST_REQUIRE(alice_comment.net_rshares.value
-                      == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
-                          / SCORUM_100_PERCENT);
-        BOOST_REQUIRE(itr->rshares
-                      == bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
-                          / SCORUM_100_PERCENT);
+        BOOST_REQUIRE_EQUAL(alice_comment.net_rshares.value,
+                            bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
+                                / SCORUM_100_PERCENT);
+        BOOST_REQUIRE_EQUAL(itr->rshares,
+                            bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)
+                                / SCORUM_100_PERCENT);
 
         generate_block();
         ACTORS((sam)(dave))
@@ -4309,7 +3947,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
 
         tx.clear();
-        withdraw.vesting_shares = ASSET_SP(0);
+        withdraw.vesting_shares = ASSET_NULL_SP;
         tx.operations.push_back(withdraw);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4330,7 +3968,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         BOOST_TEST_MESSAGE("--- Remove a delegation and ensure it is returned after 1 week");
         tx.clear();
-        op.vesting_shares = ASSET_SP(0);
+        op.vesting_shares = ASSET_NULL_SP;
         tx.operations.push_back(op);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4353,13 +3991,15 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj == end);
-        BOOST_REQUIRE(db.get_account("sam").delegated_vesting_shares == ASSET_SP(0));
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").delegated_vesting_shares, ASSET_NULL_SP);
     }
     FC_LOG_AND_RETHROW()
 }
 
 BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 {
+    const asset to_delegate = ASSET_SP(10e+6);
+
     // This is a regression test specifically for issue #971
     try
     {
@@ -4382,7 +4022,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         signed_transaction tx;
         delegate_vesting_shares_operation op;
-        op.vesting_shares = ASSET_SP(10e+12);
+        op.vesting_shares = to_delegate;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4394,8 +4034,8 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         const account_object& alice_acc = db.get_account("alice");
         const account_object& bob_acc = db.get_account("bob");
 
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET_SP(10e+12));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET_SP(10e+12));
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
 
         generate_block();
 
@@ -4406,7 +4046,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         generate_block();
 
-        op.vesting_shares = ASSET_SP(0);
+        op.vesting_shares = ASSET_NULL_SP;
 
         tx.clear();
         tx.operations.push_back(op);
@@ -4414,8 +4054,8 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         db.push_transaction(tx, 0);
         generate_block();
 
-        BOOST_REQUIRE(alice_acc.delegated_vesting_shares == ASSET_SP(10e+12));
-        BOOST_REQUIRE(bob_acc.received_vesting_shares == ASSET_SP(0));
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, ASSET_NULL_SP);
     }
     FC_LOG_AND_RETHROW()
 }

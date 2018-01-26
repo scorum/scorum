@@ -106,7 +106,6 @@
 #define SCORUM_MAX_MEMO_SIZE                   2048
 #define SCORUM_MAX_PROXY_RECURSION_DEPTH       4
 
-#define SCORUM_VESTING_WITHDRAW_INTERVALS_PRE_HF_16 104
 #define SCORUM_VESTING_WITHDRAW_INTERVALS           13
 #define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS    (DAYS_TO_SECONDS(7)) /// 1 week per interval
 
@@ -117,7 +116,7 @@
 #define SCORUM_MAX_VOTE_CHANGES                5
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (60*30) /// 30 minutes
 #define SCORUM_MIN_VOTE_INTERVAL_SEC           3
-#define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50000)
+#define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50)
 
 #define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999999e+6) //100 billion - 1
 
