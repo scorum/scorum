@@ -938,7 +938,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
     FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
-    int64_t weight = o.weight * SCORUM_1_PERCENT;
+    int16_t weight = o.weight * SCORUM_1_PERCENT;
     if (weight > 0)
         FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 
