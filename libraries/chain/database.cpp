@@ -1015,23 +1015,6 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when) const
     return (when - first_slot_time).to_seconds() / SCORUM_BLOCK_INTERVAL + 1;
 }
 
-/**
- * This method updates total_reward_shares2 on DGPO, and children_rshares2 on comments, when a comment's rshares2
- * changes
- * from old_rshares2 to new_rshares2.  Maintaining invariants that children_rshares2 is the sum of all descendants'
- * rshares2,
- * and dgpo.total_reward_shares2 is the total number of rshares2 outstanding.
- */
-void database::adjust_rshares2(const comment_object& c, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2)
-{
-
-    const auto& dgpo = get_dynamic_global_properties();
-    modify(dgpo, [&](dynamic_global_property_object& p) {
-        p.total_reward_shares2 -= old_rshares2;
-        p.total_reward_shares2 += new_rshares2;
-    });
-}
-
 void database::process_vesting_withdrawals()
 {
     // clang-format off
@@ -2518,6 +2501,7 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
 
 
 

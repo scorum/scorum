@@ -44,7 +44,6 @@ public:
     asset total_supply = asset(0, SCORUM_SYMBOL); ///< accounts_current_supply + reward and registration pools supply
     asset accounts_current_supply = asset(0, SCORUM_SYMBOL); ///< total SCR on accounts balances
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
-    fc::uint128 total_reward_shares2; ///< the running total of REWARD^2
 
     price get_vesting_share_price() const
     {
@@ -108,7 +107,6 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (total_supply)
           (accounts_current_supply)
           (total_vesting_shares)
-          (total_reward_shares2)
           (maximum_block_size)
           (current_aslot)
           (recent_slots_filled)
