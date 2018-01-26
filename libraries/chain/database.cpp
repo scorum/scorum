@@ -1095,7 +1095,6 @@ void database::process_vesting_withdrawals()
                     modify(to_account, [&](account_object& a) { a.balance += converted_scorum; });
 
                     modify(cprops, [&](dynamic_global_property_object& o) {
-                        o.total_vesting_fund_scorum -= converted_scorum;
                         o.total_vesting_shares.amount -= to_deposit;
                     });
 
@@ -1128,7 +1127,6 @@ void database::process_vesting_withdrawals()
         });
 
         modify(cprops, [&](dynamic_global_property_object& o) {
-            o.total_vesting_fund_scorum -= converted_scorum;
             o.total_vesting_shares.amount -= to_convert;
         });
 
@@ -1390,7 +1388,6 @@ void database::process_funds()
     });
     
     modify(props, [&](dynamic_global_property_object& p) {
-        // p.total_vesting_fund_scorum += vesting_reward;
         p.accounts_current_supply += total_block_reward;
     });
     // clang-format on
@@ -2420,7 +2417,7 @@ void database::validate_invariants() const
 
         total_supply += get_reward_fund().reward_balance;
 
-        total_supply += gpo.total_vesting_fund_scorum;
+        total_supply += gpo.total_vesting_shares * gpo.get_vesting_share_price();
 
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
@@ -2521,6 +2518,10 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
+
 
 
 

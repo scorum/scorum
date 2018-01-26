@@ -41,19 +41,14 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset total_supply = asset(0, SCORUM_SYMBOL);
-    asset accounts_current_supply = asset(0, SCORUM_SYMBOL);
-    asset confidential_supply = asset(0, SCORUM_SYMBOL); ///< total asset held in confidential balances
-    asset total_vesting_fund_scorum = asset(0, SCORUM_SYMBOL);
-    asset total_vesting_shares = asset(0, VESTS_SYMBOL);
+    asset total_supply = asset(0, SCORUM_SYMBOL); ///< accounts_current_supply + reward and registration pools supply
+    asset accounts_current_supply = asset(0, SCORUM_SYMBOL); ///< total SCR on accounts balances
+    asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
     fc::uint128 total_reward_shares2; ///< the running total of REWARD^2
 
     price get_vesting_share_price() const
     {
-        if (total_vesting_fund_scorum.amount == 0 || total_vesting_shares.amount == 0)
-            return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
-
-        return price(total_vesting_shares, total_vesting_fund_scorum);
+        return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
     }
 
     /**
@@ -112,8 +107,6 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (current_witness)
           (total_supply)
           (accounts_current_supply)
-          (confidential_supply)
-          (total_vesting_fund_scorum)
           (total_vesting_shares)
           (total_reward_shares2)
           (maximum_block_size)
