@@ -10,7 +10,7 @@ class dynamic_global_property_object;
 struct dynamic_global_property_service_i
 {
     virtual const dynamic_global_property_object& get_dynamic_global_properties() const = 0;
-    virtual fc::time_point_sec head_block_time() = 0;
+    virtual fc::time_point_sec head_block_time() const = 0;
 };
 
 class dbs_dynamic_global_property : public dbs_base, public dynamic_global_property_service_i
@@ -23,9 +23,7 @@ protected:
 public:
     virtual const dynamic_global_property_object& get_dynamic_global_properties() const override;
 
-    virtual fc::time_point_sec head_block_time() override;
-
-    time_point_sec head_block_time() const;
+    virtual fc::time_point_sec head_block_time() const override;
 
     void set_invite_quorum(uint64_t quorum);
     void set_dropout_quorum(uint64_t quorum);

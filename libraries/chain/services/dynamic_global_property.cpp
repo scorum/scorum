@@ -21,12 +21,7 @@ const dynamic_global_property_object& dbs_dynamic_global_property::get_dynamic_g
     FC_CAPTURE_AND_RETHROW()
 }
 
-fc::time_point_sec dbs_dynamic_global_property::head_block_time()
-{
-    return get_dynamic_global_properties().time;
-}
-
-time_point_sec dbs_dynamic_global_property::head_block_time() const
+fc::time_point_sec dbs_dynamic_global_property::head_block_time() const
 {
     return get_dynamic_global_properties().time;
 }

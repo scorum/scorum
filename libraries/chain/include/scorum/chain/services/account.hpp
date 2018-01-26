@@ -88,8 +88,7 @@ struct account_service_i
     virtual void update_withdraw(const account_object& account,
                                  const asset& vesting,
                                  const time_point_sec& next_vesting_withdrawal,
-                                 const share_type& to_withdrawn,
-                                 const optional<share_type>& withdrawn = optional<share_type>())
+                                 const share_type& to_withdrawn)
         = 0;
 
     virtual void increase_withdraw_routes(const account_object& account) = 0;
@@ -215,8 +214,7 @@ public:
     virtual void update_withdraw(const account_object& account,
                                  const asset& vesting,
                                  const time_point_sec& next_vesting_withdrawal,
-                                 const share_type& to_withdrawn,
-                                 const optional<share_type>& withdrawn = optional<share_type>()) override;
+                                 const share_type& to_withdrawn) override;
 
     virtual void increase_withdraw_routes(const account_object& account) override;
     virtual void decrease_withdraw_routes(const account_object& account) override;
