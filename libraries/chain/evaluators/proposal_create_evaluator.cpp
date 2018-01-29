@@ -41,7 +41,7 @@ uint64_t proposal_create_evaluator::get_quorum(scorum::protocol::proposal_action
 {
     using proposal_action = scorum::protocol::proposal_action;
 
-    const dynamic_global_property_object& properties = _property_service.get_dynamic_global_properties();
+    const dynamic_global_property_object& properties = _property_service.get();
 
     switch (action)
     {

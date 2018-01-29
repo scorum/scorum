@@ -4,9 +4,11 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include "database_fixture.hpp"
 
@@ -21,6 +23,7 @@ public:
         : account_service(db.account_service())
         , comment_service(db.comment_service())
         , comment_vote_service(db.comment_vote_service())
+        , global_property_service(db.dynamic_global_property_service())
     {
         ACTORS((alice)(bob)(sam)(dave))
 
@@ -58,6 +61,9 @@ public:
         sam_comment_op.body = "foo bar";
         sam_comment_op.parent_permlink = "foo";
         sam_comment_op.parent_author = "alice";
+
+        max_vote = (global_property_service.get().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
+            / (60 * 60 * 24);
     }
 
     std::string comment(const std::string& actor)
@@ -66,14 +72,16 @@ public:
 
         if (comment_ops[actor].parent_author != SCORUM_ROOT_POST_PARENT)
         {
-            comment(comment_ops[actor].parent_author);
+            if (!comment_service.is_exists(comment_ops[actor].parent_author, comment_ops[actor].parent_permlink))
+                comment(comment_ops[actor].parent_author);
         }
 
         signed_transaction tx;
 
         tx.operations.push_back(comment_ops[actor]);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+        tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.sign(private_keys[actor], db.get_chain_id());
+
         BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
         BOOST_REQUIRE_NO_THROW(validate_database());
 
@@ -85,6 +93,7 @@ public:
     const account_service_i& account_service;
     const comment_service_i& comment_service;
     const comment_vote_service_i& comment_vote_service;
+    const dynamic_global_property_service_i& global_property_service;
 
     comment_operation alice_comment_op;
     comment_operation bob_comment_op;
@@ -95,9 +104,11 @@ public:
 
     using comment_ops_type = std::map<std::string, comment_operation>;
     comment_ops_type comment_ops;
+
+    int64_t max_vote;
 };
 
-BOOST_FIXTURE_TEST_SUITE(vote_apply_1, vote_apply_base_fixture)
+BOOST_FIXTURE_TEST_SUITE(vote_base_tests, vote_apply_base_fixture)
 
 SCORUM_TEST_CASE(alice_comment_check)
 {
@@ -126,7 +137,7 @@ SCORUM_TEST_CASE(voting_non_existent_comment_check)
 
     signed_transaction tx;
     tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.sign(private_keys["bob"], db.get_chain_id());
 
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
@@ -144,7 +155,7 @@ SCORUM_TEST_CASE(voting_with_zerro_weight_check)
 
     signed_transaction tx;
     tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.sign(private_keys["bob"], db.get_chain_id());
 
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
@@ -162,20 +173,19 @@ SCORUM_TEST_CASE(voting_with_dust_vesting_check)
 
     signed_transaction tx;
     tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.sign(private_keys["alice"], db.get_chain_id());
 
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(success_vote_voting_power_check)
+SCORUM_TEST_CASE(success_vote_for_100_weight_check)
 {
-    auto comment_permlink = comment("alice");
+    const auto& alice_comment = comment_service.get("alice", comment("alice"));
 
     const account_object& bob_vested = account_service.get_account("bob");
 
     auto old_voting_power = bob_vested.voting_power;
-    auto old_last_vote_time = bob_vested.last_vote_time;
 
     vote_operation op;
     op.voter = "bob"; // bob has enough vests to vote
@@ -185,105 +195,74 @@ SCORUM_TEST_CASE(success_vote_voting_power_check)
 
     signed_transaction tx;
     tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.sign(private_keys["bob"], db.get_chain_id());
 
     BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 
-    auto& alice_comment = db.get_comment("alice", comment_permlink);
-
     const auto& comment_vote = comment_vote_service.get(alice_comment.id, bob_vested.id);
+
+    // * Math notes
+    //=================================================================================================
+    // clang-format off
+    //
+    //           vesting_shares
+    // rshares = -------------- * used_power =
+    //               S100
+    //
+    //    vesting_shares                            S100 * elapsed_seconds             weight            1
+    // = -------------- * (( old_voting_power + -------------------------------- ) * ------- + M - 1) * --- =@
+    //        S100                               SCORUM_VOTE_REGENERATION_SECONDS      S100              M
+    //
+    //    vesting_shares                                 1
+    // =@ -------------- * (old_voting_power + M - 1) * ---
+    //         S100                                      M
+    //
+    //                 (M - 1)
+    // voting_power =@ ------- * (old_voting_power - 1)
+    //                    M
+    //
+    // used_power = old_voting_power - voting_power
+    //
+    // voting_power = old_voting_power - voting_power_delta =@
+    //
+    //                                                     1
+    // =@ old_voting_power - (old_voting_power + M - 1) * ---
+    //                                                     M
+    //
+    // S100 - SCORUM_100_PERCENT
+    // '=@' - approximately equally
+    // M = max_vote =
+    // = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24)
+    //
+    // SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE - constant
+    // SCORUM_VOTE_REGENERATION_SECONDS           - constant
+    //
+    // clang-format on
+    //=================================================================================================
 
     //------------------------------------------------------------------------Bob changes
 
     // check last_vote_time
-    BOOST_REQUIRE_EQUAL(bob_vested.last_vote_time.sec_since_epoch(), db.head_block_time().sec_since_epoch());
-
-    // clang-format off
-    //
-    // check voting_power decrease:
-    //
-    //                (max_vote - 1)
-    // voting_power = -------------- * (old_voting_power - 1) =
-    //                   max_vote
-    //
-    //                        old_voting_power + max_vote - 1
-    // = old_voting_power - ( -------------------------------)
-    //                                  max_vote
-    //
-    // max_vote = vote_power_reserve_rate * scorum_vote_regeneration_seconds / (60 * 60 * 24)
-    //
-    // clang-format on
-
-    int64_t max_vote = (db.get_dynamic_global_properties().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
-        / (60 * 60 * 24);
+    BOOST_REQUIRE_EQUAL(bob_vested.last_vote_time.sec_since_epoch(),
+                        global_property_service.head_block_time().sec_since_epoch());
 
     BOOST_REQUIRE_EQUAL(bob_vested.voting_power, old_voting_power - ((old_voting_power + max_vote - 1) / max_vote));
 
     //------------------------------------------------------------Bob comment vote changes
 
-    // clang-format off
-    //
-    // check comment reward setting (all Bob input values):
-    //
-    //           ( old_voting_power - voting_power )
-    // rshares = ---------------------------------- * vesting_shares
-    //                         100
-    //
-    // clang-format on
-
-    share_type rshares
-        = bob_vested.vesting_shares.amount.value * (old_voting_power - bob_vested.voting_power) / SCORUM_100_PERCENT;
+    share_type rshares = (uint128_t(bob_vested.vesting_shares.amount.value)
+                          * (old_voting_power - bob_vested.voting_power) / SCORUM_100_PERCENT)
+                             .to_uint64();
 
     BOOST_REQUIRE_EQUAL(comment_vote.rshares, rshares);
 
     //--------------------------------------------------------------Alice comment changes
 
-    // clang-format off
-    //
-    //               vesting_shares                             100 * elapsed_seconds             weight                    1
-    // abs_rshares = -------------- * (( old_voting_power + -------------------------------- ) * ------- + max_vote - 1) * ---
-    //                    100                               scorum_vote_regeneration_seconds       100                   max_vote
-    //
-    // for w = 100 and integer arithmetic ( scorum_vote_regeneration_seconds >> elapsed_seconds * 100 )
-    //
-    //   vesting_shares                                          1
-    // = -------------- * (old_voting_power + max_vote - 1) * --------
-    //        100                                             max_vote
-    //
-    // clang-format on
+    BOOST_REQUIRE_EQUAL(alice_comment.abs_rshares.value, rshares.value);
 
-    int64_t elapsed_seconds = (db.head_block_time() - old_last_vote_time).to_seconds();
-    int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / SCORUM_VOTE_REGENERATION_SECONDS;
-    int64_t current_power = std::min(int64_t(old_voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
-    int64_t abs_weight = std::abs(op.weight * SCORUM_1_PERCENT);
-    int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
-    used_power = (used_power + max_vote - 1) / max_vote;
-    int64_t abs_rshares
-        = ((uint128_t(bob_vested.effective_vesting_shares().amount.value) * used_power) / (SCORUM_100_PERCENT))
-              .to_uint64();
-    BOOST_REQUIRE_EQUAL(alice_comment.abs_rshares.value, (share_value_type)abs_rshares);
-
-    // clang-format off
-    //
-    // rshares = abs_rshares, for one vote and because:
-    //
-    //     100 * elapsed_seconds
-    // -------------------------------- -> 0 for integer arithmetic
-    // scorum_vote_regeneration_seconds
-    //
-    //  weight
-    // ------- = 1, weight = 100
-    //   100
-    //
-    // clang-format on
-
-    BOOST_REQUIRE_EQUAL(rshares.value, (share_value_type)abs_rshares);
-
-    //
-    // check net_rshares
     //
     // net_rshares = rshares, for one vote
     //
@@ -291,14 +270,11 @@ SCORUM_TEST_CASE(success_vote_voting_power_check)
     BOOST_REQUIRE_EQUAL(alice_comment.net_rshares.value, rshares.value);
 
     //
-    // check net_rshares
-    //
     // vote_rshares = rshares, for one positive vote
     //
 
     BOOST_REQUIRE_EQUAL(alice_comment.vote_rshares.value, rshares.value);
 
-    // check cashout_time
     BOOST_REQUIRE_EQUAL(alice_comment.cashout_time.sec_since_epoch(),
                         (alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
 }
@@ -314,13 +290,34 @@ public:
 
         generate_block();
     }
+
+    void vote(const std::string& voter, const std::string& author, int16_t w)
+    {
+        // comment of author must already exists
+
+        vote_operation op;
+        op.voter = voter;
+        op.author = author;
+        op.permlink = "foo";
+        op.weight = w;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+        tx.sign(private_keys[voter], db.get_chain_id());
+
+        BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+        BOOST_REQUIRE_NO_THROW(validate_database());
+
+        generate_block();
+    }
 };
 
-BOOST_FIXTURE_TEST_SUITE(vote_apply_2, vote_apply_for_alice_fixture)
+BOOST_FIXTURE_TEST_SUITE(vote_logic_tests, vote_apply_for_alice_fixture)
 
-SCORUM_TEST_CASE(reduced_power_for_quick_voting_check)
+SCORUM_TEST_CASE(reduced_power_for_50_weight_check)
 {
-    auto comment_permlink = comment("bob");
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
 
     const account_object& alice_vested = account_service.get_account("alice");
 
@@ -334,38 +331,393 @@ SCORUM_TEST_CASE(reduced_power_for_quick_voting_check)
 
     signed_transaction tx;
     tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.sign(private_keys["alice"], db.get_chain_id());
 
     BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 
-    auto& bob_comment = db.get_comment("bob", comment_permlink);
-
+    // Look 'Math notes'
+    //=================================================================================================
     // clang-format off
     //
     // check voting_power decrease:
     //
-    //                (max_vote - 1)
-    // voting_power = -------------- * (old_voting_power - 1) =
-    //                   max_vote
+    // voting_power = old_voting_power - voting_power_delta =@
     //
-    //                        old_voting_power + max_vote - 1
-    // = old_voting_power - ( -------------------------------)
-    //                                  max_vote
+    //                                                     1
+    // =@ old_voting_power - (old_voting_power + M - 1) * ---
+    //                                                    2*M
     //
-    // max_vote = vote_power_reserve_rate * scorum_vote_regeneration_seconds / (60 * 60 * 24)
+    // For W = 50S:
+    //                                 1                                   1
+    // (old_voting_power + 2*M - 2) * --- =@ (old_voting_power + M - 1) * ---
+    //                                2*M                                 2*M
     //
     // clang-format on
+    //=================================================================================================
 
-    int64_t max_vote = (db.get_dynamic_global_properties().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
-        / (60 * 60 * 24);
+    BOOST_REQUIRE_EQUAL(alice_vested.voting_power,
+                        old_voting_power - ((old_voting_power + max_vote - 1) / (2 * max_vote)));
 
-    // with SCORUM_100_PERCENT multiplier
-    BOOST_REQUIRE(alice_vested.voting_power
-                  == old_voting_power
-                      - ((old_voting_power + max_vote - 1) * SCORUM_100_PERCENT / (2 * max_vote * SCORUM_100_PERCENT)));
+    share_type rshares = (uint128_t(alice_vested.vesting_shares.amount.value)
+                          * (old_voting_power - alice_vested.voting_power) / SCORUM_100_PERCENT)
+                             .to_uint64();
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares.value, rshares.value);
+}
+
+SCORUM_TEST_CASE(restore_power_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    const account_object& alice_vested = account_service.get_account("alice");
+
+    vote("alice", "bob", 50);
+
+    auto old_abs_rshares = bob_comment.abs_rshares;
+
+    // Look 'Math notes'
+    //=================================================================================================
+    // clang-format off
+    //
+    //                      S100 * elapsed_seconds
+    // regenerated_power = ------------------------
+    //                 SCORUM_VOTE_REGENERATION_SECONDS
+    //
+    // current_power = voter.voting_power + regenerated_power
+    //
+    // For current_power = S100
+    //
+    //                                                      S100 - voter.voting_power
+    // elapsed_seconds = SCORUM_VOTE_REGENERATION_SECONDS * -------------------------
+    //                                                               S100
+    //
+    // clang-format on
+    //=================================================================================================
+
+    int64_t elapsed_seconds
+        = SCORUM_VOTE_REGENERATION_SECONDS * (SCORUM_100_PERCENT - alice_vested.voting_power) / SCORUM_100_PERCENT;
+    generate_blocks(global_property_service.head_block_time() + elapsed_seconds, true);
+
+    vote("alice", "bob", 100);
+
+    // voting_power is total restored
+
+    int64_t used_power = (SCORUM_100_PERCENT + max_vote - 1) / max_vote;
+
+    BOOST_REQUIRE_EQUAL(alice_vested.voting_power, SCORUM_100_PERCENT - used_power);
+
+    share_type rshares
+        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+
+    BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.cashout_time.sec_since_epoch(),
+                        (bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
+}
+
+SCORUM_TEST_CASE(negative_vote_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    const account_object& sam_vested = account_service.get_account("sam");
+
+    vote("alice", "bob", 100); // make not zerro abs_rshares for bob_comment
+
+    auto old_abs_rshares = bob_comment.abs_rshares;
+
+    generate_blocks(global_property_service.head_block_time() + fc::seconds((SCORUM_CASHOUT_WINDOW_SECONDS / 2)), true);
+
+    vote("sam", "bob", -50);
+
+    share_type rshares = (uint128_t(sam_vested.vesting_shares.amount.value)
+                          * (SCORUM_100_PERCENT - sam_vested.voting_power) / SCORUM_100_PERCENT)
+                             .to_uint64();
+
+    BOOST_REQUIRE_EQUAL(sam_vested.voting_power,
+                        SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote - 1) / (2 * max_vote)));
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, old_abs_rshares - rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.cashout_time.sec_since_epoch(),
+                        (bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
+}
+
+SCORUM_TEST_CASE(nested_comment_vote_check)
+{
+    const auto& parent_comment = comment_service.get("alice", comment("alice"));
+
+    // root is itself
+    BOOST_REQUIRE_EQUAL(parent_comment.root_comment._id, parent_comment.id._id);
+
+    vote("dave", "alice", 80);
+
+    // create child comment for alice comment
+
+    const auto& sam_comment = comment_service.get("sam", comment("sam"));
+
+    BOOST_REQUIRE_EQUAL(sam_comment.root_comment._id, parent_comment.id._id);
+
+    const account_object& dave_vested = account_service.get_account("dave");
+
+    auto old_abs_rshares = parent_comment.children_abs_rshares;
+
+    generate_blocks(global_property_service.head_block_time() + fc::seconds((SCORUM_CASHOUT_WINDOW_SECONDS / 2)), true);
+
+    vote("dave", "sam", 100);
+
+    share_type rshares = (uint128_t(dave_vested.vesting_shares.amount.value)
+                          * (SCORUM_100_PERCENT - dave_vested.voting_power) / SCORUM_100_PERCENT)
+                             .to_uint64();
+
+    BOOST_REQUIRE_EQUAL(parent_comment.cashout_time.sec_since_epoch(),
+                        (parent_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
+
+    BOOST_REQUIRE_EQUAL(parent_comment.children_abs_rshares, old_abs_rshares + rshares);
+}
+
+SCORUM_TEST_CASE(increasing_rshares_for_2_different_voters_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    const account_object& alice_vested = account_service.get_account("alice");
+
+    vote("sam", "bob", 50);
+
+    auto old_abs_rshares = bob_comment.abs_rshares;
+    auto old_net_rshares = bob_comment.net_rshares;
+
+    const auto alice_vote_weight = 25;
+
+    // Look 'Math notes'
+    //=================================================================================================
+    // clang-format off
+    //
+    //           vesting_shares
+    // rshares = -------------- * used_power =
+    //               S100
+    //
+    //    vesting_shares                            S100 * elapsed_seconds             weight            1
+    // = -------------- * (( old_voting_power + -------------------------------- ) * ------- + M - 1) * --- =@
+    //        S100                               SCORUM_VOTE_REGENERATION_SECONDS      S100              M
+    //
+    // For weight = S25
+    //
+    //    vesting_shares                       S25              1
+    // =@ -------------- * (old_voting_power * ---  + M - 1) * ---
+    //         S100                           S100              M
+    //
+    // clang-format on
+    //=================================================================================================
+
+    auto used_power
+        = ((SCORUM_1_PERCENT * alice_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT) + max_vote - 1)
+        / max_vote;
+    auto alice_voting_power = alice_vested.voting_power - used_power;
+    auto new_rshares
+        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+
+    vote("alice", "bob", alice_vote_weight);
+
+    const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.rshares, (int64_t)new_rshares);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_vote_weight * SCORUM_1_PERCENT);
+
+    BOOST_REQUIRE_EQUAL(alice_vested.voting_power, alice_voting_power);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, old_net_rshares + new_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + new_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.cashout_time.sec_since_epoch(),
+                        (bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
+}
+
+SCORUM_TEST_CASE(increasing_rshares_for_2_same_voters_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    const account_object& alice_vested = account_service.get_account("alice");
+
+    vote("alice", "bob", 50);
+
+    const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
+
+    auto old_abs_rshares = bob_comment.abs_rshares;
+    auto old_net_rshares = bob_comment.net_rshares;
+    auto old_vote_rshares = alice_vote.rshares;
+
+    const auto alice_second_vote_weight = 35;
+
+    auto used_power = ((SCORUM_1_PERCENT * alice_second_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT)
+                       + max_vote - 1)
+        / max_vote;
+    auto alice_voting_power = alice_vested.voting_power - used_power;
+    auto new_rshares
+        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+
+    vote("alice", "bob", alice_second_vote_weight);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.rshares, (int64_t)new_rshares);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_second_vote_weight * SCORUM_1_PERCENT);
+
+    BOOST_REQUIRE_EQUAL(alice_vested.voting_power, alice_voting_power);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, old_net_rshares - old_vote_rshares + new_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + new_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.cashout_time.sec_since_epoch(),
+                        (bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
+}
+
+// decreasing_rshares_for_2_different_voters_check is tested by negative_vote_check
+
+SCORUM_TEST_CASE(decreasing_rshares_for_2_same_voters_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    const account_object& alice_vested = account_service.get_account("alice");
+
+    vote("alice", "bob", 50);
+
+    const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
+
+    auto old_abs_rshares = bob_comment.abs_rshares;
+    auto old_net_rshares = bob_comment.net_rshares;
+    auto old_vote_rshares = alice_vote.rshares;
+
+    const auto alice_second_vote_weight = -75;
+
+    auto used_power = ((SCORUM_1_PERCENT * -alice_second_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT)
+                       + max_vote - 1)
+        / max_vote;
+    auto alice_voting_power = alice_vested.voting_power - used_power;
+    auto new_rshares
+        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+
+    vote("alice", "bob", alice_second_vote_weight);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.rshares, -(int64_t)new_rshares);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_second_vote_weight * SCORUM_1_PERCENT);
+
+    BOOST_REQUIRE_EQUAL(alice_vested.voting_power, alice_voting_power);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, old_net_rshares - old_vote_rshares - new_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + new_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.cashout_time.sec_since_epoch(),
+                        (bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS).sec_since_epoch());
+}
+
+SCORUM_TEST_CASE(removing_vote_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    const account_object& alice_vested = account_service.get_account("alice");
+
+    vote("alice", "bob", -50);
+
+    const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
+
+    auto old_abs_rshares = bob_comment.abs_rshares;
+    auto old_net_rshares = bob_comment.net_rshares;
+    auto old_vote_rshares = alice_vote.rshares;
+
+    BOOST_REQUIRE_NE(alice_vote.rshares, (int64_t)0);
+
+    vote("alice", "bob", 0);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.rshares, (int64_t)0);
+
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, (int64_t)0);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, old_net_rshares - old_vote_rshares);
+
+    BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares);
+}
+
+SCORUM_TEST_CASE(failure_when_increasing_rshares_within_lockout_period_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    vote("alice", "bob", 90);
+
+    generate_blocks(fc::time_point_sec((bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
+                                       + SCORUM_BLOCK_INTERVAL),
+                    true);
+
+    vote_operation op;
+    op.voter = "alice";
+    op.author = "bob";
+    op.permlink = "foo";
+    op.weight = (int16_t)100;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(private_keys["alice"], db.get_chain_id());
+
+    SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(success_when_reducing_rshares_within_lockout_period_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    vote("alice", "bob", 90);
+
+    generate_blocks(fc::time_point_sec((bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
+                                       + SCORUM_BLOCK_INTERVAL),
+                    true);
+
+    vote_operation op;
+    op.voter = "alice";
+    op.author = "bob";
+    op.permlink = "foo";
+    op.weight = (int16_t)-100;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(private_keys["alice"], db.get_chain_id());
+
+    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+}
+
+SCORUM_TEST_CASE(failure_with_a_new_vote_within_lockout_period_check)
+{
+    const auto& bob_comment = comment_service.get("bob", comment("bob"));
+
+    vote("alice", "bob", 90);
+
+    generate_blocks(fc::time_point_sec((bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
+                                       + SCORUM_BLOCK_INTERVAL),
+                    true);
+
+    vote_operation op;
+    op.voter = "dave";
+    op.author = "bob";
+    op.permlink = "foo";
+    op.weight = (int16_t)50;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.set_expiration(global_property_service.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(private_keys["dave"], db.get_chain_id());
+
+    SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -198,7 +198,7 @@ public:
     {
         dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
 
-        auto& prop = prop_service.get_dynamic_global_properties();
+        auto& prop = prop_service.get();
 
         return prop.invite_quorum;
     }
@@ -207,7 +207,7 @@ public:
     {
         dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
 
-        auto& prop = prop_service.get_dynamic_global_properties();
+        auto& prop = prop_service.get();
 
         return prop.dropout_quorum;
     }
@@ -216,7 +216,7 @@ public:
     {
         dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
 
-        auto& prop = prop_service.get_dynamic_global_properties();
+        auto& prop = prop_service.get();
 
         return prop.change_quorum;
     }

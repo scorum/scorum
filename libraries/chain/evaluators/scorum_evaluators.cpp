@@ -138,7 +138,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     witness_service_i& witness_service = db().witness_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
-    const auto& props = dprops_service.get_dynamic_global_properties();
+    const auto& props = dprops_service.get();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -784,7 +784,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
     if (!account.created_by_genesis)
     {
-        const auto& props = dprops_service.get_dynamic_global_properties();
+        const auto& props = dprops_service.get();
         const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
 
         asset min_vests = wso.median_props.account_creation_fee * props.get_vesting_share_price();
@@ -981,7 +981,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         int64_t abs_weight = std::abs(weight);
         int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
 
-        const auto& props = dprops_service.get_dynamic_global_properties();
+        const auto& props = dprops_service.get();
 
         // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
         // The second multiplication is rounded up as of HF 259
@@ -1311,7 +1311,7 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
 
     const auto& wso = witness_service.get_witness_schedule_object();
-    const auto& props = dprops_service.get_dynamic_global_properties();
+    const auto& props = dprops_service.get();
     auto min_delegation
         = asset(wso.median_props.account_creation_fee.amount * 10, SCORUM_SYMBOL) * props.get_vesting_share_price();
     auto min_update = wso.median_props.account_creation_fee * props.get_vesting_share_price();
