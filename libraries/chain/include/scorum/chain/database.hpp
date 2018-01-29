@@ -300,8 +300,8 @@ public:
      */
     void process_vesting_withdrawals();
     share_type pay_curators(const comment_object& c, share_type& max_rewards);
-    share_type pay_for_post(const share_type& reward, const comment_object& comment);
-    void process_posts_cashout();
+    share_type pay_for_comment(const share_type& reward, const comment_object& comment);
+    void process_comments_cashout();
     void process_funds();
     void account_recovery_processing();
     void expire_escrow_ratification();
