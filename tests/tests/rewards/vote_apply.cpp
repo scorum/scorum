@@ -206,10 +206,14 @@ SCORUM_TEST_CASE(success_vote_voting_power_check)
     // check voting_power decrease:
     //
     //                (max_vote - 1)
-    // voting_power = -------------- * (old_voting_power - 1)
-    //                  max_vote
+    // voting_power = -------------- * (old_voting_power - 1) =
+    //                   max_vote
     //
-    // max_vote = vote_power_reserve_rate * scorum_vote_regeneration_days
+    //                        old_voting_power + max_vote - 1
+    // = old_voting_power - ( -------------------------------)
+    //                                  max_vote
+    //
+    // max_vote = vote_power_reserve_rate * scorum_vote_regeneration_seconds / (60 * 60 * 24)
     //
     // clang-format on
 
@@ -239,12 +243,15 @@ SCORUM_TEST_CASE(success_vote_voting_power_check)
 
     // clang-format off
     //
-    // check abs_rshares -
-    //        This is used to track the total abs(weight) of votes.
-    //
     //               vesting_shares                             100 * elapsed_seconds             weight                    1
     // abs_rshares = -------------- * (( old_voting_power + -------------------------------- ) * ------- + max_vote - 1) * ---
     //                    100                               scorum_vote_regeneration_seconds       100                   max_vote
+    //
+    // for w = 100 and integer arithmetic ( scorum_vote_regeneration_seconds >> elapsed_seconds * 100 )
+    //
+    //   vesting_shares                                          1
+    // = -------------- * (old_voting_power + max_vote - 1) * --------
+    //        100                                             max_vote
     //
     // clang-format on
 
@@ -259,7 +266,20 @@ SCORUM_TEST_CASE(success_vote_voting_power_check)
               .to_uint64();
     BOOST_REQUIRE_EQUAL(alice_comment.abs_rshares.value, (share_value_type)abs_rshares);
 
-    // Magic for integer arithmetic
+    // clang-format off
+    //
+    // rshares = abs_rshares, for one vote and because:
+    //
+    //     100 * elapsed_seconds
+    // -------------------------------- -> 0 for integer arithmetic
+    // scorum_vote_regeneration_seconds
+    //
+    //  weight
+    // ------- = 1, weight = 100
+    //   100
+    //
+    // clang-format on
+
     BOOST_REQUIRE_EQUAL(rshares.value, (share_value_type)abs_rshares);
 
     //
@@ -273,7 +293,7 @@ SCORUM_TEST_CASE(success_vote_voting_power_check)
     //
     // check net_rshares
     //
-    // net_rshares = rshares, for one positive vote
+    // vote_rshares = rshares, for one positive vote
     //
 
     BOOST_REQUIRE_EQUAL(alice_comment.vote_rshares.value, rshares.value);
@@ -323,6 +343,22 @@ SCORUM_TEST_CASE(reduced_power_for_quick_voting_check)
 
     auto& bob_comment = db.get_comment("bob", comment_permlink);
 
+    // clang-format off
+    //
+    // check voting_power decrease:
+    //
+    //                (max_vote - 1)
+    // voting_power = -------------- * (old_voting_power - 1) =
+    //                   max_vote
+    //
+    //                        old_voting_power + max_vote - 1
+    // = old_voting_power - ( -------------------------------)
+    //                                  max_vote
+    //
+    // max_vote = vote_power_reserve_rate * scorum_vote_regeneration_seconds / (60 * 60 * 24)
+    //
+    // clang-format on
+
     int64_t max_vote = (db.get_dynamic_global_properties().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
         / (60 * 60 * 24);
 
@@ -330,11 +366,6 @@ SCORUM_TEST_CASE(reduced_power_for_quick_voting_check)
     BOOST_REQUIRE(alice_vested.voting_power
                   == old_voting_power
                       - ((old_voting_power + max_vote - 1) * SCORUM_100_PERCENT / (2 * max_vote * SCORUM_100_PERCENT)));
-
-    // check net_rshares = rshares
-    BOOST_REQUIRE(bob_comment.net_rshares.value
-                  == alice_vested.vesting_shares.amount.value * (old_voting_power - alice_vested.voting_power)
-                      / SCORUM_100_PERCENT);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
