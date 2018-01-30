@@ -161,8 +161,6 @@
 #define SCORUM_MAX_TRANSACTION_SIZE            (1024*64)
 #define SCORUM_MIN_BLOCK_SIZE_LIMIT            (SCORUM_MAX_TRANSACTION_SIZE)
 #define SCORUM_MAX_BLOCK_SIZE                  (SCORUM_MAX_TRANSACTION_SIZE*SCORUM_BLOCK_INTERVAL*2000)
-#define SCORUM_MAX_FEED_AGE_SECONDS            (DAYS_TO_SECONDS(7))
-#define SCORUM_MIN_FEEDS                       (SCORUM_MAX_WITNESSES/3) /// protects the network from conversions before price has been established
 
 #define SCORUM_MIN_UNDO_HISTORY                 10
 #define SCORUM_MAX_UNDO_HISTORY                 10000
