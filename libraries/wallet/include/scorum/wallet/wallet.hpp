@@ -645,7 +645,7 @@ public:
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
-     * @param amount The funds being transferred. i.e. "100.000000 SCR"
+     * @param amount The funds being transferred. i.e. "100.000000000 SCR"
      * @param memo A memo for the transactionm, encrypted with the to account's public memo key
      * @param broadcast true if you wish to broadcast the transaction
      */
@@ -745,7 +745,7 @@ public:
      *
      * @param from The account the SCR is coming from
      * @param to The account getting the SP
-     * @param amount The amount of SCR to vest i.e. "100.000000 SCR"
+     * @param amount The amount of SCR to vest i.e. "100.000000000 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
@@ -756,7 +756,7 @@ public:
      *
      * @param from The account the SP are withdrawn from
      * @param vesting_shares The amount of SP to withdraw over the next 13 weeks. Each week (amount/13) shares are
-     *    withdrawn and deposited back as SCR. i.e. "10.000000 SP"
+     *    withdrawn and deposited back as SCR. i.e. "10.000000000 SP"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction

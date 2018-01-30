@@ -13,7 +13,7 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
-#define SCORUM_CURRENCY_PRECISION  6
+#define SCORUM_CURRENCY_PRECISION  9
 
 // SCORUM = SCR with 3 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
@@ -118,7 +118,7 @@
 #define SCORUM_MIN_VOTE_INTERVAL_SEC           3
 #define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50)
 
-#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999999e+6) //100 billion - 1
+#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999e+9) //100 million - 1
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds

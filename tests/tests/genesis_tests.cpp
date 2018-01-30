@@ -17,8 +17,8 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
                                             "name":"user",
                                             "recovery_account":"admin",
                                             "public_key":"SCR1111111111111111111111111111111114T1Anm",
-                                            "scr_amount":"0.001000 SCR",
-                                            "sp_amount":"1.000000 SP"
+                                            "scr_amount":"0.000001000 SCR",
+                                            "sp_amount":"1.000000000 SP"
                                         }]
                                     }
                                     )json";
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
     BOOST_CHECK(account.name == "user");
     BOOST_CHECK(account.public_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
     BOOST_CHECK(account.scr_amount == sp::asset(1000, SCORUM_SYMBOL));
-    BOOST_CHECK(account.sp_amount == sp::asset(1000000, VESTS_SYMBOL));
+    BOOST_CHECK(account.sp_amount == sp::asset(1000000000, VESTS_SYMBOL));
     BOOST_CHECK(account.recovery_account == "admin");
 }
 
@@ -69,21 +69,21 @@ BOOST_AUTO_TEST_CASE(check_initial_timestamp)
 
 BOOST_AUTO_TEST_CASE(check_initial_supply)
 {
-    std::string genesis_str = R"json({ "init_accounts_supply": "1.000000 SCR"})json";
+    std::string genesis_str = R"json({ "init_accounts_supply": "1.000000000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
-    BOOST_CHECK(genesis_state.init_accounts_supply.amount == 1000000);
+    BOOST_CHECK(genesis_state.init_accounts_supply.amount == 1000000000);
     BOOST_CHECK(genesis_state.init_accounts_supply.symbol == SCORUM_SYMBOL);
 }
 
 BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
 {
-    std::string genesis_str = R"json({ "init_rewards_supply": "1.000000 SCR"})json";
+    std::string genesis_str = R"json({ "init_rewards_supply": "1.000000000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
-    BOOST_CHECK(genesis_state.init_rewards_supply.amount == 1000000);
+    BOOST_CHECK(genesis_state.init_rewards_supply.amount == 1000000000);
     BOOST_CHECK(genesis_state.init_rewards_supply.symbol == SCORUM_SYMBOL);
 }
 
