@@ -286,8 +286,6 @@ public:
                              const asset& curator_sbd_value,
                              const asset& beneficiary_value);
 
-    void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
-
     asset get_balance(const account_object& a, asset_symbol_type symbol) const;
     asset get_balance(const std::string& aname, asset_symbol_type symbol) const
     {
@@ -336,7 +334,6 @@ public:
      * can be reapplied at the proper time */
     std::deque<signed_transaction> _popped_tx;
 
-    void perform_vesting_share_split(uint32_t magnitude);
     void retally_comment_children();
     void retally_witness_votes();
 

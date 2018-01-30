@@ -1,7 +1,6 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/compound.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
@@ -1016,37 +1015,19 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when) const
     return (when - first_slot_time).to_seconds() / SCORUM_BLOCK_INTERVAL + 1;
 }
 
-/**
- * This method updates total_reward_shares2 on DGPO, and children_rshares2 on comments, when a comment's rshares2
- * changes
- * from old_rshares2 to new_rshares2.  Maintaining invariants that children_rshares2 is the sum of all descendants'
- * rshares2,
- * and dgpo.total_reward_shares2 is the total number of rshares2 outstanding.
- */
-void database::adjust_rshares2(const comment_object& c, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2)
-{
-
-    const auto& dgpo = get_dynamic_global_properties();
-    modify(dgpo, [&](dynamic_global_property_object& p) {
-        p.total_reward_shares2 -= old_rshares2;
-        p.total_reward_shares2 += new_rshares2;
-    });
-}
-
 void database::process_vesting_withdrawals()
 {
+    // clang-format off
     dbs_account& account_service = obtain_service<dbs_account>();
 
     const auto& widx = get_index<account_index>().indices().get<by_next_vesting_withdrawal>();
     const auto& didx = get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
-    auto current = widx.begin();
 
     const auto& cprops = get_dynamic_global_properties();
 
-    while (current != widx.end() && current->next_vesting_withdrawal <= head_block_time())
+    for (auto current = widx.begin(); current != widx.end() && current->next_vesting_withdrawal <= head_block_time();)
     {
-        const auto& from_account = *current;
-        ++current;
+        const auto& from_account = *(current++);
 
         /**
          *  Let T = total tokens in vesting fund
@@ -1057,32 +1038,28 @@ void database::process_vesting_withdrawals()
          */
         share_type to_withdraw;
         if (from_account.to_withdraw - from_account.withdrawn < from_account.vesting_withdraw_rate.amount)
-            to_withdraw = std::min(from_account.vesting_shares.amount,
-                                   from_account.to_withdraw % from_account.vesting_withdraw_rate.amount)
-                              .value;
+        {
+            to_withdraw = std::min(from_account.vesting_shares.amount, from_account.to_withdraw % from_account.vesting_withdraw_rate.amount);
+        }
         else
         {
-            to_withdraw = std::min(from_account.vesting_shares.amount, from_account.vesting_withdraw_rate.amount).value;
+            to_withdraw = std::min(from_account.vesting_shares.amount, from_account.vesting_withdraw_rate.amount);
         }
 
-        share_type vests_deposited_as_scorum = 0;
         share_type vests_deposited_as_vests = 0;
-        asset total_scorum_converted = asset(0, SCORUM_SYMBOL);
+        share_type vests_deposited_as_scorum = 0;
 
-        // Do two passes, the first for vests, the second for scorum. Try to maintain as much accuracy for vests as
-        // possible.
-        for (auto itr = didx.upper_bound(boost::make_tuple(from_account.id, account_id_type()));
-             itr != didx.end() && itr->from_account == from_account.id; ++itr)
+        for (auto itr = didx.upper_bound(boost::make_tuple(from_account.id, account_id_type())); itr != didx.end() && itr->from_account == from_account.id; ++itr)
         {
-            if (itr->auto_vest)
-            {
-                share_type to_deposit
-                    = ((fc::uint128_t(to_withdraw.value) * itr->percent) / SCORUM_100_PERCENT).to_uint64();
-                vests_deposited_as_vests += to_deposit;
+            share_type to_deposit = ((fc::uint128_t(to_withdraw.value) * itr->percent) / SCORUM_100_PERCENT).to_uint64();
 
-                if (to_deposit > 0)
+            if (to_deposit > 0)
+            {
+                const auto& to_account = get(itr->to_account);
+
+                if (itr->auto_vest)//withdraw SP
                 {
-                    const auto& to_account = get(itr->to_account);
+                    vests_deposited_as_vests += to_deposit;
 
                     modify(to_account, [&](account_object& a) { a.vesting_shares.amount += to_deposit; });
 
@@ -1092,33 +1069,21 @@ void database::process_vesting_withdrawals()
                                                                            asset(to_deposit, VESTS_SYMBOL),
                                                                            asset(to_deposit, VESTS_SYMBOL)));
                 }
-            }
-        }
-
-        for (auto itr = didx.upper_bound(boost::make_tuple(from_account.id, account_id_type()));
-             itr != didx.end() && itr->from_account == from_account.id; ++itr)
-        {
-            if (!itr->auto_vest)
-            {
-                const auto& to_account = get(itr->to_account);
-
-                share_type to_deposit
-                    = ((fc::uint128_t(to_withdraw.value) * itr->percent) / SCORUM_100_PERCENT).to_uint64();
-                vests_deposited_as_scorum += to_deposit;
-                auto converted_scorum = asset(to_deposit, VESTS_SYMBOL) * cprops.get_vesting_share_price();
-                total_scorum_converted += converted_scorum;
-
-                if (to_deposit > 0)
+                else //convert SP to SCR and withdraw SCR
                 {
+                    vests_deposited_as_scorum += to_deposit;
+
+                    auto converted_scorum = asset(to_deposit, VESTS_SYMBOL) * cprops.get_vesting_share_price();
+
                     modify(to_account, [&](account_object& a) { a.balance += converted_scorum; });
 
                     modify(cprops, [&](dynamic_global_property_object& o) {
-                        o.total_vesting_fund_scorum -= converted_scorum;
                         o.total_vesting_shares.amount -= to_deposit;
                     });
 
-                    push_virtual_operation(fill_vesting_withdraw_operation(
-                        from_account.name, to_account.name, asset(to_deposit, VESTS_SYMBOL), converted_scorum));
+                    push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name, 
+                                                                           asset(to_deposit, VESTS_SYMBOL), 
+                                                                           converted_scorum));
                 }
             }
         }
@@ -1145,7 +1110,6 @@ void database::process_vesting_withdrawals()
         });
 
         modify(cprops, [&](dynamic_global_property_object& o) {
-            o.total_vesting_fund_scorum -= converted_scorum;
             o.total_vesting_shares.amount -= to_convert;
         });
 
@@ -1157,6 +1121,8 @@ void database::process_vesting_withdrawals()
         push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, from_account.name,
                                                                asset(to_withdraw, VESTS_SYMBOL), converted_scorum));
     }
+
+    // clang-format on
 }
 
 void database::adjust_total_payout(const comment_object& cur,
@@ -1398,18 +1364,16 @@ void database::process_funds()
     auto total_block_reward = reward_service.take_block_reward();
     // clang-format off
     auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
-    auto vesting_reward = asset(total_block_reward.amount * SCORUM_VESTING_FUND_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol); /// 15% to vesting fund
-    auto witness_reward = total_block_reward - content_reward - vesting_reward; /// Remaining 15% to witness pay
+    auto witness_reward = total_block_reward - content_reward; /// Remaining 5% to witness pay
 
     modify(rf, [&](reward_fund_object& rfo) {
         rfo.reward_balance += content_reward;
     });
-    // clang-format on
-
+    
     modify(props, [&](dynamic_global_property_object& p) {
-        p.total_vesting_fund_scorum += vesting_reward;
         p.accounts_current_supply += total_block_reward;
     });
+    // clang-format on
 
     const auto& cwit = get_witness(props.current_witness);
 
@@ -2362,9 +2326,6 @@ void database::apply_hardfork(uint32_t hardfork)
 
     switch (hardfork)
     {
-    case SCORUM_HARDFORK_0_1:
-        perform_vesting_share_split(1000000);
-        break;
     default:
         break;
     }
@@ -2439,7 +2400,7 @@ void database::validate_invariants() const
 
         total_supply += get_reward_fund().reward_balance;
 
-        total_supply += gpo.total_vesting_fund_scorum;
+        total_supply += gpo.total_vesting_shares * gpo.get_vesting_share_price();
 
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
@@ -2463,57 +2424,6 @@ void database::validate_invariants() const
                   ("total_vesting_shares", gpo.total_vesting_shares)("total_vsf_votes", total_vsf_votes));
     }
     FC_CAPTURE_LOG_AND_RETHROW((head_block_num()));
-}
-
-void database::perform_vesting_share_split(uint32_t magnitude)
-{
-    try
-    {
-        modify(get_dynamic_global_properties(), [&](dynamic_global_property_object& d) {
-            d.total_vesting_shares.amount *= magnitude;
-            d.total_reward_shares2 = 0;
-        });
-
-        // Need to update all SP in accounts and the total SP in the dgpo
-        for (const auto& account : get_index<account_index>().indices())
-        {
-            modify(account, [&](account_object& a) {
-                a.vesting_shares.amount *= magnitude;
-                a.withdrawn *= magnitude;
-                a.to_withdraw *= magnitude;
-                a.vesting_withdraw_rate
-                    = asset(a.to_withdraw / SCORUM_VESTING_WITHDRAW_INTERVALS_PRE_HF_16, VESTS_SYMBOL);
-                if (a.vesting_withdraw_rate.amount == 0)
-                {
-                    a.vesting_withdraw_rate.amount = 1;
-                }
-
-                for (uint32_t i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
-                {
-                    a.proxied_vsf_votes[i] *= magnitude;
-                }
-            });
-        }
-
-        const auto& comments = get_index<comment_index>().indices();
-        for (const auto& comment : comments)
-        {
-            modify(comment, [&](comment_object& c) {
-                c.net_rshares *= magnitude;
-                c.abs_rshares *= magnitude;
-                c.vote_rshares *= magnitude;
-            });
-        }
-
-        for (const auto& c : comments)
-        {
-            if (c.net_rshares.value > 0)
-            {
-                adjust_rshares2(c, 0, util::evaluate_reward_curve(c.net_rshares.value));
-            }
-        }
-    }
-    FC_CAPTURE_AND_RETHROW()
 }
 
 void database::retally_comment_children()
@@ -2591,6 +2501,32 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
