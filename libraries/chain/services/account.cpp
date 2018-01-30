@@ -504,7 +504,7 @@ const asset dbs_account::create_vesting(const account_object& to_account, const 
     {
         const auto& cprops = db_impl().get_dynamic_global_properties();
 
-        asset new_vesting = scorum * cprops.get_vesting_share_price();
+        asset new_vesting = asset(scorum.amount, VESTS_SYMBOL);
 
         db_impl().modify(to_account, [&](account_object& to) { to.vesting_shares += new_vesting; });
 

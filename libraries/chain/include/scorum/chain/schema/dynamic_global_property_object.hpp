@@ -45,11 +45,6 @@ public:
     asset accounts_current_supply = asset(0, SCORUM_SYMBOL); ///< total SCR on accounts balances
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
 
-    price get_vesting_share_price() const
-    {
-        return price(asset(1000000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
-    }
-
     /**
      *  Maximum block size is decided by the set of active witnesses which change every round.
      *  Each witness posts what they think the maximum size should be as part of their witness

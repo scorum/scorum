@@ -1073,7 +1073,7 @@ void database::process_vesting_withdrawals()
                 {
                     vests_deposited_as_scorum += to_deposit;
 
-                    auto converted_scorum = asset(to_deposit, VESTS_SYMBOL) * cprops.get_vesting_share_price();
+                    auto converted_scorum = asset(to_deposit, SCORUM_SYMBOL);
 
                     modify(to_account, [&](account_object& a) { a.balance += converted_scorum; });
 
@@ -1091,7 +1091,7 @@ void database::process_vesting_withdrawals()
         share_type to_convert = to_withdraw - vests_deposited_as_scorum - vests_deposited_as_vests;
         FC_ASSERT(to_convert >= 0, "Deposited more vests than were supposed to be withdrawn");
 
-        auto converted_scorum = asset(to_convert, VESTS_SYMBOL) * cprops.get_vesting_share_price();
+        auto converted_scorum = asset(to_convert, SCORUM_SYMBOL);
 
         modify(from_account, [&](account_object& a) {
             a.vesting_shares.amount -= to_withdraw;
@@ -2397,7 +2397,7 @@ void database::validate_invariants() const
 
         total_supply += get_reward_fund().reward_balance;
 
-        total_supply += gpo.total_vesting_shares * gpo.get_vesting_share_price();
+        total_supply += asset(gpo.total_vesting_shares.amount, SCORUM_SYMBOL);
 
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())

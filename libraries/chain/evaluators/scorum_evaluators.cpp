@@ -136,9 +136,6 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     account_service_i& account_service = db().account_service();
     witness_service_i& witness_service = db().witness_service();
-    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-
-    const auto& props = dprops_service.get();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -161,12 +158,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     auto target_delegation
         = asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
                     * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                SCORUM_SYMBOL)
-        * props.get_vesting_share_price();
+                VESTS_SYMBOL);
 
-    auto current_delegation
-        = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, SCORUM_SYMBOL) * props.get_vesting_share_price()
-        + o.delegation;
+    auto current_delegation = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, VESTS_SYMBOL) + o.delegation;
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
               ("f", target_delegation)("p", current_delegation)(
@@ -783,10 +777,9 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
     if (!account.created_by_genesis)
     {
-        const auto& props = dprops_service.get();
         const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
 
-        asset min_vests = wso.median_props.account_creation_fee * props.get_vesting_share_price();
+        asset min_vests = asset(wso.median_props.account_creation_fee.amount, VESTS_SYMBOL);
         min_vests.amount.value *= 10;
 
         FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
@@ -1279,10 +1272,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
 
     const auto& wso = witness_service.get_witness_schedule_object();
-    const auto& props = dprops_service.get();
-    auto min_delegation
-        = asset(wso.median_props.account_creation_fee.amount * 10, SCORUM_SYMBOL) * props.get_vesting_share_price();
-    auto min_update = wso.median_props.account_creation_fee * props.get_vesting_share_price();
+    auto min_delegation = asset(wso.median_props.account_creation_fee.amount * 10, VESTS_SYMBOL);
+    auto min_update = asset(wso.median_props.account_creation_fee.amount, VESTS_SYMBOL);
 
     // If delegation doesn't exist, create it
     if (!vd_service.is_exists(op.delegator, op.delegatee))

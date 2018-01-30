@@ -100,8 +100,6 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         const account_object& init = db.get_account(TEST_INIT_DELEGATE_NAME);
         asset init_starting_balance = init.balance;
 
-        const auto& gpo = db.get_dynamic_global_properties();
-
         account_create_operation op;
 
         op.fee = asset(100, SCORUM_SYMBOL);
@@ -123,9 +121,6 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         const account_object& acct = db.get_account("alice");
         const account_authority_object& acct_auth = db.get<account_authority_object, by_account>("alice");
 
-        auto vest_shares = gpo.total_vesting_shares;
-        auto vests = gpo.total_vesting_shares * gpo.get_vesting_share_price();
-
         BOOST_REQUIRE(acct.name == "alice");
         BOOST_REQUIRE(acct_auth.owner == authority(1, priv_key.get_public_key(), 1));
         BOOST_REQUIRE(acct_auth.active == authority(2, priv_key.get_public_key(), 2));
@@ -137,7 +132,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
 
         /// because init_witness has created vesting shares and blocks have been produced, 100 SCR is worth less than
         /// 100 vesting shares due to rounding
-        BOOST_REQUIRE(acct.vesting_shares.amount.value == (op.fee * (vest_shares / vests)).amount.value);
+        BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
         BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
         BOOST_REQUIRE((init_starting_balance - ASSET_SCR(100)).amount.value == init.balance.amount.value);
@@ -153,7 +148,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_REQUIRE(acct.proxy == "");
         BOOST_REQUIRE(acct.created == db.head_block_time());
         BOOST_REQUIRE(acct.balance.amount.value == ASSET_SCR(0).amount.value);
-        BOOST_REQUIRE(acct.vesting_shares.amount.value == (op.fee * (vest_shares / vests)).amount.value);
+        BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
         BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
         BOOST_REQUIRE((init_starting_balance - ASSET_SCR(100)).amount.value == init.balance.amount.value);
@@ -980,8 +975,6 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         fund("alice", 10000);
 
         const auto& gpo = db.get_dynamic_global_properties();
-        price share_price = gpo.get_vesting_share_price();
-        price scorum_price = price(share_price.quote, share_price.base); // == 1/gpo.get_vesting_share_price()
 
         BOOST_REQUIRE(alice.balance == ASSET_SCR(10e+3));
 
@@ -1000,14 +993,14 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto new_vest = op.amount * scorum_price;
+        auto new_vest = ASSET_SP(op.amount.amount.value);
         shares += new_vest;
         alice_shares += new_vest;
 
         BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(25e+2).amount.value);
         BOOST_REQUIRE_EQUAL(alice.vesting_shares, alice_shares);
         BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
-   
+
         validate_database();
 
         op.to = "bob";
@@ -1019,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        new_vest = op.amount * scorum_price;
+        new_vest = ASSET_SP(op.amount.amount.value);
         shares += new_vest;
         bob_shares += new_vest;
 

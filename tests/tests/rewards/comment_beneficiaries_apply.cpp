@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"], (db.get_account("sam").vesting_shares - sam_vesting_before));
 
         // clang-format off
-        BOOST_REQUIRE_EQUAL(db.get_comment("alice", std::string("test")).beneficiary_payout_value * db.get_dynamic_global_properties().get_vesting_share_price(),
+        BOOST_REQUIRE_EQUAL(asset(db.get_comment("alice", std::string("test")).beneficiary_payout_value.amount, VESTS_SYMBOL),
                             (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
         // clang-format on
     }

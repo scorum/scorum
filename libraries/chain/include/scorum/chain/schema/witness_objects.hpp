@@ -59,7 +59,6 @@ public:
     public_key_type signing_key;
 
     chain_properties props;
-    price sbd_exchange_rate;
 
     /**
      *  The total votes for this witness. This determines how the witness is ranked for
