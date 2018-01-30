@@ -98,8 +98,8 @@ public:
 
     void do_apply(const proposal_vote_operation& op)
     {
-        FC_ASSERT(_committee_service.is_exists(op.voting_account),
-                  "Account \"${account_name}\" is not in committee.", ("account_name", op.voting_account));
+        FC_ASSERT(_committee_service.is_exists(op.voting_account), "Account \"${account_name}\" is not in committee.",
+                  ("account_name", op.voting_account));
 
         _account_service.check_account_existence(op.voting_account);
 

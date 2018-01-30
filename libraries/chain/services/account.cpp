@@ -300,14 +300,13 @@ void dbs_account::prove_authority(const account_object& account, bool require_ow
 void dbs_account::update_withdraw(const account_object& account,
                                   const asset& vesting,
                                   const time_point_sec& next_vesting_withdrawal,
-                                  const share_type& to_withdrawn,
-                                  const optional<share_type>& withdrawn)
+                                  const share_type& to_withdrawn)
 {
     db_impl().modify(account, [&](account_object& a) {
         a.vesting_withdraw_rate = vesting;
         a.next_vesting_withdrawal = next_vesting_withdrawal;
         a.to_withdraw = to_withdrawn;
-        a.withdrawn = (withdrawn.valid()) ? (*withdrawn) : 0;
+        a.withdrawn = 0;
     });
 }
 
@@ -505,27 +504,12 @@ const asset dbs_account::create_vesting(const account_object& to_account, const 
     {
         const auto& cprops = db_impl().get_dynamic_global_properties();
 
-        /**
-         *  The ratio of total_vesting_shares / total_vesting_fund_scorum should not
-         *  change as the result of the user adding funds
-         *
-         *  V / C  = (V+Vn) / (C+Cn)
-         *
-         *  Simplifies to Vn = (V * Cn ) / C
-         *
-         *  If Cn equals o.amount, then we must solve for Vn to know how many new vesting shares
-         *  the user should receive.
-         *
-         *  128 bit math is required due to multiplying of 64 bit numbers. This is done in asset and price.
-         */
         asset new_vesting = scorum * cprops.get_vesting_share_price();
 
         db_impl().modify(to_account, [&](account_object& to) { to.vesting_shares += new_vesting; });
 
-        db_impl().modify(cprops, [&](dynamic_global_property_object& props) {
-            props.total_vesting_fund_scorum += scorum;
-            props.total_vesting_shares += new_vesting;
-        });
+        db_impl().modify(cprops,
+                         [&](dynamic_global_property_object& props) { props.total_vesting_shares += new_vesting; });
 
         adjust_proxied_witness_votes(to_account, new_vesting.amount);
 

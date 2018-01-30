@@ -117,8 +117,6 @@ public:
      */
     bool is_known_block(const block_id_type& id) const;
     bool is_known_transaction(const transaction_id_type& id) const;
-    fc::sha256 get_pow_target() const;
-    uint32_t get_pow_summary_target() const;
     block_id_type find_block_id_for_num(uint32_t block_num) const;
     block_id_type get_block_id_for_num(uint32_t block_num) const;
     optional<signed_block> fetch_block_by_id(const block_id_type& id) const;
@@ -283,14 +281,10 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    /** @return the sbd created and deposited to_account, may return SCR if there is no median feed */
-    asset create_vesting(const account_object& to_account, asset scorum, bool to_reward_balance = false);
     void adjust_total_payout(const comment_object& a,
                              const asset& sbd,
                              const asset& curator_sbd_value,
                              const asset& beneficiary_value);
-
-    void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
     asset get_balance(const account_object& a, asset_symbol_type symbol) const;
     asset get_balance(const std::string& aname, asset_symbol_type symbol) const
@@ -302,17 +296,14 @@ public:
      * witness vote totals.  Vote totals should be updated first via a call to
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
      */
-    void clear_witness_votes(const account_object& a);
     void process_vesting_withdrawals();
     share_type pay_curators(const comment_object& c, share_type& max_rewards);
     share_type cashout_comment_helper(const share_type& reward, const comment_object& comment);
     void process_comment_cashout();
     void process_funds();
-    void process_conversions();
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();
-    void update_median_feed();
 
     time_point_sec head_block_time() const;
     uint32_t head_block_num() const;
@@ -343,7 +334,6 @@ public:
      * can be reapplied at the proper time */
     std::deque<signed_transaction> _popped_tx;
 
-    void perform_vesting_share_split(uint32_t magnitude);
     void retally_comment_children();
     void retally_witness_votes();
 
@@ -380,8 +370,6 @@ private:
     void _update_median_witness_props();
 
 protected:
-    // Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
-    // void pop_undo() { object_database::pop_undo(); }
     void notify_changed_objects();
 
     void set_producing(bool p)
@@ -418,7 +406,7 @@ private:
 
     bool _is_producing = false;
 
-    optional<chainbase::database::session> _pending_tx_session;
+    optional<chainbase::abstract_undo_session_ptr> _pending_tx_session;
 
     std::vector<signed_transaction> _pending_tx;
     fork_database _fork_db;

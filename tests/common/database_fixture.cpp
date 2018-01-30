@@ -19,6 +19,8 @@
 
 #include "database_fixture.hpp"
 
+#define SCORUM_MIN_PRODUCER_REWARD asset(1000, SCORUM_SYMBOL)
+
 namespace scorum {
 namespace chain {
 
@@ -125,11 +127,6 @@ clean_database_fixture::~clean_database_fixture()
         {
             BOOST_CHECK(db.get_node_properties().skip_flags == database::skip_nothing);
         }
-
-        if (data_dir)
-            db.close();
-
-        return;
     }
     FC_CAPTURE_AND_RETHROW()
 }
