@@ -1011,18 +1011,9 @@ void vote_evaluator::do_apply(const vote_operation& o)
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
-            // used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread
-            // their votes around over 50+ posts day for a week
-            // if( used_power == 0 ) used_power = 1;
-
             account_service.update_voting_power(voter, current_power - used_power);
 
-            /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
-            /// total rshares^2
-            fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
             const auto& root_comment = comment_service.get(comment.root_comment);
-
-            fc::uint128_t avg_cashout_sec;
 
             FC_ASSERT(abs_rshares > 0, "Cannot vote with 0 rshares.");
 
@@ -1040,12 +1031,6 @@ void vote_evaluator::do_apply(const vote_operation& o)
             });
 
             comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
-
-            fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
-
-            /// calculate rshares2 value
-            new_rshares = util::evaluate_reward_curve(new_rshares);
-            old_rshares = util::evaluate_reward_curve(old_rshares);
 
             uint64_t max_vote_weight = 0;
 
@@ -1130,12 +1115,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             account_service.update_voting_power(voter, current_power - used_power);
 
-            /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
-            /// total rshares^2
-            fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
             const auto& root_comment = comment_service.get(comment.root_comment);
-
-            fc::uint128_t avg_cashout_sec;
 
             comment_service.update(comment, [&](comment_object& c) {
                 c.net_rshares -= comment_vote.rshares;
@@ -1158,12 +1138,6 @@ void vote_evaluator::do_apply(const vote_operation& o)
             });
 
             comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
-
-            fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
-
-            /// calculate rshares2 value
-            new_rshares = util::evaluate_reward_curve(new_rshares);
-            old_rshares = util::evaluate_reward_curve(old_rshares);
 
             comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
 

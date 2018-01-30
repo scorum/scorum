@@ -8,8 +8,6 @@
 #include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
-#include <limits>
-
 namespace scorum {
 namespace protocol {
 
