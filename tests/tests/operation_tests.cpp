@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         const account_authority_object& acct_auth = db.get<account_authority_object, by_account>("alice");
 
         auto vest_shares = gpo.total_vesting_shares;
-        auto vests = gpo.total_vesting_fund_scorum;
+        auto vests = gpo.total_vesting_shares * gpo.get_vesting_share_price();
 
         BOOST_REQUIRE(acct.name == "alice");
         BOOST_REQUIRE(acct_auth.owner == authority(1, priv_key.get_public_key(), 1));
@@ -557,10 +557,6 @@ BOOST_AUTO_TEST_CASE(comment_apply)
             com.abs_rshares = 10;
         });
 
-        db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& o) {
-            o.total_reward_shares2 = scorum::chain::util::evaluate_reward_curve(10);
-        });
-
         tx.signatures.clear();
         tx.operations.clear();
         op.title = "foo";
@@ -984,11 +980,12 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         fund("alice", 10000);
 
         const auto& gpo = db.get_dynamic_global_properties();
+        price share_price = gpo.get_vesting_share_price();
+        price scorum_price = price(share_price.quote, share_price.base); // == 1/gpo.get_vesting_share_price()
 
         BOOST_REQUIRE(alice.balance == ASSET_SCR(10e+3));
 
-        auto shares = asset(gpo.total_vesting_shares.amount, VESTS_SYMBOL);
-        auto vests = asset(gpo.total_vesting_fund_scorum.amount, SCORUM_SYMBOL);
+        auto shares = gpo.total_vesting_shares;
         auto alice_shares = alice.vesting_shares;
         auto bob_shares = bob.vesting_shares;
 
@@ -1003,15 +1000,14 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto new_vest = op.amount * (shares / vests);
+        auto new_vest = op.amount * scorum_price;
         shares += new_vest;
-        vests += op.amount;
         alice_shares += new_vest;
 
         BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(25e+2).amount.value);
-        BOOST_REQUIRE(alice.vesting_shares.amount.value == alice_shares.amount.value);
-        BOOST_REQUIRE(gpo.total_vesting_fund_scorum.amount.value == vests.amount.value);
-        BOOST_REQUIRE(gpo.total_vesting_shares.amount.value == shares.amount.value);
+        BOOST_REQUIRE_EQUAL(alice.vesting_shares, alice_shares);
+        BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
+   
         validate_database();
 
         op.to = "bob";
@@ -1023,27 +1019,24 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        new_vest = asset((op.amount * (shares / vests)).amount, VESTS_SYMBOL);
+        new_vest = op.amount * scorum_price;
         shares += new_vest;
-        vests += op.amount;
         bob_shares += new_vest;
 
         BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(500).amount.value);
         BOOST_REQUIRE(alice.vesting_shares.amount.value == alice_shares.amount.value);
         BOOST_REQUIRE(bob.balance.amount.value == ASSET_SCR(0).amount.value);
-        BOOST_REQUIRE(bob.vesting_shares.amount.value == bob_shares.amount.value);
-        BOOST_REQUIRE(gpo.total_vesting_fund_scorum.amount.value == vests.amount.value);
-        BOOST_REQUIRE(gpo.total_vesting_shares.amount.value == shares.amount.value);
+        BOOST_REQUIRE_EQUAL(bob.vesting_shares, bob_shares);
+        BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
         validate_database();
 
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, database::skip_transaction_dupe_check), fc::exception);
 
         BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(500).amount.value);
-        BOOST_REQUIRE(alice.vesting_shares.amount.value == alice_shares.amount.value);
+        BOOST_REQUIRE_EQUAL(alice.vesting_shares, alice_shares);
         BOOST_REQUIRE(bob.balance.amount.value == ASSET_SCR(0).amount.value);
-        BOOST_REQUIRE(bob.vesting_shares.amount.value == bob_shares.amount.value);
-        BOOST_REQUIRE(gpo.total_vesting_fund_scorum.amount.value == vests.amount.value);
-        BOOST_REQUIRE(gpo.total_vesting_shares.amount.value == shares.amount.value);
+        BOOST_REQUIRE_EQUAL(bob.vesting_shares, bob_shares);
+        BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
         validate_database();
     }
     FC_LOG_AND_RETHROW()

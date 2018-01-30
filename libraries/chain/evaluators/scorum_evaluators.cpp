@@ -771,16 +771,15 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
 
 void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 {
+    // clang-format off
     account_service_i& account_service = db().account_service();
     witness_service_i& witness_service = db().witness_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& account = account_service.get_account(o.account);
 
-    FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL),
-              "Account does not have sufficient Scorum Power for withdraw.");
-    FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares,
-              "Account does not have sufficient Scorum Power for withdraw.");
+    FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL), "Account does not have sufficient Scorum Power for withdraw.");
+    FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares, "Account does not have sufficient Scorum Power for withdraw.");
 
     if (!account.created_by_genesis)
     {
@@ -790,38 +789,33 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
         asset min_vests = wso.median_props.account_creation_fee * props.get_vesting_share_price();
         min_vests.amount.value *= 10;
 
-        FC_ASSERT(
-            account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
-            "Account registered by another account requires 10x account creation fee worth of Scorum Power before it "
-            "can be powered down.");
+        FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
+                  "Account registered by another account requires 10x account creation fee worth of Scorum Power before it can be powered down.");
     }
 
     if (o.vesting_shares.amount == 0)
     {
-        FC_ASSERT(account.vesting_withdraw_rate.amount != 0,
-                  "This operation would not change the vesting withdraw rate.");
+        FC_ASSERT(account.vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
 
         account_service.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), 0);
     }
     else
     {
-
         // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
-        int vesting_withdraw_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS; /// 13 weeks = 1 quarter of a year
-
-        auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / vesting_withdraw_intervals, VESTS_SYMBOL);
+        // 13 weeks = 1 quarter of a year
+        auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS, VESTS_SYMBOL);
 
         if (new_vesting_withdraw_rate.amount == 0)
             new_vesting_withdraw_rate.amount = 1;
 
-        FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate,
-                  "This operation would not change the vesting withdraw rate.");
+        FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate, "This operation would not change the vesting withdraw rate.");
 
         account_service.update_withdraw(account, new_vesting_withdraw_rate,
-                                        dprops_service.head_block_time()
-                                            + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
+                                        dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
                                         o.vesting_shares.amount);
     }
+
+    // clang-format on
 }
 
 void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_route_operation& o)

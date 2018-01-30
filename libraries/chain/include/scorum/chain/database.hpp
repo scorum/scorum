@@ -282,11 +282,9 @@ public:
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
     void adjust_total_payout(const comment_object& a,
-                             const asset& sbd,
-                             const asset& curator_sbd_value,
+                             const asset& author_tokens,
+                             const asset& curation_tokens,
                              const asset& beneficiary_value);
-
-    void adjust_rshares2(const comment_object& comment, fc::uint128_t old_rshares2, fc::uint128_t new_rshares2);
 
     asset get_balance(const account_object& a, asset_symbol_type symbol) const;
     asset get_balance(const std::string& aname, asset_symbol_type symbol) const

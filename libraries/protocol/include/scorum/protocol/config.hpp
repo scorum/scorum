@@ -130,11 +130,7 @@
 #define SCORUM_1_TENTH_PERCENT                 (SCORUM_100_PERCENT/1000)
 #define SCORUM_PERCENT(X)                      (X*SCORUM_1_PERCENT)
 
-#define SCORUM_INFLATION_RATE_START_PERCENT    (978) // Fixes block 7,000,000 to 9.5%
-#define SCORUM_INFLATION_RATE_STOP_PERCENT     (95) // 0.95%
-#define SCORUM_INFLATION_NARROWING_PERIOD      (250000) // Narrow 0.01% every 250k blocks
-#define SCORUM_CONTENT_REWARD_PERCENT          (75*SCORUM_1_PERCENT)
-#define SCORUM_VESTING_FUND_PERCENT            (15*SCORUM_1_PERCENT)
+#define SCORUM_CONTENT_REWARD_PERCENT          (95*SCORUM_1_PERCENT)
 #define SCORUM_CURATION_REWARD_PERCENT         (25*SCORUM_1_PERCENT)
 
 #define SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS (DAYS_TO_SECONDS(7))
@@ -150,39 +146,6 @@
 
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
-
-// 5ccc e802 de5f
-// int(expm1( log1p( 1 ) / BLOCKS_PER_YEAR ) * 2**SCORUM_APR_PERCENT_SHIFT_PER_BLOCK / 100000 + 0.5)
-// we use 100000 here instead of 10000 because we end up creating an additional 9x for vesting
-#define SCORUM_APR_PERCENT_MULTIPLY_PER_BLOCK          ( (uint64_t( 0x5ccc ) << 0x20) \
-                                                        | (uint64_t( 0xe802 ) << 0x10) \
-                                                        | (uint64_t( 0xde5f )        ) \
-                                                        )
-// chosen to be the maximal value such that SCORUM_APR_PERCENT_MULTIPLY_PER_BLOCK * 2**64 * 100000 < 2**128
-#define SCORUM_APR_PERCENT_SHIFT_PER_BLOCK             87
-
-#define SCORUM_APR_PERCENT_MULTIPLY_PER_ROUND          ( (uint64_t( 0x79cc ) << 0x20 ) \
-                                                        | (uint64_t( 0xf5c7 ) << 0x10 ) \
-                                                        | (uint64_t( 0x3480 )         ) \
-                                                        )
-
-#define SCORUM_APR_PERCENT_SHIFT_PER_ROUND             83
-
-// We have different constants for hourly rewards
-// i.e. hex(int(math.expm1( math.log1p( 1 ) / HOURS_PER_YEAR ) * 2**SCORUM_APR_PERCENT_SHIFT_PER_HOUR / 100000 + 0.5))
-#define SCORUM_APR_PERCENT_MULTIPLY_PER_HOUR           ( (uint64_t( 0x6cc1 ) << 0x20) \
-                                                        | (uint64_t( 0x39a1 ) << 0x10) \
-                                                        | (uint64_t( 0x5cbd )        ) \
-                                                        )
-
-// chosen to be the maximal value such that SCORUM_APR_PERCENT_MULTIPLY_PER_HOUR * 2**64 * 100000 < 2**128
-#define SCORUM_APR_PERCENT_SHIFT_PER_HOUR              77
-
-// These constants add up to GRAPHENE_100_PERCENT.  Each GRAPHENE_1_PERCENT is equivalent to 1% per year APY
-// *including the corresponding 9x vesting rewards*
-#define SCORUM_CONTENT_APR_PERCENT             3875
-#define SCORUM_PRODUCER_APR_PERCENT             750
-#define SCORUM_POW_APR_PERCENT                  750
 
 #define SCORUM_MIN_PAYOUT                  (asset(5, SCORUM_SYMBOL))
 
