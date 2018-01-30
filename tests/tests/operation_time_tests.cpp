@@ -14,7 +14,6 @@
 #include <scorum/plugins/debug_node/debug_node_plugin.hpp>
 
 #include <fc/crypto/digest.hpp>
-
 #include "database_fixture.hpp"
 
 #include <cmath>
@@ -77,8 +76,8 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
 
         for (const auto& voter : voters)
         {
-            fund(voter.name, 10000);
-            vest(voter.name, 10000);
+            fund(voter.name, ASSET_SCR(10e+3));
+            vest(voter.name, ASSET_SCR(100e+3));
         }
 
         // authors all write in the same block, but Bob declines payout
@@ -118,7 +117,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
             vote.voter = voter.name;
             vote.author = voter.favorite_author;
             vote.permlink = "mypost";
-            vote.weight = SCORUM_100_PERCENT;
+            vote.weight = (int16_t)100;
             tx.operations.push_back(vote);
             tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
             tx.sign(voter.private_key, db.get_chain_id());
@@ -170,8 +169,8 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         ACTORS((alice)(bob))
         generate_block();
 
-        vest("alice", ASSET_SCR(10e+3));
-        vest("bob", ASSET_SCR(10e+3));
+        vest("alice", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(100e+3));
 
         generate_block();
         validate_database();
@@ -186,7 +185,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = 81 * SCORUM_1_PERCENT;
+        vote.weight = (int16_t)81;
 
         signed_transaction tx;
         tx.operations.push_back(comment);
@@ -199,7 +198,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         comment.author = "bob";
         vote.voter = "bob";
         vote.author = "bob";
-        vote.weight = 59 * SCORUM_1_PERCENT;
+        vote.weight = (int16_t)59;
 
         tx.clear();
         tx.operations.push_back(comment);
@@ -228,14 +227,18 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         BOOST_TEST_MESSAGE("Testing: reward_fund");
 
         ACTORS((alice)(bob))
+
+        vest("alice", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(100e+3));
+
         generate_block();
 
-        const asset account_initial_vest_supply = ASSET_SP(50);
+        asset account_initial_vest_supply = db.get_account("alice").vesting_shares;
+
         const auto blocks_between_comments = 5;
 
         BOOST_REQUIRE_EQUAL(db.get_account("alice").balance, asset(0, SCORUM_SYMBOL));
         BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, asset(0, SCORUM_SYMBOL));
-        BOOST_REQUIRE_EQUAL(db.get_account("alice").vesting_shares, account_initial_vest_supply);
         BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares, account_initial_vest_supply);
 
         comment_operation comment;
@@ -250,7 +253,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = SCORUM_100_PERCENT;
+        vote.weight = (int16_t)100;
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -323,7 +326,9 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
     {
         BOOST_TEST_MESSAGE("Testing: recent_rshares_2decay");
         ACTORS((alice)(bob))
-        generate_block();
+
+        vest("alice", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(100e+3));
 
         generate_block();
 
@@ -339,7 +344,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = SCORUM_100_PERCENT;
+        vote.weight = (int16_t)100;
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -1278,8 +1283,8 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
     try
     {
         ACTORS((alice))
-        fund("alice", 100000);
-        vest("alice", 100000);
+        fund("alice", ASSET_SCR(100e+3));
+        vest("alice", ASSET_SCR(100e+3));
 
         const auto& new_alice = db.get_account("alice");
 
@@ -1419,8 +1424,8 @@ BOOST_AUTO_TEST_CASE(vesting_withdraw_route)
 
         auto original_vesting = alice.vesting_shares;
 
-        fund("alice", 1040000);
-        vest("alice", 1040000);
+        fund("alice", ASSET_SCR(104e+4));
+        vest("alice", ASSET_SCR(104e+4));
 
         auto withdraw_amount = alice.vesting_shares - original_vesting;
 
@@ -1549,8 +1554,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
     {
         ACTORS((alice))
 
-        fund("alice", 10000);
-        vest("alice", 10000);
+        fund("alice", ASSET_SCR(10e+3));
+        vest("alice", ASSET_SCR(100e+3));
 
         comment_operation op;
         op.author = "alice";
@@ -1632,15 +1637,15 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
     try
     {
         ACTORS((alice)(bob)(sam)(dave))
-        fund("alice", 10000);
-        fund("bob", 10000);
-        fund("sam", 10000);
-        fund("dave", 10000);
+        fund("alice", ASSET_SCR(10e+3));
+        fund("bob", ASSET_SCR(10e+3));
+        fund("sam", ASSET_SCR(10e+3));
+        fund("dave", ASSET_SCR(10e+3));
 
-        vest("alice", 10000);
-        vest("bob", 10000);
-        vest("sam", 10000);
-        vest("dave", 10000);
+        vest("alice", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(100e+3));
+        vest("sam", ASSET_SCR(100e+3));
+        vest("dave", ASSET_SCR(100e+3));
 
         signed_transaction tx;
 
@@ -1666,7 +1671,7 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         db.push_transaction(tx, 0);
 
         vote_operation vote;
-        vote.weight = SCORUM_100_PERCENT;
+        vote.weight = (int16_t)100;
         vote.voter = "bob";
         vote.author = "alice";
         vote.permlink = "test";
@@ -1702,7 +1707,7 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         BOOST_REQUIRE(db.get_comment("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "bob";
-        vote.weight = SCORUM_100_PERCENT * -1;
+        vote.weight = (int16_t)100 * -1;
 
         tx.operations.clear();
         tx.signatures.clear();
@@ -1717,7 +1722,7 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         BOOST_REQUIRE(db.get_comment("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "dave";
-        vote.weight = 0;
+        vote.weight = (int16_t)0;
 
         tx.operations.clear();
         tx.signatures.clear();
