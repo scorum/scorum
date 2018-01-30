@@ -97,9 +97,13 @@ void db_genesis::init_accounts()
 
 void db_genesis::init_witnesses()
 {
+    FC_ASSERT(_genesis_state.witness_candidates.size() <= SCORUM_MAX_WITNESSES,
+              "Witness amount in genesis exceeds ${1}.", ("1", SCORUM_MAX_WITNESSES));
+
     for (auto& witness : _genesis_state.witness_candidates)
     {
         FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
+        FC_ASSERT(witness.block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
 
         _db.create<witness_object>([&](witness_object& w) {
             w.owner = witness.owner_name;

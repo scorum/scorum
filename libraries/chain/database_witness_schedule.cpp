@@ -67,6 +67,8 @@ void database::_update_median_witness_props()
  */
 void database::update_witness_schedule()
 {
+    // clang-format off
+
     database& _db = (*this);
 
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
@@ -77,10 +79,10 @@ void database::update_witness_schedule()
 
         /// Add the highest voted witnesses
         flat_set<witness_id_type> selected_voted;
-        selected_voted.reserve(wso.max_voted_witnesses);
+        selected_voted.reserve(SCORUM_MAX_VOTED_WITNESSES);
 
         const auto& widx = _db.get_index<witness_index>().indices().get<by_vote_name>();
-        for (auto itr = widx.begin(); itr != widx.end() && selected_voted.size() < wso.max_voted_witnesses; ++itr)
+        for (auto itr = widx.begin(); itr != widx.end() && selected_voted.size() < SCORUM_MAX_VOTED_WITNESSES; ++itr)
         {
             if (itr->signing_key == public_key_type())
             {
@@ -96,8 +98,7 @@ void database::update_witness_schedule()
         const auto& schedule_idx = _db.get_index<witness_index>().indices().get<by_schedule_time>();
         auto sitr = schedule_idx.begin();
         std::vector<decltype(sitr)> processed_witnesses;
-        for (auto witness_count = selected_voted.size();
-             sitr != schedule_idx.end() && witness_count < SCORUM_MAX_WITNESSES; ++sitr)
+        for (auto witness_count = selected_voted.size(); sitr != schedule_idx.end() && witness_count < SCORUM_MAX_WITNESSES; ++sitr)
         {
             new_virtual_time = sitr->virtual_scheduled_time; /// everyone advances to at least this time
             processed_witnesses.push_back(sitr);
@@ -119,8 +120,7 @@ void database::update_witness_schedule()
         bool reset_virtual_time = false;
         for (auto itr = processed_witnesses.begin(); itr != processed_witnesses.end(); ++itr)
         {
-            auto new_virtual_scheduled_time
-                = new_virtual_time + VIRTUAL_SCHEDULE_LAP_LENGTH / ((*itr)->votes.value + 1);
+            auto new_virtual_scheduled_time = new_virtual_time + VIRTUAL_SCHEDULE_LAP_LENGTH / ((*itr)->votes.value + 1);
             if (new_virtual_scheduled_time < new_virtual_time)
             {
                 reset_virtual_time = true; /// overflow
@@ -140,12 +140,11 @@ void database::update_witness_schedule()
 
         size_t expected_active_witnesses = std::min(size_t(SCORUM_MAX_WITNESSES), widx.size());
 
-        FC_ASSERT(
-            active_witnesses.size() == expected_active_witnesses, "number of active witnesses (${active_witnesses}) "
-                                                                  "does not equal expected_active_witnesses "
-                                                                  "(${expected_active_witnesses})",
-            ("active_witnesses.size()", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)(
-                "active_witnesses", active_witnesses.size())("expected_active_witnesses", expected_active_witnesses));
+        FC_ASSERT(active_witnesses.size() == expected_active_witnesses, 
+                    "number of active witnesses (${active_witnesses}) does not equal expected_active_witnesses (${expected_active_witnesses})",
+                    ("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES)
+                    ("active_witnesses", active_witnesses.size())
+                    ("expected_active_witnesses", expected_active_witnesses));
 
         auto majority_version = wso.majority_version;
 
@@ -176,11 +175,10 @@ void database::update_witness_schedule()
         }
 
         int witnesses_on_version = 0;
-        auto ver_itr = witness_versions.begin();
-
+        
         // The map should be sorted highest version to smallest, so we iterate until we hit the majority of witnesses on
         // at least this version
-        while (ver_itr != witness_versions.end())
+        for (auto ver_itr = witness_versions.begin(); ver_itr != witness_versions.end(); ++ver_itr)
         {
             witnesses_on_version += ver_itr->second;
 
@@ -189,8 +187,6 @@ void database::update_witness_schedule()
                 majority_version = ver_itr->first;
                 break;
             }
-
-            ++ver_itr;
         }
 
         auto hf_itr = hardfork_version_votes.begin();
@@ -259,6 +255,8 @@ void database::update_witness_schedule()
 
         _update_median_witness_props();
     }
+
+    // clang-format on
 }
 } // namespace chain
 } // namespace scorum

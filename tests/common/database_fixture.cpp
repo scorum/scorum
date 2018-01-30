@@ -338,7 +338,6 @@ const witness_object& database_fixture::witness_create(const std::string& owner,
         op.owner = owner;
         op.url = url;
         op.block_signing_key = signing_key;
-        op.fee = asset(fee, SCORUM_SYMBOL);
 
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);

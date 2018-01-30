@@ -26,7 +26,7 @@
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
 
-#define SCORUM_MIN_ACCOUNT_CREATION_FEE        0
+#define SCORUM_MIN_ACCOUNT_CREATION_FEE        asset(0, SCORUM_SYMBOL)
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
@@ -57,7 +57,7 @@
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
 
-#define SCORUM_MIN_ACCOUNT_CREATION_FEE           1
+#define SCORUM_MIN_ACCOUNT_CREATION_FEE           asset(1, SCORUM_SYMBOL);
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)

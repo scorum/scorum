@@ -59,8 +59,6 @@ public:
     public_key_type signing_key;
 
     chain_properties props;
-    price sbd_exchange_rate;
-    time_point_sec last_sbd_exchange_update;
 
     /**
      *  The total votes for this witness. This determines how the witness is ranked for
@@ -148,8 +146,6 @@ public:
     chain_properties median_props;
     version majority_version;
 
-    uint8_t max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES;
-    uint8_t max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES;
     uint8_t hardfork_required_witnesses = SCORUM_HARDFORK_REQUIRED_WITNESSES;
 };
 
@@ -245,7 +241,6 @@ FC_REFLECT( scorum::chain::witness_object,
              (url)(votes)(schedule)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
              (last_aslot)(last_confirmed_block_num)(signing_key)
              (props)
-             (sbd_exchange_rate)(last_sbd_exchange_update)
              (last_work)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
@@ -258,8 +253,6 @@ CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_vote_object, scorum::chain::wit
 FC_REFLECT( scorum::chain::witness_schedule_object,
              (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_witnesses)(num_scheduled_witnesses)
              (median_props)(majority_version)
-             (max_voted_witnesses)
-             (max_runner_witnesses)
              (hardfork_required_witnesses)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_schedule_object, scorum::chain::witness_schedule_index )

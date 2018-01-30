@@ -438,7 +438,7 @@ struct chain_properties
      *  fee requires all accounts to have some kind of commitment to the network that includes the
      *  ability to vote and make transactions.
      */
-    asset account_creation_fee = asset(SCORUM_MIN_ACCOUNT_CREATION_FEE, SCORUM_SYMBOL);
+    asset account_creation_fee = SCORUM_MIN_ACCOUNT_CREATION_FEE;
 
     /**
      *  This witnesses vote for the maximum_block_size which is used by the network
@@ -448,7 +448,7 @@ struct chain_properties
 
     void validate() const
     {
-        FC_ASSERT(account_creation_fee.amount >= SCORUM_MIN_ACCOUNT_CREATION_FEE);
+        FC_ASSERT(account_creation_fee >= SCORUM_MIN_ACCOUNT_CREATION_FEE);
         FC_ASSERT(maximum_block_size >= SCORUM_MIN_BLOCK_SIZE_LIMIT);
     }
 };
@@ -458,7 +458,7 @@ struct chain_properties
  *  the current witnesses to apply for the position and allow voting
  *  to begin.
  *
- *  If the owner isn't a witness they will become a witness.  Witnesses
+ *  If the owner isn't a witness he will become a witness.  Witnesses
  *  are charged a fee equal to 1 weeks worth of witness pay which in
  *  turn is derived from the current share supply.  The fee is
  *  only applied if the owner is not already a witness.
@@ -473,8 +473,6 @@ struct witness_update_operation : public base_operation
     std::string url;
     public_key_type block_signing_key;
     chain_properties props;
-    asset fee = asset(
-        0, SCORUM_SYMBOL); ///< the fee paid to register a new witness, should be 10x current block production pay
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -920,7 +918,7 @@ FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
 FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
 FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(vesting_shares) )
 FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_operation, (from_account)(to_account)(percent)(auto_vest) )
-FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(props)(fee) )
+FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(props) )
 FC_REFLECT( scorum::protocol::account_witness_vote_operation, (account)(witness)(approve) )
 FC_REFLECT( scorum::protocol::account_witness_proxy_operation, (account)(proxy) )
 FC_REFLECT( scorum::protocol::comment_operation, (parent_author)(parent_permlink)(author)(permlink)(title)(body)(json_metadata) )

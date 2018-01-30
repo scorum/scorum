@@ -49,6 +49,9 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
                                                   const public_key_type& block_signing_key,
                                                   const chain_properties& props)
 {
+    FC_ASSERT(owner.size(), "Witness 'owner_name' should not be empty.");
+    FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
+
     const auto& dprops = db_impl().get_dynamic_global_properties();
 
     const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
@@ -68,6 +71,8 @@ void dbs_witness::update_witness(const witness_object& witness,
                                  const public_key_type& block_signing_key,
                                  const chain_properties& props)
 {
+    FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
+
     db_impl().modify(witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
         w.signing_key = block_signing_key;
