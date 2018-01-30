@@ -15,7 +15,7 @@ struct asset
         : amount(0)
         , symbol(SCORUM_SYMBOL)
     {
-        // used for fc::variant and price
+        // used for fc::variant
     }
 
     asset(share_type a, asset_symbol_type id)
@@ -161,58 +161,6 @@ template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::
     return stream;
 }
 
-struct price
-{
-    price()
-        : base(asset())
-        , quote(asset())
-    {
-    }
-
-    price(const asset& base, const asset& quote)
-        : base(base)
-        , quote(quote)
-    {
-    }
-
-    asset base;
-    asset quote;
-
-    static price max(asset_symbol_type base, asset_symbol_type quote);
-    static price min(asset_symbol_type base, asset_symbol_type quote);
-
-    price max() const
-    {
-        return price::max(base.symbol, quote.symbol);
-    }
-    price min() const
-    {
-        return price::min(base.symbol, quote.symbol);
-    }
-
-    double to_real() const
-    {
-        return base.to_real() / quote.to_real();
-    }
-
-    bool is_null() const;
-    void validate() const;
-};
-
-price operator/(const asset& base, const asset& quote);
-inline price operator~(const price& p)
-{
-    return price{ p.quote, p.base };
-}
-
-bool operator<(const price& a, const price& b);
-bool operator<=(const price& a, const price& b);
-bool operator>(const price& a, const price& b);
-bool operator>=(const price& a, const price& b);
-bool operator==(const price& a, const price& b);
-bool operator!=(const price& a, const price& b);
-asset operator*(const asset& a, const price& b);
-
 } // namespace protocol
 } // namespace scorum
 
@@ -233,4 +181,3 @@ inline void from_variant(const fc::variant& var, scorum::protocol::asset& vo)
 FC_REFLECT_TYPENAME(scorum::protocol::share_type)
 
 FC_REFLECT(scorum::protocol::asset, (amount)(symbol))
-FC_REFLECT(scorum::protocol::price, (base)(quote))

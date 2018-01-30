@@ -29,7 +29,6 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::authority;
 using scorum::protocol::operation;
-using scorum::protocol::price;
 using scorum::protocol::signed_transaction;
 
 class database_impl;

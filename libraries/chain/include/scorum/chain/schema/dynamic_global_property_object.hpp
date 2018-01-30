@@ -9,7 +9,6 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using scorum::protocol::price;
 
 /**
  * @class dynamic_global_property_object
