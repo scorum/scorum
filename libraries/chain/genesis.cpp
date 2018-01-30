@@ -128,9 +128,9 @@ void db_genesis::init_global_property_object()
         gpo.time = _db.get_genesis_time();
         gpo.recent_slots_filled = fc::uint128::max_value();
         gpo.participation_count = 128;
-        gpo.accounts_current_supply = _genesis_state.init_accounts_supply;
+        gpo.circulating_capital = _genesis_state.init_accounts_supply;
         gpo.total_supply
-            = gpo.accounts_current_supply + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
+            = gpo.circulating_capital + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
         gpo.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
     });
 }

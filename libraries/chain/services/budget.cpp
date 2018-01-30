@@ -139,6 +139,9 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     time_point_sec start_date = props.time;
     FC_ASSERT(start_date < deadline, "Invalid deadline.");
 
+    FC_ASSERT(props.circulating_capital > balance, "Invalid balance. Must ${1} > ${2}.",
+              ("1", props.circulating_capital)("2", balance));
+
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
     account_service.decrease_balance(owner, balance);
@@ -160,6 +163,8 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
         // allocate cash only after next block generation
         budget.last_allocated_block = head_block_num;
     });
+
+    db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
 
     return new_budget;
 }
@@ -297,8 +302,12 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
+        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
+
+        db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
     }
 
     // delete budget

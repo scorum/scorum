@@ -1368,7 +1368,7 @@ void database::process_funds()
     });
     
     modify(props, [&](dynamic_global_property_object& p) {
-        p.accounts_current_supply += total_block_reward;
+        p.circulating_capital += total_block_reward;
     });
     // clang-format on
 

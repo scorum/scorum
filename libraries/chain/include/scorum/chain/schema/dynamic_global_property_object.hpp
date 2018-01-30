@@ -40,8 +40,9 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset total_supply = asset(0, SCORUM_SYMBOL); ///< accounts_current_supply + reward and registration pools supply
-    asset accounts_current_supply = asset(0, SCORUM_SYMBOL); ///< total SCR on accounts balances
+    asset total_supply = asset(0, SCORUM_SYMBOL); ///< circulating_capital + reward and registration pools supply
+    asset circulating_capital
+        = asset(0, SCORUM_SYMBOL); ///< total SCR on circulating. circulating_capital <= total_supply
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
 
     /**
@@ -99,7 +100,7 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (time)
           (current_witness)
           (total_supply)
-          (accounts_current_supply)
+          (circulating_capital)
           (total_vesting_shares)
           (maximum_block_size)
           (current_aslot)
