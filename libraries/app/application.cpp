@@ -1122,6 +1122,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from");
     command_line_options.add(configuration_file_options);
     command_line_options.add_options()
+    ("version", "Print version number and exit.")
     ("replay-blockchain", "Rebuild object graph by replaying all blocks")
     ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
     ("force-validate", "Force validation of all transactions")
