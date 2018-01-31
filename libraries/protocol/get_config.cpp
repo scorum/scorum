@@ -119,6 +119,8 @@ fc::variant_object get_config()
 
     result["SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE"] = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
 
+    result["SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER"] = SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER;
+
     return result;
 }
 } // namespace protocol

@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
 
         account_create_operation op;
 
-        op.fee = asset(100, SCORUM_SYMBOL);
+        op.fee = SUFFICIENT_FEE;
         op.new_account_name = "alice";
         op.creator = TEST_INIT_DELEGATE_NAME;
         op.owner = authority(1, priv_key.get_public_key(), 1);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
         BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
-        BOOST_REQUIRE((init_starting_balance - ASSET_SCR(100)).amount.value == init.balance.amount.value);
+        BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test failure of duplicate account creation");
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
         BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
-        BOOST_REQUIRE((init_starting_balance - ASSET_SCR(100)).amount.value == init.balance.amount.value);
+        BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test failure when creator cannot cover fee");
@@ -167,13 +167,14 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_TEST_MESSAGE("--- Test failure covering witness fee");
         generate_block();
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& wso) { wso.median_props.account_creation_fee = ASSET_SCR(10e+3); });
+            db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& wso) {
+                wso.median_props.account_creation_fee = SUFFICIENT_FEE * 10;
+            });
         });
         generate_block();
 
         tx.clear();
-        op.fee = ASSET_SCR(1e+3);
+        op.fee = SUFFICIENT_FEE;
         tx.operations.push_back(op);
         tx.sign(init_account_priv_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
@@ -1228,7 +1229,7 @@ BOOST_AUTO_TEST_CASE(witness_update_authorities)
         witness_update_operation op;
         op.owner = "alice";
         op.url = "foo.bar";
-        op.fee = ASSET_SCR(1e+3);
+        op.fee = SUFFICIENT_FEE;
         op.block_signing_key = signing_key.get_public_key();
 
         signed_transaction tx;
@@ -1283,7 +1284,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         witness_update_operation op;
         op.owner = "alice";
         op.url = "foo.bar";
-        op.fee = ASSET_SCR(1e+3);
+        op.fee = SUFFICIENT_FEE;
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = asset(SCORUM_MIN_ACCOUNT_CREATION_FEE + 10, SCORUM_SYMBOL);
         op.props.maximum_block_size = SCORUM_MIN_BLOCK_SIZE_LIMIT + 100;
@@ -1856,7 +1857,7 @@ BOOST_AUTO_TEST_CASE(account_recovery)
         BOOST_TEST_MESSAGE("Creating account bob with alice");
 
         account_create_with_delegation_operation acc_create;
-        acc_create.fee = ASSET_SCR(10e+3);
+        acc_create.fee = SUFFICIENT_FEE;
         acc_create.delegation = ASSET_SP(0);
         acc_create.creator = "alice";
         acc_create.new_account_name = "bob";
@@ -2197,7 +2198,7 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_validate)
         op.scorum_amount = ASSET_SCR(1e+3);
         op.escrow_id = 0;
         op.agent = "sam";
-        op.fee = ASSET_SCR(100);
+        op.fee = SUFFICIENT_FEE;
         op.json_meta = "";
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;
@@ -2250,7 +2251,7 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_authorities)
         op.scorum_amount = ASSET_SCR(1e+6);
         op.escrow_id = 0;
         op.agent = "sam";
-        op.fee = ASSET_SCR(100);
+        op.fee = SUFFICIENT_FEE;
         op.json_meta = "";
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;
@@ -2353,7 +2354,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         et_op.to = "bob";
         et_op.agent = "sam";
         et_op.scorum_amount = ASSET_SCR(1e+3);
-        et_op.fee = ASSET_SCR(100);
+        et_op.fee = SUFFICIENT_FEE;
         et_op.json_meta = "";
         et_op.ratification_deadline = db.head_block_time() + 100;
         et_op.escrow_expiration = db.head_block_time() + 200;
@@ -2406,7 +2407,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
-        BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(100));
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, SUFFICIENT_FEE);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2423,7 +2424,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
-        BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(100));
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, SUFFICIENT_FEE);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2443,7 +2444,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
-        BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(100));
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, SUFFICIENT_FEE);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2559,7 +2560,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
             BOOST_REQUIRE(!escrow.disputed);
         }
 
-        BOOST_REQUIRE(db.get_account("sam").balance == et_op.fee);
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, et_op.fee);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- ratification expiration does not remove an approved escrow");
@@ -2578,7 +2579,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
             BOOST_REQUIRE(!escrow.disputed);
         }
 
-        BOOST_REQUIRE(db.get_account("sam").balance == et_op.fee);
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, et_op.fee);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -2656,7 +2657,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         et_op.to = "bob";
         et_op.agent = "sam";
         et_op.scorum_amount = ASSET_SCR(1e+3);
-        et_op.fee = ASSET_SCR(100);
+        et_op.fee = SUFFICIENT_FEE;
         et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
         et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
 
@@ -2694,7 +2695,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-        BOOST_REQUIRE(escrow.pending_fee == et_op.fee);
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, et_op.fee);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2900,402 +2901,444 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
         BOOST_TEST_MESSAGE("Testing: escrow_release_apply");
 
         ACTORS((alice)(bob)(sam)(dave))
+
+        generate_block();
+
         fund("alice", 10000);
 
+        generate_block();
+
+        const account_object& alice_vested = db.get_account("alice");
+        const account_object& bob_vested = db.get_account("bob");
+        const account_object& sam_vested = db.get_account("sam");
+
+        auto initial_alice_balance = alice_vested.balance;
+        const auto escrow_transfer_amount = ASSET_SCR(1e+3);
+        const auto escrow_release_amount = ASSET_SCR(100);
+
         escrow_transfer_operation et_op;
-        et_op.from = "alice";
-        et_op.to = "bob";
-        et_op.agent = "sam";
-        et_op.scorum_amount = ASSET_SCR(1e+3);
-        et_op.fee = ASSET_SCR(100);
-        et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
-        et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
+        et_op.from = alice_vested.name;
+        et_op.to = bob_vested.name;
+        et_op.agent = sam_vested.name;
+        et_op.scorum_amount = escrow_transfer_amount;
+        et_op.fee = SUFFICIENT_FEE;
 
-        signed_transaction tx;
-        tx.operations.push_back(et_op);
-
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_TEST_MESSAGE("--- failure releasing funds prior to approval");
         escrow_release_operation op;
         op.from = et_op.from;
         op.to = et_op.to;
         op.agent = et_op.agent;
         op.who = et_op.from;
         op.receiver = et_op.to;
-        op.scorum_amount = ASSET_SCR(100);
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+        op.scorum_amount = escrow_release_amount;
 
         escrow_approve_operation ea_b_op;
-        ea_b_op.from = "alice";
-        ea_b_op.to = "bob";
-        ea_b_op.agent = "sam";
-        ea_b_op.who = "bob";
+        ea_b_op.from = alice_vested.name;
+        ea_b_op.to = bob_vested.name;
+        ea_b_op.agent = sam_vested.name;
+        ea_b_op.who = bob_vested.name;
 
         escrow_approve_operation ea_s_op;
-        ea_s_op.from = "alice";
-        ea_s_op.to = "bob";
-        ea_s_op.agent = "sam";
-        ea_s_op.who = "sam";
+        ea_s_op.from = alice_vested.name;
+        ea_s_op.to = bob_vested.name;
+        ea_s_op.agent = sam_vested.name;
+        ea_s_op.who = sam_vested.name;
 
-        tx.clear();
-        tx.operations.push_back(ea_b_op);
-        tx.operations.push_back(ea_s_op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'to'");
-        op.who = et_op.agent;
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'from' ");
-        op.receiver = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempt to release non-disputed escrow to not 'to' or 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'to'");
-        op.receiver = et_op.to;
-        op.who = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'from' ");
-        op.receiver = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when other attempt to release non-disputed escrow to not 'to' or 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attemtps to release non-disputed escrow to 'to'");
-        op.receiver = et_op.to;
-        op.who = et_op.to;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured escrow to 'agent' ");
-        op.receiver = et_op.agent;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-disputed escrow to not 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'to' from 'from'");
-        op.receiver = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_escrow(op.from, op.escrow_id).scorum_balance == ASSET_SCR(900));
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(9e+3));
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'from'");
-        op.receiver = et_op.from;
-        op.who = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'agent'");
-        op.receiver = et_op.agent;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to not 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'from' from 'to'");
-        op.receiver = et_op.to;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_escrow(op.from, op.escrow_id).scorum_balance == ASSET_SCR(800));
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET_SCR(100));
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed escrow");
-        escrow_dispute_operation ed_op;
-        ed_op.from = "alice";
-        ed_op.to = "bob";
-        ed_op.agent = "sam";
-        ed_op.who = "alice";
-
-        tx.clear();
-        tx.operations.push_back(ed_op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        tx.clear();
-        op.from = et_op.from;
-        op.receiver = et_op.from;
-        op.who = et_op.to;
-        op.scorum_amount = ASSET_SCR(100);
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed escrow");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when releasing disputed escrow to an account not 'to' or 'from'");
-        tx.clear();
-        op.who = et_op.agent;
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when agent does not match escrow");
-        tx.clear();
-        op.who = "dave";
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'to'");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET_SCR(200));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(700));
-
-        BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'from'");
-        tx.clear();
-        op.receiver = et_op.from;
-        op.who = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(91e+2));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(600));
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed expired escrow");
-        generate_blocks(2);
-
-        tx.clear();
-        op.receiver = et_op.from;
-        op.who = et_op.to;
-        tx.operations.push_back(op);
+        signed_transaction tx;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed expired escrow");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+        {
+            et_op.escrow_expiration = fc::time_point_sec::maximum(); // never expire
+            et_op.ratification_deadline = fc::time_point_sec::maximum() - SCORUM_BLOCK_INTERVAL;
 
-        BOOST_TEST_MESSAGE("--- success releasing disputed expired escrow with agent");
-        tx.clear();
-        op.receiver = et_op.from;
-        op.who = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.operations.push_back(et_op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(92e+2));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(500));
+            generate_block();
 
-        BOOST_TEST_MESSAGE("--- success deleting escrow when balances are both zero");
-        tx.clear();
-        op.scorum_amount = ASSET_SCR(500);
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            const escrow_object& escrow_vested = db.get_escrow(et_op.from, et_op.escrow_id);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(97e+2));
-        SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure releasing funds prior to approval");
 
-        tx.clear();
-        et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
-        et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
-        tx.operations.push_back(et_op);
-        tx.operations.push_back(ea_b_op);
-        tx.operations.push_back(ea_s_op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        tx.sign(bob_private_key, db.get_chain_id());
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-        generate_blocks(2);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'to'");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.agent;
-        op.scorum_amount = ASSET_SCR(100);
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            tx.clear();
+            tx.operations.push_back(ea_b_op);
+            tx.operations.push_back(ea_s_op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'from'");
-        tx.clear();
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'to'");
+            op.who = et_op.agent;
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE(
-            "--- failure when 'agent' attempt to release non-disputed expired escrow to not 'to' or 'from'");
-        tx.clear();
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'from' ");
+            op.receiver = et_op.from;
 
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured expired escrow to 'agent'");
-        tx.clear();
-        op.who = et_op.to;
-        op.receiver = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE(
-            "--- failure when 'to' attempts to release non-disputed expired escrow to not 'from' or 'to'");
-        tx.clear();
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempt to release non-disputed escrow to not 'to' or 'from'");
+            op.receiver = "dave";
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'to'");
-        tx.clear();
-        op.receiver = et_op.to;
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET_SCR(300));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(900));
+            BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'to'");
+            op.receiver = et_op.to;
+            op.who = "dave";
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'to'");
-        tx.clear();
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(87e+2));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(800));
+            BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'from' ");
+            op.receiver = et_op.from;
 
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed expired escrow to 'agent'");
-        tx.clear();
-        op.who = et_op.from;
-        op.receiver = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE(
-            "--- failure when 'from' attempts to release non-disputed expired escrow to not 'from' or 'to'");
-        tx.clear();
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when other attempt to release non-disputed escrow to not 'to' or 'from'");
+            op.receiver = "dave";
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'from'");
-        tx.clear();
-        op.receiver = et_op.to;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET_SCR(400));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(700));
+            BOOST_TEST_MESSAGE("--- failure when 'to' attemtps to release non-disputed escrow to 'to'");
+            op.receiver = et_op.to;
+            op.who = et_op.to;
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'from'");
-        tx.clear();
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(88e+2));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET_SCR(600));
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured escrow to 'agent' ");
+            op.receiver = et_op.agent;
 
-        BOOST_TEST_MESSAGE("--- success deleting escrow when balances are zero on non-disputed escrow");
-        tx.clear();
-        op.scorum_amount = ASSET_SCR(600);
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(94e+2));
-        SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-disputed escrow to not 'from'");
+            op.receiver = "dave";
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'to' from 'from'");
+            op.receiver = et_op.from;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(db.get_escrow(op.from, op.escrow_id).scorum_balance,
+                                escrow_transfer_amount - escrow_release_amount);
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'from'");
+            op.receiver = et_op.from;
+            op.who = et_op.from;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'agent'");
+            op.receiver = et_op.agent;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to not 'from'");
+            op.receiver = "dave";
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'from' from 'to'");
+            op.receiver = et_op.to;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(db.get_escrow(op.from, op.escrow_id).scorum_balance,
+                                escrow_transfer_amount - escrow_release_amount * 2);
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount);
+
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed escrow");
+            escrow_dispute_operation ed_op;
+            ed_op.from = "alice";
+            ed_op.to = "bob";
+            ed_op.agent = "sam";
+            ed_op.who = "alice";
+
+            tx.clear();
+            tx.operations.push_back(ed_op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            tx.clear();
+            op.from = et_op.from;
+            op.receiver = et_op.from;
+            op.who = et_op.to;
+            op.scorum_amount = escrow_release_amount;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed escrow");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when releasing disputed escrow to an account not 'to' or 'from'");
+            tx.clear();
+            op.who = et_op.agent;
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when agent does not match escrow");
+            tx.clear();
+            op.who = "dave";
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'to'");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount * 2);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 3);
+
+            BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'from'");
+            tx.clear();
+            op.receiver = et_op.from;
+            op.who = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount * 2);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 4);
+
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed not expired escrow");
+
+            tx.clear();
+            op.receiver = et_op.from;
+            op.who = et_op.to;
+            tx.operations.push_back(op);
+            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed non-expired escrow");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success releasing disputed non-expired escrow with agent");
+            tx.clear();
+            op.receiver = et_op.from;
+            op.who = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount * 3);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 5);
+
+            auto rest = escrow_transfer_amount - escrow_release_amount * 5; // rest
+
+            BOOST_TEST_MESSAGE("--- success deleting escrow when balances are both zero");
+            tx.clear();
+            op.scorum_amount = rest;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount * 3 + rest);
+            SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+        }
+
+        {
+            tx.clear();
+
+            et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
+            et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
+
+            tx.operations.push_back(et_op);
+            tx.operations.push_back(ea_b_op);
+            tx.operations.push_back(ea_s_op);
+            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+            tx.sign(alice_private_key, db.get_chain_id());
+            tx.sign(bob_private_key, db.get_chain_id());
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            generate_block();
+
+            const escrow_object& escrow_vested = db.get_escrow(et_op.from, et_op.escrow_id);
+
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'to'");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.agent;
+            op.scorum_amount = escrow_release_amount;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'from'");
+            tx.clear();
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE(
+                "--- failure when 'agent' attempt to release non-disputed expired escrow to not 'to' or 'from'");
+            tx.clear();
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured expired escrow to 'agent'");
+            tx.clear();
+            op.who = et_op.to;
+            op.receiver = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE(
+                "--- failure when 'to' attempts to release non-disputed expired escrow to not 'from' or 'to'");
+            tx.clear();
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            generate_blocks(2); // move up time
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'to'");
+            tx.clear();
+            op.receiver = et_op.to;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount * 3);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'to'");
+            tx.clear();
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 2);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed expired escrow to 'agent'");
+            tx.clear();
+            op.who = et_op.from;
+            op.receiver = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE(
+                "--- failure when 'from' attempts to release non-disputed expired escrow to not 'from' or 'to'");
+            tx.clear();
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'from'");
+            tx.clear();
+            op.receiver = et_op.to;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount * 4);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 3);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'from'");
+            tx.clear();
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 4);
+
+            auto rest = escrow_transfer_amount - escrow_release_amount * 4; // rest
+
+            BOOST_TEST_MESSAGE("--- success deleting escrow when balances are zero on non-disputed escrow");
+            tx.clear();
+            op.scorum_amount = rest;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - (SUFFICIENT_FEE)*2 - escrow_transfer_amount + rest);
+            SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+        }
     }
     FC_LOG_AND_RETHROW()
 }
@@ -3545,7 +3588,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
         private_key_type priv_key = generate_private_key("temp_key");
 
         account_create_with_delegation_operation op;
-        op.fee = ASSET_SCR(0);
+        op.fee = SUFFICIENT_FEE;
         op.delegation = asset(100, VESTS_SYMBOL);
         op.creator = "alice";
         op.new_account_name = "bob";
@@ -3612,10 +3655,13 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         generate_block();
 
+        const auto new_account_creation_fee = ASSET_SCR(1e+3);
+
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_witness_schedule_object(),
-                          [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(1e+3); });
+                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
+                    w.median_props.account_creation_fee = new_account_creation_fee;
+                });
             },
             default_skip);
 
@@ -3626,7 +3672,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         withdraw.account = "alice";
         withdraw.vesting_shares = alice_vested.vesting_shares;
         account_create_with_delegation_operation op;
-        op.fee = ASSET_SCR(10e+3);
+        op.fee = new_account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
         op.delegation = to_delegate;
         op.creator = "alice";
         op.new_account_name = "bob";
@@ -3683,7 +3729,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient funds to process transaction.");
         tx.clear();
-        op.fee = ASSET_SCR(10e+3);
+        op.fee = SUFFICIENT_FEE;
         op.delegation = ASSET_NULL_SP;
         op.new_account_name = "pam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);

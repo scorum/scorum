@@ -139,6 +139,8 @@
 #define ASSET_SCR(s) asset((share_value_type)s, SCORUM_SYMBOL)
 #define ASSET_SP(s) asset((share_value_type)s, VESTS_SYMBOL)
 
+#define SUFFICIENT_FEE asset(SCORUM_MIN_ACCOUNT_CREATION_FEE* SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER, SCORUM_SYMBOL)
+
 // test case defines
 #if BOOST_VERSION >= 106000 // boost ver. >= 1.60.0
 

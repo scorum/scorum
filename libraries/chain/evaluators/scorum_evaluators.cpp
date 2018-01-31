@@ -1272,7 +1272,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
 
     const auto& wso = witness_service.get_witness_schedule_object();
-    auto min_delegation = asset(wso.median_props.account_creation_fee.amount * 10, VESTS_SYMBOL);
+    auto min_delegation = asset(
+        wso.median_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER, VESTS_SYMBOL);
     auto min_update = asset(wso.median_props.account_creation_fee.amount, VESTS_SYMBOL);
 
     // If delegation doesn't exist, create it

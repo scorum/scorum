@@ -20,15 +20,29 @@
 // VESTS = SP with 6 digits of precision
 #define VESTS_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
+#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999e+9) //100 million - 1
+
+#define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50)
+
 #define SCORUM_ATOMICSWAP_CONTRACT_METADATA_MAX_LENGTH  10*1024
 #define SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH             1024
 
+//Got only minimum for transactions bandwidth. Required spend SCR to enlarge up to SCORUM_VOTE_DUST_THRESHOLD
+#define SCORUM_MIN_ACCOUNT_CREATION_FEE        share_value_type(SCORUM_VOTE_DUST_THRESHOLD/2)
+
+#define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER 30
+
+#define SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER 10
+
+#define SCORUM_MIN_PAYOUT                  (asset(5, SCORUM_SYMBOL))
+
+#define SCORUM_ADJUST_REWARD_PERCENT                    5
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef IS_TEST_NET
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
-
-#define SCORUM_MIN_ACCOUNT_CREATION_FEE        0
 
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
@@ -39,7 +53,6 @@
 
 #define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   2
 #define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        3
-#define SCORUM_ADJUST_REWARD_PERCENT                    5
 
 #define SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER       5
 #define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
@@ -58,8 +71,6 @@
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
 
-#define SCORUM_MIN_ACCOUNT_CREATION_FEE           1
-
 #define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
 #define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
 #define SCORUM_OWNER_UPDATE_LIMIT                          fc::minutes(60)
@@ -69,7 +80,6 @@
 
 #define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   30
 #define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        100
-#define SCORUM_ADJUST_REWARD_PERCENT                    5
 
 #define SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER       1000
 #define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          1000
@@ -77,13 +87,13 @@
 
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 1000, VESTS_SYMBOL )
 
-
 #define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           48*3600
 #define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         24*3600
 
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER            1000
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        10
 #endif
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        30
 
@@ -116,9 +126,6 @@
 #define SCORUM_MAX_VOTE_CHANGES                5
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (60*30) /// 30 minutes
 #define SCORUM_MIN_VOTE_INTERVAL_SEC           3
-#define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50)
-
-#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999e+9) //100 million - 1
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
@@ -140,14 +147,11 @@
 
 #define SCORUM_MAX_RESERVE_RATIO                (20000)
 
-#define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER 30
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
 
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
 // note, if redefining these constants make sure calculate_claims doesn't overflow
-
-#define SCORUM_MIN_PAYOUT                  (asset(5, SCORUM_SYMBOL))
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
 #define SCORUM_MAX_ACCOUNT_NAME_LENGTH         16
