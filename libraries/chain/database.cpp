@@ -114,7 +114,6 @@ void database::open(const fc::path& data_dir,
 
             // Rewind all undo state. This should return us to the state at the last irreversible block.
             with_write_lock([&]() {
-
                 for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo_all(); });
 
                 for_each_index([&](chainbase::abstract_generic_index_i& item) {
@@ -1302,9 +1301,9 @@ void database::process_comment_cashout()
 
         modify(comment, [&](comment_object& c) {
             /**
-            * A payout is only made for positive rshares, negative rshares hang around
-            * for the next time this post might get an upvote.
-            */
+             * A payout is only made for positive rshares, negative rshares hang around
+             * for the next time this post might get an upvote.
+             */
             if (c.net_rshares > 0)
             {
                 c.net_rshares = 0;
@@ -2076,7 +2075,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 dgp.recent_slots_filled = (dgp.recent_slots_filled << 1) + (i == 0 ? 1 : 0);
                 dgp.participation_count += (i == 0 ? 1 : 0);
             }
-
+            
             dgp.head_block_number = b.block_num();
             dgp.head_block_id = b.id();
             dgp.time = b.timestamp;
@@ -2101,11 +2100,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 {
     try
     {
-        const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-        uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time(new_block.timestamp);
-
         modify(signing_witness, [&](witness_object& _wit) {
-            _wit.last_aslot = new_block_aslot;
             _wit.last_confirmed_block_num = new_block.block_num();
         });
     }
@@ -2501,49 +2496,5 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

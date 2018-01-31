@@ -50,7 +50,6 @@ public:
     time_point_sec created;
     fc::shared_string url;
     uint32_t total_missed = 0;
-    uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
 
     /**
@@ -96,8 +95,6 @@ public:
     fc::uint128 virtual_scheduled_time = fc::uint128::max_value();
     ///@}
 
-    digest_type last_work;
-
     /**
      * This field represents the Scorum blockchain version the witness is running.
      */
@@ -109,14 +106,12 @@ public:
 
 class witness_vote_object : public object<witness_vote_object_type, witness_vote_object>
 {
+    witness_vote_object() = delete;
+
 public:
     template <typename Constructor, typename Allocator> witness_vote_object(Constructor&& c, allocator<Allocator> a)
     {
         c(*this);
-    }
-
-    witness_vote_object()
-    {
     }
 
     id_type id;
@@ -140,19 +135,15 @@ public:
     id_type id;
 
     fc::uint128 current_virtual_time;
-    uint32_t next_shuffle_block_num = 1;
     fc::array<account_name_type, SCORUM_MAX_WITNESSES> current_shuffled_witnesses;
     uint8_t num_scheduled_witnesses = 1;
     chain_properties median_props;
     version majority_version;
-
-    uint8_t hardfork_required_witnesses = SCORUM_HARDFORK_REQUIRED_WITNESSES;
 };
 
 struct by_vote_name;
 struct by_name;
 struct by_pow;
-struct by_work;
 struct by_schedule_time;
 /**
  * @ingroup object_index
@@ -160,10 +151,6 @@ struct by_schedule_time;
 typedef multi_index_container<witness_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<witness_object, witness_id_type, &witness_object::id>>,
-                                         ordered_non_unique<tag<by_work>,
-                                                            member<witness_object,
-                                                                   digest_type,
-                                                                   &witness_object::last_work>>,
                                          ordered_unique<tag<by_name>,
                                                         member<witness_object,
                                                                account_name_type,
@@ -239,9 +226,8 @@ FC_REFLECT( scorum::chain::witness_object,
              (owner)
              (created)
              (url)(votes)(schedule)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
+             (last_confirmed_block_num)(signing_key)
              (props)
-             (last_work)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )
@@ -251,9 +237,8 @@ FC_REFLECT( scorum::chain::witness_vote_object, (id)(witness)(account) )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_vote_object, scorum::chain::witness_vote_index )
 
 FC_REFLECT( scorum::chain::witness_schedule_object,
-             (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_witnesses)(num_scheduled_witnesses)
+             (id)(current_virtual_time)(current_shuffled_witnesses)(num_scheduled_witnesses)
              (median_props)(majority_version)
-             (hardfork_required_witnesses)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_schedule_object, scorum::chain::witness_schedule_index )
 
