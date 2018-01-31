@@ -7,20 +7,20 @@
 #include <vector>
 
 namespace scorum {
-namespace wallet {
+namespace ui {
 
 #define DEFAULT_SCREEN_W 100
 
-class printer
+class formatter
 {
 public:
-    printer(std::stringstream& out, const size_t scr_w = DEFAULT_SCREEN_W)
+    formatter(std::stringstream& out, const size_t scr_w = DEFAULT_SCREEN_W)
         : screen_w(scr_w)
         , _out(out)
         , _cell_ctx(*this)
     {
     }
-    printer(const size_t scr_w = DEFAULT_SCREEN_W)
+    formatter(const size_t scr_w = DEFAULT_SCREEN_W)
         : screen_w(scr_w)
         , _own_out(new std::stringstream)
         , _out(*_own_out)
@@ -28,19 +28,9 @@ public:
     {
     }
 
-    void clear()
-    {
-        _end_print_sequence();
-        _cell_ctx.reset();
-        _table_ctx.reset();
-        std::stringstream empty;
-        _out.swap(empty);
-    }
+    void clear();
 
-    std::string str() const
-    {
-        return _out.str();
-    }
+    std::string str() const;
 
     template <typename T, typename... Types> void print_sequence(const T& val, const Types&... vals) const
     {
@@ -56,7 +46,7 @@ public:
 
     template <typename T, typename... Types> std::string print_sequence2str(const T& val, const Types&... vals) const
     {
-        printer p;
+        formatter p;
         p.print_sequence(val, vals...);
         return p.str();
     }
@@ -82,28 +72,9 @@ public:
         print_endl();
     }
 
-    void print_field(const std::string& field_name, const std::string& field_val) const
-    {
-        print_raw(field_name, false);
-        size_t out_w = screen_w - field_name.size();
-        if (field_val.size() < out_w)
-        {
-            _out << std::right << std::setw(out_w) << field_val;
-        }
-        else
-        {
-            print_endl();
-            _out << std::left << field_val;
-        }
-        print_endl();
-    }
+    void print_field(const std::string& field_name, const std::string& field_val) const;
 
-    void print_line(const char symbol = '-', bool end_line = true) const
-    {
-        _out << std::left << std::string(screen_w, symbol);
-        if (end_line)
-            print_endl();
-    }
+    void print_line(const char symbol = '-', bool end_line = true) const;
 
     template <typename T> void print_cell(const T& val, size_t w, size_t cell_count) const
     {
@@ -123,7 +94,7 @@ public:
                 _cell_ctx.reset(cell_count);
             }
 
-            printer p;
+            formatter p;
             p.print_raw(val, false);
             std::string val_str = p.str();
             size_t out_w = w;
@@ -210,21 +181,7 @@ public:
         return ret;
     }
 
-    bool create_table() const
-    {
-        size_t table_w = 0;
-        for (size_t w : _table_ctx.ws)
-        {
-            table_w += w;
-        }
-        if (table_w > screen_w)
-        {
-            _table_ctx.reset();
-            return false;
-        }
-        _table_ctx.saved = true;
-        return _table_ctx.is_init();
-    }
+    bool create_table() const;
 
     template <typename T> bool print_cell(const T& val) const
     {
@@ -250,30 +207,21 @@ public:
     }
 
 private:
-    void _start_print_sequence() const
-    {
-        if (!_sequence_ctx)
-            _sequence_ctx.reset(new std::stringstream);
-    }
+    void _start_print_sequence() const;
+
     template <typename T> void _print_sequence(const T& val) const
     {
         if (_sequence_ctx)
             (*_sequence_ctx) << val;
     }
-    void _end_print_sequence() const
-    {
-        if (_sequence_ctx)
-        {
-            _out << (*_sequence_ctx).str();
-            _sequence_ctx.reset();
-        }
-    }
+
+    void _end_print_sequence() const;
 
     using stringstream_type = std::unique_ptr<std::stringstream>;
 
     struct cell_context
     {
-        cell_context(const printer& p)
+        cell_context(const formatter& p)
             : screen_w(p.screen_w)
         {
         }
