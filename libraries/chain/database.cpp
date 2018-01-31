@@ -1670,13 +1670,18 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
-        /*try
-        {
         /// check invariants
         if( is_producing() || !( skip & skip_validate_invariants ) )
-           validate_invariants();
+        {
+            try{
+                validate_invariants();
+            }
+#ifdef DEBUG
+        FC_CAPTURE_AND_RETHROW( (next_block) );
+#else
+        FC_CAPTURE_AND_LOG( (next_block) );
+#endif
         }
-        FC_CAPTURE_AND_RETHROW( (next_block) );*/
 
         // fc::time_point end_time = fc::time_point::now();
         // fc::microseconds dt = end_time - begin_time;
@@ -2412,6 +2417,9 @@ void database::validate_invariants() const
         {
             total_supply += itr->amount;
         }
+
+        FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
+        FC_ASSERT(total_vesting <= asset::maximum(VESTS_SYMBOL), "Assets SP overflow");
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
