@@ -1,159 +1,49 @@
 #!/bin/bash
 
-SCORUMD="/usr/local/scorumd-default/bin/scorumd"
+function generate_healthcheck_conf()
+{
+    cp /etc/nginx/healthcheck.conf.template /etc/nginx/healthcheck.conf
+    
+    # echo server 127.0.0.1:8090\; >> /etc/nginx/healthcheck.conf
+    # echo } >> /etc/nginx/healthcheck.conf
+    
+    rm /etc/nginx/sites-enabled/default
+
+    cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
+}
+
+function setup_and_restart_nginx()
+{
+    mv /etc/nginx/nginx.conf /etc/nginx/nginx.original.conf
+    cp /etc/nginx/scorumd.nginx.conf /etc/nginx/nginx.conf
+
+    /etc/init.d/fcgiwrap restart
+    service nginx restart
+}
 
 VERSION=`cat /etc/scorumdversion`
 
-if [[ "$USE_WAY_TOO_MUCH_RAM" ]]; then
-    SCORUMD="/usr/local/scorumd-full/bin/scorumd"
-fi
+SCORUMD="/usr/local/scorumd-full/bin/scorumd"
 
 chown -R scorumd:scorumd $HOME
 
-# seed nodes come from doc/seednodes.txt which is
-# installed by docker into /etc/scorumd/seednodes.txt
-SEED_NODES="$(cat /etc/scorumd/seednodes.txt | awk -F' ' '{print $1}')"
-
-ARGS=""
-
-# if user did not pass in any desired
-# seed nodes, use the ones above:
-if [[ -z "$SCORUMD_SEED_NODES" ]]; then
-    for NODE in $SEED_NODES ; do
-        ARGS+=" --seed-node=$NODE"
-    done
-fi
-
-# if user did pass in desired seed nodes, use
-# the ones the user specified:
-if [[ ! -z "$SCORUMD_SEED_NODES" ]]; then
-    for NODE in $SCORUMD_SEED_NODES ; do
-        ARGS+=" --seed-node=$NODE"
-    done
-fi
-
-if [[ ! -z "$SCORUMD_WITNESS_NAME" ]]; then
-    ARGS+=" --witness=\"$SCORUMD_WITNESS_NAME\""
-fi
-
-if [[ ! -z "$SCORUMD_PRIVATE_KEY" ]]; then
-    ARGS+=" --private-key=$SCORUMD_PRIVATE_KEY"
-fi
-
-if [[ ! -z "$TRACK_ACCOUNT" ]]; then
-    if [[ ! "$USE_WAY_TOO_MUCH_RAM" ]]; then
-        ARGS+=" --enable-plugin=account_history"
-    fi
-    ARGS+=" --track-account-range=[\"$TRACK_ACCOUNT\",\"$TRACK_ACCOUNT\"]"
-fi
-
-NOW=`date +%s`
-SCORUMD_FEED_START_TIME=`expr $NOW - 1209600`
-
-ARGS+=" --follow-start-feeds=$SCORUMD_FEED_START_TIME"
-
-# overwrite local config with image one
-if [[ "$USE_FULL_WEB_NODE" ]]; then
-  cp /etc/scorumd/fullnode.config.ini $HOME/config.ini
-else
-  cp /etc/scorumd/config.ini $HOME/config.ini
-fi
-
-chown scorumd:scorumd $HOME/config.ini
-
-if [[ ! -d $HOME/blockchain ]]; then
-    if [[ -e /var/cache/scorumd/blocks.tbz2 ]]; then
-        # init with blockchain cached in image
-        ARGS+=" --replay-blockchain"
-        mkdir -p $HOME/blockchain/database
-        cd $HOME/blockchain/database
-        tar xvjpf /var/cache/scorumd/blocks.tbz2
-        chown -R scorumd:scorumd $HOME/blockchain
-    fi
+if [ ! -f "${HOME}/config.ini" ]; then
+    cp /etc/scorumd/fullnode.config.ini "${HOME}/config.ini"
+    chown scorumd:scorumd "${HOME}/config.ini"
 fi
 
 # without --data-dir it uses cwd as datadir(!)
 # who knows what else it dumps into current dir
 cd $HOME
 
-if [[ "$USE_PUBLIC_SHARED_MEMORY" ]]; then
-  echo scorumd: Downloading and uncompressing blockchain-$VERSION-latest.tar.bz2 - this may take awhile.
-  wget -qO- https://s3.amazonaws.com/scorum-dev-blockchainstate/blockchain-$VERSION-latest.tar.bz2 | pbzip2 -m2000dc | tar x
-fi
-
 # slow down restart loop if flapping
 sleep 1
 
-mv /etc/nginx/nginx.conf /etc/nginx/nginx.original.conf
-cp /etc/nginx/scorumd.nginx.conf /etc/nginx/nginx.conf
+generate_healthcheck_conf
+setup_and_restart_nginx
 
-#start multiple read-only instances based on the number of cores
-#attach to the local interface since a proxy will be used to loadbalance
-if [[ "$USE_MULTICORE_READONLY" ]]; then
-    exec chpst -uscorumd \
-        $SCORUMD \
-            --rpc-endpoint=127.0.0.1:8091 \
-            --p2p-endpoint=0.0.0.0:2001 \
-            --data-dir=$HOME \
-            $ARGS \
-            $SCORUMD_EXTRA_OPTS \
-            2>&1 &
-    # sleep for a moment to allow the writer node to be ready to accept connections from the readers
-    sleep 30
-    PORT_NUM=8092
-    cp /etc/nginx/healthcheck.conf.template /etc/nginx/healthcheck.conf
-    CORES=$(nproc)
-    PROCESSES=$((CORES * 4))
-    for (( i=2; i<=$PROCESSES; i++ ))
-      do
-        echo server 127.0.0.1:$PORT_NUM\; >> /etc/nginx/healthcheck.conf
-        ((PORT_NUM++))
-    done
-    echo } >> /etc/nginx/healthcheck.conf
-    PORT_NUM=8092
-    for (( i=2; i<=$PROCESSES; i++ ))
-      do
-        exec chpst -uscorumd \
-        $SCORUMD \
-          --rpc-endpoint=127.0.0.1:$PORT_NUM \
-          --data-dir=$HOME \
-          --read-forward-rpc=127.0.0.1:8091 \
-          --read-only \
-          2>&1 &
-          ((PORT_NUM++))
-          sleep 1
-    done
-    # start nginx now that the config file is complete with all endpoints
-    # all of the read-only processes will connect to the write node onport 8091
-    # nginx will balance all incoming traffic on port 8090
-    rm /etc/nginx/sites-enabled/default
-    cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
-    /etc/init.d/fcgiwrap restart
-    echo daemon off\; >> /etc/nginx/nginx.conf
-    service nginx restart
-elif [[ "$USE_NGINX_FRONTEND" ]]; then
-    cp /etc/nginx/healthcheck.conf.template /etc/nginx/healthcheck.conf
-    echo server 127.0.0.1:8091\; >> /etc/nginx/healthcheck.conf
-    echo } >> /etc/nginx/healthcheck.conf
-    rm /etc/nginx/sites-enabled/default
-    cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
-    /etc/init.d/fcgiwrap restart
-    service nginx restart
-    exec chpst -uscorumd \
-        $SCORUMD \
-            --rpc-endpoint=0.0.0.0:8091 \
-            --p2p-endpoint=0.0.0.0:2001 \
-            --data-dir=$HOME \
-            $ARGS \
-            $SCORUMD_EXTRA_OPTS \
-            2>&1
-else
-    exec chpst -uscorumd \
-        $SCORUMD \
-            --rpc-endpoint=0.0.0.0:8090 \
-            --p2p-endpoint=0.0.0.0:2001 \
-            --data-dir=$HOME \
-            $ARGS \
-            $SCORUMD_EXTRA_OPTS \
-            2>&1
-fi
+exec chpst -uscorumd \
+    $SCORUMD \
+        --config-file="${HOME}/config.ini" \
+        --data-dir="${HOME}" \
+        2>&1
