@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(check_asset_value_transformations)
 
     BOOST_CHECK_EQUAL((share_value_type)ordinary_input_value, 12000ll);
 
-    auto max_input_value = 99999999e+9;
+    auto max_input_value = 100000000e+9;
 
     BOOST_CHECK_EQUAL((share_value_type)max_input_value, SCORUM_MAX_SHARE_SUPPLY);
 }
