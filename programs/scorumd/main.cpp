@@ -12,8 +12,6 @@
 #include <fc/log/logger_config.hpp>
 
 #include <scorum/protocol/version.hpp>
-#include <graphene/utilities/git_revision.hpp>
-#include <fc/git_revision.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -49,14 +47,6 @@ int main(int argc, char** argv)
     fc::oexception unhandled_exception;
     try
     {
-        std::cerr << "------------------------------------------------------\n\n";
-        std::cerr << "            STARTING SCORUM NETWORK\n\n";
-        std::cerr << "------------------------------------------------------\n";
-        //        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
-        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-        std::cerr << "------------------------------------------------------\n";
-
         // clang-format off
         bpo::options_description app_options("Scorum Daemon");
         bpo::options_description cfg_options("Scorum Daemon");
@@ -87,9 +77,7 @@ int main(int argc, char** argv)
 
         if (options.count("version"))
         {
-            std::cout << "scorum_blockchain_version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-            std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
-            std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
+            app::print_application_version();
             return 0;
         }
 
@@ -175,6 +163,11 @@ int main(int argc, char** argv)
 
         ilog("parsing options");
         bpo::notify(options);
+
+        app::print_application_version();
+
+        std::cout << "Starting Scorum network...\n\n";
+
         ilog("initializing node");
         node->initialize(options);
         ilog("initializing plugins");
@@ -204,6 +197,8 @@ int main(int argc, char** argv)
         node->chain_database()->with_read_lock([&]() {
             ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
         });
+
+        std::cout << "Scorum network started.\n\n";
 
         exit_promise->wait();
         node->shutdown_plugins();
