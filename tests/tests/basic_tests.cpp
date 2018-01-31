@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(check_asset_limits)
 
     BOOST_CHECK_LE(SCORUM_MAX_SHARE_SUPPLY, std::numeric_limits<share_value_type>::max());
 
-    BOOST_CHECK_GE(asset::maximum(SCORUM_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
+    BOOST_CHECK_EQUAL(asset::maximum(SCORUM_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
 
-    BOOST_CHECK_GE(asset::maximum(VESTS_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
+    BOOST_CHECK_EQUAL(asset::maximum(VESTS_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
 
     BOOST_CHECK_GT(asset::maximum(SCORUM_SYMBOL), asset::min(SCORUM_SYMBOL));
 

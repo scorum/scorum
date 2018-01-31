@@ -20,7 +20,7 @@
 // VESTS = SP with 6 digits of precision
 #define VESTS_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
-#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(99999999e+9) //100 million - 1
+#define SCORUM_MAX_SHARE_SUPPLY                share_value_type(100000000e+9) //100 million
 
 #define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50)
 
