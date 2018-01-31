@@ -11,7 +11,16 @@ add_library( scorum_app
              ${EGENESIS_HEADERS}
            )
 
-target_link_libraries( scorum_app scorum_chain scorum_protocol scorum_tags scorum_follow scorum_witness scorum_mf_plugins fc graphene_net graphene_utilities )
+target_link_libraries( scorum_app
+                       scorum_chain
+                       scorum_protocol
+                       scorum_tags
+                       scorum_follow
+                       scorum_witness
+                       scorum_mf_plugins
+                       fc
+                       graphene_net
+                       graphene_utilities )
 target_include_directories( scorum_app
                             PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/include"

@@ -64,7 +64,12 @@ add_library( scorum_chain
            )
 
 add_dependencies( scorum_chain scorum_protocol build_hardfork_hpp )
-target_link_libraries( scorum_chain scorum_protocol fc chainbase graphene_schema ${PATCH_MERGE_LIB} )
+target_link_libraries( scorum_chain
+                       scorum_protocol
+                       fc
+                       chainbase
+                       graphene_schema
+                       ${PATCH_MERGE_LIB} )
 target_include_directories( scorum_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 

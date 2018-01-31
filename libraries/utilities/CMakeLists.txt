@@ -22,7 +22,8 @@ list(APPEND sources "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
 add_library( graphene_utilities
              ${sources}
              ${HEADERS} )
-target_link_libraries( graphene_utilities fc )
+target_link_libraries( graphene_utilities
+                       fc )
 target_include_directories( graphene_utilities
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 if (USE_PCH)
