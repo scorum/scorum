@@ -29,12 +29,12 @@ add_library( scorum_wallet
              ${HEADERS} )
 # I don't know why scorum_app is required twice in the following line, I just know the linker breaks if it isn't.
 target_link_libraries( scorum_wallet PRIVATE
-                       scorum_app
                        graphene_net
                        scorum_chain
                        scorum_protocol
                        graphene_utilities
                        scorum_private_message
+                       scorum_app
                        scorum_follow
                        scorum_account_by_key
                        fc

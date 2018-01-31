@@ -13,7 +13,6 @@ endif()
 # I don't know why scorum_app is required twice in the following line, I just know the linker breaks if it isn't.
 target_link_libraries( cli_wallet
                        PRIVATE
-                       scorum_app
                        graphene_net
                        scorum_chain
                        scorum_egenesis_brief
@@ -21,6 +20,7 @@ target_link_libraries( cli_wallet
                        graphene_utilities
                        scorum_wallet
                        scorum_private_message
+                       scorum_app
                        scorum_follow
                        fc
                        ${CMAKE_DL_LIBS}
