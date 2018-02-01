@@ -78,6 +78,7 @@ int main(int argc, char** argv)
         // clang-format off
         opts.add_options()
                 ("help,h", "Print this help message and exit.")
+                ("version,v", "Print version number and exit.")
                 ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
                 ("server-rpc-user,u",     bpo::value<string>(), "Server Username")
                 ("server-rpc-password,p", bpo::value<string>(), "Server Password")
@@ -98,45 +99,18 @@ int main(int argc, char** argv)
 
         bpo::store(bpo::parse_command_line(argc, argv, opts), options);
 
-#ifdef DEBUG
-
-#define OUT_OPT_DEBUG std::cout << "D: "
-
-        for (int carg = 1; carg < argc; ++carg)
+        if (options.count("version"))
         {
-            OUT_OPT_DEBUG << "argv[" << carg << "] = " << argv[carg] << "\n";
+            scorum::app::print_application_version();
+            return 0;
         }
-
-#define PRINT_OPT(name)                                                                                                \
-    if (options.count(name))                                                                                           \
-    {                                                                                                                  \
-        OUT_OPT_DEBUG << "Opt '" << name << "':";                                                                      \
-        std::cout << " '" << options[name].as<std::string>() << "'";                                                   \
-        std::cout << "\n";                                                                                             \
-    }
-
-        PRINT_OPT("help");
-        PRINT_OPT("server-rpc-endpoint");
-        PRINT_OPT("server-rpc-user");
-        PRINT_OPT("server-rpc-password");
-        PRINT_OPT("cert-authority");
-        PRINT_OPT("rpc-endpoint");
-        PRINT_OPT("rpc-tls-endpoint");
-        PRINT_OPT("rpc-tls-certificate");
-        PRINT_OPT("rpc-http-endpoint");
-        PRINT_OPT("daemon");
-        PRINT_OPT("rpc-http-allowip");
-        PRINT_OPT("wallet-file");
-        PRINT_OPT("chain-id");
-
-        OUT_OPT_DEBUG << std::endl;
-#endif
 
         if (options.count("help"))
         {
             std::cout << opts << "\n";
             return 0;
         }
+
         if (options.count("rpc-http-allowip") && options.count("rpc-http-endpoint"))
         {
             allowed_ips = options["rpc-http-allowip"].as<vector<string>>();
@@ -337,7 +311,7 @@ int main(int argc, char** argv)
     }
     catch (const fc::exception& e)
     {
-        std::cout << e.to_detail_string() << "\n";
+        std::cerr << e.to_detail_string() << "\n";
         return -1;
     }
     return 0;
