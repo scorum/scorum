@@ -37,8 +37,11 @@ cd $HOME
 # slow down restart loop if flapping
 sleep 1
 
-generate_healthcheck_conf
-setup_and_restart_nginx
+# Run nginx if variable NGINX_CHECK=true
+if [ "$NGINX_CHECK" = true ] ; then
+    generate_healthcheck_conf
+    setup_and_restart_nginx
+fi
 
 exec chpst -u scorumd \
     $SCORUMD \
