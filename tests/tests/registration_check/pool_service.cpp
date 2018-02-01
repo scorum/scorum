@@ -18,6 +18,8 @@ public:
         : timed_blocks_database_fixture(registration_check::create_registration_genesis(schedule_input, rest_of_supply))
         , registration_pool_service(db.obtain_service<dbs_registration_pool>())
         , registration_committee_service(db.obtain_service<dbs_registration_committee>())
+        , account_service(db.account_service())
+        , bonus_beneficiary(account_service.get_account("alice"))
     {
     }
 
@@ -25,6 +27,9 @@ public:
     static asset rest_of_supply;
     dbs_registration_pool& registration_pool_service;
     dbs_registration_committee& registration_committee_service;
+    account_service_i& account_service;
+
+    const account_object& bonus_beneficiary;
 
     const std::string genesis_invalid_schedule_users_str = R"json(
     {
@@ -244,7 +249,7 @@ SCORUM_TEST_CASE(create_invalid_genesis_schedule_schedule_check)
 
 SCORUM_TEST_CASE(create_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     BOOST_CHECK_EQUAL(pool.balance, genesis_state.registration_supply);
     BOOST_CHECK_EQUAL(pool.maximum_bonus, genesis_state.registration_bonus);
@@ -346,7 +351,7 @@ SCORUM_TEST_CASE(predict_input_check)
 
 SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
@@ -363,7 +368,12 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
 
             asset allocated_bonus(0, SCORUM_SYMBOL);
             db_plugin->debug_update(
-                [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
+                [&](database&) {
+                    allocated_bonus = registration_pool_service.allocate_cash("alice");
+                    // to save invariants we must give allocated bonus to someone
+                    account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                },
+                default_skip);
 
             BOOST_REQUIRE_EQUAL(allocated_bonus, predicted_bonus);
         }
@@ -372,7 +382,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
 
 SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distribution_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
@@ -397,7 +407,12 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
 
             asset allocated_bonus(0, SCORUM_SYMBOL);
             db_plugin->debug_update(
-                [&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); }, default_skip);
+                [&](database&) {
+                    allocated_bonus = registration_pool_service.allocate_cash("alice");
+                    // to save invariants we must give allocated bonus to someone
+                    account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                },
+                default_skip);
 
             BOOST_CHECK_EQUAL(allocated_bonus, predicted_bonus);
         }
@@ -406,7 +421,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
 
 SCORUM_TEST_CASE(allocate_limits_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
@@ -415,6 +430,10 @@ SCORUM_TEST_CASE(allocate_limits_check)
     auto fn = [&](uint64_t) -> asset {
         asset allocated_bonus(registration_pool_service.allocate_cash("alice").amount, SCORUM_SYMBOL);
         BOOST_CHECK_GT(allocated_bonus.amount, share_type(0));
+
+        // to save invariants we must give allocated bonus to someone
+        account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+
         return allocated_bonus;
     };
 
@@ -429,7 +448,7 @@ SCORUM_TEST_CASE(allocate_limits_check)
 
 SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
@@ -438,8 +457,13 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
 
     asset allocated_bonus(0, SCORUM_SYMBOL);
     auto fn = [&](uint64_t) -> asset {
-        db_plugin->debug_update([&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); },
-                                default_skip);
+        db_plugin->debug_update(
+            [&](database&) {
+                allocated_bonus = registration_pool_service.allocate_cash("alice");
+                // to save invariants we must give allocated bonus to someone
+                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+            },
+            default_skip);
         return allocated_bonus;
     };
 
@@ -470,7 +494,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
 
 SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
@@ -482,6 +506,8 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
             [&](database&) {
                 allocated_bonus = registration_pool_service.allocate_cash("alice");
                 BOOST_CHECK_GT(allocated_bonus.amount, 0);
+                // to save invariants we must give allocated bonus to someone
+                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
             },
             default_skip);
         return allocated_bonus;
@@ -516,7 +542,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 
 SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     generate_block();
 
@@ -529,14 +555,18 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 
     // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
     auto fn = [&]() -> asset {
+
         // to prevent reaching limit
-        for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
-        {
-            generate_block();
-        }
+        generate_blocks(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK);
+
         asset allocated_bonus(0, SCORUM_SYMBOL);
-        db_plugin->debug_update([&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); },
-                                default_skip);
+        db_plugin->debug_update(
+            [&](database&) {
+                allocated_bonus = registration_pool_service.allocate_cash("alice");
+                // to save invariants we must give allocated bonus to someone
+                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+            },
+            default_skip);
         return allocated_bonus;
     };
     total_allocated_bonus = schedule_input_vest_all(fn);
@@ -549,20 +579,24 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 
 SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
 {
-    const registration_pool_object& pool = registration_pool_service.get_pool();
+    const registration_pool_object& pool = registration_pool_service.get();
 
     asset total_allocated_bonus(0, SCORUM_SYMBOL);
 
     // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
     auto fn = [&]() -> asset {
+
         // to prevent reaching limit
-        for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
-        {
-            generate_block();
-        }
+        generate_blocks(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK);
+
         asset allocated_bonus(0, SCORUM_SYMBOL);
-        db_plugin->debug_update([&](database&) { allocated_bonus = registration_pool_service.allocate_cash("alice"); },
-                                default_skip);
+        db_plugin->debug_update(
+            [&](database&) {
+                allocated_bonus = registration_pool_service.allocate_cash("alice");
+                // to save invariants we must give allocated bonus to someone
+                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+            },
+            default_skip);
         return allocated_bonus;
     };
     total_allocated_bonus = schedule_input_vest_all(fn);
@@ -581,14 +615,18 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
     for (int ci = 0; ci < last_regs; ++ci)
     {
         // to prevent reaching limit
-        for (uint64_t cblock = 0; cblock < SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK; ++cblock)
-        {
-            generate_block();
-        }
-        db_plugin->debug_update([&](database&) { registration_pool_service.allocate_cash("alice"); }, default_skip);
+        generate_blocks(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK);
+
+        db_plugin->debug_update(
+            [&](database&) {
+                auto allocated_bonus = registration_pool_service.allocate_cash("alice");
+                // to save invariants we must give allocated bonus to someone
+                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+            },
+            default_skip);
     }
 
-    BOOST_REQUIRE_THROW(registration_pool_service.get_pool(), fc::exception);
+    BOOST_REQUIRE_THROW(registration_pool_service.get(), fc::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

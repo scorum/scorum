@@ -11,7 +11,7 @@ dbs_registration_pool::dbs_registration_pool(database& db)
 {
 }
 
-const registration_pool_object& dbs_registration_pool::get_pool() const
+const registration_pool_object& dbs_registration_pool::get() const
 {
     try
     {
@@ -19,6 +19,11 @@ const registration_pool_object& dbs_registration_pool::get_pool() const
         return db_impl().get<registration_pool_object>();
     }
     FC_CAPTURE_AND_RETHROW(("Pool does not exist."))
+}
+
+bool dbs_registration_pool::is_exists() const
+{
+    return nullptr != db_impl().find<registration_pool_object>();
 }
 
 const registration_pool_object& dbs_registration_pool::create_pool(const asset& supply,
@@ -59,7 +64,7 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
-    const registration_pool_object& this_pool = get_pool();
+    const registration_pool_object& this_pool = get();
 
     asset per_reg = _calculate_per_reg();
     FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
@@ -134,7 +139,7 @@ asset dbs_registration_pool::_decrease_balance(const asset& balance)
 {
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
-    const registration_pool_object& this_pool = get_pool();
+    const registration_pool_object& this_pool = get();
 
     asset ret(0, SCORUM_SYMBOL);
 
@@ -156,7 +161,7 @@ asset dbs_registration_pool::_decrease_balance(const asset& balance)
 
 asset dbs_registration_pool::_calculate_per_reg()
 {
-    const registration_pool_object& this_pool = get_pool();
+    const registration_pool_object& this_pool = get();
 
     FC_ASSERT(!this_pool.schedule_items.empty(), "Invalid schedule.");
 
@@ -192,7 +197,7 @@ asset dbs_registration_pool::_calculate_per_reg()
 
 bool dbs_registration_pool::_check_autoclose()
 {
-    const registration_pool_object& this_pool = get_pool();
+    const registration_pool_object& this_pool = get();
 
     if (this_pool.balance.amount <= 0)
     {
@@ -207,7 +212,7 @@ bool dbs_registration_pool::_check_autoclose()
 
 void dbs_registration_pool::_close()
 {
-    const registration_pool_object& this_pool = get_pool();
+    const registration_pool_object& this_pool = get();
     db_impl().remove(this_pool);
 }
 } // namespace chain

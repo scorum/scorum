@@ -2409,7 +2409,11 @@ void database::validate_invariants() const
         {
             total_supply += budget.balance;
         }
-        total_supply += obtain_service<dbs_registration_pool>().get_pool().balance;
+
+        if (obtain_service<dbs_registration_pool>().is_exists())
+        {
+            total_supply += obtain_service<dbs_registration_pool>().get().balance;
+        }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
 
