@@ -361,7 +361,7 @@ void database_fixture::fund(const std::string& account_name, const share_type& a
 
 void database_fixture::fund(const std::string& account_name, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
     try
     {
@@ -413,7 +413,7 @@ void database_fixture::transfer_to_vest(const std::string& from, const std::stri
 
 void database_fixture::vest(const std::string& account_name, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
     try
     {

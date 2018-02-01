@@ -136,24 +136,10 @@ BOOST_AUTO_TEST_CASE(asset_test)
         BOOST_CHECK_EQUAL(scorum.decimals(), SCORUM_CURRENCY_PRECISION);
         BOOST_CHECK_EQUAL(scorum.symbol_name(), "SCR");
         BOOST_CHECK_EQUAL(scorum.to_string(), "1.123456000 SCR");
-        BOOST_CHECK_EQUAL(scorum.symbol, SCORUM_SYMBOL);
+        BOOST_CHECK_EQUAL(scorum.symbol(), SCORUM_SYMBOL);
         BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.000000050 SCR");
         BOOST_CHECK_EQUAL(asset(5e+10, SCORUM_SYMBOL).to_string(), "50.000000000 SCR");
 
-        BOOST_CHECK_THROW(scorum.set_decimals(100), fc::exception);
-        char* scorum_sy = (char*)&scorum.symbol;
-        scorum_sy[0] = 100;
-        BOOST_CHECK_THROW(scorum.decimals(), fc::exception);
-        scorum_sy[6] = 'A';
-        scorum_sy[7] = 'A';
-
-        auto check_sym = [](const asset& a) -> std::string {
-            auto symbol = a.symbol_name();
-            wlog("symbol_name is ${s}", ("s", symbol));
-            return symbol;
-        };
-
-        BOOST_CHECK_THROW(check_sym(scorum), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1.0000000000000000000000 SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1.000000000SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1. 333333333 SCR"),

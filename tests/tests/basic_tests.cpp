@@ -28,6 +28,8 @@
 
 #include <limits>
 
+#include "defines.hpp"
+
 using namespace scorum::protocol;
 
 BOOST_AUTO_TEST_SUITE(type_operation_tests)
@@ -68,6 +70,19 @@ BOOST_AUTO_TEST_CASE(check_asset_value_transformations)
     auto max_input_value = 100000000e+9;
 
     BOOST_CHECK_EQUAL((share_value_type)max_input_value, SCORUM_MAX_SHARE_SUPPLY);
+}
+
+BOOST_AUTO_TEST_CASE(asset_symbol_test)
+{
+    const asset_symbol_type invald_symbol_name
+        = (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('E') << 8) | (uint64_t('R') << 16) | (uint64_t('R') << 24));
+    const asset_symbol_type invald_symbol_precision
+        = (uint64_t(SCORUM_CURRENCY_PRECISION / 2) | (uint64_t('S') << 8) | (uint64_t('P') << 16));
+
+    BOOST_REQUIRE_NO_THROW(asset(10, SCORUM_SYMBOL));
+    BOOST_REQUIRE_NO_THROW(asset(10, VESTS_SYMBOL));
+    SCORUM_REQUIRE_THROW(asset(10, invald_symbol_name), fc::assert_exception);
+    SCORUM_REQUIRE_THROW(asset(10, invald_symbol_precision), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_CASE(asset_operation_test)

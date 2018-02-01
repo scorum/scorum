@@ -1360,7 +1360,7 @@ void database::process_funds()
 
     auto total_block_reward = reward_service.take_block_reward();
     // clang-format off
-    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
+    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol());
     auto witness_reward = total_block_reward - content_reward; /// Remaining 5% to witness pay
 
     modify(rf, [&](reward_fund_object& rfo) {
@@ -2232,7 +2232,7 @@ void database::clear_expired_delegations()
 void database::adjust_balance(const account_object& a, const asset& delta)
 {
     modify(a, [&](account_object& acnt) {
-        switch (delta.symbol)
+        switch (delta.symbol())
         {
         case SCORUM_SYMBOL:
             acnt.balance += delta;
@@ -2353,7 +2353,6 @@ void database::validate_invariants() const
 {
     try
     {
-        const auto& account_idx = get_index<account_index>().indices().get<by_name>();
         asset total_supply = asset(0, SCORUM_SYMBOL);
         asset total_vesting = asset(0, VESTS_SYMBOL);
         share_type total_vsf_votes = share_type(0);
@@ -2367,6 +2366,7 @@ void database::validate_invariants() const
             FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "", ("itr", *itr));
         }
 
+        const auto& account_idx = get_index<account_index>().indices().get<by_name>();
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
@@ -2379,18 +2379,15 @@ void database::validate_invariants() const
         }
 
         const auto& escrow_idx = get_index<escrow_index>().indices().get<by_id>();
-
         for (auto itr = escrow_idx.begin(); itr != escrow_idx.end(); ++itr)
         {
             total_supply += itr->scorum_balance;
-
             total_supply += itr->pending_fee;
         }
 
         fc::uint128_t total_rshares2;
 
         const auto& comment_idx = get_index<comment_index>().indices();
-
         for (auto itr = comment_idx.begin(); itr != comment_idx.end(); ++itr)
         {
             if (itr->net_rshares.value > 0)
@@ -2401,10 +2398,9 @@ void database::validate_invariants() const
         }
 
         total_supply += get_reward_fund().reward_balance;
-
         total_supply += asset(gpo.total_vesting_shares.amount, SCORUM_SYMBOL);
-
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
+
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {
             total_supply += budget.balance;
@@ -2416,7 +2412,6 @@ void database::validate_invariants() const
         }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
-
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
         {
             total_supply += itr->amount;

@@ -86,7 +86,7 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
     account_service.check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
-    FC_ASSERT(o.props.account_creation_fee.symbol == SCORUM_SYMBOL);
+    FC_ASSERT(o.props.account_creation_fee.symbol() == SCORUM_SYMBOL);
 
     if (!witness_service.is_exists(o.owner))
     {
@@ -572,7 +572,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
         FC_ASSERT(o.escrow_expiration > dprops_service.head_block_time(),
                   "The escrow expiration must be after head block time.");
 
-        FC_ASSERT(o.fee.symbol == SCORUM_SYMBOL, "Fee must be in SCR.");
+        FC_ASSERT(o.fee.symbol() == SCORUM_SYMBOL, "Fee must be in SCR.");
 
         asset scorum_spent = o.scorum_amount;
         scorum_spent += o.fee;
@@ -744,7 +744,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
 
     account_service.drop_challenged(from_account);
 
-    FC_ASSERT(dbs_account::get_balance(from_account, o.amount.symbol) >= o.amount,
+    FC_ASSERT(dbs_account::get_balance(from_account, o.amount.symbol()) >= o.amount,
               "Account does not have sufficient funds for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.increase_balance(to_account, o.amount);
@@ -927,7 +927,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
         FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
-        int16_t weight = o.weight * SCORUM_1_PERCENT;
+        const int16_t weight = o.weight * SCORUM_1_PERCENT;
         if (weight > 0)
             FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 

@@ -16,24 +16,30 @@ namespace scorum {
 namespace protocol {
 typedef boost::multiprecision::int128_t int128_t;
 
+void asset::_check_symbol(asset_symbol_type id)
+{
+    FC_ASSERT(SCORUM_SYMBOL == id || VESTS_SYMBOL == id, "Invalid asset symbol received. ${1} not either ${2} or ${3}.",
+              ("1", id)("2", SCORUM_SYMBOL)("3", VESTS_SYMBOL));
+}
+
+void asset::_set_decimals(uint8_t d)
+{
+    FC_ASSERT(d < 15);
+    auto a = (char*)&_symbol;
+    a[0] = d;
+}
+
 uint8_t asset::decimals() const
 {
-    auto a = (const char*)&symbol;
+    auto a = (const char*)&_symbol;
     uint8_t result = uint8_t(a[0]);
     FC_ASSERT(result < 15);
     return result;
 }
 
-void asset::set_decimals(uint8_t d)
-{
-    FC_ASSERT(d < 15);
-    auto a = (char*)&symbol;
-    a[0] = d;
-}
-
 std::string asset::symbol_name() const
 {
-    auto a = (const char*)&symbol;
+    auto a = (const char*)&_symbol;
     FC_ASSERT(a[7] == 0);
     return &a[1];
 }
@@ -86,8 +92,8 @@ asset asset::from_string(const std::string& from)
         FC_ASSERT(space_pos != std::string::npos);
 
         asset result;
-        result.symbol = uint64_t(0);
-        auto sy = (char*)&result.symbol;
+        result._symbol = uint64_t(0);
+        auto sy = (char*)&result._symbol;
 
         if (dot_pos != std::string::npos)
         {
@@ -95,7 +101,7 @@ asset asset::from_string(const std::string& from)
 
             auto intpart = s.substr(0, dot_pos);
             auto fractpart = "1" + s.substr(dot_pos + 1, space_pos - dot_pos - 1);
-            result.set_decimals(fractpart.size() - 1);
+            result._set_decimals(fractpart.size() - 1);
 
             result.amount = fc::to_int64(intpart);
             result.amount.value *= result.precision();
@@ -106,7 +112,7 @@ asset asset::from_string(const std::string& from)
         {
             auto intpart = s.substr(0, space_pos);
             result.amount = fc::to_int64(intpart);
-            result.set_decimals(0);
+            result._set_decimals(0);
         }
         auto symbol = s.substr(space_pos + 1);
         size_t symbol_size = symbol.size();

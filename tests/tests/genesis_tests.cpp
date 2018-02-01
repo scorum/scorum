@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(check_initial_supply)
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
     BOOST_CHECK(genesis_state.init_accounts_supply.amount == 1000000000);
-    BOOST_CHECK(genesis_state.init_accounts_supply.symbol == SCORUM_SYMBOL);
+    BOOST_CHECK(genesis_state.init_accounts_supply.symbol() == SCORUM_SYMBOL);
 }
 
 BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
     BOOST_CHECK(genesis_state.init_rewards_supply.amount == 1000000000);
-    BOOST_CHECK(genesis_state.init_rewards_supply.symbol == SCORUM_SYMBOL);
+    BOOST_CHECK(genesis_state.init_rewards_supply.symbol() == SCORUM_SYMBOL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

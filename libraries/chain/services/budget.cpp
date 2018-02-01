@@ -94,7 +94,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
 {
     // clang-format off
     FC_ASSERT((db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT) == nullptr), "Recreation of fund budget is not allowed.");
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
 
@@ -128,7 +128,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 {
     FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "'${1}' name is not allowed for ordinary budget.",
               ("1", SCORUM_ROOT_POST_PARENT));
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
     FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER,
@@ -238,7 +238,7 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
 
 asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& balance)
 {
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
     asset ret(0, SCORUM_SYMBOL);

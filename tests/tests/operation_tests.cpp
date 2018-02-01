@@ -2204,12 +2204,11 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_validate)
         op.escrow_expiration = db.head_block_time() + 200;
 
         BOOST_TEST_MESSAGE("--- failure when sbd symbol != SCR");
-        op.scorum_amount.symbol = VESTS_SYMBOL;
+        op.scorum_amount = ASSET_SP(1e+3);
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
         BOOST_TEST_MESSAGE("--- failure when scorum == 0");
-        op.fee.symbol = SCORUM_SYMBOL;
-        op.scorum_amount.symbol = SCORUM_SYMBOL;
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.scorum_amount.amount = 0;
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
@@ -2232,7 +2231,7 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_validate)
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
         BOOST_TEST_MESSAGE("--- success");
-        op.scorum_amount.symbol = SCORUM_SYMBOL;
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.ratification_deadline = op.escrow_expiration - 100;
         op.validate();
     }
@@ -2849,6 +2848,16 @@ BOOST_AUTO_TEST_CASE(escrow_release_validate)
         op.agent = "sam";
         op.receiver = "bob";
 
+        BOOST_TEST_MESSAGE("--- failure when scorum < 0");
+        op.scorum_amount.amount = -1;
+        SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
+
+        BOOST_TEST_MESSAGE("--- failure when scorum is invalid symbol");
+        op.scorum_amount = ASSET_SP(1e+3);
+        SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
+
+        BOOST_TEST_MESSAGE("--- success");
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.validate();
     }
     FC_LOG_AND_RETHROW()

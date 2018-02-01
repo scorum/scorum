@@ -145,7 +145,7 @@ public:
         share_type ret = (share_type)schedule_input_bonus_percent_by_pos(pos);
         ret *= maximum_bonus.amount;
         ret /= 100;
-        return asset(ret, maximum_bonus.symbol);
+        return asset(ret, maximum_bonus.symbol());
     }
 
     asset schedule_input_predicted_limit(uint64_t pass_through_blocks)

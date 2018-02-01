@@ -155,7 +155,7 @@ void db_genesis::init_rewards()
     asset initial_reward_pool_supply(_genesis_state.init_rewards_supply.amount
                                          * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                          / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                                     _genesis_state.init_rewards_supply.symbol);
+                                     _genesis_state.init_rewards_supply.symbol());
     fc::time_point deadline = _db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     reward_service.create_pool(initial_reward_pool_supply);
