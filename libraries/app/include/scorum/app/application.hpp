@@ -55,6 +55,8 @@ class application;
 class network_broadcast_api;
 class login_api;
 
+void print_application_version();
+
 class application
 {
 public:
