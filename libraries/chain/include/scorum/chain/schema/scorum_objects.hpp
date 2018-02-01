@@ -20,14 +20,7 @@ using scorum::protocol::price;
 class escrow_object : public object<escrow_object_type, escrow_object>
 {
 public:
-    template <typename Constructor, typename Allocator> escrow_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    escrow_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(escrow_object)
 
     id_type id;
 
@@ -55,15 +48,7 @@ public:
 class withdraw_vesting_route_object : public object<withdraw_vesting_route_object_type, withdraw_vesting_route_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    withdraw_vesting_route_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    withdraw_vesting_route_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_vesting_route_object)
 
     id_type id;
 
@@ -77,15 +62,7 @@ class decline_voting_rights_request_object
     : public object<decline_voting_rights_request_object_type, decline_voting_rights_request_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    decline_voting_rights_request_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    decline_voting_rights_request_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(decline_voting_rights_request_object)
 
     id_type id;
 
@@ -104,14 +81,7 @@ enum curve_id
 class reward_fund_object : public object<reward_fund_object_type, reward_fund_object>
 {
 public:
-    template <typename Constructor, typename Allocator> reward_fund_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    reward_fund_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(reward_fund_object)
 
     id_type id;
 

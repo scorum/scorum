@@ -11,15 +11,7 @@ class proposal_object : public object<proposal_object_type, proposal_object>
 public:
     using cref_type = std::reference_wrapper<const proposal_object>;
 
-    template <typename Constructor, typename Allocator> proposal_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
-
-    proposal_object()
-        : action(scorum::protocol::proposal_action::invite)
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(proposal_object)
 
     id_type id;
     account_name_type creator;
@@ -30,7 +22,7 @@ public:
 
     uint64_t quorum_percent = 0;
 
-    scorum::protocol::proposal_action action;
+    scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
     flat_set<account_name_type> voted_accounts;
 };
 

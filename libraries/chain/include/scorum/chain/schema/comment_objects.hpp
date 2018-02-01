@@ -97,10 +97,7 @@ public:
 class comment_vote_object : public object<comment_vote_object_type, comment_vote_object>
 {
 public:
-    template <typename Constructor, typename Allocator> comment_vote_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(comment_vote_object)
 
     id_type id;
 

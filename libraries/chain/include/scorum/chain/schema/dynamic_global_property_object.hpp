@@ -24,15 +24,7 @@ class dynamic_global_property_object
     : public object<dynamic_global_property_object_type, dynamic_global_property_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    dynamic_global_property_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
-
-    dynamic_global_property_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(dynamic_global_property_object)
 
     id_type id;
 

@@ -79,10 +79,7 @@ typedef multi_index_container<operation_object,
 class account_history_object : public object<account_history_object_type, account_history_object>
 {
 public:
-    template <typename Constructor, typename Allocator> account_history_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(account_history_object)
 
     id_type id;
 

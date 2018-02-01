@@ -63,10 +63,7 @@ private:
 
 struct bucket_object : public object<bucket_object_type, bucket_object>
 {
-    template <typename Constructor, typename Allocator> bucket_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(bucket_object)
 
     id_type id;
 

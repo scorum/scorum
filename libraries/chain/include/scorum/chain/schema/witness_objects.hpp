@@ -106,13 +106,8 @@ public:
 
 class witness_vote_object : public object<witness_vote_object_type, witness_vote_object>
 {
-    witness_vote_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator> witness_vote_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(witness_vote_object)
 
     id_type id;
 
@@ -123,14 +118,7 @@ public:
 class witness_schedule_object : public object<witness_schedule_object_type, witness_schedule_object>
 {
 public:
-    template <typename Constructor, typename Allocator> witness_schedule_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    witness_schedule_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(witness_schedule_object)
 
     id_type id;
 

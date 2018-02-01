@@ -125,15 +125,7 @@ public:
 class vesting_delegation_object : public object<vesting_delegation_object_type, vesting_delegation_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    vesting_delegation_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    vesting_delegation_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(vesting_delegation_object)
 
     id_type id;
     account_name_type delegator;
@@ -146,15 +138,7 @@ class vesting_delegation_expiration_object
     : public object<vesting_delegation_expiration_object_type, vesting_delegation_expiration_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    vesting_delegation_expiration_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    vesting_delegation_expiration_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(vesting_delegation_expiration_object)
 
     id_type id;
     account_name_type delegator;
@@ -206,11 +190,7 @@ class change_recovery_account_request_object
     : public object<change_recovery_account_request_object_type, change_recovery_account_request_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    change_recovery_account_request_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(change_recovery_account_request_object)
 
     id_type id;
 

@@ -10,10 +10,7 @@ class chain_property_object;
 class chain_property_object : public object<chain_property_object_type, chain_property_object>
 {
 public:
-    template <typename Constructor, typename Allocator> chain_property_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(chain_property_object)
 
     id_type id;
     chain_id_type chain_id;

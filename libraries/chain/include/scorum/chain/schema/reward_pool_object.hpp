@@ -11,10 +11,7 @@ using scorum::protocol::asset;
 class reward_pool_object : public object<reward_pool_object_type, reward_pool_object>
 {
 public:
-    template <typename Constructor, typename Allocator> reward_pool_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(reward_pool_object)
 
 public:
     reward_pool_id_type id;

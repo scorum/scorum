@@ -50,16 +50,10 @@ public:
 class registration_committee_member_object
     : public object<registration_committee_member_object_type, registration_committee_member_object>
 {
-    registration_committee_member_object() = delete;
-
 public:
     typedef std::reference_wrapper<const registration_committee_member_object> cref_type;
 
-    template <typename Constructor, typename Allocator>
-    registration_committee_member_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(registration_committee_member_object)
 
     id_type id;
 
