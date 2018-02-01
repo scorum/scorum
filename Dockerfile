@@ -57,7 +57,7 @@ RUN \
         make -j$(nproc) && \
         make install && \
         cd .. && \
-        ( /usr/local/scorumd-default/bin/scorumd --version \
+        ( /usr/local/scorumd-full/bin/scorumd --version \
         | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
         && echo '_' \
         && git rev-parse --short HEAD ) \
@@ -138,22 +138,20 @@ ADD doc/seednodes.txt /etc/scorumd/seednodes.txt
 ADD contrib/config-for-docker.ini /etc/scorumd/config.ini
 ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini
 
-# add normal startup script that starts via sv
-ADD contrib/scorumd.run /usr/local/bin/scorum-sv-run.sh
-RUN chmod +x /usr/local/bin/scorum-sv-run.sh
+# add normal startup script that start via runsv
+RUN mkdir /etc/sv/scorumd
+RUN mkdir /etc/sv/scorumd/log
+ADD contrib/runsv/scorumd.run /etc/sv/scorumd/run
+ADD contrib/runsv/scorumd-log.run /etc/sv/scorumd/log/run
+ADD contrib/runsv/scorumd-log.config /etc/sv/scorumd/log/config
+RUN chmod +x /etc/sv/scorumd/run /etc/sv/scorumd/log/run
 
 # add nginx templates
 ADD contrib/scorumd.nginx.conf /etc/nginx/scorumd.nginx.conf
 ADD contrib/healthcheck.conf.template /etc/nginx/healthcheck.conf.template
 
-# add PaaS startup script and service script
-ADD contrib/startpaasscorumd.sh /usr/local/bin/startpaasscorumd.sh
-ADD contrib/paas-sv-run.sh /usr/local/bin/paas-sv-run.sh
-ADD contrib/sync-sv-run.sh /usr/local/bin/sync-sv-run.sh
+# add healthcheck script
 ADD contrib/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/startpaasscorumd.sh
-RUN chmod +x /usr/local/bin/paas-sv-run.sh
-RUN chmod +x /usr/local/bin/sync-sv-run.sh
 RUN chmod +x /usr/local/bin/healthcheck.sh
 
 # new entrypoint for all instances

@@ -21,8 +21,6 @@ function setup_and_restart_nginx()
     service nginx restart
 }
 
-VERSION=`cat /etc/scorumdversion`
-
 SCORUMD="/usr/local/scorumd-full/bin/scorumd"
 
 chown -R scorumd:scorumd $HOME
@@ -42,7 +40,7 @@ sleep 1
 generate_healthcheck_conf
 setup_and_restart_nginx
 
-exec chpst -uscorumd \
+exec chpst -u scorumd \
     $SCORUMD \
         --config-file="${HOME}/config.ini" \
         --data-dir="${HOME}" \
