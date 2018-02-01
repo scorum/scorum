@@ -7,9 +7,8 @@ add_library( cli
            )
 
 target_link_libraries( cli
-             fc
-             ${CMAKE_DL_LIBS}
-                          ${PLATFORM_SPECIFIC_LIBS} )
+                       fc
+                       ${PLATFORM_SPECIFIC_LIBS} )
 target_include_directories( cli
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 

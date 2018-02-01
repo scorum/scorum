@@ -20,7 +20,8 @@ target_link_libraries( scorum_app
                        scorum_mf_plugins
                        fc
                        graphene_net
-                       graphene_utilities )
+                       graphene_utilities
+                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_app
                             PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/include"

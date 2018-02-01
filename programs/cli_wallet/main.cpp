@@ -55,7 +55,6 @@
 
 #include <sstream>
 
-#include <printf.h>
 #ifdef WIN32
 #include <signal.h>
 #else

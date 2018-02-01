@@ -69,7 +69,8 @@ target_link_libraries( scorum_chain
                        fc
                        chainbase
                        graphene_schema
-                       ${PATCH_MERGE_LIB} )
+                       ${PATCH_MERGE_LIB}
+                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 

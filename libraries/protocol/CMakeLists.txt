@@ -20,7 +20,8 @@ add_library( scorum_protocol
            )
 
 target_link_libraries( scorum_protocol
-                       fc )
+                       fc
+                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_protocol
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 

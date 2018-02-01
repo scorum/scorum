@@ -23,7 +23,8 @@ add_library( graphene_utilities
              ${sources}
              ${HEADERS} )
 target_link_libraries( graphene_utilities
-                       fc )
+                       fc
+                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( graphene_utilities
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 if (USE_PCH)

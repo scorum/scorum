@@ -39,7 +39,6 @@ target_link_libraries( scorum_wallet PRIVATE
                        scorum_account_by_key
                        cli
                        fc
-                       ${CMAKE_DL_LIBS}
                        ${PLATFORM_SPECIFIC_LIBS} )
 target_include_directories( scorum_wallet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
