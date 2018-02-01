@@ -124,7 +124,35 @@ BOOST_AUTO_TEST_CASE(asset_test)
         BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).symbol_name(), "SCR");
         BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).to_string(), "0.000000000 SCR");
 
-        BOOST_TEST_MESSAGE("Asset Test");
+        BOOST_CHECK_THROW(asset::from_string("1.0000000000000000000000 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.000000000SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1. 333333333 SCR"),
+                          fc::exception); // Fails because symbol is '333333333 SCR', which is too long
+        BOOST_CHECK_THROW(asset::from_string("1 .333333333 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1 .333333333 X"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1 .333333333"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1 1.1"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.1.1 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.abc SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string(" SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.333333333"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.333333333 "), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string(""), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string(" "), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("  "), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.000111222 LARGENAME"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.000111222 WRONG"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1. SP"), fc::exception);
+
+        BOOST_CHECK_EQUAL(asset::from_string("100.012000000 SCR").amount.value, 100012000000);
+        BOOST_CHECK_EQUAL(asset::from_string("0.000000120 SCR").amount.value, 120);
+        BOOST_CHECK_EQUAL(asset::from_string("100.000000000 SCR").amount.value, 100000000000);
+        BOOST_CHECK_EQUAL(asset::from_string("100.012000000 SP").amount.value, 100012000000);
+        BOOST_CHECK_EQUAL(asset::from_string("0.000000120 SP").amount.value, 120);
+        BOOST_CHECK_EQUAL(asset::from_string("100.000000000 SP").amount.value, 100000000000);
+
         asset scorum = asset::from_string("1.123456000 SCR");
         asset tmp = asset::from_string("0.000000456 SCR");
         BOOST_CHECK_EQUAL(tmp.amount.value, 456);
@@ -139,30 +167,6 @@ BOOST_AUTO_TEST_CASE(asset_test)
         BOOST_CHECK_EQUAL(scorum.symbol(), SCORUM_SYMBOL);
         BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.000000050 SCR");
         BOOST_CHECK_EQUAL(asset(5e+10, SCORUM_SYMBOL).to_string(), "50.000000000 SCR");
-
-        BOOST_CHECK_THROW(asset::from_string("1.0000000000000000000000 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.000000000SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1. 333333333 SCR"),
-                          fc::exception); // Fails because symbol is '333 SCR', which is too long
-        BOOST_CHECK_THROW(asset::from_string("1 .333333333 SCR"), fc::exception);
-        asset unusual = asset::from_string("1. 333 X"); // Passes because symbol '333 X' is short enough
-        FC_ASSERT(unusual.decimals() == 0);
-        FC_ASSERT(unusual.symbol_name() == "333 X");
-        BOOST_CHECK_THROW(asset::from_string("1 .333333333 X"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1 .333333333"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1 1.1"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.1.1 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.abc SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(" SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.333333333"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.333333333 "), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(""), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(" "), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("  "), fc::exception);
-
-        BOOST_CHECK_EQUAL(asset::from_string("100 SCR").amount.value, 100);
     }
     FC_LOG_AND_RETHROW()
 }

@@ -22,7 +22,7 @@ struct asset
         : amount(a)
         , _symbol(id)
     {
-        _check_symbol(id);
+        _check_symbol();
     }
 
     share_type amount;
@@ -155,7 +155,7 @@ private:
     asset_symbol_type _symbol;
 
     // throw fc::assert_exception is symbol unknown
-    void _check_symbol(asset_symbol_type id);
+    void _check_symbol();
 
     void _set_decimals(uint8_t d);
 };

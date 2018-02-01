@@ -16,10 +16,11 @@ namespace scorum {
 namespace protocol {
 typedef boost::multiprecision::int128_t int128_t;
 
-void asset::_check_symbol(asset_symbol_type id)
+void asset::_check_symbol()
 {
-    FC_ASSERT(SCORUM_SYMBOL == id || VESTS_SYMBOL == id, "Invalid asset symbol received. ${1} not either ${2} or ${3}.",
-              ("1", id)("2", SCORUM_SYMBOL)("3", VESTS_SYMBOL));
+    FC_ASSERT(SCORUM_SYMBOL == _symbol || VESTS_SYMBOL == _symbol,
+              "Invalid asset symbol received. ${1} not either ${2} or ${3}.",
+              ("1", _symbol)("2", SCORUM_SYMBOL)("3", VESTS_SYMBOL));
 }
 
 void asset::_set_decimals(uint8_t d)
@@ -123,6 +124,7 @@ asset asset::from_string(const std::string& from)
             memcpy(sy + 1, symbol.c_str(), symbol_size);
         }
 
+        result._check_symbol();
         return result;
     }
     FC_CAPTURE_AND_RETHROW((from))
