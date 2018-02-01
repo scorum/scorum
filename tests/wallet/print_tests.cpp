@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/ui/formatter.hpp>
+#include <scorum/cli/formatter.hpp>
 
 //#define PRINT_OUTPUT
 
@@ -10,7 +10,7 @@
 
 struct printer_tests_fixture
 {
-    scorum::ui::formatter p;
+    scorum::cli::formatter p;
 };
 
 BOOST_FIXTURE_TEST_SUITE(printer_tests, printer_tests_fixture)

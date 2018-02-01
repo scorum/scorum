@@ -37,7 +37,7 @@ target_link_libraries( scorum_wallet PRIVATE
                        scorum_app
                        scorum_follow
                        scorum_account_by_key
-                       ui
+                       cli
                        fc
                        ${CMAKE_DL_LIBS}
                        ${PLATFORM_SPECIFIC_LIBS} )

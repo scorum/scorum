@@ -1,7 +1,7 @@
-#include <scorum/ui/formatter.hpp>
+#include <scorum/cli/formatter.hpp>
 
 namespace scorum {
-namespace ui {
+namespace cli {
 
 void formatter::clear()
 {

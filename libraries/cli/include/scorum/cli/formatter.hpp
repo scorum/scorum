@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace scorum {
-namespace ui {
+namespace cli {
 
 #define DEFAULT_SCREEN_W 100
 
