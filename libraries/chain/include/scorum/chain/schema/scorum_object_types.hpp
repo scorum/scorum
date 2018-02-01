@@ -9,6 +9,7 @@
 #include <chainbase/chainbase.hpp>
 
 #include <scorum/protocol/types.hpp>
+#include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/authority.hpp>
 
 namespace scorum {

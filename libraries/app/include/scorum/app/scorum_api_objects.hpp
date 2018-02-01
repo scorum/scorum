@@ -392,8 +392,6 @@ struct witness_api_obj
         , last_confirmed_block_num(w.last_confirmed_block_num)
         , signing_key(w.signing_key)
         , props(w.props)
-        , sbd_exchange_rate(w.sbd_exchange_rate)
-        , last_sbd_exchange_update(w.last_sbd_exchange_update)
         , votes(w.votes)
         , virtual_last_update(w.virtual_last_update)
         , virtual_position(w.virtual_position)
@@ -418,8 +416,6 @@ struct witness_api_obj
     uint64_t last_confirmed_block_num = 0;
     public_key_type signing_key;
     chain_properties props;
-    price sbd_exchange_rate;
-    time_point_sec last_sbd_exchange_update;
     share_type votes;
     fc::uint128 virtual_last_update;
     fc::uint128 virtual_position;
@@ -671,7 +667,6 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (url)(votes)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
              (last_aslot)(last_confirmed_block_num)(signing_key)
              (props)
-             (sbd_exchange_rate)(last_sbd_exchange_update)
              (last_work)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)

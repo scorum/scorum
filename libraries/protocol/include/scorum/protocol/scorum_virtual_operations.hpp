@@ -78,8 +78,8 @@ struct fill_vesting_withdraw_operation : public virtual_operation
 
     account_name_type from_account;
     account_name_type to_account;
-    asset withdrawn;
-    asset deposited;
+    asset withdrawn = asset(0, VESTS_SYMBOL);
+    asset deposited = asset(0, SCORUM_SYMBOL);
 };
 
 struct shutdown_witness_operation : public virtual_operation

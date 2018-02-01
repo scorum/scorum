@@ -72,7 +72,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
                                                           const std::string& json_metadata)
 {
     FC_ASSERT(new_account_name.size() > 0, "Account 'name' should not be empty.");
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
 
     authority owner;
     owner.add_authority(memo_key, 1);
@@ -97,7 +97,7 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
                                                   const authority& posting,
                                                   const asset& fee)
 {
-    FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(fee.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
     const auto& creator = get_account(creator_name);
 
@@ -121,8 +121,8 @@ const account_object& dbs_account::create_account_with_delegation(const account_
                                                                   const asset& fee,
                                                                   const asset& delegation)
 {
-    FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(delegation.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(fee.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(delegation.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
 
     const auto& creator = get_account(creator_name);
 
@@ -163,7 +163,7 @@ const account_object& dbs_account::create_account_with_bonus(const account_name_
                                                              const authority& posting,
                                                              const asset& bonus)
 {
-    FC_ASSERT(bonus.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(bonus.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
@@ -237,7 +237,7 @@ void dbs_account::update_owner_authority(const account_object& account, const au
 
 void dbs_account::increase_balance(const account_object& account, const asset& scorums)
 {
-    FC_ASSERT(scorums.symbol == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(scorums.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
     db_impl().modify(account, [&](account_object& acnt) { acnt.balance += scorums; });
 }
 
@@ -248,19 +248,19 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
 
 void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting)
 {
-    FC_ASSERT(vesting.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(vesting.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
     db_impl().modify(account, [&](account_object& a) { a.vesting_shares += vesting; });
 }
 
 void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(amount.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
     db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += amount; });
 }
 
 void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == VESTS_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(amount.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
     db_impl().modify(account, [&](account_object& a) { a.received_vesting_shares += amount; });
 }
 
@@ -504,7 +504,7 @@ const asset dbs_account::create_vesting(const account_object& to_account, const 
     {
         const auto& cprops = db_impl().get_dynamic_global_properties();
 
-        asset new_vesting = scorum * cprops.get_vesting_share_price();
+        asset new_vesting = asset(scorum.amount, VESTS_SYMBOL);
 
         db_impl().modify(to_account, [&](account_object& to) { to.vesting_shares += new_vesting; });
 

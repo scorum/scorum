@@ -120,58 +120,44 @@ BOOST_AUTO_TEST_CASE(asset_test)
 {
     try
     {
-        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).decimals(), 3);
+        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).decimals(), SCORUM_CURRENCY_PRECISION);
         BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).symbol_name(), "SCR");
-        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).to_string(), "0.000 SCR");
+        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).to_string(), "0.000000000 SCR");
 
         BOOST_TEST_MESSAGE("Asset Test");
-        asset scorum = asset::from_string("123.456 SCR");
-        asset tmp = asset::from_string("0.456 SCR");
+        asset scorum = asset::from_string("1.123456000 SCR");
+        asset tmp = asset::from_string("0.000000456 SCR");
         BOOST_CHECK_EQUAL(tmp.amount.value, 456);
-        tmp = asset::from_string("0.056 SCR");
+        tmp = asset::from_string("0.000000056 SCR");
         BOOST_CHECK_EQUAL(tmp.amount.value, 56);
 
-        BOOST_CHECK(std::abs(scorum.to_real() - 123.456) < 0.0005);
-        BOOST_CHECK_EQUAL(scorum.amount.value, 123456);
-        BOOST_CHECK_EQUAL(scorum.decimals(), 3);
+        BOOST_CHECK(std::abs(scorum.to_real() - 1.123456) < 0.0005);
+        BOOST_CHECK_EQUAL(scorum.amount.value, 1123456000);
+        BOOST_CHECK_EQUAL(scorum.decimals(), SCORUM_CURRENCY_PRECISION);
         BOOST_CHECK_EQUAL(scorum.symbol_name(), "SCR");
-        BOOST_CHECK_EQUAL(scorum.to_string(), "123.456 SCR");
-        BOOST_CHECK_EQUAL(scorum.symbol, SCORUM_SYMBOL);
-        BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.050 SCR");
-        BOOST_CHECK_EQUAL(asset(50000, SCORUM_SYMBOL).to_string(), "50.000 SCR");
+        BOOST_CHECK_EQUAL(scorum.to_string(), "1.123456000 SCR");
+        BOOST_CHECK_EQUAL(scorum.symbol(), SCORUM_SYMBOL);
+        BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.000000050 SCR");
+        BOOST_CHECK_EQUAL(asset(5e+10, SCORUM_SYMBOL).to_string(), "50.000000000 SCR");
 
-        BOOST_CHECK_THROW(scorum.set_decimals(100), fc::exception);
-        char* scorum_sy = (char*)&scorum.symbol;
-        scorum_sy[0] = 100;
-        BOOST_CHECK_THROW(scorum.decimals(), fc::exception);
-        scorum_sy[6] = 'A';
-        scorum_sy[7] = 'A';
-
-        auto check_sym = [](const asset& a) -> std::string {
-            auto symbol = a.symbol_name();
-            wlog("symbol_name is ${s}", ("s", symbol));
-            return symbol;
-        };
-
-        BOOST_CHECK_THROW(check_sym(scorum), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.00000000000000000000 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.000SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1. 333 SCR"),
+        BOOST_CHECK_THROW(asset::from_string("1.0000000000000000000000 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.000000000SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1. 333333333 SCR"),
                           fc::exception); // Fails because symbol is '333 SCR', which is too long
-        BOOST_CHECK_THROW(asset::from_string("1 .333 SCR"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1 .333333333 SCR"), fc::exception);
         asset unusual = asset::from_string("1. 333 X"); // Passes because symbol '333 X' is short enough
         FC_ASSERT(unusual.decimals() == 0);
         FC_ASSERT(unusual.symbol_name() == "333 X");
-        BOOST_CHECK_THROW(asset::from_string("1 .333 X"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1 .333"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1 .333333333 X"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1 .333333333"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1 1.1"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1.1.1 SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("1.abc SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string(" SCR"), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.333"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.333 "), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.333333333"), fc::exception);
+        BOOST_CHECK_THROW(asset::from_string("1.333333333 "), fc::exception);
         BOOST_CHECK_THROW(asset::from_string(""), fc::exception);
         BOOST_CHECK_THROW(asset::from_string(" "), fc::exception);
         BOOST_CHECK_THROW(asset::from_string("  "), fc::exception);

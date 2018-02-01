@@ -20,7 +20,9 @@ struct registration_pool_service_i
         = 0;
 
     virtual asset allocate_cash(const account_name_type& committee_member) = 0;
-    virtual const registration_pool_object& get_pool() const = 0;
+    virtual const registration_pool_object& get() const = 0;
+
+    virtual bool is_exists() const = 0;
 };
 
 /**
@@ -34,7 +36,9 @@ protected:
     explicit dbs_registration_pool(database& db);
 
 public:
-    virtual const registration_pool_object& get_pool() const override;
+    virtual const registration_pool_object& get() const override;
+
+    virtual bool is_exists() const override;
 
     virtual const registration_pool_object&
     create_pool(const asset& supply, const asset& maximum_bonus, const schedule_items_type& schedule_items) override;

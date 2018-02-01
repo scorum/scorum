@@ -21,6 +21,7 @@ target_link_libraries(chain_test
                       scorum_witness
                       scorum_egenesis_none
                       scorum_debug_node
+                      cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories(chain_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/common")
@@ -36,6 +37,7 @@ target_link_libraries(plugin_test
                       scorum_witness
                       scorum_egenesis_none
                       scorum_debug_node
+                      cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories(plugin_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/common")
@@ -49,6 +51,7 @@ target_link_libraries(wallet_tests
                       scorum_private_message
                       scorum_egenesis_none
                       graphene_utilities
+                      cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS})
 

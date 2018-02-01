@@ -53,6 +53,8 @@
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 
+#include <sstream>
+
 #ifdef WIN32
 #include <signal.h>
 #else
@@ -86,8 +88,8 @@ int main(int argc, char** argv)
                 ("rpc-http-endpoint,H",   bpo::value<string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
                 ("daemon,d", "Run the wallet in daemon mode")
                 ("rpc-http-allowip",      bpo::value<vector<string>>()->multitoken(),             "Allows only specified IPs to connect to the HTTP endpoint")
-                ("wallet-file,w",         bpo::value<string>()->default_value("wallet.json"),    "wallet to load")
-                ("chain-id",              bpo::value<string>(),                                   "chain ID to connect to");
+                ("wallet-file,w",         bpo::value<string>()->default_value("wallet.json"),     "Wallet configuration to load")
+                ("chain-id",              bpo::value<string>(),                                   "Chain ID to connect to");
         // clang-format on
 
         vector<string> allowed_ips;
@@ -191,6 +193,16 @@ int main(int argc, char** argv)
         fc::api<wallet_api> wapi(wapiptr);
 
         auto wallet_cli = std::make_shared<fc::rpc::cli>();
+
+        auto promptFormatter = [](const std::string& state = "") -> std::string {
+            static const char* prompt = "$";
+            std::stringstream out;
+            if (!state.empty())
+                out << "(" << state << ") ";
+            out << prompt << " ";
+            return out.str();
+        };
+
         for (auto& name_formatter : wapiptr->get_result_formatters())
             wallet_cli->format_result(name_formatter.first, name_formatter.second);
 
@@ -203,13 +215,14 @@ int main(int argc, char** argv)
         if (wapiptr->is_new())
         {
             std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
-            wallet_cli->set_prompt("new >>> ");
+            wallet_cli->set_prompt(promptFormatter("new"));
         }
         else
-            wallet_cli->set_prompt("locked >>> ");
+            wallet_cli->set_prompt(promptFormatter("locked"));
 
-        boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect(
-            [&](bool locked) { wallet_cli->set_prompt(locked ? "locked >>> " : "unlocked >>> "); }));
+        boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool locked) {
+            wallet_cli->set_prompt(locked ? promptFormatter("locked") : promptFormatter("unlocked"));
+        }));
 
         auto _websocket_server = std::make_shared<fc::http::websocket_server>();
         if (options.count("rpc-endpoint"))

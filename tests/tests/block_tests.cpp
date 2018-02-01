@@ -268,6 +268,7 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         cop.creator = TEST_INIT_DELEGATE_NAME;
         cop.owner = authority(1, init_account_pub_key, 1);
         cop.active = cop.owner;
+        cop.fee = SUFFICIENT_FEE;
         trx.operations.push_back(cop);
         trx.set_expiration(db1.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.sign(init_account_priv_key, db1.get_chain_id());
@@ -334,6 +335,7 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
         cop.new_account_name = "alice";
         cop.creator = TEST_INIT_DELEGATE_NAME;
         cop.owner = authority(1, init_account_pub_key, 1);
+        cop.fee = SUFFICIENT_FEE;
         cop.active = cop.owner;
         trx.operations.push_back(cop);
         trx.set_expiration(db1.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -394,6 +396,7 @@ BOOST_AUTO_TEST_CASE(tapos)
         cop.creator = TEST_INIT_DELEGATE_NAME;
         cop.owner = authority(1, init_account_pub_key, 1);
         cop.active = cop.owner;
+        cop.fee = SUFFICIENT_FEE;
         trx.operations.push_back(cop);
         trx.set_expiration(db1.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.sign(init_account_priv_key, db1.get_chain_id());

@@ -61,7 +61,7 @@
 #include <sys/stat.h>
 #endif
 
-#include <scorum/wallet/printer.hpp>
+#include <scorum/cli/formatter.hpp>
 
 namespace scorum {
 namespace wallet {
@@ -652,7 +652,7 @@ public:
 
     std::string print_atomicswap_secret2str(const std::string& secret) const
     {
-        printer p;
+        cli::formatter p;
 
         p.print_line();
         p.print_field("SECRET: ", secret);
@@ -662,7 +662,7 @@ public:
 
     std::string print_atomicswap_contract2str(const atomicswap_contract_info_api_obj& rt) const
     {
-        printer p;
+        cli::formatter p;
 
         p.print_line();
 
@@ -719,7 +719,7 @@ public:
         m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
             auto accounts = result.as<std::vector<account_api_obj>>();
 
-            printer p;
+            cli::formatter p;
 
             asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
@@ -747,7 +747,7 @@ public:
         m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<account_balance_info_api_obj>();
 
-            printer p;
+            cli::formatter p;
 
             FC_ASSERT(p.create_table(16, 20, 10, 20));
 
@@ -762,7 +762,7 @@ public:
         m["get_account_history"] = [this](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
-            printer p;
+            cli::formatter p;
 
             FC_ASSERT(p.create_table(5, 10, 15, 20, 50));
 
@@ -789,7 +789,7 @@ public:
         m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
 
-            printer p;
+            cli::formatter p;
 
             FC_ASSERT(p.create_table(20, 20, 8, 9));
 
@@ -2253,7 +2253,7 @@ annotated_signed_transaction wallet_api::vote(
     op.voter = voter;
     op.author = author;
     op.permlink = permlink;
-    op.weight = weight * SCORUM_1_PERCENT;
+    op.weight = weight;
 
     signed_transaction tx;
     tx.operations.push_back(op);

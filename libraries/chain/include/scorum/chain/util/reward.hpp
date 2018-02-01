@@ -16,7 +16,6 @@ namespace chain {
 namespace util {
 
 using scorum::protocol::asset;
-using scorum::protocol::price;
 using scorum::protocol::share_type;
 
 using fc::uint128_t;

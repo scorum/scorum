@@ -14,10 +14,10 @@ dbs_reward::dbs_reward(database& db)
 const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
 {
     // clang-format off
-    asset initial_per_block_reward(initial_supply.amount / (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY), initial_supply.symbol);
+    asset initial_per_block_reward(initial_supply.amount / (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY), initial_supply.symbol());
 
     FC_ASSERT(db_impl().find<reward_pool_object>() == nullptr, "recreation of reward_pool_object is not allowed");
-    FC_ASSERT(initial_supply.symbol == SCORUM_SYMBOL, "initial supply for reward_pool must in ${1}", ("1", asset(0, SCORUM_SYMBOL).symbol_name()));
+    FC_ASSERT(initial_supply.symbol() == SCORUM_SYMBOL, "initial supply for reward_pool must in ${1}", ("1", asset(0, SCORUM_SYMBOL).symbol_name()));
     FC_ASSERT(initial_supply > asset(0, SCORUM_SYMBOL), "initial supply for reward_pool must not be null");
     FC_ASSERT(initial_per_block_reward > asset(0, SCORUM_SYMBOL),
               "initial supply for reward_pool is not sufficient to make per_block_reward > 0. It should be at least ${1}, but current value is ${2}",
@@ -40,7 +40,7 @@ const asset& dbs_reward::increase_pool_ballance(const asset& delta)
     const auto& pool = get_pool();
 
     db_impl().modify(pool, [&](reward_pool_object& pool) {
-        switch (delta.symbol)
+        switch (delta.symbol())
         {
         case SCORUM_SYMBOL:
             FC_ASSERT(delta >= asset(0, SCORUM_SYMBOL));
