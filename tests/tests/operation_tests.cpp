@@ -1284,8 +1284,8 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         op.owner = "alice";
         op.url = "foo.bar";
         op.block_signing_key = signing_key.get_public_key();
-        op.props.account_creation_fee = SCORUM_MIN_ACCOUNT_CREATION_FEE + 10;
-        op.props.maximum_block_size = SCORUM_MIN_BLOCK_SIZE_LIMIT + 100;
+        op.proposed_chain_props.account_creation_fee = SCORUM_MIN_ACCOUNT_CREATION_FEE + 10;
+        op.proposed_chain_props.maximum_block_size = SCORUM_MIN_BLOCK_SIZE_LIMIT + 100;
 
         signed_transaction tx;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -1300,8 +1300,10 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
         BOOST_REQUIRE(fc::to_string(alice_witness.url) == op.url);
         BOOST_REQUIRE(alice_witness.signing_key == op.block_signing_key);
-        BOOST_REQUIRE(alice_witness.props.account_creation_fee == op.props.account_creation_fee);
-        BOOST_REQUIRE(alice_witness.props.maximum_block_size == op.props.maximum_block_size);
+        BOOST_REQUIRE(alice_witness.proposed_chain_props.account_creation_fee
+                      == op.proposed_chain_props.account_creation_fee);
+        BOOST_REQUIRE(alice_witness.proposed_chain_props.maximum_block_size
+                      == op.proposed_chain_props.maximum_block_size);
         BOOST_REQUIRE(alice_witness.total_missed == 0);
         BOOST_REQUIRE(alice_witness.last_confirmed_block_num == 0);
         BOOST_REQUIRE(alice_witness.votes.value == 0);
@@ -1325,8 +1327,10 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
         BOOST_REQUIRE(fc::to_string(alice_witness.url) == "bar.foo");
         BOOST_REQUIRE(alice_witness.signing_key == op.block_signing_key);
-        BOOST_REQUIRE(alice_witness.props.account_creation_fee == op.props.account_creation_fee);
-        BOOST_REQUIRE(alice_witness.props.maximum_block_size == op.props.maximum_block_size);
+        BOOST_REQUIRE(alice_witness.proposed_chain_props.account_creation_fee
+                      == op.proposed_chain_props.account_creation_fee);
+        BOOST_REQUIRE(alice_witness.proposed_chain_props.maximum_block_size
+                      == op.proposed_chain_props.maximum_block_size);
         BOOST_REQUIRE(alice_witness.total_missed == 0);
         BOOST_REQUIRE(alice_witness.last_confirmed_block_num == 0);
         BOOST_REQUIRE(alice_witness.votes.value == 0);

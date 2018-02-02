@@ -86,16 +86,16 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
     account_service.check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
-    FC_ASSERT(o.props.account_creation_fee.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(o.proposed_chain_props.account_creation_fee.symbol() == SCORUM_SYMBOL);
 
     if (!witness_service.is_exists(o.owner))
     {
-        witness_service.create_witness(o.owner, o.url, o.block_signing_key, o.props);
+        witness_service.create_witness(o.owner, o.url, o.block_signing_key, o.proposed_chain_props);
     }
     else
     {
         const auto& witness = witness_service.get(o.owner);
-        witness_service.update_witness(witness, o.url, o.block_signing_key, o.props);
+        witness_service.update_witness(witness, o.url, o.block_signing_key, o.proposed_chain_props);
     }
 }
 
@@ -1391,11 +1391,11 @@ void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation
 
     switch (op.type)
     {
-    case atomicswap_by_initiator:
+    case atomicswap_initiate_operation::by_initiator:
         atomicswap_service.create_contract(atomicswap_contract_initiator, owner, recipient, op.amount, op.secret_hash,
                                            metadata);
         break;
-    case atomicswap_by_participant:
+    case atomicswap_initiate_operation::by_participant:
         atomicswap_service.create_contract(atomicswap_contract_participant, owner, recipient, op.amount, op.secret_hash,
                                            metadata);
         break;

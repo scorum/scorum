@@ -2,7 +2,7 @@
 #include <scorum/protocol/base.hpp>
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
-
+#include <scorum/protocol/chain_properties.hpp>
 #include <scorum/protocol/types.hpp>
 
 #include <fc/utf8.hpp>
@@ -427,34 +427,6 @@ struct set_withdraw_vesting_route_operation : public base_operation
 };
 
 /**
- * Witnesses must vote on how to set certain chain properties to ensure a smooth
- * and well functioning network.  Any time @owner is in the active set of witnesses these
- * properties will be used to control the blockchain configuration.
- */
-struct chain_properties
-{
-    /**
-     *  This fee, paid in SCORUM, is converted into VESTING SHARES for the new account. Accounts
-     *  without vesting shares cannot earn usage rations and therefore are powerless. This minimum
-     *  fee requires all accounts to have some kind of commitment to the network that includes the
-     *  ability to vote and make transactions.
-     */
-    asset account_creation_fee = SCORUM_MIN_ACCOUNT_CREATION_FEE;
-
-    /**
-     *  This witnesses vote for the maximum_block_size which is used by the network
-     *  to tune rate limiting and capacity
-     */
-    uint32_t maximum_block_size = SCORUM_MIN_BLOCK_SIZE_LIMIT * 2;
-
-    void validate() const
-    {
-        FC_ASSERT(account_creation_fee >= SCORUM_MIN_ACCOUNT_CREATION_FEE);
-        FC_ASSERT(maximum_block_size >= SCORUM_MIN_BLOCK_SIZE_LIMIT);
-    }
-};
-
-/**
  *  Users who wish to become a witness must pay a fee acceptable to
  *  the current witnesses to apply for the position and allow voting
  *  to begin.
@@ -473,7 +445,7 @@ struct witness_update_operation : public base_operation
     account_name_type owner;
     std::string url;
     public_key_type block_signing_key;
-    chain_properties props;
+    chain_properties proposed_chain_props;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -785,6 +757,24 @@ struct close_budget_operation : public base_operation
     }
 };
 
+struct proposal_create_operation : public base_operation
+{
+    typedef scorum::protocol::proposal_action action_t;
+
+    account_name_type creator;
+    fc::variant data;
+
+    fc::optional<fc::enum_type<uint8_t, action_t>> action;
+    uint32_t lifetime_sec = 0;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+
+    void validate() const;
+};
+
 struct proposal_vote_operation : public base_operation
 {
     account_name_type voting_account;
@@ -798,15 +788,15 @@ struct proposal_vote_operation : public base_operation
     void validate() const;
 };
 
-enum atomicswap_initiate_type : bool
-{
-    atomicswap_by_initiator = 0,
-    atomicswap_by_participant,
-};
-
 struct atomicswap_initiate_operation : public base_operation
 {
-    atomicswap_initiate_type type = atomicswap_by_initiator;
+    enum operation_type : bool
+    {
+        by_initiator = 0,
+        by_participant,
+    };
+
+    operation_type type = by_initiator;
 
     account_name_type owner;
     account_name_type recipient;
@@ -851,30 +841,10 @@ struct atomicswap_refund_operation : public base_operation
     }
 };
 
-struct proposal_create_operation : public base_operation
-{
-    typedef scorum::protocol::proposal_action action_t;
-
-    account_name_type creator;
-    fc::variant data;
-
-    fc::optional<fc::enum_type<uint8_t, action_t>> action;
-    uint32_t lifetime_sec = 0;
-
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(creator);
-    }
-
-    void validate() const;
-};
-
 } // namespace protocol
 } // namespace scorum
 
 // clang-format off
-
-FC_REFLECT( scorum::protocol::chain_properties, (account_creation_fee)(maximum_block_size) )
 
 FC_REFLECT( scorum::protocol::account_create_operation,
             (fee)
@@ -919,7 +889,7 @@ FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
 FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
 FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(vesting_shares) )
 FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_operation, (from_account)(to_account)(percent)(auto_vest) )
-FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(props) )
+FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(proposed_chain_props) )
 FC_REFLECT( scorum::protocol::account_witness_vote_operation, (account)(witness)(approve) )
 FC_REFLECT( scorum::protocol::account_witness_proxy_operation, (account)(proxy) )
 FC_REFLECT( scorum::protocol::comment_operation, (parent_author)(parent_permlink)(author)(permlink)(title)(body)(json_metadata) )
@@ -950,8 +920,8 @@ FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
-FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_type,
-                (atomicswap_by_initiator)(atomicswap_by_participant))
+FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,
+                (by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 

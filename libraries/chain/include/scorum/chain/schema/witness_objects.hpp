@@ -56,7 +56,7 @@ public:
      */
     public_key_type signing_key;
 
-    chain_properties props;
+    chain_properties proposed_chain_props;
 
     /**
      *  The total votes for this witness. This determines how the witness is ranked for
@@ -226,7 +226,7 @@ FC_REFLECT( scorum::chain::witness_object,
              (created)
              (url)(votes)(schedule)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
              (last_confirmed_block_num)(signing_key)
-             (props)
+             (proposed_chain_props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )

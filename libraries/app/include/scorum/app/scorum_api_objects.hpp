@@ -390,7 +390,7 @@ struct witness_api_obj
         , total_missed(w.total_missed)
         , last_confirmed_block_num(w.last_confirmed_block_num)
         , signing_key(w.signing_key)
-        , props(w.props)
+        , proposed_chain_props(w.proposed_chain_props)
         , votes(w.votes)
         , virtual_last_update(w.virtual_last_update)
         , virtual_position(w.virtual_position)
@@ -412,7 +412,7 @@ struct witness_api_obj
     uint32_t total_missed = 0;
     uint64_t last_confirmed_block_num = 0;
     public_key_type signing_key;
-    chain_properties props;
+    chain_properties proposed_chain_props;
     share_type votes;
     fc::uint128 virtual_last_update;
     fc::uint128 virtual_position;
@@ -576,7 +576,7 @@ struct atomicswap_contract_result_api_obj
                                        const std::string& secret = "")
         : tr(_tr)
     {
-        obj.contract_initiator = (op.type == protocol::atomicswap_by_initiator);
+        obj.contract_initiator = (op.type == protocol::atomicswap_initiate_operation::by_initiator);
         obj.owner = op.owner;
         obj.to = op.recipient;
         obj.amount = op.amount;
@@ -662,7 +662,7 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (created)
              (url)(votes)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
              (last_confirmed_block_num)(signing_key)
-             (props)
+             (proposed_chain_props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )

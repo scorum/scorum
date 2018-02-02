@@ -216,7 +216,7 @@ void witness_update_operation::validate() const
     validate_account_name(owner);
     FC_ASSERT(url.size() > 0, "URL size must be greater than 0");
     FC_ASSERT(fc::is_utf8(url), "URL is not valid UTF8");
-    props.validate();
+    proposed_chain_props.validate();
 }
 
 void account_witness_vote_operation::validate() const

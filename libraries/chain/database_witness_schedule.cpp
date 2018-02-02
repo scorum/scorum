@@ -142,6 +142,8 @@ void database::_reset_witness_virtual_schedule_time()
 
 void database::_update_witness_median_props()
 {
+    // clang-format off
+
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
@@ -156,15 +158,15 @@ void database::_update_witness_median_props()
 
     /// sort them by account_creation_fee
     std::sort(active.begin(), active.end(), [&](const witness_object* a, const witness_object* b) {
-        return a->props.account_creation_fee.amount < b->props.account_creation_fee.amount;
+        return a->proposed_chain_props.account_creation_fee.amount < b->proposed_chain_props.account_creation_fee.amount;
     });
-    asset median_account_creation_fee = active[active.size() / 2]->props.account_creation_fee;
+    asset median_account_creation_fee = active[active.size() / 2]->proposed_chain_props.account_creation_fee;
 
     /// sort them by maximum_block_size
     std::sort(active.begin(), active.end(), [&](const witness_object* a, const witness_object* b) {
-        return a->props.maximum_block_size < b->props.maximum_block_size;
+        return a->proposed_chain_props.maximum_block_size < b->proposed_chain_props.maximum_block_size;
     });
-    uint32_t median_maximum_block_size = active[active.size() / 2]->props.maximum_block_size;
+    uint32_t median_maximum_block_size = active[active.size() / 2]->proposed_chain_props.maximum_block_size;
 
     _db.modify(wso, [&](witness_schedule_object& _wso) {
         _wso.median_props.account_creation_fee = median_account_creation_fee;
@@ -173,6 +175,8 @@ void database::_update_witness_median_props()
 
     _db.modify(_db.get_dynamic_global_properties(),
                [&](dynamic_global_property_object& _dgpo) { _dgpo.maximum_block_size = median_maximum_block_size; });
+
+    // clang-format on
 }
 
 void database::_update_witness_majority_version()
