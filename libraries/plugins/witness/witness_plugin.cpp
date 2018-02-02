@@ -98,26 +98,6 @@ void witness_plugin_impl::plugin_initialize()
     _self.database().set_custom_operation_interpreter(_self.plugin_name(), _custom_operation_interpreter);
 }
 
-struct comment_options_extension_visitor
-{
-    comment_options_extension_visitor(const comment_object& c, const database& db)
-        : _c(c)
-        , _db(db)
-    {
-    }
-
-    typedef void result_type;
-
-    const comment_object& _c;
-    const database& _db;
-
-    void operator()(const comment_payout_beneficiaries& cpb) const
-    {
-        SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
-                      "Cannot specify more than 8 beneficiaries.");
-    }
-};
-
 void check_memo(const std::string& memo, const account_object& account, const account_authority_object& auth)
 {
     std::vector<public_key_type> keys;
@@ -192,13 +172,11 @@ struct operation_visitor
 
     void operator()(const comment_options_operation& o) const
     {
-        const auto& comment = _db.get_comment(o.author, o.permlink);
-
-        comment_options_extension_visitor v(comment, _db);
-
         for (auto& e : o.extensions)
         {
-            e.visit(v);
+            const comment_payout_beneficiaries& cpb = e.get<comment_payout_beneficiaries>();
+            SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
+                          "Cannot specify more than 8 beneficiaries.");
         }
     }
 

@@ -3,6 +3,7 @@
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/chain_properties.hpp>
+#include <scorum/protocol/comment.hpp>
 #include <scorum/protocol/types.hpp>
 
 #include <fc/utf8.hpp>
@@ -121,38 +122,6 @@ struct comment_operation : public base_operation
     }
 };
 
-struct beneficiary_route_type
-{
-    beneficiary_route_type()
-    {
-    }
-    beneficiary_route_type(const account_name_type& a, const uint16_t& w)
-        : account(a)
-        , weight(w)
-    {
-    }
-
-    account_name_type account;
-    uint16_t weight;
-
-    // For use by std::sort such that the route is sorted first by name (ascending)
-    bool operator<(const beneficiary_route_type& o) const
-    {
-        return account < o.account;
-    }
-};
-
-struct comment_payout_beneficiaries
-{
-    std::vector<beneficiary_route_type> beneficiaries;
-
-    void validate() const;
-};
-
-typedef static_variant<comment_payout_beneficiaries> comment_options_extension;
-
-typedef flat_set<comment_options_extension> comment_options_extensions_type;
-
 /**
  *  Authors of posts may not want all of the benefits that come from creating a post. This
  *  operation allows authors to update properties associated with their post.
@@ -171,7 +140,7 @@ struct comment_options_operation : public base_operation
     uint16_t percent_scrs
         = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
     bool allow_votes = true; /// allows a post to receive votes;
-    bool allow_curation_rewards = true; /// allows voters to recieve curation rewards. Rewards return to reward fund.
+    bool allow_curation_rewards = true; /// allows voters to receive curation rewards. Rewards return to reward fund.
     comment_options_extensions_type extensions;
 
     void validate() const;
@@ -899,10 +868,6 @@ FC_REFLECT( scorum::protocol::custom_json_operation, (required_auths)(required_p
 FC_REFLECT( scorum::protocol::custom_binary_operation, (required_owner_auths)(required_active_auths)(required_posting_auths)(required_auths)(id)(data) )
 
 FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) )
-
-FC_REFLECT( scorum::protocol::beneficiary_route_type, (account)(weight) )
-FC_REFLECT( scorum::protocol::comment_payout_beneficiaries, (beneficiaries) )
-FC_REFLECT_TYPENAME( scorum::protocol::comment_options_extension )
 FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_scrs)(allow_votes)(allow_curation_rewards)(extensions) )
 
 FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) )
@@ -920,8 +885,7 @@ FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
-FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,
-                (by_initiator)(by_participant))
+FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 

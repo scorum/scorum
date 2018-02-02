@@ -1,21 +1,8 @@
 file(GLOB HEADERS "include/scorum/protocol/*.hpp")
+file(GLOB SRC_FILES *.cpp)
 
-## SORT .cpp by most likely to change / break compile
 add_library( scorum_protocol
-
-             types.cpp
-             authority.cpp
-             operations.cpp
-             sign_state.cpp
-             operation_util_impl.cpp
-             scorum_operations.cpp
-             transaction.cpp
-             block.cpp
-             asset.cpp
-             version.cpp
-             get_config.cpp
-             atomicswap_helper.cpp
-
+             ${SRC_FILES}
              ${HEADERS}
            )
 
