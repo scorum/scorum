@@ -9,7 +9,6 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using scorum::protocol::price;
 
 /**
  * @class dynamic_global_property_object
@@ -41,14 +40,10 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset total_supply = asset(0, SCORUM_SYMBOL); ///< accounts_current_supply + reward and registration pools supply
-    asset accounts_current_supply = asset(0, SCORUM_SYMBOL); ///< total SCR on accounts balances
+    asset total_supply = asset(0, SCORUM_SYMBOL); ///< circulating_capital + reward and registration pools supply
+    asset circulating_capital
+        = asset(0, SCORUM_SYMBOL); ///< total SCR on circulating. circulating_capital <= total_supply
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
-
-    price get_vesting_share_price() const
-    {
-        return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
-    }
 
     /**
      *  Maximum block size is decided by the set of active witnesses which change every round.
@@ -80,7 +75,7 @@ public:
      * "wasting" voting power through spillover; any user voting faster than this rate will have
      * their votes reduced.
      */
-    uint32_t vote_power_reserve_rate = 40;
+    uint32_t vote_power_reserve_rate = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
 
     uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
@@ -105,7 +100,7 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (time)
           (current_witness)
           (total_supply)
-          (accounts_current_supply)
+          (circulating_capital)
           (total_vesting_shares)
           (maximum_block_size)
           (current_aslot)

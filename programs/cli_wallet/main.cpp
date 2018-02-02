@@ -53,6 +53,8 @@
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 
+#include <sstream>
+
 #ifdef WIN32
 #include <signal.h>
 #else
@@ -75,6 +77,7 @@ int main(int argc, char** argv)
         // clang-format off
         opts.add_options()
                 ("help,h", "Print this help message and exit.")
+                ("version,v", "Print version number and exit.")
                 ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
                 ("server-rpc-user,u",     bpo::value<string>(), "Server Username")
                 ("server-rpc-password,p", bpo::value<string>(), "Server Password")
@@ -85,8 +88,8 @@ int main(int argc, char** argv)
                 ("rpc-http-endpoint,H",   bpo::value<string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
                 ("daemon,d", "Run the wallet in daemon mode")
                 ("rpc-http-allowip",      bpo::value<vector<string>>()->multitoken(),             "Allows only specified IPs to connect to the HTTP endpoint")
-                ("wallet-file,w",         bpo::value<string>()->default_value("wallet.json"),    "wallet to load")
-                ("chain-id",              bpo::value<string>(),                                   "chain ID to connect to");
+                ("wallet-file,w",         bpo::value<string>()->default_value("wallet.json"),     "Wallet configuration to load")
+                ("chain-id",              bpo::value<string>(),                                   "Chain ID to connect to");
         // clang-format on
 
         vector<string> allowed_ips;
@@ -95,45 +98,18 @@ int main(int argc, char** argv)
 
         bpo::store(bpo::parse_command_line(argc, argv, opts), options);
 
-#ifdef DEBUG
-
-#define OUT_OPT_DEBUG std::cout << "D: "
-
-        for (int carg = 1; carg < argc; ++carg)
+        if (options.count("version"))
         {
-            OUT_OPT_DEBUG << "argv[" << carg << "] = " << argv[carg] << "\n";
+            scorum::app::print_application_version();
+            return 0;
         }
-
-#define PRINT_OPT(name)                                                                                                \
-    if (options.count(name))                                                                                           \
-    {                                                                                                                  \
-        OUT_OPT_DEBUG << "Opt '" << name << "':";                                                                      \
-        std::cout << " '" << options[name].as<std::string>() << "'";                                                   \
-        std::cout << "\n";                                                                                             \
-    }
-
-        PRINT_OPT("help");
-        PRINT_OPT("server-rpc-endpoint");
-        PRINT_OPT("server-rpc-user");
-        PRINT_OPT("server-rpc-password");
-        PRINT_OPT("cert-authority");
-        PRINT_OPT("rpc-endpoint");
-        PRINT_OPT("rpc-tls-endpoint");
-        PRINT_OPT("rpc-tls-certificate");
-        PRINT_OPT("rpc-http-endpoint");
-        PRINT_OPT("daemon");
-        PRINT_OPT("rpc-http-allowip");
-        PRINT_OPT("wallet-file");
-        PRINT_OPT("chain-id");
-
-        OUT_OPT_DEBUG << std::endl;
-#endif
 
         if (options.count("help"))
         {
             std::cout << opts << "\n";
             return 0;
         }
+
         if (options.count("rpc-http-allowip") && options.count("rpc-http-endpoint"))
         {
             allowed_ips = options["rpc-http-allowip"].as<vector<string>>();
@@ -217,6 +193,16 @@ int main(int argc, char** argv)
         fc::api<wallet_api> wapi(wapiptr);
 
         auto wallet_cli = std::make_shared<fc::rpc::cli>();
+
+        auto promptFormatter = [](const std::string& state = "") -> std::string {
+            static const char* prompt = "$";
+            std::stringstream out;
+            if (!state.empty())
+                out << "(" << state << ") ";
+            out << prompt << " ";
+            return out.str();
+        };
+
         for (auto& name_formatter : wapiptr->get_result_formatters())
             wallet_cli->format_result(name_formatter.first, name_formatter.second);
 
@@ -229,13 +215,14 @@ int main(int argc, char** argv)
         if (wapiptr->is_new())
         {
             std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
-            wallet_cli->set_prompt("new >>> ");
+            wallet_cli->set_prompt(promptFormatter("new"));
         }
         else
-            wallet_cli->set_prompt("locked >>> ");
+            wallet_cli->set_prompt(promptFormatter("locked"));
 
-        boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect(
-            [&](bool locked) { wallet_cli->set_prompt(locked ? "locked >>> " : "unlocked >>> "); }));
+        boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool locked) {
+            wallet_cli->set_prompt(locked ? promptFormatter("locked") : promptFormatter("unlocked"));
+        }));
 
         auto _websocket_server = std::make_shared<fc::http::websocket_server>();
         if (options.count("rpc-endpoint"))
@@ -323,7 +310,7 @@ int main(int argc, char** argv)
     }
     catch (const fc::exception& e)
     {
-        std::cout << e.to_detail_string() << "\n";
+        std::cerr << e.to_detail_string() << "\n";
         return -1;
     }
     return 0;

@@ -10,7 +10,7 @@ namespace protocol {
 
 bool inline is_asset_type(asset asset, asset_symbol_type symbol)
 {
-    return asset.symbol == symbol;
+    return asset.symbol() == symbol;
 }
 
 void account_create_operation::validate() const
@@ -149,7 +149,7 @@ void comment_options_operation::validate() const
 {
     validate_account_name(author);
     FC_ASSERT(percent_scrs <= SCORUM_100_PERCENT, "Percent cannot exceed 100%");
-    FC_ASSERT(max_accepted_payout.symbol == SCORUM_SYMBOL, "Max accepted payout must be in SCR");
+    FC_ASSERT(max_accepted_payout.symbol() == SCORUM_SYMBOL, "Max accepted payout must be in SCR");
     FC_ASSERT(max_accepted_payout.amount.value >= 0, "Cannot accept less than 0 payout");
     validate_permlink(permlink);
     for (auto& e : extensions)
@@ -171,7 +171,7 @@ void vote_operation::validate() const
 {
     validate_account_name(voter);
     validate_account_name(author);
-    FC_ASSERT(abs(weight) <= SCORUM_100_PERCENT, "Weight is not a SCORUM percentage");
+    FC_ASSERT(abs(weight) <= 100, "Weight is not a SCORUM percentage");
     validate_permlink(permlink);
 }
 
@@ -181,7 +181,7 @@ void transfer_operation::validate() const
     {
         validate_account_name(from);
         validate_account_name(to);
-        FC_ASSERT(amount.symbol != VESTS_SYMBOL, "transferring of Scorum Power (STMP) is not allowed.");
+        FC_ASSERT(amount.symbol() != VESTS_SYMBOL, "transferring of Scorum Power (STMP) is not allowed.");
         FC_ASSERT(amount.amount > 0, "Cannot transfer a negative amount (aka: stealing)");
         FC_ASSERT(memo.size() < SCORUM_MAX_MEMO_SIZE, "Memo is too large");
         FC_ASSERT(fc::is_utf8(memo), "Memo is not UTF8");
@@ -264,8 +264,8 @@ void escrow_transfer_operation::validate() const
     FC_ASSERT(fee.amount >= 0, "fee cannot be negative");
     FC_ASSERT(scorum_amount.amount > 0, "scorum amount cannot be negative");
     FC_ASSERT(from != agent && to != agent, "agent must be a third party");
-    FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "fee must be SCR");
-    FC_ASSERT(scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCR");
+    FC_ASSERT(fee.symbol() == SCORUM_SYMBOL, "fee must be SCR");
+    FC_ASSERT(scorum_amount.symbol() == SCORUM_SYMBOL, "scorum amount must contain SCR");
     FC_ASSERT(ratification_deadline < escrow_expiration, "ratification deadline must be before escrow expiration");
     if (json_meta.size() > 0)
     {
@@ -302,7 +302,7 @@ void escrow_release_operation::validate() const
     FC_ASSERT(who == from || who == to || who == agent, "who must be from or to or agent");
     FC_ASSERT(receiver == from || receiver == to, "receiver must be from or to");
     FC_ASSERT(scorum_amount.amount >= 0, "scorum amount cannot be negative");
-    FC_ASSERT(scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCR");
+    FC_ASSERT(scorum_amount.symbol() == SCORUM_SYMBOL, "scorum amount must contain SCR");
 }
 
 void request_account_recovery_operation::validate() const

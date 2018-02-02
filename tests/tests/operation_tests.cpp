@@ -16,6 +16,9 @@
 
 #include "database_fixture.hpp"
 
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment_vote.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -97,11 +100,9 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         const account_object& init = db.get_account(TEST_INIT_DELEGATE_NAME);
         asset init_starting_balance = init.balance;
 
-        const auto& gpo = db.get_dynamic_global_properties();
-
         account_create_operation op;
 
-        op.fee = asset(100, SCORUM_SYMBOL);
+        op.fee = SUFFICIENT_FEE;
         op.new_account_name = "alice";
         op.creator = TEST_INIT_DELEGATE_NAME;
         op.owner = authority(1, priv_key.get_public_key(), 1);
@@ -120,24 +121,21 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         const account_object& acct = db.get_account("alice");
         const account_authority_object& acct_auth = db.get<account_authority_object, by_account>("alice");
 
-        auto vest_shares = gpo.total_vesting_shares;
-        auto vests = gpo.total_vesting_shares * gpo.get_vesting_share_price();
-
         BOOST_REQUIRE(acct.name == "alice");
         BOOST_REQUIRE(acct_auth.owner == authority(1, priv_key.get_public_key(), 1));
         BOOST_REQUIRE(acct_auth.active == authority(2, priv_key.get_public_key(), 2));
         BOOST_REQUIRE(acct.memo_key == priv_key.get_public_key());
         BOOST_REQUIRE(acct.proxy == "");
         BOOST_REQUIRE(acct.created == db.head_block_time());
-        BOOST_REQUIRE(acct.balance.amount.value == ASSET("0.000 SCR").amount.value);
+        BOOST_REQUIRE(acct.balance.amount.value == ASSET_SCR(0).amount.value);
         BOOST_REQUIRE(acct.id._id == acct_auth.id._id);
 
         /// because init_witness has created vesting shares and blocks have been produced, 100 SCR is worth less than
         /// 100 vesting shares due to rounding
-        BOOST_REQUIRE(acct.vesting_shares.amount.value == (op.fee * (vest_shares / vests)).amount.value);
-        BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET("0.000000 SP").amount.value);
+        BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
+        BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
-        BOOST_REQUIRE((init_starting_balance - ASSET("0.100 SCR")).amount.value == init.balance.amount.value);
+        BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test failure of duplicate account creation");
@@ -149,11 +147,11 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_REQUIRE(acct.memo_key == priv_key.get_public_key());
         BOOST_REQUIRE(acct.proxy == "");
         BOOST_REQUIRE(acct.created == db.head_block_time());
-        BOOST_REQUIRE(acct.balance.amount.value == ASSET("0.000 SCR ").amount.value);
-        BOOST_REQUIRE(acct.vesting_shares.amount.value == (op.fee * (vest_shares / vests)).amount.value);
-        BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET("0.000000 SP").amount.value);
+        BOOST_REQUIRE(acct.balance.amount.value == ASSET_SCR(0).amount.value);
+        BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
+        BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
-        BOOST_REQUIRE((init_starting_balance - ASSET("0.100 SCR")).amount.value == init.balance.amount.value);
+        BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test failure when creator cannot cover fee");
@@ -170,13 +168,13 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         generate_block();
         db_plugin->debug_update([=](database& db) {
             db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& wso) {
-                wso.median_props.account_creation_fee = ASSET("10.000 SCR");
+                wso.median_props.account_creation_fee = SUFFICIENT_FEE * 10;
             });
         });
         generate_block();
 
         tx.clear();
-        op.fee = ASSET("1.000 SCR");
+        op.fee = SUFFICIENT_FEE;
         tx.operations.push_back(op);
         tx.sign(init_account_priv_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
@@ -613,7 +611,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         ACTORS((alice))
         generate_block();
 
-        vest("alice", ASSET("1000.000 SCR"));
+        vest("alice", ASSET_SCR(1e+6));
 
         generate_block();
 
@@ -629,7 +627,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test1";
-        vote.weight = SCORUM_100_PERCENT;
+        vote.weight = (int16_t)100;
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
         tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
@@ -649,7 +647,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         BOOST_TEST_MESSAGE("--- Test success deleting a comment with negative rshares");
 
         generate_block();
-        vote.weight = -1 * SCORUM_100_PERCENT;
+        vote.weight = -1 * (int16_t)100;
         tx.clear();
         tx.operations.push_back(vote);
         tx.operations.push_back(op);
@@ -728,377 +726,9 @@ BOOST_AUTO_TEST_CASE(vote_authorities)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(vote_apply)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Testing: vote_apply");
+BOOST_AUTO_TEST_SUITE_END()
 
-        ACTORS((alice)(bob)(sam)(dave))
-        generate_block();
-
-        vest("alice", ASSET("10.000 SCR"));
-        validate_database();
-        vest("bob", ASSET("10.000 SCR"));
-        vest("sam", ASSET("10.000 SCR"));
-        vest("dave", ASSET("10.000 SCR"));
-        generate_block();
-
-        const auto& vote_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-
-        {
-            const auto& alice = db.get_account("alice");
-
-            signed_transaction tx;
-            comment_operation comment_op;
-            comment_op.author = "alice";
-            comment_op.permlink = "foo";
-            comment_op.parent_permlink = "test";
-            comment_op.title = "bar";
-            comment_op.body = "foo bar";
-            tx.operations.push_back(comment_op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            BOOST_TEST_MESSAGE("--- Testing voting on a non-existent comment");
-
-            tx.operations.clear();
-            tx.signatures.clear();
-
-            vote_operation op;
-            op.voter = "alice";
-            op.author = "bob";
-            op.permlink = "foo";
-            op.weight = SCORUM_100_PERCENT;
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Testing voting with a weight of 0");
-
-            op.weight = (int16_t)0;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Testing success");
-
-            auto old_voting_power = alice.voting_power;
-
-            op.weight = SCORUM_100_PERCENT;
-            op.author = "alice";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            db.push_transaction(tx, 0);
-
-            auto& alice_comment = db.get_comment("alice", string("foo"));
-            auto itr = vote_idx.find(std::make_tuple(alice_comment.id, alice.id));
-            int64_t max_vote_denom
-                = (db.get_dynamic_global_properties().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
-                / (60 * 60 * 24);
-
-            BOOST_REQUIRE(alice.voting_power
-                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) / max_vote_denom));
-            BOOST_REQUIRE(alice.last_vote_time == db.head_block_time());
-            BOOST_REQUIRE(alice_comment.net_rshares.value
-                          == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power)
-                              / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(alice_comment.cashout_time == alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr->rshares
-                          == alice.vesting_shares.amount.value * (old_voting_power - alice.voting_power)
-                              / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test reduced power for quick voting");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            old_voting_power = db.get_account("alice").voting_power;
-
-            comment_op.author = "bob";
-            comment_op.permlink = "foo";
-            comment_op.title = "bar";
-            comment_op.body = "foo bar";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(comment_op);
-            tx.sign(bob_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            op.weight = SCORUM_100_PERCENT / 2;
-            op.voter = "alice";
-            op.author = "bob";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            const auto& bob_comment = db.get_comment("bob", string("foo"));
-            itr = vote_idx.find(std::make_tuple(bob_comment.id, alice.id));
-
-            BOOST_REQUIRE(db.get_account("alice").voting_power
-                          == old_voting_power - ((old_voting_power + max_vote_denom - 1) * SCORUM_100_PERCENT
-                                                 / (2 * max_vote_denom * SCORUM_100_PERCENT)));
-            BOOST_REQUIRE(bob_comment.net_rshares.value
-                          == alice.vesting_shares.amount.value
-                              * (old_voting_power - db.get_account("alice").voting_power) / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(bob_comment.cashout_time == bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test payout time extension on vote");
-
-            old_voting_power = db.get_account("bob").voting_power;
-            auto old_abs_rshares = db.get_comment("alice", string("foo")).abs_rshares.value;
-
-            generate_blocks(db.head_block_time() + fc::seconds((SCORUM_CASHOUT_WINDOW_SECONDS / 2)), true);
-
-            const auto& new_bob = db.get_account("bob");
-            const auto& new_alice_comment = db.get_comment("alice", string("foo"));
-
-            op.weight = SCORUM_100_PERCENT;
-            op.voter = "bob";
-            op.author = "alice";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(bob_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            itr = vote_idx.find(std::make_tuple(new_alice_comment.id, new_bob.id));
-            uint128_t new_cashout_time = db.head_block_time().sec_since_epoch() + SCORUM_CASHOUT_WINDOW_SECONDS;
-
-            BOOST_REQUIRE(new_bob.voting_power
-                          == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / max_vote_denom));
-            BOOST_REQUIRE(new_alice_comment.net_rshares.value
-                          == old_abs_rshares
-                              + new_bob.vesting_shares.amount.value * (old_voting_power - new_bob.voting_power)
-                                  / SCORUM_100_PERCENT);
-            BOOST_REQUIRE(new_alice_comment.cashout_time == new_alice_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test negative vote");
-
-            const auto& new_sam = db.get_account("sam");
-            const auto& new_bob_comment = db.get_comment("bob", string("foo"));
-
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-
-            op.weight = -1 * SCORUM_100_PERCENT / 2;
-            op.voter = "sam";
-            op.author = "bob";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(sam_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            itr = vote_idx.find(std::make_tuple(new_bob_comment.id, new_sam.id));
-            new_cashout_time = db.head_block_time().sec_since_epoch() + SCORUM_CASHOUT_WINDOW_SECONDS;
-            auto sam_weight /*= ( ( uint128_t( new_sam.vesting_shares.amount.value ) ) / 400 + 1 ).to_uint64();*/
-                = ((uint128_t(new_sam.vesting_shares.amount.value)
-                    * ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)))
-                   / SCORUM_100_PERCENT)
-                      .to_uint64();
-
-            BOOST_REQUIRE(new_sam.voting_power
-                          == SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote_denom - 1) / (2 * max_vote_denom)));
-            BOOST_REQUIRE(new_bob_comment.net_rshares.value == static_cast<int64_t>(old_abs_rshares - sam_weight));
-            BOOST_REQUIRE(new_bob_comment.abs_rshares.value == static_cast<int64_t>(old_abs_rshares + sam_weight));
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(itr != vote_idx.end());
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test nested voting on nested comments");
-
-            old_abs_rshares = new_alice_comment.children_abs_rshares.value;
-            int64_t regenerated_power
-                = (SCORUM_100_PERCENT * (db.head_block_time() - db.get_account("alice").last_vote_time).to_seconds())
-                / SCORUM_VOTE_REGENERATION_SECONDS;
-            int64_t used_power
-                = (db.get_account("alice").voting_power + regenerated_power + max_vote_denom - 1) / max_vote_denom;
-
-            comment_op.author = "sam";
-            comment_op.permlink = "foo";
-            comment_op.title = "bar";
-            comment_op.body = "foo bar";
-            comment_op.parent_author = "alice";
-            comment_op.parent_permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(comment_op);
-            tx.sign(sam_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            op.weight = SCORUM_100_PERCENT;
-            op.voter = "alice";
-            op.author = "sam";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            auto new_rshares = ((fc::uint128_t(db.get_account("alice").vesting_shares.amount.value) * used_power)
-                                / SCORUM_100_PERCENT)
-                                   .to_uint64();
-
-            BOOST_REQUIRE(db.get_comment("alice", string("foo")).cashout_time
-                          == db.get_comment("alice", string("foo")).created + SCORUM_CASHOUT_WINDOW_SECONDS);
-
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test increasing vote rshares");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            auto new_alice = db.get_account("alice");
-            auto alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-            auto old_vote_rshares = alice_bob_vote->rshares;
-            auto old_net_rshares = new_bob_comment.net_rshares.value;
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-            used_power = ((SCORUM_1_PERCENT * 25 * (new_alice.voting_power) / SCORUM_100_PERCENT) + max_vote_denom - 1)
-                / max_vote_denom;
-            auto alice_voting_power = new_alice.voting_power - used_power;
-
-            op.voter = "alice";
-            op.weight = SCORUM_1_PERCENT * 25;
-            op.author = "bob";
-            op.permlink = "foo";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-
-            new_rshares = ((fc::uint128_t(new_alice.vesting_shares.amount.value) * used_power) / SCORUM_100_PERCENT)
-                              .to_uint64();
-
-            BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares + new_rshares);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares + new_rshares);
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == static_cast<int64_t>(new_rshares));
-            BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
-            BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
-            BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test decreasing vote rshares");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            old_vote_rshares = new_rshares;
-            old_net_rshares = new_bob_comment.net_rshares.value;
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-            used_power = (uint64_t(SCORUM_1_PERCENT) * 75 * uint64_t(alice_voting_power)) / SCORUM_100_PERCENT;
-            used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
-            alice_voting_power -= used_power;
-
-            op.weight = SCORUM_1_PERCENT * -75;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-
-            new_rshares = ((fc::uint128_t(new_alice.vesting_shares.amount.value) * used_power) / SCORUM_100_PERCENT)
-                              .to_uint64();
-
-            BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares - new_rshares);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares + new_rshares);
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == static_cast<int64_t>(-1 * new_rshares));
-            BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
-            BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
-            BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test changing a vote to 0 weight (aka: removing a vote)");
-
-            generate_blocks(db.head_block_time() + SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-            old_vote_rshares = alice_bob_vote->rshares;
-            old_net_rshares = new_bob_comment.net_rshares.value;
-            old_abs_rshares = new_bob_comment.abs_rshares.value;
-
-            op.weight = 0;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            alice_bob_vote = vote_idx.find(std::make_tuple(new_bob_comment.id, new_alice.id));
-
-            BOOST_REQUIRE(new_bob_comment.net_rshares == old_net_rshares - old_vote_rshares);
-            BOOST_REQUIRE(new_bob_comment.abs_rshares == old_abs_rshares);
-            BOOST_REQUIRE(new_bob_comment.cashout_time == new_bob_comment.created + SCORUM_CASHOUT_WINDOW_SECONDS);
-            BOOST_REQUIRE(alice_bob_vote->rshares == 0);
-            BOOST_REQUIRE(alice_bob_vote->last_update == db.head_block_time());
-            BOOST_REQUIRE(alice_bob_vote->vote_percent == op.weight);
-            BOOST_REQUIRE(db.get_account("alice").voting_power == alice_voting_power);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test failure when increasing rshares within lockout period");
-
-            generate_blocks(fc::time_point_sec((new_bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
-                                               + SCORUM_BLOCK_INTERVAL),
-                            true);
-
-            op.weight = SCORUM_100_PERCENT;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test success when reducing rshares within lockout period");
-
-            op.weight = -1 * SCORUM_100_PERCENT;
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test failure with a new vote within lockout period");
-
-            op.weight = SCORUM_100_PERCENT;
-            op.voter = "dave";
-            tx.operations.clear();
-            tx.signatures.clear();
-            tx.operations.push_back(op);
-            tx.sign(dave_private_key, db.get_chain_id());
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-            validate_database();
-        }
-    }
-    FC_LOG_AND_RETHROW()
-}
+BOOST_FIXTURE_TEST_SUITE(operation_tests, clean_database_fixture)
 
 BOOST_AUTO_TEST_CASE(transfer_validate)
 {
@@ -1116,14 +746,14 @@ BOOST_AUTO_TEST_CASE(transfer_authorities)
     try
     {
         ACTORS((alice)(bob))
-        fund("alice", 10000);
+        fund("alice", 10e+3);
 
         BOOST_TEST_MESSAGE("Testing: transfer_authorities");
 
         transfer_operation op;
         op.from = "alice";
         op.to = "bob";
-        op.amount = ASSET("2.500 SCR");
+        op.amount = ASSET_SCR(25e+2);
 
         signed_transaction tx;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -1167,7 +797,7 @@ BOOST_AUTO_TEST_CASE(signature_stripping)
         // Sam shouldn't be able to add or remove signatures to get the transaction to process multiple times.
 
         ACTORS((alice)(bob)(sam)(corp))
-        fund("corp", 10000);
+        fund("corp", 10e+3);
 
         account_update_operation update_op;
         update_op.account = "corp";
@@ -1186,7 +816,7 @@ BOOST_AUTO_TEST_CASE(signature_stripping)
         transfer_operation transfer_op;
         transfer_op.from = "corp";
         transfer_op.to = "sam";
-        transfer_op.amount = ASSET("1.000 SCR");
+        transfer_op.amount = ASSET_SCR(1e+3);
 
         tx.operations.push_back(transfer_op);
 
@@ -1219,17 +849,17 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
         BOOST_TEST_MESSAGE("Testing: transfer_apply");
 
         ACTORS((alice)(bob))
-        fund("alice", 10000);
+        fund("alice", 10e+3);
 
-        BOOST_REQUIRE(alice.balance.amount.value == ASSET("10.000 SCR").amount.value);
-        BOOST_REQUIRE(bob.balance.amount.value == ASSET(" 0.000 SCR").amount.value);
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(10e+3).amount.value);
+        BOOST_REQUIRE(bob.balance.amount.value == ASSET_SCR(0).amount.value);
 
         signed_transaction tx;
         transfer_operation op;
 
         op.from = "alice";
         op.to = "bob";
-        op.amount = ASSET("5.000 SCR");
+        op.amount = ASSET_SCR(5e+3);
 
         BOOST_TEST_MESSAGE("--- Test normal transaction");
         tx.operations.push_back(op);
@@ -1237,8 +867,8 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(alice.balance.amount.value == ASSET("5.000 SCR").amount.value);
-        BOOST_REQUIRE(bob.balance.amount.value == ASSET("5.000 SCR").amount.value);
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(5e+3).amount.value);
+        BOOST_REQUIRE(bob.balance.amount.value == ASSET_SCR(5e+3).amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Generating a block");
@@ -1247,8 +877,8 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
         const auto& new_alice = db.get_account("alice");
         const auto& new_bob = db.get_account("bob");
 
-        BOOST_REQUIRE(new_alice.balance.amount.value == ASSET("5.000 SCR").amount.value);
-        BOOST_REQUIRE(new_bob.balance.amount.value == ASSET("5.000 SCR").amount.value);
+        BOOST_REQUIRE(new_alice.balance.amount.value == ASSET_SCR(5e+3).amount.value);
+        BOOST_REQUIRE(new_bob.balance.amount.value == ASSET_SCR(5e+3).amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test emptying an account");
@@ -1259,8 +889,8 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, database::skip_transaction_dupe_check);
 
-        BOOST_REQUIRE(new_alice.balance.amount.value == ASSET("0.000 SCR").amount.value);
-        BOOST_REQUIRE(new_bob.balance.amount.value == ASSET("10.000 SCR").amount.value);
+        BOOST_REQUIRE(new_alice.balance.amount.value == ASSET_SCR(0).amount.value);
+        BOOST_REQUIRE(new_bob.balance.amount.value == ASSET_SCR(10e+3).amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test transferring non-existent funds");
@@ -1271,8 +901,8 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, database::skip_transaction_dupe_check), fc::exception);
 
-        BOOST_REQUIRE(new_alice.balance.amount.value == ASSET("0.000 SCR").amount.value);
-        BOOST_REQUIRE(new_bob.balance.amount.value == ASSET("10.000 SCR").amount.value);
+        BOOST_REQUIRE(new_alice.balance.amount.value == ASSET_SCR(0).amount.value);
+        BOOST_REQUIRE(new_bob.balance.amount.value == ASSET_SCR(10e+3).amount.value);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -1301,7 +931,7 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_authorities)
         transfer_to_vesting_operation op;
         op.from = "alice";
         op.to = "bob";
-        op.amount = ASSET("2.500 SCR");
+        op.amount = ASSET_SCR(25e+2);
 
         signed_transaction tx;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -1346,10 +976,8 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         fund("alice", 10000);
 
         const auto& gpo = db.get_dynamic_global_properties();
-        price share_price = gpo.get_vesting_share_price();
-        price scorum_price = price(share_price.quote, share_price.base); // == 1/gpo.get_vesting_share_price()
 
-        BOOST_REQUIRE_EQUAL(alice.balance, ASSET("10.000 SCR"));
+        BOOST_REQUIRE(alice.balance == ASSET_SCR(10e+3));
 
         auto shares = gpo.total_vesting_shares;
         auto alice_shares = alice.vesting_shares;
@@ -1358,7 +986,7 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         transfer_to_vesting_operation op;
         op.from = "alice";
         op.to = "";
-        op.amount = ASSET("7.500 SCR");
+        op.amount = ASSET_SCR(75e+2);
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -1366,17 +994,18 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto new_vest = op.amount * scorum_price;
+        auto new_vest = ASSET_SP(op.amount.amount.value);
         shares += new_vest;
         alice_shares += new_vest;
 
-        BOOST_REQUIRE_EQUAL(alice.balance, ASSET("2.500 SCR"));
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(25e+2).amount.value);
         BOOST_REQUIRE_EQUAL(alice.vesting_shares, alice_shares);
         BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
+
         validate_database();
 
         op.to = "bob";
-        op.amount = asset(2000, SCORUM_SYMBOL);
+        op.amount = asset(2e+3, SCORUM_SYMBOL);
         tx.operations.clear();
         tx.signatures.clear();
         tx.operations.push_back(op);
@@ -1384,22 +1013,22 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        new_vest = op.amount * scorum_price;
+        new_vest = ASSET_SP(op.amount.amount.value);
         shares += new_vest;
         bob_shares += new_vest;
 
-        BOOST_REQUIRE_EQUAL(alice.balance, ASSET("0.500 SCR"));
-        BOOST_REQUIRE_EQUAL(alice.vesting_shares, alice_shares);
-        BOOST_REQUIRE_EQUAL(bob.balance, ASSET("0.000 SCR"));
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(500).amount.value);
+        BOOST_REQUIRE(alice.vesting_shares.amount.value == alice_shares.amount.value);
+        BOOST_REQUIRE(bob.balance.amount.value == ASSET_SCR(0).amount.value);
         BOOST_REQUIRE_EQUAL(bob.vesting_shares, bob_shares);
         BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
         validate_database();
 
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, database::skip_transaction_dupe_check), fc::exception);
 
-        BOOST_REQUIRE_EQUAL(alice.balance, ASSET("0.500 SCR"));
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(500).amount.value);
         BOOST_REQUIRE_EQUAL(alice.vesting_shares, alice_shares);
-        BOOST_REQUIRE_EQUAL(bob.balance, ASSET("0.000 SCR"));
+        BOOST_REQUIRE(bob.balance.amount.value == ASSET_SCR(0).amount.value);
         BOOST_REQUIRE_EQUAL(bob.vesting_shares, bob_shares);
         BOOST_REQUIRE_EQUAL(gpo.total_vesting_shares, shares);
         validate_database();
@@ -1430,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_authorities)
 
         withdraw_vesting_operation op;
         op.account = "alice";
-        op.vesting_shares = ASSET("0.001000 SP");
+        op.vesting_shares = ASSET_SP(1e+3);
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -1471,7 +1100,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
 
         ACTORS((alice))
         generate_block();
-        vest("alice", ASSET("10.000 SCR"));
+        vest("alice", ASSET_SCR(10e+3));
 
         generate_block();
         validate_database();
@@ -1563,13 +1192,13 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
         withdraw_vesting_operation op;
         signed_transaction tx;
         op.account = "alice";
-        op.vesting_shares = ASSET("0.000000 SP");
+        op.vesting_shares = ASSET_SP(0);
         tx.operations.push_back(op);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_account("alice").vesting_withdraw_rate == ASSET("0.000000 SP"));
+        BOOST_REQUIRE(db.get_account("alice").vesting_withdraw_rate == ASSET_SP(0));
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -1679,7 +1308,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         BOOST_REQUIRE(alice_witness.virtual_last_update == 0);
         BOOST_REQUIRE(alice_witness.virtual_position == 0);
         BOOST_REQUIRE(alice_witness.virtual_scheduled_time == fc::uint128_t::max_value());
-        BOOST_REQUIRE(alice.balance.amount.value == ASSET("10.000 SCR").amount.value); // No fee
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(10e+3).amount.value); // No fee
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test updating a witness");
@@ -1704,7 +1333,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
         BOOST_REQUIRE(alice_witness.virtual_last_update == 0);
         BOOST_REQUIRE(alice_witness.virtual_position == 0);
         BOOST_REQUIRE(alice_witness.virtual_scheduled_time == fc::uint128_t::max_value());
-        BOOST_REQUIRE(alice.balance.amount.value == ASSET("10.000 SCR").amount.value);
+        BOOST_REQUIRE(alice.balance.amount.value == ASSET_SCR(10e+3).amount.value);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test failure when upgrading a non-existent account");
@@ -2224,8 +1853,8 @@ BOOST_AUTO_TEST_CASE(account_recovery)
         BOOST_TEST_MESSAGE("Creating account bob with alice");
 
         account_create_with_delegation_operation acc_create;
-        acc_create.fee = ASSET("10.000 SCR");
-        acc_create.delegation = ASSET("0.000000 SP");
+        acc_create.fee = SUFFICIENT_FEE;
+        acc_create.delegation = ASSET_SP(0);
         acc_create.creator = "alice";
         acc_create.new_account_name = "bob";
         acc_create.owner = authority(1, generate_private_key("bob_owner").get_public_key(), 1);
@@ -2562,21 +2191,20 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_validate)
         escrow_transfer_operation op;
         op.from = "alice";
         op.to = "bob";
-        op.scorum_amount = ASSET("1.000 SCR");
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.escrow_id = 0;
         op.agent = "sam";
-        op.fee = ASSET("0.100 SCR");
+        op.fee = SUFFICIENT_FEE;
         op.json_meta = "";
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;
 
         BOOST_TEST_MESSAGE("--- failure when sbd symbol != SCR");
-        op.scorum_amount.symbol = VESTS_SYMBOL;
+        op.scorum_amount = ASSET_SP(1e+3);
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
         BOOST_TEST_MESSAGE("--- failure when scorum == 0");
-        op.fee.symbol = SCORUM_SYMBOL;
-        op.scorum_amount.symbol = SCORUM_SYMBOL;
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.scorum_amount.amount = 0;
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
@@ -2599,7 +2227,7 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_validate)
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
         BOOST_TEST_MESSAGE("--- success");
-        op.scorum_amount.symbol = SCORUM_SYMBOL;
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.ratification_deadline = op.escrow_expiration - 100;
         op.validate();
     }
@@ -2615,10 +2243,10 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_authorities)
         escrow_transfer_operation op;
         op.from = "alice";
         op.to = "bob";
-        op.scorum_amount = ASSET("1.000 SCR");
+        op.scorum_amount = ASSET_SCR(1e+6);
         op.escrow_id = 0;
         op.agent = "sam";
-        op.fee = ASSET("0.100 SCR");
+        op.fee = SUFFICIENT_FEE;
         op.json_meta = "";
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;
@@ -2720,8 +2348,8 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         et_op.from = "alice";
         et_op.to = "bob";
         et_op.agent = "sam";
-        et_op.scorum_amount = ASSET("1.000 SCR");
-        et_op.fee = ASSET("0.100 SCR");
+        et_op.scorum_amount = ASSET_SCR(1e+3);
+        et_op.fee = SUFFICIENT_FEE;
         et_op.json_meta = "";
         et_op.ratification_deadline = db.head_block_time() + 100;
         et_op.escrow_expiration = db.head_block_time() + 200;
@@ -2773,8 +2401,8 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         BOOST_REQUIRE(escrow.agent == "sam");
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
-        BOOST_REQUIRE(escrow.scorum_balance == ASSET("1.000 SCR"));
-        BOOST_REQUIRE(escrow.pending_fee == ASSET("0.100 SCR"));
+        BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, SUFFICIENT_FEE);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2790,8 +2418,8 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         BOOST_REQUIRE(escrow.agent == "sam");
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
-        BOOST_REQUIRE(escrow.scorum_balance == ASSET("1.000 SCR"));
-        BOOST_REQUIRE(escrow.pending_fee == ASSET("0.100 SCR"));
+        BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, SUFFICIENT_FEE);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2810,8 +2438,8 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         BOOST_REQUIRE(escrow.agent == "sam");
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
-        BOOST_REQUIRE(escrow.scorum_balance == ASSET("1.000 SCR"));
-        BOOST_REQUIRE(escrow.pending_fee == ASSET("0.100 SCR"));
+        BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, SUFFICIENT_FEE);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -2827,7 +2455,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         db.push_transaction(tx, 0);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(alice.balance == ASSET("10.000 SCR"));
+        BOOST_REQUIRE(alice.balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- test automatic refund when escrow is not ratified before deadline");
@@ -2840,7 +2468,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("10.000 SCR"));
+        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- test ratification expiration when escrow is only approved by to");
@@ -2864,7 +2492,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("10.000 SCR"));
+        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- test ratification expiration when escrow is only approved by agent");
@@ -2887,7 +2515,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("10.000 SCR"));
+        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- success approving escrow");
@@ -2920,14 +2548,14 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
             BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
-            BOOST_REQUIRE(escrow.scorum_balance == ASSET("1.000 SCR"));
-            BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+            BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
+            BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
             BOOST_REQUIRE(escrow.to_approved);
             BOOST_REQUIRE(escrow.agent_approved);
             BOOST_REQUIRE(!escrow.disputed);
         }
 
-        BOOST_REQUIRE(db.get_account("sam").balance == et_op.fee);
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, et_op.fee);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- ratification expiration does not remove an approved escrow");
@@ -2939,14 +2567,14 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
             BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
-            BOOST_REQUIRE(escrow.scorum_balance == ASSET("1.000 SCR"));
-            BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+            BOOST_REQUIRE(escrow.scorum_balance == ASSET_SCR(1e+3));
+            BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
             BOOST_REQUIRE(escrow.to_approved);
             BOOST_REQUIRE(escrow.agent_approved);
             BOOST_REQUIRE(!escrow.disputed);
         }
 
-        BOOST_REQUIRE(db.get_account("sam").balance == et_op.fee);
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, et_op.fee);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -3023,8 +2651,8 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         et_op.from = "alice";
         et_op.to = "bob";
         et_op.agent = "sam";
-        et_op.scorum_amount = ASSET("1.000 SCR");
-        et_op.fee = ASSET("0.100 SCR");
+        et_op.scorum_amount = ASSET_SCR(1e+3);
+        et_op.fee = SUFFICIENT_FEE;
         et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
         et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
 
@@ -3062,7 +2690,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-        BOOST_REQUIRE(escrow.pending_fee == et_op.fee);
+        BOOST_REQUIRE_EQUAL(escrow.pending_fee, et_op.fee);
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(!escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -3094,7 +2722,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-        BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+        BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -3114,7 +2742,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
         BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
         BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-        BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+        BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
         BOOST_REQUIRE(escrow.to_approved);
         BOOST_REQUIRE(escrow.agent_approved);
         BOOST_REQUIRE(!escrow.disputed);
@@ -3137,7 +2765,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
             BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
             BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-            BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+            BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
             BOOST_REQUIRE(escrow.to_approved);
             BOOST_REQUIRE(escrow.agent_approved);
             BOOST_REQUIRE(!escrow.disputed);
@@ -3174,7 +2802,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
             BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
             BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-            BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+            BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
             BOOST_REQUIRE(escrow.to_approved);
             BOOST_REQUIRE(escrow.agent_approved);
             BOOST_REQUIRE(escrow.disputed);
@@ -3195,7 +2823,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
             BOOST_REQUIRE(escrow.escrow_expiration == et_op.escrow_expiration);
             BOOST_REQUIRE(escrow.scorum_balance == et_op.scorum_amount);
-            BOOST_REQUIRE(escrow.pending_fee == ASSET("0.000 SCR"));
+            BOOST_REQUIRE(escrow.pending_fee == ASSET_SCR(0));
             BOOST_REQUIRE(escrow.to_approved);
             BOOST_REQUIRE(escrow.agent_approved);
             BOOST_REQUIRE(escrow.disputed);
@@ -3220,12 +2848,12 @@ BOOST_AUTO_TEST_CASE(escrow_release_validate)
         op.scorum_amount.amount = -1;
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
-        BOOST_TEST_MESSAGE("--- failure when scorum is not scorum symbol");
-        op.scorum_amount = ASSET("1.000 WRONG");
+        BOOST_TEST_MESSAGE("--- failure when scorum is invalid symbol");
+        op.scorum_amount = ASSET_SP(1e+3);
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 
         BOOST_TEST_MESSAGE("--- success");
-        op.scorum_amount.symbol = SCORUM_SYMBOL;
+        op.scorum_amount = ASSET_SCR(1e+3);
         op.validate();
     }
     FC_LOG_AND_RETHROW()
@@ -3278,425 +2906,444 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
         BOOST_TEST_MESSAGE("Testing: escrow_release_apply");
 
         ACTORS((alice)(bob)(sam)(dave))
+
+        generate_block();
+
         fund("alice", 10000);
 
+        generate_block();
+
+        const account_object& alice_vested = db.get_account("alice");
+        const account_object& bob_vested = db.get_account("bob");
+        const account_object& sam_vested = db.get_account("sam");
+
+        auto initial_alice_balance = alice_vested.balance;
+        const auto escrow_transfer_amount = ASSET_SCR(1e+3);
+        const auto escrow_release_amount = ASSET_SCR(100);
+
         escrow_transfer_operation et_op;
-        et_op.from = "alice";
-        et_op.to = "bob";
-        et_op.agent = "sam";
-        et_op.scorum_amount = ASSET("1.000 SCR");
-        et_op.fee = ASSET("0.100 SCR");
-        et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
-        et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
+        et_op.from = alice_vested.name;
+        et_op.to = bob_vested.name;
+        et_op.agent = sam_vested.name;
+        et_op.scorum_amount = escrow_transfer_amount;
+        et_op.fee = SUFFICIENT_FEE;
 
-        signed_transaction tx;
-        tx.operations.push_back(et_op);
-
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_TEST_MESSAGE("--- failure releasing funds prior to approval");
         escrow_release_operation op;
         op.from = et_op.from;
         op.to = et_op.to;
         op.agent = et_op.agent;
         op.who = et_op.from;
         op.receiver = et_op.to;
-        op.scorum_amount = ASSET("0.100 SCR");
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+        op.scorum_amount = escrow_release_amount;
 
         escrow_approve_operation ea_b_op;
-        ea_b_op.from = "alice";
-        ea_b_op.to = "bob";
-        ea_b_op.agent = "sam";
-        ea_b_op.who = "bob";
+        ea_b_op.from = alice_vested.name;
+        ea_b_op.to = bob_vested.name;
+        ea_b_op.agent = sam_vested.name;
+        ea_b_op.who = bob_vested.name;
 
         escrow_approve_operation ea_s_op;
-        ea_s_op.from = "alice";
-        ea_s_op.to = "bob";
-        ea_s_op.agent = "sam";
-        ea_s_op.who = "sam";
+        ea_s_op.from = alice_vested.name;
+        ea_s_op.to = bob_vested.name;
+        ea_s_op.agent = sam_vested.name;
+        ea_s_op.who = sam_vested.name;
 
-        tx.clear();
-        tx.operations.push_back(ea_b_op);
-        tx.operations.push_back(ea_s_op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'to'");
-        op.who = et_op.agent;
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'from' ");
-        op.receiver = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempt to release non-disputed escrow to not 'to' or 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'to'");
-        op.receiver = et_op.to;
-        op.who = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'from' ");
-        op.receiver = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when other attempt to release non-disputed escrow to not 'to' or 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attemtps to release non-disputed escrow to 'to'");
-        op.receiver = et_op.to;
-        op.who = et_op.to;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured escrow to 'agent' ");
-        op.receiver = et_op.agent;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-disputed escrow to not 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'to' from 'from'");
-        op.receiver = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_escrow(op.from, op.escrow_id).scorum_balance == ASSET("0.900 SCR"));
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("9.000 SCR"));
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'from'");
-        op.receiver = et_op.from;
-        op.who = et_op.from;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'agent'");
-        op.receiver = et_op.agent;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to not 'from'");
-        op.receiver = "dave";
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'from' from 'to'");
-        op.receiver = et_op.to;
-
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_escrow(op.from, op.escrow_id).scorum_balance == ASSET("0.800 SCR"));
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET("0.100 SCR"));
-
-        // SCORUM: implement these test for just SCR
-        /*
-
-        BOOST_TEST_MESSAGE( "--- failure when releasing more sbd than available" );
-        op.scorum_amount = ASSET( "1.000 SCR" );
-
-        tx.clear();
-        tx.operations.push_back( op );
-        tx.sign( alice_private_key, db.get_chain_id() );
-        SCORUM_REQUIRE_THROW( db.push_transaction( tx, 0 ), fc::exception );
-
-
-        BOOST_TEST_MESSAGE( "--- failure when releasing less scorum than available" );
-        op.scorum_amount = ASSET( "0.000 SCR" );
-        op.sbd_amount = ASSET( "1.000 TBD" );
-
-        tx.clear();
-        tx.operations.push_back( op );
-        tx.sign( alice_private_key, db.get_chain_id() );
-        SCORUM_REQUIRE_THROW( db.push_transaction( tx, 0 ), fc::exception );
-
-        */
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed escrow");
-        escrow_dispute_operation ed_op;
-        ed_op.from = "alice";
-        ed_op.to = "bob";
-        ed_op.agent = "sam";
-        ed_op.who = "alice";
-
-        tx.clear();
-        tx.operations.push_back(ed_op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        tx.clear();
-        op.from = et_op.from;
-        op.receiver = et_op.from;
-        op.who = et_op.to;
-        op.scorum_amount = ASSET("0.100 SCR");
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed escrow");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when releasing disputed escrow to an account not 'to' or 'from'");
-        tx.clear();
-        op.who = et_op.agent;
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- failure when agent does not match escrow");
-        tx.clear();
-        op.who = "dave";
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(dave_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-        BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'to'");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET("0.200 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.700 SCR"));
-
-        BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'from'");
-        tx.clear();
-        op.receiver = et_op.from;
-        op.who = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("9.100 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.600 SCR"));
-
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed expired escrow");
-        generate_blocks(2);
-
-        tx.clear();
-        op.receiver = et_op.from;
-        op.who = et_op.to;
-        tx.operations.push_back(op);
+        signed_transaction tx;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed expired escrow");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+        {
+            et_op.escrow_expiration = fc::time_point_sec::maximum(); // never expire
+            et_op.ratification_deadline = fc::time_point_sec::maximum() - SCORUM_BLOCK_INTERVAL;
 
-        BOOST_TEST_MESSAGE("--- success releasing disputed expired escrow with agent");
-        tx.clear();
-        op.receiver = et_op.from;
-        op.who = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.operations.push_back(et_op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("9.200 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.500 SCR"));
+            generate_block();
 
-        BOOST_TEST_MESSAGE("--- success deleting escrow when balances are both zero");
-        tx.clear();
-        op.scorum_amount = ASSET("0.500 SCR");
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            const escrow_object& escrow_vested = db.get_escrow(et_op.from, et_op.escrow_id);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("9.700 SCR"));
-        SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure releasing funds prior to approval");
 
-        tx.clear();
-        et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
-        et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
-        tx.operations.push_back(et_op);
-        tx.operations.push_back(ea_b_op);
-        tx.operations.push_back(ea_s_op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        tx.sign(bob_private_key, db.get_chain_id());
-        tx.sign(sam_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-        generate_blocks(2);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'to'");
-        tx.clear();
-        op.receiver = et_op.to;
-        op.who = et_op.agent;
-        op.scorum_amount = ASSET("0.100 SCR");
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            tx.clear();
+            tx.operations.push_back(ea_b_op);
+            tx.operations.push_back(ea_s_op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-        BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'from'");
-        tx.clear();
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'to'");
+            op.who = et_op.agent;
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE(
-            "--- failure when 'agent' attempt to release non-disputed expired escrow to not 'to' or 'from'");
-        tx.clear();
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(sam_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed escrow to 'from' ");
+            op.receiver = et_op.from;
 
-        BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured expired escrow to 'agent'");
-        tx.clear();
-        op.who = et_op.to;
-        op.receiver = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE(
-            "--- failure when 'to' attempts to release non-disputed expired escrow to not 'from' or 'to'");
-        tx.clear();
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempt to release non-disputed escrow to not 'to' or 'from'");
+            op.receiver = "dave";
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'to'");
-        tx.clear();
-        op.receiver = et_op.to;
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET("0.300 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.900 SCR"));
+            BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'to'");
+            op.receiver = et_op.to;
+            op.who = "dave";
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'to'");
-        tx.clear();
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("8.700 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.800 SCR"));
+            BOOST_TEST_MESSAGE("--- failure when other attempts to release non-disputed escrow to 'from' ");
+            op.receiver = et_op.from;
 
-        BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed expired escrow to 'agent'");
-        tx.clear();
-        op.who = et_op.from;
-        op.receiver = et_op.agent;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_TEST_MESSAGE(
-            "--- failure when 'from' attempts to release non-disputed expired escrow to not 'from' or 'to'");
-        tx.clear();
-        op.receiver = "dave";
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when other attempt to release non-disputed escrow to not 'to' or 'from'");
+            op.receiver = "dave";
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'from'");
-        tx.clear();
-        op.receiver = et_op.to;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("bob").balance == ASSET("0.400 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.700 SCR"));
+            BOOST_TEST_MESSAGE("--- failure when 'to' attemtps to release non-disputed escrow to 'to'");
+            op.receiver = et_op.to;
+            op.who = et_op.to;
 
-        BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'from'");
-        tx.clear();
-        op.receiver = et_op.from;
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("8.800 SCR"));
-        BOOST_REQUIRE(db.get_escrow(et_op.from, et_op.escrow_id).scorum_balance == ASSET("0.600 SCR"));
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured escrow to 'agent' ");
+            op.receiver = et_op.agent;
 
-        BOOST_TEST_MESSAGE("--- success deleting escrow when balances are zero on non-disputed escrow");
-        tx.clear();
-        op.scorum_amount = ASSET("0.600 SCR");
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET("9.400 SCR"));
-        SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-disputed escrow to not 'from'");
+            op.receiver = "dave";
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'to' from 'from'");
+            op.receiver = et_op.from;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(db.get_escrow(op.from, op.escrow_id).scorum_balance,
+                                escrow_transfer_amount - escrow_release_amount);
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'from'");
+            op.receiver = et_op.from;
+            op.who = et_op.from;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to 'agent'");
+            op.receiver = et_op.agent;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed escrow to not 'from'");
+            op.receiver = "dave";
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed escrow to 'from' from 'to'");
+            op.receiver = et_op.to;
+
+            tx.clear();
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(db.get_escrow(op.from, op.escrow_id).scorum_balance,
+                                escrow_transfer_amount - escrow_release_amount * 2);
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount);
+
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed escrow");
+            escrow_dispute_operation ed_op;
+            ed_op.from = "alice";
+            ed_op.to = "bob";
+            ed_op.agent = "sam";
+            ed_op.who = "alice";
+
+            tx.clear();
+            tx.operations.push_back(ed_op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            tx.clear();
+            op.from = et_op.from;
+            op.receiver = et_op.from;
+            op.who = et_op.to;
+            op.scorum_amount = escrow_release_amount;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed escrow");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when releasing disputed escrow to an account not 'to' or 'from'");
+            tx.clear();
+            op.who = et_op.agent;
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when agent does not match escrow");
+            tx.clear();
+            op.who = "dave";
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(dave_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'to'");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount * 2);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 3);
+
+            BOOST_TEST_MESSAGE("--- success releasing disputed escrow with agent to 'from'");
+            tx.clear();
+            op.receiver = et_op.from;
+            op.who = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount * 2);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 4);
+
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release disputed not expired escrow");
+
+            tx.clear();
+            op.receiver = et_op.from;
+            op.who = et_op.to;
+            tx.operations.push_back(op);
+            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release disputed non-expired escrow");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success releasing disputed non-expired escrow with agent");
+            tx.clear();
+            op.receiver = et_op.from;
+            op.who = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount * 3);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 5);
+
+            auto rest = escrow_transfer_amount - escrow_release_amount * 5; // rest
+
+            BOOST_TEST_MESSAGE("--- success deleting escrow when balances are both zero");
+            tx.clear();
+            op.scorum_amount = rest;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
+                                    + escrow_release_amount * 3 + rest);
+            SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+        }
+
+        {
+            tx.clear();
+
+            et_op.ratification_deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
+            et_op.escrow_expiration = db.head_block_time() + 2 * SCORUM_BLOCK_INTERVAL;
+
+            tx.operations.push_back(et_op);
+            tx.operations.push_back(ea_b_op);
+            tx.operations.push_back(ea_s_op);
+            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+            tx.sign(alice_private_key, db.get_chain_id());
+            tx.sign(bob_private_key, db.get_chain_id());
+            tx.sign(sam_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            generate_block();
+
+            const escrow_object& escrow_vested = db.get_escrow(et_op.from, et_op.escrow_id);
+
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'to'");
+            tx.clear();
+            op.receiver = et_op.to;
+            op.who = et_op.agent;
+            op.scorum_amount = escrow_release_amount;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'from'");
+            tx.clear();
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE(
+                "--- failure when 'agent' attempt to release non-disputed expired escrow to not 'to' or 'from'");
+            tx.clear();
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(sam_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- failure when 'to' attempts to release non-dispured expired escrow to 'agent'");
+            tx.clear();
+            op.who = et_op.to;
+            op.receiver = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE(
+                "--- failure when 'to' attempts to release non-disputed expired escrow to not 'from' or 'to'");
+            tx.clear();
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            generate_blocks(2); // move up time
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'to'");
+            tx.clear();
+            op.receiver = et_op.to;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount * 3);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'to'");
+            tx.clear();
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(bob_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 2);
+
+            BOOST_TEST_MESSAGE("--- failure when 'from' attempts to release non-disputed expired escrow to 'agent'");
+            tx.clear();
+            op.who = et_op.from;
+            op.receiver = et_op.agent;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE(
+                "--- failure when 'from' attempts to release non-disputed expired escrow to not 'from' or 'to'");
+            tx.clear();
+            op.receiver = "dave";
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'to' from 'from'");
+            tx.clear();
+            op.receiver = et_op.to;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount * 4);
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 3);
+
+            BOOST_TEST_MESSAGE("--- success release non-disputed expired escrow to 'from' from 'from'");
+            tx.clear();
+            op.receiver = et_op.from;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(escrow_vested.scorum_balance, escrow_transfer_amount - escrow_release_amount * 4);
+
+            auto rest = escrow_transfer_amount - escrow_release_amount * 4; // rest
+
+            BOOST_TEST_MESSAGE("--- success deleting escrow when balances are zero on non-disputed escrow");
+            tx.clear();
+            op.scorum_amount = rest;
+            tx.operations.push_back(op);
+            tx.sign(alice_private_key, db.get_chain_id());
+            BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+            BOOST_REQUIRE_EQUAL(alice_vested.balance,
+                                initial_alice_balance - (SUFFICIENT_FEE)*2 - escrow_transfer_amount + rest);
+            SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+        }
     }
     FC_LOG_AND_RETHROW()
 }
@@ -3734,8 +3381,8 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
 
         ACTORS((alice)(bob));
         generate_block();
-        vest("alice", ASSET("10.000 SCR"));
-        vest("bob", ASSET("10.000 SCR"));
+        vest("alice", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(100e+3));
         generate_block();
 
         account_witness_proxy_operation proxy;
@@ -3768,7 +3415,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         tx.operations.push_back(op);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+        SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
 
         BOOST_TEST_MESSAGE("--- successs cancelling a request");
         op.decline = false;
@@ -3819,7 +3466,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = SCORUM_100_PERCENT;
+        vote.weight = (int16_t)100;
         tx.clear();
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
@@ -3848,13 +3495,13 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         db.get<comment_vote_object, by_comment_voter>(
             boost::make_tuple(db.get_comment("alice", string("test")).id, db.get_account("alice").id));
 
-        vote.weight = 0;
+        vote.weight = (int16_t)0;
         tx.clear();
         tx.operations.push_back(vote);
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        vote.weight = SCORUM_1_PERCENT * 50;
+        vote.weight = (int16_t)50;
         tx.clear();
         tx.operations.push_back(vote);
         tx.sign(alice_private_key, db.get_chain_id());
@@ -3877,9 +3524,9 @@ BOOST_AUTO_TEST_CASE(account_bandwidth)
         BOOST_TEST_MESSAGE("Testing: account_bandwidth");
         ACTORS((alice)(bob))
         generate_block();
-        vest("alice", ASSET("10.000 SCR"));
-        fund("alice", ASSET("10.000 SCR"));
-        vest("bob", ASSET("10.000 SCR"));
+        vest("alice", ASSET_SCR(10e+3));
+        fund("alice", ASSET_SCR(10e+3));
+        vest("bob", ASSET_SCR(10e+3));
 
         generate_block();
 
@@ -3890,7 +3537,7 @@ BOOST_AUTO_TEST_CASE(account_bandwidth)
 
         op.from = "alice";
         op.to = "bob";
-        op.amount = ASSET("1.000 SCR");
+        op.amount = ASSET_SCR(1e+3);
 
         tx.operations.push_back(op);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -3910,7 +3557,7 @@ BOOST_AUTO_TEST_CASE(account_bandwidth)
 
         BOOST_TEST_MESSAGE("--- Test second tx in block");
 
-        op.amount = ASSET("0.100 SCR");
+        op.amount = ASSET_SCR(100);
         tx.clear();
         tx.operations.push_back(op);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -3938,13 +3585,15 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
 
         signed_transaction tx;
         ACTORS((alice));
+
+        vest("alice", ASSET_SCR(100e+3));
         generate_blocks(1);
-        fund("alice", ASSET("1000.000 SCR"));
+        fund("alice", ASSET_SCR(1e+6));
 
         private_key_type priv_key = generate_private_key("temp_key");
 
         account_create_with_delegation_operation op;
-        op.fee = ASSET("0.000 SCR");
+        op.fee = SUFFICIENT_FEE;
         op.delegation = asset(100, VESTS_SYMBOL);
         op.creator = "alice";
         op.new_account_name = "bob";
@@ -3990,8 +3639,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_authorities)
 
 BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 {
-    const asset DELEGATED_ASSET = ASSET("100.000000 SP");
-    const asset NULL_ASSET = ASSET("0.000000 SP");
+    const asset to_delegate = ASSET_SP(100e+3);
 
     try
     {
@@ -4000,17 +3648,24 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         ACTORS((alice));
         // 150 * fee = ( 5 * SCR ) + SP
         generate_blocks(1);
-        fund("alice", ASSET("1510.000 SCR"));
-        vest("alice", ASSET("1000.000 SCR"));
+        fund("alice", ASSET_SCR(151e+4));
+        vest("alice", ASSET_SCR(1e+6));
+
+        const auto& account_service = db.account_service();
+
+        const account_object& alice_vested = account_service.get_account("alice");
+        BOOST_REQUIRE_GE(alice_vested.vesting_shares, to_delegate);
 
         private_key_type priv_key = generate_private_key("temp_key");
 
         generate_block();
 
+        const auto new_account_creation_fee = ASSET_SCR(1e+3);
+
         db_plugin->debug_update(
             [=](database& db) {
                 db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
-                    w.median_props.account_creation_fee = ASSET("1.000 SCR");
+                    w.median_props.account_creation_fee = new_account_creation_fee;
                 });
             },
             default_skip);
@@ -4020,10 +3675,10 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_TEST_MESSAGE("--- Test failure when SP are powering down.");
         withdraw_vesting_operation withdraw;
         withdraw.account = "alice";
-        withdraw.vesting_shares = db.get_account("alice").vesting_shares;
+        withdraw.vesting_shares = alice_vested.vesting_shares;
         account_create_with_delegation_operation op;
-        op.fee = ASSET("10.000 SCR");
-        op.delegation = DELEGATED_ASSET;
+        op.fee = new_account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
+        op.delegation = to_delegate;
         op.creator = "alice";
         op.new_account_name = "bob";
         op.owner = authority(1, priv_key.get_public_key(), 1);
@@ -4042,10 +3697,10 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const account_object& bob_acc = db.get_account("bob");
-        const account_object& alice_acc = db.get_account("alice");
-        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
-        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET);
+        const account_object& bob_acc = account_service.get_account("bob");
+        const account_object& alice_acc = account_service.get_account("alice");
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
         BOOST_REQUIRE_EQUAL(bob_acc.effective_vesting_shares(),
                             bob_acc.vesting_shares - bob_acc.delegated_vesting_shares
                                 + bob_acc.received_vesting_shares);
@@ -4057,7 +3712,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_REQUIRE(delegation != nullptr);
         BOOST_REQUIRE_EQUAL(delegation->delegator, op.creator);
         BOOST_REQUIRE_EQUAL(delegation->delegatee, op.new_account_name);
-        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, to_delegate);
         BOOST_REQUIRE(delegation->min_delegation_time == db.head_block_time() + SCORUM_CREATE_ACCOUNT_DELEGATION_TIME);
         auto del_amt = delegation->vesting_shares;
         auto exp_time = delegation->min_delegation_time;
@@ -4079,8 +3734,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient funds to process transaction.");
         tx.clear();
-        op.fee = ASSET("10.000 SCR");
-        op.delegation = NULL_ASSET;
+        op.fee = SUFFICIENT_FEE;
+        op.delegation = ASSET_NULL_SP;
         op.new_account_name = "pam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
@@ -4101,7 +3756,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         delegate_vesting_shares_operation delegate;
         delegate.delegator = "alice";
         delegate.delegatee = "bob";
-        delegate.vesting_shares = NULL_ASSET;
+        delegate.vesting_shares = ASSET_NULL_SP;
         tx.operations.push_back(delegate);
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4134,14 +3789,25 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_validate)
 
 BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
 {
+    asset to_delegate = ASSET_SP(300e+3);
+
     try
     {
         BOOST_TEST_MESSAGE("Testing: delegate_vesting_shares_authorities");
         signed_transaction tx;
         ACTORS((alice)(bob))
 
+        vest("alice", ASSET_SCR(1e+6));
+
+        generate_block();
+
+        const auto& account_service = db.account_service();
+
+        const account_object& alice_vested = account_service.get_account("alice");
+        BOOST_REQUIRE_GE(alice_vested.vesting_shares, to_delegate);
+
         delegate_vesting_shares_operation op;
-        op.vesting_shares = ASSET("0.003000 SP");
+        op.vesting_shares = to_delegate;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4181,8 +3847,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_authorities)
 
 BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 {
-    const asset DELEGATED_ASSET = ASSET("10.000000 SP");
-    const asset NULL_ASSET = ASSET("0.000000 SP");
+    const asset to_delegate = ASSET_SP(10e+6);
 
     try
     {
@@ -4191,22 +3856,22 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         ACTORS((alice)(bob))
         generate_block();
 
-        vest("alice", ASSET("1000.000 SCR"));
+        vest("alice", ASSET_SCR(1e+9));
+        vest("bob", ASSET_SCR(100e+3));
 
         generate_block();
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
-                    w.median_props.account_creation_fee = ASSET("1.000 SCR");
-                });
+                db.modify(db.get_witness_schedule_object(),
+                          [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(1e+3); });
             },
             default_skip);
 
         generate_block();
 
         delegate_vesting_shares_operation op;
-        op.vesting_shares = DELEGATED_ASSET;
+        op.vesting_shares = to_delegate;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4218,8 +3883,8 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         const account_object& alice_acc = db.get_account("alice");
         const account_object& bob_acc = db.get_account("bob");
 
-        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
-        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
 
         BOOST_TEST_MESSAGE("--- Test that the delegation object is correct. ");
         auto delegation
@@ -4227,11 +3892,11 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         BOOST_REQUIRE(delegation != nullptr);
         BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
-        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, to_delegate);
 
         validate_database();
         tx.clear();
-        op.vesting_shares = DELEGATED_ASSET * 2;
+        op.vesting_shares = to_delegate * 2;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
@@ -4240,9 +3905,9 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         BOOST_REQUIRE(delegation != nullptr);
         BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
-        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, DELEGATED_ASSET * 2);
-        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET * 2);
-        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET * 2);
+        BOOST_REQUIRE_EQUAL(delegation->vesting_shares, to_delegate * 2);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate * 2);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate * 2);
 
         BOOST_TEST_MESSAGE("--- Test that effective vesting shares is accurate and being applied.");
         tx.operations.clear();
@@ -4264,7 +3929,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         vote_op.voter = "bob";
         vote_op.author = "alice";
         vote_op.permlink = "foo";
-        vote_op.weight = SCORUM_100_PERCENT;
+        vote_op.weight = (int16_t)100;
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(vote_op);
         tx.sign(bob_private_key, db.get_chain_id());
@@ -4288,7 +3953,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         ACTORS((sam)(dave))
         generate_block();
 
-        vest("sam", ASSET("1000.000 SCR"));
+        vest("sam", ASSET_SCR(1e+9));
 
         generate_block();
 
@@ -4326,7 +3991,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
 
         tx.clear();
-        withdraw.vesting_shares = NULL_ASSET;
+        withdraw.vesting_shares = ASSET_NULL_SP;
         tx.operations.push_back(withdraw);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4347,7 +4012,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         BOOST_TEST_MESSAGE("--- Remove a delegation and ensure it is returned after 1 week");
         tx.clear();
-        op.vesting_shares = NULL_ASSET;
+        op.vesting_shares = ASSET_NULL_SP;
         tx.operations.push_back(op);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
@@ -4360,7 +4025,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         BOOST_REQUIRE(exp_obj->vesting_shares == sam_vest);
         BOOST_REQUIRE(exp_obj->expiration == db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
         BOOST_REQUIRE(db.get_account("sam").delegated_vesting_shares == sam_vest);
-        BOOST_REQUIRE(db.get_account("dave").received_vesting_shares == ASSET("0.000000 SP"));
+        BOOST_REQUIRE(db.get_account("dave").received_vesting_shares == ASSET_SP(0));
         delegation = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
         BOOST_REQUIRE(delegation == nullptr);
 
@@ -4370,15 +4035,15 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj == end);
-        BOOST_REQUIRE_EQUAL(db.get_account("sam").delegated_vesting_shares, NULL_ASSET);
+        BOOST_REQUIRE_EQUAL(db.get_account("sam").delegated_vesting_shares, ASSET_NULL_SP);
     }
     FC_LOG_AND_RETHROW()
 }
 
 BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 {
-    const asset DELEGATED_ASSET = ASSET("10.000000 SP");
-    const asset NULL_ASSET = ASSET("0.000000 SP");
+    const asset to_delegate = ASSET_SP(10e+6);
+
     // This is a regression test specifically for issue #971
     try
     {
@@ -4386,15 +4051,14 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         ACTORS((alice)(bob))
         generate_block();
 
-        vest("alice", ASSET("1000.000 SCR"));
+        vest("alice", ASSET_SCR(1e+9));
 
         generate_block();
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
-                    w.median_props.account_creation_fee = ASSET("1.000 SCR");
-                });
+                db.modify(db.get_witness_schedule_object(),
+                          [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(1e+3); });
             },
             default_skip);
 
@@ -4402,7 +4066,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         signed_transaction tx;
         delegate_vesting_shares_operation op;
-        op.vesting_shares = DELEGATED_ASSET;
+        op.vesting_shares = to_delegate;
         op.delegator = "alice";
         op.delegatee = "bob";
 
@@ -4414,19 +4078,19 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         const account_object& alice_acc = db.get_account("alice");
         const account_object& bob_acc = db.get_account("bob");
 
-        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
-        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, DELEGATED_ASSET);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
 
         generate_block();
 
         db_plugin->debug_update([=](database& db) {
             db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET("100.000 SCR"); });
+                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(100e+6); });
         });
 
         generate_block();
 
-        op.vesting_shares = NULL_ASSET;
+        op.vesting_shares = ASSET_NULL_SP;
 
         tx.clear();
         tx.operations.push_back(op);
@@ -4434,8 +4098,8 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         db.push_transaction(tx, 0);
         generate_block();
 
-        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, DELEGATED_ASSET);
-        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, NULL_ASSET);
+        BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
+        BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, ASSET_NULL_SP);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -4506,153 +4170,6 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_validate)
         op.extensions.clear();
         op.extensions.insert(b);
         op.validate();
-    }
-    FC_LOG_AND_RETHROW()
-}
-
-struct comment_benefactor_reward_visitor
-{
-    typedef void result_type;
-
-    database& _db;
-
-    std::map<account_name_type, asset> reward_map;
-
-    comment_benefactor_reward_visitor(database& db)
-        : _db(db)
-    {
-    }
-
-    void operator()(const comment_benefactor_reward_operation& op)
-    {
-        reward_map.insert(std::make_pair(op.benefactor, op.reward));
-    }
-
-    template <typename Op> void operator()(Op&&) const
-    {
-    } /// ignore all other ops
-};
-
-BOOST_AUTO_TEST_CASE(comment_beneficiaries_apply)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Test Comment Beneficiaries");
-        ACTORS((alice)(bob)(sam)(dave))
-        generate_block();
-
-        comment_operation comment;
-        vote_operation vote;
-        comment_options_operation op;
-        comment_payout_beneficiaries b;
-        signed_transaction tx;
-
-        comment.author = "alice";
-        comment.permlink = "test";
-        comment.parent_permlink = "test";
-        comment.title = "test";
-        comment.body = "foobar";
-
-        tx.operations.push_back(comment);
-        tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx);
-
-        BOOST_TEST_MESSAGE("--- Test failure on more than 8 benefactors");
-        b.beneficiaries.push_back(beneficiary_route_type(account_name_type("bob"), SCORUM_1_PERCENT));
-
-        for (size_t i = 0; i < 8; i++)
-        {
-            b.beneficiaries.push_back(beneficiary_route_type(
-                account_name_type(TEST_INIT_DELEGATE_NAME + fc::to_string(i)), SCORUM_1_PERCENT));
-        }
-
-        op.author = "alice";
-        op.permlink = "test";
-        op.allow_curation_rewards = false;
-        op.extensions.insert(b);
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx), chain::plugin_exception);
-
-        BOOST_TEST_MESSAGE("--- Test specifying a non-existent benefactor");
-        b.beneficiaries.clear();
-        b.beneficiaries.push_back(beneficiary_route_type(account_name_type("doug"), SCORUM_1_PERCENT));
-        op.extensions.clear();
-        op.extensions.insert(b);
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("--- Test setting when comment has been voted on");
-        vote.author = "alice";
-        vote.permlink = "test";
-        vote.voter = "bob";
-        vote.weight = SCORUM_100_PERCENT;
-
-        b.beneficiaries.clear();
-        b.beneficiaries.push_back(beneficiary_route_type(account_name_type("bob"), 25 * SCORUM_1_PERCENT));
-        b.beneficiaries.push_back(beneficiary_route_type(account_name_type("sam"), 50 * SCORUM_1_PERCENT));
-        op.extensions.clear();
-        op.extensions.insert(b);
-
-        tx.clear();
-        tx.operations.push_back(vote);
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        tx.sign(bob_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("--- Test success");
-        tx.clear();
-        tx.operations.push_back(op);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx);
-
-        BOOST_TEST_MESSAGE("--- Test setting when there are already beneficiaries");
-        b.beneficiaries.clear();
-        b.beneficiaries.push_back(beneficiary_route_type(account_name_type("dave"), 25 * SCORUM_1_PERCENT));
-        op.extensions.clear();
-        op.extensions.insert(b);
-        tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
-
-        BOOST_TEST_MESSAGE("--- Payout and verify rewards were split properly");
-        tx.clear();
-        tx.operations.push_back(vote);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        generate_blocks(db.get_comment("alice", string("test")).cashout_time - SCORUM_BLOCK_INTERVAL);
-
-        BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, ASSET("0.000 SCR"));
-        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, ASSET("0.000 SCR"));
-
-        asset bob_vesting_before = db.get_account("bob").vesting_shares;
-        asset sam_vesting_before = db.get_account("sam").vesting_shares;
-
-        comment_benefactor_reward_visitor visitor(db);
-
-        db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
-
-        generate_block();
-
-        validate_database();
-
-        BOOST_REQUIRE_EQUAL(visitor.reward_map.size(), size_t(2));
-
-        BOOST_REQUIRE(visitor.reward_map.find("bob") != visitor.reward_map.end());
-        BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
-
-        BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"], (db.get_account("bob").vesting_shares - bob_vesting_before));
-        BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"], (db.get_account("sam").vesting_shares - sam_vesting_before));
-
-        // clang-format off
-        BOOST_REQUIRE_EQUAL(db.get_comment("alice", string("test")).beneficiary_payout_value * db.get_dynamic_global_properties().get_vesting_share_price(),
-                            (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
-        // clang-format on
     }
     FC_LOG_AND_RETHROW()
 }

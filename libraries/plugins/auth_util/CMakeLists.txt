@@ -6,6 +6,10 @@ add_library( scorum_auth_util
              auth_util_api.cpp
            )
 
-target_link_libraries( scorum_auth_util scorum_app scorum_chain scorum_protocol fc )
+target_link_libraries( scorum_auth_util
+                       scorum_app
+                       scorum_chain
+                       scorum_protocol
+                       fc )
 target_include_directories( scorum_auth_util
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

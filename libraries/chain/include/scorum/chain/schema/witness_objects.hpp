@@ -15,7 +15,6 @@ using scorum::protocol::asset_symbol_type;
 using scorum::protocol::chain_properties;
 using scorum::protocol::digest_type;
 using scorum::protocol::hardfork_version;
-using scorum::protocol::price;
 using scorum::protocol::public_key_type;
 using scorum::protocol::version;
 

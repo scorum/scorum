@@ -951,7 +951,7 @@ void database_api::set_pending_payout(discussion& d) const
         r2 *= pot.amount.value;
         r2 /= total_r2;
 
-        d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol);
+        d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
 
         if (my->_follow_api)
         {

@@ -1,1 +1,61 @@
-{"initial_timestamp": "2018-01-26T13:20:00", "init_accounts_supply": "5000000.000 SCR", "init_rewards_supply": "10000000.000 SCR", "accounts": [{"name": "initdelegate", "recovery_account": "", "public_key": "SCR6CQwBYjQLYJnmw5HG8Z2cDoQQzf9MQrEu6X67XszkXXN3foZap", "scr_amount": "4500000.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user1", "recovery_account": "", "public_key": "SCR6My6g5gf88AMs3RZNfQYwvdYr6VpybX4vHFei8sobbLnT5NApT", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user2", "recovery_account": "", "public_key": "SCR8iF2zrwShYUKECgJkU6D75eueK4P2x4FtoXrZMk8qGVtxHc97n", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user3", "recovery_account": "", "public_key": "SCR5oXEn4RZRncfK2hmybSArpVqSttgSD2K5g2bh8Yk2v3884fe7A", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user4", "recovery_account": "", "public_key": "SCR8XXmbHUCaZYg1SEiyWigxzAW5YKvVFUV3KuhLrDqjYWRviP6rm", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user5", "recovery_account": "", "public_key": "SCR5MVAYbxUfNrGDRMFedYq4qLo6nf2y72Cnm8n6UAVmBhxRWUjoG", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user6", "recovery_account": "", "public_key": "SCR7wisVhjMyAqz5Nyr5cRtLUwgqMiR83GVXkQgwx2y5qS8SeNYKa", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user7", "recovery_account": "", "public_key": "SCR5LWwViDzZCJ9kKLxXbxxdYB1BQvHkLMPnHxbQNwntPLtArP4ws", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user8", "recovery_account": "", "public_key": "SCR8dyD97iw7DYhTHdggKv85fH39sQq9oM88P3eBTZ4eiyBgzjQWn", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user9", "recovery_account": "", "public_key": "SCR6hwro1m6KG1WTGeE644oLfgJt5Vk16WMSs6qrkXAnbTpxktn53", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user10", "recovery_account": "", "public_key": "SCR8VU4DbrCbdErpi4cubK8MzXtUDdyQxoCNS7FmqaBCh1rWSvPVM", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user11", "recovery_account": "", "public_key": "SCR5FBhntpGKs1QRvZNTAghXpwuw59ejmu3L8gmuA9remYik28zKC", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user12", "recovery_account": "", "public_key": "SCR698iHGKERBDkmUAp6kkDWDevDKh7v6hXwNTui8Cw9dFKusKAj9", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user13", "recovery_account": "", "public_key": "SCR5x6TYahfcnvNUTR5rx9ZmBv9oJKpEz1VnF7PdjKBciypB7p5Qq", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user14", "recovery_account": "", "public_key": "SCR5iyhw2J9qCqN7qzJYzLPJj6dMui4EiJ7oJbV7r2BtwmnEzYHM9", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user15", "recovery_account": "", "public_key": "SCR76q2MYt3pEjQd1Ay1YVMhN3Js4LWJ35daUWGKrWmpZZQaKRoWE", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user16", "recovery_account": "", "public_key": "SCR7Htzo97g52qLciMvxJf3mKyBChYa7Vx9nLMSznTnwc2G2ELGDr", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user17", "recovery_account": "", "public_key": "SCR7aEt9q1XYDGy81nNzW7LPaWkRzRwZ5Lnibw5h2S4atLqy32uqR", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user18", "recovery_account": "", "public_key": "SCR8VAGe8N6p3ox3TGBTkp37bqqvkfTp43qL1CoNeHyRKRdMqQRVS", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user19", "recovery_account": "", "public_key": "SCR79gr6FtKw4UKc2sZu3RF8dmHorp6PUpwkqYpZXrdbHsGTP5LgX", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user20", "recovery_account": "", "public_key": "SCR7sV1x9ZGkVEJGg9JMnhB5UqTYdCuuLeTzb1mTatGxGwNKXDUW5", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user21", "recovery_account": "", "public_key": "SCR5T52strpR47hQkfrtY8CXWF1kcp5TsuDe6D8tjnnw3HsKyTvSu", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user22", "recovery_account": "", "public_key": "SCR6iaLxPGNxnaM87de1y4qFEWjQepqREh9sKUTHifP65mmoigGDu", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user23", "recovery_account": "", "public_key": "SCR6CfBbZRt2ztWVrzvpkscm3dv7cwDYp1qS4hMmfKU8wj3VPScdj", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user24", "recovery_account": "", "public_key": "SCR6dweqoPJHpvqNpZo56hb4ensG97nReoZgo5CBFzwQ6Ld36ELjE", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user25", "recovery_account": "", "public_key": "SCR5SEgdYuw29eK4MsSrpKLH7JYfuBFayeWzFGqG8ddq1627Ato9j", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user26", "recovery_account": "", "public_key": "SCR5bsJBzHfFbVwBXN6GbDzukHTR2x2KnHnmNPs7DhcuhJz8mPNTe", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user27", "recovery_account": "", "public_key": "SCR7G3r95xsoT5hWwn14LrC5Fryty3g38zSPpkti14JRTbacBPra3", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user28", "recovery_account": "", "public_key": "SCR7yqfcnwtoRMnReZfjjGsNM1QWTBTM8USvLCnC41n518qsv385F", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user29", "recovery_account": "", "public_key": "SCR5wLs6EWuVTafrYiq5EZqJEhYqZa2r4bUbugS9FdtCHKSzRXphd", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user30", "recovery_account": "", "public_key": "SCR7ucSpTo1cFM4xWvThoqhZK43AK8FYr6mGUnZTMU2HGNQ1evqUV", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user31", "recovery_account": "", "public_key": "SCR7Jnmb8SmF5pZv4SrSRVEVLe3s782kMvoCMYti61ezhenuU3QPJ", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user32", "recovery_account": "", "public_key": "SCR8CH92wevbrEZrfxgCWywvB1HpUxXHuHWTnF1RD2voFcwV1HWL8", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user33", "recovery_account": "", "public_key": "SCR8PWyzDe1Fv28q2rzJvSQdiR8gP7B1JjQfRwXrCy5jeCcd4fSXE", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user34", "recovery_account": "", "public_key": "SCR6M7Ut3wPdA7ApdyntjKVQVWkxSkCsJ99dXf6w7gXM1ouAXBUQX", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user35", "recovery_account": "", "public_key": "SCR8ZAZK9eR75HbLGsBdKxeePXip77GCWBBsZD3cLSN5ifZSzReL5", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user36", "recovery_account": "", "public_key": "SCR8Eiob9D5a8rAVsEsHhcqTsHrjF4qm1BejN4ybrzEUWvfLUnzhV", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user37", "recovery_account": "", "public_key": "SCR6CUZWqyrbWEjqpy2hDwKH6nnBuQrnMZQt8mBxay8jFFFZfG7Mc", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user38", "recovery_account": "", "public_key": "SCR89o5ePN9ifNWk1eX34PPVtAHSKw2TixV3VFPVKC7f5NVTzFVqk", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user39", "recovery_account": "", "public_key": "SCR72wqTbsoi4DLRWiHJ1L8j4phPuG7oTbpVy6wFQwc89fQdtZzUa", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}, {"name": "user40", "recovery_account": "", "public_key": "SCR5un9taEK2LZV2t4iwkWkdupRyUkFoy6BfMFw5x5g3poTAtkqnJ", "scr_amount": "12500.000 SCR", "sp_amount": "0.000 SP"}], "witness_candidates": [{"owner_name": "initdelegate", "block_signing_key": "SCR6CQwBYjQLYJnmw5HG8Z2cDoQQzf9MQrEu6X67XszkXXN3foZap"}, {"owner_name": "user1", "block_signing_key": "SCR6My6g5gf88AMs3RZNfQYwvdYr6VpybX4vHFei8sobbLnT5NApT"}, {"owner_name": "user2", "block_signing_key": "SCR8iF2zrwShYUKECgJkU6D75eueK4P2x4FtoXrZMk8qGVtxHc97n"}, {"owner_name": "user3", "block_signing_key": "SCR5oXEn4RZRncfK2hmybSArpVqSttgSD2K5g2bh8Yk2v3884fe7A"}, {"owner_name": "user4", "block_signing_key": "SCR8XXmbHUCaZYg1SEiyWigxzAW5YKvVFUV3KuhLrDqjYWRviP6rm"}, {"owner_name": "user5", "block_signing_key": "SCR5MVAYbxUfNrGDRMFedYq4qLo6nf2y72Cnm8n6UAVmBhxRWUjoG"}, {"owner_name": "user6", "block_signing_key": "SCR7wisVhjMyAqz5Nyr5cRtLUwgqMiR83GVXkQgwx2y5qS8SeNYKa"}, {"owner_name": "user7", "block_signing_key": "SCR5LWwViDzZCJ9kKLxXbxxdYB1BQvHkLMPnHxbQNwntPLtArP4ws"}, {"owner_name": "user8", "block_signing_key": "SCR8dyD97iw7DYhTHdggKv85fH39sQq9oM88P3eBTZ4eiyBgzjQWn"}, {"owner_name": "user9", "block_signing_key": "SCR6hwro1m6KG1WTGeE644oLfgJt5Vk16WMSs6qrkXAnbTpxktn53"}, {"owner_name": "user10", "block_signing_key": "SCR8VU4DbrCbdErpi4cubK8MzXtUDdyQxoCNS7FmqaBCh1rWSvPVM"}, {"owner_name": "user11", "block_signing_key": "SCR5FBhntpGKs1QRvZNTAghXpwuw59ejmu3L8gmuA9remYik28zKC"}, {"owner_name": "user12", "block_signing_key": "SCR698iHGKERBDkmUAp6kkDWDevDKh7v6hXwNTui8Cw9dFKusKAj9"}, {"owner_name": "user13", "block_signing_key": "SCR5x6TYahfcnvNUTR5rx9ZmBv9oJKpEz1VnF7PdjKBciypB7p5Qq"}, {"owner_name": "user14", "block_signing_key": "SCR5iyhw2J9qCqN7qzJYzLPJj6dMui4EiJ7oJbV7r2BtwmnEzYHM9"}, {"owner_name": "user15", "block_signing_key": "SCR76q2MYt3pEjQd1Ay1YVMhN3Js4LWJ35daUWGKrWmpZZQaKRoWE"}, {"owner_name": "user16", "block_signing_key": "SCR7Htzo97g52qLciMvxJf3mKyBChYa7Vx9nLMSznTnwc2G2ELGDr"}, {"owner_name": "user17", "block_signing_key": "SCR7aEt9q1XYDGy81nNzW7LPaWkRzRwZ5Lnibw5h2S4atLqy32uqR"}, {"owner_name": "user18", "block_signing_key": "SCR8VAGe8N6p3ox3TGBTkp37bqqvkfTp43qL1CoNeHyRKRdMqQRVS"}, {"owner_name": "user19", "block_signing_key": "SCR79gr6FtKw4UKc2sZu3RF8dmHorp6PUpwkqYpZXrdbHsGTP5LgX"}, {"owner_name": "user20", "block_signing_key": "SCR7sV1x9ZGkVEJGg9JMnhB5UqTYdCuuLeTzb1mTatGxGwNKXDUW5"}], "registration_committee": ["initdelegate", "user25", "user26", "user27", "user28"], "registration_supply": "100.000 SCR", "registration_bonus": "0.100 SCR", "registration_schedule": [{"stage": 1, "users": 1, "bonus_percent": 100}, {"stage": 2, "users": 2, "bonus_percent": 75}, {"stage": 3, "users": 5, "bonus_percent": 50}, {"stage": 4, "users": 10, "bonus_percent": 25}]}
+{
+  "initial_timestamp": "2017-11-29T10:03:00",
+  "init_accounts_supply": "1000.000000000 SCR",
+  "init_rewards_supply": "21024.000000000 SCR",
+  "accounts": [
+    {
+      "name": "initdelegate",
+      "recovery_account": "",
+      "public_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
+      "scr_amount": "1000.000000000 SCR",
+      "sp_amount": "0.000000000 SP"
+    },
+    {
+      "name": "alice",
+      "recovery_account": "",
+      "public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
+      "scr_amount": "0.000000000 SCR",
+      "sp_amount": "0.000000000 SP"
+    },
+    {
+      "name": "bob",
+      "recovery_account": "",
+      "public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
+      "scr_amount": "0.000000000 SCR",
+      "sp_amount": "0.000000000 SP"
+    }
+  ],
+
+  "witness_candidates": [{
+    "owner_name": "initdelegate",
+    "block_signing_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa"
+  }, {
+    "owner_name": "alice",
+    "block_signing_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c"
+  }, {
+    "owner_name": "bob",
+    "block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B"
+  }],
+
+  "registration_committee": ["alice", "bob"],
+  "registration_supply": "1.000000000 SCR",
+  "registration_bonus": "0.000000005 SCR",
+
+  "registration_schedule": [{
+    "stage": 1,
+    "users": 1,
+    "bonus_percent": 100
+  }, {
+    "stage": 2,
+    "users": 2,
+    "bonus_percent": 75
+  }, {
+    "stage": 3,
+    "users": 5,
+    "bonus_percent": 75
+  }, {
+    "stage": 4,
+    "users": 10,
+    "bonus_percent": 25
+  }]
+}

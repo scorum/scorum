@@ -390,8 +390,8 @@ struct operation_visitor
     void operator()(const transfer_operation& op) const
     {
         // SCORUM: changed from null account
-        // if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol == SCORUM_SYMBOL )
-        if (op.to == "" && op.amount.symbol == SCORUM_SYMBOL)
+        // if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol() == SCORUM_SYMBOL )
+        if (op.to == "" && op.amount.symbol() == SCORUM_SYMBOL)
         {
             std::vector<std::string> part;
             part.reserve(4);

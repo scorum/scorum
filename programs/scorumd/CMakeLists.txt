@@ -1,4 +1,5 @@
-add_executable(scorumd main.cpp)
+add_executable(scorumd
+               main.cpp)
 if(UNIX AND NOT APPLE)
     set(rt_library rt)
 endif()

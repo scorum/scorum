@@ -10,6 +10,8 @@
 
 #include <boost/multi_index/composite_key.hpp>
 
+#include <limits>
+
 namespace scorum {
 namespace chain {
 
@@ -52,13 +54,11 @@ public:
     uint16_t depth = 0; ///< used to track max nested depth
     uint32_t children = 0; ///< used to track the total number of children, grandchildren, etc...
 
-    /// index on pending_payout for "things happning now... needs moderation"
-    /// TRENDING = UNCLAIMED + PENDING
-    share_type net_rshares; // reward is proportional to rshares^2, this is the sum of all votes (positive and negative)
-    share_type abs_rshares; /// this is used to track the total abs(weight) of votes for the purpose of calculating
-    /// cashout_time
-    share_type vote_rshares; /// Total positive rshares from all votes. Used to calculate delta weights. Needed to
-    /// handle vote changing and removal.
+    share_type net_rshares; /// This is the sum of all votes (positive and negative).
+    /// Used for calculation reward witch is proportional to rshares^2
+    share_type abs_rshares; /// This is used to track the total abs(weight) of votes.
+    share_type vote_rshares; /// Total positive rshares from all votes.
+    /// Used to calculate delta weights. Needed to handle vote changing and removal.
 
     share_type children_abs_rshares; /// this is used to calculate cashout time of a discussion.
     time_point_sec cashout_time; /// 24 hours from the weighted average of vote time
@@ -80,9 +80,8 @@ public:
     id_type root_comment;
 
     asset max_accepted_payout
-        = asset(1000000000, SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
-    uint16_t percent_scrs
-        = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
+        = asset::maximum(SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
+    uint16_t percent_scrs = SCORUM_100_PERCENT; /// the percent of SCR to pay, unkept amounts will be received as SP
     bool allow_replies = true; /// allows a post to disable replies.
     bool allow_votes = true; /// allows a post to receive votes;
     bool allow_curation_rewards = true;
