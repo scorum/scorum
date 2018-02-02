@@ -4,12 +4,15 @@
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/version.hpp>
+#include <scorum/protocol/chain_properties.hpp>
 
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using scorum::protocol::price;
+using scorum::protocol::chain_properties;
+using scorum::protocol::version;
 
 /**
  * @class dynamic_global_property_object
@@ -33,24 +36,23 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset total_supply = asset(0, SCORUM_SYMBOL); ///< accounts_current_supply + reward and registration pools supply
-    asset accounts_current_supply = asset(0, SCORUM_SYMBOL); ///< total SCR on accounts balances
+    asset total_supply = asset(0, SCORUM_SYMBOL); ///< circulating_capital + reward and registration pools supply
+    asset circulating_capital
+        = asset(0, SCORUM_SYMBOL); ///< total SCR on circulating. circulating_capital <= total_supply
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
 
-    price get_vesting_share_price() const
-    {
-        return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
-    }
-
     /**
-     *  Maximum block size is decided by the set of active witnesses which change every round.
-     *  Each witness posts what they think the maximum size should be as part of their witness
-     *  properties, the median size is chosen to be the maximum block size for the round.
+     *  Chain properties are decided by the set of active witnesses which change every round.
+     *  Each witness posts what they think the chain properties should be as part of their witness
+     *  properties, the median size is chosen to be the chain properties for the round.
      *
      *  @note the minimum value for maximum_block_size is defined by the protocol to prevent the
      *  network from getting stuck by witnesses attempting to set this too low.
      */
-    uint32_t maximum_block_size = 0;
+
+    chain_properties median_chain_props;
+
+    version majority_version;
 
     /**
      * The current absolute slot number.  Equal to the total
@@ -72,7 +74,7 @@ public:
      * "wasting" voting power through spillover; any user voting faster than this rate will have
      * their votes reduced.
      */
-    uint32_t vote_power_reserve_rate = 40;
+    uint32_t vote_power_reserve_rate = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
 
     uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
@@ -97,9 +99,10 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (time)
           (current_witness)
           (total_supply)
-          (accounts_current_supply)
+          (circulating_capital)
           (total_vesting_shares)
-          (maximum_block_size)
+          (median_chain_props)
+          (majority_version)
           (current_aslot)
           (recent_slots_filled)
           (participation_count)

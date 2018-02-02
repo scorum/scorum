@@ -62,7 +62,6 @@ typedef fc::ripemd160 checksum_type;
 typedef fc::ripemd160 transaction_id_type;
 typedef fc::sha256 digest_type;
 typedef fc::ecc::compact_signature signature_type;
-typedef safe<int64_t> share_type;
 typedef uint16_t weight_type;
 
 struct public_key_type
@@ -167,8 +166,6 @@ FC_REFLECT(scorum::protocol::extended_public_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_public_key_type::binary_key, (check)(data))
 FC_REFLECT(scorum::protocol::extended_private_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_private_key_type::binary_key, (check)(data))
-
-FC_REFLECT_TYPENAME(scorum::protocol::share_type)
 
 FC_REFLECT(scorum::void_t, )
 

@@ -310,9 +310,9 @@ database_fixture::account_create(const std::string& name, const public_key_type&
     try
     {
         return account_create(name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
-                              std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                              std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                                       share_type(100)),
+                                       (SUFFICIENT_FEE).amount),
                               key, post_key, "");
     }
     FC_CAPTURE_AND_RETHROW((name));
@@ -360,7 +360,7 @@ void database_fixture::fund(const std::string& account_name, const share_type& a
 
 void database_fixture::fund(const std::string& account_name, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
     try
     {
@@ -412,7 +412,7 @@ void database_fixture::transfer_to_vest(const std::string& from, const std::stri
 
 void database_fixture::vest(const std::string& account_name, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
     try
     {

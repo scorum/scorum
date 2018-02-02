@@ -86,23 +86,23 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
     account_service.check_account_existence(o.owner);
 
     FC_ASSERT(o.url.size() <= SCORUM_MAX_WITNESS_URL_LENGTH, "URL is too long");
-    FC_ASSERT(o.props.account_creation_fee.symbol == SCORUM_SYMBOL);
+    FC_ASSERT(o.proposed_chain_props.account_creation_fee.symbol() == SCORUM_SYMBOL);
 
     if (!witness_service.is_exists(o.owner))
     {
-        witness_service.create_witness(o.owner, o.url, o.block_signing_key, o.props);
+        witness_service.create_witness(o.owner, o.url, o.block_signing_key, o.proposed_chain_props);
     }
     else
     {
         const auto& witness = witness_service.get(o.owner);
-        witness_service.update_witness(witness, o.url, o.block_signing_key, o.props);
+        witness_service.update_witness(witness, o.url, o.block_signing_key, o.proposed_chain_props);
     }
 }
 
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -113,10 +113,10 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     // check fee
 
-    const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
-    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-              "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f", wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER)("p", o.fee));
+    const auto creation_fee
+        = dprops_service.get().median_chain_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
+    FC_ASSERT(o.fee >= creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
+              ("f", creation_fee)("p", o.fee));
 
     // check accounts existence
 
@@ -135,14 +135,9 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
 {
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
-    const auto& props = dprops_service.get_dynamic_global_properties();
-
     const auto& creator = account_service.get_account(o.creator);
-
-    const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
 
     // check creator balance
 
@@ -158,23 +153,20 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
               ("creator.vesting_shares", creator.vesting_shares)(
                   "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
 
-    auto target_delegation
-        = asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
-                    * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                SCORUM_SYMBOL)
-        * props.get_vesting_share_price();
+    const auto median_creation_fee = dprops_service.get().median_chain_props.account_creation_fee;
 
-    auto current_delegation
-        = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, SCORUM_SYMBOL) * props.get_vesting_share_price()
-        + o.delegation;
+    auto target_delegation = asset(median_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
+                                       * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                                   VESTS_SYMBOL);
+
+    auto current_delegation = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, VESTS_SYMBOL) + o.delegation;
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
-              ("f", target_delegation)("p", current_delegation)(
-                  "account_creation_fee", wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation",
-                                                                                                 o.delegation));
+              ("f", target_delegation)("p", current_delegation)("account_creation_fee", median_creation_fee)(
+                  "o.fee", o.fee)("o.delegation", o.delegation));
 
-    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f", wso.median_props.account_creation_fee)("p", o.fee));
+    FC_ASSERT(o.fee >= median_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
+              ("f", median_creation_fee)("p", o.fee));
 
     // check accounts existence
 
@@ -346,7 +338,7 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
     FC_ASSERT(comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled.");
     FC_ASSERT(comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled.");
     FC_ASSERT(comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout.");
-    FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent SBD.");
+    FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent.");
 
     comment_service.update(comment, [&](comment_object& c) {
         c.max_accepted_payout = o.max_accepted_payout;
@@ -578,7 +570,7 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
         FC_ASSERT(o.escrow_expiration > dprops_service.head_block_time(),
                   "The escrow expiration must be after head block time.");
 
-        FC_ASSERT(o.fee.symbol == SCORUM_SYMBOL, "Fee must be in SCR.");
+        FC_ASSERT(o.fee.symbol() == SCORUM_SYMBOL, "Fee must be in SCR.");
 
         asset scorum_spent = o.scorum_amount;
         scorum_spent += o.fee;
@@ -750,7 +742,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
 
     account_service.drop_challenged(from_account);
 
-    FC_ASSERT(dbs_account::get_balance(from_account, o.amount.symbol) >= o.amount,
+    FC_ASSERT(dbs_account::get_balance(from_account, o.amount.symbol()) >= o.amount,
               "Account does not have sufficient funds for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.increase_balance(to_account, o.amount);
@@ -773,7 +765,6 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 {
     // clang-format off
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& account = account_service.get_account(o.account);
@@ -783,10 +774,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
     if (!account.created_by_genesis)
     {
-        const auto& props = dprops_service.get_dynamic_global_properties();
-        const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
-
-        asset min_vests = wso.median_props.account_creation_fee * props.get_vesting_share_price();
+        const auto& dprops = dprops_service.get();
+        asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
         min_vests.amount.value *= 10;
 
         FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
@@ -934,7 +923,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
         FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
-        if (o.weight > 0)
+        const int16_t weight = o.weight * SCORUM_1_PERCENT;
+        if (weight > 0)
             FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 
         if (comment.cashout_time == fc::time_point_sec::maximum())
@@ -945,7 +935,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 comment_vote_service.create([&](comment_vote_object& cvo) {
                     cvo.voter = voter.id;
                     cvo.comment = comment.id;
-                    cvo.vote_percent = o.weight;
+                    cvo.vote_percent = weight;
                     cvo.last_update = dprops_service.head_block_time();
                 });
             }
@@ -953,7 +943,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
             {
                 const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
                 comment_vote_service.update(comment_vote, [&](comment_vote_object& cvo) {
-                    cvo.vote_percent = o.weight;
+                    cvo.vote_percent = weight;
                     cvo.last_update = dprops_service.head_block_time();
                 });
             }
@@ -971,10 +961,10 @@ void vote_evaluator::do_apply(const vote_operation& o)
         int64_t current_power = std::min(int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
         FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
-        int64_t abs_weight = abs(o.weight);
+        int64_t abs_weight = std::abs(weight);
         int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
 
-        const auto& props = dprops_service.get_dynamic_global_properties();
+        const auto& props = dprops_service.get();
 
         // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
         // The second multiplication is rounded up as of HF 259
@@ -989,14 +979,14 @@ void vote_evaluator::do_apply(const vote_operation& o)
             = ((uint128_t(voter.effective_vesting_shares().amount.value) * used_power) / (SCORUM_100_PERCENT))
                   .to_uint64();
 
-        FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || o.weight == 0,
+        FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || weight == 0,
                   "Voting weight is too small, please accumulate more voting power or scorum power.");
 
         if (!comment_vote_service.is_exists(comment.id, voter.id))
         {
-            FC_ASSERT(o.weight != 0, "Vote weight cannot be 0.");
+            FC_ASSERT(weight != 0, "Vote weight cannot be 0.");
             /// this is the rshares voting for or against the post
-            int64_t rshares = o.weight < 0 ? -abs_rshares : abs_rshares;
+            int64_t rshares = weight < 0 ? -abs_rshares : abs_rshares;
 
             if (rshares > 0)
             {
@@ -1004,18 +994,9 @@ void vote_evaluator::do_apply(const vote_operation& o)
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
-            // used_power /= (50*7); /// a 100% vote means use .28% of voting power which should force users to spread
-            // their votes around over 50+ posts day for a week
-            // if( used_power == 0 ) used_power = 1;
-
             account_service.update_voting_power(voter, current_power - used_power);
 
-            /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
-            /// total rshares^2
-            fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
             const auto& root_comment = comment_service.get(comment.root_comment);
-
-            fc::uint128_t avg_cashout_sec;
 
             FC_ASSERT(abs_rshares > 0, "Cannot vote with 0 rshares.");
 
@@ -1033,12 +1014,6 @@ void vote_evaluator::do_apply(const vote_operation& o)
             });
 
             comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
-
-            fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
-
-            /// calculate rshares2 value
-            new_rshares = util::evaluate_reward_curve(new_rshares);
-            old_rshares = util::evaluate_reward_curve(old_rshares);
 
             uint64_t max_vote_weight = 0;
 
@@ -1065,7 +1040,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 cv.voter = voter.id;
                 cv.comment = comment.id;
                 cv.rshares = rshares;
-                cv.vote_percent = o.weight;
+                cv.vote_percent = weight;
                 cv.last_update = dprops_service.head_block_time();
 
                 bool curation_reward_eligible
@@ -1110,10 +1085,10 @@ void vote_evaluator::do_apply(const vote_operation& o)
             FC_ASSERT(comment_vote.num_changes < SCORUM_MAX_VOTE_CHANGES,
                       "Voter has used the maximum number of vote changes on this comment.");
 
-            FC_ASSERT(comment_vote.vote_percent != o.weight, "You have already voted in a similar way.");
+            FC_ASSERT(comment_vote.vote_percent != weight, "You have already voted in a similar way.");
 
             /// this is the rshares voting for or against the post
-            int64_t rshares = o.weight < 0 ? -abs_rshares : abs_rshares;
+            int64_t rshares = weight < 0 ? -abs_rshares : abs_rshares;
 
             if (comment_vote.rshares < rshares)
             {
@@ -1123,12 +1098,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             account_service.update_voting_power(voter, current_power - used_power);
 
-            /// if the current net_rshares is less than 0, the post is getting 0 rewards so it is not factored into
-            /// total rshares^2
-            fc::uint128_t old_rshares = std::max(comment.net_rshares.value, int64_t(0));
             const auto& root_comment = comment_service.get(comment.root_comment);
-
-            fc::uint128_t avg_cashout_sec;
 
             comment_service.update(comment, [&](comment_object& c) {
                 c.net_rshares -= comment_vote.rshares;
@@ -1152,24 +1122,18 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
-            fc::uint128_t new_rshares = std::max(comment.net_rshares.value, int64_t(0));
-
-            /// calculate rshares2 value
-            new_rshares = util::evaluate_reward_curve(new_rshares);
-            old_rshares = util::evaluate_reward_curve(old_rshares);
-
             comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
 
             comment_vote_service.update(comment_vote, [&](comment_vote_object& cv) {
                 cv.rshares = rshares;
-                cv.vote_percent = o.weight;
+                cv.vote_percent = weight;
                 cv.last_update = dprops_service.head_block_time();
                 cv.weight = 0;
                 cv.num_changes += 1;
             });
         }
     }
-    FC_CAPTURE_AND_RETHROW((o))
+    FC_CAPTURE_AND_RETHROW()
 }
 
 void custom_evaluator::do_apply(const custom_operation&)
@@ -1293,7 +1257,6 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
 {
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
     vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
@@ -1303,11 +1266,11 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
 
-    const auto& wso = witness_service.get_witness_schedule_object();
-    const auto& props = dprops_service.get_dynamic_global_properties();
+    const auto dprops = dprops_service.get();
     auto min_delegation
-        = asset(wso.median_props.account_creation_fee.amount * 10, SCORUM_SYMBOL) * props.get_vesting_share_price();
-    auto min_update = wso.median_props.account_creation_fee * props.get_vesting_share_price();
+        = asset(dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER,
+                VESTS_SYMBOL);
+    auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
 
     // If delegation doesn't exist, create it
     if (!vd_service.is_exists(op.delegator, op.delegatee))
@@ -1424,11 +1387,11 @@ void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation
 
     switch (op.type)
     {
-    case atomicswap_by_initiator:
+    case atomicswap_initiate_operation::by_initiator:
         atomicswap_service.create_contract(atomicswap_contract_initiator, owner, recipient, op.amount, op.secret_hash,
                                            metadata);
         break;
-    case atomicswap_by_participant:
+    case atomicswap_initiate_operation::by_participant:
         atomicswap_service.create_contract(atomicswap_contract_participant, owner, recipient, op.amount, op.secret_hash,
                                            metadata);
         break;

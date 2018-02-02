@@ -74,8 +74,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
         mocks.ExpectCall(property_service, dynamic_global_property_service_i::head_block_time).Return(current_time);
 
-        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get_dynamic_global_properties)
-            .ReturnByRef(global_property);
+        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get).ReturnByRef(global_property);
     }
 
     void create_proposal(proposal_action expected_action)
@@ -99,8 +98,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
     uint64_t get_quorum(proposal_action action)
     {
-        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get_dynamic_global_properties)
-            .ReturnByRef(global_property);
+        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get).ReturnByRef(global_property);
 
         proposal_create_evaluator evaluator(*services);
 

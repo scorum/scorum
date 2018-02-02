@@ -29,7 +29,6 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::authority;
 using scorum::protocol::operation;
-using scorum::protocol::price;
 using scorum::protocol::signed_transaction;
 
 class database_impl;
@@ -282,8 +281,8 @@ public:
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
     void adjust_total_payout(const comment_object& a,
-                             const asset& sbd,
-                             const asset& curator_sbd_value,
+                             const asset& author_tokens,
+                             const asset& curation_tokens,
                              const asset& beneficiary_value);
 
     asset get_balance(const account_object& a, asset_symbol_type symbol) const;
@@ -298,8 +297,8 @@ public:
      */
     void process_vesting_withdrawals();
     share_type pay_curators(const comment_object& c, share_type& max_rewards);
-    share_type cashout_comment_helper(const share_type& reward, const comment_object& comment);
-    void process_comment_cashout();
+    share_type pay_for_comment(const share_type& reward, const comment_object& comment);
+    void process_comments_cashout();
     void process_funds();
     void account_recovery_processing();
     void expire_escrow_ratification();

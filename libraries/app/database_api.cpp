@@ -271,7 +271,7 @@ dynamic_global_property_api_obj database_api::get_dynamic_global_properties() co
 
 chain_properties database_api::get_chain_properties() const
 {
-    return my->_db.with_read_lock([&]() { return my->_db.get_witness_schedule_object().median_props; });
+    return my->_db.with_read_lock([&]() { return my->_db.get_dynamic_global_properties().median_chain_props; });
 }
 
 dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties() const
@@ -963,7 +963,7 @@ void database_api::set_pending_payout(discussion& d) const
         r2 *= pot.amount.value;
         r2 /= total_r2;
 
-        d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol);
+        d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
 
         if (my->_follow_api)
         {

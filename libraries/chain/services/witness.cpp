@@ -59,7 +59,7 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
         fc::from_string(w.url, url);
         w.signing_key = block_signing_key;
         w.created = dprops.time;
-        w.props = props;
+        w.proposed_chain_props = props;
         w.hardfork_time_vote = db_impl().get_genesis_time();
     });
 
@@ -76,7 +76,7 @@ void dbs_witness::update_witness(const witness_object& witness,
     db_impl().modify(witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
         w.signing_key = block_signing_key;
-        w.props = props;
+        w.proposed_chain_props = props;
     });
 }
 

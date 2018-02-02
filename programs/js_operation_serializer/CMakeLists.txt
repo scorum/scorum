@@ -1,4 +1,5 @@
-add_executable( js_operation_serializer main.cpp )
+add_executable( js_operation_serializer
+                main.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
 endif()

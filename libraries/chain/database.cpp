@@ -681,7 +681,7 @@ void database::push_transaction(const signed_transaction& trx, uint32_t skip)
         try
         {
             size_t trx_size = fc::raw::pack_size(trx);
-            FC_ASSERT(trx_size <= (get_dynamic_global_properties().maximum_block_size - 256));
+            FC_ASSERT(trx_size <= (get_dynamic_global_properties().median_chain_props.maximum_block_size - 256));
             set_producing(true);
             detail::with_skip_flags(*this, skip, [&]() { with_write_lock([&]() { _push_transaction(trx); }); });
             set_producing(false);
@@ -757,7 +757,8 @@ signed_block database::_generate_block(fc::time_point_sec when,
     }
 
     static const size_t max_block_header_size = fc::raw::pack_size(signed_block_header()) + 4;
-    auto maximum_block_size = get_dynamic_global_properties().maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
+    auto maximum_block_size
+        = get_dynamic_global_properties().median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
     size_t total_block_size = max_block_header_size;
 
     signed_block pending_block;
@@ -1072,7 +1073,7 @@ void database::process_vesting_withdrawals()
                 {
                     vests_deposited_as_scorum += to_deposit;
 
-                    auto converted_scorum = asset(to_deposit, VESTS_SYMBOL) * cprops.get_vesting_share_price();
+                    auto converted_scorum = asset(to_deposit, SCORUM_SYMBOL);
 
                     modify(to_account, [&](account_object& a) { a.balance += converted_scorum; });
 
@@ -1090,7 +1091,7 @@ void database::process_vesting_withdrawals()
         share_type to_convert = to_withdraw - vests_deposited_as_scorum - vests_deposited_as_vests;
         FC_ASSERT(to_convert >= 0, "Deposited more vests than were supposed to be withdrawn");
 
-        auto converted_scorum = asset(to_convert, VESTS_SYMBOL) * cprops.get_vesting_share_price();
+        auto converted_scorum = asset(to_convert, SCORUM_SYMBOL);
 
         modify(from_account, [&](account_object& a) {
             a.vesting_shares.amount -= to_withdraw;
@@ -1125,16 +1126,13 @@ void database::process_vesting_withdrawals()
 }
 
 void database::adjust_total_payout(const comment_object& cur,
-                                   const asset& sbd_created,
-                                   const asset& curator_sbd_value,
+                                   const asset& author_tokens,
+                                   const asset& curation_tokens,
                                    const asset& beneficiary_value)
 {
     modify(cur, [&](comment_object& c) {
-        if (c.total_payout_value.symbol == sbd_created.symbol)
-        {
-            c.total_payout_value += sbd_created;
-        }
-        c.curator_payout_value += curator_sbd_value;
+        c.total_payout_value += author_tokens;
+        c.curator_payout_value += curation_tokens;
         c.beneficiary_payout_value += beneficiary_value;
     });
     /// TODO: potentially modify author's total payout numbers as well
@@ -1193,7 +1191,7 @@ share_type database::pay_curators(const comment_object& c, share_type& max_rewar
     FC_CAPTURE_AND_RETHROW()
 }
 
-share_type database::cashout_comment_helper(const share_type& reward_tokens, const comment_object& comment)
+share_type database::pay_for_comment(const share_type& reward_tokens, const comment_object& comment)
 {
     try
     {
@@ -1246,7 +1244,7 @@ share_type database::cashout_comment_helper(const share_type& reward_tokens, con
     FC_CAPTURE_AND_RETHROW((comment))
 }
 
-void database::process_comment_cashout()
+void database::process_comments_cashout()
 {
     const auto& rf = get_reward_fund();
 
@@ -1274,7 +1272,7 @@ void database::process_comment_cashout()
      * Payout all comments
      *
      * Each payout follows a similar pattern, but for a different reason.
-     * The helper only does token allocation based on curation rewards and the SBD
+     * The helper only does token allocation based on curation rewards and the SCR
      * global %, etc.
      *
      * Each context is used by get_rshare_reward to determine what part of each budget
@@ -1296,7 +1294,7 @@ void database::process_comment_cashout()
             ctx.reward_weight = comment.reward_weight;
             ctx.max_scr = comment.max_accepted_payout;
 
-            scorum_awarded.amount += cashout_comment_helper(util::get_rshare_reward(ctx), comment);
+            scorum_awarded.amount += pay_for_comment(util::get_rshare_reward(ctx), comment);
         }
 
         modify(comment, [&](comment_object& c) {
@@ -1362,7 +1360,7 @@ void database::process_funds()
 
     auto total_block_reward = reward_service.take_block_reward();
     // clang-format off
-    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol);
+    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol());
     auto witness_reward = total_block_reward - content_reward; /// Remaining 5% to witness pay
 
     modify(rf, [&](reward_fund_object& rfo) {
@@ -1370,7 +1368,7 @@ void database::process_funds()
     });
     
     modify(props, [&](dynamic_global_property_object& p) {
-        p.accounts_current_supply += total_block_reward;
+        p.circulating_capital += total_block_reward;
     });
     // clang-format on
 
@@ -1672,13 +1670,18 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
-        /*try
-        {
         /// check invariants
         if( is_producing() || !( skip & skip_validate_invariants ) )
-           validate_invariants();
+        {
+            try{
+                validate_invariants();
+            }
+#ifdef DEBUG
+        FC_CAPTURE_AND_RETHROW( (next_block) );
+#else
+        FC_CAPTURE_AND_LOG( (next_block) );
+#endif
         }
-        FC_CAPTURE_AND_RETHROW( (next_block) );*/
 
         // fc::time_point end_time = fc::time_point::now();
         // fc::microseconds dt = end_time - begin_time;
@@ -1776,8 +1779,8 @@ void database::_apply_block(const signed_block& next_block)
 
         const auto& gprops = get_dynamic_global_properties();
         auto block_size = fc::raw::pack_size(next_block);
-        FC_ASSERT(block_size <= gprops.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.maximum_block_size));
+        FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
+                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -1819,7 +1822,7 @@ void database::_apply_block(const signed_block& next_block)
         process_funds();
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
-        process_comment_cashout();
+        process_comments_cashout();
         process_vesting_withdrawals();
 
         account_recovery_processing();
@@ -2225,7 +2228,7 @@ void database::clear_expired_delegations()
 void database::adjust_balance(const account_object& a, const asset& delta)
 {
     modify(a, [&](account_object& acnt) {
-        switch (delta.symbol)
+        switch (delta.symbol())
         {
         case SCORUM_SYMBOL:
             acnt.balance += delta;
@@ -2346,7 +2349,6 @@ void database::validate_invariants() const
 {
     try
     {
-        const auto& account_idx = get_index<account_index>().indices().get<by_name>();
         asset total_supply = asset(0, SCORUM_SYMBOL);
         asset total_vesting = asset(0, VESTS_SYMBOL);
         share_type total_vsf_votes = share_type(0);
@@ -2360,6 +2362,7 @@ void database::validate_invariants() const
             FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "", ("itr", *itr));
         }
 
+        const auto& account_idx = get_index<account_index>().indices().get<by_name>();
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
@@ -2372,18 +2375,15 @@ void database::validate_invariants() const
         }
 
         const auto& escrow_idx = get_index<escrow_index>().indices().get<by_id>();
-
         for (auto itr = escrow_idx.begin(); itr != escrow_idx.end(); ++itr)
         {
             total_supply += itr->scorum_balance;
-
             total_supply += itr->pending_fee;
         }
 
         fc::uint128_t total_rshares2;
 
         const auto& comment_idx = get_index<comment_index>().indices();
-
         for (auto itr = comment_idx.begin(); itr != comment_idx.end(); ++itr)
         {
             if (itr->net_rshares.value > 0)
@@ -2394,22 +2394,27 @@ void database::validate_invariants() const
         }
 
         total_supply += get_reward_fund().reward_balance;
-
-        total_supply += gpo.total_vesting_shares * gpo.get_vesting_share_price();
-
+        total_supply += asset(gpo.total_vesting_shares.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
+
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {
             total_supply += budget.balance;
         }
-        total_supply += obtain_service<dbs_registration_pool>().get_pool().balance;
+
+        if (obtain_service<dbs_registration_pool>().is_exists())
+        {
+            total_supply += obtain_service<dbs_registration_pool>().get().balance;
+        }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
-
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
         {
             total_supply += itr->amount;
         }
+
+        FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
+        FC_ASSERT(total_vesting <= asset::maximum(VESTS_SYMBOL), "Assets SP overflow");
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
@@ -2496,6 +2501,9 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
 
 
 

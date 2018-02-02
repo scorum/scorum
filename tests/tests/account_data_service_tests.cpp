@@ -31,7 +31,7 @@ public:
 
     share_type calc_fee()
     {
-        return std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+        return std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                             * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
                         share_type(100));
     }
