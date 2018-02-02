@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scorum/protocol/authority.hpp>
-#include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
@@ -136,8 +135,6 @@ public:
     fc::uint128 current_virtual_time;
     fc::array<account_name_type, SCORUM_MAX_WITNESSES> current_shuffled_witnesses;
     uint8_t num_scheduled_witnesses = 1;
-    chain_properties median_props;
-    version majority_version;
 };
 
 struct by_vote_name;
@@ -237,7 +234,6 @@ CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_vote_object, scorum::chain::wit
 
 FC_REFLECT( scorum::chain::witness_schedule_object,
              (id)(current_virtual_time)(current_shuffled_witnesses)(num_scheduled_witnesses)
-             (median_props)(majority_version)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_schedule_object, scorum::chain::witness_schedule_index )
 

@@ -102,7 +102,7 @@ void witness_update_evaluator::do_apply(const witness_update_operation& o)
 void account_create_evaluator::do_apply(const account_create_operation& o)
 {
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -113,10 +113,10 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 
     // check fee
 
-    const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
-    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-              "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f", wso.median_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER)("p", o.fee));
+    const auto creation_fee
+        = dprops_service.get().median_chain_props.account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
+    FC_ASSERT(o.fee >= creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
+              ("f", creation_fee)("p", o.fee));
 
     // check accounts existence
 
@@ -135,11 +135,9 @@ void account_create_evaluator::do_apply(const account_create_operation& o)
 void account_create_with_delegation_evaluator::do_apply(const account_create_with_delegation_operation& o)
 {
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& creator = account_service.get_account(o.creator);
-
-    const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
 
     // check creator balance
 
@@ -155,20 +153,20 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
               ("creator.vesting_shares", creator.vesting_shares)(
                   "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
 
-    auto target_delegation
-        = asset(wso.median_props.account_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
-                    * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                VESTS_SYMBOL);
+    const auto median_creation_fee = dprops_service.get().median_chain_props.account_creation_fee;
+
+    auto target_delegation = asset(median_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
+                                       * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                                   VESTS_SYMBOL);
 
     auto current_delegation = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, VESTS_SYMBOL) + o.delegation;
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
-              ("f", target_delegation)("p", current_delegation)(
-                  "account_creation_fee", wso.median_props.account_creation_fee)("o.fee", o.fee)("o.delegation",
-                                                                                                 o.delegation));
+              ("f", target_delegation)("p", current_delegation)("account_creation_fee", median_creation_fee)(
+                  "o.fee", o.fee)("o.delegation", o.delegation));
 
-    FC_ASSERT(o.fee >= wso.median_props.account_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
-              ("f", wso.median_props.account_creation_fee)("p", o.fee));
+    FC_ASSERT(o.fee >= median_creation_fee, "Insufficient Fee: ${f} required, ${p} provided.",
+              ("f", median_creation_fee)("p", o.fee));
 
     // check accounts existence
 
@@ -767,7 +765,6 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 {
     // clang-format off
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     const auto& account = account_service.get_account(o.account);
@@ -777,9 +774,8 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
     if (!account.created_by_genesis)
     {
-        const witness_schedule_object& wso = witness_service.get_witness_schedule_object();
-
-        asset min_vests = asset(wso.median_props.account_creation_fee.amount, VESTS_SYMBOL);
+        const auto& dprops = dprops_service.get();
+        asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
         min_vests.amount.value *= 10;
 
         FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
@@ -1261,7 +1257,6 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
 {
     account_service_i& account_service = db().account_service();
-    witness_service_i& witness_service = db().witness_service();
     vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
@@ -1271,10 +1266,11 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
         - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
 
-    const auto& wso = witness_service.get_witness_schedule_object();
-    auto min_delegation = asset(
-        wso.median_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER, VESTS_SYMBOL);
-    auto min_update = asset(wso.median_props.account_creation_fee.amount, VESTS_SYMBOL);
+    const auto dprops = dprops_service.get();
+    auto min_delegation
+        = asset(dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER,
+                VESTS_SYMBOL);
+    auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
 
     // If delegation doesn't exist, create it
     if (!vd_service.is_exists(op.delegator, op.delegatee))

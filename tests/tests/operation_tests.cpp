@@ -167,8 +167,8 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_TEST_MESSAGE("--- Test failure covering witness fee");
         generate_block();
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& wso) {
-                wso.median_props.account_creation_fee = SUFFICIENT_FEE * 10;
+            db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                dgpo.median_chain_props.account_creation_fee = SUFFICIENT_FEE * 10;
             });
         });
         generate_block();
@@ -3668,8 +3668,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_witness_schedule_object(), [&](witness_schedule_object& w) {
-                    w.median_props.account_creation_fee = new_account_creation_fee;
+                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                    dgpo.median_chain_props.account_creation_fee = new_account_creation_fee;
                 });
             },
             default_skip);
@@ -3726,7 +3726,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_TEST_MESSAGE("--- Test success using only SCR to reach target delegation.");
 
         tx.clear();
-        op.fee = asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+        op.fee = asset(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
                        SCORUM_SYMBOL);
         op.delegation = asset(0, VESTS_SYMBOL);
@@ -3748,7 +3748,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient fee fo reach target delegation.");
-        fund("alice", asset(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+        fund("alice", asset(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                                 * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
                             SCORUM_SYMBOL));
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
@@ -3867,8 +3867,9 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_witness_schedule_object(),
-                          [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(1e+3); });
+                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                    dgpo.median_chain_props.account_creation_fee = ASSET_SCR(1e+3);
+                });
             },
             default_skip);
 
@@ -4061,8 +4062,9 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_witness_schedule_object(),
-                          [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(1e+3); });
+                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                    dgpo.median_chain_props.account_creation_fee = ASSET_SCR(1e+3);
+                });
             },
             default_skip);
 
@@ -4088,8 +4090,9 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         generate_block();
 
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_witness_schedule_object(),
-                      [&](witness_schedule_object& w) { w.median_props.account_creation_fee = ASSET_SCR(100e+6); });
+            db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                dgpo.median_chain_props.account_creation_fee = ASSET_SCR(100e+6);
+            });
         });
 
         generate_block();

@@ -681,7 +681,7 @@ void database::push_transaction(const signed_transaction& trx, uint32_t skip)
         try
         {
             size_t trx_size = fc::raw::pack_size(trx);
-            FC_ASSERT(trx_size <= (get_dynamic_global_properties().maximum_block_size - 256));
+            FC_ASSERT(trx_size <= (get_dynamic_global_properties().median_chain_props.maximum_block_size - 256));
             set_producing(true);
             detail::with_skip_flags(*this, skip, [&]() { with_write_lock([&]() { _push_transaction(trx); }); });
             set_producing(false);
@@ -757,7 +757,8 @@ signed_block database::_generate_block(fc::time_point_sec when,
     }
 
     static const size_t max_block_header_size = fc::raw::pack_size(signed_block_header()) + 4;
-    auto maximum_block_size = get_dynamic_global_properties().maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
+    auto maximum_block_size
+        = get_dynamic_global_properties().median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
     size_t total_block_size = max_block_header_size;
 
     signed_block pending_block;
@@ -1778,8 +1779,8 @@ void database::_apply_block(const signed_block& next_block)
 
         const auto& gprops = get_dynamic_global_properties();
         auto block_size = fc::raw::pack_size(next_block);
-        FC_ASSERT(block_size <= gprops.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.maximum_block_size));
+        FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
+                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -2500,5 +2501,8 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
 
 

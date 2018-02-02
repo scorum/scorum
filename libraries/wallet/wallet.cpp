@@ -210,14 +210,13 @@ public:
     variant info() const
     {
         auto dynamic_props = _remote_db->get_dynamic_global_properties();
-        auto witness_schedule = _remote_db->get_witness_schedule();
 
         fc::mutable_variant_object result = fc::variant(dynamic_props).get_object();
 
-        result["witness_majority_version"] = fc::string(witness_schedule.majority_version);
+        result["witness_majority_version"] = fc::string(dynamic_props.majority_version);
         result["hardfork_version"] = fc::string(_remote_db->get_hardfork_version());
 
-        result["chain_properties"] = fc::variant(witness_schedule.median_props).get_object();
+        result["chain_properties"] = fc::variant(dynamic_props.median_chain_props).get_object();
 
         result["head_block_num"] = dynamic_props.head_block_number;
         result["head_block_id"] = dynamic_props.head_block_id;

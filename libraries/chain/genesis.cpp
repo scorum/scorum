@@ -132,7 +132,7 @@ void db_genesis::init_global_property_object()
         gpo.circulating_capital = _genesis_state.init_accounts_supply;
         gpo.total_supply
             = gpo.circulating_capital + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
-        gpo.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
+        gpo.median_chain_props.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
     });
 }
 

@@ -249,7 +249,7 @@ void witness_plugin_impl::pre_operation(const operation_notification& note)
 void witness_plugin_impl::on_block(const signed_block& b)
 {
     auto& db = _self.database();
-    int64_t max_block_size = db.get_dynamic_global_properties().maximum_block_size;
+    int64_t max_block_size = db.get_dynamic_global_properties().median_chain_props.maximum_block_size;
 
     auto reserve_ratio_ptr = db.find(reserve_ratio_id_type());
 
