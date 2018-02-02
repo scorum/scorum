@@ -97,9 +97,6 @@ void db_genesis::init_accounts()
 
 void db_genesis::init_witnesses()
 {
-    FC_ASSERT(_genesis_state.witness_candidates.size() <= SCORUM_MAX_WITNESSES,
-              "Witness amount in genesis exceeds ${1}.", ("1", SCORUM_MAX_WITNESSES));
-
     for (auto& witness : _genesis_state.witness_candidates)
     {
         FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
