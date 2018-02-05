@@ -16,12 +16,11 @@ public:
     chain_id_type chain_id;
 };
 
-typedef multi_index_container<chain_property_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<chain_property_object,
-                                                               chain_property_object::id_type,
-                                                               &chain_property_object::id>>>,
-                              fc::shared_allocator<chain_property_object>>
+typedef shared_multi_index_container<chain_property_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<chain_property_object,
+                                                                      chain_property_object::id_type,
+                                                                      &chain_property_object::id>>>>
     chain_property_index;
 
 } // namespace chain

@@ -81,12 +81,11 @@ public:
     uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
-typedef multi_index_container<dynamic_global_property_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<dynamic_global_property_object,
-                                                               dynamic_global_property_object::id_type,
-                                                               &dynamic_global_property_object::id>>>,
-                              fc::shared_allocator<dynamic_global_property_object>>
+typedef shared_multi_index_container<dynamic_global_property_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<dynamic_global_property_object,
+                                                                      dynamic_global_property_object::id_type,
+                                                                      &dynamic_global_property_object::id>>>>
     dynamic_global_property_index;
 } // namespace chain
 } // namespace scorum

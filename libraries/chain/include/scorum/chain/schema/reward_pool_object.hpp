@@ -21,12 +21,11 @@ public:
 };
 
 // clang-format off
-using reward_pool_index = multi_index_container<reward_pool_object,
+using reward_pool_index = shared_multi_index_container<reward_pool_object,
                                                 indexed_by<ordered_unique<tag<by_id>, 
                                                                           member<reward_pool_object, 
                                                                                  reward_pool_id_type, 
-                                                                                 &reward_pool_object::id>>>,
-                                                fc::shared_allocator<reward_pool_object>>;
+                                                                                 &reward_pool_object::id>>>>;
 
 } // namespace chain
 } // namespace scorum

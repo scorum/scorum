@@ -57,7 +57,7 @@ public:
 
 protected:
     /**
-    * Construct a new element in the multi_index_container.
+    * Construct a new element in the shared_multi_index_container.
     * Set the ID to the next available ID, then increment _next_id and fire off on_create().
     */
     template <typename Constructor> const value_type& emplace(Constructor&& c)

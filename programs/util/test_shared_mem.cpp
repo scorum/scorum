@@ -36,7 +36,6 @@
 #include <fc/shared_string.hpp>
 #include <fc/shared_allocator.hpp>
 
-using boost::multi_index_container;
 using namespace boost::multi_index;
 namespace bip = boost::interprocess;
 
@@ -102,12 +101,13 @@ struct book
     }
 };
 
-typedef multi_index_container<book,
-                              indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, author)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, name)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
-                              fc::shared_allocator<book>>
-    book_container;
+typedef fc::
+    shared_multi_index_container<book,
+                                 indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(
+                                                book, fc::shared_string, author)>,
+                                            ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, name)>,
+                                            ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>>
+        book_container;
 
 FC_REFLECT(book, (name)(author)(pages)(prize)(deq)(auth))
 

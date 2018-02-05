@@ -24,12 +24,11 @@ public:
     block_id_type block_id;
 };
 
-typedef multi_index_container<block_summary_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<block_summary_object,
-                                                               block_summary_object::id_type,
-                                                               &block_summary_object::id>>>,
-                              fc::shared_allocator<block_summary_object>>
+typedef shared_multi_index_container<block_summary_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<block_summary_object,
+                                                                      block_summary_object::id_type,
+                                                                      &block_summary_object::id>>>>
     block_summary_index;
 }
 } // scorum::chain

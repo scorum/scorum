@@ -26,11 +26,10 @@ struct book : public chainbase::object<0, book>
     int b = 1;
 };
 
-typedef multi_index_container<book,
-                              indexed_by<ordered_unique<member<book, book::id_type, &book::id>>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, a)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, b)>>,
-                              fc::shared_allocator<book>>
+typedef fc::shared_multi_index_container<book,
+                                         indexed_by<ordered_unique<member<book, book::id_type, &book::id>>,
+                                                    ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, a)>,
+                                                    ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, b)>>>
     book_index;
 
 CHAINBASE_SET_INDEX_TYPE(book, book_index)

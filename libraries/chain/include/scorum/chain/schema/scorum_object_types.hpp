@@ -1,11 +1,11 @@
 #pragma once
 
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/mem_fun.hpp>
 
 #include <fc/shared_string.hpp>
+#include <fc/shared_containers.hpp>
 #include <chainbase/chainbase.hpp>
 
 #include <scorum/protocol/types.hpp>
@@ -17,7 +17,7 @@ namespace chain {
 
 using namespace boost::multi_index;
 
-using boost::multi_index_container;
+using fc::shared_multi_index_container;
 
 using chainbase::object;
 using chainbase::oid;

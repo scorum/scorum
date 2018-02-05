@@ -117,7 +117,7 @@ struct by_comment_voter;
 struct by_voter_comment;
 struct by_comment_weight_voter;
 struct by_voter_last_update;
-typedef multi_index_container<comment_vote_object,
+typedef shared_multi_index_container<comment_vote_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<comment_vote_object,
                                                                comment_vote_id_type,
@@ -165,8 +165,8 @@ typedef multi_index_container<comment_vote_object,
                                                                              &comment_vote_object::voter>>,
                                                         composite_key_compare<std::less<comment_id_type>,
                                                                               std::greater<uint64_t>,
-                                                                              std::less<account_id_type>>>>,
-                              fc::shared_allocator<comment_vote_object>>
+                                                                              std::less<account_id_type>>>>
+     >
     comment_vote_index;
 
 struct by_cashout_time; /// cashout_time
@@ -187,7 +187,7 @@ struct by_author_last_update;
 /**
  * @ingroup object_index
  */
-typedef multi_index_container<comment_object,
+typedef shared_multi_index_container<comment_object,
                               indexed_by<
                                   /// CONSENUSS INDICIES - used by evaluators
                                   ordered_unique<tag<by_id>,
@@ -263,8 +263,8 @@ typedef multi_index_container<comment_object,
                                                                        std::greater<time_point_sec>,
                                                                        std::less<comment_id_type>>>
 #endif
-                                  >,
-                              fc::shared_allocator<comment_object>>
+                                  >
+    >
     comment_index;
 
 // clang-format on

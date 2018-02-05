@@ -33,12 +33,11 @@ class hardfork_property_object : public object< hardfork_property_object_type, h
       fc::time_point_sec                                                   next_hardfork_time;
 };
 
-typedef multi_index_container<
+typedef shared_multi_index_container<
    hardfork_property_object,
    indexed_by<
       ordered_unique< member< hardfork_property_object, hardfork_property_object::id_type, &hardfork_property_object::id > >
-   >,
-   fc::shared_allocator< hardfork_property_object >
+   >
 > hardfork_property_index;
 
 } } // namespace scorum::chain

@@ -68,26 +68,24 @@ public:
     uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
-typedef multi_index_container<registration_pool_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<registration_pool_object,
-                                                               registration_pool_id_type,
-                                                               &registration_pool_object::id>>>,
-                              fc::shared_allocator<registration_pool_object>>
+typedef shared_multi_index_container<registration_pool_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<registration_pool_object,
+                                                                      registration_pool_id_type,
+                                                                      &registration_pool_object::id>>>>
     registration_pool_index;
 
 struct by_account_name;
 
-typedef multi_index_container<registration_committee_member_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<registration_committee_member_object,
-                                                               registration_committee_member_id_type,
-                                                               &registration_committee_member_object::id>>,
-                                         ordered_unique<tag<by_account_name>,
-                                                        member<registration_committee_member_object,
-                                                               account_name_type,
-                                                               &registration_committee_member_object::account>>>,
-                              fc::shared_allocator<registration_committee_member_object>>
+typedef shared_multi_index_container<registration_committee_member_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<registration_committee_member_object,
+                                                                      registration_committee_member_id_type,
+                                                                      &registration_committee_member_object::id>>,
+                                                ordered_unique<tag<by_account_name>,
+                                                               member<registration_committee_member_object,
+                                                                      account_name_type,
+                                                                      &registration_committee_member_object::account>>>>
     registration_committee_member_index;
 } // namespace chain
 } // namespace scorum
