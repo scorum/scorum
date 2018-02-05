@@ -38,6 +38,8 @@
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
 
+#include <scorum/cli/formatter.hpp>
+
 #include <iostream>
 #include <memory>
 
@@ -53,15 +55,35 @@ using chain::account_object;
 
 void new_chain_banner(const scorum::chain::database& db)
 {
-    std::cerr << "\n"
-                 "********************************\n"
-                 "*                              *\n"
-                 "*   ------- NEW CHAIN ------   *\n"
-                 "*   -   Welcome to Scorum!  -   *\n"
-                 "*   ------------------------   *\n"
-                 "*                              *\n"
-                 "********************************\n"
-                 "\n";
+    const std::string welcome = "Welcome to Scorum!";
+    const std::string info_ch = "NEW CHAIN";
+    const char space_symbol = ' ';
+    const char border_symbol = '*';
+
+    size_t sz = std::max(welcome.size(), info_ch.size());
+    sz *= 2;
+    cli::formatter p(sz * 2);
+    p.print_raw(std::string(1, space_symbol) + std::string((3 * sz - 1) / 2, border_symbol));
+    p.create_table((sz - 1) / 2, sz + 1, (sz - 1) / 2);
+    p.print_cell(border_symbol);
+    p.print_cell(space_symbol);
+    p.print_cell(border_symbol);
+    p.print_cell(border_symbol);
+    auto old_alignment = p.set_alignment(cli::formatter_alignment::center);
+    p.print_cell(info_ch);
+    old_alignment = p.set_alignment(old_alignment);
+    p.print_cell(border_symbol);
+    p.print_cell(border_symbol);
+    old_alignment = p.set_alignment(old_alignment);
+    p.print_cell(welcome);
+    old_alignment = p.set_alignment(old_alignment);
+    p.print_cell(border_symbol);
+    p.print_cell(border_symbol);
+    p.print_cell(space_symbol);
+    p.print_cell(border_symbol);
+    p.print_endl();
+    p.print_raw(std::string(1, space_symbol) + std::string((3 * sz - 1) / 2, border_symbol));
+    std::cerr << p.str();
     return;
 }
 
