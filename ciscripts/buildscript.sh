@@ -9,7 +9,9 @@ if [[ $IMAGE_NAME == "scorum/blockchain:stable" ]] ; then
 	IMAGE_NAME="scorum/blockchain:latest"
 fi
 
-sudo docker build -t=$IMAGE_NAME .
+sudo docker build --build-arg GIT_BRANCH=$GIT_BRANCH GIT_COMMIT=$GIT_COMMIT AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT AZURE_STORAGE_ACCESS_KEY=$AZURE_STORAGE_ACCESS_KEY \
+AZURE_STORAGE_CONNECTION_STRING=$AZURE_STORAGE_CONNECTION_STRING AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME \
+-t=$IMAGE_NAME .
 #sudo docker login --username=$DOCKER_USER --password=$DOCKER_PASS
 #sudo docker push $IMAGE_NAME
 #sudo docker run -v /var/jenkins_home:/var/jenkins $IMAGE_NAME cp -r /var/cobertura /var/jenkins
