@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/cli/formatter.hpp>
+#include <sstream>
 
 //#define PRINT_OUTPUT
 
@@ -14,6 +15,18 @@ struct printer_tests_fixture
 };
 
 BOOST_FIXTURE_TEST_SUITE(printer_tests, printer_tests_fixture)
+
+BOOST_AUTO_TEST_CASE(check_print_internal_impl)
+{
+    const std::string test_str = "test";
+
+    p.print_raw(test_str, false);
+
+    std::stringstream etalon;
+    etalon << std::left << test_str;
+
+    BOOST_CHECK_EQUAL(p.str(), etalon.str());
+}
 
 BOOST_AUTO_TEST_CASE(check_print_sequence)
 {
@@ -77,7 +90,69 @@ BOOST_AUTO_TEST_CASE(check_print_line)
     std::cout << p.str() << std::endl;
 #endif
 
+    // check size with endline symbol
     BOOST_CHECK_EQUAL(p.str().size(), p.screen_w + 1);
+}
+
+BOOST_AUTO_TEST_CASE(check_print_line_first_char)
+{
+    const std::string test_str = "test";
+
+    BOOST_REQUIRE_LE(test_str.size(), p.screen_w);
+
+    p.print_line(test_str, false);
+
+#ifdef PRINT_OUTPUT
+    std::cout << p.str() << std::endl;
+#endif
+
+    BOOST_CHECK_EQUAL(p.str().size(), p.screen_w);
+    BOOST_CHECK_EQUAL(p.str()[0], test_str[0]);
+    BOOST_CHECK_EQUAL(p.str()[p.screen_w - 1], test_str[0]);
+}
+
+BOOST_AUTO_TEST_CASE(check_alignment_raw)
+{
+    const char fill_symbol = '*';
+    const std::string test_str(p.screen_w / 2, fill_symbol);
+
+    auto old_alignment = p.set_alignment(scorum::cli::formatter_alignment::center);
+
+    BOOST_CHECK_EQUAL((int)old_alignment, (int)scorum::cli::formatter_alignment::left);
+
+    p.print_raw(test_str, false);
+
+#ifdef PRINT_OUTPUT
+    std::cout << p.str() << std::endl;
+#endif
+
+    BOOST_CHECK_EQUAL(p.str()[p.screen_w / 2], fill_symbol);
+    BOOST_CHECK_NE(p.str()[0], fill_symbol);
+
+    p.clear();
+
+    p.set_alignment(old_alignment);
+
+    p.print_raw(test_str, false);
+
+#ifdef PRINT_OUTPUT
+    std::cout << p.str() << std::endl;
+#endif
+
+    BOOST_CHECK_EQUAL(p.str()[0], fill_symbol);
+
+    p.clear();
+
+    p.set_alignment(scorum::cli::formatter_alignment::right);
+
+    p.print_raw(test_str, false);
+
+#ifdef PRINT_OUTPUT
+    std::cout << p.str() << std::endl;
+#endif
+
+    BOOST_CHECK_NE(p.str()[0], fill_symbol);
+    BOOST_CHECK_EQUAL(p.str()[p.screen_w - 1], fill_symbol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
