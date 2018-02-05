@@ -56,10 +56,20 @@ void completion_registry::registry_completions(const completions_incontext_type&
         ctx_id = it->second.id;
     }
     _completions[ctx_id] = completions_incontext_store_type(completions, completions_incontext_type());
+    completions_incontext_store_type& ret = _completions[ctx_id];
+    ret.second.reserve(ret.first.size());
 }
 
 int completion_registry::guess_completion_context(const char* line, const char* text, int start, int end)
 {
+    const char* pline = line;
+    while (*pline && *pline == ' ')
+    {
+        ++pline;
+        --start;
+    }
+    FC_ASSERT(start >= 0);
+
     if (!start)
     {
         return (int)completion_context_id::commands;
@@ -75,7 +85,7 @@ int completion_registry::guess_completion_context(const char* line, const char* 
         if (!ctx.line_regex.empty())
         {
             std::regex reg(ctx.line_regex);
-            if (!std::regex_match(line, reg))
+            if (!std::regex_match(pline, reg))
             {
                 continue;
             }
@@ -110,7 +120,7 @@ bool completion_registry::generate_completions(int context_id, const std::string
     completions_incontext_store_type& ret = it->second;
     const completions_incontext_type& in = ret.first;
     completions_incontext_type& out = ret.second;
-    ;
+    out.clear();
     for (const std::string& item : in)
     {
         std::cmatch m;
