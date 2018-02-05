@@ -31,7 +31,6 @@
 #include <fc/io/stdio.hpp>
 #include <fc/network/http/server.hpp>
 #include <fc/network/http/websocket.hpp>
-#include <fc/rpc/cli.hpp>
 #include <fc/rpc/http_api.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -54,6 +53,8 @@
 #include <fc/log/logger_config.hpp>
 
 #include <sstream>
+
+#include "wallet_app.hpp"
 
 #ifdef WIN32
 #include <signal.h>
@@ -192,7 +193,7 @@ int main(int argc, char** argv)
 
         fc::api<wallet_api> wapi(wapiptr);
 
-        auto wallet_cli = std::make_shared<fc::rpc::cli>();
+        auto wallet_cli = std::make_shared<scorum::wallet_app>();
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
             static const char* prompt = "$";
