@@ -23,8 +23,8 @@ class registration_pool_object : public object<registration_pool_object_type, re
 
 public:
     template <typename Constructor, typename Allocator>
-    registration_pool_object(Constructor&& c, allocator<Allocator> a)
-        : schedule_items(a.get_segment_manager())
+    registration_pool_object(Constructor&& c, fc::shared_allocator<Allocator> a)
+        : schedule_items(a)
     {
         c(*this);
     }
@@ -73,7 +73,7 @@ typedef multi_index_container<registration_pool_object,
                                                         member<registration_pool_object,
                                                                registration_pool_id_type,
                                                                &registration_pool_object::id>>>,
-                              allocator<registration_pool_object>>
+                              fc::shared_allocator<registration_pool_object>>
     registration_pool_index;
 
 struct by_account_name;
@@ -87,7 +87,7 @@ typedef multi_index_container<registration_committee_member_object,
                                                         member<registration_committee_member_object,
                                                                account_name_type,
                                                                &registration_committee_member_object::account>>>,
-                              allocator<registration_committee_member_object>>
+                              fc::shared_allocator<registration_committee_member_object>>
     registration_committee_member_index;
 } // namespace chain
 } // namespace scorum

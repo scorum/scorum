@@ -20,8 +20,8 @@ class operation_object : public object<operation_object_type, operation_object>
 
 public:
     template <typename Constructor, typename Allocator>
-    operation_object(Constructor&& c, allocator<Allocator> a)
-        : serialized_op(a.get_segment_manager())
+    operation_object(Constructor&& c, fc::shared_allocator<Allocator> a)
+        : serialized_op(a)
     {
         c(*this);
     }
@@ -73,7 +73,7 @@ typedef multi_index_container<operation_object,
                                                                              &operation_object::id>>>
 #endif
                                          >,
-                              allocator<operation_object>>
+                              fc::shared_allocator<operation_object>>
     operation_index;
 
 class account_history_object : public object<account_history_object_type, account_history_object>
@@ -104,7 +104,7 @@ typedef multi_index_container<account_history_object,
                                                                              &account_history_object::sequence>>,
                                                         composite_key_compare<std::less<account_name_type>,
                                                                               std::greater<uint32_t>>>>,
-                              allocator<account_history_object>>
+                              fc::shared_allocator<account_history_object>>
     account_history_index;
 }
 }

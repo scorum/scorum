@@ -16,7 +16,6 @@ using namespace boost::multi_index;
 
 using scorum::app::application;
 
-using chainbase::allocator;
 using chainbase::object;
 using chainbase::oid;
 
@@ -241,7 +240,7 @@ typedef multi_index_container<
                                              std::less<bool>,
                                              std::greater<int64_t>,
                                              std::less<tag_id_type>>>>,
-    allocator<tag_object>>
+    fc::shared_allocator<tag_object>>
     tag_index;
 // clang-format on
 
@@ -297,7 +296,7 @@ typedef multi_index_container<
                                          member<tag_stats_object, fc::uint128, &tag_stats_object::total_trending>,
                                          member<tag_stats_object, tag_name_type, &tag_stats_object::tag>>,
                            composite_key_compare<std::greater<fc::uint128>, std::less<tag_name_type>>>>,
-    allocator<tag_stats_object>>
+    fc::shared_allocator<tag_stats_object>>
     tag_stats_index;
 // clang-format on
 
@@ -366,7 +365,7 @@ typedef multi_index_container<
                                             member<peer_stats_object, account_id_type, &peer_stats_object::voter>,
                                             member<peer_stats_object, account_id_type, &peer_stats_object::peer>>,
                               composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>>,
-    allocator<peer_stats_object>>
+    fc::shared_allocator<peer_stats_object>>
     peer_stats_index;
 // clang-format on
 
@@ -395,7 +394,7 @@ struct by_author_tag_rewards;
 struct by_tag_rewards_author;
 
 // clang-format off
-typedef chainbase::shared_multi_index_container<
+typedef fc::shared_multi_index_container<
     author_tag_stats_object,
     indexed_by<
         ordered_unique<tag<by_id>,

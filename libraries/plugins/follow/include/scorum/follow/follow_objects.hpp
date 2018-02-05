@@ -52,8 +52,8 @@ public:
     feed_object() = delete;
 
     template <typename Constructor, typename Allocator>
-    feed_object(Constructor&& c, allocator<Allocator> a)
-        : reblogged_by(a.get_segment_manager())
+    feed_object(Constructor&& c, fc::shared_allocator<Allocator> a)
+        : reblogged_by(a)
     {
         c(*this);
     }
@@ -161,11 +161,11 @@ typedef multi_index_container<follow_object,
                                                                              &follow_object::following>>,
                                                         composite_key_compare<std::less<account_name_type>,
                                                                               std::less<account_name_type>>>>,
-                              allocator<follow_object>>
+                              fc::shared_allocator<follow_object>>
     follow_index;
 
 struct by_blogger_guest_count;
-typedef chainbase::
+typedef fc::
     shared_multi_index_container<blog_author_stats_object,
                                  indexed_by<ordered_unique<tag<by_id>,
                                                            member<blog_author_stats_object,
@@ -235,7 +235,7 @@ typedef multi_index_container<feed_object,
                                                                              &feed_object::account>>,
                                                         composite_key_compare<std::less<comment_id_type>,
                                                                               std::less<account_name_type>>>>,
-                              allocator<feed_object>>
+                              fc::shared_allocator<feed_object>>
     feed_index;
 
 struct by_blog;
@@ -274,7 +274,7 @@ typedef multi_index_container<blog_object,
                                                                              &blog_object::account>>,
                                                         composite_key_compare<std::less<comment_id_type>,
                                                                               std::less<account_name_type>>>>,
-                              allocator<blog_object>>
+                              fc::shared_allocator<blog_object>>
     blog_index;
 
 struct by_reputation;
@@ -298,7 +298,7 @@ typedef multi_index_container<reputation_object,
                                                         member<reputation_object,
                                                                account_name_type,
                                                                &reputation_object::account>>>,
-                              allocator<reputation_object>>
+                              fc::shared_allocator<reputation_object>>
     reputation_index;
 
 struct by_followers;
@@ -333,7 +333,7 @@ typedef multi_index_container<follow_count_object,
                                                                              &follow_count_object::id>>,
                                                         composite_key_compare<std::greater<uint32_t>,
                                                                               std::less<follow_count_id_type>>>>,
-                              allocator<follow_count_object>>
+                              fc::shared_allocator<follow_count_object>>
     follow_count_index;
 }
 } // scorum::follow

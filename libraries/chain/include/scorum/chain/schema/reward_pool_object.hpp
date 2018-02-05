@@ -26,7 +26,7 @@ using reward_pool_index = multi_index_container<reward_pool_object,
                                                                           member<reward_pool_object, 
                                                                                  reward_pool_id_type, 
                                                                                  &reward_pool_object::id>>>,
-                                                allocator<reward_pool_object>>;
+                                                fc::shared_allocator<reward_pool_object>>;
 
 } // namespace chain
 } // namespace scorum

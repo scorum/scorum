@@ -21,7 +21,7 @@ class transaction_object : public object<transaction_object_type, transaction_ob
 
 public:
     template <typename Constructor, typename Allocator>
-    transaction_object(Constructor&& c, allocator<Allocator> a)
+    transaction_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : packed_trx(a)
     {
         c(*this);
@@ -29,7 +29,7 @@ public:
 
     id_type id;
 
-    bip::vector<char, allocator<char>> packed_trx;
+    fc::shared_buffer packed_trx;
     transaction_id_type trx_id;
     time_point_sec expiration;
 };
@@ -49,7 +49,7 @@ typedef multi_index_container<transaction_object,
                                                             member<transaction_object,
                                                                    time_point_sec,
                                                                    &transaction_object::expiration>>>,
-                              allocator<transaction_object>>
+                              fc::shared_allocator<transaction_object>>
     transaction_index;
 }
 } // scorum::chain

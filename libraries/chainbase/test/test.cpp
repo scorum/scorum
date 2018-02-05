@@ -30,7 +30,7 @@ typedef multi_index_container<book,
                               indexed_by<ordered_unique<member<book, book::id_type, &book::id>>,
                                          ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, a)>,
                                          ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, b)>>,
-                              chainbase::allocator<book>>
+                              fc::shared_allocator<book>>
     book_index;
 
 CHAINBASE_SET_INDEX_TYPE(book, book_index)
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
     }
     catch (...)
     {
-        chainbase::bfs::remove_all(temp);
+        boost::filesystem::remove_all(temp);
         throw;
     }
 }

@@ -44,7 +44,7 @@ typedef multi_index_container<proposal_object,
                                                             member<proposal_object,
                                                                    fc::time_point_sec,
                                                                    &proposal_object::created>>>,
-                              allocator<proposal_object>>
+                              fc::shared_allocator<proposal_object>>
     proposal_object_index;
 // clang-format on
 

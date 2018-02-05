@@ -29,7 +29,7 @@ typedef multi_index_container<block_summary_object,
                                                         member<block_summary_object,
                                                                block_summary_object::id_type,
                                                                &block_summary_object::id>>>,
-                              allocator<block_summary_object>>
+                              fc::shared_allocator<block_summary_object>>
     block_summary_index;
 }
 } // scorum::chain

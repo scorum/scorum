@@ -1,27 +1,13 @@
 #pragma once
 
-#include <boost/interprocess/managed_mapped_file.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-
-#include <boost/interprocess/containers/map.hpp>
-#include <boost/interprocess/containers/set.hpp>
-#include <boost/interprocess/containers/deque.hpp>
-
-#include <boost/multi_index_container.hpp>
-
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+
+#include <fc/shared_containers.hpp>
 
 #include <chainbase/undo_session.hpp>
 
 namespace chainbase {
-
-namespace bip = boost::interprocess;
-
-template <typename T> using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
-
-template <typename Object, typename... Args>
-using shared_multi_index_container = boost::multi_index_container<Object, Args..., allocator<Object>>;
 
 /**
 *  The value_type stored in the multiindex container must have a integer field with the name 'id'.  This will
@@ -35,7 +21,7 @@ public:
     using value_type = typename MultiIndexType::value_type;
     using allocator_type = typename MultiIndexType::allocator_type;
 
-    base_index(const allocator<value_type>& a)
+    base_index(const fc::shared_allocator<value_type>& a)
         : _indices(a)
         , _size_of_value_type(sizeof(typename MultiIndexType::node_type))
         , _size_of_this(sizeof(*this))
@@ -134,7 +120,6 @@ template <typename MultiIndexType>
 class generic_index : public abstract_generic_index_i, public base_index<MultiIndexType>
 {
 public:
-    using allocator_type = allocator<generic_index>;
     using value_type = typename MultiIndexType::value_type;
     using base_index_type = base_index<MultiIndexType>;
 
@@ -144,18 +129,14 @@ private:
     {
     public:
         using id_type = typename value_type::id_type;
-        using id_value_allocator_type = allocator<std::pair<const id_type, value_type>>;
-        using id_allocator_type = allocator<id_type>;
-
-        using id_type_set = boost::interprocess::set<id_type, std::less<id_type>, id_allocator_type>;
-        using id_value_type_map
-            = boost::interprocess::map<id_type, value_type, std::less<id_type>, id_value_allocator_type>;
+        using id_type_set = fc::shared_set<id_type>;
+        using id_value_type_map = fc::shared_map<id_type, value_type>;
 
         template <typename T>
-        undo_state(const allocator<T>& al)
-            : old_values(id_value_allocator_type(al.get_segment_manager()))
-            , removed_values(id_value_allocator_type(al.get_segment_manager()))
-            , new_ids(id_allocator_type(al.get_segment_manager()))
+        undo_state(const fc::shared_allocator<T>& al)
+            : old_values(al)
+            , removed_values(al)
+            , new_ids(al)
         {
         }
 
@@ -167,7 +148,7 @@ private:
     };
 
 public:
-    generic_index(const allocator<value_type>& a)
+    generic_index(const fc::shared_allocator<value_type>& a)
         : base_index_type(a)
         , _stack(a)
     {
@@ -456,7 +437,7 @@ private:
     */
     int64_t _revision = 0;
 
-    boost::interprocess::deque<undo_state, allocator<undo_state>> _stack;
+    fc::shared_deque<undo_state> _stack;
 };
 
 /** this class is meant to be specified to enable lookup of index type by object type using

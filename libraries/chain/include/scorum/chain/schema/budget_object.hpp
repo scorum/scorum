@@ -24,7 +24,7 @@ class budget_object : public object<budget_object_type, budget_object>
 
 public:
     template <typename Constructor, typename Allocator>
-    budget_object(Constructor&& c, allocator<Allocator> a)
+    budget_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : content_permlink(a)
     {
         c(*this);
@@ -53,7 +53,7 @@ typedef multi_index_container<budget_object,
                                                             member<budget_object,
                                                                    account_name_type,
                                                                    &budget_object::owner>>>,
-                              allocator<budget_object>>
+                              fc::shared_allocator<budget_object>>
     budget_index;
 } // namespace chain
 } // namespace scorum

@@ -25,7 +25,7 @@ class account_object : public object<account_object_type, account_object>
 
 public:
     template <typename Constructor, typename Allocator>
-    account_object(Constructor&& c, allocator<Allocator> a)
+    account_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : json_metadata(a)
     {
         c(*this);
@@ -103,7 +103,7 @@ class account_authority_object : public object<account_authority_object_type, ac
 
 public:
     template <typename Constructor, typename Allocator>
-    account_authority_object(Constructor&& c, allocator<Allocator> a)
+    account_authority_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : owner(a)
         , active(a)
         , posting(a)
@@ -153,8 +153,8 @@ class owner_authority_history_object
 
 public:
     template <typename Constructor, typename Allocator>
-    owner_authority_history_object(Constructor&& c, allocator<Allocator> a)
-        : previous_owner_authority(shared_authority::allocator_type(a.get_segment_manager()))
+    owner_authority_history_object(Constructor&& c, fc::shared_allocator<Allocator> a)
+        : previous_owner_authority(a)
     {
         c(*this);
     }
@@ -173,8 +173,8 @@ class account_recovery_request_object
 
 public:
     template <typename Constructor, typename Allocator>
-    account_recovery_request_object(Constructor&& c, allocator<Allocator> a)
-        : new_owner_authority(shared_authority::allocator_type(a.get_segment_manager()))
+    account_recovery_request_object(Constructor&& c, fc::shared_allocator<Allocator> a)
+        : new_owner_authority(a)
     {
         c(*this);
     }
@@ -293,7 +293,7 @@ typedef multi_index_container<account_object,
                                                                              &account_object::id>>,
                                                         composite_key_compare<std::greater<uint32_t>,
                                                                               std::less<account_id_type>>>>,
-                              allocator<account_object>>
+                              fc::shared_allocator<account_object>>
     account_index;
 
 struct by_account;
@@ -320,7 +320,7 @@ typedef multi_index_container<owner_authority_history_object,
                                                                               std::less<time_point_sec>,
                                                                               std::
                                                                                   less<owner_authority_history_id_type>>>>,
-                              allocator<owner_authority_history_object>>
+                              fc::shared_allocator<owner_authority_history_object>>
     owner_authority_history_index;
 
 struct by_last_owner_update;
@@ -351,7 +351,7 @@ typedef multi_index_container<account_authority_object,
                                                                              &account_authority_object::id>>,
                                                         composite_key_compare<std::greater<time_point_sec>,
                                                                               std::less<account_authority_id_type>>>>,
-                              allocator<account_authority_object>>
+                              fc::shared_allocator<account_authority_object>>
     account_authority_index;
 
 struct by_delegation;
@@ -371,7 +371,7 @@ typedef multi_index_container<vesting_delegation_object,
                                                                              &vesting_delegation_object::delegatee>>,
                                                         composite_key_compare<std::less<account_name_type>,
                                                                               std::less<account_name_type>>>>,
-                              allocator<vesting_delegation_object>>
+                              fc::shared_allocator<vesting_delegation_object>>
     vesting_delegation_index;
 
 struct by_expiration;
@@ -413,7 +413,7 @@ typedef multi_index_container<vesting_delegation_expiration_object,
                                                                               std::less<time_point_sec>,
                                                                               std::
                                                                                   less<vesting_delegation_expiration_id_type>>>>,
-                              allocator<vesting_delegation_expiration_object>>
+                              fc::shared_allocator<vesting_delegation_expiration_object>>
     vesting_delegation_expiration_index;
 
 struct by_expiration;
@@ -446,7 +446,7 @@ typedef multi_index_container<account_recovery_request_object,
                                                         composite_key_compare<std::less<time_point_sec>,
                                                                               std::
                                                                                   less<account_recovery_request_id_type>>>>,
-                              allocator<account_recovery_request_object>>
+                              fc::shared_allocator<account_recovery_request_object>>
     account_recovery_request_index;
 
 struct by_effective_date;
@@ -482,7 +482,7 @@ typedef multi_index_container<change_recovery_account_request_object,
                                                         composite_key_compare<std::less<time_point_sec>,
                                                                               std::
                                                                                   less<change_recovery_account_request_id_type>>>>,
-                              allocator<change_recovery_account_request_object>>
+                              fc::shared_allocator<change_recovery_account_request_object>>
     change_recovery_account_request_index;
 } // namespace chain
 } // namespace scorum

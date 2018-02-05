@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fc/shared_string.hpp>
+#include <fc/shared_buffer.hpp>
 
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -23,7 +24,7 @@ class comment_object : public object<comment_object_type, comment_object>
 
 public:
     template <typename Constructor, typename Allocator>
-    comment_object(Constructor&& c, allocator<Allocator> a)
+    comment_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : category(a)
         , parent_permlink(a)
         , permlink(a)
@@ -86,7 +87,7 @@ public:
     bool allow_votes = true; /// allows a post to receive votes;
     bool allow_curation_rewards = true;
 
-    bip::vector<beneficiary_route_type, allocator<beneficiary_route_type>> beneficiaries;
+    fc::shared_vector<beneficiary_route_type> beneficiaries;
 };
 
 /**
@@ -165,7 +166,7 @@ typedef multi_index_container<comment_vote_object,
                                                         composite_key_compare<std::less<comment_id_type>,
                                                                               std::greater<uint64_t>,
                                                                               std::less<account_id_type>>>>,
-                              allocator<comment_vote_object>>
+                              fc::shared_allocator<comment_vote_object>>
     comment_vote_index;
 
 struct by_cashout_time; /// cashout_time
@@ -263,7 +264,7 @@ typedef multi_index_container<comment_object,
                                                                        std::less<comment_id_type>>>
 #endif
                                   >,
-                              allocator<comment_object>>
+                              fc::shared_allocator<comment_object>>
     comment_index;
 
 // clang-format on

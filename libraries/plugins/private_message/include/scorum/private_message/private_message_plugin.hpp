@@ -75,7 +75,7 @@ class message_object : public object<message_object_type, message_object>
 {
 public:
     template <typename Constructor, typename Allocator>
-    message_object(Constructor&& c, allocator<Allocator> a)
+    message_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : encrypted_message(a)
     {
         c(*this);
@@ -174,7 +174,7 @@ typedef multi_index_container<message_object,
                                                         composite_key_compare<std::less<std::string>,
                                                                               std::greater<time_point_sec>,
                                                                               std::less<message_id_type>>>>,
-                              allocator<message_object>>
+                              fc::shared_allocator<message_object>>
     message_index;
 
 /**

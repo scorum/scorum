@@ -21,7 +21,7 @@ typedef multi_index_container<chain_property_object,
                                                         member<chain_property_object,
                                                                chain_property_object::id_type,
                                                                &chain_property_object::id>>>,
-                              allocator<chain_property_object>>
+                              fc::shared_allocator<chain_property_object>>
     chain_property_index;
 
 } // namespace chain

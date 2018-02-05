@@ -35,7 +35,7 @@ public:
     };
 
     template <typename Constructor, typename Allocator>
-    witness_object(Constructor&& c, allocator<Allocator> a)
+    witness_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : url(a)
     {
         c(*this);
@@ -157,7 +157,7 @@ typedef multi_index_container<witness_object,
                                                                       member<witness_object,
                                                                              witness_id_type,
                                                                              &witness_object::id>>>>,
-                              allocator<witness_object>>
+                              fc::shared_allocator<witness_object>>
     witness_index;
 
 struct by_account_witness;
@@ -188,7 +188,7 @@ typedef multi_index_container<witness_vote_object,
                                                         composite_key_compare<std::less<witness_id_type>,
                                                                               std::
                                                                                   less<account_id_type>>>>, // indexed_by
-                              allocator<witness_vote_object>>
+                              fc::shared_allocator<witness_vote_object>>
     witness_vote_index;
 
 typedef multi_index_container<witness_schedule_object,
@@ -196,7 +196,7 @@ typedef multi_index_container<witness_schedule_object,
                                                         member<witness_schedule_object,
                                                                witness_schedule_id_type,
                                                                &witness_schedule_object::id>>>,
-                              allocator<witness_schedule_object>>
+                              fc::shared_allocator<witness_schedule_object>>
     witness_schedule_index;
 } // namespace chain
 } // namespace scorum

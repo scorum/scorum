@@ -120,7 +120,7 @@ typedef multi_index_container<withdraw_vesting_route_object,
                                                                       member<withdraw_vesting_route_object,
                                                                              withdraw_vesting_route_id_type,
                                                                              &withdraw_vesting_route_object::id>>>>,
-                              allocator<withdraw_vesting_route_object>>
+                              fc::shared_allocator<withdraw_vesting_route_object>>
     withdraw_vesting_route_index;
 
 struct by_from_id;
@@ -168,7 +168,7 @@ typedef multi_index_container<escrow_object,
                                                         composite_key_compare<std::less<bool>,
                                                                               std::less<time_point_sec>,
                                                                               std::less<escrow_id_type>>>>,
-                              allocator<escrow_object>>
+                              fc::shared_allocator<escrow_object>>
     escrow_index;
 
 struct by_account;
@@ -194,7 +194,7 @@ typedef multi_index_container<decline_voting_rights_request_object,
                                                                                  account>>,
                                                         composite_key_compare<std::less<time_point_sec>,
                                                                               std::less<account_id_type>>>>,
-                              allocator<decline_voting_rights_request_object>>
+                              fc::shared_allocator<decline_voting_rights_request_object>>
     decline_voting_rights_request_index;
 
 struct by_name;
@@ -203,7 +203,7 @@ typedef multi_index_container<reward_fund_object,
                                                         member<reward_fund_object,
                                                                reward_fund_id_type,
                                                                &reward_fund_object::id>>>,
-                              allocator<reward_fund_object>>
+                              fc::shared_allocator<reward_fund_object>>
     reward_fund_index;
 // clang-format on
 

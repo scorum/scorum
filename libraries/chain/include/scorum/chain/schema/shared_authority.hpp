@@ -1,6 +1,6 @@
 #pragma once
 #include <scorum/protocol/authority.hpp>
-#include <boost/interprocess/managed_mapped_file.hpp>
+#include <fc/shared_containers.hpp>
 
 namespace scorum {
 namespace chain {
@@ -9,10 +9,8 @@ using scorum::protocol::public_key_type;
 using scorum::protocol::account_name_type;
 using scorum::protocol::weight_type;
 
-namespace bip = boost::interprocess;
-
 /**
- *  The purpose of this class is to represent an authority object in a manner compatiable with
+ *  The purpose of this class is to represent an authority object in a manner compatible with
  *  shared memory storage.  This requires all dynamic fields to be allocated with the same allocator
  *  that allocated the shared_authority.
  */
@@ -24,8 +22,8 @@ private:
 public:
     template <typename Allocator>
     shared_authority(const authority& a, const Allocator& alloc)
-        : account_auths(account_pair_allocator_type(alloc.get_segment_manager()))
-        , key_auths(key_pair_allocator_type(alloc.get_segment_manager()))
+        : account_auths(alloc)
+        , key_auths(alloc)
     {
         account_auths.reserve(a.account_auths.size());
         key_auths.reserve(a.key_auths.size());
@@ -45,16 +43,16 @@ public:
 
     template <typename Allocator>
     shared_authority(const Allocator& alloc)
-        : account_auths(account_pair_allocator_type(alloc.get_segment_manager()))
-        , key_auths(key_pair_allocator_type(alloc.get_segment_manager()))
+        : account_auths(alloc)
+        , key_auths(alloc)
     {
     }
 
     template <typename Allocator, class... Args>
     shared_authority(const Allocator& alloc, uint32_t weight_threshold, Args... auths)
         : weight_threshold(weight_threshold)
-        , account_auths(account_pair_allocator_type(alloc.get_segment_manager()))
-        , key_auths(key_pair_allocator_type(alloc.get_segment_manager()))
+        , account_auths(alloc)
+        , key_auths(alloc)
     {
         add_authorities(auths...);
     }
@@ -84,17 +82,8 @@ public:
     void clear();
     void validate() const;
 
-    typedef bip::allocator<shared_authority, bip::managed_mapped_file::segment_manager> allocator_type;
-
-    typedef bip::allocator<std::pair<account_name_type, weight_type>, bip::managed_mapped_file::segment_manager>
-        account_pair_allocator_type;
-    typedef bip::allocator<std::pair<public_key_type, weight_type>, bip::managed_mapped_file::segment_manager>
-        key_pair_allocator_type;
-
-    typedef bip::flat_map<account_name_type, weight_type, std::less<account_name_type>, account_pair_allocator_type>
-        account_authority_map;
-    typedef bip::flat_map<public_key_type, weight_type, std::less<public_key_type>, key_pair_allocator_type>
-        key_authority_map;
+    typedef fc::shared_flat_map<account_name_type, weight_type> account_authority_map;
+    typedef fc::shared_flat_map<public_key_type, weight_type> key_authority_map;
 
     uint32_t weight_threshold = 0;
     account_authority_map account_auths;

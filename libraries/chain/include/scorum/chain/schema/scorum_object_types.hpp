@@ -15,12 +15,10 @@
 namespace scorum {
 namespace chain {
 
-namespace bip = chainbase::bip;
 using namespace boost::multi_index;
 
 using boost::multi_index_container;
 
-using chainbase::allocator;
 using chainbase::object;
 using chainbase::oid;
 

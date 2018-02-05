@@ -33,7 +33,7 @@ class atomicswap_contract_object : public object<atomicswap_contract_object_type
 
 public:
     template <typename Constructor, typename Allocator>
-    atomicswap_contract_object(Constructor&& c, allocator<Allocator> a)
+    atomicswap_contract_object(Constructor&& c, fc::shared_allocator<Allocator> a)
         : metadata(a)
         , secret_hash(a)
         , secret(a)
@@ -81,7 +81,7 @@ typedef multi_index_container<atomicswap_contract_object,
                                                         member<atomicswap_contract_object,
                                                                hash_index_type,
                                                                &atomicswap_contract_object::contract_hash>>>,
-                              allocator<atomicswap_contract_object>>
+                              fc::shared_allocator<atomicswap_contract_object>>
     atomicswap_contract_index;
 }
 }

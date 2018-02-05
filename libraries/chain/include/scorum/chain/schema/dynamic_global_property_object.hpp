@@ -86,7 +86,7 @@ typedef multi_index_container<dynamic_global_property_object,
                                                         member<dynamic_global_property_object,
                                                                dynamic_global_property_object::id_type,
                                                                &dynamic_global_property_object::id>>>,
-                              allocator<dynamic_global_property_object>>
+                              fc::shared_allocator<dynamic_global_property_object>>
     dynamic_global_property_index;
 } // namespace chain
 } // namespace scorum
