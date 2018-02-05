@@ -283,22 +283,26 @@ SCORUM_TEST_CASE(proposal)
 
     {
         actor(alice).vote_for(joe_invitation);
+        actor(jim).vote_for(joe_invitation);
         BOOST_CHECK_EQUAL(3u, get_committee_members().size());
         BOOST_CHECK_EQUAL(true, is_committee_member(joe));
     }
 
     {
         actor(alice).vote_for(hue_invitation);
+        actor(jim).vote_for(hue_invitation);
         BOOST_CHECK_EQUAL(4u, get_committee_members().size());
         BOOST_CHECK_EQUAL(true, is_committee_member(hue));
     }
 
     {
         actor(alice).vote_for(liz_invitation);
+        actor(joe).vote_for(liz_invitation);
 
         // not enough votes to add liz
         BOOST_CHECK_EQUAL(4u, get_committee_members().size());
 
+        // needs 3 votes to add liz
         actor(jim).vote_for(liz_invitation);
         BOOST_CHECK_EQUAL(5u, get_committee_members().size());
     }
@@ -332,10 +336,24 @@ SCORUM_TEST_CASE(proposal)
         // three votes is enoght to dropout joe
         BOOST_CHECK_EQUAL(false, is_committee_member(joe));
 
+        // We droped one member, amount of needed votes reduced but not enough to 'drop_hue' executed automatically
+        BOOST_CHECK_EQUAL(true, is_committee_member(hue));
+
+        BOOST_CHECK_EQUAL(4u, get_committee_members().size());
+
+        // Lets drop out one more committee member
+        auto drop_liz = actor(alice).dropout_from_committee(liz);
+        actor(alice).vote_for(drop_liz);
+        actor(jim).vote_for(drop_liz);
+        actor(hue).vote_for(drop_liz);
+
+        // three votes is enoght to dropout liz
+        BOOST_CHECK_EQUAL(false, is_committee_member(liz));
+
         // We droped one member, amount of needed votes reduced and 'drop_hue' executed automatically
         BOOST_CHECK_EQUAL(false, is_committee_member(hue));
 
-        BOOST_CHECK_EQUAL(3u, get_committee_members().size());
+        BOOST_CHECK_EQUAL(2u, get_committee_members().size());
     }
 
     // check that member removed from voted_accounts after committee member removing
@@ -357,12 +375,15 @@ SCORUM_TEST_CASE(proposal)
     {
         auto proposal = actor(alice).change_invite_quorum(50);
         actor(alice).vote_for(proposal);
+        actor(jim).vote_for(proposal);
 
         proposal = actor(alice).change_dropout_quorum(51);
         actor(alice).vote_for(proposal);
+        actor(jim).vote_for(proposal);
 
         proposal = actor(alice).change_quorum(100);
         actor(alice).vote_for(proposal);
+        actor(jim).vote_for(proposal);
 
         BOOST_CHECK_EQUAL(50u, get_invite_quorum());
         BOOST_CHECK_EQUAL(51u, get_dropout_quorum());
