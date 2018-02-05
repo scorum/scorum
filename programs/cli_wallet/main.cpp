@@ -45,6 +45,7 @@
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/chain/genesis_state.hpp>
 #include <scorum/egenesis/egenesis.hpp>
+#include <scorum/cli/formatter.hpp>
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
@@ -194,12 +195,11 @@ int main(int argc, char** argv)
         auto wallet_cli = std::make_shared<wallet_app>();
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
-            static const char* prompt = "$";
-            std::stringstream out;
-            if (!state.empty())
-                out << "(" << state << ") ";
-            out << prompt << " ";
-            return out.str();
+            static const char* prompt = "<$> ";
+            cli::formatter p(14);
+            p.set_alignment(cli::formatter_alignment::center);
+            p.print_field(state, prompt, false);
+            return p.str();
         };
 
         for (auto& name_formatter : wapiptr->get_result_formatters())

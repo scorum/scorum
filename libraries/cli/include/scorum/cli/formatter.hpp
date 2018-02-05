@@ -11,6 +11,13 @@ namespace cli {
 
 #define DEFAULT_SCREEN_W 100
 
+enum class formatter_alignment
+{
+    left = 0,
+    center,
+    right,
+};
+
 class formatter
 {
 public:
@@ -31,6 +38,18 @@ public:
     void clear();
 
     std::string str() const;
+
+    formatter_alignment set_alignment(formatter_alignment alignment)
+    {
+        auto old_alignment = _alignment;
+        _alignment = alignment;
+        return old_alignment;
+    }
+
+    formatter_alignment alignment() const
+    {
+        return _alignment;
+    }
 
     template <typename T, typename... Types> void print_sequence(const T& val, const Types&... vals) const
     {
@@ -64,17 +83,49 @@ public:
             print_endl();
     }
 
-    template <typename T> void print_field(const std::string& field_name, const T& field_val) const
+    template <typename FN, typename T>
+    void print_field(const FN& field_name, const T& field_val, bool end_line = true) const
     {
         print_raw(field_name, false);
-        size_t out_w = screen_w - field_name.size();
-        _out << std::right << std::setw(out_w) << field_val;
-        print_endl();
+        std::stringstream fn;
+        fn << field_name;
+        size_t out_w = screen_w - fn.str().size();
+        std::stringstream fv;
+        fv << field_val;
+        if (fv.str().size() < out_w)
+        {
+            _out << std::right << std::setw(out_w) << field_val;
+        }
+        else
+        {
+            print_endl();
+            _out << std::left << field_val;
+        }
+        if (end_line)
+            print_endl();
     }
 
-    void print_field(const std::string& field_name, const std::string& field_val) const;
+    template <typename T> void print_line(const T& symbol, bool end_line = true) const
+    {
+        std::stringstream first_symbol;
+        first_symbol << symbol;
+        char s = line_symbol;
+        if (first_symbol.str().size() > 0)
+            s = first_symbol.str()[0];
+        _out << std::left << std::string(screen_w, s);
+        if (end_line)
+            print_endl();
+    }
 
-    void print_line(const char symbol = '-', bool end_line = true) const;
+    void print_line(bool end_line) const
+    {
+        print_line(wrap_symbol, end_line);
+    }
+
+    void print_line() const
+    {
+        print_line(wrap_symbol);
+    }
 
     template <typename T> void print_cell(const T& val, size_t w, size_t cell_count) const
     {
@@ -271,8 +322,10 @@ private:
 public:
     const size_t screen_w;
     const char* wrap_symbol = "> ";
+    const char line_symbol = '-';
 
 private:
+    formatter_alignment _alignment = formatter_alignment::left;
     stringstream_type _own_out;
     std::stringstream& _out;
     mutable stringstream_type _sequence_ctx;
