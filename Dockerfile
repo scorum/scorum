@@ -34,6 +34,7 @@ RUN \
             python3-dev \
             python3-jinja2 \
             python3-pip \
+            python-pip \
             nginx \
             fcgiwrap \
             s3cmd \
@@ -45,7 +46,7 @@ RUN \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
         pip3 install gcovr && \
-        pip3 install azure-cli
+        pip install azure-cli
 
 ADD . /usr/local/src/scorum
 
