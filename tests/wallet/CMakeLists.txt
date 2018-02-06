@@ -1,7 +1,6 @@
 set( SOURCES
   main.cpp
   keys_tests.cpp
-  print_tests.cpp
 )
 
 set( HEADERS

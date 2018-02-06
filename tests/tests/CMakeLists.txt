@@ -1,12 +1,9 @@
 set( SOURCES
     main.cpp
     block_tests.cpp
-    proposal_vote_operation_tests.cpp
     operation_tests.cpp
     serialization_tests.cpp
-    genesis_tests.cpp
     escrow_transfer_operation_tests.cpp
-    basic_tests.cpp
     account_data_service_tests.cpp
     live_tests.cpp
     operation_time_tests.cpp
@@ -17,14 +14,12 @@ set( SOURCES
     registration_check/registration_check_common.cpp
     registration_check/committee_operations.cpp
     registration_check/pool_service.cpp
-    proposal/proposal_create_evaluator_tests.cpp
-    proposal/proposal_tests.cpp
     atomicswap_check/atomicswap_service.cpp
     atomicswap_check/atomicswap_operations.cpp
-    atomicswap_check/atomicswap_helper_check.cpp
     budget_check/budget_service.cpp
     budget_check/fund_budget.cpp
     budget_check/budget_operations.cpp
+    proposal/proposal_tests.cpp
 )
 
 set( HEADERS

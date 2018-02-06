@@ -3,9 +3,7 @@
 #include <scorum/cli/formatter.hpp>
 #include <sstream>
 
-//#define PRINT_OUTPUT
-
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
 #include <iostream>
 #endif
 
@@ -34,7 +32,7 @@ BOOST_AUTO_TEST_CASE(check_print_sequence)
 {
     p.print_sequence(1, 2, 3, '4', "56");
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -51,7 +49,7 @@ BOOST_AUTO_TEST_CASE(check_print_clear)
     p.print_raw("Atyyy38432749423323");
     p.print_field("Name: ", "Andrew");
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -66,7 +64,7 @@ BOOST_AUTO_TEST_CASE(check_print_field)
 {
     p.print_field("Name: ", "Andrew");
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -77,7 +75,7 @@ BOOST_AUTO_TEST_CASE(check_print_field)
 
     p.print_field("Score: ", 100);
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -88,7 +86,7 @@ BOOST_AUTO_TEST_CASE(check_print_line)
 {
     p.print_line('=');
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -104,7 +102,7 @@ BOOST_AUTO_TEST_CASE(check_print_line_first_char)
 
     p.print_line(test_str, false);
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -123,7 +121,7 @@ BOOST_AUTO_TEST_CASE(check_alignment_raw)
 
     p.print_raw(test_str, false);
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -136,7 +134,7 @@ BOOST_AUTO_TEST_CASE(check_alignment_raw)
 
     p.print_raw(test_str, false);
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -148,7 +146,7 @@ BOOST_AUTO_TEST_CASE(check_alignment_raw)
 
     p.print_raw(test_str, false);
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -205,7 +203,7 @@ BOOST_AUTO_TEST_CASE(check_print_cell)
 
     print();
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -219,7 +217,7 @@ BOOST_AUTO_TEST_CASE(check_print_cell)
     print_cell(3);
     print_cell(4);
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -233,7 +231,7 @@ BOOST_AUTO_TEST_CASE(check_print_cell)
     print_cell(3);
     print_cell(4, std::string(ws[0] - 2, fill_char));
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -250,7 +248,7 @@ BOOST_AUTO_TEST_CASE(check_print_cell_wrap)
         print_cell(ci, std::string(ws[ci], fill_char));
     }
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -296,7 +294,7 @@ BOOST_AUTO_TEST_CASE(check_print_table)
 
     print_table();
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -317,7 +315,7 @@ BOOST_AUTO_TEST_CASE(check_print_table_with_cells)
 
     print();
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -339,7 +337,7 @@ BOOST_AUTO_TEST_CASE(check_align_table)
     p.print_cell(std::string(ws[3] / 2, fill_char));
     p.print_cell(std::string(ws[4] / 2, fill_char));
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -357,7 +355,7 @@ BOOST_AUTO_TEST_CASE(check_align_table)
     p.print_cell(std::string(ws[3] / 2, fill_char));
     p.print_cell(std::string(ws[4] / 2, fill_char));
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
@@ -375,7 +373,7 @@ BOOST_AUTO_TEST_CASE(check_align_table)
     p.print_cell(std::string(ws[3] / 2, fill_char));
     p.print_cell(std::string(ws[4] / 2, fill_char));
 
-#ifdef PRINT_OUTPUT
+#ifdef PRINT_TEST_CLI_OUTPUT
     std::cout << p.str() << std::endl;
 #endif
 
