@@ -27,7 +27,7 @@ private:
         if (_accounts.find(a.name) == _accounts.end())
         {
             _accounts.insert(std::make_pair(a.name, a));
-            genesis_state.accounts.push_back({ a.name, "", a.public_key, a.scr_amount, a.sp_amount });
+            genesis_state.accounts.push_back({ a.name, "", a.public_key, a.scr_amount });
         }
     }
 

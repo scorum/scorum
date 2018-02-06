@@ -17,8 +17,7 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
                                             "name":"user",
                                             "recovery_account":"admin",
                                             "public_key":"SCR1111111111111111111111111111111114T1Anm",
-                                            "scr_amount":"0.000001000 SCR",
-                                            "sp_amount":"1.000000000 SP"
+                                            "scr_amount":"0.000001000 SCR"
                                         }]
                                     }
                                     )json";
@@ -32,7 +31,6 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
     BOOST_CHECK(account.name == "user");
     BOOST_CHECK(account.public_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
     BOOST_CHECK(account.scr_amount == sp::asset(1000, SCORUM_SYMBOL));
-    BOOST_CHECK(account.sp_amount == sp::asset(1000000000, VESTS_SYMBOL));
     BOOST_CHECK(account.recovery_account == "admin");
 }
 
@@ -42,7 +40,7 @@ BOOST_AUTO_TEST_CASE(check_witness_fields)
                                     {
                                         "witness_candidates":[
                                         {
-                                            "owner_name":"user",
+                                            "name":"user",
                                             "block_signing_key":"SCR1111111111111111111111111111111114T1Anm"
                                         }]
                                     }
@@ -54,7 +52,7 @@ BOOST_AUTO_TEST_CASE(check_witness_fields)
 
     sc::genesis_state_type::witness_type w = genesis_state.witness_candidates.front();
 
-    BOOST_CHECK(w.owner_name == "user");
+    BOOST_CHECK(w.name == "user");
     BOOST_CHECK(w.block_signing_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
 }
 

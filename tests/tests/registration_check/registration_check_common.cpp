@@ -22,8 +22,7 @@ genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedu
     {
         fc::ecc::private_key private_key = database_fixture::generate_private_key(member);
         committee_private_keys.insert(committee_private_keys_type::value_type(member, private_key));
-        genesis_state.accounts.push_back(
-            { member, "", private_key.get_public_key(), asset(0, SCORUM_SYMBOL), asset(0, SCORUM_SYMBOL) });
+        genesis_state.accounts.push_back({ member, "", private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
     }
 
     schedule_input.clear();

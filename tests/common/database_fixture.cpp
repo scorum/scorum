@@ -30,8 +30,8 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
         = private_key_type::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
-    genesis_state.accounts.push_back({ TEST_INIT_DELEGATE_NAME, "null", init_public_key,
-                                       genesis_state.init_accounts_supply, asset(0, VESTS_SYMBOL) });
+    genesis_state.accounts.push_back(
+        { TEST_INIT_DELEGATE_NAME, "null", init_public_key, genesis_state.init_accounts_supply });
 
     genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_public_key });
 }

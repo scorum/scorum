@@ -99,10 +99,10 @@ void db_genesis::init_witnesses()
 {
     for (auto& witness : _genesis_state.witness_candidates)
     {
-        FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
+        FC_ASSERT(!witness.name.empty(), "Witness 'name' should not be empty.");
 
         _db.create<witness_object>([&](witness_object& w) {
-            w.owner = witness.owner_name;
+            w.owner = witness.name;
             w.signing_key = witness.block_signing_key;
             w.schedule = witness_object::top20;
             w.hardfork_time_vote = _db.get_genesis_time();
@@ -117,7 +117,7 @@ void db_genesis::init_witness_schedule()
     _db.create<witness_schedule_object>([&](witness_schedule_object& wso) {
         for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
         {
-            wso.current_shuffled_witnesses[i] = witness_candidates[i].owner_name;
+            wso.current_shuffled_witnesses[i] = witness_candidates[i].name;
         }
     });
 }
