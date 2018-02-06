@@ -337,14 +337,13 @@ private:
         switch (_alignment)
         {
         case formatter_alignment::left:
+        case formatter_alignment::center:
             _out << std::left;
             break;
         case formatter_alignment::right:
             _out << std::right;
             break;
-        default:
-            // formatter_alignment::center
-            ;
+        default:;
         }
 
         if (!out_w)
