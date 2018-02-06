@@ -195,10 +195,14 @@ int main(int argc, char** argv)
         auto wallet_cli = std::make_shared<wallet_app>();
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
-            static const char* prompt = "<$> ";
-            cli::formatter p(14);
-            p.set_alignment(cli::formatter_alignment::center);
-            p.print_field(state, prompt, false);
+            static const char* prompt = "~$ ";
+            static const size_t state_max_size = 8;
+            static const size_t prompt_size = 4;
+            cli::formatter p(state_max_size + prompt_size);
+            p.set_alignment(cli::formatter_alignment::right);
+            p.print_cell(state, state_max_size, 2);
+            p.set_alignment(cli::formatter_alignment::right);
+            p.print_cell(prompt, prompt_size, 2);
             return p.str();
         };
 
