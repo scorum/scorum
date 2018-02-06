@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$AZURE_UPLOAD" = true ]; then
-  ARCHIVE_NAME=scorum_$(echo $GIT_BRANCH | cut -d '/' -f 2)_${GIT_COMMIT:0:7}.tar.gz
+  ARCHIVE_NAME="scorum_$BRANCH_NAME_${GIT_COMMIT:0:7}.tar.gz"
   echo "Creating arhive with base files"
   /bin/tar czf /var/lib/scorumd/$ARCHIVE_NAME --directory=/usr/local/scorumd-full/bin scorumd cli_wallet
   echo "Upload arhive to azure"

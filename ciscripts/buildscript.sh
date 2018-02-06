@@ -1,13 +1,7 @@
 #!/bin/bash
 set -e
 
-#BRANCH_NAME=${BRANCH_NAME:-master}
-BRANCH_NAME="master"
-
-export IMAGE_NAME="scorum/blockchain:$BRANCH_NAME"
-if [[ $IMAGE_NAME == "scorum/blockchain:stable" ]] ; then
-	IMAGE_NAME="scorum/blockchain:latest"
-fi
+IMAGE_NAME="scorum/scorum:$BRANCH_NAME"
 
 sudo docker build --build-arg GIT_BRANCH=$GIT_BRANCH --build-arg GIT_COMMIT=$GIT_COMMIT --build-arg AZURE_UPLOAD=$AZURE_UPLOAD \
 --build-arg AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT --build-arg AZURE_STORAGE_ACCESS_KEY=$AZURE_STORAGE_ACCESS_KEY \
