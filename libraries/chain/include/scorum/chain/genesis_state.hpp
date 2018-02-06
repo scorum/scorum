@@ -46,7 +46,7 @@ struct genesis_state_type
 
     asset registration_supply = asset(0, SCORUM_SYMBOL);
     asset registration_bonus = asset(0, SCORUM_SYMBOL);
-    asset init_accounts_supply = asset(0, SCORUM_SYMBOL);
+    asset accounts_supply = asset(0, SCORUM_SYMBOL);
     asset init_rewards_supply = asset(0, SCORUM_SYMBOL);
     asset founders_supply = asset(0, VESTS_SYMBOL);
     time_point_sec initial_timestamp;
@@ -85,7 +85,7 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
 FC_REFLECT(scorum::chain::genesis_state_type,
            (registration_supply)
            (registration_bonus)
-           (init_accounts_supply)
+           (accounts_supply)
            (init_rewards_supply)
            (founders_supply)
            (initial_timestamp)

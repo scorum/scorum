@@ -92,7 +92,7 @@ public:
         return *this;
     }
 
-    Genesis& init_accounts_supply(asset amount)
+    Genesis& accounts_supply(asset amount)
     {
         genesis_state.registration_bonus = amount;
         return *this;

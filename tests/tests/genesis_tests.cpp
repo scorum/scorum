@@ -67,12 +67,12 @@ BOOST_AUTO_TEST_CASE(check_initial_timestamp)
 
 BOOST_AUTO_TEST_CASE(check_initial_supply)
 {
-    std::string genesis_str = R"json({ "init_accounts_supply": "1.000000000 SCR"})json";
+    std::string genesis_str = R"json({ "accounts_supply": "1.000000000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
-    BOOST_CHECK(genesis_state.init_accounts_supply.amount == 1000000000);
-    BOOST_CHECK(genesis_state.init_accounts_supply.symbol() == SCORUM_SYMBOL);
+    BOOST_CHECK(genesis_state.accounts_supply.amount == 1000000000);
+    BOOST_CHECK(genesis_state.accounts_supply.symbol() == SCORUM_SYMBOL);
 }
 
 BOOST_AUTO_TEST_CASE(check_init_rewards_supply)

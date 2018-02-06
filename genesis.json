@@ -1,8 +1,8 @@
 {
   "initial_timestamp": "2017-11-29T10:03:00",
 
-  "init_accounts_supply": "1002.000000000 SCR",
-  "init_rewards_supply": "21024.000000000 SCR",
+  "accounts_supply": "1002.000000000 SCR",
+  "rewards_supply": "21024.000000000 SCR",
   "registration_supply": "1.000000000 SCR",
   "registration_bonus": "0.000000005 SCR",
   "founders_supply": "200.100000000 SP",

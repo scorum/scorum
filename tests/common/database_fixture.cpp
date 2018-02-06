@@ -31,14 +31,14 @@ void create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
     public_key_type init_public_key = init_delegate_priv_key.get_public_key();
 
     genesis_state.accounts.push_back(
-        { TEST_INIT_DELEGATE_NAME, "null", init_public_key, genesis_state.init_accounts_supply });
+        { TEST_INIT_DELEGATE_NAME, "null", init_public_key, genesis_state.accounts_supply });
 
     genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_public_key });
 }
 
 void create_default_genesis_state(genesis_state_type& genesis_state)
 {
-    genesis_state.init_accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
+    genesis_state.accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
@@ -480,7 +480,7 @@ genesis_state_type init_genesis(const genesis_state_type& external_genesis_state
 {
     genesis_state_type genesis_state = external_genesis_state;
 
-    genesis_state.init_accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
+    genesis_state.accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
     genesis_state.init_rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
     genesis_state.initial_chain_id = TEST_CHAIN_ID;
     genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);

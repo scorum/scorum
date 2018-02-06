@@ -17,6 +17,7 @@ public:
 
 private:
     void init_accounts();
+    void init_founders();
     void init_witnesses();
     void init_witness_schedule();
     void init_global_property_object();
