@@ -4,11 +4,15 @@
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/version.hpp>
+#include <scorum/protocol/chain_properties.hpp>
 
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
+using scorum::protocol::chain_properties;
+using scorum::protocol::version;
 
 /**
  * @class dynamic_global_property_object
@@ -46,14 +50,17 @@ public:
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
 
     /**
-     *  Maximum block size is decided by the set of active witnesses which change every round.
-     *  Each witness posts what they think the maximum size should be as part of their witness
-     *  properties, the median size is chosen to be the maximum block size for the round.
+     *  Chain properties are decided by the set of active witnesses which change every round.
+     *  Each witness posts what they think the chain properties should be as part of their witness
+     *  properties, the median size is chosen to be the chain properties for the round.
      *
      *  @note the minimum value for maximum_block_size is defined by the protocol to prevent the
      *  network from getting stuck by witnesses attempting to set this too low.
      */
-    uint32_t maximum_block_size = 0;
+
+    chain_properties median_chain_props;
+
+    version majority_version;
 
     /**
      * The current absolute slot number.  Equal to the total
@@ -102,7 +109,8 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (total_supply)
           (circulating_capital)
           (total_vesting_shares)
-          (maximum_block_size)
+          (median_chain_props)
+          (majority_version)
           (current_aslot)
           (recent_slots_filled)
           (participation_count)

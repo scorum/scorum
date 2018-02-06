@@ -350,10 +350,6 @@ public:
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
 
-    // witness_schedule
-
-    void update_witness_schedule();
-
     // index
 
     template <typename MultiIndexType> void add_plugin_index()
@@ -364,9 +360,12 @@ public:
 private:
     void adjust_balance(const account_object& a, const asset& delta);
 
-    void _reset_virtual_schedule_time();
-
-    void _update_median_witness_props();
+    // witness_schedule
+    void update_witness_schedule();
+    void _reset_witness_virtual_schedule_time();
+    void _update_witness_median_props();
+    void _update_witness_majority_version();
+    void _update_witness_hardfork_version_votes();
 
 protected:
     void notify_changed_objects();

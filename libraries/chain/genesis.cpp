@@ -100,6 +100,7 @@ void db_genesis::init_witnesses()
     for (auto& witness : _genesis_state.witness_candidates)
     {
         FC_ASSERT(!witness.name.empty(), "Witness 'name' should not be empty.");
+        FC_ASSERT(witness.block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
 
         _db.create<witness_object>([&](witness_object& w) {
             w.owner = witness.name;
@@ -131,7 +132,7 @@ void db_genesis::init_global_property_object()
         gpo.circulating_capital = _genesis_state.init_accounts_supply;
         gpo.total_supply
             = gpo.circulating_capital + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
-        gpo.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
+        gpo.median_chain_props.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
     });
 }
 
