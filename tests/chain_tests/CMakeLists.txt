@@ -26,15 +26,15 @@ set( HEADERS
     registration_check/registration_check_common.hpp
 )
 
-add_executable(chain_test 
+add_executable(chain_tests
              ${SOURCES}
              ${HEADERS})
-target_link_libraries(chain_test
+target_link_libraries(chain_tests
                       common_test
                       scorum_app
                       scorum_egenesis_none
                       )
-target_include_directories(chain_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 if(MSVC)
     set_source_files_properties(serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

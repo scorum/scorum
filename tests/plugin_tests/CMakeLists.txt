@@ -6,13 +6,13 @@ set( SOURCES
 set( HEADERS
 )
 
-add_executable(plugin_test
+add_executable(plugin_tests
               ${SOURCES}
               ${HEADERS})
-target_link_libraries(plugin_test
+target_link_libraries(plugin_tests
                       common_test
                       scorum_app
                       scorum_egenesis_none
                       )
-target_include_directories(plugin_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(plugin_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

@@ -54,9 +54,9 @@ RUN \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
-    ./tests/utests && \
-    ./tests/chain_test && \
-    ./tests/wallet_tests && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
     cd /usr/local/src/scorum && \
     doxygen && \
@@ -79,9 +79,9 @@ RUN \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
-    ./tests/utests && \
-    ./tests/chain_test && \
-    ./tests/wallet_tests && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
     mkdir -p /var/cobertura && \
     gcovr --object-directory="../" --root=../ --xml-pretty --gcov-exclude=".*tests.*" --gcov-exclude=".*fc.*" --gcov-exclude=".*app*" --gcov-exclude=".*net*" --gcov-exclude=".*plugins*" --gcov-exclude=".*schema*" --gcov-exclude=".*time*" --gcov-exclude=".*utilities*" --gcov-exclude=".*wallet*" --gcov-exclude=".*programs*" --output="/var/cobertura/coverage.xml" && \
     cd /usr/local/src/scorum && \
@@ -103,9 +103,9 @@ RUN \
     && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
-    ./tests/utests && \
-    ./tests/chain_test && \
-    ./tests/wallet_tests && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
     make install && \
     cd .. && \
