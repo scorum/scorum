@@ -74,12 +74,7 @@ struct message_body
 class message_object : public object<message_object_type, message_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    message_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : encrypted_message(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(message_object, (encrypted_message))
 
     id_type id;
 

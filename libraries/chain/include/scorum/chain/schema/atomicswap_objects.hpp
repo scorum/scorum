@@ -29,17 +29,8 @@ enum atomicswap_contract_type : bool
 
 class atomicswap_contract_object : public object<atomicswap_contract_object_type, atomicswap_contract_object>
 {
-    atomicswap_contract_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    atomicswap_contract_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : metadata(a)
-        , secret_hash(a)
-        , secret(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(atomicswap_contract_object, (metadata)(secret_hash)(secret))
 
     id_type id;
 

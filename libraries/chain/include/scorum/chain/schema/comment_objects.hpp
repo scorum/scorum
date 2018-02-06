@@ -20,21 +20,9 @@ using protocol::beneficiary_route_type;
 
 class comment_object : public object<comment_object_type, comment_object>
 {
-    comment_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    comment_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : category(a)
-        , parent_permlink(a)
-        , permlink(a)
-        , title(a)
-        , body(a)
-        , json_metadata(a)
-        , beneficiaries(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(
+        comment_object, (category)(parent_permlink)(permlink)(title)(body)(json_metadata)(beneficiaries))
 
     id_type id;
 

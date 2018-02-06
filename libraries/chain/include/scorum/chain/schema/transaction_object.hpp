@@ -17,15 +17,8 @@ using scorum::protocol::signed_transaction;
  */
 class transaction_object : public object<transaction_object_type, transaction_object>
 {
-    transaction_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    transaction_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : packed_trx(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(transaction_object, (packed_trx))
 
     id_type id;
 

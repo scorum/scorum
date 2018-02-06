@@ -19,15 +19,8 @@ using scorum::protocol::asset;
 
 class registration_pool_object : public object<registration_pool_object_type, registration_pool_object>
 {
-    registration_pool_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    registration_pool_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : schedule_items(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(registration_pool_object, (schedule_items))
 
     id_type id;
 

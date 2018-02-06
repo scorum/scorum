@@ -17,12 +17,7 @@ namespace scorum { namespace chain {
 class hardfork_property_object : public object< hardfork_property_object_type, hardfork_property_object >
 {
    public:
-      template< typename Constructor, typename Allocator >
-      hardfork_property_object( Constructor&& c, fc::shared_allocator< Allocator > a )
-         :processed_hardforks( a )
-      {
-         c( *this );
-      }
+      CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(hardfork_property_object, (processed_hardforks))
 
       id_type                                                              id;
 

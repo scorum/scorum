@@ -21,15 +21,8 @@ using scorum::protocol::authority;
 // clang-format off
 class account_object : public object<account_object_type, account_object>
 {
-    account_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    account_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : json_metadata(a)
-    {
-        c(*this);
-    };
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(account_object, (json_metadata))
 
     id_type id;
 
@@ -99,17 +92,8 @@ public:
 
 class account_authority_object : public object<account_authority_object_type, account_authority_object>
 {
-    account_authority_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    account_authority_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : owner(a)
-        , active(a)
-        , posting(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(account_authority_object, (owner)(active)(posting))
 
     id_type id;
 
@@ -149,15 +133,8 @@ public:
 class owner_authority_history_object
     : public object<owner_authority_history_object_type, owner_authority_history_object>
 {
-    owner_authority_history_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    owner_authority_history_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : previous_owner_authority(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(owner_authority_history_object, (previous_owner_authority))
 
     id_type id;
 
@@ -169,15 +146,8 @@ public:
 class account_recovery_request_object
     : public object<account_recovery_request_object_type, account_recovery_request_object>
 {
-    account_recovery_request_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    account_recovery_request_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : new_owner_authority(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(account_recovery_request_object, (new_owner_authority))
 
     id_type id;
 

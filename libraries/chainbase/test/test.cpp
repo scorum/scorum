@@ -15,11 +15,7 @@ using namespace boost::multi_index;
 
 struct book : public chainbase::object<0, book>
 {
-
-    template <typename Constructor, typename Allocator> book(Constructor&& c, Allocator&& a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(book)
 
     id_type id;
     int a = 0;

@@ -20,15 +20,8 @@ using scorum::protocol::asset;
 
 class budget_object : public object<budget_object_type, budget_object>
 {
-    budget_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    budget_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : content_permlink(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(budget_object, (content_permlink))
 
     id_type id;
 

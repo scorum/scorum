@@ -16,15 +16,8 @@ namespace chain {
 
 class operation_object : public object<operation_object_type, operation_object>
 {
-    operation_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    operation_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : serialized_op(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(operation_object, (serialized_op))
 
     id_type id;
 

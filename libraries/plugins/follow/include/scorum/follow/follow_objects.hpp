@@ -49,14 +49,7 @@ typedef oid<follow_object> follow_id_type;
 class feed_object : public object<feed_object_type, feed_object>
 {
 public:
-    feed_object() = delete;
-
-    template <typename Constructor, typename Allocator>
-    feed_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : reblogged_by(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(feed_object, (reblogged_by))
 
     id_type id;
 

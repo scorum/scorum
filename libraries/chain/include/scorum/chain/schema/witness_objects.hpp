@@ -24,22 +24,15 @@ using scorum::protocol::version;
  */
 class witness_object : public object<witness_object_type, witness_object>
 {
-    witness_object() = delete;
-
 public:
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(witness_object, (url))
+
     enum witness_schedule_type
     {
         top20,
         timeshare,
         none
     };
-
-    template <typename Constructor, typename Allocator>
-    witness_object(Constructor&& c, fc::shared_allocator<Allocator> a)
-        : url(a)
-    {
-        c(*this);
-    }
 
     id_type id;
 

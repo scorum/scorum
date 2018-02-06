@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fc/variant.hpp>
+#include <boost/preprocessor.hpp>
 
 // clang-format off
 
@@ -48,12 +49,37 @@ namespace chainbase {
         static const uint16_t type_id = TypeNumber;
     };
 
-#define CHAINBASE_DEFAULT_CONSTRUCTOR(OBJECT_TYPE)                                                                     \
+//Default constructor for object in index
+//Usage:
+//  if object has members which use internal memory allocation(e.g. via new operator) pass them to the second macro parameter as a sequence,
+//  otherwise pass BOOST_PP_SEQ_NIL or use CHAINBASE_DEFAULT_CONSTRUCTOR macro
+//
+//  class Example
+//  {
+//  public:
+//    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(Example, (str1)(str2))
+//
+//    int i; // No need to pass i to macro? because it has no memory magement inside
+//    std::string str1;
+//    std::string str2;
+//  };
+//
+#define CHAINBASE_COLON() :
+
+#define CHAINBASE_COLON_IF_NOT(n) BOOST_PP_IF(BOOST_PP_EQUAL(n, 0), CHAINBASE_COLON, BOOST_PP_EMPTY)()
+
+#define INIT_DYNAMIC_MEMBER(r, initval, n, param) CHAINBASE_COLON_IF_NOT(n) BOOST_PP_COMMA_IF(n) param(initval)
+
+#define CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(OBJECT_TYPE, DYNAMIC_MEMBERS)                                            \
     OBJECT_TYPE() = delete;                                                                                            \
-    template <typename Constructor, typename Allocator> OBJECT_TYPE(Constructor&& c, Allocator&&)                      \
+    template <typename Constructor, typename Allocator>                                                                \
+    OBJECT_TYPE(Constructor&& c, Allocator&& a)                                                                        \
+    BOOST_PP_SEQ_FOR_EACH_I(INIT_DYNAMIC_MEMBER, a, DYNAMIC_MEMBERS)                                                   \
     {                                                                                                                  \
         c(*this);                                                                                                      \
     }
+
+#define CHAINBASE_DEFAULT_CONSTRUCTOR(OBJECT_TYPE)  CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(OBJECT_TYPE, BOOST_PP_SEQ_NIL)
 
 } // namespace chainbase
 
