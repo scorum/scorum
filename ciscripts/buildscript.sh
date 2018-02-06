@@ -9,7 +9,7 @@ if [[ $IMAGE_NAME == "scorum/blockchain:stable" ]] ; then
 	IMAGE_NAME="scorum/blockchain:latest"
 fi
 
-sudo docker build --build-arg GIT_BRANCH=$GIT_BRANCH --build-arg GIT_COMMIT=$GIT_COMMIT \
+sudo docker build --build-arg GIT_BRANCH=$GIT_BRANCH --build-arg GIT_COMMIT=$GIT_COMMIT --build-arg AZURE_UPLOAD=$AZURE_UPLOAD \
 --build-arg AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT --build-arg AZURE_STORAGE_ACCESS_KEY=$AZURE_STORAGE_ACCESS_KEY \
 --build-arg AZURE_STORAGE_CONNECTION_STRING=$AZURE_STORAGE_CONNECTION_STRING --build-arg AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME \
 --tag=$IMAGE_NAME .
