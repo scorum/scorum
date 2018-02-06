@@ -388,15 +388,13 @@ struct witness_api_obj
         , created(w.created)
         , url(fc::to_string(w.url))
         , total_missed(w.total_missed)
-        , last_aslot(w.last_aslot)
         , last_confirmed_block_num(w.last_confirmed_block_num)
         , signing_key(w.signing_key)
-        , props(w.props)
+        , proposed_chain_props(w.proposed_chain_props)
         , votes(w.votes)
         , virtual_last_update(w.virtual_last_update)
         , virtual_position(w.virtual_position)
         , virtual_scheduled_time(w.virtual_scheduled_time)
-        , last_work(w.last_work)
         , running_version(w.running_version)
         , hardfork_version_vote(w.hardfork_version_vote)
         , hardfork_time_vote(w.hardfork_time_vote)
@@ -412,15 +410,13 @@ struct witness_api_obj
     time_point_sec created;
     std::string url;
     uint32_t total_missed = 0;
-    uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
     public_key_type signing_key;
-    chain_properties props;
+    chain_properties proposed_chain_props;
     share_type votes;
     fc::uint128 virtual_last_update;
     fc::uint128 virtual_position;
     fc::uint128 virtual_scheduled_time;
-    digest_type last_work;
     version running_version;
     hardfork_version hardfork_version_vote;
     time_point_sec hardfork_time_vote;
@@ -580,7 +576,7 @@ struct atomicswap_contract_result_api_obj
                                        const std::string& secret = "")
         : tr(_tr)
     {
-        obj.contract_initiator = (op.type == protocol::atomicswap_by_initiator);
+        obj.contract_initiator = (op.type == protocol::atomicswap_initiate_operation::by_initiator);
         obj.owner = op.owner;
         obj.to = op.recipient;
         obj.amount = op.amount;
@@ -665,9 +661,8 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (owner)
              (created)
              (url)(votes)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
-             (props)
-             (last_work)
+             (last_confirmed_block_num)(signing_key)
+             (proposed_chain_props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )

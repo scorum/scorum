@@ -30,13 +30,13 @@ public:
     {
         alice_secret_hash = atomicswap::get_secret_hash(ALICE_SECRET);
 
-        initiate_op.type = atomicswap_by_initiator;
+        initiate_op.type = atomicswap_initiate_operation::atomicswap_initiate_operation::by_initiator;
         initiate_op.owner = "alice";
         initiate_op.recipient = "bob";
         initiate_op.amount = ALICE_SHARE_FOR_BOB;
         initiate_op.secret_hash = alice_secret_hash;
 
-        participate_op.type = atomicswap_by_participant;
+        participate_op.type = atomicswap_initiate_operation::by_participant;
         participate_op.owner = "bob";
         participate_op.recipient = "alice";
         participate_op.amount = BOB_SHARE_FOR_ALICE;
