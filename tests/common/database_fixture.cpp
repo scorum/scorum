@@ -310,7 +310,7 @@ database_fixture::account_create(const std::string& name, const public_key_type&
     try
     {
         return account_create(name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
-                              std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                              std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
                                        (SUFFICIENT_FEE).amount),
                               key, post_key, "");
@@ -335,7 +335,6 @@ const witness_object& database_fixture::witness_create(const std::string& owner,
         op.owner = owner;
         op.url = url;
         op.block_signing_key = signing_key;
-        op.fee = asset(fee, SCORUM_SYMBOL);
 
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);

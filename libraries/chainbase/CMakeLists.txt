@@ -60,10 +60,16 @@ if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
 
-
 file(GLOB HEADERS "include/*.hpp")
-file(GLOB SRC_FILES *.cpp)
-add_library( chainbase ${SRC_FILES} ${HEADERS} )
+
+add_library( chainbase 
+
+             chainbase.cpp
+             database_guard.cpp
+             segment_manager.cpp
+             undo_db_state.cpp
+
+             ${HEADERS} )
 target_link_libraries( chainbase
                        fc
                        ${Boost_LIBRARIES} )

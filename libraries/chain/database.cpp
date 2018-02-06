@@ -114,7 +114,6 @@ void database::open(const fc::path& data_dir,
 
             // Rewind all undo state. This should return us to the state at the last irreversible block.
             with_write_lock([&]() {
-
                 for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo_all(); });
 
                 for_each_index([&](chainbase::abstract_generic_index_i& item) {
@@ -682,7 +681,7 @@ void database::push_transaction(const signed_transaction& trx, uint32_t skip)
         try
         {
             size_t trx_size = fc::raw::pack_size(trx);
-            FC_ASSERT(trx_size <= (get_dynamic_global_properties().maximum_block_size - 256));
+            FC_ASSERT(trx_size <= (get_dynamic_global_properties().median_chain_props.maximum_block_size - 256));
             set_producing(true);
             detail::with_skip_flags(*this, skip, [&]() { with_write_lock([&]() { _push_transaction(trx); }); });
             set_producing(false);
@@ -758,7 +757,8 @@ signed_block database::_generate_block(fc::time_point_sec when,
     }
 
     static const size_t max_block_header_size = fc::raw::pack_size(signed_block_header()) + 4;
-    auto maximum_block_size = get_dynamic_global_properties().maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
+    auto maximum_block_size
+        = get_dynamic_global_properties().median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
     size_t total_block_size = max_block_header_size;
 
     signed_block pending_block;
@@ -1299,9 +1299,9 @@ void database::process_comments_cashout()
 
         modify(comment, [&](comment_object& c) {
             /**
-            * A payout is only made for positive rshares, negative rshares hang around
-            * for the next time this post might get an upvote.
-            */
+             * A payout is only made for positive rshares, negative rshares hang around
+             * for the next time this post might get an upvote.
+             */
             if (c.net_rshares > 0)
             {
                 c.net_rshares = 0;
@@ -1779,8 +1779,8 @@ void database::_apply_block(const signed_block& next_block)
 
         const auto& gprops = get_dynamic_global_properties();
         auto block_size = fc::raw::pack_size(next_block);
-        FC_ASSERT(block_size <= gprops.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.maximum_block_size));
+        FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
+                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -2078,7 +2078,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 dgp.recent_slots_filled = (dgp.recent_slots_filled << 1) + (i == 0 ? 1 : 0);
                 dgp.participation_count += (i == 0 ? 1 : 0);
             }
-
+            
             dgp.head_block_number = b.block_num();
             dgp.head_block_id = b.id();
             dgp.time = b.timestamp;
@@ -2103,11 +2103,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 {
     try
     {
-        const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-        uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time(new_block.timestamp);
-
         modify(signing_witness, [&](witness_object& _wit) {
-            _wit.last_aslot = new_block_aslot;
             _wit.last_confirmed_block_num = new_block.block_num();
         });
     }
@@ -2505,46 +2501,6 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
