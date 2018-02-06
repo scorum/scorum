@@ -54,6 +54,7 @@ RUN \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
@@ -78,6 +79,7 @@ RUN \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
     mkdir -p /var/cobertura && \
@@ -101,6 +103,7 @@ RUN \
     && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests && \
     ./tests/chain_test && \
     ./tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
