@@ -4,6 +4,7 @@ FROM phusion/baseimage:0.9.19
 
 ARG GIT_BRANCH
 ARG GIT_COMMIT
+ARG AZURE_UPLOAD
 ARG AZURE_STORAGE_ACCOUNT
 ARG AZURE_STORAGE_ACCESS_KEY
 ARG AZURE_STORAGE_CONNECTION_STRING
@@ -161,6 +162,11 @@ ADD contrib/healthcheck.conf.template /etc/nginx/healthcheck.conf.template
 # add healthcheck script
 ADD contrib/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/healthcheck.sh
+
+# upload archive to azure
+ADD contrib/azure_upload.sh /usr/local/bin/azure_upload.sh
+RUN chmod +x /usr/local/bin/azure_upload.sh
+RUN /usr/local/bin/azure_upload.sh
 
 # new entrypoint for all instances
 # this enables exitting of the container when the writer node dies
