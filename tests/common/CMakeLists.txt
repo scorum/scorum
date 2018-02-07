@@ -4,16 +4,11 @@ if(GPERFTOOLS_FOUND)
     list(APPEND PLATFORM_SPECIFIC_LIBS tcmalloc)
 endif()
 
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+
 set( SOURCES
   actor.cpp
   database_fixture.cpp
-)
-
-set( HEADERS
-  actor.hpp
-  database_fixture.hpp
-  defines.hpp
-  genesis.hpp
 )
 
 add_library(common_test 

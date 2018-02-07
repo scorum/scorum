@@ -26,8 +26,6 @@ public:
                        std::function<std::string(fc::variant, const fc::variants&)> formatter);
 
 protected:
-    using parent_type = app;
-
     virtual fc::variant process_command(const std::string& command, const fc::variants& args = fc::variants()) = 0;
 
 private:

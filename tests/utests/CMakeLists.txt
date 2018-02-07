@@ -5,6 +5,8 @@ if( BUILD_PRINT_TEST_CLI_OUTPUT  )
   SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPRINT_TEST_CLI_OUTPUT" )
 endif()
 
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+
 set( SOURCES
   main.cpp
   basic_tests.cpp
