@@ -53,15 +53,13 @@ using chain::account_object;
 
 void new_chain_banner(const scorum::chain::database& db)
 {
-    std::cerr << "\n"
-                 "********************************\n"
-                 "*                              *\n"
-                 "*   ------- NEW CHAIN ------   *\n"
-                 "*   -   Welcome to Scorum!  -   *\n"
-                 "*   ------------------------   *\n"
-                 "*                              *\n"
-                 "********************************\n"
-                 "\n";
+    const std::string welcome = "Welcome to Scorum!";
+    const std::string info_ch = "NEW CHAIN";
+
+    std::cerr << info_ch;
+    std::cerr << std::endl;
+    std::cerr << welcome;
+    std::cerr << std::endl;
     return;
 }
 
