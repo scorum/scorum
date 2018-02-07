@@ -11,6 +11,13 @@ namespace cli {
 
 #define DEFAULT_SCREEN_W 100
 
+enum class formatter_alignment
+{
+    left = 0,
+    center,
+    right,
+};
+
 class formatter
 {
 public:
@@ -31,6 +38,18 @@ public:
     void clear();
 
     std::string str() const;
+
+    formatter_alignment set_alignment(formatter_alignment alignment)
+    {
+        auto old_alignment = _alignment;
+        _alignment = alignment;
+        return old_alignment;
+    }
+
+    formatter_alignment alignment() const
+    {
+        return _alignment;
+    }
 
     template <typename T, typename... Types> void print_sequence(const T& val, const Types&... vals) const
     {
@@ -58,23 +77,69 @@ public:
 
     template <typename T> void print_raw(const T& val, bool end_line = true) const
     {
-        _out << std::left;
-        _out << val;
+        _print(val);
         if (end_line)
             print_endl();
     }
 
-    template <typename T> void print_field(const std::string& field_name, const T& field_val) const
+    template <typename FN, typename T>
+    void print_field(const FN& field_name, const T& field_val, bool end_line = true) const
     {
-        print_raw(field_name, false);
-        size_t out_w = screen_w - field_name.size();
-        _out << std::right << std::setw(out_w) << field_val;
-        print_endl();
+        formatter fn;
+        fn.print_raw(field_name, false);
+        formatter fv;
+        fv.print_raw(field_val, false);
+        print_field(fn.str(), fv.str(), end_line);
     }
 
-    void print_field(const std::string& field_name, const std::string& field_val) const;
+    void print_field(const std::string& field_name, const std::string& field_val, bool end_line = true) const
+    {
+        _print(field_name, field_name.size());
+        size_t out_w = screen_w - field_name.size();
+        if (field_val.size() < out_w)
+        {
+            auto old_alignment = alignment();
+            if (alignment() != formatter_alignment::center)
+                _alignment = formatter_alignment::right;
+            _print(field_val, out_w);
+            _alignment = old_alignment;
+        }
+        else
+        {
+            print_endl();
+            _print(field_val);
+        }
+        if (end_line)
+            print_endl();
+    }
 
-    void print_line(const char symbol = '-', bool end_line = true) const;
+    template <typename T> void print_line(const T& symbol, bool end_line = true) const
+    {
+        formatter fs;
+        fs.print_raw(symbol, false);
+        char s = line_symbol;
+        std::string ss(fs.str());
+        if (ss.size() > 0)
+            s = ss[0];
+        print_line(s, end_line);
+    }
+
+    void print_line(const char symbol, bool end_line = true) const
+    {
+        _print(std::string(screen_w, symbol));
+        if (end_line)
+            print_endl();
+    }
+
+    void print_line(bool end_line) const
+    {
+        print_line(wrap_symbol, end_line);
+    }
+
+    void print_line() const
+    {
+        print_line(wrap_symbol);
+    }
 
     template <typename T> void print_cell(const T& val, size_t w, size_t cell_count) const
     {
@@ -137,8 +202,7 @@ public:
             {
                 _cell_ctx.left_w -= out_w;
 
-                _out << std::left << std::setw(out_w);
-                _out << val_str;
+                _print(val_str, out_w);
 
                 _cell_ctx.current++;
             }
@@ -268,13 +332,60 @@ private:
         }
     };
 
+    template <typename T> void _print(const T& val, size_t out_w = (size_t)0) const
+    {
+        switch (_alignment)
+        {
+        case formatter_alignment::left:
+        case formatter_alignment::center:
+            _out << std::left;
+            break;
+        case formatter_alignment::right:
+            _out << std::right;
+            break;
+        default:;
+        }
+
+        if (!out_w)
+        {
+            out_w = screen_w;
+            if (_alignment == formatter_alignment::right)
+                _out << std::setw(out_w);
+        }
+        else
+            _out << std::setw(out_w);
+
+        if (_alignment == formatter_alignment::center)
+        {
+            std::stringstream buff;
+            buff << val;
+            std::string center_val(buff.str());
+            std::stringstream empty;
+            buff.swap(empty);
+            if (center_val.size() < out_w - 1)
+            {
+                out_w -= center_val.size();
+                out_w /= 2;
+                buff << std::string(out_w, _out.fill());
+            }
+            buff << val;
+            _out << buff.str();
+        }
+        else
+        {
+            _out << val;
+        }
+    }
+
 public:
     const size_t screen_w;
     const char* wrap_symbol = "> ";
+    const char line_symbol = '-';
 
 private:
     stringstream_type _own_out;
     std::stringstream& _out;
+    mutable formatter_alignment _alignment = formatter_alignment::left;
     mutable stringstream_type _sequence_ctx;
     mutable cell_context _cell_ctx;
     mutable table_context _table_ctx;
