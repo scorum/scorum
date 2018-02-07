@@ -11,7 +11,7 @@ curl --silent -XPOST -H "Authorization: token $GITHUB_SECRET" https://api.github
 
 if [ "$DOCKER_HUB" = true ]; then
   docker login --username=$DOCKER_USR --password=$DOCKER_PWD
-  if [ -z "${DOCKER_IMAGE_VERSION}"  ]]; then
+  if [[ -z "${DOCKER_IMAGE_VERSION}"  ]]; then
     FULL_IMAGE_NAME="scorum/scorum:$BRANCH_NAME"
     docker push "$FULL_IMAGE_NAME"
   else
