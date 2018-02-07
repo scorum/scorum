@@ -19,7 +19,6 @@ target_link_libraries( cli_wallet
                        scorum_protocol
                        graphene_utilities
                        scorum_wallet
-                       scorum_private_message
                        scorum_app
                        scorum_follow
                        fc

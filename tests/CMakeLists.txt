@@ -48,7 +48,6 @@ target_link_libraries(wallet_tests
                       scorum_wallet
                       scorum_chain
                       scorum_app
-                      scorum_private_message
                       scorum_egenesis_none
                       graphene_utilities
                       cli
