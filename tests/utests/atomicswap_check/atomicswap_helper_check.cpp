@@ -1,14 +1,13 @@
 #include <boost/test/unit_test.hpp>
 
-#include "database_fixture.hpp"
-
 #include <scorum/protocol/atomicswap_helper.hpp>
 
 #include <cstdlib>
 
 #include <fc/crypto/sha512.hpp>
 
-using namespace scorum::chain;
+#include "defines.hpp"
+
 using namespace scorum::protocol;
 using namespace scorum::protocol::atomicswap;
 

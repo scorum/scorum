@@ -124,12 +124,9 @@ public:
         return existent_accounts.count(account) == 1 ? true : false;
     }
 
-    uint64_t quorum_votes(uint64_t quorum_percent)
+    size_t get_members_count() const
     {
-        this->quorum_percent = quorum_percent;
-
-        BOOST_REQUIRE(needed_votes > 0);
-        return needed_votes;
+        return members_count;
     }
 
     std::set<account_name_type> existent_accounts;
@@ -137,8 +134,7 @@ public:
     std::vector<account_name_type> added_members;
     std::vector<account_name_type> excluded_members;
 
-    uint64_t needed_votes = 0;
-    uint64_t quorum_percent = 0;
+    size_t members_count = 0;
 };
 
 class properties_service_mock
@@ -215,6 +211,7 @@ public:
         proposal.creator = "alice";
         proposal.data = fc::variant("bob").as_string();
         proposal.action = action;
+        proposal.quorum_percent = SCORUM_COMMITTEE_QUORUM_PERCENT;
 
         proposal.id = proposal_service.proposals.size() + 1;
         proposal_service.proposals.push_back(proposal);
@@ -234,6 +231,7 @@ public:
         proposal.creator = "alice";
         proposal.data = fc::variant(quorum).as_uint64();
         proposal.action = action;
+        proposal.quorum_percent = SCORUM_COMMITTEE_QUORUM_PERCENT;
 
         proposal.id = proposal_service.proposals.size() + 1;
         proposal_service.proposals.push_back(proposal);
@@ -249,13 +247,13 @@ public:
     void configure_quorum()
     {
         proposal_service.voted = 1;
-        committee_service.needed_votes = 1;
+        committee_service.members_count = 1;
     }
 
     void configure_not_enough_quorum()
     {
         proposal_service.voted = 1;
-        committee_service.needed_votes = 2;
+        committee_service.members_count = 10;
     }
 
     proposal_vote_operation op;
@@ -462,31 +460,18 @@ SCORUM_TEST_CASE(dont_change_quorum)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(test_get_quorum)
+BOOST_AUTO_TEST_SUITE(test_is_quorum)
 
-BOOST_AUTO_TEST_CASE(sixty_percent_from_ten_is_six_votes)
+BOOST_AUTO_TEST_CASE(needs_six_and_above_votes)
 {
-    BOOST_CHECK_EQUAL(6u, scorum::chain::utils::get_quorum(10, 60));
+    BOOST_CHECK_EQUAL(true, scorum::chain::utils::is_quorum(6, 10, 60));
+    BOOST_CHECK_EQUAL(false, scorum::chain::utils::is_quorum(5, 10, 60));
 }
 
-BOOST_AUTO_TEST_CASE(sixty_percent_from_eight_is_four_votes)
+BOOST_AUTO_TEST_CASE(needs_five_and_above_votes_for_quourum)
 {
-    BOOST_CHECK_EQUAL(4u, scorum::chain::utils::get_quorum(8, 60));
-}
-
-BOOST_AUTO_TEST_CASE(sixty_percent_from_six_is_three_votes)
-{
-    BOOST_CHECK_EQUAL(3u, scorum::chain::utils::get_quorum(6, 60));
-}
-
-BOOST_AUTO_TEST_CASE(sixty_percent_from_five_is_three_votes)
-{
-    BOOST_CHECK_EQUAL(3u, scorum::chain::utils::get_quorum(5, 60));
-}
-
-BOOST_AUTO_TEST_CASE(sixty_percent_from_four_is_two_votes)
-{
-    BOOST_CHECK_EQUAL(2u, scorum::chain::utils::get_quorum(4, 60));
+    BOOST_CHECK_EQUAL(false, scorum::chain::utils::is_quorum(4, 8, 60));
+    BOOST_CHECK_EQUAL(true, scorum::chain::utils::is_quorum(5, 8, 60));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
