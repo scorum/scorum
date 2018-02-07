@@ -1,5 +1,6 @@
 add_executable( cli_wallet
-                main.cpp )
+                main.cpp
+                wallet_app.cpp)
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
 endif()
@@ -19,6 +20,7 @@ target_link_libraries( cli_wallet
                        scorum_protocol
                        graphene_utilities
                        scorum_wallet
+                       cli
                        scorum_app
                        scorum_follow
                        fc
