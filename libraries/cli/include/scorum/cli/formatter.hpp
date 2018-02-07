@@ -77,7 +77,7 @@ public:
 
     template <typename T> void print_raw(const T& val, bool end_line = true) const
     {
-        _print(val);
+        print_internal(val);
         if (end_line)
             print_endl();
     }
@@ -94,20 +94,20 @@ public:
 
     void print_field(const std::string& field_name, const std::string& field_val, bool end_line = true) const
     {
-        _print(field_name, field_name.size());
+        print_internal(field_name, field_name.size());
         size_t out_w = screen_w - field_name.size();
         if (field_val.size() < out_w)
         {
             auto old_alignment = alignment();
             if (alignment() != formatter_alignment::center)
                 _alignment = formatter_alignment::right;
-            _print(field_val, out_w);
+            print_internal(field_val, out_w);
             _alignment = old_alignment;
         }
         else
         {
             print_endl();
-            _print(field_val);
+            print_internal(field_val);
         }
         if (end_line)
             print_endl();
@@ -126,7 +126,7 @@ public:
 
     void print_line(const char symbol, bool end_line = true) const
     {
-        _print(std::string(screen_w, symbol));
+        print_internal(std::string(screen_w, symbol));
         if (end_line)
             print_endl();
     }
@@ -202,7 +202,7 @@ public:
             {
                 _cell_ctx.left_w -= out_w;
 
-                _print(val_str, out_w);
+                print_internal(val_str, out_w);
 
                 _cell_ctx.current++;
             }
@@ -332,7 +332,7 @@ private:
         }
     };
 
-    template <typename T> void _print(const T& val, size_t out_w = (size_t)0) const
+    template <typename T> void print_internal(const T& val, size_t out_w = (size_t)0) const
     {
         switch (_alignment)
         {

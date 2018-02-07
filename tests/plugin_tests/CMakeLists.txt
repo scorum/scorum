@@ -1,9 +1,8 @@
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+
 set( SOURCES
   main.cpp
   plugin_ops.cpp
-)
-
-set( HEADERS
 )
 
 add_executable(plugin_tests

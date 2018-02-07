@@ -15,23 +15,10 @@ public:
     virtual void start();
 
 protected:
-    // cli::app
     virtual fc::variant process_command(const std::string& command, const fc::variants& args = fc::variants());
 
-    // fc::api_connection
-    virtual fc::variant send_call(fc::api_id_type, std::string, fc::variants = fc::variants())
-    {
-        FC_ASSERT(false);
-        return fc::variant();
-    }
-    virtual fc::variant send_callback(uint64_t, fc::variants = fc::variants())
-    {
-        FC_ASSERT(false);
-        return fc::variant();
-    }
-    virtual void send_notice(uint64_t, fc::variants = fc::variants())
-    {
-        FC_ASSERT(false);
-    }
+private:
+    void register_types_completions();
+    void register_commands_api_completions();
 };
 }

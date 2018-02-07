@@ -9,8 +9,7 @@ add_library( scorum_witness
 target_link_libraries( scorum_witness
                        scorum_chain
                        scorum_protocol
-                       scorum_app
-                       cli)
+                       scorum_app)
 target_include_directories( scorum_witness
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

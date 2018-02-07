@@ -1,3 +1,5 @@
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+
 set( SOURCES
     main.cpp
     block_tests.cpp
@@ -20,10 +22,6 @@ set( SOURCES
     budget_check/fund_budget.cpp
     budget_check/budget_operations.cpp
     proposal/proposal_tests.cpp
-)
-
-set( HEADERS
-    registration_check/registration_check_common.hpp
 )
 
 add_executable(chain_tests
