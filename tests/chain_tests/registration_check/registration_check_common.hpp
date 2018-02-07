@@ -4,7 +4,7 @@
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/account_objects.hpp>

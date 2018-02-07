@@ -54,12 +54,33 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
 
     const auto& dprops = db_impl().get_dynamic_global_properties();
 
-    const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
-        w.owner = owner;
+    const auto& new_witness = create_internal(owner, block_signing_key);
+
+    db_impl().modify(new_witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
-        w.signing_key = block_signing_key;
         w.created = dprops.time;
         w.proposed_chain_props = props;
+    });
+
+    return new_witness;
+}
+
+const witness_object& dbs_witness::create_initial_witness(const account_name_type& owner,
+                                                          const public_key_type& block_signing_key)
+{
+    const auto& new_witness = create_internal(owner, block_signing_key);
+
+    db_impl().modify(new_witness, [&](witness_object& w) { w.schedule = witness_object::top20; });
+
+    return new_witness;
+}
+
+const witness_object& dbs_witness::create_internal(const account_name_type& owner,
+                                                   const public_key_type& block_signing_key)
+{
+    const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
+        w.owner = owner;
+        w.signing_key = block_signing_key;
         w.hardfork_time_vote = db_impl().get_genesis_time();
     });
 

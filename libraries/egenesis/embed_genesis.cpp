@@ -38,7 +38,7 @@
 #include <fc/string.hpp>
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/protocol/types.hpp>
 
 namespace sp = scorum::protocol;

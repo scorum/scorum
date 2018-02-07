@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 #include "actor.hpp"
 

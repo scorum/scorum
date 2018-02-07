@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <fc/io/json.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 namespace sc = scorum::chain;
 namespace sp = scorum::protocol;

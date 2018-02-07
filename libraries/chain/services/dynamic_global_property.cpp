@@ -21,6 +21,11 @@ const dynamic_global_property_object& dbs_dynamic_global_property::get() const
     FC_CAPTURE_AND_RETHROW()
 }
 
+void dbs_dynamic_global_property::update(const modifier_type& modifier)
+{
+    db_impl().modify(get(), [&](dynamic_global_property_object& cvo) { modifier(cvo); });
+}
+
 fc::time_point_sec dbs_dynamic_global_property::head_block_time() const
 {
     return get().time;

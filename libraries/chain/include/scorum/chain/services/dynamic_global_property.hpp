@@ -10,6 +10,11 @@ class dynamic_global_property_object;
 struct dynamic_global_property_service_i
 {
     virtual const dynamic_global_property_object& get() const = 0;
+
+    using modifier_type = std::function<void(dynamic_global_property_object&)>;
+
+    virtual void update(const modifier_type& modifier) = 0;
+
     virtual fc::time_point_sec head_block_time() const = 0;
 };
 
@@ -22,6 +27,8 @@ protected:
 
 public:
     virtual const dynamic_global_property_object& get() const override;
+
+    virtual void update(const modifier_type& modifier) override;
 
     virtual fc::time_point_sec head_block_time() const override;
 

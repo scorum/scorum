@@ -30,6 +30,10 @@ struct witness_service_i
                                                  const chain_properties& props)
         = 0;
 
+    virtual const witness_object& create_initial_witness(const account_name_type& owner,
+                                                         const public_key_type& block_signing_key)
+        = 0;
+
     virtual void update_witness(const witness_object& witness,
                                 const std::string& url,
                                 const public_key_type& block_signing_key,
@@ -64,6 +68,9 @@ public:
                                          const public_key_type& block_signing_key,
                                          const chain_properties& props) override;
 
+    const witness_object& create_initial_witness(const account_name_type& owner,
+                                                 const public_key_type& block_signing_key) override;
+
     void update_witness(const witness_object& witness,
                         const std::string& url,
                         const public_key_type& block_signing_key,
@@ -74,6 +81,9 @@ public:
 
     /** this is called by `adjust_proxied_witness_votes` when account proxy to self */
     void adjust_witness_votes(const account_object& account, const share_type& delta) override;
+
+private:
+    const witness_object& create_internal(const account_name_type& owner, const public_key_type& block_signing_key);
 };
 } // namespace chain
 } // namespace scorum

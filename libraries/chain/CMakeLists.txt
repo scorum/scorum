@@ -2,7 +2,8 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/evaluators/*.hpp"
                   "include/scorum/chain/schema/*.hpp"
                   "include/scorum/chain/services/*.hpp"
-                  "include/scorum/chain/util/*.hpp")
+                  "include/scorum/chain/util/*.hpp"
+                  "include/scorum/chain/genesis/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -54,7 +55,11 @@ add_library( scorum_chain
              schema/shared_authority.cpp
              block_log.cpp
 
-             genesis.cpp
+             genesis/genesis.cpp
+             genesis/initializators/initializators.cpp
+             genesis/initializators/accounts_initializator.cpp
+             genesis/initializators/founders_initializator.cpp
+             genesis/initializators/witnesses_initializator.cpp
 
              util/reward.cpp
 

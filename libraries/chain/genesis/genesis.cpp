@@ -1,5 +1,4 @@
 #include <scorum/chain/database.hpp>
-#include <scorum/chain/genesis_state.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/account.hpp>
@@ -14,7 +13,12 @@
 
 #include <scorum/chain/schema/reward_pool_object.hpp>
 
-#include <scorum/chain/genesis.hpp>
+#include <scorum/chain/genesis/genesis.hpp>
+#include <scorum/chain/genesis/initializators/accounts_initializator.hpp>
+
+#include <scorum/chain/genesis/initializators/accounts_initializator.hpp>
+#include <scorum/chain/genesis/initializators/founders_initializator.hpp>
+#include <scorum/chain/genesis/initializators/witnesses_initializator.hpp>
 
 #include <fc/io/json.hpp>
 
@@ -72,119 +76,23 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 }
 
 scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
-    : _db(db)
+    : genesis::initializators_registry(db, genesis_state)
+    , _db(db)
     , _genesis_state(genesis_state)
 {
+    const auto& accounts_initializator = register_initializator(new genesis::accounts_initializator);
+    const auto& founders_initializator = register_initializator(new genesis::founders_initializator);
+    const auto& witnesses_initializator = register_initializator(new genesis::witnesses_initializator);
+
     init_global_property_object();
-    init_accounts();
-    init_founders();
-    init_witnesses();
+
+    init(accounts_initializator);
+    init(founders_initializator);
+    init(witnesses_initializator);
+
     init_witness_schedule();
     init_rewards();
     init_registration_objects();
-}
-
-void db_genesis::init_accounts()
-{
-    dbs_account& account_service = _db.obtain_service<dbs_account>();
-
-    asset accounts_supply = _genesis_state.accounts_supply;
-    for (auto& account : _genesis_state.accounts)
-    {
-        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
-
-        accounts_supply -= account.scr_amount;
-    }
-
-    FC_ASSERT(accounts_supply.amount == (share_value_type)0, "'accounts_supply' must be sum of all accounts supply.");
-
-    for (auto& account : _genesis_state.accounts)
-    {
-        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
-
-        account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
-                                               account.recovery_account, "{\"created_at\": \"GENESIS\"}");
-    }
-}
-
-void db_genesis::init_founders()
-{
-    dbs_dynamic_global_property& prop_service = _db.obtain_service<dbs_dynamic_global_property>();
-    const auto& cprops = prop_service.get();
-
-    dbs_account& account_service = _db.obtain_service<dbs_account>();
-
-    asset founders_supply = _genesis_state.founders_supply;
-    uint16_t total_sp_percent = (uint16_t)0;
-    for (auto& founder : _genesis_state.founders)
-    {
-        FC_ASSERT(!founder.name.empty(), "Founder 'name' should not be empty.");
-        account_service.check_account_existence(founder.name);
-        FC_ASSERT(founder.sp_percent >= (uint16_t)0 && founder.sp_percent <= (uint16_t)100,
-                  "Founder 'sp_percent' should be in range [0, 100]. ${1} received.", ("1", founder.sp_percent));
-        FC_ASSERT(founder.sp_percent == (uint16_t)0 || founders_supply.amount > (share_value_type)0,
-                  "Empty 'founders_supply'.");
-
-        total_sp_percent += founder.sp_percent;
-        if (total_sp_percent >= (uint16_t)100)
-            break;
-    }
-
-    FC_ASSERT(total_sp_percent == (uint16_t)100, "Total 'sp_percent' must be 100%.");
-
-    asset founders_supply_rest = founders_supply;
-    account_name_type pitiful;
-    for (auto& founder : _genesis_state.founders)
-    {
-        if (founder.sp_percent == (uint16_t)0)
-            continue;
-
-        const auto& founder_obj = account_service.get_account(founder.name);
-        asset sp_bonus(0, VESTS_SYMBOL);
-        sp_bonus.amount *= founder.sp_percent * SCORUM_1_PERCENT;
-        sp_bonus.amount /= SCORUM_100_PERCENT;
-        if (sp_bonus.amount > (share_value_type)0)
-        {
-            account_service.increase_vesting_shares(founder_obj, sp_bonus);
-            _db.modify(cprops, [&](dynamic_global_property_object& props) { props.total_vesting_shares += sp_bonus; });
-            founders_supply_rest -= sp_bonus;
-        }
-        else if (founder.sp_percent > (uint16_t)0)
-        {
-            pitiful = founder_obj.name;
-        }
-    }
-
-    if (founders_supply_rest.amount > (share_value_type)0)
-    {
-        if (pitiful != account_name_type())
-        {
-            const auto& founder_obj = account_service.get_account(pitiful);
-            account_service.increase_vesting_shares(founder_obj, founders_supply_rest);
-            _db.modify(cprops, [&](dynamic_global_property_object& props) {
-                props.total_vesting_shares += founders_supply_rest;
-            });
-        }
-    }
-}
-
-void db_genesis::init_witnesses()
-{
-    dbs_account& account_service = _db.obtain_service<dbs_account>();
-
-    for (auto& witness : _genesis_state.witness_candidates)
-    {
-        FC_ASSERT(!witness.name.empty(), "Witness 'name' should not be empty.");
-        account_service.check_account_existence(witness.name);
-        FC_ASSERT(witness.block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
-
-        _db.create<witness_object>([&](witness_object& w) {
-            w.owner = witness.name;
-            w.signing_key = witness.block_signing_key;
-            w.schedule = witness_object::top20;
-            w.hardfork_time_vote = _db.get_genesis_time();
-        });
-    }
 }
 
 void db_genesis::init_witness_schedule()

@@ -43,7 +43,7 @@
 #include <scorum/app/api.hpp>
 #include <scorum/protocol/protocol.hpp>
 #include <scorum/wallet/wallet.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/egenesis/egenesis.hpp>
 #include <scorum/cli/formatter.hpp>
 

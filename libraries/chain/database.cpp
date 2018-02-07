@@ -18,7 +18,7 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>

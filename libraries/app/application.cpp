@@ -29,7 +29,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/chain/database_exceptions.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/egenesis/egenesis.hpp>
 
 #include <fc/time.hpp>
