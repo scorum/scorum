@@ -26,11 +26,9 @@ public:
 
     Actor& scorum(asset scr);
 
-    Actor& vests(asset vests);
-
     std::string name;
     asset scr_amount;
-    asset sp_amount;
+    uint16_t sp_percent;
     private_key_type private_key;
     private_key_type post_key;
     public_key_type public_key;

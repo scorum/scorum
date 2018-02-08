@@ -115,8 +115,7 @@ void db_genesis::init_global_property_object()
         gpo.participation_count = 128;
         asset founders_supply = _genesis_state.founders_supply;
         gpo.circulating_capital = _genesis_state.accounts_supply + asset(founders_supply.amount, SCORUM_SYMBOL);
-        gpo.total_supply
-            = gpo.circulating_capital + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
+        gpo.total_supply = gpo.circulating_capital + _genesis_state.rewards_supply + _genesis_state.registration_supply;
         gpo.median_chain_props.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
     });
 }
@@ -138,14 +137,14 @@ void db_genesis::init_rewards()
     dbs_reward& reward_service = _db.obtain_service<dbs_reward>();
     dbs_budget& budget_service = _db.obtain_service<dbs_budget>();
 
-    asset initial_reward_pool_supply(_genesis_state.init_rewards_supply.amount
+    asset initial_reward_pool_supply(_genesis_state.rewards_supply.amount
                                          * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                          / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                                     _genesis_state.init_rewards_supply.symbol());
+                                     _genesis_state.rewards_supply.symbol());
     fc::time_point deadline = _db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     reward_service.create_pool(initial_reward_pool_supply);
-    budget_service.create_fund_budget(_genesis_state.init_rewards_supply - initial_reward_pool_supply, deadline);
+    budget_service.create_fund_budget(_genesis_state.rewards_supply - initial_reward_pool_supply, deadline);
 }
 
 void db_genesis::init_registration_objects()

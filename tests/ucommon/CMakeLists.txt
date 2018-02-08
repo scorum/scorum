@@ -7,25 +7,20 @@ endif()
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
 set( SOURCES
-  database_fixture.cpp
+  actor.cpp
 )
 
-add_library(common_test 
+add_library(ucommon_test 
             ${SOURCES}
             ${HEADERS})
-target_link_libraries(common_test
-                      ucommon_test
+target_link_libraries(ucommon_test
                       HippoMocks
                       chainbase
                       scorum_chain
                       scorum_protocol
-                      scorum_account_history
-                      scorum_witness
-                      scorum_debug_node
                       cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS}
                       )
-target_include_directories(common_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}",
-                                              "../ucommon")
+target_include_directories(ucommon_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

@@ -75,14 +75,14 @@ BOOST_AUTO_TEST_CASE(check_initial_supply)
     BOOST_CHECK(genesis_state.accounts_supply.symbol() == SCORUM_SYMBOL);
 }
 
-BOOST_AUTO_TEST_CASE(check_init_rewards_supply)
+BOOST_AUTO_TEST_CASE(check_rewards_supply)
 {
-    std::string genesis_str = R"json({ "init_rewards_supply": "1.000000000 SCR"})json";
+    std::string genesis_str = R"json({ "rewards_supply": "1.000000000 SCR"})json";
 
     sc::genesis_state_type genesis_state = fc::json::from_string(genesis_str).as<sc::genesis_state_type>();
 
-    BOOST_CHECK(genesis_state.init_rewards_supply.amount == 1000000000);
-    BOOST_CHECK(genesis_state.init_rewards_supply.symbol() == SCORUM_SYMBOL);
+    BOOST_CHECK(genesis_state.rewards_supply.amount == 1000000000);
+    BOOST_CHECK(genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

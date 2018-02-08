@@ -24,7 +24,7 @@ Actor::Actor(const Actor& a)
 {
     this->name = a.name;
     this->scr_amount = a.scr_amount;
-    this->sp_amount = a.sp_amount;
+    this->sp_percent = a.sp_percent;
     this->private_key = a.private_key;
     this->public_key = a.public_key;
     this->post_key = a.post_key;
@@ -33,11 +33,5 @@ Actor::Actor(const Actor& a)
 Actor& Actor::scorum(asset scr)
 {
     scr_amount = scr;
-    return *this;
-}
-
-Actor& Actor::vests(asset vests)
-{
-    sp_amount = vests;
     return *this;
 }

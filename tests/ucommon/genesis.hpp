@@ -31,6 +31,11 @@ private:
         }
     }
 
+    void founder_create(Actor& a)
+    {
+        genesis_state.founders.push_back({ a.name, a.sp_percent });
+    }
+
     void witness_create(Actor& a)
     {
         genesis_state.witness_candidates.push_back({ a.name, a.public_key });
@@ -54,6 +59,16 @@ public:
         for (Actor& a : list)
         {
             account_create(a);
+        }
+        return *this;
+    }
+
+    template <typename... Args> Genesis& founders(Args... args)
+    {
+        std::array<Actor, sizeof...(args)> list = { args... };
+        for (Actor& a : list)
+        {
+            founder_create(a);
         }
         return *this;
     }
@@ -94,13 +109,19 @@ public:
 
     Genesis& accounts_supply(asset amount)
     {
-        genesis_state.registration_bonus = amount;
+        genesis_state.accounts_supply = amount;
         return *this;
     }
 
-    Genesis& init_rewards_supply(asset amount)
+    Genesis& rewards_supply(asset amount)
     {
-        genesis_state.registration_bonus = amount;
+        genesis_state.rewards_supply = amount;
+        return *this;
+    }
+
+    Genesis& founders_supply(asset amount)
+    {
+        genesis_state.founders_supply = amount;
         return *this;
     }
 
