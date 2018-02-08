@@ -1,11 +1,9 @@
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
-//#include <graphene/utilities/words.hpp>
 
 #include <scorum/app/api.hpp>
 #include <scorum/protocol/base.hpp>
 #include <scorum/follow/follow_operations.hpp>
-#include <scorum/private_message/private_message_operations.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/wallet/api_documentation.hpp>
 #include <scorum/wallet/reflect_util.hpp>
@@ -880,22 +878,6 @@ public:
         }
     }
 
-    void use_remote_message_api()
-    {
-        if (_remote_message_api.valid())
-            return;
-
-        try
-        {
-            _remote_message_api = _remote_api->get_api_by_name("private_message_api")->as<private_message_api>();
-        }
-        catch (const fc::exception& e)
-        {
-            elog("Couldn't get private message API");
-            throw(e);
-        }
-    }
-
     void use_follow_api()
     {
         if (_remote_follow_api.valid())
@@ -974,7 +956,6 @@ public:
     fc::api<network_broadcast_api> _remote_net_broadcast;
     optional<fc::api<network_node_api>> _remote_net_node;
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
-    optional<fc::api<private_message_api>> _remote_message_api;
     optional<fc::api<follow::follow_api>> _remote_follow_api;
     uint32_t _tx_expiration_seconds = 30;
 
@@ -2350,134 +2331,6 @@ annotated_signed_transaction wallet_api::follow(const std::string& follower,
     trx.validate();
 
     return my->sign_transaction(trx, broadcast);
-}
-
-annotated_signed_transaction wallet_api::send_private_message(
-    const std::string& from, const std::string& to, const std::string& subject, const std::string& body, bool broadcast)
-{
-    FC_ASSERT(!is_locked(), "wallet must be unlocked to send a private message");
-    auto from_account = get_account(from);
-    auto to_account = get_account(to);
-
-    custom_operation op;
-    op.required_auths.insert(from);
-    op.id = SCORUM_PRIVATE_MESSAGE_COP_ID;
-
-    private_message_operation pmo;
-    pmo.from = from;
-    pmo.to = to;
-    pmo.sent_time = fc::time_point::now().time_since_epoch().count();
-    pmo.from_memo_key = from_account.memo_key;
-    pmo.to_memo_key = to_account.memo_key;
-
-    message_body message;
-    message.subject = subject;
-    message.body = body;
-
-    auto priv_key = wif_to_key(get_private_key(pmo.from_memo_key));
-    FC_ASSERT(priv_key, "unable to find private key for memo");
-    auto shared_secret = priv_key->get_shared_secret(pmo.to_memo_key);
-    fc::sha512::encoder enc;
-    fc::raw::pack(enc, pmo.sent_time);
-    fc::raw::pack(enc, shared_secret);
-    auto encrypt_key = enc.result();
-    auto hash_encrypt_key = fc::sha256::hash(encrypt_key);
-    pmo.checksum = hash_encrypt_key._hash[0];
-
-    std::vector<char> plain_text = fc::raw::pack(message);
-    pmo.encrypted_message = fc::aes_encrypt(encrypt_key, plain_text);
-
-    message_api_obj obj;
-    obj.to_memo_key = pmo.to_memo_key;
-    obj.from_memo_key = pmo.from_memo_key;
-    obj.checksum = pmo.checksum;
-    obj.sent_time = pmo.sent_time;
-    obj.encrypted_message = pmo.encrypted_message;
-    auto decrypted = try_decrypt_message(obj);
-
-    op.data = fc::raw::pack(pmo);
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
-
-    return my->sign_transaction(tx, broadcast);
-}
-message_body wallet_api::try_decrypt_message(const message_api_obj& mo)
-{
-    message_body result;
-
-    fc::sha512 shared_secret;
-
-    auto it = my->_keys.find(mo.from_memo_key);
-    if (it == my->_keys.end())
-    {
-        it = my->_keys.find(mo.to_memo_key);
-        if (it == my->_keys.end())
-        {
-            wlog("unable to find keys");
-            return result;
-        }
-        auto priv_key = wif_to_key(it->second);
-        if (!priv_key)
-            return result;
-        shared_secret = priv_key->get_shared_secret(mo.from_memo_key);
-    }
-    else
-    {
-        auto priv_key = wif_to_key(it->second);
-        if (!priv_key)
-            return result;
-        shared_secret = priv_key->get_shared_secret(mo.to_memo_key);
-    }
-
-    fc::sha512::encoder enc;
-    fc::raw::pack(enc, mo.sent_time);
-    fc::raw::pack(enc, shared_secret);
-    auto encrypt_key = enc.result();
-
-    uint32_t check = fc::sha256::hash(encrypt_key)._hash[0];
-
-    if (mo.checksum != check)
-        return result;
-
-    auto decrypt_data = fc::aes_decrypt(encrypt_key, mo.encrypted_message);
-    try
-    {
-        return fc::raw::unpack<message_body>(decrypt_data);
-    }
-    catch (...)
-    {
-        return result;
-    }
-}
-
-std::vector<extended_message_object>
-wallet_api::get_inbox(const std::string& account, fc::time_point newest, uint32_t limit)
-{
-    FC_ASSERT(!is_locked());
-    std::vector<extended_message_object> result;
-    auto remote_result = (*my->_remote_message_api)->get_inbox(account, newest, limit);
-    for (const auto& item : remote_result)
-    {
-        result.emplace_back(item);
-        result.back().message = try_decrypt_message(item);
-    }
-    return result;
-}
-
-std::vector<extended_message_object>
-wallet_api::get_outbox(const std::string& account, fc::time_point newest, uint32_t limit)
-{
-    FC_ASSERT(!is_locked());
-    std::vector<extended_message_object> result;
-    auto remote_result = (*my->_remote_message_api)->get_outbox(account, newest, limit);
-    for (const auto& item : remote_result)
-    {
-        result.emplace_back(item);
-        result.back().message = try_decrypt_message(item);
-    }
-    return result;
 }
 
 std::vector<budget_api_obj> wallet_api::list_my_budgets()
