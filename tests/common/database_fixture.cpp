@@ -248,7 +248,7 @@ void database_fixture::open_database()
     }
 }
 
-void database_fixture::generate_block(uint32_t skip, const fc::ecc::private_key& key, int miss_blocks)
+void database_fixture::generate_block(uint32_t skip, const private_key_type& key, int miss_blocks)
 {
     skip |= default_skip;
     db_plugin->debug_generate_blocks(graphene::utilities::key_to_wif(key), 1, skip, miss_blocks);
@@ -438,11 +438,6 @@ void database_fixture::proxy(const std::string& account, const std::string& prox
         trx.operations.clear();
     }
     FC_CAPTURE_AND_RETHROW((account)(proxy))
-}
-
-const asset& database_fixture::get_balance(const std::string& account_name) const
-{
-    return db.get_account(account_name).balance;
 }
 
 void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)

@@ -285,12 +285,6 @@ public:
                              const asset& curation_tokens,
                              const asset& beneficiary_value);
 
-    asset get_balance(const account_object& a, asset_symbol_type symbol) const;
-    asset get_balance(const std::string& aname, asset_symbol_type symbol) const
-    {
-        return get_balance(get_account(aname), symbol);
-    }
-
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )

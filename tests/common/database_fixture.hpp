@@ -89,7 +89,6 @@ struct database_fixture
     void vest(const std::string& account, const asset& amount);
     void vest(const std::string& from, const share_type& amount);
     void proxy(const std::string& account, const std::string& proxy);
-    const asset& get_balance(const std::string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);
 
     std::vector<operation> get_last_operations(uint32_t ops);

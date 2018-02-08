@@ -742,8 +742,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
 
     account_service.drop_challenged(from_account);
 
-    FC_ASSERT(dbs_account::get_balance(from_account, o.amount.symbol()) >= o.amount,
-              "Account does not have sufficient funds for transfer.");
+    FC_ASSERT(from_account.balance >= o.amount, "Account does not have sufficient funds for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.increase_balance(to_account, o.amount);
 }
@@ -755,8 +754,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     const auto& from_account = account_service.get_account(o.from);
     const auto& to_account = o.to.size() ? account_service.get_account(o.to) : from_account;
 
-    FC_ASSERT(dbs_account::get_balance(from_account, SCORUM_SYMBOL) >= o.amount,
-              "Account does not have sufficient SCR for transfer.");
+    FC_ASSERT(from_account.balance >= o.amount, "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.create_vesting(to_account, o.amount);
 }

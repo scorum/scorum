@@ -12,8 +12,6 @@ struct account_service_i
 {
     virtual const account_object& get_account(const account_name_type&) const = 0;
 
-    //    static asset get_balance(const account_object& account, asset_symbol_type symbol);
-
     virtual const account_authority_object& get_account_authority(const account_name_type&) const = 0;
 
     virtual void check_account_existence(const account_name_type&,
@@ -141,8 +139,6 @@ protected:
     explicit dbs_account(database& db);
 
 public:
-    static asset get_balance(const account_object& account, asset_symbol_type symbol);
-
     virtual const account_object& get_account(const account_name_type&) const override;
 
     virtual const account_authority_object& get_account_authority(const account_name_type&) const override;

@@ -22,17 +22,6 @@ const account_object& dbs_account::get_account(const account_name_type& name) co
     FC_CAPTURE_AND_RETHROW((name))
 }
 
-asset dbs_account::get_balance(const account_object& account, asset_symbol_type symbol)
-{
-    switch (symbol)
-    {
-    case SCORUM_SYMBOL:
-        return account.balance;
-    default:
-        FC_ASSERT(false, "invalid symbol");
-    }
-}
-
 const account_authority_object& dbs_account::get_account_authority(const account_name_type& name) const
 {
     try

@@ -2239,17 +2239,6 @@ void database::adjust_balance(const account_object& a, const asset& delta)
     });
 }
 
-asset database::get_balance(const account_object& a, asset_symbol_type symbol) const
-{
-    switch (symbol)
-    {
-    case SCORUM_SYMBOL:
-        return a.balance;
-    default:
-        FC_ASSERT(false, "invalid symbol");
-    }
-}
-
 void database::init_hardforks(time_point_sec genesis_time)
 {
     _hardfork_times[0] = genesis_time;
