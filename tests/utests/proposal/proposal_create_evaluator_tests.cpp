@@ -55,6 +55,8 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
                                                                          const fc::optional<const char*>& b) const;
 
     create_proposal_fixture()
+        : INIT_MEMBER_OBJ(proposal)
+        , INIT_MEMBER_OBJ(global_property)
     {
         global_property.invite_quorum = 71u;
         global_property.dropout_quorum = 72u;

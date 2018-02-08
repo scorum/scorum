@@ -20,15 +20,8 @@ using scorum::protocol::asset;
 
 class budget_object : public object<budget_object_type, budget_object>
 {
-    budget_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    budget_object(Constructor&& c, allocator<Allocator> a)
-        : content_permlink(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(budget_object, (content_permlink))
 
     id_type id;
 
@@ -46,14 +39,15 @@ public:
 
 struct by_owner_name;
 
-typedef multi_index_container<budget_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<budget_object, budget_id_type, &budget_object::id>>,
-                                         ordered_non_unique<tag<by_owner_name>,
-                                                            member<budget_object,
-                                                                   account_name_type,
-                                                                   &budget_object::owner>>>,
-                              allocator<budget_object>>
+typedef shared_multi_index_container<budget_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<budget_object,
+                                                                      budget_id_type,
+                                                                      &budget_object::id>>,
+                                                ordered_non_unique<tag<by_owner_name>,
+                                                                   member<budget_object,
+                                                                          account_name_type,
+                                                                          &budget_object::owner>>>>
     budget_index;
 } // namespace chain
 } // namespace scorum

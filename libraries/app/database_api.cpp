@@ -276,7 +276,19 @@ chain_properties database_api::get_chain_properties() const
 
 dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties() const
 {
-    return dynamic_global_property_api_obj(_db.get(dynamic_global_property_id_type()), _db);
+    dynamic_global_property_api_obj gpao;
+    gpao = _db.get(dynamic_global_property_id_type());
+
+    if (_db.has_index<witness::reserve_ratio_index>())
+    {
+        const auto& r = _db.find(witness::reserve_ratio_id_type());
+
+        if (BOOST_LIKELY(r != nullptr))
+        {
+            gpao = *r;
+        }
+    }
+    return gpao;
 }
 
 chain_id_type database_api_impl::get_chain_id() const

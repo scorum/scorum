@@ -11,7 +11,7 @@ class segment_manager
 protected:
     bool _read_only = false;
 
-    std::unique_ptr<bip::managed_mapped_file> _segment;
+    std::unique_ptr<boost::interprocess::managed_mapped_file> _segment;
 
 protected:
     size_t get_free_memory() const;

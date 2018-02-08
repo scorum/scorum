@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fc/shared_string.hpp>
+#include <fc/shared_buffer.hpp>
 
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -19,21 +20,10 @@ using protocol::beneficiary_route_type;
 
 class comment_object : public object<comment_object_type, comment_object>
 {
-    comment_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    comment_object(Constructor&& c, allocator<Allocator> a)
-        : category(a)
-        , parent_permlink(a)
-        , permlink(a)
-        , title(a)
-        , body(a)
-        , json_metadata(a)
-        , beneficiaries(a)
-    {
-        c(*this);
-    }
+    /// \cond DO_NOT_DOCUMENT
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(
+        comment_object, (category)(parent_permlink)(permlink)(title)(body)(json_metadata)(beneficiaries))
 
     id_type id;
 
@@ -86,7 +76,7 @@ public:
     bool allow_votes = true; /// allows a post to receive votes;
     bool allow_curation_rewards = true;
 
-    bip::vector<beneficiary_route_type, allocator<beneficiary_route_type>> beneficiaries;
+    fc::shared_vector<beneficiary_route_type> beneficiaries;
 };
 
 /**
@@ -96,10 +86,7 @@ public:
 class comment_vote_object : public object<comment_vote_object_type, comment_vote_object>
 {
 public:
-    template <typename Constructor, typename Allocator> comment_vote_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(comment_vote_object)
 
     id_type id;
 
@@ -119,7 +106,7 @@ struct by_comment_voter;
 struct by_voter_comment;
 struct by_comment_weight_voter;
 struct by_voter_last_update;
-typedef multi_index_container<comment_vote_object,
+typedef shared_multi_index_container<comment_vote_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<comment_vote_object,
                                                                comment_vote_id_type,
@@ -167,8 +154,8 @@ typedef multi_index_container<comment_vote_object,
                                                                              &comment_vote_object::voter>>,
                                                         composite_key_compare<std::less<comment_id_type>,
                                                                               std::greater<uint64_t>,
-                                                                              std::less<account_id_type>>>>,
-                              allocator<comment_vote_object>>
+                                                                              std::less<account_id_type>>>>
+     >
     comment_vote_index;
 
 struct by_cashout_time; /// cashout_time
@@ -189,7 +176,7 @@ struct by_author_last_update;
 /**
  * @ingroup object_index
  */
-typedef multi_index_container<comment_object,
+typedef shared_multi_index_container<comment_object,
                               indexed_by<
                                   /// CONSENUSS INDICIES - used by evaluators
                                   ordered_unique<tag<by_id>,
@@ -265,8 +252,8 @@ typedef multi_index_container<comment_object,
                                                                        std::greater<time_point_sec>,
                                                                        std::less<comment_id_type>>>
 #endif
-                                  >,
-                              allocator<comment_object>>
+                                  >
+    >
     comment_index;
 
 // clang-format on

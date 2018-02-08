@@ -11,10 +11,7 @@ using scorum::protocol::asset;
 class reward_pool_object : public object<reward_pool_object_type, reward_pool_object>
 {
 public:
-    template <typename Constructor, typename Allocator> reward_pool_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(reward_pool_object)
 
 public:
     reward_pool_id_type id;
@@ -24,12 +21,11 @@ public:
 };
 
 // clang-format off
-using reward_pool_index = multi_index_container<reward_pool_object,
+using reward_pool_index = shared_multi_index_container<reward_pool_object,
                                                 indexed_by<ordered_unique<tag<by_id>, 
                                                                           member<reward_pool_object, 
                                                                                  reward_pool_id_type, 
-                                                                                 &reward_pool_object::id>>>,
-                                                allocator<reward_pool_object>>;
+                                                                                 &reward_pool_object::id>>>>;
 
 } // namespace chain
 } // namespace scorum

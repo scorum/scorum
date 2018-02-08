@@ -27,15 +27,7 @@ class dynamic_global_property_object
     : public object<dynamic_global_property_object_type, dynamic_global_property_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    dynamic_global_property_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
-
-    dynamic_global_property_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(dynamic_global_property_object)
 
     id_type id;
 
@@ -89,12 +81,11 @@ public:
     uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
-typedef multi_index_container<dynamic_global_property_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<dynamic_global_property_object,
-                                                               dynamic_global_property_object::id_type,
-                                                               &dynamic_global_property_object::id>>>,
-                              allocator<dynamic_global_property_object>>
+typedef shared_multi_index_container<dynamic_global_property_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<dynamic_global_property_object,
+                                                                      dynamic_global_property_object::id_type,
+                                                                      &dynamic_global_property_object::id>>>>
     dynamic_global_property_index;
 } // namespace chain
 } // namespace scorum

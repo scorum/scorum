@@ -47,19 +47,21 @@ void segment_manager::create_segment_file(const boost::filesystem::path& file,
     {
         if (read_only)
         {
-            _segment.reset(new bip::managed_mapped_file(bip::open_read_only, file.generic_string().c_str()));
+            _segment.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::open_read_only,
+                                                                        file.generic_string().c_str()));
         }
         else
         {
             auto existing_file_size = boost::filesystem::file_size(file);
             if (shared_file_size > existing_file_size)
             {
-                if (!bip::managed_mapped_file::grow(file.generic_string().c_str(),
-                                                    shared_file_size - existing_file_size))
+                if (!boost::interprocess::managed_mapped_file::grow(file.generic_string().c_str(),
+                                                                    shared_file_size - existing_file_size))
                     BOOST_THROW_EXCEPTION(std::runtime_error("could not grow database file to requested size."));
             }
 
-            _segment.reset(new bip::managed_mapped_file(bip::open_only, file.generic_string().c_str()));
+            _segment.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::open_only,
+                                                                        file.generic_string().c_str()));
         }
 
         _read_only = read_only;
@@ -73,7 +75,8 @@ void segment_manager::create_segment_file(const boost::filesystem::path& file,
     }
     else
     {
-        _segment.reset(new bip::managed_mapped_file(bip::create_only, file.generic_string().c_str(), shared_file_size));
+        _segment.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::create_only,
+                                                                    file.generic_string().c_str(), shared_file_size));
         _segment->construct<environment_check>("environment")();
     }
 }
