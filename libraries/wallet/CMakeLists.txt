@@ -33,7 +33,6 @@ target_link_libraries( scorum_wallet PRIVATE
                        scorum_chain
                        scorum_protocol
                        graphene_utilities
-                       scorum_private_message
                        scorum_app
                        scorum_follow
                        scorum_account_by_key

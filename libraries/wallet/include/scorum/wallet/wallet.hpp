@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scorum/app/api.hpp>
-#include <scorum/private_message/private_message_plugin.hpp>
 #include <scorum/follow/follow_plugin.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
@@ -17,8 +16,6 @@ using namespace scorum::chain;
 
 namespace scorum {
 namespace wallet {
-
-using namespace scorum::private_message;
 
 typedef uint16_t transaction_handle_type;
 
@@ -829,16 +826,6 @@ public:
                                               const std::string& json,
                                               bool broadcast);
 
-    annotated_signed_transaction send_private_message(const std::string& from,
-                                                      const std::string& to,
-                                                      const std::string& subject,
-                                                      const std::string& body,
-                                                      bool broadcast);
-
-    std::vector<extended_message_object> get_inbox(const std::string& account, fc::time_point newest, uint32_t limit);
-    std::vector<extended_message_object> get_outbox(const std::string& account, fc::time_point newest, uint32_t limit);
-    message_body try_decrypt_message(const message_api_obj& mo);
-
     /**
      * Vote on a comment to be paid SCR
      *
@@ -1260,11 +1247,6 @@ FC_API( scorum::wallet::wallet_api,
         (atomicswap_extractsecret)
         (atomicswap_refund)
         (get_atomicswap_contracts)
-
-        // private message api
-        (send_private_message)
-        (get_inbox)
-        (get_outbox)
 
         /// helper api
         (get_prototype_operation)
