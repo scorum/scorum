@@ -11,11 +11,11 @@ curl --silent -XPOST -H "Authorization: token $GITHUB_SECRET" https://api.github
 
 if [ "$DOCKER_HUB" = true ]; then
   docker login --username=$DOCKER_USR --password=$DOCKER_PWD
-  if [[ -z "${DOCKER_IMAGE_VERSION}"  ]]; then
+  if [[ -z "${BUILD_VERSION}"  ]]; then
     FULL_IMAGE_NAME="scorum/$UPLOAD_PATH:${BRANCH_NAME}.${GIT_COMMIT:0:7}"
     docker push "$FULL_IMAGE_NAME"
   else
-    FULL_IMAGE_NAME="scorum/$UPLOAD_PATH:$DOCKER_IMAGE_VERSION.${GIT_COMMIT:0:7}"
+    FULL_IMAGE_NAME="scorum/$UPLOAD_PATH:$BUILD_VERSION.${GIT_COMMIT:0:7}"
     docker tag "scorum/$UPLOAD_PATH:$BRANCH_NAME.${GIT_COMMIT:0:7}" "$FULL_IMAGE_NAME"
     docker push "$FULL_IMAGE_NAME"
   fi
