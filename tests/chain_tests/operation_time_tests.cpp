@@ -8,6 +8,7 @@
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <scorum/chain/util/reward.hpp>
 
@@ -135,22 +136,22 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
         /*
         for( const auto& author : authors )
         {
-           const account_object& a = db.get_account(author.name);
+           const account_object& a = db.obtain_service<dbs_account>().get_account(author.name);
            ilog( "${n} : ${scorum} ${sbd}", ("n", author.name)("scorum", a.reward_scorum_balance)("sbd",
         a.reward_sbd_balance) );
         }
         for( const auto& voter : voters )
         {
-           const account_object& a = db.get_account(voter.name);
+           const account_object& a = db.obtain_service<dbs_account>().get_account(voter.name);
            ilog( "${n} : ${scorum} ${sbd}", ("n", voter.name)("scorum", a.reward_scorum_balance)("sbd",
         a.reward_sbd_balance) );
         }
         */
 
         // SCORUM: rewrite to check SCR reward
-        //        const account_object& alice_account = db.get_account("alice");
-        //        const account_object& bob_account = db.get_account("bob");
-        //        const account_object& dave_account = db.get_account("dave");
+        //        const account_object& alice_account = db.obtain_service<dbs_account>().get_account("alice");
+        //        const account_object& bob_account = db.obtain_service<dbs_account>().get_account("bob");
+        //        const account_object& dave_account = db.obtain_service<dbs_account>().get_account("dave");
 
         //        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "14288.000 TBD" ) );
         //        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "13967.000 TBD" ) );
@@ -233,13 +234,14 @@ BOOST_AUTO_TEST_CASE(reward_fund)
 
         generate_block();
 
-        asset account_initial_vest_supply = db.get_account("alice").vesting_shares;
+        asset account_initial_vest_supply = db.obtain_service<dbs_account>().get_account("alice").vesting_shares;
 
         const auto blocks_between_comments = 5;
 
-        BOOST_REQUIRE_EQUAL(db.get_account("alice").balance, asset(0, SCORUM_SYMBOL));
-        BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, asset(0, SCORUM_SYMBOL));
-        BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares, account_initial_vest_supply);
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").vesting_shares,
+                            account_initial_vest_supply);
 
         comment_operation comment;
         vote_operation vote;
@@ -287,13 +289,13 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
 
             // clang-format off
-            BOOST_REQUIRE_GT   (db.get_account("alice").vesting_shares, account_initial_vest_supply);
-            BOOST_REQUIRE_EQUAL(db.get_account("alice").vesting_shares,
-                                account_initial_vest_supply + ASSET_SP(db.get_account("alice").balance.amount.value));
+            BOOST_REQUIRE_GT   (db.obtain_service<dbs_account>().get_account("alice").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").vesting_shares,
+                                account_initial_vest_supply + ASSET_SP(db.obtain_service<dbs_account>().get_account("alice").balance.amount.value));
 
-            BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares, account_initial_vest_supply);
-            BOOST_REQUIRE_EQUAL(db.get_account("bob").vesting_shares,
-                                account_initial_vest_supply + ASSET_SP(db.get_account("bob").balance.amount.value));
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").vesting_shares,
+                                account_initial_vest_supply + ASSET_SP(db.obtain_service<dbs_account>().get_account("bob").balance.amount.value));
             // clang-format on
 
             validate_database();
@@ -310,8 +312,8 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
             BOOST_REQUIRE_GT(fund.reward_balance, ASSET_SCR(0));
 
-            BOOST_REQUIRE_GT(db.get_account("alice").vesting_shares, account_initial_vest_supply);
-            BOOST_REQUIRE_GT(db.get_account("bob").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").vesting_shares, account_initial_vest_supply);
             // clang-format on
 
             validate_database();
@@ -409,7 +411,7 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
         fund("alice", ASSET_SCR(100e+3));
         vest("alice", ASSET_SCR(100e+3));
 
-        const auto& new_alice = db.get_account("alice");
+        const auto& new_alice = db.obtain_service<dbs_account>().get_account("alice");
 
         BOOST_TEST_MESSAGE("Setting up withdrawal");
 
@@ -431,7 +433,8 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
         BOOST_TEST_MESSAGE("Generating block up to first withdrawal");
         generate_blocks(next_withdrawal - (SCORUM_BLOCK_INTERVAL / 2), true);
 
-        BOOST_REQUIRE(db.get_account("alice").vesting_shares.amount.value == vesting_shares.amount.value);
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").vesting_shares.amount.value
+                      == vesting_shares.amount.value);
 
         BOOST_TEST_MESSAGE("Generating block to cause withdrawal");
         generate_block();
@@ -439,10 +442,12 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
         auto fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
         auto gpo = db.get_dynamic_global_properties();
 
-        BOOST_REQUIRE(db.get_account("alice").vesting_shares.amount.value
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").vesting_shares.amount.value
                       == (vesting_shares - withdraw_rate).amount.value);
-        BOOST_REQUIRE_LE((ASSET_SCR(withdraw_rate.amount.value) - db.get_account("alice").balance).amount.value,
-                         (share_value_type)1);
+        BOOST_REQUIRE_LE(
+            (ASSET_SCR(withdraw_rate.amount.value) - db.obtain_service<dbs_account>().get_account("alice").balance)
+                .amount.value,
+            (share_value_type)1);
         BOOST_REQUIRE(fill_op.from_account == "alice");
         BOOST_REQUIRE(fill_op.to_account == "alice");
         BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
@@ -451,15 +456,15 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
 
         BOOST_TEST_MESSAGE("Generating the rest of the blocks in the withdrawal");
 
-        vesting_shares = db.get_account("alice").vesting_shares;
-        auto balance = db.get_account("alice").balance;
-        auto old_next_vesting = db.get_account("alice").next_vesting_withdrawal;
+        vesting_shares = db.obtain_service<dbs_account>().get_account("alice").vesting_shares;
+        auto balance = db.obtain_service<dbs_account>().get_account("alice").balance;
+        auto old_next_vesting = db.obtain_service<dbs_account>().get_account("alice").next_vesting_withdrawal;
 
         for (int i = 1; i < SCORUM_VESTING_WITHDRAW_INTERVALS - 1; i++)
         {
             generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
 
-            const auto& alice = db.get_account("alice");
+            const auto& alice = db.obtain_service<dbs_account>().get_account("alice");
 
             gpo = db.get_dynamic_global_properties();
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
@@ -493,8 +498,9 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
             gpo = db.get_dynamic_global_properties();
 
-            BOOST_REQUIRE(db.get_account("alice").next_vesting_withdrawal.sec_since_epoch()
-                          == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
+            BOOST_REQUIRE(
+                db.obtain_service<dbs_account>().get_account("alice").next_vesting_withdrawal.sec_since_epoch()
+                == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
             BOOST_REQUIRE(fill_op.from_account == "alice");
             BOOST_REQUIRE(fill_op.to_account == "alice");
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
@@ -504,8 +510,9 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             gpo = db.get_dynamic_global_properties();
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
 
-            BOOST_REQUIRE(db.get_account("alice").next_vesting_withdrawal.sec_since_epoch()
-                          == fc::time_point_sec::maximum().sec_since_epoch());
+            BOOST_REQUIRE(
+                db.obtain_service<dbs_account>().get_account("alice").next_vesting_withdrawal.sec_since_epoch()
+                == fc::time_point_sec::maximum().sec_since_epoch());
             BOOST_REQUIRE(fill_op.to_account == "alice");
             BOOST_REQUIRE(fill_op.from_account == "alice");
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == to_withdraw.amount.value % withdraw_rate.amount.value);
@@ -517,8 +524,9 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
         {
             generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
 
-            BOOST_REQUIRE(db.get_account("alice").next_vesting_withdrawal.sec_since_epoch()
-                          == fc::time_point_sec::maximum().sec_since_epoch());
+            BOOST_REQUIRE(
+                db.obtain_service<dbs_account>().get_account("alice").next_vesting_withdrawal.sec_since_epoch()
+                == fc::time_point_sec::maximum().sec_since_epoch());
 
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
             BOOST_REQUIRE(fill_op.from_account == "alice");
@@ -527,7 +535,7 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             BOOST_REQUIRE(std::abs((fill_op.deposited - ASSET_SCR(fill_op.withdrawn.amount.value)).amount.value) <= 1);
         }
 
-        BOOST_REQUIRE(db.get_account("alice").vesting_shares.amount.value
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").vesting_shares.amount.value
                       == (original_vesting - op.vesting_shares).amount.value);
     }
     FC_LOG_AND_RETHROW()
@@ -588,9 +596,9 @@ BOOST_AUTO_TEST_CASE(vesting_withdraw_route)
         generate_blocks(alice.next_vesting_withdrawal, true);
 
         {
-            const auto& alice = db.get_account("alice");
-            const auto& bob = db.get_account("bob");
-            const auto& sam = db.get_account("sam");
+            const auto& alice = db.obtain_service<dbs_account>().get_account("alice");
+            const auto& bob = db.obtain_service<dbs_account>().get_account("bob");
+            const auto& sam = db.obtain_service<dbs_account>().get_account("sam");
 
             BOOST_REQUIRE(alice.vesting_shares == old_alice_vesting - vesting_withdraw_rate);
             BOOST_REQUIRE(alice.balance
@@ -639,11 +647,11 @@ BOOST_AUTO_TEST_CASE(vesting_withdraw_route)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        generate_blocks(db.get_account("alice").next_vesting_withdrawal, true);
+        generate_blocks(db.obtain_service<dbs_account>().get_account("alice").next_vesting_withdrawal, true);
         {
-            const auto& alice = db.get_account("alice");
-            const auto& bob = db.get_account("bob");
-            const auto& sam = db.get_account("sam");
+            const auto& alice = db.obtain_service<dbs_account>().get_account("alice");
+            const auto& bob = db.obtain_service<dbs_account>().get_account("bob");
+            const auto& sam = db.obtain_service<dbs_account>().get_account("sam");
 
             BOOST_REQUIRE(alice.vesting_shares == old_alice_vesting - vesting_withdraw_rate);
             BOOST_REQUIRE(alice.balance == old_alice_balance);

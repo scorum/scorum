@@ -297,7 +297,7 @@ const account_object& database_fixture::account_create(const std::string& name,
         trx.operations.clear();
         trx.signatures.clear();
 
-        const account_object& acct = db.get_account(name);
+        const account_object& acct = db.obtain_service<dbs_account>().get_account(name);
 
         return acct;
     }

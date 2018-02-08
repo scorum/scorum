@@ -7,6 +7,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include "database_fixture.hpp"
 
@@ -142,11 +143,11 @@ BOOST_AUTO_TEST_CASE(old_tests)
 
         generate_blocks(db.get_comment("alice", std::string("test")).cashout_time - SCORUM_BLOCK_INTERVAL);
 
-        BOOST_REQUIRE_EQUAL(db.get_account("bob").balance, ASSET_SCR(0));
-        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, ASSET_SCR(0));
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, ASSET_SCR(0));
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, ASSET_SCR(0));
 
-        asset bob_vesting_before = db.get_account("bob").vesting_shares;
-        asset sam_vesting_before = db.get_account("sam").vesting_shares;
+        asset bob_vesting_before = db.obtain_service<dbs_account>().get_account("bob").vesting_shares;
+        asset sam_vesting_before = db.obtain_service<dbs_account>().get_account("sam").vesting_shares;
 
         comment_benefactor_reward_visitor visitor(db);
 
@@ -161,8 +162,10 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE(visitor.reward_map.find("bob") != visitor.reward_map.end());
         BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
 
-        BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"], (db.get_account("bob").vesting_shares - bob_vesting_before));
-        BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"], (db.get_account("sam").vesting_shares - sam_vesting_before));
+        BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"],
+                            (db.obtain_service<dbs_account>().get_account("bob").vesting_shares - bob_vesting_before));
+        BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"],
+                            (db.obtain_service<dbs_account>().get_account("sam").vesting_shares - sam_vesting_before));
 
         // clang-format off
         BOOST_REQUIRE_EQUAL(asset(db.get_comment("alice", std::string("test")).beneficiary_payout_value.amount, VESTS_SYMBOL),

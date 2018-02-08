@@ -403,20 +403,6 @@ const witness_object* database::find_witness(const account_name_type& name) cons
     return find<witness_object, by_name>(name);
 }
 
-const account_object& database::get_account(const account_name_type& name) const
-{
-    try
-    {
-        return get<account_object, by_name>(name);
-    }
-    FC_CAPTURE_AND_RETHROW((name))
-}
-
-const account_object* database::find_account(const account_name_type& name) const
-{
-    return find<account_object, by_name>(name);
-}
-
 const comment_object& database::get_comment(const account_name_type& author, const fc::shared_string& permlink) const
 {
     try
@@ -1211,7 +1197,7 @@ share_type database::pay_for_comment(const share_type& reward_tokens, const comm
             for (auto& b : comment.beneficiaries)
             {
                 auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                asset vest_created = account_service.create_vesting(get_account(b.account), asset(benefactor_tokens, SCORUM_SYMBOL));
+                asset vest_created = account_service.create_vesting(account_service.get_account(b.account), asset(benefactor_tokens, SCORUM_SYMBOL));
                 push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), vest_created));
                 total_beneficiary += benefactor_tokens;
             }
@@ -1223,7 +1209,7 @@ share_type database::pay_for_comment(const share_type& reward_tokens, const comm
             auto payout_scorum  = asset((author_tokens * comment.percent_scrs) / (2 * SCORUM_100_PERCENT), SCORUM_SYMBOL);
             auto vesting_scorum = asset((author_tokens - payout_scorum.amount), SCORUM_SYMBOL);
 
-            const auto& author = get_account(comment.author);
+            const auto& author = account_service.get_account(comment.author);
             account_service.increase_balance(author, payout_scorum);
             asset vest_created = account_service.create_vesting(author, vesting_scorum);
 
@@ -1379,7 +1365,8 @@ void database::process_funds()
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
     }
 
-    const auto producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
+    const auto producer_reward
+        = account_service.create_vesting(account_service.get_account(cwit.owner), witness_reward);
     push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 
@@ -1410,9 +1397,10 @@ void database::account_recovery_processing()
     const auto& change_req_idx = get_index<change_recovery_account_request_index>().indices().get<by_effective_date>();
     auto change_req = change_req_idx.begin();
 
+    const dbs_account& account_service = obtain_service<dbs_account>();
     while (change_req != change_req_idx.end() && change_req->effective_on <= head_block_time())
     {
-        modify(get_account(change_req->account_to_recover),
+        modify(account_service.get_account(change_req->account_to_recover),
                [&](account_object& a) { a.recovery_account = change_req->recovery_account; });
 
         remove(*change_req);
@@ -1431,7 +1419,7 @@ void database::expire_escrow_ratification()
         const auto& old_escrow = *escrow_itr;
         ++escrow_itr;
 
-        const auto& from_account = get_account(old_escrow.from);
+        const auto& from_account = obtain_service<dbs_account>().get_account(old_escrow.from);
         adjust_balance(from_account, old_escrow.scorum_balance);
         adjust_balance(from_account, old_escrow.pending_fee);
 
@@ -2212,10 +2200,11 @@ void database::clear_expired_delegations()
 {
     auto now = head_block_time();
     const auto& delegations_by_exp = get_index<vesting_delegation_expiration_index, by_expiration>();
+    const auto& account_service = obtain_service<dbs_account>();
     auto itr = delegations_by_exp.begin();
     while (itr != delegations_by_exp.end() && itr->expiration < now)
     {
-        modify(get_account(itr->delegator),
+        modify(account_service.get_account(itr->delegator),
                [&](account_object& a) { a.delegated_vesting_shares -= itr->vesting_shares; });
 
         push_virtual_operation(return_vesting_delegation_operation(itr->delegator, itr->vesting_shares));
@@ -2490,6 +2479,11 @@ void database::retally_witness_votes()
 }
 } // namespace chain
 } // namespace scorum
+
+
+
+
+
 
 
 

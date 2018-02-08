@@ -30,6 +30,7 @@
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <fc/time.hpp>
 
@@ -220,7 +221,7 @@ void witness_plugin_impl::pre_transaction(const signed_transaction& trx)
 
     for (const auto& auth : required)
     {
-        const auto& acnt = _db.get_account(auth);
+        const auto& acnt = _db.obtain_service<dbs_account>().get_account(auth);
 
         update_account_bandwidth(acnt, trx_size, bandwidth_type::forum);
 

@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
 
         private_key_type priv_key = generate_private_key("alice");
 
-        const account_object& init = db.get_account(TEST_INIT_DELEGATE_NAME);
+        const account_object& init = db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME);
         asset init_starting_balance = init.balance;
 
         account_create_operation op;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         tx.validate();
         db.push_transaction(tx, 0);
 
-        const account_object& acct = db.get_account("alice");
+        const account_object& acct = db.obtain_service<dbs_account>().get_account("alice");
         const account_authority_object& acct_auth = db.get<account_authority_object, by_account>("alice");
 
         BOOST_REQUIRE(acct.name == "alice");
@@ -157,7 +157,8 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_TEST_MESSAGE("--- Test failure when creator cannot cover fee");
         tx.signatures.clear();
         tx.operations.clear();
-        op.fee = asset(db.get_account(TEST_INIT_DELEGATE_NAME).balance.amount + 1, SCORUM_SYMBOL);
+        op.fee = asset(db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME).balance.amount + 1,
+                       SCORUM_SYMBOL);
         op.new_account_name = "bob";
         tx.operations.push_back(op);
         tx.sign(init_account_priv_key, db.get_chain_id());
@@ -324,7 +325,7 @@ BOOST_AUTO_TEST_CASE(account_update_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const account_object& acct = db.get_account("alice");
+        const account_object& acct = db.obtain_service<dbs_account>().get_account("alice");
         const account_authority_object& acct_auth = db.get<account_authority_object, by_account>("alice");
 
         BOOST_REQUIRE(acct.name == "alice");
@@ -874,8 +875,8 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
         BOOST_TEST_MESSAGE("--- Generating a block");
         generate_block();
 
-        const auto& new_alice = db.get_account("alice");
-        const auto& new_bob = db.get_account("bob");
+        const auto& new_alice = db.obtain_service<dbs_account>().get_account("alice");
+        const auto& new_bob = db.obtain_service<dbs_account>().get_account("bob");
 
         BOOST_REQUIRE(new_alice.balance.amount.value == ASSET_SCR(5e+3).amount.value);
         BOOST_REQUIRE(new_bob.balance.amount.value == ASSET_SCR(5e+3).amount.value);
@@ -1107,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
         BOOST_TEST_MESSAGE("--- Test withdraw of existing SP");
 
         {
-            const auto& alice = db.get_account("alice");
+            const auto& alice = db.obtain_service<dbs_account>().get_account("alice");
 
             withdraw_vesting_operation op;
             op.account = "alice";
@@ -1198,7 +1199,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_account("alice").vesting_withdraw_rate == ASSET_SP(0));
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").vesting_withdraw_rate == ASSET_SP(0));
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -2472,7 +2473,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(10e+3));
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- test ratification expiration when escrow is only approved by to");
@@ -2496,7 +2497,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(10e+3));
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- test ratification expiration when escrow is only approved by agent");
@@ -2519,7 +2520,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
         SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
-        BOOST_REQUIRE(db.get_account("alice").balance == ASSET_SCR(10e+3));
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
         BOOST_TEST_MESSAGE("--- success approving escrow");
@@ -2559,7 +2560,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
             BOOST_REQUIRE(!escrow.disputed);
         }
 
-        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, et_op.fee);
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, et_op.fee);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- ratification expiration does not remove an approved escrow");
@@ -2578,7 +2579,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
             BOOST_REQUIRE(!escrow.disputed);
         }
 
-        BOOST_REQUIRE_EQUAL(db.get_account("sam").balance, et_op.fee);
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, et_op.fee);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -2917,9 +2918,9 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
 
         generate_block();
 
-        const account_object& alice_vested = db.get_account("alice");
-        const account_object& bob_vested = db.get_account("bob");
-        const account_object& sam_vested = db.get_account("sam");
+        const account_object& alice_vested = db.obtain_service<dbs_account>().get_account("alice");
+        const account_object& bob_vested = db.obtain_service<dbs_account>().get_account("bob");
+        const account_object& sam_vested = db.obtain_service<dbs_account>().get_account("sam");
 
         auto initial_alice_balance = alice_vested.balance;
         const auto escrow_transfer_amount = ASSET_SCR(1e+3);
@@ -3409,7 +3410,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         db.push_transaction(tx, 0);
 
         const auto& request_idx = db.get_index<decline_voting_rights_request_index>().indices().get<by_account>();
-        auto itr = request_idx.find(db.get_account("alice").id);
+        auto itr = request_idx.find(db.obtain_service<dbs_account>().get_account("alice").id);
         BOOST_REQUIRE(itr != request_idx.end());
         BOOST_REQUIRE(itr->effective_date == db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
 
@@ -3428,7 +3429,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        itr = request_idx.find(db.get_account("alice").id);
+        itr = request_idx.find(db.obtain_service<dbs_account>().get_account("alice").id);
         BOOST_REQUIRE(itr == request_idx.end());
 
         BOOST_TEST_MESSAGE("--- failure cancelling a request that doesn't exist");
@@ -3448,7 +3449,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
 
         generate_blocks(db.head_block_time() + SCORUM_OWNER_AUTH_RECOVERY_PERIOD - fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
-        BOOST_REQUIRE(db.get_account("alice").can_vote);
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").can_vote);
         witness_create("alice", alice_private_key, "foo.bar", alice_private_key.get_public_key(), 0);
 
         account_witness_vote_operation witness_vote;
@@ -3480,14 +3481,15 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
 
         BOOST_TEST_MESSAGE("--- check account cannot vote after request is processed");
         generate_block();
-        BOOST_REQUIRE(!db.get_account("alice").can_vote);
+        BOOST_REQUIRE(!db.obtain_service<dbs_account>().get_account("alice").can_vote);
         validate_database();
 
-        itr = request_idx.find(db.get_account("alice").id);
+        itr = request_idx.find(db.obtain_service<dbs_account>().get_account("alice").id);
         BOOST_REQUIRE(itr == request_idx.end());
 
         const auto& witness_idx = db.get_index<witness_vote_index>().indices().get<by_account_witness>();
-        auto witness_itr = witness_idx.find(boost::make_tuple(db.get_account("alice").id, db.get_witness("alice").id));
+        auto witness_itr = witness_idx.find(
+            boost::make_tuple(db.obtain_service<dbs_account>().get_account("alice").id, db.get_witness("alice").id));
         BOOST_REQUIRE(witness_itr == witness_idx.end());
 
         tx.clear();
@@ -3496,8 +3498,8 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        db.get<comment_vote_object, by_comment_voter>(
-            boost::make_tuple(db.get_comment("alice", string("test")).id, db.get_account("alice").id));
+        db.get<comment_vote_object, by_comment_voter>(boost::make_tuple(
+            db.get_comment("alice", string("test")).id, db.obtain_service<dbs_account>().get_account("alice").id));
 
         vote.weight = (int16_t)0;
         tx.clear();
@@ -3885,8 +3887,8 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
         generate_blocks(1);
-        const account_object& alice_acc = db.get_account("alice");
-        const account_object& bob_acc = db.get_account("bob");
+        const account_object& alice_acc = db.obtain_service<dbs_account>().get_account("alice");
+        const account_object& bob_acc = db.obtain_service<dbs_account>().get_account("bob");
 
         BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
         BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);
@@ -3962,7 +3964,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         generate_block();
 
-        auto sam_vest = db.get_account("sam").vesting_shares;
+        auto sam_vest = db.obtain_service<dbs_account>().get_account("sam").vesting_shares;
 
         BOOST_TEST_MESSAGE("--- Test failure when delegating 0 SP");
         tx.clear();
@@ -4029,8 +4031,8 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         BOOST_REQUIRE(exp_obj->delegator == "sam");
         BOOST_REQUIRE(exp_obj->vesting_shares == sam_vest);
         BOOST_REQUIRE(exp_obj->expiration == db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
-        BOOST_REQUIRE(db.get_account("sam").delegated_vesting_shares == sam_vest);
-        BOOST_REQUIRE(db.get_account("dave").received_vesting_shares == ASSET_SP(0));
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("sam").delegated_vesting_shares == sam_vest);
+        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("dave").received_vesting_shares == ASSET_SP(0));
         delegation = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
         BOOST_REQUIRE(delegation == nullptr);
 
@@ -4040,7 +4042,8 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
         end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj == end);
-        BOOST_REQUIRE_EQUAL(db.get_account("sam").delegated_vesting_shares, ASSET_NULL_SP);
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").delegated_vesting_shares,
+                            ASSET_NULL_SP);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -4081,8 +4084,8 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
         generate_block();
-        const account_object& alice_acc = db.get_account("alice");
-        const account_object& bob_acc = db.get_account("bob");
+        const account_object& alice_acc = db.obtain_service<dbs_account>().get_account("alice");
+        const account_object& bob_acc = db.obtain_service<dbs_account>().get_account("bob");
 
         BOOST_REQUIRE_EQUAL(alice_acc.delegated_vesting_shares, to_delegate);
         BOOST_REQUIRE_EQUAL(bob_acc.received_vesting_shares, to_delegate);

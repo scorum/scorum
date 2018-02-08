@@ -4,6 +4,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
@@ -99,7 +100,7 @@ struct operation_process
         _db.modify(_bucket, [&](bucket_object& b) {
             const auto& cv_idx = _db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
             const auto& comment = _db.get_comment(op.author, op.permlink);
-            const auto& voter = _db.get_account(op.voter);
+            const auto& voter = _db.obtain_service<chain::dbs_account>().get_account(op.voter);
             const auto itr = cv_idx.find(boost::make_tuple(comment.id, voter.id));
 
             if (itr->num_changes)
@@ -143,7 +144,7 @@ struct operation_process
 
     void operator()(const fill_vesting_withdraw_operation& op) const
     {
-        const auto& account = _db.get_account(op.from_account);
+        const auto& account = _db.obtain_service<chain::dbs_account>().get_account(op.from_account);
 
         _db.modify(_bucket, [&](bucket_object& b) {
             b.vesting_withdrawals_processed++;
@@ -263,7 +264,7 @@ void blockchain_statistics_plugin_impl::pre_operation(const operation_notificati
         else if (o.op.which() == operation::tag<withdraw_vesting_operation>::value)
         {
             withdraw_vesting_operation op = o.op.get<withdraw_vesting_operation>();
-            const auto& account = db.get_account(op.account);
+            const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
             const auto& bucket = db.get(bucket_id);
 
             auto new_vesting_withdrawal_rate = op.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
