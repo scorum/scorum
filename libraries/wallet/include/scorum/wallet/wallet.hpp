@@ -641,11 +641,11 @@ public:
                                                   bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another. SCR and SBD can be transferred.
+     * Transfer funds from one account to another.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
-     * @param amount The funds being transferred. i.e. "100.000 SCR"
+     * @param amount The funds being transferred. i.e. "100.000000000 SCR"
      * @param memo A memo for the transactionm, encrypted with the to account's public memo key
      * @param broadcast true if you wish to broadcast the transaction
      */
@@ -656,7 +656,7 @@ public:
                                           bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another using escrow. SCR and SBD can be transferred.
+     * Transfer funds from one account to another using escrow.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
@@ -745,18 +745,18 @@ public:
      *
      * @param from The account the SCR is coming from
      * @param to The account getting the SP
-     * @param amount The amount of SCR to vest i.e. "100.00 SCR"
+     * @param amount The amount of SCR to vest i.e. "100.000000000 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
     transfer_to_vesting(const std::string& from, const std::string& to, const asset& amount, bool broadcast = false);
 
     /**
-     * Set up a vesting withdraw request. The request is fulfilled once a week over the next two year (104 weeks).
+     * Set up a vesting withdraw request. The request is fulfilled once a week over the next 13 weeks.
      *
      * @param from The account the SP are withdrawn from
-     * @param vesting_shares The amount of SP to withdraw over the next two years. Each week (amount/104) shares are
-     *    withdrawn and deposited back as SCR. i.e. "10.000000 SP"
+     * @param vesting_shares The amount of SP to withdraw over the next 13 weeks. Each week (amount/13) shares are
+     *    withdrawn and deposited back as SCR. i.e. "10.000000000 SP"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
@@ -770,7 +770,7 @@ public:
      * @param to   The account receiving either SP or SCR.
      * @param percent The percent of the withdraw to go to the 'to' account. This is denoted in hundreths of a percent.
      *    i.e. 100 is 1% and 10000 is 100%. This value must be between 1 and 100000
-     * @param auto_vest Set to true if the from account should receive the SP as SP, or false if it should receive
+     * @param auto_vest Set to true if the 'to' account should receive the SP as SP, or false if it should receive
      *    them as SCR.
      * @param broadcast true if you wish to broadcast the transaction.
      */

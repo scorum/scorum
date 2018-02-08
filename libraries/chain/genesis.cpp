@@ -100,6 +100,7 @@ void db_genesis::init_witnesses()
     for (auto& witness : _genesis_state.witness_candidates)
     {
         FC_ASSERT(!witness.owner_name.empty(), "Witness 'owner_name' should not be empty.");
+        FC_ASSERT(witness.block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
 
         _db.create<witness_object>([&](witness_object& w) {
             w.owner = witness.owner_name;
@@ -128,11 +129,10 @@ void db_genesis::init_global_property_object()
         gpo.time = _db.get_genesis_time();
         gpo.recent_slots_filled = fc::uint128::max_value();
         gpo.participation_count = 128;
-        gpo.accounts_current_supply = _genesis_state.init_accounts_supply;
+        gpo.circulating_capital = _genesis_state.init_accounts_supply;
         gpo.total_supply
-            = gpo.accounts_current_supply + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
-        gpo.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
-        gpo.total_reward_shares2 = 0;
+            = gpo.circulating_capital + _genesis_state.init_rewards_supply + _genesis_state.registration_supply;
+        gpo.median_chain_props.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
     });
 }
 
@@ -156,7 +156,7 @@ void db_genesis::init_rewards()
     asset initial_reward_pool_supply(_genesis_state.init_rewards_supply.amount
                                          * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                          / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                                     _genesis_state.init_rewards_supply.symbol);
+                                     _genesis_state.init_rewards_supply.symbol());
     fc::time_point deadline = _db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     reward_service.create_pool(initial_reward_pool_supply);

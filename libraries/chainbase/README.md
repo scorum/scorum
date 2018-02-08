@@ -50,8 +50,8 @@ struct by_date;
 
 /**
  * This is a relatively standard boost multi_index_container definition that has three 
- * requirements to be used withn a chainbase database:
- *   - it must use chainbase::allocator<T> 
+ * requirements to be used within a chainbase database:
+ *   - it must use fc::shared_allocator<T> 
  *   - the first index must be on the primary key (id) and must be unique (hashed or ordered)
  */
 typedef multi_index_container<
@@ -61,7 +61,7 @@ typedef multi_index_container<
      ordered_non_unique< tag<by_pages>, BOOST_MULTI_INDEX_MEMBER(book,int,pages) >,
      ordered_non_unique< tag<by_date>, BOOST_MULTI_INDEX_MEMBER(book,int,publish_date) >
   >,
-  chainbase::allocator<book> ///< required for use with chainbase::database
+  fc::shared_allocator<book> ///< required for use with chainbase::database
 > book_index;
 
 /**

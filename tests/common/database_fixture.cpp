@@ -19,6 +19,8 @@
 
 #include "database_fixture.hpp"
 
+#define SCORUM_MIN_PRODUCER_REWARD asset(1000, SCORUM_SYMBOL)
+
 namespace scorum {
 namespace chain {
 
@@ -125,11 +127,6 @@ clean_database_fixture::~clean_database_fixture()
         {
             BOOST_CHECK(db.get_node_properties().skip_flags == database::skip_nothing);
         }
-
-        if (data_dir)
-            db.close();
-
-        return;
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -313,9 +310,9 @@ database_fixture::account_create(const std::string& name, const public_key_type&
     try
     {
         return account_create(name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
-                              std::max(db.get_witness_schedule_object().median_props.account_creation_fee.amount
+                              std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                                       share_type(100)),
+                                       (SUFFICIENT_FEE).amount),
                               key, post_key, "");
     }
     FC_CAPTURE_AND_RETHROW((name));
@@ -338,7 +335,6 @@ const witness_object& database_fixture::witness_create(const std::string& owner,
         op.owner = owner;
         op.url = url;
         op.block_signing_key = signing_key;
-        op.fee = asset(fee, SCORUM_SYMBOL);
 
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -364,7 +360,7 @@ void database_fixture::fund(const std::string& account_name, const share_type& a
 
 void database_fixture::fund(const std::string& account_name, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
     try
     {
@@ -416,7 +412,7 @@ void database_fixture::transfer_to_vest(const std::string& from, const std::stri
 
 void database_fixture::vest(const std::string& account_name, const asset& amount)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) in ${1}.", ("1", __FUNCTION__));
 
     try
     {

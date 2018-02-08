@@ -53,15 +53,13 @@ using chain::account_object;
 
 void new_chain_banner(const scorum::chain::database& db)
 {
-    std::cerr << "\n"
-                 "********************************\n"
-                 "*                              *\n"
-                 "*   ------- NEW CHAIN ------   *\n"
-                 "*   -   Welcome to Scorum!  -   *\n"
-                 "*   ------------------------   *\n"
-                 "*                              *\n"
-                 "********************************\n"
-                 "\n";
+    const std::string welcome = "Welcome to Scorum!";
+    const std::string info_ch = "NEW CHAIN";
+
+    std::cerr << info_ch;
+    std::cerr << std::endl;
+    std::cerr << welcome;
+    std::cerr << std::endl;
     return;
 }
 
@@ -97,26 +95,6 @@ void witness_plugin_impl::plugin_initialize()
 
     _self.database().set_custom_operation_interpreter(_self.plugin_name(), _custom_operation_interpreter);
 }
-
-struct comment_options_extension_visitor
-{
-    comment_options_extension_visitor(const comment_object& c, const database& db)
-        : _c(c)
-        , _db(db)
-    {
-    }
-
-    typedef void result_type;
-
-    const comment_object& _c;
-    const database& _db;
-
-    void operator()(const comment_payout_beneficiaries& cpb) const
-    {
-        SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
-                      "Cannot specify more than 8 beneficiaries.");
-    }
-};
 
 void check_memo(const std::string& memo, const account_object& account, const account_authority_object& auth)
 {
@@ -192,13 +170,11 @@ struct operation_visitor
 
     void operator()(const comment_options_operation& o) const
     {
-        const auto& comment = _db.get_comment(o.author, o.permlink);
-
-        comment_options_extension_visitor v(comment, _db);
-
         for (auto& e : o.extensions)
         {
-            e.visit(v);
+            const comment_payout_beneficiaries& cpb = e.get<comment_payout_beneficiaries>();
+            SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
+                          "Cannot specify more than 8 beneficiaries.");
         }
     }
 
@@ -271,7 +247,7 @@ void witness_plugin_impl::pre_operation(const operation_notification& note)
 void witness_plugin_impl::on_block(const signed_block& b)
 {
     auto& db = _self.database();
-    int64_t max_block_size = db.get_dynamic_global_properties().maximum_block_size;
+    int64_t max_block_size = db.get_dynamic_global_properties().median_chain_props.maximum_block_size;
 
     auto reserve_ratio_ptr = db.find(reserve_ratio_id_type());
 

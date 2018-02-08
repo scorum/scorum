@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scorum/protocol/authority.hpp>
-#include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
@@ -15,7 +14,6 @@ using scorum::protocol::asset_symbol_type;
 using scorum::protocol::chain_properties;
 using scorum::protocol::digest_type;
 using scorum::protocol::hardfork_version;
-using scorum::protocol::price;
 using scorum::protocol::public_key_type;
 using scorum::protocol::version;
 
@@ -26,22 +24,15 @@ using scorum::protocol::version;
  */
 class witness_object : public object<witness_object_type, witness_object>
 {
-    witness_object() = delete;
-
 public:
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(witness_object, (url))
+
     enum witness_schedule_type
     {
         top20,
         timeshare,
         none
     };
-
-    template <typename Constructor, typename Allocator>
-    witness_object(Constructor&& c, allocator<Allocator> a)
-        : url(a)
-    {
-        c(*this);
-    }
 
     id_type id;
 
@@ -50,7 +41,6 @@ public:
     time_point_sec created;
     fc::shared_string url;
     uint32_t total_missed = 0;
-    uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
 
     /**
@@ -58,9 +48,7 @@ public:
      */
     public_key_type signing_key;
 
-    chain_properties props;
-    price sbd_exchange_rate;
-    time_point_sec last_sbd_exchange_update;
+    chain_properties proposed_chain_props;
 
     /**
      *  The total votes for this witness. This determines how the witness is ranked for
@@ -98,8 +86,6 @@ public:
     fc::uint128 virtual_scheduled_time = fc::uint128::max_value();
     ///@}
 
-    digest_type last_work;
-
     /**
      * This field represents the Scorum blockchain version the witness is running.
      */
@@ -112,14 +98,7 @@ public:
 class witness_vote_object : public object<witness_vote_object_type, witness_vote_object>
 {
 public:
-    template <typename Constructor, typename Allocator> witness_vote_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    witness_vote_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(witness_vote_object)
 
     id_type id;
 
@@ -130,106 +109,88 @@ public:
 class witness_schedule_object : public object<witness_schedule_object_type, witness_schedule_object>
 {
 public:
-    template <typename Constructor, typename Allocator> witness_schedule_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    witness_schedule_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(witness_schedule_object)
 
     id_type id;
 
     fc::uint128 current_virtual_time;
-    uint32_t next_shuffle_block_num = 1;
     fc::array<account_name_type, SCORUM_MAX_WITNESSES> current_shuffled_witnesses;
     uint8_t num_scheduled_witnesses = 1;
-    chain_properties median_props;
-    version majority_version;
-
-    uint8_t max_voted_witnesses = SCORUM_MAX_VOTED_WITNESSES;
-    uint8_t max_runner_witnesses = SCORUM_MAX_RUNNER_WITNESSES;
-    uint8_t hardfork_required_witnesses = SCORUM_HARDFORK_REQUIRED_WITNESSES;
 };
 
 struct by_vote_name;
 struct by_name;
 struct by_pow;
-struct by_work;
 struct by_schedule_time;
 /**
  * @ingroup object_index
  */
-typedef multi_index_container<witness_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<witness_object, witness_id_type, &witness_object::id>>,
-                                         ordered_non_unique<tag<by_work>,
-                                                            member<witness_object,
-                                                                   digest_type,
-                                                                   &witness_object::last_work>>,
-                                         ordered_unique<tag<by_name>,
-                                                        member<witness_object,
-                                                               account_name_type,
-                                                               &witness_object::owner>>,
-                                         ordered_unique<tag<by_vote_name>,
-                                                        composite_key<witness_object,
-                                                                      member<witness_object,
-                                                                             share_type,
-                                                                             &witness_object::votes>,
-                                                                      member<witness_object,
-                                                                             account_name_type,
-                                                                             &witness_object::owner>>,
-                                                        composite_key_compare<std::greater<share_type>,
-                                                                              std::less<account_name_type>>>,
-                                         ordered_unique<tag<by_schedule_time>,
-                                                        composite_key<witness_object,
-                                                                      member<witness_object,
-                                                                             fc::uint128,
-                                                                             &witness_object::virtual_scheduled_time>,
-                                                                      member<witness_object,
-                                                                             witness_id_type,
-                                                                             &witness_object::id>>>>,
-                              allocator<witness_object>>
+typedef shared_multi_index_container<witness_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<witness_object,
+                                                                      witness_id_type,
+                                                                      &witness_object::id>>,
+                                                ordered_unique<tag<by_name>,
+                                                               member<witness_object,
+                                                                      account_name_type,
+                                                                      &witness_object::owner>>,
+                                                ordered_unique<tag<by_vote_name>,
+                                                               composite_key<witness_object,
+                                                                             member<witness_object,
+                                                                                    share_type,
+                                                                                    &witness_object::votes>,
+                                                                             member<witness_object,
+                                                                                    account_name_type,
+                                                                                    &witness_object::owner>>,
+                                                               composite_key_compare<std::greater<share_type>,
+                                                                                     std::less<account_name_type>>>,
+                                                ordered_unique<tag<by_schedule_time>,
+                                                               composite_key<witness_object,
+                                                                             member<witness_object,
+                                                                                    fc::uint128,
+                                                                                    &witness_object::
+                                                                                        virtual_scheduled_time>,
+                                                                             member<witness_object,
+                                                                                    witness_id_type,
+                                                                                    &witness_object::id>>>>>
     witness_index;
 
 struct by_account_witness;
 struct by_witness_account;
-typedef multi_index_container<witness_vote_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<witness_vote_object,
-                                                               witness_vote_id_type,
-                                                               &witness_vote_object::id>>,
-                                         ordered_unique<tag<by_account_witness>,
-                                                        composite_key<witness_vote_object,
-                                                                      member<witness_vote_object,
-                                                                             account_id_type,
-                                                                             &witness_vote_object::account>,
-                                                                      member<witness_vote_object,
-                                                                             witness_id_type,
-                                                                             &witness_vote_object::witness>>,
-                                                        composite_key_compare<std::less<account_id_type>,
-                                                                              std::less<witness_id_type>>>,
-                                         ordered_unique<tag<by_witness_account>,
-                                                        composite_key<witness_vote_object,
-                                                                      member<witness_vote_object,
-                                                                             witness_id_type,
-                                                                             &witness_vote_object::witness>,
-                                                                      member<witness_vote_object,
-                                                                             account_id_type,
-                                                                             &witness_vote_object::account>>,
-                                                        composite_key_compare<std::less<witness_id_type>,
-                                                                              std::
-                                                                                  less<account_id_type>>>>, // indexed_by
-                              allocator<witness_vote_object>>
+typedef shared_multi_index_container<witness_vote_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<witness_vote_object,
+                                                                      witness_vote_id_type,
+                                                                      &witness_vote_object::id>>,
+                                                ordered_unique<tag<by_account_witness>,
+                                                               composite_key<witness_vote_object,
+                                                                             member<witness_vote_object,
+                                                                                    account_id_type,
+                                                                                    &witness_vote_object::account>,
+                                                                             member<witness_vote_object,
+                                                                                    witness_id_type,
+                                                                                    &witness_vote_object::witness>>,
+                                                               composite_key_compare<std::less<account_id_type>,
+                                                                                     std::less<witness_id_type>>>,
+                                                ordered_unique<tag<by_witness_account>,
+                                                               composite_key<witness_vote_object,
+                                                                             member<witness_vote_object,
+                                                                                    witness_id_type,
+                                                                                    &witness_vote_object::witness>,
+                                                                             member<witness_vote_object,
+                                                                                    account_id_type,
+                                                                                    &witness_vote_object::account>>,
+                                                               composite_key_compare<std::less<witness_id_type>,
+                                                                                     std::
+                                                                                         less<account_id_type>>>> // indexed_by
+                                     >
     witness_vote_index;
 
-typedef multi_index_container<witness_schedule_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<witness_schedule_object,
-                                                               witness_schedule_id_type,
-                                                               &witness_schedule_object::id>>>,
-                              allocator<witness_schedule_object>>
+typedef shared_multi_index_container<witness_schedule_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<witness_schedule_object,
+                                                                      witness_schedule_id_type,
+                                                                      &witness_schedule_object::id>>>>
     witness_schedule_index;
 } // namespace chain
 } // namespace scorum
@@ -243,10 +204,8 @@ FC_REFLECT( scorum::chain::witness_object,
              (owner)
              (created)
              (url)(votes)(schedule)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
-             (props)
-             (sbd_exchange_rate)(last_sbd_exchange_update)
-             (last_work)
+             (last_confirmed_block_num)(signing_key)
+             (proposed_chain_props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )
@@ -256,11 +215,7 @@ FC_REFLECT( scorum::chain::witness_vote_object, (id)(witness)(account) )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_vote_object, scorum::chain::witness_vote_index )
 
 FC_REFLECT( scorum::chain::witness_schedule_object,
-             (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_witnesses)(num_scheduled_witnesses)
-             (median_props)(majority_version)
-             (max_voted_witnesses)
-             (max_runner_witnesses)
-             (hardfork_required_witnesses)
+             (id)(current_virtual_time)(current_shuffled_witnesses)(num_scheduled_witnesses)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_schedule_object, scorum::chain::witness_schedule_index )
 

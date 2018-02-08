@@ -15,9 +15,26 @@
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
 #define TEST_INIT_KEY TEST_INIT_DELEGATE_NAME
 
+#define SCORUM_MIN_PRODUCER_REWARD asset(1000, SCORUM_SYMBOL)
+
 #define PUSH_TX scorum::chain::test::_push_transaction
 
 #define PUSH_BLOCK scorum::chain::test::_push_block
+
+template <class T> T make_test_index_object()
+{
+    struct constructor
+    {
+        void operator()(const T&)
+        {
+        }
+    };
+
+    return std::move(T(constructor(), std::allocator<T>()));
+}
+
+#define INIT_MEMBER_OBJ(obj) obj(make_test_index_object<decltype(obj)>())
+#define INIT_OBJ(type) make_test_index_object<type>()
 
 // See below
 #define REQUIRE_OP_VALIDATION_SUCCESS(op, field, value)                                                                \
@@ -133,6 +150,11 @@
 #define ASSET(s) asset::from_string(s)
 #define ASSET_NULL_SCR asset(0, SCORUM_SYMBOL)
 #define ASSET_NULL_SP asset(0, VESTS_SYMBOL)
+
+#define ASSET_SCR(s) asset((share_value_type)s, SCORUM_SYMBOL)
+#define ASSET_SP(s) asset((share_value_type)s, VESTS_SYMBOL)
+
+#define SUFFICIENT_FEE SCORUM_MIN_ACCOUNT_CREATION_FEE* SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
 
 // test case defines
 #if BOOST_VERSION >= 106000 // boost ver. >= 1.60.0

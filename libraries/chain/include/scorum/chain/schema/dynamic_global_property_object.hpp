@@ -4,12 +4,15 @@
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/version.hpp>
+#include <scorum/protocol/chain_properties.hpp>
 
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
-using scorum::protocol::price;
+using scorum::protocol::chain_properties;
+using scorum::protocol::version;
 
 /**
  * @class dynamic_global_property_object
@@ -24,15 +27,7 @@ class dynamic_global_property_object
     : public object<dynamic_global_property_object_type, dynamic_global_property_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    dynamic_global_property_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
-
-    dynamic_global_property_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(dynamic_global_property_object)
 
     id_type id;
 
@@ -41,30 +36,23 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset total_supply = asset(0, SCORUM_SYMBOL);
-    asset accounts_current_supply = asset(0, SCORUM_SYMBOL);
-    asset confidential_supply = asset(0, SCORUM_SYMBOL); ///< total asset held in confidential balances
-    asset total_vesting_fund_scorum = asset(0, SCORUM_SYMBOL);
-    asset total_vesting_shares = asset(0, VESTS_SYMBOL);
-    fc::uint128 total_reward_shares2; ///< the running total of REWARD^2
-
-    price get_vesting_share_price() const
-    {
-        if (total_vesting_fund_scorum.amount == 0 || total_vesting_shares.amount == 0)
-            return price(asset(1000, SCORUM_SYMBOL), asset(1000000, VESTS_SYMBOL));
-
-        return price(total_vesting_shares, total_vesting_fund_scorum);
-    }
+    asset total_supply = asset(0, SCORUM_SYMBOL); ///< circulating_capital + reward and registration pools supply
+    asset circulating_capital
+        = asset(0, SCORUM_SYMBOL); ///< total SCR on circulating. circulating_capital <= total_supply
+    asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
 
     /**
-     *  Maximum block size is decided by the set of active witnesses which change every round.
-     *  Each witness posts what they think the maximum size should be as part of their witness
-     *  properties, the median size is chosen to be the maximum block size for the round.
+     *  Chain properties are decided by the set of active witnesses which change every round.
+     *  Each witness posts what they think the chain properties should be as part of their witness
+     *  properties, the median size is chosen to be the chain properties for the round.
      *
      *  @note the minimum value for maximum_block_size is defined by the protocol to prevent the
      *  network from getting stuck by witnesses attempting to set this too low.
      */
-    uint32_t maximum_block_size = 0;
+
+    chain_properties median_chain_props;
+
+    version majority_version;
 
     /**
      * The current absolute slot number.  Equal to the total
@@ -86,19 +74,18 @@ public:
      * "wasting" voting power through spillover; any user voting faster than this rate will have
      * their votes reduced.
      */
-    uint32_t vote_power_reserve_rate = 40;
+    uint32_t vote_power_reserve_rate = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
 
     uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
-typedef multi_index_container<dynamic_global_property_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<dynamic_global_property_object,
-                                                               dynamic_global_property_object::id_type,
-                                                               &dynamic_global_property_object::id>>>,
-                              allocator<dynamic_global_property_object>>
+typedef shared_multi_index_container<dynamic_global_property_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<dynamic_global_property_object,
+                                                                      dynamic_global_property_object::id_type,
+                                                                      &dynamic_global_property_object::id>>>>
     dynamic_global_property_index;
 } // namespace chain
 } // namespace scorum
@@ -111,12 +98,10 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (time)
           (current_witness)
           (total_supply)
-          (accounts_current_supply)
-          (confidential_supply)
-          (total_vesting_fund_scorum)
+          (circulating_capital)
           (total_vesting_shares)
-          (total_reward_shares2)
-          (maximum_block_size)
+          (median_chain_props)
+          (majority_version)
           (current_aslot)
           (recent_slots_filled)
           (participation_count)

@@ -94,7 +94,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
 {
     // clang-format off
     FC_ASSERT((db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT) == nullptr), "Recreation of fund budget is not allowed.");
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
 
@@ -128,7 +128,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 {
     FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "'${1}' name is not allowed for ordinary budget.",
               ("1", SCORUM_ROOT_POST_PARENT));
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
     FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER,
@@ -138,6 +138,9 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 
     time_point_sec start_date = props.time;
     FC_ASSERT(start_date < deadline, "Invalid deadline.");
+
+    FC_ASSERT(props.circulating_capital > balance, "Invalid balance. Must ${1} > ${2}.",
+              ("1", props.circulating_capital)("2", balance));
 
     dbs_account& account_service = db().obtain_service<dbs_account>();
 
@@ -160,6 +163,8 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
         // allocate cash only after next block generation
         budget.last_allocated_block = head_block_num;
     });
+
+    db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
 
     return new_budget;
 }
@@ -233,7 +238,7 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
 
 asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& balance)
 {
-    FC_ASSERT(balance.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
     asset ret(0, SCORUM_SYMBOL);
@@ -297,8 +302,12 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
+        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
+
+        db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
     }
 
     // delete budget

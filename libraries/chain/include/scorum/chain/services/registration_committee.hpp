@@ -32,7 +32,7 @@ struct registration_committee_service_i
 
     virtual bool is_exists(const account_name_type&) const = 0;
 
-    virtual uint64_t quorum_votes(uint64_t quorum_percent) = 0;
+    virtual size_t get_members_count() const = 0;
 };
 
 /** DB service for operations with registration_committee_* objects
@@ -64,18 +64,16 @@ public:
 
     bool is_exists(const account_name_type&) const override;
 
-    uint64_t quorum_votes(uint64_t quorum_percent) override;
+    size_t get_members_count() const override;
 
 private:
-    uint64_t _get_members_count() const;
-
     const registration_committee_member_object& _add_member(const account_object&);
 
     void _exclude_member(const account_object&);
 };
 
 namespace utils {
-uint64_t get_quorum(size_t members_count, uint64_t percent);
+bool is_quorum(size_t votes, size_t members_count, size_t quorum);
 } // namespace utils
 
 } // namespace chain

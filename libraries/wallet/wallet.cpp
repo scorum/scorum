@@ -48,7 +48,6 @@
 #include <fc/io/json.hpp>
 #include <fc/io/stdio.hpp>
 #include <fc/network/http/websocket.hpp>
-#include <fc/rpc/cli.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/crypto/aes.hpp>
 #include <fc/crypto/hex.hpp>
@@ -61,7 +60,7 @@
 #include <sys/stat.h>
 #endif
 
-#include <scorum/wallet/printer.hpp>
+#include <scorum/cli/formatter.hpp>
 
 namespace scorum {
 namespace wallet {
@@ -210,15 +209,21 @@ public:
     variant info() const
     {
         auto dynamic_props = _remote_db->get_dynamic_global_properties();
-        fc::mutable_variant_object result(fc::variant(dynamic_props).get_object());
-        result["witness_majority_version"] = fc::string(_remote_db->get_witness_schedule().majority_version);
+
+        fc::mutable_variant_object result = fc::variant(dynamic_props).get_object();
+
+        result["witness_majority_version"] = fc::string(dynamic_props.majority_version);
         result["hardfork_version"] = fc::string(_remote_db->get_hardfork_version());
+
+        result["chain_properties"] = fc::variant(dynamic_props.median_chain_props).get_object();
+
         result["head_block_num"] = dynamic_props.head_block_number;
         result["head_block_id"] = dynamic_props.head_block_id;
         result["head_block_age"]
             = fc::get_approximate_relative_time_string(dynamic_props.time, time_point_sec(time_point::now()), " old");
+
         result["participation"] = (100 * dynamic_props.recent_slots_filled.popcount()) / 128.0;
-        result["account_creation_fee"] = _remote_db->get_chain_properties().account_creation_fee;
+
         result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund()).get_object();
         return result;
     }
@@ -652,7 +657,7 @@ public:
 
     std::string print_atomicswap_secret2str(const std::string& secret) const
     {
-        printer p;
+        cli::formatter p;
 
         p.print_line();
         p.print_field("SECRET: ", secret);
@@ -662,7 +667,7 @@ public:
 
     std::string print_atomicswap_contract2str(const atomicswap_contract_info_api_obj& rt) const
     {
-        printer p;
+        cli::formatter p;
 
         p.print_line();
 
@@ -719,7 +724,7 @@ public:
         m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
             auto accounts = result.as<std::vector<account_api_obj>>();
 
-            printer p;
+            cli::formatter p;
 
             asset total_scorum(0, SCORUM_SYMBOL);
             asset total_vest(0, VESTS_SYMBOL);
@@ -747,7 +752,7 @@ public:
         m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<account_balance_info_api_obj>();
 
-            printer p;
+            cli::formatter p;
 
             FC_ASSERT(p.create_table(16, 20, 10, 20));
 
@@ -762,7 +767,7 @@ public:
         m["get_account_history"] = [this](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
-            printer p;
+            cli::formatter p;
 
             FC_ASSERT(p.create_table(5, 10, 15, 20, 50));
 
@@ -789,7 +794,7 @@ public:
         m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
 
-            printer p;
+            cli::formatter p;
 
             FC_ASSERT(p.create_table(20, 20, 8, 9));
 
@@ -1833,7 +1838,7 @@ annotated_signed_transaction wallet_api::update_witness(const std::string& witne
     }
     op.owner = witness_account_name;
     op.block_signing_key = block_signing_key;
-    op.props = props;
+    op.proposed_chain_props = props;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2253,7 +2258,7 @@ annotated_signed_transaction wallet_api::vote(
     op.voter = voter;
     op.author = author;
     op.permlink = permlink;
-    op.weight = weight * SCORUM_1_PERCENT;
+    op.weight = weight;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2695,7 +2700,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
 
     atomicswap_initiate_operation op;
 
-    op.type = atomicswap_by_initiator;
+    op.type = atomicswap_initiate_operation::by_initiator;
     op.owner = initiator;
     op.recipient = participant;
     op.secret_hash = secret_hash;
@@ -2732,7 +2737,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std:
 
     atomicswap_initiate_operation op;
 
-    op.type = atomicswap_by_participant;
+    op.type = atomicswap_initiate_operation::by_participant;
     op.owner = participant;
     op.recipient = initiator;
     op.secret_hash = secret_hash;

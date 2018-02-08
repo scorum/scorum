@@ -27,15 +27,6 @@
 
 #include <boost/config.hpp> /* keep it first to prevent nasty warns in MSVC */
 #include <algorithm>
-#include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/containers/string.hpp>
-#include <boost/interprocess/containers/deque.hpp>
-#include <boost/interprocess/managed_mapped_file.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/member.hpp>
 #include <iostream>
 #include <iterator>
 #include <sstream>
@@ -43,12 +34,10 @@
 
 #include <fc/fixed_string.hpp>
 #include <fc/shared_string.hpp>
+#include <fc/shared_allocator.hpp>
 
-using boost::multi_index_container;
 using namespace boost::multi_index;
 namespace bip = boost::interprocess;
-
-typedef bip::allocator<fc::shared_string, bip::managed_mapped_file::segment_manager> basic_string_allocator;
 
 namespace fc {
 
@@ -80,7 +69,7 @@ for( uint32_t i = 0; i < vars.size(); ++i ) {
 
 struct book
 {
-    typedef bip::allocator<book, bip::managed_mapped_file::segment_manager> allocator_type;
+    typedef fc::shared_allocator<book> allocator_type;
 
     template <typename Constructor, typename Allocator>
     book(Constructor&& c, const Allocator& al)
@@ -88,9 +77,8 @@ struct book
         , author(al)
         , pages(0)
         , prize(0)
-        , auth(bip::allocator<scorum::chain::shared_authority, bip::managed_mapped_file::segment_manager>(
-              al.get_segment_manager()))
-        , deq(basic_string_allocator(al.get_segment_manager()))
+        , auth(al)
+        , deq(al)
     {
         c(*this);
     }
@@ -100,26 +88,26 @@ struct book
     int32_t pages;
     int32_t prize;
     scorum::chain::shared_authority auth;
-    bip::deque<fc::shared_string, basic_string_allocator> deq;
+    fc::shared_deque<fc::shared_string> deq;
 
     book(const fc::shared_string::allocator_type& al)
         : name(al)
         , author(al)
         , pages(0)
         , prize(0)
-        , auth(bip::allocator<scorum::chain::shared_authority, bip::managed_mapped_file::segment_manager>(
-              al.get_segment_manager()))
-        , deq(basic_string_allocator(al.get_segment_manager()))
+        , auth(al)
+        , deq(al)
     {
     }
 };
 
-typedef multi_index_container<book,
-                              indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, author)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, name)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>,
-                              bip::allocator<book, bip::managed_mapped_file::segment_manager>>
-    book_container;
+typedef fc::
+    shared_multi_index_container<book,
+                                 indexed_by<ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(
+                                                book, fc::shared_string, author)>,
+                                            ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, fc::shared_string, name)>,
+                                            ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int32_t, prize)>>>
+        book_container;
 
 FC_REFLECT(book, (name)(author)(pages)(prize)(deq)(auth))
 

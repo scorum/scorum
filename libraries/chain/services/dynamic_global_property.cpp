@@ -12,7 +12,7 @@ dbs_dynamic_global_property::dbs_dynamic_global_property(database& db)
 {
 }
 
-const dynamic_global_property_object& dbs_dynamic_global_property::get_dynamic_global_properties() const
+const dynamic_global_property_object& dbs_dynamic_global_property::get() const
 {
     try
     {
@@ -21,31 +21,26 @@ const dynamic_global_property_object& dbs_dynamic_global_property::get_dynamic_g
     FC_CAPTURE_AND_RETHROW()
 }
 
-fc::time_point_sec dbs_dynamic_global_property::head_block_time()
+fc::time_point_sec dbs_dynamic_global_property::head_block_time() const
 {
-    return get_dynamic_global_properties().time;
-}
-
-time_point_sec dbs_dynamic_global_property::head_block_time() const
-{
-    return get_dynamic_global_properties().time;
+    return get().time;
 }
 
 void dbs_dynamic_global_property::set_invite_quorum(uint64_t quorum)
 {
-    const dynamic_global_property_object& properties = get_dynamic_global_properties();
+    const dynamic_global_property_object& properties = get();
     db_impl().modify(properties, [&](dynamic_global_property_object& p) { p.invite_quorum = quorum; });
 }
 
 void dbs_dynamic_global_property::set_dropout_quorum(uint64_t quorum)
 {
-    const dynamic_global_property_object& properties = get_dynamic_global_properties();
+    const dynamic_global_property_object& properties = get();
     db_impl().modify(properties, [&](dynamic_global_property_object& p) { p.dropout_quorum = quorum; });
 }
 
 void dbs_dynamic_global_property::set_quorum(uint64_t quorum)
 {
-    const dynamic_global_property_object& properties = get_dynamic_global_properties();
+    const dynamic_global_property_object& properties = get();
     db_impl().modify(properties, [&](dynamic_global_property_object& p) { p.change_quorum = quorum; });
 }
 

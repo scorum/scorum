@@ -74,12 +74,7 @@ struct message_body
 class message_object : public object<message_object_type, message_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    message_object(Constructor&& c, allocator<Allocator> a)
-        : encrypted_message(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(message_object, (encrypted_message))
 
     id_type id;
 
@@ -143,38 +138,39 @@ struct by_from_date;
 
 using namespace boost::multi_index;
 
-typedef multi_index_container<message_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<message_object, message_id_type, &message_object::id>>,
-                                         ordered_unique<tag<by_to_date>,
-                                                        composite_key<message_object,
-                                                                      member<message_object,
-                                                                             account_name_type,
-                                                                             &message_object::to>,
-                                                                      member<message_object,
-                                                                             time_point_sec,
-                                                                             &message_object::receive_time>,
-                                                                      member<message_object,
-                                                                             message_id_type,
-                                                                             &message_object::id>>,
-                                                        composite_key_compare<std::less<std::string>,
-                                                                              std::greater<time_point_sec>,
-                                                                              std::less<message_id_type>>>,
-                                         ordered_unique<tag<by_from_date>,
-                                                        composite_key<message_object,
-                                                                      member<message_object,
-                                                                             account_name_type,
-                                                                             &message_object::from>,
-                                                                      member<message_object,
-                                                                             time_point_sec,
-                                                                             &message_object::receive_time>,
-                                                                      member<message_object,
-                                                                             message_id_type,
-                                                                             &message_object::id>>,
-                                                        composite_key_compare<std::less<std::string>,
-                                                                              std::greater<time_point_sec>,
-                                                                              std::less<message_id_type>>>>,
-                              allocator<message_object>>
+typedef shared_multi_index_container<message_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<message_object,
+                                                                      message_id_type,
+                                                                      &message_object::id>>,
+                                                ordered_unique<tag<by_to_date>,
+                                                               composite_key<message_object,
+                                                                             member<message_object,
+                                                                                    account_name_type,
+                                                                                    &message_object::to>,
+                                                                             member<message_object,
+                                                                                    time_point_sec,
+                                                                                    &message_object::receive_time>,
+                                                                             member<message_object,
+                                                                                    message_id_type,
+                                                                                    &message_object::id>>,
+                                                               composite_key_compare<std::less<std::string>,
+                                                                                     std::greater<time_point_sec>,
+                                                                                     std::less<message_id_type>>>,
+                                                ordered_unique<tag<by_from_date>,
+                                                               composite_key<message_object,
+                                                                             member<message_object,
+                                                                                    account_name_type,
+                                                                                    &message_object::from>,
+                                                                             member<message_object,
+                                                                                    time_point_sec,
+                                                                                    &message_object::receive_time>,
+                                                                             member<message_object,
+                                                                                    message_id_type,
+                                                                                    &message_object::id>>,
+                                                               composite_key_compare<std::less<std::string>,
+                                                                                     std::greater<time_point_sec>,
+                                                                                     std::less<message_id_type>>>>>
     message_index;
 
 /**

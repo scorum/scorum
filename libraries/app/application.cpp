@@ -38,6 +38,8 @@
 #include <graphene/net/exceptions.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/git_revision.hpp>
+#include <fc/git_revision.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -1122,7 +1124,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from");
     command_line_options.add(configuration_file_options);
     command_line_options.add_options()
-    ("version", "Print version number and exit.")
+    ("version,v", "Print version number and exit.")
     ("replay-blockchain", "Rebuild object graph by replaying all blocks")
     ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
     ("force-validate", "Force validation of all transactions")
@@ -1406,6 +1408,14 @@ void application::startup_plugins()
         entry.second->plugin_startup();
     }
     return;
+}
+
+void print_application_version()
+{
+    std::cout << "scorum_blockchain_version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
+    std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
+    std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
+    std::cout << "embeded_chain_id           " << egenesis::get_egenesis_chain_id().str() << "\n";
 }
 
 } // namespace app

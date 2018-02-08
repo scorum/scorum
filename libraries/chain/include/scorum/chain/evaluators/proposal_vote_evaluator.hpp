@@ -98,8 +98,8 @@ public:
 
     void do_apply(const proposal_vote_operation& op)
     {
-        FC_ASSERT(_committee_service.is_exists(op.voting_account),
-                  "Account \"${account_name}\" is not in committee.", ("account_name", op.voting_account));
+        FC_ASSERT(_committee_service.is_exists(op.voting_account), "Account \"${account_name}\" is not in committee.",
+                  ("account_name", op.voting_account));
 
         _account_service.check_account_existence(op.voting_account);
 
@@ -152,9 +152,9 @@ protected:
     bool is_quorum(const proposal_object& proposal)
     {
         const size_t votes = _proposal_service.get_votes(proposal);
-        const size_t needed_votes = _committee_service.quorum_votes(proposal.quorum_percent);
+        const size_t members_count = _committee_service.get_members_count();
 
-        return votes >= needed_votes ? true : false;
+        return utils::is_quorum(votes, members_count, proposal.quorum_percent);
     }
 
     void invite_evaluator(const proposal_object& proposal)

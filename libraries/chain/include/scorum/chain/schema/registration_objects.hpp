@@ -19,15 +19,8 @@ using scorum::protocol::asset;
 
 class registration_pool_object : public object<registration_pool_object_type, registration_pool_object>
 {
-    registration_pool_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    registration_pool_object(Constructor&& c, allocator<Allocator> a)
-        : schedule_items(a.get_segment_manager())
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(registration_pool_object, (schedule_items))
 
     id_type id;
 
@@ -50,16 +43,10 @@ public:
 class registration_committee_member_object
     : public object<registration_committee_member_object_type, registration_committee_member_object>
 {
-    registration_committee_member_object() = delete;
-
 public:
     typedef std::reference_wrapper<const registration_committee_member_object> cref_type;
 
-    template <typename Constructor, typename Allocator>
-    registration_committee_member_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(registration_committee_member_object)
 
     id_type id;
 
@@ -74,26 +61,24 @@ public:
     uint32_t per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
 };
 
-typedef multi_index_container<registration_pool_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<registration_pool_object,
-                                                               registration_pool_id_type,
-                                                               &registration_pool_object::id>>>,
-                              allocator<registration_pool_object>>
+typedef shared_multi_index_container<registration_pool_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<registration_pool_object,
+                                                                      registration_pool_id_type,
+                                                                      &registration_pool_object::id>>>>
     registration_pool_index;
 
 struct by_account_name;
 
-typedef multi_index_container<registration_committee_member_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<registration_committee_member_object,
-                                                               registration_committee_member_id_type,
-                                                               &registration_committee_member_object::id>>,
-                                         ordered_unique<tag<by_account_name>,
-                                                        member<registration_committee_member_object,
-                                                               account_name_type,
-                                                               &registration_committee_member_object::account>>>,
-                              allocator<registration_committee_member_object>>
+typedef shared_multi_index_container<registration_committee_member_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<registration_committee_member_object,
+                                                                      registration_committee_member_id_type,
+                                                                      &registration_committee_member_object::id>>,
+                                                ordered_unique<tag<by_account_name>,
+                                                               member<registration_committee_member_object,
+                                                                      account_name_type,
+                                                                      &registration_committee_member_object::account>>>>
     registration_committee_member_index;
 } // namespace chain
 } // namespace scorum

@@ -51,7 +51,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_con
                                                                   const std::string& secret_hash,
                                                                   const optional<std::string>& metadata)
 {
-    FC_ASSERT(amount.symbol == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(amount.amount > 0, "Invalid amount.");
     FC_ASSERT(owner.balance >= amount, "Insufficient funds.");
     FC_ASSERT(!secret_hash.empty(), "Empty secret hash.");

@@ -52,29 +52,96 @@ RUN \
 ADD . /usr/local/src/scorum
 
 RUN \
-        cd /usr/local/src/scorum && \
-        git submodule update --init --recursive && \
-        mkdir build && \
-        cd build && \
-        cmake \
-            -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLOW_MEMORY_NODE=OFF \
-            -DCLEAR_VOTES=OFF \
-            -DSKIP_BY_TX_ID=ON \
-            -DBUILD_SCORUM_TESTNET=OFF \
-            .. \
-        && \
-        make -j$(nproc) && \
-        make install && \
-        cd .. && \
-        ( /usr/local/scorumd-full/bin/scorumd --version \
-        | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
-        && echo '_' \
-        && git rev-parse --short HEAD ) \
-        | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n//g' \
-        > /etc/scorumdversion && \
-        rm -rf /usr/local/src/scorum
+    cd /usr/local/src/scorum && \
+    git submodule update --init --recursive && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SCORUM_TESTNET=ON \
+        -DLOW_MEMORY_NODE=OFF \
+        -DCLEAR_VOTES=ON \
+        -DSKIP_BY_TX_ID=ON \
+        .. && \
+    make -j$(nproc) && \
+    ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
+    ./programs/util/test_fixed_string && \
+    cd /usr/local/src/scorum && \
+    doxygen && \
+    programs/build_helpers/check_reflect.py && \
+    programs/build_helpers/get_config_check.sh && \
+    rm -rf /usr/local/src/scorum/build
+
+RUN \
+    cd /usr/local/src/scorum && \
+    git submodule update --init --recursive && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DENABLE_COVERAGE_TESTING=ON \
+        -DBUILD_SCORUM_TESTNET=ON \
+        -DLOW_MEMORY_NODE=OFF \
+        -DCLEAR_VOTES=ON \
+        -DSKIP_BY_TX_ID=ON \
+        .. && \
+    make -j$(nproc) && \
+    ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
+    mkdir -p /var/cobertura && \
+    gcovr --object-directory="../" --root=../ --xml-pretty --gcov-exclude=".*tests.*" --gcov-exclude=".*fc.*" --gcov-exclude=".*app*" --gcov-exclude=".*net*" --gcov-exclude=".*plugins*" --gcov-exclude=".*schema*" --gcov-exclude=".*time*" --gcov-exclude=".*utilities*" --gcov-exclude=".*wallet*" --gcov-exclude=".*programs*" --output="/var/cobertura/coverage.xml" && \
+    cd /usr/local/src/scorum && \
+    rm -rf /usr/local/src/scorum/build
+
+RUN \
+    cd /usr/local/src/scorum && \
+    git submodule update --init --recursive && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLOW_MEMORY_NODE=ON \
+        -DCLEAR_VOTES=ON \
+        -DSKIP_BY_TX_ID=ON \
+        -DBUILD_SCORUM_TESTNET=OFF \
+        .. \
+    && \
+    make -j$(nproc) && \
+    ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
+    ./programs/util/test_fixed_string && \
+    make install && \
+    rm -rfv build && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLOW_MEMORY_NODE=OFF \
+        -DCLEAR_VOTES=OFF \
+        -DSKIP_BY_TX_ID=ON \
+        -DBUILD_SCORUM_TESTNET=OFF \
+        .. \
+    && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && \
+    ( /usr/local/scorumd-full/bin/scorumd --version \
+      | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
+      && echo '_' \
+      && git rev-parse --short HEAD ) \
+      | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n//g' \
+      > /etc/scorumdversion && \
+    cat /etc/scorumdversion && \
+    rm -rf /usr/local/src/scorum
 
 RUN \
         apt-get remove -y \
@@ -127,7 +194,7 @@ RUN \
 RUN useradd -s /bin/bash -m -d /var/lib/scorumd scorumd
 
 RUN mkdir /var/cache/scorumd && \
-        chown scorumd:scorumd -R /var/cache/scorumd
+          chown scorumd:scorumd -R /var/cache/scorumd
 
 # add blockchain cache to image
 #ADD $SCORUMD_BLOCKCHAIN /var/cache/scorumd/blocks.tbz2

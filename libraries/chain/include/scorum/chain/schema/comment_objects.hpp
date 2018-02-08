@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fc/shared_string.hpp>
+#include <fc/shared_buffer.hpp>
 
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -10,6 +11,8 @@
 
 #include <boost/multi_index/composite_key.hpp>
 
+#include <limits>
+
 namespace scorum {
 namespace chain {
 
@@ -17,21 +20,9 @@ using protocol::beneficiary_route_type;
 
 class comment_object : public object<comment_object_type, comment_object>
 {
-    comment_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    comment_object(Constructor&& c, allocator<Allocator> a)
-        : category(a)
-        , parent_permlink(a)
-        , permlink(a)
-        , title(a)
-        , body(a)
-        , json_metadata(a)
-        , beneficiaries(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(
+        comment_object, (category)(parent_permlink)(permlink)(title)(body)(json_metadata)(beneficiaries))
 
     id_type id;
 
@@ -52,13 +43,11 @@ public:
     uint16_t depth = 0; ///< used to track max nested depth
     uint32_t children = 0; ///< used to track the total number of children, grandchildren, etc...
 
-    /// index on pending_payout for "things happning now... needs moderation"
-    /// TRENDING = UNCLAIMED + PENDING
-    share_type net_rshares; // reward is proportional to rshares^2, this is the sum of all votes (positive and negative)
-    share_type abs_rshares; /// this is used to track the total abs(weight) of votes for the purpose of calculating
-    /// cashout_time
-    share_type vote_rshares; /// Total positive rshares from all votes. Used to calculate delta weights. Needed to
-    /// handle vote changing and removal.
+    share_type net_rshares; /// This is the sum of all votes (positive and negative).
+    /// Used for calculation reward witch is proportional to rshares^2
+    share_type abs_rshares; /// This is used to track the total abs(weight) of votes.
+    share_type vote_rshares; /// Total positive rshares from all votes.
+    /// Used to calculate delta weights. Needed to handle vote changing and removal.
 
     share_type children_abs_rshares; /// this is used to calculate cashout time of a discussion.
     time_point_sec cashout_time; /// 24 hours from the weighted average of vote time
@@ -80,14 +69,13 @@ public:
     id_type root_comment;
 
     asset max_accepted_payout
-        = asset(1000000000, SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
-    uint16_t percent_scrs
-        = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
+        = asset::maximum(SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
+    uint16_t percent_scrs = SCORUM_100_PERCENT; /// the percent of SCR to pay, unkept amounts will be received as SP
     bool allow_replies = true; /// allows a post to disable replies.
     bool allow_votes = true; /// allows a post to receive votes;
     bool allow_curation_rewards = true;
 
-    bip::vector<beneficiary_route_type, allocator<beneficiary_route_type>> beneficiaries;
+    fc::shared_vector<beneficiary_route_type> beneficiaries;
 };
 
 /**
@@ -97,10 +85,7 @@ public:
 class comment_vote_object : public object<comment_vote_object_type, comment_vote_object>
 {
 public:
-    template <typename Constructor, typename Allocator> comment_vote_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(comment_vote_object)
 
     id_type id;
 
@@ -120,7 +105,7 @@ struct by_comment_voter;
 struct by_voter_comment;
 struct by_comment_weight_voter;
 struct by_voter_last_update;
-typedef multi_index_container<comment_vote_object,
+typedef shared_multi_index_container<comment_vote_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<comment_vote_object,
                                                                comment_vote_id_type,
@@ -168,8 +153,8 @@ typedef multi_index_container<comment_vote_object,
                                                                              &comment_vote_object::voter>>,
                                                         composite_key_compare<std::less<comment_id_type>,
                                                                               std::greater<uint64_t>,
-                                                                              std::less<account_id_type>>>>,
-                              allocator<comment_vote_object>>
+                                                                              std::less<account_id_type>>>>
+     >
     comment_vote_index;
 
 struct by_cashout_time; /// cashout_time
@@ -190,7 +175,7 @@ struct by_author_last_update;
 /**
  * @ingroup object_index
  */
-typedef multi_index_container<comment_object,
+typedef shared_multi_index_container<comment_object,
                               indexed_by<
                                   /// CONSENUSS INDICIES - used by evaluators
                                   ordered_unique<tag<by_id>,
@@ -266,8 +251,8 @@ typedef multi_index_container<comment_object,
                                                                        std::greater<time_point_sec>,
                                                                        std::less<comment_id_type>>>
 #endif
-                                  >,
-                              allocator<comment_object>>
+                                  >
+    >
     comment_index;
 
 // clang-format on

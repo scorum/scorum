@@ -29,17 +29,8 @@ enum atomicswap_contract_type : bool
 
 class atomicswap_contract_object : public object<atomicswap_contract_object_type, atomicswap_contract_object>
 {
-    atomicswap_contract_object() = delete;
-
 public:
-    template <typename Constructor, typename Allocator>
-    atomicswap_contract_object(Constructor&& c, allocator<Allocator> a)
-        : metadata(a)
-        , secret_hash(a)
-        , secret(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(atomicswap_contract_object, (metadata)(secret_hash)(secret))
 
     id_type id;
 
@@ -64,24 +55,23 @@ struct by_owner_name;
 struct by_recipient_name;
 struct by_contract_hash;
 
-typedef multi_index_container<atomicswap_contract_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<atomicswap_contract_object,
-                                                               atomicswap_contract_id_type,
-                                                               &atomicswap_contract_object::id>>,
-                                         ordered_non_unique<tag<by_owner_name>,
-                                                            member<atomicswap_contract_object,
-                                                                   account_name_type,
-                                                                   &atomicswap_contract_object::owner>>,
-                                         ordered_non_unique<tag<by_recipient_name>,
-                                                            member<atomicswap_contract_object,
-                                                                   account_name_type,
-                                                                   &atomicswap_contract_object::to>>,
-                                         ordered_unique<tag<by_contract_hash>,
-                                                        member<atomicswap_contract_object,
-                                                               hash_index_type,
-                                                               &atomicswap_contract_object::contract_hash>>>,
-                              allocator<atomicswap_contract_object>>
+typedef shared_multi_index_container<atomicswap_contract_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<atomicswap_contract_object,
+                                                                      atomicswap_contract_id_type,
+                                                                      &atomicswap_contract_object::id>>,
+                                                ordered_non_unique<tag<by_owner_name>,
+                                                                   member<atomicswap_contract_object,
+                                                                          account_name_type,
+                                                                          &atomicswap_contract_object::owner>>,
+                                                ordered_non_unique<tag<by_recipient_name>,
+                                                                   member<atomicswap_contract_object,
+                                                                          account_name_type,
+                                                                          &atomicswap_contract_object::to>>,
+                                                ordered_unique<tag<by_contract_hash>,
+                                                               member<atomicswap_contract_object,
+                                                                      hash_index_type,
+                                                                      &atomicswap_contract_object::contract_hash>>>>
     atomicswap_contract_index;
 }
 }

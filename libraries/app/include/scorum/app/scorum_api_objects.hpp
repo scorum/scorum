@@ -23,18 +23,53 @@ namespace app {
 
 using namespace scorum::chain;
 
-typedef chain::change_recovery_account_request_object change_recovery_account_request_api_obj;
-typedef chain::block_summary_object block_summary_api_obj;
-typedef chain::comment_vote_object comment_vote_api_obj;
-typedef chain::escrow_object escrow_api_obj;
-typedef chain::withdraw_vesting_route_object withdraw_vesting_route_api_obj;
-typedef chain::decline_voting_rights_request_object decline_voting_rights_request_api_obj;
-typedef chain::witness_vote_object witness_vote_api_obj;
-typedef chain::witness_schedule_object witness_schedule_api_obj;
-typedef chain::vesting_delegation_object vesting_delegation_api_obj;
-typedef chain::vesting_delegation_expiration_object vesting_delegation_expiration_api_obj;
-typedef chain::reward_fund_object reward_fund_api_obj;
-typedef witness::account_bandwidth_object account_bandwidth_api_obj;
+template <class T> class api_obj : public T
+{
+    struct constructor
+    {
+        void operator()(const T&)
+        {
+        }
+    };
+
+public:
+    api_obj()
+        : T(constructor(), std::allocator<T>())
+    {
+    }
+
+    api_obj(const T& other)
+        : T(constructor(), std::allocator<T>())
+    {
+        T& base = static_cast<T&>(*this);
+        base = other;
+    }
+};
+
+typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
+typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
+typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
+typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
+typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
+typedef api_obj<scorum::chain::reward_fund_object> reward_fund_api_obj;
+typedef api_obj<scorum::chain::vesting_delegation_expiration_object> vesting_delegation_expiration_api_obj;
+typedef api_obj<scorum::chain::vesting_delegation_object> vesting_delegation_api_obj;
+typedef api_obj<scorum::chain::withdraw_vesting_route_object> withdraw_vesting_route_api_obj;
+typedef api_obj<scorum::chain::witness_schedule_object> witness_schedule_api_obj;
+typedef api_obj<scorum::chain::witness_vote_object> witness_vote_api_obj;
+typedef api_obj<scorum::witness::account_bandwidth_object> account_bandwidth_api_obj;
+typedef api_obj<scorum::witness::reserve_ratio_object> reserve_ratio_api_obj;
+
+struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_global_property_object>,
+                                         public api_obj<scorum::witness::reserve_ratio_object>
+{
+    template <class T> dynamic_global_property_api_obj& operator=(const T& other)
+    {
+        T& base = static_cast<T&>(*this);
+        base = other;
+        return *this;
+    }
+};
 
 struct comment_api_obj
 {
@@ -346,10 +381,6 @@ struct account_recovery_request_api_obj
     time_point_sec expires;
 };
 
-struct account_history_api_obj
-{
-};
-
 struct proposal_api_obj
 {
     proposal_api_obj(const proposal_object& p)
@@ -388,17 +419,13 @@ struct witness_api_obj
         , created(w.created)
         , url(fc::to_string(w.url))
         , total_missed(w.total_missed)
-        , last_aslot(w.last_aslot)
         , last_confirmed_block_num(w.last_confirmed_block_num)
         , signing_key(w.signing_key)
-        , props(w.props)
-        , sbd_exchange_rate(w.sbd_exchange_rate)
-        , last_sbd_exchange_update(w.last_sbd_exchange_update)
+        , proposed_chain_props(w.proposed_chain_props)
         , votes(w.votes)
         , virtual_last_update(w.virtual_last_update)
         , virtual_position(w.virtual_position)
         , virtual_scheduled_time(w.virtual_scheduled_time)
-        , last_work(w.last_work)
         , running_version(w.running_version)
         , hardfork_version_vote(w.hardfork_version_vote)
         , hardfork_time_vote(w.hardfork_time_vote)
@@ -414,17 +441,13 @@ struct witness_api_obj
     time_point_sec created;
     std::string url;
     uint32_t total_missed = 0;
-    uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
     public_key_type signing_key;
-    chain_properties props;
-    price sbd_exchange_rate;
-    time_point_sec last_sbd_exchange_update;
+    chain_properties proposed_chain_props;
     share_type votes;
     fc::uint128 virtual_last_update;
     fc::uint128 virtual_position;
     fc::uint128 virtual_scheduled_time;
-    digest_type last_work;
     version running_version;
     hardfork_version hardfork_version_vote;
     time_point_sec hardfork_time_vote;
@@ -448,38 +471,6 @@ struct signed_block_api_obj : public signed_block
     block_id_type block_id;
     public_key_type signing_key;
     std::vector<transaction_id_type> transaction_ids;
-};
-
-struct dynamic_global_property_api_obj : public dynamic_global_property_object
-{
-    dynamic_global_property_api_obj(const dynamic_global_property_object& gpo, const chain::database& db)
-        : dynamic_global_property_object(gpo)
-    {
-        if (db.has_index<witness::reserve_ratio_index>())
-        {
-            const auto& r = db.find(witness::reserve_ratio_id_type());
-
-            if (BOOST_LIKELY(r != nullptr))
-            {
-                current_reserve_ratio = r->current_reserve_ratio;
-                average_block_size = r->average_block_size;
-                max_virtual_bandwidth = r->max_virtual_bandwidth;
-            }
-        }
-    }
-
-    dynamic_global_property_api_obj(const dynamic_global_property_object& gpo)
-        : dynamic_global_property_object(gpo)
-    {
-    }
-
-    dynamic_global_property_api_obj()
-    {
-    }
-
-    uint32_t current_reserve_ratio = 0;
-    uint64_t average_block_size = 0;
-    uint128_t max_virtual_bandwidth = 0;
 };
 
 struct budget_api_obj
@@ -584,7 +575,7 @@ struct atomicswap_contract_result_api_obj
                                        const std::string& secret = "")
         : tr(_tr)
     {
-        obj.contract_initiator = (op.type == protocol::atomicswap_by_initiator);
+        obj.contract_initiator = (op.type == protocol::atomicswap_initiate_operation::by_initiator);
         obj.owner = op.owner;
         obj.to = op.recipient;
         obj.amount = op.amount;
@@ -610,6 +601,23 @@ struct atomicswap_contract_result_api_obj
 } // namespace scorum
 
 // clang-format off
+
+FC_REFLECT_EMPTY(scorum::app::account_bandwidth_api_obj)
+FC_REFLECT_EMPTY(scorum::app::block_summary_api_obj)
+FC_REFLECT_EMPTY(scorum::app::change_recovery_account_request_api_obj)
+FC_REFLECT_EMPTY(scorum::app::comment_vote_api_obj)
+FC_REFLECT_EMPTY(scorum::app::decline_voting_rights_request_api_obj)
+FC_REFLECT_EMPTY(scorum::app::escrow_api_obj)
+FC_REFLECT_EMPTY(scorum::app::reward_fund_api_obj)
+FC_REFLECT_EMPTY(scorum::app::vesting_delegation_api_obj)
+FC_REFLECT_EMPTY(scorum::app::vesting_delegation_expiration_api_obj)
+FC_REFLECT_EMPTY(scorum::app::withdraw_vesting_route_api_obj)
+FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
+FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
+
+FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
+
+
 
 FC_REFLECT( scorum::app::comment_api_obj,
              (id)(author)(permlink)
@@ -669,10 +677,8 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (owner)
              (created)
              (url)(votes)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
-             (props)
-             (sbd_exchange_rate)(last_sbd_exchange_update)
-             (last_work)
+             (last_confirmed_block_num)(signing_key)
+             (proposed_chain_props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
           )
@@ -691,12 +697,6 @@ FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed
                      (block_id)
                      (signing_key)
                      (transaction_ids)
-                  )
-
-FC_REFLECT_DERIVED( scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object),
-                     (current_reserve_ratio)
-                     (average_block_size)
-                     (max_virtual_bandwidth)
                   )
 
 FC_REFLECT( scorum::app::budget_api_obj,

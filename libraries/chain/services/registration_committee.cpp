@@ -62,7 +62,7 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
     // add members
     for (const auto& item : items)
     {
-        if (_get_members_count() > SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS)
+        if (get_members_count() > SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS)
         {
             wlog("Too many committee members in genesis state. More than ${1} are ignored.",
                  ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
@@ -72,7 +72,7 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
         _add_member(accout);
     }
 
-    if (!_get_members_count())
+    if (!get_members_count())
     {
         FC_ASSERT(false, "Can't initialize at least one member.");
     }
@@ -111,14 +111,9 @@ void dbs_registration_committee::update_member_info(const registration_committee
     db_impl().modify(member, [&](registration_committee_member_object& m) { modifier(m); });
 }
 
-uint64_t dbs_registration_committee::_get_members_count() const
+uint64_t dbs_registration_committee::get_members_count() const
 {
     return db_impl().get_index<registration_committee_member_index>().indices().size();
-}
-
-uint64_t dbs_registration_committee::quorum_votes(uint64_t quorum_percent)
-{
-    return utils::get_quorum(_get_members_count(), quorum_percent);
 }
 
 bool dbs_registration_committee::is_exists(const account_name_type& account_name) const
@@ -130,7 +125,7 @@ bool dbs_registration_committee::is_exists(const account_name_type& account_name
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)
 {
     FC_ASSERT(!is_exists(account.name), "Member already exists.");
-    FC_ASSERT(_get_members_count() <= SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS,
+    FC_ASSERT(get_members_count() <= SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS,
               "Can't add member. Limit ${1} is reached.", ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
 
     const registration_committee_member_object& new_member = db_impl().create<registration_committee_member_object>(
@@ -150,11 +145,11 @@ void dbs_registration_committee::_exclude_member(const account_object& account)
 
 namespace utils {
 
-uint64_t get_quorum(size_t members_count, uint64_t percent)
+bool is_quorum(size_t votes, size_t members_count, size_t quorum)
 {
-    const uint32_t needed_votes = (members_count * SCORUM_PERCENT(percent)) / SCORUM_100_PERCENT;
+    const size_t voted_percent = votes * SCORUM_100_PERCENT / members_count;
 
-    return needed_votes;
+    return voted_percent >= SCORUM_PERCENT(quorum) ? true : false;
 }
 
 } // namespace utils

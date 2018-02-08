@@ -16,7 +16,6 @@ using namespace boost::multi_index;
 
 using scorum::app::application;
 
-using chainbase::allocator;
 using chainbase::object;
 using chainbase::oid;
 
@@ -68,14 +67,7 @@ class tags_plugin_impl;
 class tag_object : public object<tag_object_type, tag_object>
 {
 public:
-    template <typename Constructor, typename Allocator> tag_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    tag_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(tag_object)
 
     id_type id;
 
@@ -119,7 +111,7 @@ struct by_comment;
 struct by_tag;
 
 // clang-format off
-typedef multi_index_container<
+typedef shared_multi_index_container<
     tag_object,
     indexed_by<
         ordered_unique<tag<by_id>, member<tag_object, tag_id_type, &tag_object::id>>,
@@ -247,8 +239,8 @@ typedef multi_index_container<
                        composite_key_compare<std::less<tag_name_type>,
                                              std::less<bool>,
                                              std::greater<int64_t>,
-                                             std::less<tag_id_type>>>>,
-    allocator<tag_object>>
+                                             std::less<tag_id_type>>>>
+    >
     tag_index;
 // clang-format on
 
@@ -259,14 +251,7 @@ typedef multi_index_container<
 class tag_stats_object : public object<tag_stats_object_type, tag_stats_object>
 {
 public:
-    template <typename Constructor, typename Allocator> tag_stats_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
-
-    tag_stats_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(tag_stats_object)
 
     id_type id;
 
@@ -285,33 +270,17 @@ struct by_top_posts;
 struct by_trending;
 
 // clang-format off
-typedef multi_index_container<
+typedef shared_multi_index_container<
     tag_stats_object,
     indexed_by<
         ordered_unique<tag<by_id>, member<tag_stats_object, tag_stats_id_type, &tag_stats_object::id>>,
         ordered_unique<tag<by_tag>, member<tag_stats_object, tag_name_type, &tag_stats_object::tag>>,
-        /*
-        ordered_non_unique< tag< by_comments >,
-           composite_key< tag_stats_object,
-              member< tag_stats_object, uint32_t, &tag_stats_object::comments >,
-              member< tag_stats_object, tag_name_type, &tag_stats_object::tag >
-           >,
-           composite_key_compare< std::less< tag_name_type >, std::greater< uint32_t > >
-        >,
-        ordered_non_unique< tag< by_top_posts >,
-           composite_key< tag_stats_object,
-              member< tag_stats_object, uint32_t, &tag_stats_object::top_posts >,
-              member< tag_stats_object, tag_name_type, &tag_stats_object::tag >
-           >,
-           composite_key_compare< std::less< tag_name_type >, std::greater< uint32_t > >
-        >,
-        */
         ordered_non_unique<tag<by_trending>,
                            composite_key<tag_stats_object,
                                          member<tag_stats_object, fc::uint128, &tag_stats_object::total_trending>,
                                          member<tag_stats_object, tag_name_type, &tag_stats_object::tag>>,
-                           composite_key_compare<std::greater<fc::uint128>, std::less<tag_name_type>>>>,
-    allocator<tag_stats_object>>
+                           composite_key_compare<std::greater<fc::uint128>, std::less<tag_name_type>>>>
+    >
     tag_stats_index;
 // clang-format on
 
@@ -322,14 +291,7 @@ typedef multi_index_container<
 class peer_stats_object : public object<peer_stats_object_type, peer_stats_object>
 {
 public:
-    template <typename Constructor, typename Allocator> peer_stats_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    peer_stats_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(peer_stats_object)
 
     id_type id;
 
@@ -372,7 +334,7 @@ struct by_rank;
 struct by_voter_peer;
 
 // clang-format off
-typedef multi_index_container<
+typedef shared_multi_index_container<
     peer_stats_object,
     indexed_by<ordered_unique<tag<by_id>, member<peer_stats_object, peer_stats_id_type, &peer_stats_object::id>>,
                ordered_unique<
@@ -386,13 +348,13 @@ typedef multi_index_container<
                               composite_key<peer_stats_object,
                                             member<peer_stats_object, account_id_type, &peer_stats_object::voter>,
                                             member<peer_stats_object, account_id_type, &peer_stats_object::peer>>,
-                              composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>>,
-    allocator<peer_stats_object>>
+                              composite_key_compare<std::less<account_id_type>, std::less<account_id_type>>>>
+    >
     peer_stats_index;
 // clang-format on
 
 /**
- *  This purpose of this object is to maintain stats about which tags an author uses, how frequnetly, and
+ *  This purpose of this object is to maintain stats about which tags an author uses, how frequently, and
  *  how many total earnings of all posts by author in tag.  It also allows us to answer the question of which
  *  authors earn the most in each tag category.  This helps users to discover the best bloggers to follow for
  *  particular tags.
@@ -400,10 +362,7 @@ typedef multi_index_container<
 class author_tag_stats_object : public object<author_tag_stats_object_type, author_tag_stats_object>
 {
 public:
-    template <typename Constructor, typename Allocator> author_tag_stats_object(Constructor&& c, allocator<Allocator>)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(author_tag_stats_object)
 
     id_type id;
     account_id_type author;
@@ -419,7 +378,7 @@ struct by_author_tag_rewards;
 struct by_tag_rewards_author;
 
 // clang-format off
-typedef chainbase::shared_multi_index_container<
+typedef shared_multi_index_container<
     author_tag_stats_object,
     indexed_by<
         ordered_unique<tag<by_id>,

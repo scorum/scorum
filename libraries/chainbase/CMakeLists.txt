@@ -60,10 +60,19 @@ if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
 
-
 file(GLOB HEADERS "include/*.hpp")
-add_library( chainbase src/chainbase.cpp ${HEADERS} )
-target_link_libraries( chainbase fc ${Boost_LIBRARIES} )
+
+add_library( chainbase 
+
+             chainbase.cpp
+             database_guard.cpp
+             segment_manager.cpp
+             undo_db_state.cpp
+
+             ${HEADERS} )
+target_link_libraries( chainbase
+                       fc
+                       ${Boost_LIBRARIES} )
 target_include_directories( chainbase PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"  ${Boost_INCLUDE_DIR} )
 
 add_subdirectory( test )

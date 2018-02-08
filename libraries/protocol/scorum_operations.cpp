@@ -10,7 +10,7 @@ namespace protocol {
 
 bool inline is_asset_type(asset asset, asset_symbol_type symbol)
 {
-    return asset.symbol == symbol;
+    return asset.symbol() == symbol;
 }
 
 void account_create_operation::validate() const
@@ -68,12 +68,13 @@ void account_create_by_committee_operation::validate() const
 void account_update_operation::validate() const
 {
     validate_account_name(account);
-    /*if( owner )
-       owner->validate();
-    if( active )
-       active->validate();
-    if( posting )
-       posting->validate();*/
+
+    if (owner)
+        owner->validate();
+    if (active)
+        active->validate();
+    if (posting)
+        posting->validate();
 
     if (json_metadata.size() > 0)
     {
@@ -101,59 +102,17 @@ void comment_operation::validate() const
     }
 }
 
-struct comment_options_extension_validate_visitor
-{
-    comment_options_extension_validate_visitor()
-    {
-    }
-
-    typedef void result_type;
-
-    void operator()(const comment_payout_beneficiaries& cpb) const
-    {
-        cpb.validate();
-    }
-};
-
-void comment_payout_beneficiaries::validate() const
-{
-    uint32_t sum = 0;
-
-    FC_ASSERT(beneficiaries.size(), "Must specify at least one beneficiary");
-    FC_ASSERT(beneficiaries.size() < 128,
-              "Cannot specify more than 127 beneficiaries."); // Require size serializtion fits in one byte.
-
-    validate_account_name(beneficiaries[0].account);
-    FC_ASSERT(beneficiaries[0].weight <= SCORUM_100_PERCENT,
-              "Cannot allocate more than 100% of rewards to one account");
-    sum += beneficiaries[0].weight;
-    FC_ASSERT(
-        sum <= SCORUM_100_PERCENT,
-        "Cannot allocate more than 100% of rewards to a comment"); // Have to check incrementally to avoid overflow
-
-    for (size_t i = 1; i < beneficiaries.size(); i++)
-    {
-        validate_account_name(beneficiaries[i].account);
-        FC_ASSERT(beneficiaries[i].weight <= SCORUM_100_PERCENT,
-                  "Cannot allocate more than 100% of rewards to one account");
-        sum += beneficiaries[i].weight;
-        FC_ASSERT(
-            sum <= SCORUM_100_PERCENT,
-            "Cannot allocate more than 100% of rewards to a comment"); // Have to check incrementally to avoid overflow
-        FC_ASSERT(beneficiaries[i - 1] < beneficiaries[i],
-                  "Benficiaries must be specified in sorted order (account ascending)");
-    }
-}
-
 void comment_options_operation::validate() const
 {
     validate_account_name(author);
     FC_ASSERT(percent_scrs <= SCORUM_100_PERCENT, "Percent cannot exceed 100%");
-    FC_ASSERT(max_accepted_payout.symbol == SCORUM_SYMBOL, "Max accepted payout must be in SCR");
+    FC_ASSERT(max_accepted_payout.symbol() == SCORUM_SYMBOL, "Max accepted payout must be in SCR");
     FC_ASSERT(max_accepted_payout.amount.value >= 0, "Cannot accept less than 0 payout");
     validate_permlink(permlink);
     for (auto& e : extensions)
-        e.visit(comment_options_extension_validate_visitor());
+    {
+        e.get<comment_payout_beneficiaries>().validate();
+    }
 }
 
 void delete_comment_operation::validate() const
@@ -171,7 +130,7 @@ void vote_operation::validate() const
 {
     validate_account_name(voter);
     validate_account_name(author);
-    FC_ASSERT(abs(weight) <= SCORUM_100_PERCENT, "Weight is not a SCORUM percentage");
+    FC_ASSERT(abs(weight) <= 100, "Weight is not a SCORUM percentage");
     validate_permlink(permlink);
 }
 
@@ -181,7 +140,7 @@ void transfer_operation::validate() const
     {
         validate_account_name(from);
         validate_account_name(to);
-        FC_ASSERT(amount.symbol != VESTS_SYMBOL, "transferring of Scorum Power (STMP) is not allowed.");
+        FC_ASSERT(amount.symbol() != VESTS_SYMBOL, "transferring of Scorum Power (STMP) is not allowed.");
         FC_ASSERT(amount.amount > 0, "Cannot transfer a negative amount (aka: stealing)");
         FC_ASSERT(memo.size() < SCORUM_MAX_MEMO_SIZE, "Memo is too large");
         FC_ASSERT(fc::is_utf8(memo), "Memo is not UTF8");
@@ -216,8 +175,7 @@ void witness_update_operation::validate() const
     validate_account_name(owner);
     FC_ASSERT(url.size() > 0, "URL size must be greater than 0");
     FC_ASSERT(fc::is_utf8(url), "URL is not valid UTF8");
-    FC_ASSERT(fee >= asset(0, SCORUM_SYMBOL), "Fee cannot be negative");
-    props.validate();
+    proposed_chain_props.validate();
 }
 
 void account_witness_vote_operation::validate() const
@@ -265,8 +223,8 @@ void escrow_transfer_operation::validate() const
     FC_ASSERT(fee.amount >= 0, "fee cannot be negative");
     FC_ASSERT(scorum_amount.amount > 0, "scorum amount cannot be negative");
     FC_ASSERT(from != agent && to != agent, "agent must be a third party");
-    FC_ASSERT(fee.symbol == SCORUM_SYMBOL, "fee must be SCR");
-    FC_ASSERT(scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCR");
+    FC_ASSERT(fee.symbol() == SCORUM_SYMBOL, "fee must be SCR");
+    FC_ASSERT(scorum_amount.symbol() == SCORUM_SYMBOL, "scorum amount must contain SCR");
     FC_ASSERT(ratification_deadline < escrow_expiration, "ratification deadline must be before escrow expiration");
     if (json_meta.size() > 0)
     {
@@ -303,7 +261,7 @@ void escrow_release_operation::validate() const
     FC_ASSERT(who == from || who == to || who == agent, "who must be from or to or agent");
     FC_ASSERT(receiver == from || receiver == to, "receiver must be from or to");
     FC_ASSERT(scorum_amount.amount >= 0, "scorum amount cannot be negative");
-    FC_ASSERT(scorum_amount.symbol == SCORUM_SYMBOL, "scorum amount must contain SCR");
+    FC_ASSERT(scorum_amount.symbol() == SCORUM_SYMBOL, "scorum amount must contain SCR");
 }
 
 void request_account_recovery_operation::validate() const

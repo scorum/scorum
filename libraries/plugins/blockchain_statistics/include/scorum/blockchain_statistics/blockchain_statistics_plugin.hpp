@@ -63,10 +63,7 @@ private:
 
 struct bucket_object : public object<bucket_object_type, bucket_object>
 {
-    template <typename Constructor, typename Allocator> bucket_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(bucket_object)
 
     id_type id;
 
@@ -120,14 +117,19 @@ typedef oid<bucket_object> bucket_id_type;
 
 struct by_id;
 struct by_bucket;
-typedef multi_index_container<
-    bucket_object,
-    indexed_by<ordered_unique<tag<by_id>, member<bucket_object, bucket_id_type, &bucket_object::id>>,
-               ordered_unique<tag<by_bucket>,
-                              composite_key<bucket_object,
-                                            member<bucket_object, uint32_t, &bucket_object::seconds>,
-                                            member<bucket_object, fc::time_point_sec, &bucket_object::open>>>>,
-    allocator<bucket_object>>
+typedef shared_multi_index_container<bucket_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<bucket_object,
+                                                                      bucket_id_type,
+                                                                      &bucket_object::id>>,
+                                                ordered_unique<tag<by_bucket>,
+                                                               composite_key<bucket_object,
+                                                                             member<bucket_object,
+                                                                                    uint32_t,
+                                                                                    &bucket_object::seconds>,
+                                                                             member<bucket_object,
+                                                                                    fc::time_point_sec,
+                                                                                    &bucket_object::open>>>>>
     bucket_index;
 } // namespace blockchain_statistics
 } // namespace scorum
