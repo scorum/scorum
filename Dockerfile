@@ -146,7 +146,6 @@ EXPOSE 2001
 ADD doc/seednodes.txt /etc/scorumd/seednodes.txt
 
 # the following adds lots of logging info to stdout
-ADD contrib/config-for-docker.ini /etc/scorumd/config.ini
 ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini
 
 # add normal startup script that start via runsv
