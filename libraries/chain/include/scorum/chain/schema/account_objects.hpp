@@ -93,6 +93,7 @@ public:
 class account_authority_object : public object<account_authority_object_type, account_authority_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(account_authority_object, (owner)(active)(posting))
 
     id_type id;

@@ -21,6 +21,7 @@ using protocol::beneficiary_route_type;
 class comment_object : public object<comment_object_type, comment_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(
         comment_object, (category)(parent_permlink)(permlink)(title)(body)(json_metadata)(beneficiaries))
 

@@ -30,6 +30,7 @@ enum atomicswap_contract_type : bool
 class atomicswap_contract_object : public object<atomicswap_contract_object_type, atomicswap_contract_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(atomicswap_contract_object, (metadata)(secret_hash)(secret))
 
     id_type id;
