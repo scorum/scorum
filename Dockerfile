@@ -51,9 +51,10 @@ RUN \
 
 ADD . /usr/local/src/scorum
 
+RUN git rev-parse --short HEAD
+
 RUN \
     cd /usr/local/src/scorum && \
-    git submodule update --init --recursive && \
     mkdir build && \
     cd build && \
     cmake \
@@ -77,7 +78,6 @@ RUN \
 
 RUN \
     cd /usr/local/src/scorum && \
-    git submodule update --init --recursive && \
     mkdir build && \
     cd build && \
     cmake \
@@ -100,7 +100,6 @@ RUN \
 
 RUN \
     cd /usr/local/src/scorum && \
-    git submodule update --init --recursive && \
     mkdir build && \
     cd build && \
     cmake \
