@@ -30,15 +30,7 @@ enum bandwidth_type
 class account_bandwidth_object : public object<account_bandwidth_object_type, account_bandwidth_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    account_bandwidth_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    account_bandwidth_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(account_bandwidth_object)
 
     id_type id;
 
@@ -54,15 +46,7 @@ typedef oid<account_bandwidth_object> account_bandwidth_id_type;
 class content_edit_lock_object : public object<content_edit_lock_object_type, content_edit_lock_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    content_edit_lock_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    content_edit_lock_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(content_edit_lock_object)
 
     id_type id;
     account_name_type account;
@@ -74,14 +58,7 @@ typedef oid<content_edit_lock_object> content_edit_lock_id_type;
 class reserve_ratio_object : public object<reserve_ratio_object_type, reserve_ratio_object>
 {
 public:
-    template <typename Constructor, typename Allocator> reserve_ratio_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    reserve_ratio_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(reserve_ratio_object)
 
     id_type id;
 
@@ -119,42 +96,39 @@ typedef oid<reserve_ratio_object> reserve_ratio_id_type;
 
 struct by_account_bandwidth_type;
 
-typedef multi_index_container<account_bandwidth_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<account_bandwidth_object,
-                                                               account_bandwidth_id_type,
-                                                               &account_bandwidth_object::id>>,
-                                         ordered_unique<tag<by_account_bandwidth_type>,
-                                                        composite_key<account_bandwidth_object,
-                                                                      member<account_bandwidth_object,
-                                                                             account_name_type,
-                                                                             &account_bandwidth_object::account>,
-                                                                      member<account_bandwidth_object,
-                                                                             bandwidth_type,
-                                                                             &account_bandwidth_object::type>>>>,
-                              allocator<account_bandwidth_object>>
+typedef shared_multi_index_container<account_bandwidth_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<account_bandwidth_object,
+                                                                      account_bandwidth_id_type,
+                                                                      &account_bandwidth_object::id>>,
+                                                ordered_unique<tag<by_account_bandwidth_type>,
+                                                               composite_key<account_bandwidth_object,
+                                                                             member<account_bandwidth_object,
+                                                                                    account_name_type,
+                                                                                    &account_bandwidth_object::account>,
+                                                                             member<account_bandwidth_object,
+                                                                                    bandwidth_type,
+                                                                                    &account_bandwidth_object::type>>>>>
     account_bandwidth_index;
 
 struct by_account;
 
-typedef multi_index_container<content_edit_lock_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<content_edit_lock_object,
-                                                               content_edit_lock_id_type,
-                                                               &content_edit_lock_object::id>>,
-                                         ordered_unique<tag<by_account>,
-                                                        member<content_edit_lock_object,
-                                                               account_name_type,
-                                                               &content_edit_lock_object::account>>>,
-                              allocator<content_edit_lock_object>>
+typedef shared_multi_index_container<content_edit_lock_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<content_edit_lock_object,
+                                                                      content_edit_lock_id_type,
+                                                                      &content_edit_lock_object::id>>,
+                                                ordered_unique<tag<by_account>,
+                                                               member<content_edit_lock_object,
+                                                                      account_name_type,
+                                                                      &content_edit_lock_object::account>>>>
     content_edit_lock_index;
 
-typedef multi_index_container<reserve_ratio_object,
-                              indexed_by<ordered_unique<tag<by_id>,
-                                                        member<reserve_ratio_object,
-                                                               reserve_ratio_id_type,
-                                                               &reserve_ratio_object::id>>>,
-                              allocator<reserve_ratio_object>>
+typedef shared_multi_index_container<reserve_ratio_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<reserve_ratio_object,
+                                                                      reserve_ratio_id_type,
+                                                                      &reserve_ratio_object::id>>>>
     reserve_ratio_index;
 }
 } // scorum::witness

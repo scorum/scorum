@@ -207,7 +207,7 @@ public:
 
     proposal_object& create_committee_proposal(proposal_action action = proposal_action::invite)
     {
-        proposal_object proposal;
+        auto proposal = INIT_OBJ(proposal_object);
         proposal.creator = "alice";
         proposal.data = fc::variant("bob").as_string();
         proposal.action = action;
@@ -227,7 +227,7 @@ public:
 
     proposal_object& create_quorum_change_proposal(uint64_t quorum, proposal_action action)
     {
-        proposal_object proposal;
+        auto proposal = INIT_OBJ(proposal_object);
         proposal.creator = "alice";
         proposal.data = fc::variant(quorum).as_uint64();
         proposal.action = action;

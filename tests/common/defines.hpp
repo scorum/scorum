@@ -21,6 +21,21 @@
 
 #define PUSH_BLOCK scorum::chain::test::_push_block
 
+template <class T> T make_test_index_object()
+{
+    struct constructor
+    {
+        void operator()(const T&)
+        {
+        }
+    };
+
+    return std::move(T(constructor(), std::allocator<T>()));
+}
+
+#define INIT_MEMBER_OBJ(obj) obj(make_test_index_object<decltype(obj)>())
+#define INIT_OBJ(type) make_test_index_object<type>()
+
 // See below
 #define REQUIRE_OP_VALIDATION_SUCCESS(op, field, value)                                                                \
     {                                                                                                                  \

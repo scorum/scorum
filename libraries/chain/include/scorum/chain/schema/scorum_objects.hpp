@@ -19,14 +19,7 @@ using scorum::protocol::asset_symbol_type;
 class escrow_object : public object<escrow_object_type, escrow_object>
 {
 public:
-    template <typename Constructor, typename Allocator> escrow_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    escrow_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(escrow_object)
 
     id_type id;
 
@@ -54,15 +47,7 @@ public:
 class withdraw_vesting_route_object : public object<withdraw_vesting_route_object_type, withdraw_vesting_route_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    withdraw_vesting_route_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    withdraw_vesting_route_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_vesting_route_object)
 
     id_type id;
 
@@ -76,15 +61,7 @@ class decline_voting_rights_request_object
     : public object<decline_voting_rights_request_object_type, decline_voting_rights_request_object>
 {
 public:
-    template <typename Constructor, typename Allocator>
-    decline_voting_rights_request_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    decline_voting_rights_request_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(decline_voting_rights_request_object)
 
     id_type id;
 
@@ -103,14 +80,7 @@ enum curve_id
 class reward_fund_object : public object<reward_fund_object_type, reward_fund_object>
 {
 public:
-    template <typename Constructor, typename Allocator> reward_fund_object(Constructor&& c, allocator<Allocator> a)
-    {
-        c(*this);
-    }
-
-    reward_fund_object()
-    {
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(reward_fund_object)
 
     id_type id;
 
@@ -124,7 +94,7 @@ public:
 // clang-format off
 struct by_withdraw_route;
 struct by_destination;
-typedef multi_index_container<withdraw_vesting_route_object,
+typedef shared_multi_index_container<withdraw_vesting_route_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<withdraw_vesting_route_object,
                                                                withdraw_vesting_route_id_type,
@@ -149,15 +119,15 @@ typedef multi_index_container<withdraw_vesting_route_object,
                                                                                  to_account>,
                                                                       member<withdraw_vesting_route_object,
                                                                              withdraw_vesting_route_id_type,
-                                                                             &withdraw_vesting_route_object::id>>>>,
-                              allocator<withdraw_vesting_route_object>>
+                                                                             &withdraw_vesting_route_object::id>>>>
+    >
     withdraw_vesting_route_index;
 
 struct by_from_id;
 struct by_to;
 struct by_agent;
 struct by_ratification_deadline;
-typedef multi_index_container<escrow_object,
+typedef shared_multi_index_container<escrow_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<escrow_object, escrow_id_type, &escrow_object::id>>,
                                          ordered_unique<tag<by_from_id>,
@@ -197,13 +167,13 @@ typedef multi_index_container<escrow_object,
                                                                              &escrow_object::id>>,
                                                         composite_key_compare<std::less<bool>,
                                                                               std::less<time_point_sec>,
-                                                                              std::less<escrow_id_type>>>>,
-                              allocator<escrow_object>>
+                                                                              std::less<escrow_id_type>>>>
+    >
     escrow_index;
 
 struct by_account;
 struct by_effective_date;
-typedef multi_index_container<decline_voting_rights_request_object,
+typedef shared_multi_index_container<decline_voting_rights_request_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<decline_voting_rights_request_object,
                                                                decline_voting_rights_request_id_type,
@@ -223,17 +193,17 @@ typedef multi_index_container<decline_voting_rights_request_object,
                                                                              &decline_voting_rights_request_object::
                                                                                  account>>,
                                                         composite_key_compare<std::less<time_point_sec>,
-                                                                              std::less<account_id_type>>>>,
-                              allocator<decline_voting_rights_request_object>>
+                                                                              std::less<account_id_type>>>>
+    >
     decline_voting_rights_request_index;
 
 struct by_name;
-typedef multi_index_container<reward_fund_object,
+typedef shared_multi_index_container<reward_fund_object,
                               indexed_by<ordered_unique<tag<by_id>,
                                                         member<reward_fund_object,
                                                                reward_fund_id_type,
-                                                               &reward_fund_object::id>>>,
-                              allocator<reward_fund_object>>
+                                                               &reward_fund_object::id>>>
+    >
     reward_fund_index;
 // clang-format on
 
