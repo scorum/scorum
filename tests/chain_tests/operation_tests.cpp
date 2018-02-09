@@ -2204,7 +2204,7 @@ BOOST_AUTO_TEST_CASE(escrow_transfer_validate)
         op.ratification_deadline = db.head_block_time() + 100;
         op.escrow_expiration = db.head_block_time() + 200;
 
-        BOOST_TEST_MESSAGE("--- failure when sbd symbol != SCR");
+        BOOST_TEST_MESSAGE("--- failure when symbol != SCR");
         op.scorum_amount = ASSET_SP(1e+3);
         SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
 

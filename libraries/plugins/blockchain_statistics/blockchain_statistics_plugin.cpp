@@ -1,3 +1,4 @@
+#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
 
 #include <scorum/app/impacted.hpp>
@@ -63,8 +64,6 @@ struct operation_process
 
             if (op.amount.symbol() == SCORUM_SYMBOL)
                 b.scorum_transferred += op.amount.amount;
-            else
-                b.sbd_transferred += op.amount.amount;
         });
     }
 
