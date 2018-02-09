@@ -4,7 +4,7 @@
 
 #include <scorum/protocol/config.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
 

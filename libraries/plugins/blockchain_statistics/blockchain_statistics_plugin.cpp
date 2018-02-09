@@ -5,7 +5,7 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
 namespace scorum {

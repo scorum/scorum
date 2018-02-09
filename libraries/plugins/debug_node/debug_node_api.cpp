@@ -10,7 +10,7 @@
 
 #include <scorum/chain/block_log.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>

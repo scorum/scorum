@@ -1,6 +1,6 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 

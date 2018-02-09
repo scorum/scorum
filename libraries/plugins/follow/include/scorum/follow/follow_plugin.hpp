@@ -1,6 +1,6 @@
 #pragma once
 #include <scorum/app/plugin.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <fc/thread/future.hpp>
 

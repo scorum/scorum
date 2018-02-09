@@ -2,7 +2,7 @@
 
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/custom_operation_interpreter.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/db_with.hpp>
 #include <scorum/chain/evaluators/evaluator_registry.hpp>

@@ -2,7 +2,7 @@
 #include <scorum/account_by_key/account_by_key_objects.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
 #include <graphene/schema/schema.hpp>

@@ -1,4 +1,4 @@
-#include <scorum/chain/fork_database.hpp>
+#include <scorum/chain/database/fork_database.hpp>
 
 #include <scorum/chain/database_exceptions.hpp>
 

@@ -27,7 +27,7 @@
 
 #include <scorum/protocol/exceptions.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>

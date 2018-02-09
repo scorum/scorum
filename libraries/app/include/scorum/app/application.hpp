@@ -25,7 +25,7 @@
 
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/api_context.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <graphene/net/node.hpp>
 

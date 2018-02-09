@@ -26,7 +26,7 @@
 #include <scorum/witness/witness_plugin.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>

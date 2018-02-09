@@ -6,7 +6,7 @@
 
 #include <scorum/protocol/config.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/schema/account_objects.hpp>

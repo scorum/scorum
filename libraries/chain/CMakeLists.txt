@@ -23,9 +23,9 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/h
 add_library( scorum_chain
 
              # As database takes the longest to compile, start it first
-             database.cpp
-             fork_database.cpp
-             database_witness_schedule.cpp
+             database/database.cpp
+             database/fork_database.cpp
+             database/database_witness_schedule.cpp
 
              services/dbs_base.cpp
              services/dbservice_dbs_factory.cpp

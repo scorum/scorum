@@ -3,7 +3,7 @@
 
 #include <scorum/chain/util/reward.hpp>
 
-#include <scorum/chain/database.hpp> //remove after get_custom_json_evaluator, is_producing removing
+#include <scorum/chain/database/database.hpp> //remove after get_custom_json_evaluator, is_producing removing
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>

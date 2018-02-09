@@ -6,7 +6,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/node_property_object.hpp>
-#include <scorum/chain/fork_database.hpp>
+#include <scorum/chain/database/fork_database.hpp>
 #include <scorum/chain/block_log.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
