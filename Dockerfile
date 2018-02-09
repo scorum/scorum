@@ -107,8 +107,7 @@ RUN \
         -DCLEAR_VOTES=ON \
         -DSKIP_BY_TX_ID=ON \
         -DBUILD_SCORUM_TESTNET=OFF \
-        .. \
-    && \
+        .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
     ./tests/utests/utests && \
@@ -116,8 +115,11 @@ RUN \
     ./tests/wallet_tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
     make install && \
-    rm -rfv build && \
-    mkdir build && \
+	rm -rf /usr/local/src/scorum/build
+
+RUN \
+	cd /usr/local/src/scorum && \
+	mkdir build && \
     cd build && \
     cmake \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
@@ -126,19 +128,25 @@ RUN \
         -DCLEAR_VOTES=OFF \
         -DSKIP_BY_TX_ID=ON \
         -DBUILD_SCORUM_TESTNET=OFF \
-        .. \
-    && \
+        .. && \
     make -j$(nproc) && \
+    ./libraries/chainbase/test/chainbase_test && \
+    ./tests/utests/utests && \
+    ./tests/chain_tests/chain_tests && \
+    ./tests/wallet_tests/wallet_tests && \
+    ./programs/util/test_fixed_string && \
     make install && \
-    cd .. && \
+    cd / && \
+    rm -rf /usr/local/src/scorum
+
+RUN \
     ( /usr/local/scorumd-full/bin/scorumd --version \
       | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
       && echo '_' \
       && git rev-parse --short HEAD ) \
       | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n//g' \
       > /etc/scorumdversion && \
-    cat /etc/scorumdversion && \
-    rm -rf /usr/local/src/scorum
+    cat /etc/scorumdversion
 
 RUN \
         apt-get remove -y \
