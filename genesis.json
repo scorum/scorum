@@ -6,6 +6,7 @@
   "registration_supply": "1.000000000 SCR",
   "registration_bonus": "0.000000005 SCR",
   "founders_supply": "200.100000000 SP",
+  "steemit_bounty_accounts_supply": "100.000000000 SP",
 
   "accounts": [
     {
@@ -34,6 +35,14 @@
   }, {
     "name": "bob",
     "sp_percent": 30
+  }],
+
+  "steemit_bounty_accounts": [{
+    "name": "initdelegate",
+    "sp_amount": "51.000000000 SP"
+  }, {
+    "name": "bob",
+    "sp_amount": "49.000000000 SP"
   }],
 
   "witness_candidates": [{

@@ -60,6 +60,12 @@ add_library( scorum_chain
              genesis/initializators/accounts_initializator.cpp
              genesis/initializators/founders_initializator.cpp
              genesis/initializators/witnesses_initializator.cpp
+             genesis/initializators/global_property_initializator.cpp
+             genesis/initializators/rewards_initializator.cpp
+             genesis/initializators/registration_initializator.cpp
+             genesis/initializators/witness_schedule_initializator.cpp
+             genesis/initializators/registration_bonus_initializator.cpp
+             genesis/initializators/steemit_bounty_account_initializator.cpp
 
              util/reward.cpp
 

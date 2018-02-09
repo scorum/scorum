@@ -36,6 +36,11 @@ private:
         genesis_state.founders.push_back({ a.name, a.sp_percent });
     }
 
+    void steemit_bounty_account_create(Actor& a)
+    {
+        genesis_state.steemit_bounty_accounts.push_back({ a.name, a.sp_amount });
+    }
+
     void witness_create(Actor& a)
     {
         genesis_state.witness_candidates.push_back({ a.name, a.public_key });
@@ -69,6 +74,16 @@ public:
         for (Actor& a : list)
         {
             founder_create(a);
+        }
+        return *this;
+    }
+
+    template <typename... Args> Genesis& steemit_bounty_accounts(Args... args)
+    {
+        std::array<Actor, sizeof...(args)> list = { args... };
+        for (Actor& a : list)
+        {
+            steemit_bounty_account_create(a);
         }
         return *this;
     }
@@ -122,6 +137,12 @@ public:
     Genesis& founders_supply(asset amount)
     {
         genesis_state.founders_supply = amount;
+        return *this;
+    }
+
+    Genesis& steemit_bounty_accounts_supply(asset amount)
+    {
+        genesis_state.steemit_bounty_accounts_supply = amount;
         return *this;
     }
 

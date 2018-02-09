@@ -19,6 +19,12 @@
 #include <scorum/chain/genesis/initializators/accounts_initializator.hpp>
 #include <scorum/chain/genesis/initializators/founders_initializator.hpp>
 #include <scorum/chain/genesis/initializators/witnesses_initializator.hpp>
+#include <scorum/chain/genesis/initializators/registration_initializator.hpp>
+#include <scorum/chain/genesis/initializators/registration_bonus_initializator.hpp>
+#include <scorum/chain/genesis/initializators/rewards_initializator.hpp>
+#include <scorum/chain/genesis/initializators/witness_schedule_initializator.hpp>
+#include <scorum/chain/genesis/initializators/global_property_initializator.hpp>
+#include <scorum/chain/genesis/initializators/steemit_bounty_account_initializator.hpp>
 
 #include <fc/io/json.hpp>
 
@@ -66,7 +72,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
         db_genesis genesis(*this, genesis_state);
 
         // Nothing to do
-        for (int i = 0; i < 0x10000; i++)
+        for (int i = 0; i <= SCORUM_BLOCKID_POOL_SIZE; ++i)
             create<block_summary_object>([&](block_summary_object&) {});
 
         create<hardfork_property_object>(
@@ -80,97 +86,25 @@ scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis
     , _db(db)
     , _genesis_state(genesis_state)
 {
-    const auto& accounts_initializator = register_initializator(new genesis::accounts_initializator);
-    const auto& founders_initializator = register_initializator(new genesis::founders_initializator);
-    const auto& witnesses_initializator = register_initializator(new genesis::witnesses_initializator);
+    register_initializator(new genesis::accounts_initializator_impl);
+    register_initializator(new genesis::founders_initializator_impl);
+    register_initializator(new genesis::witnesses_initializator_impl);
+    register_initializator(new genesis::registration_initializator_impl);
+    register_initializator(new genesis::registration_bonus_initializator_impl);
+    register_initializator(new genesis::global_property_initializator_impl);
+    register_initializator(new genesis::witness_schedule_initializator_impl);
+    register_initializator(new genesis::rewards_initializator_impl);
+    register_initializator(new genesis::steemit_bounty_account_initializator_impl);
 
-    init_global_property_object();
-
-    init(accounts_initializator);
-    init(founders_initializator);
-    init(witnesses_initializator);
-
-    init_witness_schedule();
-    init_rewards();
-    init_registration_objects();
-}
-
-void db_genesis::init_witness_schedule()
-{
-    const std::vector<genesis_state_type::witness_type>& witness_candidates = _genesis_state.witness_candidates;
-
-    _db.create<witness_schedule_object>([&](witness_schedule_object& wso) {
-        for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
-        {
-            wso.current_shuffled_witnesses[i] = witness_candidates[i].name;
-        }
-    });
-}
-
-void db_genesis::init_global_property_object()
-{
-    _db.create<dynamic_global_property_object>([&](dynamic_global_property_object& gpo) {
-        gpo.time = _db.get_genesis_time();
-        gpo.recent_slots_filled = fc::uint128::max_value();
-        gpo.participation_count = 128;
-        asset founders_supply = _genesis_state.founders_supply;
-        gpo.circulating_capital = _genesis_state.accounts_supply + asset(founders_supply.amount, SCORUM_SYMBOL);
-        gpo.total_supply = gpo.circulating_capital + _genesis_state.rewards_supply + _genesis_state.registration_supply;
-        gpo.median_chain_props.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
-    });
-}
-
-void db_genesis::init_rewards()
-{
-    const auto& post_rf = _db.create<reward_fund_object>([&](reward_fund_object& rfo) {
-        rfo.last_update = _db.head_block_time();
-        rfo.reward_balance = asset(0, SCORUM_SYMBOL);
-        rfo.author_reward_curve = curve_id::linear;
-        rfo.curation_reward_curve = curve_id::square_root;
-    });
-
-    // As a shortcut in payout processing, we use the id as an array index.
-    // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
-    FC_ASSERT(post_rf.id._id == 0);
-
-    // We share initial fund between raward_pool and fund budget
-    dbs_reward& reward_service = _db.obtain_service<dbs_reward>();
-    dbs_budget& budget_service = _db.obtain_service<dbs_budget>();
-
-    asset initial_reward_pool_supply(_genesis_state.rewards_supply.amount
-                                         * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
-                                         / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                                     _genesis_state.rewards_supply.symbol());
-    fc::time_point deadline = _db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
-
-    reward_service.create_pool(initial_reward_pool_supply);
-    budget_service.create_fund_budget(_genesis_state.rewards_supply - initial_reward_pool_supply, deadline);
-}
-
-void db_genesis::init_registration_objects()
-{
-    dbs_registration_pool& registration_pool_service = _db.obtain_service<dbs_registration_pool>();
-    dbs_registration_committee& registration_committee_service = _db.obtain_service<dbs_registration_committee>();
-
-    // create sorted items list form genesis unordered data
-    using schedule_item_type = registration_pool_object::schedule_item;
-    using schedule_items_type = std::map<uint8_t, schedule_item_type>;
-    schedule_items_type items;
-    for (const auto& genesis_item : _genesis_state.registration_schedule)
-    {
-        items.insert(schedule_items_type::value_type(
-            genesis_item.stage, schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
-    }
-
-    registration_pool_service.create_pool(_genesis_state.registration_supply, _genesis_state.registration_bonus, items);
-
-    using account_names_type = std::vector<account_name_type>;
-    account_names_type committee;
-    for (const auto& member : _genesis_state.registration_committee)
-    {
-        committee.emplace_back(member);
-    }
-    registration_committee_service.create_committee(committee);
+    init(genesis::accounts_initializator);
+    init(genesis::founders_initializator);
+    init(genesis::witnesses_initializator);
+    init(genesis::registration_initializator);
+    init(genesis::registration_bonus_initializator);
+    init(genesis::global_property_initializator);
+    init(genesis::witness_schedule_initializator);
+    init(genesis::rewards_initializator);
+    init(genesis::steemit_bounty_account_initializator);
 }
 
 } // namespace chain

@@ -267,7 +267,7 @@ block_id_type database::find_block_id_for_num(uint32_t block_num) const
 
         // Reversible blocks are *usually* in the TAPOS buffer.  Since this
         // is the fastest check, we do it first.
-        block_summary_id_type bsid = block_num & 0xFFFF;
+        block_summary_id_type bsid = block_num & SCORUM_BLOCKID_POOL_SIZE;
         const block_summary_object* bs = find<block_summary_object, by_id>(bsid);
         if (bs != nullptr)
         {
@@ -2033,7 +2033,7 @@ void database::create_block_summary(const signed_block& next_block)
 {
     try
     {
-        block_summary_id_type sid(next_block.block_num() & 0xffff);
+        block_summary_id_type sid(next_block.block_num() & SCORUM_BLOCKID_POOL_SIZE);
         modify(get<block_summary_object>(sid), [&](block_summary_object& p) { p.block_id = next_block.id(); });
     }
     FC_CAPTURE_AND_RETHROW()

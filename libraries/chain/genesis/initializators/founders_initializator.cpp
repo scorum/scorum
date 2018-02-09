@@ -14,23 +14,27 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void founders_initializator::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void founders_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
 {
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     account_service_i& account_service = services.account_service();
 
     asset founders_supply = genesis_state.founders_supply;
+
+    FC_ASSERT(founders_supply.symbol() == VESTS_SYMBOL);
+
     uint16_t total_sp_percent = (uint16_t)0;
     for (auto& founder : genesis_state.founders)
     {
         FC_ASSERT(!founder.name.empty(), "Founder 'name' should not be empty.");
+
         account_service.check_account_existence(founder.name);
+
         FC_ASSERT(founder.sp_percent >= (uint16_t)0 && founder.sp_percent <= (uint16_t)100,
                   "Founder 'sp_percent' should be in range [0, 100]. ${1} received.", ("1", founder.sp_percent));
-        FC_ASSERT(founder.sp_percent == (uint16_t)0 || founders_supply.amount > (share_value_type)0,
-                  "Empty 'founders_supply'.");
 
         total_sp_percent += founder.sp_percent;
+
         if (total_sp_percent >= (uint16_t)100)
             break;
     }

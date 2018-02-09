@@ -1,5 +1,8 @@
 #pragma once
 
+#include <fc/reflect/reflect.hpp>
+#include <fc/exception/exception.hpp>
+
 #include <vector>
 #include <map>
 #include <memory>
@@ -14,9 +17,15 @@ namespace genesis {
 
 enum initializators
 {
-    accounts_initializator_type = 0,
-    founders_initializator_type,
-    witnesses_initializator_type,
+    accounts_initializator = 0,
+    founders_initializator,
+    witnesses_initializator,
+    global_property_initializator,
+    rewards_initializator,
+    registration_initializator,
+    witness_schedule_initializator,
+    registration_bonus_initializator,
+    steemit_bounty_account_initializator
 };
 
 class mark
@@ -69,6 +78,7 @@ protected:
 public:
     template <typename InitializatorType> const initializator& register_initializator(InitializatorType* e)
     {
+        FC_ASSERT(e);
         _initializators_ptr[e->get_type()].reset(e);
         return *e;
     }
@@ -88,3 +98,16 @@ private:
 }
 }
 }
+
+// clang-format off
+FC_REFLECT_ENUM(scorum::chain::genesis::initializators,
+                (accounts_initializator)
+                (founders_initializator)
+                (witnesses_initializator)
+                (global_property_initializator)
+                (rewards_initializator)
+                (registration_initializator)
+                (witness_schedule_initializator)
+                (registration_bonus_initializator)
+                (steemit_bounty_account_initializator))
+// clang-format on

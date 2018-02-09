@@ -6,16 +6,16 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-struct founders_initializator_impl : public initializator
+struct witness_schedule_initializator_impl : public initializator
 {
     virtual initializators get_type() const
     {
-        return founders_initializator;
+        return witness_schedule_initializator;
     }
 
     virtual initializators_reqired_type get_reqired_types() const
     {
-        return { global_property_initializator, accounts_initializator };
+        return { witnesses_initializator };
     }
 
     virtual void apply(data_service_factory_i& services, const genesis_state_type& genesis_state);

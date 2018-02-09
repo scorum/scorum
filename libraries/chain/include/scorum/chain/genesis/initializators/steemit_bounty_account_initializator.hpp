@@ -6,11 +6,11 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-struct founders_initializator_impl : public initializator
+struct steemit_bounty_account_initializator_impl : public initializator
 {
     virtual initializators get_type() const
     {
-        return founders_initializator;
+        return steemit_bounty_account_initializator;
     }
 
     virtual initializators_reqired_type get_reqired_types() const

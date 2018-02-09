@@ -13,6 +13,8 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
+#define SCORUM_BLOCKID_POOL_SIZE 0xffff
+
 #define SCORUM_CURRENCY_PRECISION  9
 
 // SCORUM = SCR with 3 digits of precision

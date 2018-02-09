@@ -28,6 +28,11 @@ bool dbs_witness::is_exists(const account_name_type& name) const
     return nullptr != db_impl().find<witness_object, by_name>(name);
 }
 
+const witness_schedule_object& dbs_witness::create_witness_schedule(const modifier_type& modifier)
+{
+    return db_impl().create<witness_schedule_object>([&](witness_schedule_object& o) { modifier(o); });
+}
+
 const witness_schedule_object& dbs_witness::get_witness_schedule_object() const
 {
     try
@@ -35,6 +40,11 @@ const witness_schedule_object& dbs_witness::get_witness_schedule_object() const
         return db_impl().get<witness_schedule_object>();
     }
     FC_CAPTURE_AND_RETHROW()
+}
+
+bool dbs_witness::is_exists() const
+{
+    return nullptr != db_impl().find<witness_schedule_object>();
 }
 
 const witness_object& dbs_witness::get_top_witness() const

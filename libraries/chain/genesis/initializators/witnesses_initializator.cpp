@@ -15,7 +15,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void witnesses_initializator::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void witnesses_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
 {
     account_service_i& account_service = services.account_service();
     witness_service_i& witness_service = services.witness_service();

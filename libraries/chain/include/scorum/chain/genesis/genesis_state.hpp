@@ -25,10 +25,16 @@ struct genesis_state_type
         asset scr_amount;
     };
 
-    struct founders_type
+    struct founder_type
     {
         std::string name;
         uint16_t sp_percent;
+    };
+
+    struct steemit_bounty_account_type
+    {
+        std::string name;
+        asset sp_amount;
     };
 
     struct witness_type
@@ -49,9 +55,11 @@ struct genesis_state_type
     asset accounts_supply = asset(0, SCORUM_SYMBOL);
     asset rewards_supply = asset(0, SCORUM_SYMBOL);
     asset founders_supply = asset(0, VESTS_SYMBOL);
+    asset steemit_bounty_accounts_supply = asset(0, VESTS_SYMBOL);
     time_point_sec initial_timestamp;
     std::vector<account_type> accounts;
-    std::vector<founders_type> founders;
+    std::vector<founder_type> founders;
+    std::vector<steemit_bounty_account_type> steemit_bounty_accounts;
     std::vector<witness_type> witness_candidates;
     std::vector<registration_schedule_item> registration_schedule;
     std::vector<std::string> registration_committee;
@@ -69,9 +77,13 @@ FC_REFLECT(scorum::chain::genesis_state_type::account_type,
            (public_key)
            (scr_amount))
 
-FC_REFLECT(scorum::chain::genesis_state_type::founders_type,
+FC_REFLECT(scorum::chain::genesis_state_type::founder_type,
            (name)
            (sp_percent))
+
+FC_REFLECT(scorum::chain::genesis_state_type::steemit_bounty_account_type,
+           (name)
+           (sp_amount))
 
 FC_REFLECT(scorum::chain::genesis_state_type::witness_type,
           (name)
@@ -88,9 +100,11 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (accounts_supply)
            (rewards_supply)
            (founders_supply)
+           (steemit_bounty_accounts_supply)
            (initial_timestamp)
            (accounts)
            (founders)
+           (steemit_bounty_accounts)
            (witness_candidates)
            (registration_schedule)
            (registration_committee)

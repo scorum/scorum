@@ -1,5 +1,4 @@
 #include <scorum/chain/genesis/initializators/initializators.hpp>
-#include <fc/exception/exception.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
@@ -15,27 +14,55 @@ initializators_registry::initializators_registry(data_service_factory_i& service
 {
 }
 
+namespace {
+
+using recursive_lock_memo_type = std::map<initializators, mark>;
+
+class recursive_lock_type
+{
+public:
+    explicit recursive_lock_type(initializators t)
+        : _t(t)
+    {
+        FC_ASSERT(!_locks[t], "Initializator ${1} already locked. Re-entry detected.", ("1", t));
+        _locks[_t] = true;
+    }
+
+    ~recursive_lock_type()
+    {
+        _locks[_t] = false;
+    }
+
+private:
+    initializators _t;
+    static recursive_lock_memo_type _locks;
+};
+
+recursive_lock_memo_type recursive_lock_type::_locks = recursive_lock_memo_type();
+}
+
 void initializators_registry::init(initializators t)
 {
-    using recursive_lock_type = std::map<initializators, mark>;
-    static recursive_lock_type recursive_lock;
-    FC_ASSERT(!recursive_lock[t]);
-    recursive_lock[t] = true;
+    recursive_lock_type lock(t);
+
     if (!_initializators_applied[t])
     {
         initializators_ptr_type::iterator it = _initializators_ptr.find(t);
-        FC_ASSERT(_initializators_ptr.end() != it);
+        FC_ASSERT(_initializators_ptr.end() != it, "Initializator ${1} is not registered.", ("1", t));
         const auto& pinitializator = it->second;
-        FC_ASSERT(pinitializator);
         for (initializators t_reqired : pinitializator->get_reqired_types())
         {
             init(t_reqired);
         }
 
+        dlog("Genesis ${1} is processing.", ("1", t));
+
         pinitializator->apply(_services, _genesis_state);
+
+        dlog("Genesis ${1} is done.", ("1", t));
+
         _initializators_applied[t] = true;
     }
-    recursive_lock[t] = false;
 }
 }
 }

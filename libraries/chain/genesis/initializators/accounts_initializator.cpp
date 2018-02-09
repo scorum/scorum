@@ -16,14 +16,20 @@ namespace genesis {
 using scorum::protocol::asset;
 using scorum::protocol::share_value_type;
 
-void accounts_initializator::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void accounts_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
 {
     account_service_i& account_service = services.account_service();
 
     asset accounts_supply = genesis_state.accounts_supply;
+
+    FC_ASSERT(accounts_supply.symbol() == SCORUM_SYMBOL);
+
     for (auto& account : genesis_state.accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
+
+        FC_ASSERT(account.scr_amount.symbol() == SCORUM_SYMBOL, "Invalid asset symbol for '${1}'.",
+                  ("1", account.name));
 
         accounts_supply -= account.scr_amount;
     }

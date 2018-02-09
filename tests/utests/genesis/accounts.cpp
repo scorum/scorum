@@ -31,7 +31,7 @@ struct genesis_initiate_accounts_fixture
         mocks.ExpectCall(pservices, data_service_factory_i::account_service).ReturnByRef(*paccount_service);
     }
 
-    accounts_initializator test_it;
+    accounts_initializator_impl test_it;
 };
 
 BOOST_AUTO_TEST_SUITE(accounts_initializator_tests)

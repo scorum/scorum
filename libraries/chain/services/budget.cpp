@@ -15,6 +15,11 @@ dbs_budget::dbs_budget(database& db)
 {
 }
 
+bool dbs_budget::is_fund_exists() const
+{
+    return nullptr != db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT);
+}
+
 dbs_budget::budget_refs_type dbs_budget::get_budgets() const
 {
     budget_refs_type ret;
