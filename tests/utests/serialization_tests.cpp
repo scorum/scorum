@@ -23,19 +23,18 @@
  */
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/protocol/transaction.hpp>
+#include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/version.hpp>
 
 #include <fc/io/json.hpp>
-#include <fc/crypto/digest.hpp>
-#include <fc/crypto/elliptic.hpp>
-#include <fc/reflect/variant.hpp>
 
 #include "defines.hpp"
 
-#include <cmath>
-
-using namespace scorum::protocol;
+using scorum::protocol::asset;
+using scorum::protocol::version;
+using scorum::protocol::extended_private_key_type;
+using scorum::protocol::extended_public_key_type;
+using scorum::protocol::hardfork_version;
 
 BOOST_AUTO_TEST_SUITE(serialization_tests)
 
@@ -62,250 +61,164 @@ BOOST_AUTO_TEST_CASE(account_name_type_test)
     test("1234567890123456");
 }
 
-BOOST_AUTO_TEST_CASE(serialization_raw_test)
+SCORUM_TEST_CASE(asset_test)
 {
-    try
-    {
-        transfer_operation op;
-        op.from = "alice";
-        op.to = "bob";
-        op.amount = asset(100, SCORUM_SYMBOL);
+    BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).decimals(), SCORUM_CURRENCY_PRECISION);
+    BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).symbol_name(), "SCR");
+    BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).to_string(), "0.000000000 SCR");
 
-        signed_transaction trx;
-        trx.operations.push_back(op);
-        auto packed = fc::raw::pack(trx);
-        signed_transaction unpacked = fc::raw::unpack<signed_transaction>(packed);
-        unpacked.validate();
-        BOOST_CHECK(trx.digest() == unpacked.digest());
-    }
-    catch (fc::exception& e)
-    {
-        edump((e.to_detail_string()));
-        throw;
-    }
+    BOOST_CHECK_THROW(asset::from_string("1.0000000000000000000000 SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.000000000SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1. 333333333 SCR"),
+                      fc::exception); // Fails because symbol is '333333333 SCR', which is too long
+    BOOST_CHECK_THROW(asset::from_string("1 .333333333 SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1 .333333333 X"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1 .333333333"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1 1.1"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.1.1 SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.abc SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string(" SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("SCR"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.333333333"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.333333333 "), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string(""), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string(" "), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("  "), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.000111222 LARGENAME"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1.000111222 WRONG"), fc::exception);
+    BOOST_CHECK_THROW(asset::from_string("1. SP"), fc::exception);
+
+    BOOST_CHECK_EQUAL(asset::from_string("100.012000000 SCR").amount.value, 100012000000);
+    BOOST_CHECK_EQUAL(asset::from_string("0.000000120 SCR").amount.value, 120);
+    BOOST_CHECK_EQUAL(asset::from_string("100.000000000 SCR").amount.value, 100000000000);
+    BOOST_CHECK_EQUAL(asset::from_string("100.012000000 SP").amount.value, 100012000000);
+    BOOST_CHECK_EQUAL(asset::from_string("0.000000120 SP").amount.value, 120);
+    BOOST_CHECK_EQUAL(asset::from_string("100.000000000 SP").amount.value, 100000000000);
+
+    asset scorum = asset::from_string("1.123456000 SCR");
+    asset tmp = asset::from_string("0.000000456 SCR");
+    BOOST_CHECK_EQUAL(tmp.amount.value, 456);
+    tmp = asset::from_string("0.000000056 SCR");
+    BOOST_CHECK_EQUAL(tmp.amount.value, 56);
+
+    BOOST_CHECK(std::abs(scorum.to_real() - 1.123456) < 0.0005);
+    BOOST_CHECK_EQUAL(scorum.amount.value, 1123456000);
+    BOOST_CHECK_EQUAL(scorum.decimals(), SCORUM_CURRENCY_PRECISION);
+    BOOST_CHECK_EQUAL(scorum.symbol_name(), "SCR");
+    BOOST_CHECK_EQUAL(scorum.to_string(), "1.123456000 SCR");
+    BOOST_CHECK_EQUAL(scorum.symbol(), SCORUM_SYMBOL);
+    BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.000000050 SCR");
+    BOOST_CHECK_EQUAL(asset(5e+10, SCORUM_SYMBOL).to_string(), "50.000000000 SCR");
 }
 
-BOOST_AUTO_TEST_CASE(serialization_json_test)
+SCORUM_TEST_CASE(json_tests)
 {
-    try
-    {
-        transfer_operation op;
-        op.from = "alice";
-        op.to = "bob";
-        op.amount = asset(100, SCORUM_SYMBOL);
-
-        fc::variant test(op.amount);
-        asset tmp = test.as<asset>();
-        BOOST_REQUIRE(tmp == op.amount);
-
-        signed_transaction trx;
-        trx.operations.push_back(op);
-        fc::variant packed(trx);
-        signed_transaction unpacked = packed.as<signed_transaction>();
-        unpacked.validate();
-        BOOST_CHECK(trx.digest() == unpacked.digest());
-    }
-    catch (fc::exception& e)
-    {
-        edump((e.to_detail_string()));
-        throw;
-    }
+    auto var = fc::json::variants_from_string("10.6 ");
+    var = fc::json::variants_from_string("10.5");
 }
 
-BOOST_AUTO_TEST_CASE(asset_test)
+SCORUM_TEST_CASE(extended_private_key_type_test)
 {
-    try
-    {
-        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).decimals(), SCORUM_CURRENCY_PRECISION);
-        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).symbol_name(), "SCR");
-        BOOST_CHECK_EQUAL(asset(0, SCORUM_SYMBOL).to_string(), "0.000000000 SCR");
-
-        BOOST_CHECK_THROW(asset::from_string("1.0000000000000000000000 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.000000000SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1. 333333333 SCR"),
-                          fc::exception); // Fails because symbol is '333333333 SCR', which is too long
-        BOOST_CHECK_THROW(asset::from_string("1 .333333333 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1 .333333333 X"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1 .333333333"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1 1.1"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("11111111111111111111111111111111111111111111111 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.1.1 SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.abc SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(" SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("SCR"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.333333333"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.333333333 "), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(""), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string(" "), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("  "), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.000111222 LARGENAME"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1.000111222 WRONG"), fc::exception);
-        BOOST_CHECK_THROW(asset::from_string("1. SP"), fc::exception);
-
-        BOOST_CHECK_EQUAL(asset::from_string("100.012000000 SCR").amount.value, 100012000000);
-        BOOST_CHECK_EQUAL(asset::from_string("0.000000120 SCR").amount.value, 120);
-        BOOST_CHECK_EQUAL(asset::from_string("100.000000000 SCR").amount.value, 100000000000);
-        BOOST_CHECK_EQUAL(asset::from_string("100.012000000 SP").amount.value, 100012000000);
-        BOOST_CHECK_EQUAL(asset::from_string("0.000000120 SP").amount.value, 120);
-        BOOST_CHECK_EQUAL(asset::from_string("100.000000000 SP").amount.value, 100000000000);
-
-        asset scorum = asset::from_string("1.123456000 SCR");
-        asset tmp = asset::from_string("0.000000456 SCR");
-        BOOST_CHECK_EQUAL(tmp.amount.value, 456);
-        tmp = asset::from_string("0.000000056 SCR");
-        BOOST_CHECK_EQUAL(tmp.amount.value, 56);
-
-        BOOST_CHECK(std::abs(scorum.to_real() - 1.123456) < 0.0005);
-        BOOST_CHECK_EQUAL(scorum.amount.value, 1123456000);
-        BOOST_CHECK_EQUAL(scorum.decimals(), SCORUM_CURRENCY_PRECISION);
-        BOOST_CHECK_EQUAL(scorum.symbol_name(), "SCR");
-        BOOST_CHECK_EQUAL(scorum.to_string(), "1.123456000 SCR");
-        BOOST_CHECK_EQUAL(scorum.symbol(), SCORUM_SYMBOL);
-        BOOST_CHECK_EQUAL(asset(50, SCORUM_SYMBOL).to_string(), "0.000000050 SCR");
-        BOOST_CHECK_EQUAL(asset(5e+10, SCORUM_SYMBOL).to_string(), "50.000000000 SCR");
-    }
-    FC_LOG_AND_RETHROW()
+    fc::ecc::extended_private_key key
+        = fc::ecc::extended_private_key(fc::ecc::private_key::generate(), fc::sha256(), 0, 0, 0);
+    extended_private_key_type type = extended_private_key_type(key);
+    std::string packed = std::string(type);
+    extended_private_key_type unpacked = extended_private_key_type(packed);
+    BOOST_CHECK(type == unpacked);
 }
 
-BOOST_AUTO_TEST_CASE(json_tests)
+SCORUM_TEST_CASE(extended_public_key_type_test)
 {
-    try
-    {
-        auto var = fc::json::variants_from_string("10.6 ");
-        var = fc::json::variants_from_string("10.5");
-    }
-    catch (const fc::exception& e)
-    {
-        edump((e.to_detail_string()));
-        throw;
-    }
+    fc::ecc::extended_public_key key
+        = fc::ecc::extended_public_key(fc::ecc::private_key::generate().get_public_key(), fc::sha256(), 0, 0, 0);
+    extended_public_key_type type = extended_public_key_type(key);
+    std::string packed = std::string(type);
+    extended_public_key_type unpacked = extended_public_key_type(packed);
+    BOOST_CHECK(type == unpacked);
 }
 
-BOOST_AUTO_TEST_CASE(extended_private_key_type_test)
+SCORUM_TEST_CASE(version_test)
 {
-    try
-    {
-        fc::ecc::extended_private_key key
-            = fc::ecc::extended_private_key(fc::ecc::private_key::generate(), fc::sha256(), 0, 0, 0);
-        extended_private_key_type type = extended_private_key_type(key);
-        std::string packed = std::string(type);
-        extended_private_key_type unpacked = extended_private_key_type(packed);
-        BOOST_CHECK(type == unpacked);
-    }
-    catch (const fc::exception& e)
-    {
-        edump((e.to_detail_string()));
-        throw;
-    }
+    BOOST_REQUIRE_EQUAL(std::string(version(1, 2, 3)), "1.2.3");
+
+    fc::variant ver_str("3.0.0");
+    version ver;
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == version(3, 0, 0));
+
+    ver_str = fc::variant("0.0.0");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == version());
+
+    ver_str = fc::variant("1.0.1");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == version(1, 0, 1));
+
+    ver_str = fc::variant("1_0_1");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == version(1, 0, 1));
+
+    ver_str = fc::variant("12.34.56");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == version(12, 34, 56));
+
+    ver_str = fc::variant("256.0.0");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+
+    ver_str = fc::variant("0.256.0");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+
+    ver_str = fc::variant("0.0.65536");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+
+    ver_str = fc::variant("1.0");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+
+    ver_str = fc::variant("1.0.0.1");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
 }
 
-BOOST_AUTO_TEST_CASE(extended_public_key_type_test)
+SCORUM_TEST_CASE(hardfork_version_test)
 {
-    try
-    {
-        fc::ecc::extended_public_key key
-            = fc::ecc::extended_public_key(fc::ecc::private_key::generate().get_public_key(), fc::sha256(), 0, 0, 0);
-        extended_public_key_type type = extended_public_key_type(key);
-        std::string packed = std::string(type);
-        extended_public_key_type unpacked = extended_public_key_type(packed);
-        BOOST_CHECK(type == unpacked);
-    }
-    catch (const fc::exception& e)
-    {
-        edump((e.to_detail_string()));
-        throw;
-    }
-}
+    BOOST_REQUIRE_EQUAL(std::string(hardfork_version(1, 2)), "1.2.0");
 
-BOOST_AUTO_TEST_CASE(version_test)
-{
-    try
-    {
-        BOOST_REQUIRE_EQUAL(std::string(version(1, 2, 3)), "1.2.3");
+    fc::variant ver_str("3.0.0");
+    hardfork_version ver;
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == hardfork_version(3, 0));
 
-        fc::variant ver_str("3.0.0");
-        version ver;
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == version(3, 0, 0));
+    ver_str = fc::variant("0.0.0");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == hardfork_version());
 
-        ver_str = fc::variant("0.0.0");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == version());
+    ver_str = fc::variant("1.0.0");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == hardfork_version(1, 0));
 
-        ver_str = fc::variant("1.0.1");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == version(1, 0, 1));
+    ver_str = fc::variant("1_0_0");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == hardfork_version(1, 0));
 
-        ver_str = fc::variant("1_0_1");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == version(1, 0, 1));
+    ver_str = fc::variant("12.34.00");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == hardfork_version(12, 34));
 
-        ver_str = fc::variant("12.34.56");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == version(12, 34, 56));
+    ver_str = fc::variant("256.0.0");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
 
-        ver_str = fc::variant("256.0.0");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+    ver_str = fc::variant("0.256.0");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
 
-        ver_str = fc::variant("0.256.0");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+    ver_str = fc::variant("0.0.1");
+    fc::from_variant(ver_str, ver);
+    BOOST_REQUIRE(ver == hardfork_version(0, 0));
 
-        ver_str = fc::variant("0.0.65536");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+    ver_str = fc::variant("1.0");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
 
-        ver_str = fc::variant("1.0");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
-
-        ver_str = fc::variant("1.0.0.1");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
-    }
-    FC_LOG_AND_RETHROW();
-}
-
-BOOST_AUTO_TEST_CASE(hardfork_version_test)
-{
-    try
-    {
-        BOOST_REQUIRE_EQUAL(std::string(hardfork_version(1, 2)), "1.2.0");
-
-        fc::variant ver_str("3.0.0");
-        hardfork_version ver;
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == hardfork_version(3, 0));
-
-        ver_str = fc::variant("0.0.0");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == hardfork_version());
-
-        ver_str = fc::variant("1.0.0");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == hardfork_version(1, 0));
-
-        ver_str = fc::variant("1_0_0");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == hardfork_version(1, 0));
-
-        ver_str = fc::variant("12.34.00");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == hardfork_version(12, 34));
-
-        ver_str = fc::variant("256.0.0");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
-
-        ver_str = fc::variant("0.256.0");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
-
-        ver_str = fc::variant("0.0.1");
-        fc::from_variant(ver_str, ver);
-        BOOST_REQUIRE(ver == hardfork_version(0, 0));
-
-        ver_str = fc::variant("1.0");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
-
-        ver_str = fc::variant("1.0.0.1");
-        SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
-    }
-    FC_LOG_AND_RETHROW();
+    ver_str = fc::variant("1.0.0.1");
+    SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
