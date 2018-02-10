@@ -16,6 +16,7 @@ set( SOURCES
   proposal/proposal_create_evaluator_tests.cpp
   proposal_vote_operation_tests.cpp
   serialization_tests.cpp
+  signed_transaction_serialization_tests.cpp
 )
 
 add_executable(utests
