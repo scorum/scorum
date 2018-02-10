@@ -21,62 +21,57 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/protocol/transaction.hpp>
 
+#include <fc/io/json.hpp>
 #include <fc/crypto/digest.hpp>
 #include <fc/crypto/elliptic.hpp>
 #include <fc/reflect/variant.hpp>
 
-#include "database_fixture.hpp"
+#include "defines.hpp"
 
 #include <cmath>
 
-using namespace scorum;
-using namespace scorum::chain;
 using namespace scorum::protocol;
 
-BOOST_FIXTURE_TEST_SUITE(serialization_tests, clean_database_fixture)
+BOOST_AUTO_TEST_SUITE(serialization_tests)
 
-/*
-BOOST_AUTO_TEST_CASE( account_name_type_test )
+BOOST_AUTO_TEST_CASE(account_name_type_test)
 {
+    auto test = [](const std::string& data) {
+        fc::fixed_string<> a(data);
+        std::string b(data);
 
-auto test = []( const std::string& data ) {
-   fixed_string<> a(data);
-   std::string    b(data);
+        auto ap = fc::raw::pack(a);
+        auto bp = fc::raw::pack(b);
 
-   auto ap = fc::raw::pack( empty );
-   auto bp = fc::raw::pack( emptystr );
-   FC_ASSERT( ap.size() == bp.size() );
-   FC_ASSERT( std::equal( ap.begin(), ap.end(), bp.begin() ) );
+        BOOST_CHECK_EQUAL(ap.size(), bp.size());
+        BOOST_CHECK(std::equal(ap.begin(), ap.end(), bp.begin()));
 
-   auto sfa = fc::raw::unpack<std::string>( ap );
-   auto afs = fc::raw::unpack<fixed_string<>>( bp );
+        auto au = fc::raw::unpack<std::string>(ap);
+        auto bu = fc::raw::unpack<fc::fixed_string<>>(bp);
+
+        BOOST_CHECK_EQUAL(au, bu);
+    };
+
+    test(std::string());
+    test("helloworld");
+    test("1234567890123456");
 }
-test( std::string() );
-test( "helloworld" );
-test( "1234567890123456" );
-
-auto packed_long_string = fc::raw::pack( std::string( "12345678901234567890" ) );
-auto unpacked = fc::raw::unpack<fixed_string<>>( packed_long_string );
-idump( (unpacked) );
-}
-*/
 
 BOOST_AUTO_TEST_CASE(serialization_raw_test)
 {
     try
     {
-        ACTORS((alice)(bob))
         transfer_operation op;
         op.from = "alice";
         op.to = "bob";
         op.amount = asset(100, SCORUM_SYMBOL);
 
+        signed_transaction trx;
         trx.operations.push_back(op);
         auto packed = fc::raw::pack(trx);
         signed_transaction unpacked = fc::raw::unpack<signed_transaction>(packed);
@@ -89,11 +84,11 @@ BOOST_AUTO_TEST_CASE(serialization_raw_test)
         throw;
     }
 }
+
 BOOST_AUTO_TEST_CASE(serialization_json_test)
 {
     try
     {
-        ACTORS((alice)(bob))
         transfer_operation op;
         op.from = "alice";
         op.to = "bob";
@@ -103,6 +98,7 @@ BOOST_AUTO_TEST_CASE(serialization_json_test)
         asset tmp = test.as<asset>();
         BOOST_REQUIRE(tmp == op.amount);
 
+        signed_transaction trx;
         trx.operations.push_back(op);
         fc::variant packed(trx);
         signed_transaction unpacked = packed.as<signed_transaction>();
@@ -313,4 +309,3 @@ BOOST_AUTO_TEST_CASE(hardfork_version_test)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-#endif
