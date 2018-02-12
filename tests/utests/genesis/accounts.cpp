@@ -6,11 +6,9 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/dynamic_global_property_object.hpp>
-
 #include "defines.hpp"
 #include "genesis.hpp"
+#include "fakes.hpp"
 
 #include <hippomocks.h>
 
@@ -55,47 +53,41 @@ struct genesis_initiate_accounts_with_actors_fixture : public genesis_initiate_a
     genesis_initiate_accounts_with_actors_fixture()
         : alice("alice")
         , bob("bob")
-    /*,    , INIT_MEMBER_OBJ(global_property)
-     INIT_MEMBER_OBJ(alice_obj)
-    , INIT_MEMBER_OBJ(bob_obj)*/
     {
     }
 
-    Actor alice;
-    Actor bob;
-
-    // dynamic_global_property_object global_property;
-    // account_object alice_obj;
-    // account_object bob_obj;
+    fake_account_object alice;
+    fake_account_object bob;
 };
 
 BOOST_FIXTURE_TEST_CASE(check_invalid_account_sum, genesis_initiate_accounts_with_actors_fixture)
 {
     asset total = ASSET_SCR(1e+6);
 
-    alice.scorum(total / 2);
+    alice.config.scorum(total / 2);
 
-    genesis_state_type input_genesis = Genesis::create().accounts(alice, bob).accounts_supply(total).generate();
+    genesis_state_type input_genesis
+        = Genesis::create().accounts(alice.config, bob.config).accounts_supply(total).generate();
 
-    //    auto lbCreate = [=](const account_name_type& new_account_name, const public_key_type& memo_key,
-    //                        const asset& balance_in_scorums, const account_name_type& recovery_account,
-    //                        const std::string& json_metadata) -> const account_object& {
-    //        account_object* pret = nullptr;
-    //        if (new_account_name == "alice")
-    //            pret = &alice_obj;
-    //        else if (new_account_name == "bob")
-    //            pret = &bob_obj;
-    //        else
-    //            FC_ASSERT(false);
+    //        auto lbCreate = [=](const account_name_type& new_account_name, const public_key_type& memo_key,
+    //                            const asset& balance_in_scorums, const account_name_type& recovery_account,
+    //                            const std::string& json_metadata) -> const account_object& {
+    //            account_object* pret = nullptr;
+    //            if (new_account_name == "alice")
+    //                pret = &alice_obj;
+    //            else if (new_account_name == "bob")
+    //                pret = &bob_obj;
+    //            else
+    //                FC_ASSERT(false);
 
-    //        pret->name = new_account_name;
-    //        pret->balance = balance_in_scorums;
-    //        pret->recovery_account = recovery_account;
-    //        fc::from_string(pret->json_metadata, json_metadata);
-    //        return *pret;
-    //    };
+    //            pret->name = new_account_name;
+    //            pret->balance = balance_in_scorums;
+    //            pret->recovery_account = recovery_account;
+    //            fc::from_string(pret->json_metadata, json_metadata);
+    //            return *pret;
+    //        };
 
-    //    mocks.OnCall(paccount_service, account_service_i::create_initial_account).Do(lbCreate);
+    //        mocks.OnCall(paccount_service, account_service_i::create_initial_account).Do(lbCreate);
 
     SCORUM_REQUIRE_THROW(test_it.apply(*pservices, input_genesis), fc::assert_exception);
 }
