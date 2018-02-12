@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/blockchain_statistics/api/statistic_api_object.hpp>
+#include <scorum/blockchain_statistics/schema/metrics.hpp>
 #include <fc/api.hpp>
 
 namespace scorum {

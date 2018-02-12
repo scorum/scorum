@@ -69,7 +69,7 @@ struct account_stats_bucket_object : public object<account_stats_bucket_object_t
     share_type scorum_received = 0; ///< SCR received by this account
     uint32_t transfers_to_vesting = 0; ///< Transfers to vesting by this account. Note: Transfer to vesting from A to B
     /// counts as a transfer from A to B followed by a vesting deposit by B.
-    share_type scorum_vested = 0; ///< SCR vested by the account
+    share_type scorum_transferred_to_vesting = 0; ///< SCR vested by the account
     share_type new_vests = 0; ///< New SP by vesting transfers
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
     uint32_t modified_vesting_withdrawal_requests = 0; ///< Changes to vesting withdraw requests
@@ -79,14 +79,6 @@ struct account_stats_bucket_object : public object<account_stats_bucket_object_t
     share_type scorum_received_from_withdrawls = 0; ///< SCR received from this account's vesting withdrawals
     share_type scorum_received_from_routes = 0; ///< SCR received from another account's vesting withdrawals
     share_type vests_received_from_routes = 0; ///< SP received from another account's vesting withdrawals
-    share_type scorum_converted = 0; ///< Amount of SCR that was converted
-    uint32_t limit_orders_created = 0; ///< Limit orders created by this account
-    uint32_t limit_orders_filled = 0; ///< Limit orders filled by this account
-    uint32_t limit_orders_cancelled = 0; ///< Limit orders cancelled by this account
-    share_type limit_order_scorum_paid = 0; ///< SCR paid by limit orders
-    share_type limit_order_scorum_received = 0; ///< SCR received from limit orders
-    uint32_t total_pow = 0; ///< POW completed
-    uint128_t estimated_hashpower = 0; ///< Estimated hashpower
 };
 
 typedef account_stats_bucket_object::id_type account_stats_bucket_id_type;
@@ -144,12 +136,9 @@ FC_REFLECT(
         new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(author_reward_payouts)(
         author_rewards_vests)(author_rewards_total_scorum_value)(curation_reward_payouts)(curation_rewards_vests)(
         curation_rewards_scorum_value)(transfers_to)(transfers_from)(scorum_sent)(scorum_received)(
-        transfers_to_vesting)(scorum_vested)(new_vests)(new_vesting_withdrawal_requests)(
+        transfers_to_vesting)(scorum_transferred_to_vesting)(new_vests)(new_vesting_withdrawal_requests)(
         modified_vesting_withdrawal_requests)(vesting_withdrawals_processed)(finished_vesting_withdrawals)(
-        vests_withdrawn)(scorum_received_from_withdrawls)(scorum_received_from_routes)(vests_received_from_routes)(
-        scorum_converted)(limit_orders_created)(limit_orders_filled)(limit_orders_cancelled)(limit_order_scorum_paid)(
-        limit_order_scorum_received)(total_pow)(estimated_hashpower))
-// SET_INDEX_TYPE( scorum::account_statistics::account_stats_bucket_object,)
+        vests_withdrawn)(scorum_received_from_withdrawls)(scorum_received_from_routes)(vests_received_from_routes))
 
 // clang-format off
 

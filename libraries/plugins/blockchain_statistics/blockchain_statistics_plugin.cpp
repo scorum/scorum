@@ -38,16 +38,16 @@ public:
     uint32_t _maximum_history_per_bucket_size = 100;
 };
 
-struct operation_process
+class operation_process
 {
-    const blockchain_statistics_plugin& _plugin;
-    const bucket_object& _bucket;
+private:
     chain::database& _db;
+    const bucket_object& _bucket;
 
-    operation_process(blockchain_statistics_plugin& bsp, const bucket_object& b)
-        : _plugin(bsp)
+public:
+    operation_process(chain::database& db, const bucket_object& b)
+        : _db(db)
         , _bucket(b)
-        , _db(bsp.database())
     {
     }
 
@@ -70,6 +70,16 @@ struct operation_process
     void operator()(const account_create_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) { b.paid_accounts_created++; });
+    }
+
+    void operator()(const account_create_with_delegation_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.paid_accounts_created++; });
+    }
+
+    void operator()(const account_create_by_committee_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.free_accounts_created++; });
     }
 
     void operator()(const comment_operation& op) const
@@ -137,7 +147,7 @@ struct operation_process
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             b.transfers_to_vesting++;
-            b.scorum_vested += op.amount.amount;
+            b.scorum_transferred_to_vesting += op.amount.amount;
         });
     }
 
@@ -183,12 +193,12 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
     uint32_t trx_size = 0;
     uint32_t num_trx = b.transactions.size();
 
-    for (auto trx : b.transactions)
+    for (const auto& trx : b.transactions)
     {
         trx_size += fc::raw::pack_size(trx);
     }
 
-    for (auto bucket : _tracked_buckets)
+    for (const auto& bucket : _tracked_buckets)
     {
         auto open = fc::time_point_sec((db.head_block_time().sec_since_epoch() / bucket) * bucket);
         auto itr = bucket_idx.find(boost::make_tuple(bucket, open));
@@ -298,7 +308,7 @@ void blockchain_statistics_plugin_impl::post_operation(const operation_notificat
             {
                 db.modify(bucket, [&](bucket_object& b) { b.operations++; });
             }
-            o.op.visit(operation_process(_self, bucket));
+            o.op.visit(operation_process(db, bucket));
         }
     }
     FC_CAPTURE_AND_RETHROW()
