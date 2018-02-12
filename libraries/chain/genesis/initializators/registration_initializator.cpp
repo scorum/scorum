@@ -12,8 +12,12 @@ namespace genesis {
 
 void registration_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
 {
-    registration_pool_service_i& registration_pool_service = services.registration_pool_service();
-    registration_committee_service_i& registration_committee_service = services.registration_committee_service();
+    if (genesis_state.registration_schedule.empty() && genesis_state.registration_committee.empty()
+        && !genesis_state.registration_supply.amount.value && !genesis_state.registration_bonus.amount.value)
+    {
+        dlog("No registration pool detected.");
+        return;
+    }
 
     // create sorted items list form genesis unordered data
     using schedule_item_type = registration_pool_object::schedule_item;
@@ -24,6 +28,9 @@ void registration_initializator_impl::apply(data_service_factory_i& services, co
         items.insert(schedule_items_type::value_type(
             genesis_item.stage, schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
     }
+
+    registration_pool_service_i& registration_pool_service = services.registration_pool_service();
+    registration_committee_service_i& registration_committee_service = services.registration_committee_service();
 
     FC_ASSERT(!registration_pool_service.is_exists());
 

@@ -8,6 +8,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
 set( SOURCES
   database_fixture.cpp
+  genesis_db_fixture.cpp
 )
 
 add_library(common_test 

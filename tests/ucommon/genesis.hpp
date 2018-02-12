@@ -13,15 +13,11 @@ using private_key_type = sp::private_key_type;
 using public_key_type = sp::public_key_type;
 using genesis_state_type = sc::genesis_state_type;
 
-using stage = genesis_state_type::registration_schedule_item;
+using registration_stage = genesis_state_type::registration_schedule_item;
 
 class Genesis
 {
-private:
-    Genesis()
-    {
-    }
-
+public:
     void account_create(Actor& a)
     {
         if (_accounts.find(a.name) == _accounts.end())
@@ -58,6 +54,10 @@ public:
         return g;
     }
 
+    Genesis()
+    {
+    }
+
     template <typename... Args> Genesis& accounts(Args... args)
     {
         std::array<Actor, sizeof...(args)> list = { args... };
@@ -73,6 +73,7 @@ public:
         std::array<Actor, sizeof...(args)> list = { args... };
         for (Actor& a : list)
         {
+            account_create(a);
             founder_create(a);
         }
         return *this;
@@ -83,6 +84,7 @@ public:
         std::array<Actor, sizeof...(args)> list = { args... };
         for (Actor& a : list)
         {
+            account_create(a);
             steemit_bounty_account_create(a);
         }
         return *this;
@@ -148,19 +150,15 @@ public:
 
     template <typename... Args> Genesis& registration_schedule(Args... args)
     {
-        std::array<stage, sizeof...(args)> list = { args... };
-        for (stage& s : list)
+        std::array<registration_stage, sizeof...(args)> list = { args... };
+        for (registration_stage& s : list)
         {
             genesis_state.registration_schedule.push_back(s);
         }
         return *this;
     }
 
-    genesis_state_type generate()
-    {
-        genesis_state.initial_chain_id = fc::sha256::hash("tests");
-        return genesis_state;
-    }
+    genesis_state_type generate();
 
     Actors _accounts;
 

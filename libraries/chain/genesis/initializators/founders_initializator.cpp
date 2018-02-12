@@ -10,14 +10,26 @@
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
+#include <limits>
+
 namespace scorum {
 namespace chain {
 namespace genesis {
 
+namespace {
+uint16_t get_percent(float sp_percent)
+{
+    float ret = sp_percent * SCORUM_1_PERCENT;
+    return (uint16_t)ret; // remove mantissa
+}
+}
+
 void founders_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
 {
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
+    FC_ASSERT(SCORUM_100_PERCENT <= std::numeric_limits<uint16_t>::max()); // constant value check
+
     account_service_i& account_service = services.account_service();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
     asset founders_supply = genesis_state.founders_supply;
 
@@ -30,27 +42,23 @@ void founders_initializator_impl::apply(data_service_factory_i& services, const 
 
         account_service.check_account_existence(founder.name);
 
-        FC_ASSERT(founder.sp_percent >= (uint16_t)0 && founder.sp_percent <= (uint16_t)100,
+        FC_ASSERT(founder.sp_percent >= 0.f && founder.sp_percent <= 100.f,
                   "Founder 'sp_percent' should be in range [0, 100]. ${1} received.", ("1", founder.sp_percent));
 
-        total_sp_percent += founder.sp_percent;
+        total_sp_percent += get_percent(founder.sp_percent);
 
-        if (total_sp_percent >= (uint16_t)100)
-            break;
+        FC_ASSERT(total_sp_percent <= (uint16_t)SCORUM_100_PERCENT, "Total 'sp_percent' more then 100%.");
     }
-
-    FC_ASSERT(genesis_state.founders.empty() || total_sp_percent == (uint16_t)100, "Total 'sp_percent' must be 100%.");
 
     asset founders_supply_rest = founders_supply;
     account_name_type pitiful;
     for (auto& founder : genesis_state.founders)
     {
-        if (founder.sp_percent == (uint16_t)0)
-            continue;
+        uint16_t percent = get_percent(founder.sp_percent);
 
         const auto& founder_obj = account_service.get_account(founder.name);
-        asset sp_bonus(0, VESTS_SYMBOL);
-        sp_bonus.amount *= founder.sp_percent * SCORUM_1_PERCENT;
+        asset sp_bonus = founders_supply;
+        sp_bonus.amount *= percent;
         sp_bonus.amount /= SCORUM_100_PERCENT;
         if (sp_bonus.amount > (share_value_type)0)
         {
@@ -58,9 +66,9 @@ void founders_initializator_impl::apply(data_service_factory_i& services, const 
             dgp_service.update([&](dynamic_global_property_object& props) { props.total_vesting_shares += sp_bonus; });
             founders_supply_rest -= sp_bonus;
         }
-        else if (founder.sp_percent > (uint16_t)0)
+        else if (founder.sp_percent > 0.f)
         {
-            pitiful = founder_obj.name;
+            pitiful = founder_obj.name; // only last pitiful may get SP
         }
     }
 
@@ -72,6 +80,7 @@ void founders_initializator_impl::apply(data_service_factory_i& services, const 
             account_service.increase_vesting_shares(founder_obj, founders_supply_rest);
             dgp_service.update(
                 [&](dynamic_global_property_object& props) { props.total_vesting_shares += founders_supply_rest; });
+            founders_supply_rest.amount = 0;
         }
     }
 

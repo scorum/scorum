@@ -151,8 +151,8 @@ template <class T> T make_test_index_object()
 #define ASSET_NULL_SCR asset(0, SCORUM_SYMBOL)
 #define ASSET_NULL_SP asset(0, VESTS_SYMBOL)
 
-#define ASSET_SCR(s) asset((share_value_type)s, SCORUM_SYMBOL)
-#define ASSET_SP(s) asset((share_value_type)s, VESTS_SYMBOL)
+#define ASSET_SCR(s) asset((scorum::protocol::share_value_type)s, SCORUM_SYMBOL)
+#define ASSET_SP(s) asset((scorum::protocol::share_value_type)s, VESTS_SYMBOL)
 
 #define SUFFICIENT_FEE SCORUM_MIN_ACCOUNT_CREATION_FEE* SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
 

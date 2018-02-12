@@ -22,6 +22,7 @@ set( SOURCES
     budget_check/fund_budget.cpp
     budget_check/budget_operations.cpp
     proposal/proposal_tests.cpp
+    genesis_db_tests.cpp
 )
 
 add_executable(chain_tests

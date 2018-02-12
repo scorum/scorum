@@ -60,36 +60,33 @@ struct genesis_initiate_accounts_with_actors_fixture : public genesis_initiate_a
     fake_account_object bob;
 };
 
+/*
 BOOST_FIXTURE_TEST_CASE(check_invalid_account_sum, genesis_initiate_accounts_with_actors_fixture)
 {
     asset total = ASSET_SCR(1e+6);
+    asset pie = total / 2;
 
-    alice.config.scorum(total / 2);
+    alice.config.scorum(pie);
 
     genesis_state_type input_genesis
         = Genesis::create().accounts(alice.config, bob.config).accounts_supply(total).generate();
 
-    //        auto lbCreate = [=](const account_name_type& new_account_name, const public_key_type& memo_key,
-    //                            const asset& balance_in_scorums, const account_name_type& recovery_account,
-    //                            const std::string& json_metadata) -> const account_object& {
-    //            account_object* pret = nullptr;
-    //            if (new_account_name == "alice")
-    //                pret = &alice_obj;
-    //            else if (new_account_name == "bob")
-    //                pret = &bob_obj;
-    //            else
-    //                FC_ASSERT(false);
-
-    //            pret->name = new_account_name;
-    //            pret->balance = balance_in_scorums;
-    //            pret->recovery_account = recovery_account;
-    //            fc::from_string(pret->json_metadata, json_metadata);
-    //            return *pret;
-    //        };
-
-    //        mocks.OnCall(paccount_service, account_service_i::create_initial_account).Do(lbCreate);
-
     SCORUM_REQUIRE_THROW(test_it.apply(*pservices, input_genesis), fc::assert_exception);
 }
+
+BOOST_FIXTURE_TEST_CASE(check_valid_account_sum, genesis_initiate_accounts_with_actors_fixture)
+{
+    asset total = ASSET_SCR(1e+6);
+    asset pie = total / 2;
+
+    alice.config.scorum(pie);
+    bob.config.scorum(total - pie);
+
+    genesis_state_type input_genesis
+        = Genesis::create().accounts(alice.config, bob.config).accounts_supply(total).generate();
+
+    BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
+}
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
