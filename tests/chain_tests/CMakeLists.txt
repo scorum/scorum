@@ -4,7 +4,6 @@ set( SOURCES
     main.cpp
     block_tests.cpp
     operation_tests.cpp
-    serialization_tests.cpp
     escrow_transfer_operation_tests.cpp
     account_data_service_tests.cpp
     live_tests.cpp
