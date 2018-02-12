@@ -46,6 +46,7 @@ public:
         return !_m;
     }
 
+private:
     bool _m = false;
 };
 

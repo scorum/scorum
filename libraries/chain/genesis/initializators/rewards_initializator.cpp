@@ -16,6 +16,8 @@ namespace genesis {
 
 void rewards_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
 {
+    FC_ASSERT(genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
+
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     reward_service_i& reward_service = services.reward_service();
     budget_service_i& budget_service = services.budget_service();

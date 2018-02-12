@@ -79,14 +79,13 @@ struct genesis_initiate_founders_with_actors_fixture : public genesis_initiate_f
     accounts_initializator_impl required_i;
 };
 
-/*
 BOOST_FIXTURE_TEST_CASE(check_invalid_founders_sum, genesis_initiate_founders_with_actors_fixture)
 {
     init_required();
 
     asset total_sp = ASSET_SP(1e+6);
-    uint16_t total = 100u;
-    uint16_t pie = total / 2u;
+    float total = 100.f;
+    float pie = total / 2;
 
     alice.config.percent(pie);
     mike.config.percent(pie);
@@ -105,13 +104,13 @@ BOOST_FIXTURE_TEST_CASE(check_valid_founders_sum, genesis_initiate_founders_with
     init_required();
 
     asset total_sp = ASSET_SP(1e+6);
-    uint16_t total = 100u;
-    uint16_t pie = total / 4u;
+    float total = 100.f;
+    float pie = total / 4;
 
     alice.config.percent(pie);
     bob.config.percent(pie);
     mike.config.percent(pie);
-    jake.config.percent(total - pie); // 100%
+    jake.config.percent(total - pie * 3); // 100%
 
     genesis_state_type input_genesis = Genesis::create()
                                            .founders(alice.config, bob.config, mike.config, jake.config)
@@ -120,6 +119,5 @@ BOOST_FIXTURE_TEST_CASE(check_valid_founders_sum, genesis_initiate_founders_with
 
     BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
 }
-*/
 
 BOOST_AUTO_TEST_SUITE_END()

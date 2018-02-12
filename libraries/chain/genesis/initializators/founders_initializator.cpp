@@ -20,7 +20,8 @@ namespace {
 uint16_t get_percent(float sp_percent)
 {
     float ret = sp_percent * SCORUM_1_PERCENT;
-    return (uint16_t)ret; // remove mantissa
+    // For SCORUM_1_PERCENT == 100 value > 0.01f > 0
+    return (uint16_t)ret; // remove mantissa.
 }
 }
 
@@ -68,10 +69,11 @@ void founders_initializator_impl::apply(data_service_factory_i& services, const 
         }
         else if (founder.sp_percent > 0.f)
         {
-            pitiful = founder_obj.name; // only last pitiful may get SP
+            pitiful = founder_obj.name; // only last pitiful is getting SP
         }
     }
 
+    // founders_supply_rest in [0, 0.01] % of founders_supply
     if (founders_supply_rest.amount > (share_value_type)0)
     {
         if (pitiful != account_name_type())

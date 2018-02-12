@@ -17,6 +17,8 @@ set( SOURCES
   proposal_vote_operation_tests.cpp
   genesis/accounts.cpp
   genesis/founders.cpp
+  serialization_tests.cpp
+  signed_transaction_serialization_tests.cpp
 )
 
 add_executable(utests

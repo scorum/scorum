@@ -15,9 +15,12 @@ void registration_initializator_impl::apply(data_service_factory_i& services, co
     if (genesis_state.registration_schedule.empty() && genesis_state.registration_committee.empty()
         && !genesis_state.registration_supply.amount.value && !genesis_state.registration_bonus.amount.value)
     {
-        dlog("No registration pool detected.");
+        dlog("There is no registration pool.");
         return;
     }
+
+    FC_ASSERT(genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(genesis_state.registration_supply.symbol() == SCORUM_SYMBOL);
 
     // create sorted items list form genesis unordered data
     using schedule_item_type = registration_pool_object::schedule_item;

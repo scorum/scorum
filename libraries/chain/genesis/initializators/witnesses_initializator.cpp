@@ -23,8 +23,11 @@ void witnesses_initializator_impl::apply(data_service_factory_i& services, const
     for (auto& witness : genesis_state.witness_candidates)
     {
         FC_ASSERT(!witness.name.empty(), "Witness 'name' should not be empty.");
+
         account_service.check_account_existence(witness.name);
+
         FC_ASSERT(witness.block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
+
         witness_service.create_initial_witness(witness.name, witness.block_signing_key);
     }
 }

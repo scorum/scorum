@@ -60,7 +60,6 @@ struct genesis_initiate_accounts_with_actors_fixture : public genesis_initiate_a
     fake_account_object bob;
 };
 
-/*
 BOOST_FIXTURE_TEST_CASE(check_invalid_account_sum, genesis_initiate_accounts_with_actors_fixture)
 {
     asset total = ASSET_SCR(1e+6);
@@ -87,6 +86,5 @@ BOOST_FIXTURE_TEST_CASE(check_valid_account_sum, genesis_initiate_accounts_with_
 
     BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
 }
-*/
 
 BOOST_AUTO_TEST_SUITE_END()

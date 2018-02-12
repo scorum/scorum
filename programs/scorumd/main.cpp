@@ -161,6 +161,14 @@ int main(int argc, char** argv)
                 fc::configure_logging(*logging_config);
         }
 
+        std::cerr << "------------------------------------------------------\n\n";
+        std::cerr << "            STARTING SCORUM NETWORK\n\n";
+        std::cerr << "------------------------------------------------------\n";
+        //        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
+        //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
+        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
+        std::cerr << "------------------------------------------------------\n";
+
         ilog("parsing options");
         bpo::notify(options);
 
