@@ -36,6 +36,9 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
+#include <scorum/chain/database/tasks/task_process_funds.hpp>
+#include <scorum/chain/database/tasks/task_process_comments_cashout.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/container/deque.hpp>
@@ -76,6 +79,7 @@ database::database()
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
+    , database_ns::tasks_registry(static_cast<data_service_factory&>(*this))
     , _my(new database_impl(*this))
 {
 }
@@ -138,6 +142,10 @@ void database::open(const fc::path& data_dir,
         with_read_lock([&]() {
             init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
+
+        // TODO: place tasks factory for hardforks here
+        register_task(new database_ns::task_process_funds_impl());
+        register_task(new database_ns::task_process_comments_cashout_impl());
     }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
@@ -1819,10 +1827,12 @@ void database::_apply_block(const signed_block& next_block)
         // in dbs_database_witness_schedule.cpp
         update_witness_schedule();
 
-        process_funds();
+        process_tasks(_current_block_num);
+
+        process_funds(); //(- process_tasks)
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
-        process_comments_cashout();
+        process_comments_cashout(); //(- process_tasks)
         process_vesting_withdrawals();
 
         account_recovery_processing();

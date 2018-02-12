@@ -3,7 +3,9 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/schema/*.hpp"
                   "include/scorum/chain/services/*.hpp"
                   "include/scorum/chain/util/*.hpp"
-                  "include/scorum/chain/genesis/*.hpp")
+                  "include/scorum/chain/genesis/*.hpp"
+                  "include/scorum/chain/database/*.hpp"
+                  "include/scorum/chain/database/tasks/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -66,6 +68,10 @@ add_library( scorum_chain
              genesis/initializators/witness_schedule_initializator.cpp
              genesis/initializators/registration_bonus_initializator.cpp
              genesis/initializators/steemit_bounty_account_initializator.cpp
+
+             database/tasks/tasks.cpp
+             database/tasks/task_process_funds.cpp
+             database/tasks/task_process_comments_cashout.cpp
 
              util/reward.cpp
 

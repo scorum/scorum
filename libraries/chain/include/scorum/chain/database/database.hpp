@@ -15,6 +15,8 @@
 #include <scorum/chain/services/dbservice_dbs_factory.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
+#include <scorum/chain/database/tasks/tasks.hpp>
+
 #include <fc/signals.hpp>
 #include <fc/shared_string.hpp>
 #include <fc/log/logger.hpp>
@@ -39,7 +41,10 @@ struct genesis_state_type;
  *   @class database
  *   @brief tracks the blockchain state in an extensible manner
  */
-class database : public chainbase::database, public dbservice_dbs_factory, public data_service_factory
+class database : public chainbase::database,
+                 public dbservice_dbs_factory,
+                 public data_service_factory,
+                 public database_ns::tasks_registry
 {
 
 public:
