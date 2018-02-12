@@ -12,7 +12,44 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <sstream>
+
+BOOST_AUTO_TEST_SUITE(genesis_db_tests)
+
+#ifdef SRC_DIR
+BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::genesis_db_fixture)
+{
+    boost::filesystem::path path_to_src_json(BOOST_PP_STRINGIZE(SRC_DIR));
+    if (boost::filesystem::exists(path_to_src_json))
+    {
+        path_to_src_json /= ".."; // tests
+        path_to_src_json /= ".."; // root
+        path_to_src_json /= "genesis.json";
+
+        path_to_src_json.normalize();
+
+        ilog("Checking ${file}.", ("file", path_to_src_json.string()));
+
+        boost::filesystem::ifstream fl;
+        fl.open(path_to_src_json.string(), std::ios::in);
+
+        BOOST_REQUIRE((bool)fl);
+
+        std::stringstream ss;
+
+        ss << fl.rdbuf();
+
+        fl.close();
+
+        genesis_state_type gs = fc::json::from_string(ss.str()).as<genesis_state_type>();
+
+        BOOST_REQUIRE_NO_THROW(apply_genesis(gs));
+    }
+}
+#endif
 
 struct genesis_base_test_fixture : public scorum::chain::genesis_db_fixture
 {
@@ -43,8 +80,6 @@ struct genesis_base_test_fixture : public scorum::chain::genesis_db_fixture
 
     Actor initdelegate;
 };
-
-BOOST_AUTO_TEST_SUITE(genesis_db_tests)
 
 struct genesis_founders_test_fixture : public genesis_base_test_fixture
 {

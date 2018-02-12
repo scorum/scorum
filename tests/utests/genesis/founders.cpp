@@ -79,6 +79,7 @@ struct genesis_initiate_founders_with_actors_fixture : public genesis_initiate_f
     accounts_initializator_impl required_i;
 };
 
+/*
 BOOST_FIXTURE_TEST_CASE(check_invalid_founders_sum, genesis_initiate_founders_with_actors_fixture)
 {
     init_required();
@@ -119,5 +120,6 @@ BOOST_FIXTURE_TEST_CASE(check_valid_founders_sum, genesis_initiate_founders_with
 
     BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
 }
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

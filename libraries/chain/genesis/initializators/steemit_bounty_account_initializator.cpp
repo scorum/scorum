@@ -37,8 +37,6 @@ void steemit_bounty_account_initializator_impl::apply(data_service_factory_i& se
                   ("1", account.name));
 
         sp_accounts_supply -= account.sp_amount;
-
-        FC_ASSERT(sp_accounts_supply.amount >= (share_value_type)0, "Invalid 'steemit_bounty_accounts_supply'.");
     }
 
     FC_ASSERT(sp_accounts_supply.amount == (share_value_type)0,

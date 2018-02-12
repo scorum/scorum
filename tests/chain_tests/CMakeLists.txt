@@ -34,6 +34,8 @@ target_link_libraries(chain_tests
                       )
 target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
+SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSRC_DIR=${CMAKE_CURRENT_SOURCE_DIR}" )
+
 if(MSVC)
     set_source_files_properties(serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
