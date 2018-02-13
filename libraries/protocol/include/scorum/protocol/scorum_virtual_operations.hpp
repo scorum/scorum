@@ -68,18 +68,16 @@ struct fill_vesting_withdraw_operation : public virtual_operation
     fill_vesting_withdraw_operation()
     {
     }
-    fill_vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w, const asset& d)
+    fill_vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w)
         : from_account(f)
         , to_account(t)
         , withdrawn(w)
-        , deposited(d)
     {
     }
 
     account_name_type from_account;
     account_name_type to_account;
     asset withdrawn = asset(0, VESTS_SYMBOL);
-    asset deposited = asset(0, SCORUM_SYMBOL);
 };
 
 struct shutdown_witness_operation : public virtual_operation
@@ -180,7 +178,7 @@ struct producer_reward_operation : public virtual_operation
 FC_REFLECT(scorum::protocol::author_reward_operation, (author)(permlink)(scorum_payout)(vesting_payout))
 FC_REFLECT(scorum::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink))
 FC_REFLECT(scorum::protocol::comment_reward_operation, (author)(permlink)(payout))
-FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited))
+FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
 FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
 FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink))

@@ -27,9 +27,9 @@ struct base_metric
     uint32_t finished_vesting_withdrawals = 0; ///< Processed vesting withdrawals that are now finished
 
     share_type scorum_transferred = 0; ///< SCR transferred from account to account
-    share_type scorum_transferred_to_vesting = 0; ///< Ammount of SCR vested
-    share_type vests_withdrawn = 0; ///< Ammount of SP withdrawn to SCR
-    share_type vests_transferred = 0; ///< Ammount of SP transferred to another account
+    share_type scorum_transferred_to_vesting = 0; ///< Amount of SCR vested
+    share_type vests_withdrawn = 0; ///< Amount of SP withdrawn to SCR
+    share_type vests_transferred = 0; ///< Amount of SP transferred to another account
     share_type vesting_withdraw_rate_delta = 0;
 
     // comments

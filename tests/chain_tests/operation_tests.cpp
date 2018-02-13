@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
             BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
             BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
                           == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 2)).value);
-            BOOST_REQUIRE(alice.to_withdraw.value == op.vesting_shares.amount.value);
+            BOOST_REQUIRE(alice.to_withdraw == op.vesting_shares);
             BOOST_REQUIRE(alice.next_vesting_withdrawal
                           == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
             validate_database();
@@ -1143,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
             BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
             BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
                           == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
-            BOOST_REQUIRE(alice.to_withdraw.value == op.vesting_shares.amount.value);
+            BOOST_REQUIRE(alice.to_withdraw == op.vesting_shares);
             BOOST_REQUIRE(alice.next_vesting_withdrawal
                           == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
             validate_database();
@@ -1178,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
 
             BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
             BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value == 0);
-            BOOST_REQUIRE(alice.to_withdraw.value == 0);
+            BOOST_REQUIRE(alice.to_withdraw == asset(0, VESTS_SYMBOL));
             BOOST_REQUIRE(alice.next_vesting_withdrawal == fc::time_point_sec::maximum());
 
             BOOST_TEST_MESSAGE("--- Test cancelling a withdraw when below the account creation fee");

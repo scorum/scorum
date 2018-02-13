@@ -289,13 +289,13 @@ void dbs_account::prove_authority(const account_object& account, bool require_ow
 void dbs_account::update_withdraw(const account_object& account,
                                   const asset& vesting,
                                   const time_point_sec& next_vesting_withdrawal,
-                                  const share_type& to_withdrawn)
+                                  const asset& to_withdraw)
 {
     db_impl().modify(account, [&](account_object& a) {
         a.vesting_withdraw_rate = vesting;
         a.next_vesting_withdrawal = next_vesting_withdrawal;
-        a.to_withdraw = to_withdrawn;
-        a.withdrawn = 0;
+        a.to_withdraw = to_withdraw;
+        a.withdrawn = asset(0, VESTS_SYMBOL);
     });
 }
 

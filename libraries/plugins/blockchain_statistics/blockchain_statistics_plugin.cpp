@@ -156,14 +156,21 @@ public:
         const auto& account = _db.obtain_service<chain::dbs_account>().get_account(op.from_account);
 
         _db.modify(_bucket, [&](bucket_object& b) {
+
             b.vesting_withdrawals_processed++;
-            if (op.deposited.symbol() == SCORUM_SYMBOL)
+
+            if (op.withdrawn.symbol() == SCORUM_SYMBOL)
                 b.vests_withdrawn += op.withdrawn.amount;
             else
                 b.vests_transferred += op.withdrawn.amount;
 
-            if (account.vesting_withdraw_rate.amount == 0)
+            if (account.withdrawn.amount + op.withdrawn.amount >= account.to_withdraw.amount
+                || account.vesting_shares.amount - op.withdrawn.amount == 0)
+            {
                 b.finished_vesting_withdrawals++;
+
+                b.vesting_withdraw_rate_delta -= account.vesting_withdraw_rate.amount;
+            }
         });
     }
 };
@@ -286,8 +293,6 @@ void blockchain_statistics_plugin_impl::pre_operation(const operation_notificati
                 else
                     b.new_vesting_withdrawal_requests++;
 
-                // TODO: Figure out how to change delta when a vesting withdraw finishes. Have until March 24th 2018 to
-                // figure that out...
                 b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - account.vesting_withdraw_rate.amount;
             });
         }

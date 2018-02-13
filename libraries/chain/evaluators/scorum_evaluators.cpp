@@ -146,8 +146,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     // check delegation fee
 
-    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares
-                      - asset(creator.to_withdraw - creator.withdrawn, VESTS_SYMBOL)
+    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares - (creator.to_withdraw - creator.withdrawn)
                   >= o.delegation,
               "Insufficient vesting shares to delegate to new account.",
               ("creator.vesting_shares", creator.vesting_shares)(
@@ -774,7 +773,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     {
         const auto& dprops = dprops_service.get();
         asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
-        min_vests.amount.value *= 10;
+        min_vests *= 10;
 
         FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
                   "Account registered by another account requires 10x account creation fee worth of Scorum Power before it can be powered down.");
@@ -784,13 +783,13 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     {
         FC_ASSERT(account.vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
 
-        account_service.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), 0);
+        account_service.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), asset(0, VESTS_SYMBOL));
     }
     else
     {
         // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
         // 13 weeks = 1 quarter of a year
-        auto new_vesting_withdraw_rate = asset(o.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS, VESTS_SYMBOL);
+        auto new_vesting_withdraw_rate = o.vesting_shares / SCORUM_VESTING_WITHDRAW_INTERVALS;
 
         if (new_vesting_withdraw_rate.amount == 0)
             new_vesting_withdraw_rate.amount = 1;
@@ -799,7 +798,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
 
         account_service.update_withdraw(account, new_vesting_withdraw_rate,
                                         dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
-                                        o.vesting_shares.amount);
+                                        o.vesting_shares);
     }
 
     // clang-format on
@@ -1261,8 +1260,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
 
-    auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
-        - asset(delegator.to_withdraw - delegator.withdrawn, VESTS_SYMBOL);
+    auto available_shares
+        = delegator.vesting_shares - delegator.delegated_vesting_shares - (delegator.to_withdraw - delegator.withdrawn);
 
     const auto dprops = dprops_service.get();
     auto min_delegation
