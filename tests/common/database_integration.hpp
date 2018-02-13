@@ -35,20 +35,17 @@ public:
 
     void validate_database();
 
-    void generate_block(uint32_t skip, const private_key_type& key, int miss_blocks = 0);
-
-    void generate_block()
-    {
-        generate_blocks(0);
-    }
+    void generate_block(uint32_t skip = 0,
+                        const private_key_type& key = generate_private_key(TEST_INIT_KEY),
+                        int miss_blocks = 0);
 
     void generate_blocks(uint32_t block_count);
 
     void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true);
 
-protected:
     static private_key_type generate_private_key(const std::string& seed);
 
+protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 
 private:

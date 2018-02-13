@@ -6,6 +6,7 @@
 
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/genesis/initializators/registration_initializator.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #define MEMBER_BONUS_BENEFICIARY alice
 #define NEXT_MEMBER bob
@@ -37,9 +38,24 @@ registration_objects_fixture::registration_objects_fixture()
 
 void registration_objects_fixture::create_registration_objects(const genesis_state_type& genesis)
 {
-    scorum::chain::genesis::registration_initializator_impl creator;
+    generate_blocks(5);
 
-    creator.apply(_services, genesis);
+    db_plugin->debug_update(
+        [&](database&) {
+
+            scorum::chain::genesis::registration_initializator_impl creator;
+
+            creator.apply(_services, genesis);
+
+            dynamic_global_property_service_i& dgp_service = _services.dynamic_global_property_service();
+
+            dgp_service.update(
+                [&](dynamic_global_property_object& gpo) { gpo.total_supply += genesis.registration_supply; });
+
+        },
+        default_skip);
+
+    generate_blocks(5);
 }
 
 genesis_state_type registration_objects_fixture::create_registration_genesis(schedule_inputs_type& schedule_input,

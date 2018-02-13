@@ -18,12 +18,8 @@ public:
         : registration_pool_service(db.obtain_service<dbs_registration_pool>())
         , registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
-        db_plugin->debug_update(
-            [&](database&) {
-                create_registration_objects(create_registration_genesis(schedule_input, rest_of_supply));
-            },
-            default_skip);
-        generate_block();
+        genesis_state = create_registration_genesis(schedule_input, rest_of_supply);
+        create_registration_objects(genesis_state);
     }
 
     static scorum::chain::schedule_inputs_type schedule_input;

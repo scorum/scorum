@@ -14,7 +14,8 @@ class registration_committee_create_account_check_fixture : public registration_
 public:
     registration_committee_create_account_check_fixture()
     {
-        create_registration_objects(create_registration_genesis(committee_private_keys));
+        genesis_state = create_registration_genesis(committee_private_keys);
+        create_registration_objects(genesis_state);
 
         new_account_private_key = generate_private_key(new_account_name);
         public_key_type new_account_public_key = new_account_private_key.get_public_key();

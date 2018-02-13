@@ -238,10 +238,13 @@ void database_trx_integration_fixture::open_database_impl(const genesis_state_ty
 {
     database_integration_fixture::open_database_impl(genesis);
 
+    generate_block();
+    db.set_hardfork(SCORUM_NUM_HARDFORKS);
+    generate_block();
+
     if (db.find<witness_object, by_name>(TEST_INIT_DELEGATE_NAME))
     {
-        // only block with witness proceed virtual operations required for witness plugin
-        generate_block(0, generate_private_key(TEST_INIT_KEY));
+        generate_blocks(5);
 
         vest(TEST_INIT_DELEGATE_NAME, 10000);
 
@@ -253,6 +256,8 @@ void database_trx_integration_fixture::open_database_impl(const genesis_state_ty
             witness_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
                            init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
         }
+
+        generate_blocks(5);
     }
 }
 

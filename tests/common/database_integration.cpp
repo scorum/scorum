@@ -25,7 +25,7 @@ namespace chain {
 database_integration_fixture::database_integration_fixture()
     : app()
     , db(*app.chain_database())
-    , init_account_priv_key(private_key_type::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY))))
+    , init_account_priv_key(database_integration_fixture::generate_private_key(TEST_INIT_KEY))
     , init_account_pub_key(init_account_priv_key.get_public_key())
     , debug_key(graphene::utilities::key_to_wif(init_account_priv_key))
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
@@ -41,14 +41,13 @@ namespace {
 
 genesis_state_type& create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
 {
-    private_key_type init_delegate_priv_key
-        = private_key_type::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
-    public_key_type init_public_key = init_delegate_priv_key.get_public_key();
+    private_key_type init_account_priv_key(database_integration_fixture::generate_private_key(TEST_INIT_KEY));
+    public_key_type init_account_pub_key(init_account_priv_key.get_public_key());
 
     genesis_state.accounts.push_back(
-        { TEST_INIT_DELEGATE_NAME, "null", init_public_key, genesis_state.accounts_supply });
+        { TEST_INIT_DELEGATE_NAME, "null", init_account_pub_key, genesis_state.accounts_supply });
 
-    genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_public_key });
+    genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_account_pub_key });
 
     return genesis_state;
 }
@@ -96,10 +95,6 @@ void database_integration_fixture::open_database(const genesis_state_type& genes
         wit_plugin->plugin_initialize(options);
 
         open_database_impl(genesis);
-
-        generate_block();
-        db.set_hardfork(SCORUM_NUM_HARDFORKS);
-        generate_block();
 
         db_plugin->plugin_startup();
 

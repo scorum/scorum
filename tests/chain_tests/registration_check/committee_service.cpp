@@ -12,7 +12,8 @@ public:
     registration_committee_service_check_fixture()
         : registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
-        create_registration_objects(create_registration_genesis());
+        genesis_state = create_registration_genesis();
+        create_registration_objects(genesis_state);
     }
 
     using account_names_type = std::vector<account_name_type>;
