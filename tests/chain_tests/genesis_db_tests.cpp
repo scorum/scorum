@@ -1,7 +1,7 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include "genesis_db_fixture.hpp"
+#include "database_integration.hpp"
 
 #include "actor.hpp"
 #include "genesis.hpp"
@@ -20,7 +20,7 @@
 BOOST_AUTO_TEST_SUITE(genesis_db_tests)
 
 #ifdef SRC_DIR
-BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::genesis_db_fixture)
+BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::database_integration_fixture)
 {
     boost::filesystem::path path_to_src_json(BOOST_PP_STRINGIZE(SRC_DIR));
     if (boost::filesystem::exists(path_to_src_json))
@@ -46,12 +46,12 @@ BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::genesis_db_fixtur
 
         genesis_state_type gs = fc::json::from_string(ss.str()).as<genesis_state_type>();
 
-        BOOST_REQUIRE_NO_THROW(apply_genesis(gs));
+        BOOST_REQUIRE_NO_THROW(open_database(gs));
     }
 }
 #endif
 
-struct genesis_base_test_fixture : public scorum::chain::genesis_db_fixture
+struct genesis_base_test_fixture : public scorum::chain::database_integration_fixture
 {
     genesis_base_test_fixture()
         : account_service(db.account_service())
@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(founders_sp_distribution_test, genesis_founders_test_fix
 
     genesis.founders(bob, mike).founders_supply(total_sp);
 
-    BOOST_REQUIRE_NO_THROW(apply_genesis(genesis.generate()));
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_CHECK_EQUAL(account_service.get_account(bob.name).vesting_shares, total_sp / 2);
 
@@ -131,7 +131,7 @@ BOOST_FIXTURE_TEST_CASE(founders_sp_distribution_with_pitiful_test, genesis_foun
 
     genesis.founders(bob, mike, luke, stiven).founders_supply(total_sp);
 
-    BOOST_REQUIRE_NO_THROW(apply_genesis(genesis.generate()));
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_CHECK_EQUAL(account_service.get_account(bob.name).vesting_shares, total_sp / 2);
 
@@ -179,7 +179,7 @@ BOOST_FIXTURE_TEST_CASE(registration_bonus_distribution_test, genesis_registrati
         .registration_schedule(single_stage)
         .committee(initdelegate);
 
-    BOOST_REQUIRE_NO_THROW(apply_genesis(genesis.generate()));
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).vesting_shares, ASSET_SP(bonus.amount.value));
 
@@ -201,7 +201,7 @@ BOOST_FIXTURE_TEST_CASE(registration_bonus_downgrade_distribution_test, genesis_
         .registration_schedule(stage1, stage2)
         .committee(initdelegate);
 
-    BOOST_REQUIRE_NO_THROW(apply_genesis(genesis.generate()));
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).vesting_shares, ASSET_SP(bonus.amount.value));
 
@@ -222,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(registration_bonus_downgrade_exhaust_distribution_test, 
         .registration_schedule(stage1, stage2)
         .committee(initdelegate);
 
-    BOOST_REQUIRE_NO_THROW(apply_genesis(genesis.generate()));
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).vesting_shares, ASSET_SP(bonus.amount.value));
 
@@ -255,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE(steemit_bounty_distribution_test, steemit_bounty_test_fi
 
     genesis.steemit_bounty_accounts(bob, luke, stiven).steemit_bounty_accounts_supply(total_sp);
 
-    BOOST_REQUIRE_NO_THROW(apply_genesis(genesis.generate()));
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_CHECK_EQUAL(account_service.get_account(bob.name).vesting_shares, pie);
 

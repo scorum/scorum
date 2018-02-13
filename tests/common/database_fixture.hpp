@@ -40,7 +40,7 @@ struct database_fixture
 
     optional<fc::temp_directory> data_dir;
 
-    database_fixture(const genesis_state_type& = genesis_state_type());
+    database_fixture();
     ~database_fixture();
 
     static private_key_type generate_private_key(const std::string& seed);
@@ -99,7 +99,7 @@ struct database_fixture
 
 struct clean_database_fixture : public database_fixture
 {
-    clean_database_fixture(const genesis_state_type& = genesis_state_type());
+    clean_database_fixture();
     ~clean_database_fixture();
 
     void resize_shared_mem(uint64_t size);
@@ -115,7 +115,7 @@ struct live_database_fixture : public database_fixture
 
 struct timed_blocks_database_fixture : public clean_database_fixture
 {
-    timed_blocks_database_fixture(const genesis_state_type& = genesis_state_type());
+    timed_blocks_database_fixture();
 
     fc::time_point_sec default_deadline;
     const int BLOCK_LIMIT_DEFAULT = 5;
@@ -125,7 +125,6 @@ private:
 };
 
 namespace test {
-genesis_state_type init_genesis(const genesis_state_type& = genesis_state_type());
 bool _push_block(database& db, const signed_block& b, uint32_t skip_flags = 0);
 void _push_transaction(database& db, const signed_transaction& tx, uint32_t skip_flags = 0);
 } // namespace test

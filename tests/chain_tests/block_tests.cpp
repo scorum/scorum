@@ -39,6 +39,7 @@
 #include <fc/crypto/digest.hpp>
 
 #include "database_fixture.hpp"
+#include "database_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -50,7 +51,7 @@ void db_setup_and_open(database& db, const fc::path& path)
 {
     genesis_state_type genesis;
 
-    genesis = test::init_genesis();
+    genesis = database_integration_fixture::create_default_genesis_state();
 
     db._log_hardforks = false;
     db.open(path, path, TEST_SHARED_MEM_SIZE_8MB, chainbase::database::read_write, genesis);

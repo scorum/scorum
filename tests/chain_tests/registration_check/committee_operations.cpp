@@ -1,24 +1,22 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include "database_fixture.hpp"
-
 #include "registration_check_common.hpp"
-
-#include <scorum/chain/services/account.hpp>
 
 //
 // usage for all budget tests 'chain_test  -t registration_*'
 //
+using namespace scorum::chain;
+using namespace scorum::protocol;
 
-class registration_committee_create_account_check_fixture : public timed_blocks_database_fixture
+class registration_committee_create_account_check_fixture : public registration_objects_fixture
 {
 public:
     registration_committee_create_account_check_fixture()
-        : timed_blocks_database_fixture(registration_check::create_registration_genesis(committee_private_keys))
-        , account_service(db.obtain_service<dbs_account>())
     {
-        new_account_private_key = database_fixture::generate_private_key(new_account_name);
+        create_registration_objects(create_registration_genesis(committee_private_keys));
+
+        new_account_private_key = generate_private_key(new_account_name);
         public_key_type new_account_public_key = new_account_private_key.get_public_key();
 
         account_committee_op.creator = creator_name;
@@ -33,17 +31,15 @@ public:
         transfer_to_vest("initdelegate", creator_name, 100);
     }
 
-    static registration_check::committee_private_keys_type committee_private_keys;
+    static scorum::chain::committee_private_keys_type committee_private_keys;
     const account_name_type creator_name = "alice";
     const account_name_type new_account_name = "andrew";
 
-    dbs_account& account_service;
     private_key_type new_account_private_key;
     account_create_by_committee_operation account_committee_op;
 };
 
-registration_check::committee_private_keys_type
-    registration_committee_create_account_check_fixture::committee_private_keys;
+scorum::chain::committee_private_keys_type registration_committee_create_account_check_fixture::committee_private_keys;
 
 BOOST_FIXTURE_TEST_SUITE(registration_committee_create_account_operation_check,
                          registration_committee_create_account_check_fixture)

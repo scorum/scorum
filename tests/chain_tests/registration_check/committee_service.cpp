@@ -1,17 +1,18 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include "database_fixture.hpp"
-
 #include "registration_check_common.hpp"
 
-class registration_committee_service_check_fixture : public timed_blocks_database_fixture
+using namespace scorum::chain;
+using namespace scorum::protocol;
+
+class registration_committee_service_check_fixture : public registration_objects_fixture
 {
 public:
     registration_committee_service_check_fixture()
-        : timed_blocks_database_fixture(registration_check::create_registration_genesis())
-        , registration_committee_service(db.obtain_service<dbs_registration_committee>())
+        : registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
+        create_registration_objects(create_registration_genesis());
     }
 
     using account_names_type = std::vector<account_name_type>;

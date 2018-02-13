@@ -1,8 +1,6 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include "database_fixture.hpp"
-
 #include <math.h>
 
 #include "registration_check_common.hpp"
@@ -10,26 +8,28 @@
 //
 // usage for all registration tests 'chain_test  -t registration_*'
 //
+using namespace scorum::chain;
+using namespace scorum::protocol;
 
-class registration_pool_service_check_fixture : public timed_blocks_database_fixture
+class registration_pool_service_check_fixture : public registration_objects_fixture
 {
 public:
     registration_pool_service_check_fixture()
-        : timed_blocks_database_fixture(registration_check::create_registration_genesis(schedule_input, rest_of_supply))
-        , registration_pool_service(db.obtain_service<dbs_registration_pool>())
+        : registration_pool_service(db.obtain_service<dbs_registration_pool>())
         , registration_committee_service(db.obtain_service<dbs_registration_committee>())
-        , account_service(db.account_service())
-        , bonus_beneficiary(account_service.get_account("alice"))
     {
+        db_plugin->debug_update(
+            [&](database&) {
+                create_registration_objects(create_registration_genesis(schedule_input, rest_of_supply));
+            },
+            default_skip);
+        generate_block();
     }
 
-    static registration_check::schedule_inputs_type schedule_input;
+    static scorum::chain::schedule_inputs_type schedule_input;
     static asset rest_of_supply;
     dbs_registration_pool& registration_pool_service;
     dbs_registration_committee& registration_committee_service;
-    account_service_i& account_service;
-
-    const account_object& bonus_beneficiary;
 
     const std::string genesis_invalid_schedule_users_str = R"json(
     {
@@ -109,7 +109,7 @@ public:
 
     asset schedule_input_total_bonus(const asset& maximum_bonus)
     {
-        return registration_check::schedule_input_total_bonus(schedule_input, maximum_bonus);
+        return scorum::chain::schedule_input_total_bonus(schedule_input, maximum_bonus);
     }
 
     int schedule_input_bonus_percent_by_pos(uint64_t pos)
@@ -199,7 +199,7 @@ public:
     }
 };
 
-registration_check::schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
+schedule_inputs_type registration_pool_service_check_fixture::schedule_input;
 asset registration_pool_service_check_fixture::rest_of_supply = asset(0, SCORUM_SYMBOL);
 
 BOOST_FIXTURE_TEST_SUITE(registration_pool_service_check, registration_pool_service_check_fixture)
@@ -371,7 +371,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
                 [&](database&) {
                     allocated_bonus = registration_pool_service.allocate_cash("alice");
                     // to save invariants we must give allocated bonus to someone
-                    account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                    account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
                 },
                 default_skip);
 
@@ -410,7 +410,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
                 [&](database&) {
                     allocated_bonus = registration_pool_service.allocate_cash("alice");
                     // to save invariants we must give allocated bonus to someone
-                    account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                    account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
                 },
                 default_skip);
 
@@ -432,7 +432,7 @@ SCORUM_TEST_CASE(allocate_limits_check)
         BOOST_CHECK_GT(allocated_bonus.amount, share_type(0));
 
         // to save invariants we must give allocated bonus to someone
-        account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+        account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
 
         return allocated_bonus;
     };
@@ -461,7 +461,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_check)
             [&](database&) {
                 allocated_bonus = registration_pool_service.allocate_cash("alice");
                 // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
             },
             default_skip);
         return allocated_bonus;
@@ -507,7 +507,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
                 allocated_bonus = registration_pool_service.allocate_cash("alice");
                 BOOST_CHECK_GT(allocated_bonus.amount, 0);
                 // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
             },
             default_skip);
         return allocated_bonus;
@@ -564,7 +564,7 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
             [&](database&) {
                 allocated_bonus = registration_pool_service.allocate_cash("alice");
                 // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
             },
             default_skip);
         return allocated_bonus;
@@ -594,7 +594,7 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
             [&](database&) {
                 allocated_bonus = registration_pool_service.allocate_cash("alice");
                 // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
             },
             default_skip);
         return allocated_bonus;
@@ -621,7 +621,7 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
             [&](database&) {
                 auto allocated_bonus = registration_pool_service.allocate_cash("alice");
                 // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary, allocated_bonus);
+                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
             },
             default_skip);
     }
