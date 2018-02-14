@@ -16,15 +16,28 @@ namespace genesis {
 using scorum::protocol::asset;
 using scorum::protocol::share_value_type;
 
-void accounts_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void accounts_initializator_impl::apply(initializator_context& ctx)
 {
-    account_service_i& account_service = services.account_service();
+    account_service_i& account_service = ctx.services.account_service();
 
-    asset accounts_supply = genesis_state.accounts_supply;
+    check_accounts_supply(ctx);
+
+    for (auto& account : ctx.genesis_state.accounts)
+    {
+        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
+
+        account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
+                                               account.recovery_account, "{\"created_at\": \"GENESIS\"}");
+    }
+}
+
+void accounts_initializator_impl::check_accounts_supply(initializator_context& ctx)
+{
+    asset accounts_supply = ctx.genesis_state.accounts_supply;
 
     FC_ASSERT(accounts_supply.symbol() == SCORUM_SYMBOL);
 
-    for (auto& account : genesis_state.accounts)
+    for (auto& account : ctx.genesis_state.accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
@@ -35,14 +48,6 @@ void accounts_initializator_impl::apply(data_service_factory_i& services, const 
     }
 
     FC_ASSERT(accounts_supply.amount == (share_value_type)0, "'accounts_supply' must be sum of all accounts supply.");
-
-    for (auto& account : genesis_state.accounts)
-    {
-        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
-
-        account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
-                                               account.recovery_account, "{\"created_at\": \"GENESIS\"}");
-    }
 }
 }
 }

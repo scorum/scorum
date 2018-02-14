@@ -43,7 +43,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 {
     try
     {
-        FC_ASSERT(genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp.");
+        FC_ASSERT(genesis_state.initial_timestamp != time_point_sec::min(), "Must initialize genesis timestamp.");
         FC_ASSERT(genesis_state.witness_candidates.size() > 0, "Cannot start a chain with zero witnesses.");
 
         struct auth_inhibitor
@@ -81,7 +81,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
     FC_CAPTURE_AND_RETHROW()
 }
 
-scorum::chain::db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
+db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
     : genesis::initializators_registry(db, genesis_state)
     , _db(db)
     , _genesis_state(genesis_state)

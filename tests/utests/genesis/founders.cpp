@@ -42,15 +42,15 @@ BOOST_AUTO_TEST_SUITE(founders_initializator_tests)
 BOOST_FIXTURE_TEST_CASE(check_empty_genesis, genesis_initiate_founders_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().generate();
-
-    BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
+    initializator_context ctx(*pservices, input_genesis);
+    BOOST_REQUIRE_NO_THROW(test_it.apply(ctx));
 }
 
 BOOST_FIXTURE_TEST_CASE(check_empty_founders_list, genesis_initiate_founders_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().founders_supply(ASSET_SP(1e+6)).generate();
-
-    SCORUM_REQUIRE_THROW(test_it.apply(*pservices, input_genesis), fc::assert_exception);
+    initializator_context ctx(*pservices, input_genesis);
+    SCORUM_REQUIRE_THROW(test_it.apply(ctx), fc::assert_exception);
 }
 
 struct genesis_initiate_founders_with_actors_fixture : public genesis_initiate_founders_fixture
@@ -67,8 +67,8 @@ struct genesis_initiate_founders_with_actors_fixture : public genesis_initiate_f
     {
         genesis_state_type input_genesis
             = Genesis::create().accounts(alice.config, bob.config, mike.config, jake.config).generate();
-
-        BOOST_REQUIRE_NO_THROW(required_i.apply(*pservices, input_genesis));
+        initializator_context ctx(*pservices, input_genesis);
+        BOOST_REQUIRE_NO_THROW(required_i.apply(ctx));
     }
 
     fake_account_object alice;
@@ -79,47 +79,6 @@ struct genesis_initiate_founders_with_actors_fixture : public genesis_initiate_f
     accounts_initializator_impl required_i;
 };
 
-/*
-BOOST_FIXTURE_TEST_CASE(check_invalid_founders_sum, genesis_initiate_founders_with_actors_fixture)
-{
-    init_required();
-
-    asset total_sp = ASSET_SP(1e+6);
-    float total = 100.f;
-    float pie = total / 2;
-
-    alice.config.percent(pie);
-    mike.config.percent(pie);
-    jake.config.percent(pie); // 150%
-
-    genesis_state_type input_genesis = Genesis::create()
-                                           .founders(alice.config, bob.config, mike.config, jake.config)
-                                           .founders_supply(total_sp)
-                                           .generate();
-
-    SCORUM_REQUIRE_THROW(test_it.apply(*pservices, input_genesis), fc::assert_exception);
-}
-
-BOOST_FIXTURE_TEST_CASE(check_valid_founders_sum, genesis_initiate_founders_with_actors_fixture)
-{
-    init_required();
-
-    asset total_sp = ASSET_SP(1e+6);
-    float total = 100.f;
-    float pie = total / 4;
-
-    alice.config.percent(pie);
-    bob.config.percent(pie);
-    mike.config.percent(pie);
-    jake.config.percent(total - pie * 3); // 100%
-
-    genesis_state_type input_genesis = Genesis::create()
-                                           .founders(alice.config, bob.config, mike.config, jake.config)
-                                           .founders_supply(total_sp)
-                                           .generate();
-
-    BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
-}
-*/
+// TODO: genesis_initiate_founders_with_actors_fixture
 
 BOOST_AUTO_TEST_SUITE_END()

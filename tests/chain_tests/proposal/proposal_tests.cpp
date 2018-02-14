@@ -248,7 +248,7 @@ SCORUM_TEST_CASE(proposal)
     Actor liz("liz");
 
     registration_stage single_stage{ 1u, 1u, 100u };
-    genesis = Genesis::create(database_trx_integration_fixture::create_default_genesis_state())
+    genesis = database_integration_fixture::default_genesis_state()
             .accounts(bob, jim, joe, hue, liz)
             .registration_supply(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
             .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)

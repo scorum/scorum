@@ -37,32 +37,32 @@ database_integration_fixture::~database_integration_fixture()
 {
 }
 
-namespace {
-
-genesis_state_type& create_initdelegate_for_genesis_state(genesis_state_type& genesis_state)
+Genesis database_integration_fixture::default_genesis_state()
 {
-    private_key_type init_account_priv_key(database_integration_fixture::generate_private_key(TEST_INIT_KEY));
-    public_key_type init_account_pub_key(init_account_priv_key.get_public_key());
+    static Genesis default_genesis;
 
-    genesis_state.accounts.push_back(
-        { TEST_INIT_DELEGATE_NAME, "null", init_account_pub_key, genesis_state.accounts_supply });
+    if (default_genesis._accounts.empty())
+    {
+        private_key_type init_account_priv_key(database_integration_fixture::generate_private_key(TEST_INIT_KEY));
+        public_key_type init_account_pub_key(init_account_priv_key.get_public_key());
 
-    genesis_state.witness_candidates.push_back({ TEST_INIT_DELEGATE_NAME, init_account_pub_key });
+        Actor initdelegate(TEST_INIT_DELEGATE_NAME);
+        initdelegate.public_key = init_account_pub_key;
+        initdelegate.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
 
-    return genesis_state;
-}
+        default_genesis = Genesis::create()
+                              .accounts_supply(TEST_ACCOUNTS_INITIAL_SUPPLY)
+                              .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+                              .accounts(initdelegate)
+                              .witnesses(initdelegate);
+    }
+
+    return default_genesis;
 }
 
 genesis_state_type database_integration_fixture::create_default_genesis_state()
 {
-    genesis_state_type genesis_state;
-
-    genesis_state.accounts_supply = TEST_ACCOUNTS_INITIAL_SUPPLY;
-    genesis_state.rewards_supply = TEST_REWARD_INITIAL_SUPPLY;
-    genesis_state.initial_chain_id = TEST_CHAIN_ID;
-    genesis_state.initial_timestamp = fc::time_point_sec(TEST_GENESIS_TIMESTAMP);
-
-    return create_initdelegate_for_genesis_state(genesis_state);
+    return default_genesis_state().generate();
 }
 
 void database_integration_fixture::open_database(const genesis_state_type& genesis)

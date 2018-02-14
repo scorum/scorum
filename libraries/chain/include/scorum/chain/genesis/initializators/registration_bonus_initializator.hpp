@@ -22,10 +22,10 @@ struct registration_bonus_initializator_impl : public initializator
         return { accounts_initializator, registration_initializator };
     }
 
-    virtual void apply(data_service_factory_i& services, const genesis_state_type& genesis_state);
+    virtual void apply(initializator_context&);
 
 private:
-    asset allocate_cash(data_service_factory_i& services);
+    asset allocate_cash(initializator_context&);
 };
 }
 }

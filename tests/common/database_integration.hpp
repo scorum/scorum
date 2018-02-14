@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "defines.hpp"
+#include "genesis.hpp"
 
 namespace scorum {
 namespace chain {
@@ -25,6 +26,7 @@ public:
     database_integration_fixture();
     virtual ~database_integration_fixture();
 
+    static Genesis default_genesis_state();
     static genesis_state_type create_default_genesis_state();
 
     void open_database(const genesis_state_type& genesis);

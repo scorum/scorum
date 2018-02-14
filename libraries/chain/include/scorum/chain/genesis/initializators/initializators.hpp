@@ -50,6 +50,14 @@ private:
     bool _m = false;
 };
 
+struct initializator_context
+{
+    explicit initializator_context(data_service_factory_i& services, const genesis_state_type& genesis_state);
+
+    data_service_factory_i& services;
+    const genesis_state_type& genesis_state;
+};
+
 struct initializator
 {
     virtual ~initializator()
@@ -65,7 +73,7 @@ struct initializator
         return {};
     }
 
-    virtual void apply(data_service_factory_i&, const genesis_state_type&) = 0;
+    virtual void apply(initializator_context&) = 0;
 };
 
 class initializators_registry

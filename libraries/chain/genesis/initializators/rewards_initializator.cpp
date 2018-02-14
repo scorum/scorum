@@ -14,13 +14,13 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void rewards_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void rewards_initializator_impl::apply(initializator_context& ctx)
 {
-    FC_ASSERT(genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(ctx.genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
 
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
-    reward_service_i& reward_service = services.reward_service();
-    budget_service_i& budget_service = services.budget_service();
+    dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
+    reward_service_i& reward_service = ctx.services.reward_service();
+    budget_service_i& budget_service = ctx.services.budget_service();
 
     FC_ASSERT(!reward_service.is_fund_exists());
 
@@ -36,9 +36,10 @@ void rewards_initializator_impl::apply(data_service_factory_i& services, const g
     FC_ASSERT(post_rf.id._id == 0);
 
     // We share initial fund between raward_pool and fund budget
-    asset initial_reward_pool_supply(genesis_state.rewards_supply.amount * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
+    asset initial_reward_pool_supply(ctx.genesis_state.rewards_supply.amount
+                                         * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                          / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                                     genesis_state.rewards_supply.symbol());
+                                     ctx.genesis_state.rewards_supply.symbol());
     fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     FC_ASSERT(!reward_service.is_pool_exists());
@@ -47,7 +48,7 @@ void rewards_initializator_impl::apply(data_service_factory_i& services, const g
 
     FC_ASSERT(!budget_service.is_fund_exists());
 
-    budget_service.create_fund_budget(genesis_state.rewards_supply - initial_reward_pool_supply, deadline);
+    budget_service.create_fund_budget(ctx.genesis_state.rewards_supply - initial_reward_pool_supply, deadline);
 }
 }
 }

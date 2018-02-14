@@ -15,17 +15,44 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void steemit_bounty_account_initializator_impl::apply(data_service_factory_i& services,
-                                                      const genesis_state_type& genesis_state)
+void steemit_bounty_account_initializator_impl::apply(initializator_context& ctx)
 {
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
-    account_service_i& account_service = services.account_service();
+    if (!is_steemit_pool_exists(ctx))
+    {
+        dlog("There is no steemit bounty account supply.");
+        return;
+    }
 
-    asset sp_accounts_supply = genesis_state.steemit_bounty_accounts_supply;
+    dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
+    account_service_i& account_service = ctx.services.account_service();
 
-    FC_ASSERT(sp_accounts_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state.steemit_bounty_accounts_supply.symbol() == VESTS_SYMBOL);
 
-    for (auto& account : genesis_state.steemit_bounty_accounts)
+    check_accounts(ctx);
+
+    for (auto& account : ctx.genesis_state.steemit_bounty_accounts)
+    {
+        const auto& account_obj = account_service.get_account(account.name);
+
+        account_service.increase_vesting_shares(account_obj, account.sp_amount);
+        dgp_service.update(
+            [&](dynamic_global_property_object& props) { props.total_vesting_shares += account.sp_amount; });
+    }
+}
+
+bool steemit_bounty_account_initializator_impl::is_steemit_pool_exists(initializator_context& ctx)
+{
+    return ctx.genesis_state.steemit_bounty_accounts_supply.amount.value
+        || !ctx.genesis_state.steemit_bounty_accounts.empty();
+}
+
+void steemit_bounty_account_initializator_impl::check_accounts(initializator_context& ctx)
+{
+    account_service_i& account_service = ctx.services.account_service();
+
+    asset sp_accounts_supply = ctx.genesis_state.steemit_bounty_accounts_supply;
+
+    for (auto& account : ctx.genesis_state.steemit_bounty_accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
@@ -41,15 +68,6 @@ void steemit_bounty_account_initializator_impl::apply(data_service_factory_i& se
 
     FC_ASSERT(sp_accounts_supply.amount == (share_value_type)0,
               "'steemit_bounty_accounts_supply' must be sum of all steemit_bounty_accounts supply.");
-
-    for (auto& account : genesis_state.steemit_bounty_accounts)
-    {
-        const auto& account_obj = account_service.get_account(account.name);
-
-        account_service.increase_vesting_shares(account_obj, account.sp_amount);
-        dgp_service.update(
-            [&](dynamic_global_property_object& props) { props.total_vesting_shares += account.sp_amount; });
-    }
 }
 }
 }
