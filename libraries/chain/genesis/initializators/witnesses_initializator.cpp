@@ -15,12 +15,12 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void witnesses_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void witnesses_initializator_impl::apply(initializator_context& ctx)
 {
-    account_service_i& account_service = services.account_service();
-    witness_service_i& witness_service = services.witness_service();
+    account_service_i& account_service = ctx.services.account_service();
+    witness_service_i& witness_service = ctx.services.witness_service();
 
-    for (auto& witness : genesis_state.witness_candidates)
+    for (auto& witness : ctx.genesis_state.witness_candidates)
     {
         FC_ASSERT(!witness.name.empty(), "Witness 'name' should not be empty.");
 

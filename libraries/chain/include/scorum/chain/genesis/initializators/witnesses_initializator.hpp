@@ -18,7 +18,7 @@ struct witnesses_initializator_impl : public initializator
         return { accounts_initializator };
     }
 
-    virtual void apply(data_service_factory_i& services, const genesis_state_type& genesis_state);
+    virtual void apply(initializator_context&);
 };
 }
 }

@@ -7,6 +7,13 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
+initializator_context::initializator_context(data_service_factory_i& _services,
+                                             const genesis_state_type& _genesis_state)
+    : services(_services)
+    , genesis_state(_genesis_state)
+{
+}
+
 initializators_registry::initializators_registry(data_service_factory_i& services,
                                                  const genesis_state_type& genesis_state)
     : _services(services)
@@ -59,7 +66,8 @@ void initializators_registry::init(initializators t)
 
         dlog("Genesis ${1} is processing.", ("1", t));
 
-        pinitializator->apply(_services, _genesis_state);
+        initializator_context ctx(_services, _genesis_state);
+        pinitializator->apply(ctx);
 
         dlog("Genesis ${1} is done.", ("1", t));
 

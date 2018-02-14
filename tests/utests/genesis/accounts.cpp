@@ -37,15 +37,15 @@ BOOST_AUTO_TEST_SUITE(accounts_initializator_tests)
 BOOST_FIXTURE_TEST_CASE(check_empty_genesis, genesis_initiate_accounts_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().generate();
-
-    BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
+    initializator_context ctx(*pservices, input_genesis);
+    BOOST_REQUIRE_NO_THROW(test_it.apply(ctx));
 }
 
 BOOST_FIXTURE_TEST_CASE(check_empty_account_list, genesis_initiate_accounts_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().accounts_supply(ASSET_SCR(1e+6)).generate();
-
-    SCORUM_REQUIRE_THROW(test_it.apply(*pservices, input_genesis), fc::assert_exception);
+    initializator_context ctx(*pservices, input_genesis);
+    SCORUM_REQUIRE_THROW(test_it.apply(ctx), fc::assert_exception);
 }
 
 struct genesis_initiate_accounts_with_actors_fixture : public genesis_initiate_accounts_fixture
@@ -60,33 +60,6 @@ struct genesis_initiate_accounts_with_actors_fixture : public genesis_initiate_a
     fake_account_object bob;
 };
 
-/*
-BOOST_FIXTURE_TEST_CASE(check_invalid_account_sum, genesis_initiate_accounts_with_actors_fixture)
-{
-    asset total = ASSET_SCR(1e+6);
-    asset pie = total / 2;
-
-    alice.config.scorum(pie);
-
-    genesis_state_type input_genesis
-        = Genesis::create().accounts(alice.config, bob.config).accounts_supply(total).generate();
-
-    SCORUM_REQUIRE_THROW(test_it.apply(*pservices, input_genesis), fc::assert_exception);
-}
-
-BOOST_FIXTURE_TEST_CASE(check_valid_account_sum, genesis_initiate_accounts_with_actors_fixture)
-{
-    asset total = ASSET_SCR(1e+6);
-    asset pie = total / 2;
-
-    alice.config.scorum(pie);
-    bob.config.scorum(total - pie);
-
-    genesis_state_type input_genesis
-        = Genesis::create().accounts(alice.config, bob.config).accounts_supply(total).generate();
-
-    BOOST_REQUIRE_NO_THROW(test_it.apply(*pservices, input_genesis));
-}
-*/
+// TODO: genesis_initiate_accounts_with_actors_fixture
 
 BOOST_AUTO_TEST_SUITE_END()

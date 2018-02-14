@@ -43,9 +43,9 @@ void registration_check_fixture::create_registration_objects(const genesis_state
     db_plugin->debug_update(
         [&](database&) {
 
-            scorum::chain::genesis::registration_initializator_impl creator;
-
-            creator.apply(_services, genesis);
+            genesis::registration_initializator_impl creator;
+            genesis::initializator_context ctx(_services, genesis);
+            creator.apply(ctx);
 
             dynamic_global_property_service_i& dgp_service = _services.dynamic_global_property_service();
 

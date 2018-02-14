@@ -48,10 +48,9 @@ public:
     }
 
 public:
-    static Genesis create(const genesis_state_type& gs = genesis_state_type())
+    static Genesis create()
     {
         Genesis g;
-        g.genesis_state = gs;
         return g;
     }
 

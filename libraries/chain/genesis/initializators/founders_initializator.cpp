@@ -19,25 +19,43 @@ namespace genesis {
 namespace {
 uint16_t get_percent(float sp_percent)
 {
-    float ret = sp_percent * SCORUM_1_PERCENT;
-    // For SCORUM_1_PERCENT == 100 value > 0.01f > 0
-    return (uint16_t)ret; // remove mantissa.
+    return (uint16_t)(sp_percent * SCORUM_1_PERCENT);
 }
 }
 
-void founders_initializator_impl::apply(data_service_factory_i& services, const genesis_state_type& genesis_state)
+void founders_initializator_impl::apply(initializator_context& ctx)
 {
+    if (!is_founders_pool_exists(ctx))
+    {
+        dlog("There is no founders supply.");
+        return;
+    }
+
     FC_ASSERT(SCORUM_100_PERCENT <= std::numeric_limits<uint16_t>::max()); // constant value check
 
-    account_service_i& account_service = services.account_service();
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
+    FC_ASSERT(ctx.genesis_state.founders_supply.symbol() == VESTS_SYMBOL);
 
-    asset founders_supply = genesis_state.founders_supply;
+    check_founders(ctx);
 
-    FC_ASSERT(founders_supply.symbol() == VESTS_SYMBOL);
+    account_name_type pitiful;
+    asset founders_supply_rest = distribure_sp_by_percent(ctx, pitiful);
+    if (founders_supply_rest.amount > (share_value_type)0)
+    {
+        distribure_sp_rest(ctx, founders_supply_rest, pitiful);
+    }
+}
 
-    uint16_t total_sp_percent = (uint16_t)0;
-    for (auto& founder : genesis_state.founders)
+bool founders_initializator_impl::is_founders_pool_exists(initializator_context& ctx)
+{
+    return ctx.genesis_state.founders_supply.amount.value || !ctx.genesis_state.founders.empty();
+}
+
+void founders_initializator_impl::check_founders(initializator_context& ctx)
+{
+    account_service_i& account_service = ctx.services.account_service();
+
+    uint16_t total_sp_percent = 0u;
+    for (auto& founder : ctx.genesis_state.founders)
     {
         FC_ASSERT(!founder.name.empty(), "Founder 'name' should not be empty.");
 
@@ -50,43 +68,62 @@ void founders_initializator_impl::apply(data_service_factory_i& services, const 
 
         FC_ASSERT(total_sp_percent <= (uint16_t)SCORUM_100_PERCENT, "Total 'sp_percent' more then 100%.");
     }
+    FC_ASSERT(total_sp_percent > 0u, "Total 'sp_percent' less or equal zerro.");
+}
 
-    asset founders_supply_rest = founders_supply;
-    account_name_type pitiful;
-    for (auto& founder : genesis_state.founders)
+asset founders_initializator_impl::distribure_sp_by_percent(initializator_context& ctx, account_name_type& pitiful)
+{
+    asset founders_supply_rest = ctx.genesis_state.founders_supply;
+    for (auto& founder : ctx.genesis_state.founders)
     {
         uint16_t percent = get_percent(founder.sp_percent);
 
-        const auto& founder_obj = account_service.get_account(founder.name);
-        asset sp_bonus = founders_supply;
+        asset sp_bonus = ctx.genesis_state.founders_supply;
         sp_bonus.amount *= percent;
         sp_bonus.amount /= SCORUM_100_PERCENT;
         if (sp_bonus.amount > (share_value_type)0)
         {
-            account_service.increase_vesting_shares(founder_obj, sp_bonus);
-            dgp_service.update([&](dynamic_global_property_object& props) { props.total_vesting_shares += sp_bonus; });
+            feed_account(ctx, founder.name, sp_bonus);
             founders_supply_rest -= sp_bonus;
         }
         else if (founder.sp_percent > 0.f)
         {
-            pitiful = founder_obj.name; // only last pitiful is getting SP
+            pitiful = founder.name; // only last pitiful is getting SP
         }
     }
+    return founders_supply_rest;
+}
 
-    // founders_supply_rest in [0, 0.01] % of founders_supply
-    if (founders_supply_rest.amount > (share_value_type)0)
+void founders_initializator_impl::distribure_sp_rest(initializator_context& ctx,
+                                                     const asset& rest,
+                                                     const account_name_type& pitiful)
+{
+    static const float sp_percent_limit_for_pitiful = 0.02f;
+
+    FC_ASSERT(rest.amount < ctx.genesis_state.founders_supply.amount * get_percent(sp_percent_limit_for_pitiful)
+                      / SCORUM_100_PERCENT,
+              "Too big rest ${r} for single pitiful. There are many pitiful members in genesis maybe.", ("r", rest));
+
+    asset founders_supply_rest = rest;
+    if (pitiful != account_name_type())
     {
-        if (pitiful != account_name_type())
-        {
-            const auto& founder_obj = account_service.get_account(pitiful);
-            account_service.increase_vesting_shares(founder_obj, founders_supply_rest);
-            dgp_service.update(
-                [&](dynamic_global_property_object& props) { props.total_vesting_shares += founders_supply_rest; });
-            founders_supply_rest.amount = 0;
-        }
+        feed_account(ctx, pitiful, founders_supply_rest);
+        founders_supply_rest.amount = 0;
     }
 
     FC_ASSERT(!founders_supply_rest.amount.value);
+}
+
+void founders_initializator_impl::feed_account(initializator_context& ctx,
+                                               const account_name_type& name,
+                                               const asset& sp)
+{
+    dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
+    account_service_i& account_service = ctx.services.account_service();
+
+    const auto& founder_obj = account_service.get_account(name);
+    account_service.increase_vesting_shares(founder_obj, sp);
+    dgp_service.update([&](dynamic_global_property_object& props) { props.total_vesting_shares += sp; });
 }
 }
 }

@@ -18,7 +18,10 @@ struct accounts_initializator_impl : public initializator
         return { global_property_initializator };
     }
 
-    virtual void apply(data_service_factory_i& services, const genesis_state_type& genesis_state);
+    virtual void apply(initializator_context&);
+
+private:
+    void check_accounts_supply(initializator_context&);
 };
 }
 }

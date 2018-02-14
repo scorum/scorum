@@ -2,6 +2,8 @@
 
 #include <scorum/chain/genesis/initializators/initializators.hpp>
 
+#include <scorum/protocol/asset.hpp>
+
 namespace scorum {
 namespace chain {
 namespace genesis {
@@ -18,7 +20,11 @@ struct steemit_bounty_account_initializator_impl : public initializator
         return { global_property_initializator, accounts_initializator };
     }
 
-    virtual void apply(data_service_factory_i& services, const genesis_state_type& genesis_state);
+    virtual void apply(initializator_context&);
+
+private:
+    bool is_steemit_pool_exists(initializator_context&);
+    void check_accounts(initializator_context& ctx);
 };
 }
 }
