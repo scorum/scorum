@@ -27,7 +27,7 @@ asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, con
     return ret;
 }
 
-registration_objects_fixture::registration_objects_fixture()
+registration_check_fixture::registration_check_fixture()
     : _services(static_cast<data_service_factory_i&>(db))
     , account_service(db.account_service())
 {
@@ -36,7 +36,7 @@ registration_objects_fixture::registration_objects_fixture()
     ACTORS((MEMBER_BONUS_BENEFICIARY)(NEXT_MEMBER));
 }
 
-void registration_objects_fixture::create_registration_objects(const genesis_state_type& genesis)
+void registration_check_fixture::create_registration_objects(const genesis_state_type& genesis)
 {
     generate_blocks(5);
 
@@ -58,15 +58,15 @@ void registration_objects_fixture::create_registration_objects(const genesis_sta
     generate_blocks(5);
 }
 
-genesis_state_type registration_objects_fixture::create_registration_genesis(schedule_inputs_type& schedule_input,
-                                                                             asset& rest_of_supply)
+genesis_state_type registration_check_fixture::create_registration_genesis(schedule_inputs_type& schedule_input,
+                                                                           asset& rest_of_supply)
 {
     committee_private_keys_type committee_private_keys;
     schedule_input.clear();
     return create_registration_genesis_impl(schedule_input, rest_of_supply, committee_private_keys);
 }
 
-genesis_state_type registration_objects_fixture::create_registration_genesis()
+genesis_state_type registration_check_fixture::create_registration_genesis()
 {
     committee_private_keys_type committee_private_keys;
     schedule_inputs_type schedule_input;
@@ -75,7 +75,7 @@ genesis_state_type registration_objects_fixture::create_registration_genesis()
 }
 
 genesis_state_type
-registration_objects_fixture::create_registration_genesis(committee_private_keys_type& committee_private_keys)
+registration_check_fixture::create_registration_genesis(committee_private_keys_type& committee_private_keys)
 {
     schedule_inputs_type schedule_input;
     asset rest_of_supply;
@@ -83,12 +83,12 @@ registration_objects_fixture::create_registration_genesis(committee_private_keys
     return create_registration_genesis_impl(schedule_input, rest_of_supply, committee_private_keys);
 }
 
-const account_object& registration_objects_fixture::bonus_beneficiary()
+const account_object& registration_check_fixture::bonus_beneficiary()
 {
     return account_service.get_account(BOOST_PP_STRINGIZE(MEMBER_BONUS_BENEFICIARY));
 }
 
-genesis_state_type registration_objects_fixture::create_registration_genesis_impl(
+genesis_state_type registration_check_fixture::create_registration_genesis_impl(
     schedule_inputs_type& schedule_input, asset& rest_of_supply, committee_private_keys_type& committee_private_keys)
 {
     genesis_state_type genesis_state;

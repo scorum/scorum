@@ -27,10 +27,10 @@ using committee_private_keys_type = std::map<account_name_type, private_key_type
 
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus);
 
-class registration_objects_fixture : public database_trx_integration_fixture
+class registration_check_fixture : public database_trx_integration_fixture
 {
 public:
-    registration_objects_fixture();
+    registration_check_fixture();
 
     void create_registration_objects(const genesis_state_type&);
 

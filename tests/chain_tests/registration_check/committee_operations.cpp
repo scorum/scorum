@@ -9,7 +9,7 @@
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-class registration_committee_create_account_check_fixture : public registration_objects_fixture
+class registration_committee_create_account_check_fixture : public registration_check_fixture
 {
 public:
     registration_committee_create_account_check_fixture()

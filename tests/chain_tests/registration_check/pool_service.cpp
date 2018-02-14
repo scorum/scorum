@@ -11,7 +11,7 @@
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-class registration_pool_service_check_fixture : public registration_objects_fixture
+class registration_pool_service_check_fixture : public registration_check_fixture
 {
 public:
     registration_pool_service_check_fixture()
