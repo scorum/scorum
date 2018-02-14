@@ -19,8 +19,6 @@
 
 #include "database_fixture.hpp"
 
-#define SCORUM_MIN_PRODUCER_REWARD asset(1000, SCORUM_SYMBOL)
-
 namespace scorum {
 namespace chain {
 

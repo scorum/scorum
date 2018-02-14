@@ -22,6 +22,7 @@ target_link_libraries(common_test
                       scorum_account_history
                       scorum_witness
                       scorum_debug_node
+                      scorum_blockchain_statistics
                       cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS}

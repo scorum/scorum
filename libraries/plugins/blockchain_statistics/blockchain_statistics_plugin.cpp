@@ -10,6 +10,8 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
+#define LIFE_TIME_PERIOD std::numeric_limits<uint32_t>::max()
+
 namespace scorum {
 namespace blockchain_statistics {
 
@@ -33,7 +35,7 @@ public:
     void post_operation(const operation_notification& o);
 
     blockchain_statistics_plugin& _self;
-    flat_set<uint32_t> _tracked_buckets = { 60, 3600, 21600, 86400, 604800, 2592000 };
+    flat_set<uint32_t> _tracked_buckets = { 60, 3600, 21600, 86400, 604800, 2592000, LIFE_TIME_PERIOD };
     flat_set<bucket_id_type> _current_buckets;
     uint32_t _maximum_history_per_bucket_size = 100;
 };
@@ -179,23 +181,7 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
 {
     auto& db = _self.database();
 
-    if (b.block_num() == 1)
-    {
-        db.create<bucket_object>([&](bucket_object& bo) {
-            bo.open = b.timestamp;
-            bo.seconds = 0;
-            bo.blocks = 1;
-        });
-    }
-    else
-    {
-        db.modify(db.get(bucket_id_type()), [&](bucket_object& bo) { bo.blocks++; });
-    }
-
     _current_buckets.clear();
-    _current_buckets.insert(bucket_id_type());
-
-    const auto& bucket_idx = db.get_index<bucket_index>().indices().get<by_bucket>();
 
     uint32_t trx_size = 0;
     uint32_t num_trx = b.transactions.size();
@@ -205,12 +191,18 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
         trx_size += fc::raw::pack_size(trx);
     }
 
+    const auto& bucket_idx = db.get_index<bucket_index>().indices().get<by_bucket>();
+
     for (const auto& bucket : _tracked_buckets)
     {
         auto open = fc::time_point_sec((db.head_block_time().sec_since_epoch() / bucket) * bucket);
-        auto itr = bucket_idx.find(boost::make_tuple(bucket, open));
 
-        if (itr == bucket_idx.end())
+        auto itr = bucket_idx.find(boost::make_tuple(bucket, open));
+        if (itr != bucket_idx.end())
+        {
+            _current_buckets.insert(itr->id);
+        }
+        else
         {
             _current_buckets.insert(db.create<bucket_object>([&](bucket_object& bo) {
                                           bo.open = open;
@@ -218,14 +210,20 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
                                           bo.blocks = 1;
                                       }).id);
 
+            // adjust history
             if (_maximum_history_per_bucket_size > 0)
             {
                 try
                 {
-                    auto cutoff = fc::time_point_sec(
-                        (safe<uint32_t>(db.head_block_time().sec_since_epoch())
-                         - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
-                            .value);
+                    auto cutoff = fc::time_point_sec();
+                    if (safe<uint64_t>(bucket) * safe<uint64_t>(_maximum_history_per_bucket_size)
+                        < safe<uint64_t>(LIFE_TIME_PERIOD))
+                    {
+                        cutoff = fc::time_point_sec(
+                            (safe<uint32_t>(db.head_block_time().sec_since_epoch())
+                             - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
+                                .value);
+                    }
 
                     itr = bucket_idx.lower_bound(boost::make_tuple(bucket, fc::time_point_sec()));
 
@@ -244,14 +242,9 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
                 }
             }
         }
-        else
-        {
-            db.modify(*itr, [&](bucket_object& bo) { bo.blocks++; });
-
-            _current_buckets.insert(itr->id);
-        }
 
         db.modify(*itr, [&](bucket_object& bo) {
+            bo.blocks++;
             bo.transactions += num_trx;
             bo.bandwidth += trx_size;
         });

@@ -65,7 +65,14 @@ statistics blockchain_statistics_api_impl::get_stats_for_interval(fc::time_point
 statistics blockchain_statistics_api_impl::get_lifetime_stats() const
 {
     statistics result;
-    result += _app.chain_database()->get(bucket_id_type());
+
+    const auto& bucket_idx = _app.chain_database()->get_index<bucket_index>().indices().get<by_bucket>();
+    auto itr = bucket_idx.find(boost::make_tuple(std::numeric_limits<uint32_t>::max(), fc::time_point_sec()));
+
+    if (itr != bucket_idx.end())
+    {
+        result += *itr;
+    }
 
     return result;
 }

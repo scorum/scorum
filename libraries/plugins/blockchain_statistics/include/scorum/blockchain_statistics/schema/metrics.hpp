@@ -44,9 +44,9 @@ struct base_metric
     uint32_t new_reply_votes = 0; ///< New votes on replies
     uint32_t changed_reply_votes = 0; ///< Changed votes on replies
     uint32_t payouts = 0; ///< Number of comment payouts
-    share_type scr_paid_to_authors = 0; ///< Ammount of SCR paid to authors
-    share_type vests_paid_to_authors = 0; ///< Ammount of SP paid to authors
-    share_type vests_paid_to_curators = 0; ///< Ammount of SP paid to curators
+    share_type scr_paid_to_authors = 0; ///< Amount of SCR paid to authors
+    share_type vests_paid_to_authors = 0; ///< Amount of SP paid to authors
+    share_type vests_paid_to_curators = 0; ///< Amount of SP paid to curators
 };
 
 struct total_metric

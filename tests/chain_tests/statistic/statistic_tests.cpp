@@ -1,0 +1,323 @@
+#include <boost/test/unit_test.hpp>
+
+#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+
+#include "../common/database_fixture.hpp"
+
+using namespace scorum;
+using namespace scorum::chain;
+using namespace scorum::protocol;
+using namespace scorum::blockchain_statistics;
+using fc::string;
+
+struct stat_database_fixture : public database_fixture
+{
+    std::shared_ptr<scorum::blockchain_statistics::blockchain_statistics_plugin> db_stat;
+
+    const char* alice = "alice";
+    const char* bob = "bob";
+
+    stat_database_fixture(const genesis_state_type& external_genesis_state = genesis_state_type())
+        : database_fixture(external_genesis_state)
+    {
+        boost::program_options::variables_map options;
+
+        db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
+        db_stat = app.register_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
+
+        db_plugin->logging = false;
+        db_plugin->plugin_initialize(options);
+        db_stat->plugin_initialize(options);
+
+        open_database();
+        generate_block();
+
+        vest(TEST_INIT_DELEGATE_NAME, 10000);
+
+        account_create(alice, init_account_pub_key);
+        fund(alice, SCORUM_MIN_PRODUCER_REWARD);
+        vest(alice, SCORUM_MIN_PRODUCER_REWARD);
+
+        account_create(bob, init_account_pub_key);
+        vest(bob, SCORUM_MIN_PRODUCER_REWARD);
+
+        generate_block();
+        validate_database();
+    }
+
+    const bucket_object& get_lifetime_bucket() const
+    {
+        const auto& bucket_idx = db.get_index<bucket_index>().indices().get<by_bucket>();
+        auto itr = bucket_idx.find(boost::make_tuple(std::numeric_limits<uint32_t>::max(), fc::time_point_sec()));
+        FC_ASSERT(itr != bucket_idx.end());
+        return *itr;
+    }
+
+    void start_withdraw(share_type to_withdraw)
+    {
+        withdraw_vesting_operation op;
+        op.account = bob;
+        op.vesting_shares = asset(to_withdraw, VESTS_SYMBOL);
+
+        push_operation(op);
+    }
+
+    template <typename T> void push_operation(const T& op)
+    {
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+        tx.validate();
+        db.push_transaction(tx, default_skip);
+
+        generate_block();
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(statistic_tests, stat_database_fixture)
+
+SCORUM_TEST_CASE(produced_blocks_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.blocks;
+
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(bucket.blocks, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(transactions_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.transactions;
+
+    transfer_operation op;
+    op.from = TEST_INIT_DELEGATE_NAME;
+    op.to = alice;
+    op.amount = asset(1, SCORUM_SYMBOL);
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.transactions, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(operations_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.operations;
+
+    transfer_operation op;
+    op.from = TEST_INIT_DELEGATE_NAME;
+    op.to = alice;
+    op.amount = asset(1, SCORUM_SYMBOL);
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.operations, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(bandwidth_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.bandwidth;
+
+    transfer_operation op;
+    op.from = TEST_INIT_DELEGATE_NAME;
+    op.to = alice;
+    op.amount = asset(1, SCORUM_SYMBOL);
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.validate();
+    db.push_transaction(tx, default_skip);
+
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(bucket.bandwidth, orig_val + fc::raw::pack_size(tx));
+}
+
+SCORUM_TEST_CASE(account_creation_stat_test1)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.paid_accounts_created;
+
+    account_create_operation op;
+    op.fee = SUFFICIENT_FEE;
+    op.creator = TEST_INIT_DELEGATE_NAME;
+    op.new_account_name = "maugli";
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.paid_accounts_created, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(account_creation_stat_test2)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.paid_accounts_created;
+
+    account_create_with_delegation_operation op;
+    op.fee = SUFFICIENT_FEE;
+    op.creator = "alice";
+    op.new_account_name = "maugli";
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.paid_accounts_created, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(account_creation_stat_test3)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.free_accounts_created;
+
+    account_create_by_committee_operation op;
+    op.creator = TEST_INIT_DELEGATE_NAME;
+    op.new_account_name = "maugli";
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.free_accounts_created, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(transfers_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.transfers;
+    auto orig_val_scr = bucket.scorum_transferred;
+
+    transfer_operation op;
+    op.from = TEST_INIT_DELEGATE_NAME;
+    op.to = alice;
+    op.amount = asset(1, SCORUM_SYMBOL);
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.transfers, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorum_transferred, orig_val_scr + 1);
+}
+
+SCORUM_TEST_CASE(transfers_to_vesting_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.transfers_to_vesting;
+    auto orig_val_scr = bucket.scorum_transferred_to_vesting;
+
+    transfer_to_vesting_operation op;
+    op.from = TEST_INIT_DELEGATE_NAME;
+    op.to = alice;
+    op.amount = asset(1, SCORUM_SYMBOL);
+
+    push_operation(op);
+
+    BOOST_REQUIRE_EQUAL(bucket.transfers_to_vesting, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorum_transferred_to_vesting, orig_val_scr + 1);
+}
+
+SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    const account_object& alice_acc = db.obtain_service<dbs_account>().get_account(alice);
+
+    {
+        auto orig_val = bucket.new_vesting_withdrawal_requests;
+
+        withdraw_vesting_operation op;
+        op.account = alice;
+        op.vesting_shares = alice_acc.vesting_shares;
+
+        push_operation(op);
+
+        BOOST_REQUIRE_EQUAL(bucket.new_vesting_withdrawal_requests, orig_val + 1);
+    }
+    {
+        auto orig_val = bucket.modified_vesting_withdrawal_requests;
+
+        withdraw_vesting_operation op;
+        op.account = alice;
+        op.vesting_shares = alice_acc.vesting_shares / 2;
+
+        push_operation(op);
+
+        BOOST_REQUIRE_EQUAL(bucket.modified_vesting_withdrawal_requests, orig_val + 1);
+    }
+}
+
+SCORUM_TEST_CASE(vesting_withdrawals_finish_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.finished_vesting_withdrawals;
+    auto orig_val_processed = bucket.vesting_withdrawals_processed;
+    auto orig_val_rate = bucket.vesting_withdraw_rate_delta;
+
+    start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
+
+    for (int i = 0; i < SCORUM_VESTING_WITHDRAW_INTERVALS; ++i)
+    {
+        BOOST_REQUIRE_EQUAL(bucket.finished_vesting_withdrawals, orig_val);
+        BOOST_REQUIRE_EQUAL(bucket.vesting_withdraw_rate_delta, orig_val_rate + 1);
+
+        time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+
+        generate_blocks(advance, true);
+        generate_block(); // call full apply_block procedure
+    }
+
+    BOOST_REQUIRE_EQUAL(bucket.finished_vesting_withdrawals, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.vesting_withdrawals_processed, orig_val_processed + SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_REQUIRE_EQUAL(bucket.vesting_withdraw_rate_delta, orig_val_rate);
+}
+
+SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.vests_withdrawn;
+
+    start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
+
+    time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+    generate_blocks(advance, true);
+    generate_block(); // call full apply_block procedure
+
+    BOOST_REQUIRE_EQUAL(bucket.vests_withdrawn, orig_val + 1);
+}
+
+SCORUM_TEST_CASE(vesting_transfered_stat_test)
+{
+    const bucket_object& bucket = get_lifetime_bucket();
+
+    auto orig_val = bucket.vests_transferred;
+
+    start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
+
+    set_withdraw_vesting_route_operation op;
+    op.from_account = "bob";
+    op.to_account = alice;
+    op.auto_vest = true;
+    op.percent = SCORUM_PERCENT(100);
+
+    push_operation(op);
+
+    time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+    generate_blocks(advance, true);
+    generate_block(); // call full apply_block procedure
+
+    BOOST_REQUIRE_EQUAL(bucket.vests_transferred, orig_val + 1);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
