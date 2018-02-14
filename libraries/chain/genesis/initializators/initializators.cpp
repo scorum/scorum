@@ -45,11 +45,13 @@ void initializators_registry::init(initializators t)
 {
     recursive_lock_type lock(t);
 
-    if (!_initializators_applied[t])
+    initializators_mark_type::iterator it = _initializators.find(t);
+    FC_ASSERT(_initializators.end() != it, "Initializator ${1} is not registered.", ("1", t));
+
+    initializators_ptr_type& _initializator = it->second;
+    if (!_initializator.first)
     {
-        initializators_ptr_type::iterator it = _initializators_ptr.find(t);
-        FC_ASSERT(_initializators_ptr.end() != it, "Initializator ${1} is not registered.", ("1", t));
-        const auto& pinitializator = it->second;
+        const auto& pinitializator = _initializator.second;
         for (initializators t_reqired : pinitializator->get_reqired_types())
         {
             init(t_reqired);
@@ -61,7 +63,7 @@ void initializators_registry::init(initializators t)
 
         dlog("Genesis ${1} is done.", ("1", t));
 
-        _initializators_applied[t] = true;
+        _initializator.first = true;
     }
 }
 }

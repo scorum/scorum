@@ -42,3 +42,9 @@ Actor& Actor::vests(asset vests)
     sp_amount = vests;
     return *this;
 }
+
+Actor& Actor::percent(float prc)
+{
+    sp_percent = prc;
+    return *this;
+}

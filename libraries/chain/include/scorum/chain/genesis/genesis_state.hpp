@@ -28,7 +28,7 @@ struct genesis_state_type
     struct founder_type
     {
         std::string name;
-        uint16_t sp_percent;
+        float sp_percent;
     };
 
     struct steemit_bounty_account_type
@@ -56,7 +56,7 @@ struct genesis_state_type
     asset rewards_supply = asset(0, SCORUM_SYMBOL);
     asset founders_supply = asset(0, VESTS_SYMBOL);
     asset steemit_bounty_accounts_supply = asset(0, VESTS_SYMBOL);
-    time_point_sec initial_timestamp;
+    time_point_sec initial_timestamp = time_point_sec::min();
     std::vector<account_type> accounts;
     std::vector<founder_type> founders;
     std::vector<steemit_bounty_account_type> steemit_bounty_accounts;

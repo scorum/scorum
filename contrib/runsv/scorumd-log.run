@@ -1,0 +1,4 @@
+#!/bin/bash
+
+[ -d /var/lib/scorumd/logs ] || mkdir /var/lib/scorumd/logs && chown -R scorumd:scorumd /var/lib/scorumd/logs
+exec chpst -u scorumd svlogd -l 3000 -b 6144 -tt /var/lib/scorumd/logs

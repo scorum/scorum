@@ -46,6 +46,7 @@ public:
         return !_m;
     }
 
+private:
     bool _m = false;
 };
 
@@ -72,14 +73,15 @@ class initializators_registry
 protected:
     explicit initializators_registry(data_service_factory_i& services, const genesis_state_type& genesis_state);
 
-    using initializators_mark_type = std::map<initializators, mark>;
-    using initializators_ptr_type = std::map<initializators, std::unique_ptr<initializator>>;
+    using initializators_ptr_type = std::pair<mark, std::unique_ptr<initializator>>;
+    using initializators_mark_type = std::map<initializators, initializators_ptr_type>;
 
 public:
     template <typename InitializatorType> const initializator& register_initializator(InitializatorType* e)
     {
         FC_ASSERT(e);
-        _initializators_ptr[e->get_type()].reset(e);
+        initializators_ptr_type& new_initializator = _initializators[e->get_type()];
+        new_initializator.second.reset(e);
         return *e;
     }
 
@@ -92,8 +94,7 @@ public:
 private:
     data_service_factory_i& _services;
     const genesis_state_type& _genesis_state;
-    initializators_mark_type _initializators_applied;
-    initializators_ptr_type _initializators_ptr;
+    initializators_mark_type _initializators;
 };
 }
 }

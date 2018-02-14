@@ -14,15 +14,26 @@ void global_property_initializator_impl::apply(data_service_factory_i& services,
 {
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
+    FC_ASSERT(genesis_state.founders_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(genesis_state.steemit_bounty_accounts_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(genesis_state.accounts_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(genesis_state.registration_supply.symbol() == SCORUM_SYMBOL);
+
     FC_ASSERT(!dgp_service.is_exists());
 
     dgp_service.create([&](dynamic_global_property_object& gpo) {
         gpo.time = dgp_service.get_genesis_time();
         gpo.recent_slots_filled = fc::uint128::max_value();
         gpo.participation_count = 128;
-        asset founders_supply = genesis_state.founders_supply;
-        gpo.circulating_capital = genesis_state.accounts_supply + asset(founders_supply.amount, SCORUM_SYMBOL);
-        gpo.total_supply = gpo.circulating_capital + genesis_state.rewards_supply + genesis_state.registration_supply;
+        auto founders_supply = genesis_state.founders_supply.amount;
+        auto steemit_bounty_accounts_supply = genesis_state.steemit_bounty_accounts_supply.amount;
+        gpo.circulating_capital = genesis_state.accounts_supply;
+        gpo.circulating_capital += asset(founders_supply, SCORUM_SYMBOL);
+        gpo.circulating_capital += asset(steemit_bounty_accounts_supply, SCORUM_SYMBOL);
+        gpo.total_supply = gpo.circulating_capital;
+        gpo.total_supply += genesis_state.rewards_supply;
+        gpo.total_supply += genesis_state.registration_supply;
         gpo.median_chain_props.maximum_block_size = SCORUM_MAX_BLOCK_SIZE;
     });
 }

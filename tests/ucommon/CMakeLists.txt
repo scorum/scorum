@@ -8,6 +8,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
 set( SOURCES
   actor.cpp
+  genesis.cpp
 )
 
 add_library(ucommon_test 

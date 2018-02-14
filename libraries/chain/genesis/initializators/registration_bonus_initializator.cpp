@@ -15,25 +15,27 @@ namespace genesis {
 void registration_bonus_initializator_impl::apply(data_service_factory_i& services,
                                                   const genesis_state_type& genesis_state)
 {
-    account_service_i& account_service = services.account_service();
     registration_pool_service_i& registration_pool_service = services.registration_pool_service();
 
-    FC_ASSERT(registration_pool_service.is_exists());
-
-    size_t total_unvested = genesis_state.accounts.size();
-    for (auto& account : genesis_state.accounts)
+    if (registration_pool_service.is_exists())
     {
-        const auto& account_obj = account_service.get_account(account.name);
-        asset bonus = allocate_cash(services);
-        if (bonus.amount > (share_value_type)0)
+        account_service_i& account_service = services.account_service();
+
+        size_t total_unvested = genesis_state.accounts.size();
+        for (auto& account : genesis_state.accounts)
         {
-            account_service.create_vesting(account_obj, bonus);
-            --total_unvested;
-        }
-        else
-        {
-            wlog("No more bonus from registration pool. ${1} accounts have no SP.", ("1", total_unvested));
-            break;
+            const auto& account_obj = account_service.get_account(account.name);
+            asset bonus = allocate_cash(services);
+            if (bonus.amount > (share_value_type)0)
+            {
+                account_service.create_vesting(account_obj, bonus);
+                --total_unvested;
+            }
+            else
+            {
+                wlog("No more bonus from registration pool. ${1} accounts have no SP.", ("1", total_unvested));
+                break;
+            }
         }
     }
 }

@@ -5,10 +5,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../common/database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 using namespace scorum::chain;
-using namespace scorum::chain::test;
+
 /*
 namespace scorum { namespace plugin_tests {
 
@@ -88,7 +88,7 @@ FC_REFLECT_TYPENAME( scorum::plugin_tests::test_op );
 DEFINE_OPERATION_TYPE( scorum::plugin_tests::test_op );
 */
 
-BOOST_FIXTURE_TEST_SUITE(plugin_ops, clean_database_fixture);
+BOOST_FIXTURE_TEST_SUITE(plugin_ops, database_default_integration_fixture);
 /*
 BOOST_AUTO_TEST_CASE( custom_json )
 {

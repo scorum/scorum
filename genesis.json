@@ -2,12 +2,6 @@
   "initial_timestamp": "2017-11-29T10:03:00",
 
   "accounts_supply": "1002.000000000 SCR",
-  "rewards_supply": "21024.000000000 SCR",
-  "registration_supply": "1.000000000 SCR",
-  "registration_bonus": "0.000000005 SCR",
-  "founders_supply": "200.100000000 SP",
-  "steemit_bounty_accounts_supply": "100.000000000 SP",
-
   "accounts": [
     {
       "name": "initdelegate",
@@ -29,20 +23,22 @@
     }
   ],
 
+  "founders_supply": "200.100000000 SP",
   "founders": [{
     "name": "alice",
-    "sp_percent": 70
+    "sp_percent": 71.5
   }, {
     "name": "bob",
-    "sp_percent": 30
+    "sp_percent": 28.5
   }],
 
+  "steemit_bounty_accounts_supply": "956.200000000 SP",
   "steemit_bounty_accounts": [{
     "name": "initdelegate",
-    "sp_amount": "51.000000000 SP"
+    "sp_amount": "500.000000000 SP"
   }, {
     "name": "bob",
-    "sp_amount": "49.000000000 SP"
+    "sp_amount": "456.200000000 SP"
   }],
 
   "witness_candidates": [{
@@ -56,23 +52,27 @@
     "block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B"
   }],
 
+  "rewards_supply": "21024.000000000 SCR",
+
+  "registration_supply": "10000.000000000 SCR",
+  "registration_bonus": "0.000000100 SCR",
   "registration_committee": ["alice", "bob"],
 
   "registration_schedule": [{
     "stage": 1,
-    "users": 1,
+    "users": 10,
     "bonus_percent": 100
   }, {
     "stage": 2,
-    "users": 2,
+    "users": 10,
     "bonus_percent": 75
   }, {
     "stage": 3,
-    "users": 5,
-    "bonus_percent": 75
+    "users": 20,
+    "bonus_percent": 50
   }, {
     "stage": 4,
-    "users": 10,
+    "users": 1,
     "bonus_percent": 25
   }]
 }

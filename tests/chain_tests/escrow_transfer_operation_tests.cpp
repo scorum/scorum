@@ -14,7 +14,7 @@
 
 #include <fc/crypto/digest.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -25,7 +25,7 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 using fc::string;
 
-struct escrow_transfer_apply_fixture : public clean_database_fixture
+struct escrow_transfer_apply_fixture : public database_default_integration_fixture
 {
     escrow_transfer_apply_fixture()
     {

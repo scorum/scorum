@@ -2,7 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "database_fixture.hpp"
+#include "database_trx_integration.hpp"
 #include "defines.hpp"
 
 #include <scorum/chain/services/registration_committee.hpp>
@@ -20,7 +20,7 @@ namespace chain {
 class proposal_fixture
 {
 public:
-    using chain_type = timed_blocks_database_fixture;
+    using chain_type = database_trx_integration_fixture;
     typedef std::shared_ptr<chain_type> chain_type_ptr;
 
     using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
@@ -141,7 +141,8 @@ public:
     {
         if (!_chain)
         {
-            _chain = chain_type_ptr(new chain_type(genesis));
+            _chain = chain_type_ptr(new chain_type());
+            _chain->open_database(genesis);
         }
 
         return *_chain;
@@ -238,7 +239,7 @@ BOOST_FIXTURE_TEST_SUITE(proposal_operation_tests, proposal_fixture)
 // clang-format off
 SCORUM_TEST_CASE(proposal)
 {
-    Actor initdelegate("initdelegate");
+    Actor initdelegate(TEST_INIT_DELEGATE_NAME);
     Actor alice("alice");
     Actor bob("bob");
     Actor jim("jim");
@@ -246,10 +247,14 @@ SCORUM_TEST_CASE(proposal)
     Actor hue("hue");
     Actor liz("liz");
 
-    genesis = Genesis::create()
-                            .accounts(bob, jim, joe, hue, liz)
-                            .committee(alice)
-                            .generate();
+    registration_stage single_stage{ 1u, 1u, 100u };
+    genesis = Genesis::create(database_trx_integration_fixture::create_default_genesis_state())
+            .accounts(bob, jim, joe, hue, liz)
+            .registration_supply(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
+            .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
+            .registration_schedule(single_stage)
+             .committee(alice)
+             .generate();
 
     chain().generate_block();
 

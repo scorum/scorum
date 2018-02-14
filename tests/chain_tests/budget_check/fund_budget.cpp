@@ -6,13 +6,13 @@
 
 #include <scorum/chain/schema/budget_object.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-class fund_budget_fixture : public database_fixture
+class fund_budget_fixture : public database_integration_fixture
 {
 public:
     fund_budget_fixture()

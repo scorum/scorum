@@ -14,7 +14,7 @@
 
 #include <fc/crypto/digest.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(creator_have_active_authority)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(operation_tests, clean_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(operation_tests, database_default_integration_fixture)
 
 BOOST_AUTO_TEST_CASE(account_create_apply)
 {
@@ -728,7 +728,7 @@ BOOST_AUTO_TEST_CASE(vote_authorities)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(operation_tests, clean_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(operation_tests, database_default_integration_fixture)
 
 BOOST_AUTO_TEST_CASE(transfer_validate)
 {
