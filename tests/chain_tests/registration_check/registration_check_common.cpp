@@ -2,7 +2,7 @@
 
 #include <scorum/protocol/config.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/genesis/initializators/registration_initializator.hpp>
@@ -99,7 +99,7 @@ genesis_state_type registration_objects_fixture::create_registration_genesis_imp
     committee_private_keys.clear();
     for (const account_name_type& member : genesis_state.registration_committee)
     {
-        fc::ecc::private_key private_key = database_fixture::generate_private_key(member);
+        fc::ecc::private_key private_key = database_integration_fixture::generate_private_key(member);
         committee_private_keys.insert(committee_private_keys_type::value_type(member, private_key));
         genesis_state.accounts.push_back({ member, "", private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
     }

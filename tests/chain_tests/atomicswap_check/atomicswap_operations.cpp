@@ -1,7 +1,7 @@
 #ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -23,7 +23,7 @@ using fc::string;
 // usage for all budget tests 'chain_test  -t atomicswap_*'
 //
 
-class atomicswap_operation_check_fixture : public timed_blocks_database_fixture
+class atomicswap_operation_check_fixture : public database_default_integration_fixture
 {
 public:
     atomicswap_operation_check_fixture()

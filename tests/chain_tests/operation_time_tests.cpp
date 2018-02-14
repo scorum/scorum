@@ -14,7 +14,7 @@
 #include <scorum/plugins/debug_node/debug_node_plugin.hpp>
 
 #include <fc/crypto/digest.hpp>
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 #include <cmath>
 
@@ -22,7 +22,7 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-BOOST_FIXTURE_TEST_SUITE(operation_time_tests, clean_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(operation_time_tests, database_default_integration_fixture)
 
 BOOST_AUTO_TEST_CASE(comment_payout_equalize)
 {

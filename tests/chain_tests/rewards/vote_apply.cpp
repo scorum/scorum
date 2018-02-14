@@ -10,13 +10,13 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-class vote_apply_base_fixture : public clean_database_fixture
+class vote_apply_base_fixture : public database_default_integration_fixture
 {
 public:
     vote_apply_base_fixture()

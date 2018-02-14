@@ -7,9 +7,9 @@ endif()
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
 set( SOURCES
-  database_fixture.cpp
   database_integration.cpp
   database_trx_integration.cpp
+  database_default_integration.cpp
 )
 
 add_library(common_test 

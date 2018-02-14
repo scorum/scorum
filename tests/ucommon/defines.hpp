@@ -17,10 +17,6 @@
 
 #define SCORUM_MIN_PRODUCER_REWARD asset(1000, SCORUM_SYMBOL)
 
-#define PUSH_TX scorum::chain::test::_push_transaction
-
-#define PUSH_BLOCK scorum::chain::test::_push_block
-
 template <class T> T make_test_index_object()
 {
     struct constructor
