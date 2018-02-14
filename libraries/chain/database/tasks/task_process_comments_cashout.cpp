@@ -4,7 +4,7 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-void task_process_comments_cashout_impl::apply(data_service_factory_i&)
+void task_process_comments_cashout_impl::apply(data_service_factory_i&, database_virtual_operations_emmiter_i&)
 {
     // TODO
 }

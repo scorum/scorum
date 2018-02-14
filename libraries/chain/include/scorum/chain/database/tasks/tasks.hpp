@@ -11,6 +11,7 @@ namespace scorum {
 namespace chain {
 
 class data_service_factory_i;
+class database_virtual_operations_emmiter_i;
 
 namespace database_ns {
 
@@ -42,7 +43,7 @@ public:
         if (!_last_block_num)
             _last_block_num = block_num - 1;
         // if enough blocks are produced
-        bool ret = (block_num - _last_block_num > _per_block_num);
+        bool ret = (block_num - _last_block_num >= _per_block_num);
         ret |= !_m; // or not already done
         _last_block_num = block_num;
         _m = true;
@@ -73,13 +74,13 @@ struct task
 
     virtual tasks get_type() const = 0;
 
-    virtual void apply(data_service_factory_i&) = 0;
+    virtual void apply(data_service_factory_i&, database_virtual_operations_emmiter_i&) = 0;
 };
 
 class tasks_registry
 {
 protected:
-    explicit tasks_registry(data_service_factory_i& services);
+    explicit tasks_registry(data_service_factory_i& services, database_virtual_operations_emmiter_i& vops);
 
     using tasks_ptr_type = std::pair<mark_with_block_num, std::unique_ptr<task>>;
     using tasks_mark_type = std::map<tasks, tasks_ptr_type>;
@@ -105,6 +106,7 @@ private:
     void process_task(task&);
 
     data_service_factory_i& _services;
+    database_virtual_operations_emmiter_i& _vops;
     tasks_mark_type _tasks;
 };
 }

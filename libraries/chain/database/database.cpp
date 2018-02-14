@@ -79,7 +79,8 @@ database::database()
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
-    , database_ns::tasks_registry(static_cast<data_service_factory&>(*this))
+    , database_ns::tasks_registry(static_cast<data_service_factory&>(*this),
+                                  static_cast<database_virtual_operations_emmiter_i&>(*this))
     , _my(new database_impl(*this))
 {
 }
@@ -1342,55 +1343,6 @@ void database::process_comments_cashout()
     });
 }
 
-/**
- *  This method pays out vesting and reward shares every block, and liquidity shares once per day.
- *  This method does not pay out witnesses.
- */
-void database::process_funds()
-{
-    dbs_account& account_service = obtain_service<dbs_account>();
-    dbs_reward& reward_service = obtain_service<dbs_reward>();
-    dbs_budget& budget_service = obtain_service<dbs_budget>();
-
-    const auto& props = get_dynamic_global_properties();
-    const auto& rf = get_reward_fund();
-
-    // We don't have inflation.
-    // We just get per block reward from reward pool and expect that after initial supply is handed out(fund budget is
-    // over) reward budgets will be created by our users.
-
-    asset budgets_reward = asset(0, SCORUM_SYMBOL);
-    for (const budget_object& budget : budget_service.get_budgets())
-    {
-        budgets_reward += budget_service.allocate_cash(budget);
-    }
-    reward_service.increase_pool_ballance(budgets_reward);
-
-    auto total_block_reward = reward_service.take_block_reward();
-    // clang-format off
-    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol());
-    auto witness_reward = total_block_reward - content_reward; /// Remaining 5% to witness pay
-
-    modify(rf, [&](reward_fund_object& rfo) {
-        rfo.reward_balance += content_reward;
-    });
-    
-    modify(props, [&](dynamic_global_property_object& p) {
-        p.circulating_capital += total_block_reward;
-    });
-    // clang-format on
-
-    const auto& cwit = get_witness(props.current_witness);
-
-    if (cwit.schedule != witness_object::top20 && cwit.schedule != witness_object::timeshare)
-    {
-        wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
-    }
-
-    const auto producer_reward = account_service.create_vesting(get_account(cwit.owner), witness_reward);
-    push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
-}
-
 void database::account_recovery_processing()
 {
     // Clear expired recovery requests
@@ -1829,7 +1781,6 @@ void database::_apply_block(const signed_block& next_block)
 
         process_tasks(_current_block_num);
 
-        process_funds(); //(- process_tasks)
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
         process_comments_cashout(); //(- process_tasks)

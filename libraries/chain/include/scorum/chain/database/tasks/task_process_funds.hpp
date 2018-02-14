@@ -13,7 +13,7 @@ struct task_process_funds_impl : public task
         return task_process_funds;
     }
 
-    virtual void apply(data_service_factory_i& services);
+    virtual void apply(data_service_factory_i& services, database_virtual_operations_emmiter_i& vops);
 };
 }
 }

@@ -13,7 +13,7 @@ struct task_process_comments_cashout_impl : public task
         return task_process_comments_cashout;
     }
 
-    virtual void apply(data_service_factory_i& services);
+    virtual void apply(data_service_factory_i& services, database_virtual_operations_emmiter_i& vops);
 };
 }
 }

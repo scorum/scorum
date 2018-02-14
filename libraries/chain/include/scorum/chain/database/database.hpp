@@ -15,6 +15,7 @@
 #include <scorum/chain/services/dbservice_dbs_factory.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
+#include <scorum/chain/database/database_virtual_operations.hpp>
 #include <scorum/chain/database/tasks/tasks.hpp>
 
 #include <fc/signals.hpp>
@@ -44,7 +45,8 @@ struct genesis_state_type;
 class database : public chainbase::database,
                  public dbservice_dbs_factory,
                  public data_service_factory,
-                 public database_ns::tasks_registry
+                 public database_ns::tasks_registry,
+                 public database_virtual_operations_emmiter_i
 {
 
 public:
@@ -304,7 +306,6 @@ public:
     share_type pay_curators(const comment_object& c, share_type& max_rewards);
     share_type pay_for_comment(const share_type& reward, const comment_object& comment);
     void process_comments_cashout();
-    void process_funds();
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();
