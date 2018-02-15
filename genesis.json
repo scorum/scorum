@@ -54,6 +54,8 @@
 
   "rewards_supply": "21024.000000000 SCR",
 
+  "dev_supply": "100.000000000 SP",
+
   "registration_supply": "10000.000000000 SCR",
   "registration_bonus": "0.000000100 SCR",
   "registration_committee": ["alice", "bob"],

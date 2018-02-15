@@ -80,8 +80,11 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
 
     authority owner;
-    owner.add_authority(memo_key, 1);
-    owner.weight_threshold = 1;
+    if (memo_key != public_key_type())
+    {
+        owner.add_authority(memo_key, 1);
+        owner.weight_threshold = 1;
+    }
     const auto& new_account
         = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
 
@@ -610,13 +613,16 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
 #endif
     });
 
-    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = new_account_name;
-        auth.owner = owner;
-        auth.active = active;
-        auth.posting = posting;
-        auth.last_owner_update = fc::time_point_sec::min();
-    });
+    if (memo_key != public_key_type())
+    {
+        db_impl().create<account_authority_object>([&](account_authority_object& auth) {
+            auth.account = new_account_name;
+            auth.owner = owner;
+            auth.active = active;
+            auth.posting = posting;
+            auth.last_owner_update = fc::time_point_sec::min();
+        });
+    }
 
     return new_account;
 }

@@ -24,6 +24,7 @@
 #include <scorum/chain/genesis/initializators/steemit_bounty_account_initializator.hpp>
 #include <scorum/chain/genesis/initializators/witness_schedule_initializator.hpp>
 #include <scorum/chain/genesis/initializators/witnesses_initializator.hpp>
+#include <scorum/chain/genesis/initializators/dev_pool_initializator.hpp>
 
 #include <fc/io/json.hpp>
 
@@ -93,6 +94,7 @@ db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& ge
     genesis::steemit_bounty_account_initializator_impl steemit_bounty_account_initializator;
     genesis::witness_schedule_initializator_impl witness_schedule_initializator;
     genesis::witnesses_initializator_impl witnesses_initializator;
+    genesis::dev_pool_initializator_impl dev_pool_initializator;
 
     genesis::initializator_context ctx(db, genesis_state);
 
@@ -104,6 +106,7 @@ db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& ge
     steemit_bounty_account_initializator.after(accounts_initializator).apply(ctx);
     registration_bonus_initializator.after(registration_initializator).after(accounts_initializator).apply(ctx);
     witness_schedule_initializator.after(witnesses_initializator).apply(ctx);
+    dev_pool_initializator.after(global_property_initializator).apply(ctx);
 }
 
 } // namespace chain
