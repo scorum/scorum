@@ -28,6 +28,5 @@ target_link_libraries(common_test
                       fc
                       ${PLATFORM_SPECIFIC_LIBS}
                       )
-target_include_directories(common_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}",
-                                              "../ucommon")
+target_include_directories(common_test PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

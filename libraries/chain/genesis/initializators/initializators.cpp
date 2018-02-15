@@ -14,65 +14,31 @@ initializator_context::initializator_context(data_service_factory_i& _services,
 {
 }
 
-initializators_registry::initializators_registry(data_service_factory_i& services,
-                                                 const genesis_state_type& genesis_state)
-    : _services(services)
-    , _genesis_state(genesis_state)
+initializator& initializator::after(initializator& impl)
 {
+    _after.push_back(std::ref(impl));
+    return *this;
 }
 
-namespace {
-
-using recursive_lock_memo_type = std::map<initializators, mark>;
-
-class recursive_lock_type
+void initializator::apply(initializator_context& ctx)
 {
-public:
-    explicit recursive_lock_type(initializators t)
-        : _t(t)
+    if (_applied)
+        return;
+
+    _applied = true;
+
+    for (initializator& r : _after)
     {
-        FC_ASSERT(!_locks[t], "Initializator ${1} already locked. Re-entry detected.", ("1", t));
-        _locks[_t] = true;
+        r.apply(ctx);
     }
 
-    ~recursive_lock_type()
-    {
-        _locks[_t] = false;
-    }
+    auto impl = boost::typeindex::type_id_runtime(*this).pretty_name();
 
-private:
-    initializators _t;
-    static recursive_lock_memo_type _locks;
-};
+    dlog("Genesis ${impl} is processing.", ("impl", impl));
 
-recursive_lock_memo_type recursive_lock_type::_locks = recursive_lock_memo_type();
-}
+    on_apply(ctx);
 
-void initializators_registry::init(initializators t)
-{
-    recursive_lock_type lock(t);
-
-    initializators_mark_type::iterator it = _initializators.find(t);
-    FC_ASSERT(_initializators.end() != it, "Initializator ${1} is not registered.", ("1", t));
-
-    initializators_ptr_type& _initializator = it->second;
-    if (!_initializator.first)
-    {
-        const auto& pinitializator = _initializator.second;
-        for (initializators t_reqired : pinitializator->get_reqired_types())
-        {
-            init(t_reqired);
-        }
-
-        dlog("Genesis ${1} is processing.", ("1", t));
-
-        initializator_context ctx(_services, _genesis_state);
-        pinitializator->apply(ctx);
-
-        dlog("Genesis ${1} is done.", ("1", t));
-
-        _initializator.first = true;
-    }
+    dlog("Genesis ${impl} is done.", ("impl", impl));
 }
 }
 }

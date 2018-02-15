@@ -1,14 +1,13 @@
 #pragma once
 
 #include <scorum/chain/genesis/genesis_state.hpp>
-#include <scorum/chain/genesis/initializators/initializators.hpp>
 
 namespace scorum {
 namespace chain {
 
 class database;
 
-class db_genesis : public genesis::initializators_registry
+class db_genesis
 {
 public:
     db_genesis(db_genesis const&) = delete;

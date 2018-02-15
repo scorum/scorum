@@ -12,7 +12,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void registration_bonus_initializator_impl::apply(initializator_context& ctx)
+void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
 {
     registration_pool_service_i& registration_pool_service = ctx.services.registration_pool_service();
 

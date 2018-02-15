@@ -10,7 +10,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void registration_initializator_impl::apply(initializator_context& ctx)
+void registration_initializator_impl::on_apply(initializator_context& ctx)
 {
     if (!is_registration_pool_exists(ctx))
     {

@@ -14,4 +14,3 @@ target_link_libraries(plugin_tests
                       scorum_egenesis_none
                       )
 target_include_directories(plugin_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-

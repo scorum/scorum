@@ -9,7 +9,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void global_property_initializator_impl::apply(initializator_context& ctx)
+void global_property_initializator_impl::on_apply(initializator_context& ctx)
 {
     dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
 

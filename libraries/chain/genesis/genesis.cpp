@@ -14,17 +14,16 @@
 #include <scorum/chain/schema/reward_pool_object.hpp>
 
 #include <scorum/chain/genesis/genesis.hpp>
-#include <scorum/chain/genesis/initializators/accounts_initializator.hpp>
 
 #include <scorum/chain/genesis/initializators/accounts_initializator.hpp>
 #include <scorum/chain/genesis/initializators/founders_initializator.hpp>
-#include <scorum/chain/genesis/initializators/witnesses_initializator.hpp>
-#include <scorum/chain/genesis/initializators/registration_initializator.hpp>
-#include <scorum/chain/genesis/initializators/registration_bonus_initializator.hpp>
-#include <scorum/chain/genesis/initializators/rewards_initializator.hpp>
-#include <scorum/chain/genesis/initializators/witness_schedule_initializator.hpp>
 #include <scorum/chain/genesis/initializators/global_property_initializator.hpp>
+#include <scorum/chain/genesis/initializators/registration_bonus_initializator.hpp>
+#include <scorum/chain/genesis/initializators/registration_initializator.hpp>
+#include <scorum/chain/genesis/initializators/rewards_initializator.hpp>
 #include <scorum/chain/genesis/initializators/steemit_bounty_account_initializator.hpp>
+#include <scorum/chain/genesis/initializators/witness_schedule_initializator.hpp>
+#include <scorum/chain/genesis/initializators/witnesses_initializator.hpp>
 
 #include <fc/io/json.hpp>
 
@@ -82,29 +81,29 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 }
 
 db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
-    : genesis::initializators_registry(db, genesis_state)
-    , _db(db)
+    : _db(db)
     , _genesis_state(genesis_state)
 {
-    register_initializator(new genesis::accounts_initializator_impl);
-    register_initializator(new genesis::founders_initializator_impl);
-    register_initializator(new genesis::witnesses_initializator_impl);
-    register_initializator(new genesis::registration_initializator_impl);
-    register_initializator(new genesis::registration_bonus_initializator_impl);
-    register_initializator(new genesis::global_property_initializator_impl);
-    register_initializator(new genesis::witness_schedule_initializator_impl);
-    register_initializator(new genesis::rewards_initializator_impl);
-    register_initializator(new genesis::steemit_bounty_account_initializator_impl);
+    genesis::accounts_initializator_impl accounts_initializator;
+    genesis::founders_initializator_impl founders_initializator;
+    genesis::global_property_initializator_impl global_property_initializator;
+    genesis::registration_bonus_initializator_impl registration_bonus_initializator;
+    genesis::registration_initializator_impl registration_initializator;
+    genesis::rewards_initializator_impl rewards_initializator;
+    genesis::steemit_bounty_account_initializator_impl steemit_bounty_account_initializator;
+    genesis::witness_schedule_initializator_impl witness_schedule_initializator;
+    genesis::witnesses_initializator_impl witnesses_initializator;
 
-    init(genesis::accounts_initializator);
-    init(genesis::founders_initializator);
-    init(genesis::witnesses_initializator);
-    init(genesis::registration_initializator);
-    init(genesis::registration_bonus_initializator);
-    init(genesis::global_property_initializator);
-    init(genesis::witness_schedule_initializator);
-    init(genesis::rewards_initializator);
-    init(genesis::steemit_bounty_account_initializator);
+    genesis::initializator_context ctx(db, genesis_state);
+
+    accounts_initializator.after(global_property_initializator).apply(ctx);
+    rewards_initializator.after(global_property_initializator).apply(ctx);
+    founders_initializator.after(accounts_initializator).apply(ctx);
+    witnesses_initializator.after(accounts_initializator).apply(ctx);
+    registration_initializator.after(accounts_initializator).apply(ctx);
+    steemit_bounty_account_initializator.after(accounts_initializator).apply(ctx);
+    registration_bonus_initializator.after(registration_initializator).after(accounts_initializator).apply(ctx);
+    witness_schedule_initializator.after(witnesses_initializator).apply(ctx);
 }
 
 } // namespace chain

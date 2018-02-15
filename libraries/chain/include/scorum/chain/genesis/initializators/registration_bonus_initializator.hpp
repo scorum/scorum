@@ -12,17 +12,7 @@ using scorum::protocol::asset;
 
 struct registration_bonus_initializator_impl : public initializator
 {
-    virtual initializators get_type() const
-    {
-        return registration_bonus_initializator;
-    }
-
-    virtual initializators_reqired_type get_reqired_types() const
-    {
-        return { accounts_initializator, registration_initializator };
-    }
-
-    virtual void apply(initializator_context&);
+    virtual void on_apply(initializator_context&);
 
 private:
     asset allocate_cash(initializator_context&);

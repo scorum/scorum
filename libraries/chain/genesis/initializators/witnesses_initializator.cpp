@@ -15,7 +15,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void witnesses_initializator_impl::apply(initializator_context& ctx)
+void witnesses_initializator_impl::on_apply(initializator_context& ctx)
 {
     account_service_i& account_service = ctx.services.account_service();
     witness_service_i& witness_service = ctx.services.witness_service();
