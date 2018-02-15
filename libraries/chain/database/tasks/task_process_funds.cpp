@@ -19,8 +19,9 @@ namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
 
-void task_process_funds_impl::apply(data_service_factory_i& services, database_virtual_operations_emmiter_i& vops)
+void task_process_funds_impl::apply(task_context& ctx)
 {
+    data_service_factory_i& services = ctx.services;
     account_service_i& account_service = services.account_service();
     reward_service_i& reward_service = services.reward_service();
     budget_service_i& budget_service = services.budget_service();
@@ -60,7 +61,7 @@ void task_process_funds_impl::apply(data_service_factory_i& services, database_v
 
     const auto producer_reward
         = account_service.create_vesting(account_service.get_account(cwit.owner), witness_reward);
-    vops.push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
+    ctx.push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 }
 }

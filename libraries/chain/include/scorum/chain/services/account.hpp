@@ -10,6 +10,8 @@ class account_authority_object;
 
 struct account_service_i
 {
+    virtual const account_object& get(const account_id_type&) const = 0;
+
     virtual const account_object& get_account(const account_name_type&) const = 0;
 
     virtual bool is_exists(const account_name_type&) const = 0;
@@ -83,6 +85,10 @@ struct account_service_i
     virtual void increase_received_vesting_shares(const account_object& account, const asset& amount) = 0;
     virtual void decrease_received_vesting_shares(const account_object& account, const asset& amount) = 0;
 
+    virtual void increase_posting_rewards(const account_object& account, const share_type& amount) = 0;
+
+    virtual void increase_curation_rewards(const account_object& account, const share_type& amount) = 0;
+
     virtual void drop_challenged(const account_object& account) = 0;
 
     virtual void prove_authority(const account_object& account, bool require_owner) = 0;
@@ -144,6 +150,8 @@ protected:
 
 public:
     static asset get_balance(const account_object& account, asset_symbol_type symbol);
+
+    virtual const account_object& get(const account_id_type&) const override;
 
     virtual const account_object& get_account(const account_name_type&) const override;
 
@@ -210,6 +218,10 @@ public:
 
     virtual void increase_received_vesting_shares(const account_object& account, const asset& amount) override;
     virtual void decrease_received_vesting_shares(const account_object& account, const asset& amount) override;
+
+    virtual void increase_posting_rewards(const account_object& account, const share_type& amount) override;
+
+    virtual void increase_curation_rewards(const account_object& account, const share_type& amount) override;
 
     virtual void drop_challenged(const account_object& account) override;
 

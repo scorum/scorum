@@ -287,11 +287,6 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    void adjust_total_payout(const comment_object& a,
-                             const asset& author_tokens,
-                             const asset& curation_tokens,
-                             const asset& beneficiary_value);
-
     asset get_balance(const account_object& a, asset_symbol_type symbol) const;
     asset get_balance(const std::string& aname, asset_symbol_type symbol) const
     {
@@ -303,9 +298,6 @@ public:
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
      */
     void process_vesting_withdrawals();
-    share_type pay_curators(const comment_object& c, share_type& max_rewards);
-    share_type pay_for_comment(const share_type& reward, const comment_object& comment);
-    void process_comments_cashout();
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();

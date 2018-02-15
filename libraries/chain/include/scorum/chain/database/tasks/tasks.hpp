@@ -7,11 +7,12 @@
 #include <map>
 #include <memory>
 
+#include <scorum/chain/database/database_virtual_operations.hpp>
+
 namespace scorum {
 namespace chain {
 
 class data_service_factory_i;
-class database_virtual_operations_emmiter_i;
 
 namespace database_ns {
 
@@ -66,6 +67,18 @@ private:
     bool _m = false;
 };
 
+struct task_context : public database_virtual_operations_emmiter_i
+{
+    explicit task_context(data_service_factory_i&, database_virtual_operations_emmiter_i&);
+
+    virtual void push_virtual_operation(const operation& op);
+
+    data_service_factory_i& services;
+
+private:
+    database_virtual_operations_emmiter_i& _vops;
+};
+
 struct task
 {
     virtual ~task()
@@ -74,7 +87,7 @@ struct task
 
     virtual tasks get_type() const = 0;
 
-    virtual void apply(data_service_factory_i&, database_virtual_operations_emmiter_i&) = 0;
+    virtual void apply(task_context&) = 0;
 };
 
 class tasks_registry

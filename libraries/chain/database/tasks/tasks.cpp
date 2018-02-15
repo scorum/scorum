@@ -1,11 +1,21 @@
 #include <scorum/chain/database/tasks/tasks.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
-#include <scorum/chain/database/database_virtual_operations.hpp>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
+
+task_context::task_context(data_service_factory_i& _services, database_virtual_operations_emmiter_i& vops)
+    : services(_services)
+    , _vops(vops)
+{
+}
+
+void task_context::push_virtual_operation(const operation& op)
+{
+    _vops.push_virtual_operation(op);
+}
 
 tasks_registry::tasks_registry(data_service_factory_i& services, database_virtual_operations_emmiter_i& vops)
     : _services(services)
@@ -42,7 +52,8 @@ void tasks_registry::process_task(task& task)
     auto t = task.get_type();
     dlog("Task ${1} is processing.", ("1", t));
 
-    task.apply(_services, _vops);
+    task_context ctx(_services, _vops);
+    task.apply(ctx);
 
     dlog("Task ${1} is done.", ("1", t));
 }
