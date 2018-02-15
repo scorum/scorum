@@ -137,7 +137,7 @@
 #define SCORUM_100_PERCENT                     10000
 #define SCORUM_1_PERCENT                       (SCORUM_100_PERCENT/100)
 #define SCORUM_1_TENTH_PERCENT                 (SCORUM_100_PERCENT/1000)
-#define SCORUM_PERCENT(X)                      (X*SCORUM_1_PERCENT)
+#define SCORUM_PERCENT(X)                      (uint16_t)(X*SCORUM_1_PERCENT)
 
 #define SCORUM_CONTENT_REWARD_PERCENT          (95*SCORUM_1_PERCENT)
 #define SCORUM_CURATION_REWARD_PERCENT         (25*SCORUM_1_PERCENT)

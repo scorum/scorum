@@ -26,7 +26,7 @@ struct genesis_initiate_accounts_fixture
 
     genesis_initiate_accounts_fixture()
     {
-        mocks.ExpectCall(pservices, data_service_factory_i::account_service).ReturnByRef(*paccount_service);
+        mocks.OnCall(pservices, data_service_factory_i::account_service).ReturnByRef(*paccount_service);
     }
 
     accounts_initializator_impl test_it;

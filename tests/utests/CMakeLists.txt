@@ -15,6 +15,7 @@ set( SOURCES
   atomicswap_check/atomicswap_helper_check.cpp
   proposal/proposal_create_evaluator_tests.cpp
   proposal_vote_operation_tests.cpp
+  genesis/initializator.cpp
   genesis/accounts.cpp
   genesis/founders.cpp
   serialization_tests.cpp
@@ -30,5 +31,4 @@ target_link_libraries(utests
                       scorum_egenesis_none
                       )
 target_include_directories(utests PUBLIC
-                           "${CMAKE_CURRENT_SOURCE_DIR}"
-                           "../ucommon")
+                           "${CMAKE_CURRENT_SOURCE_DIR}")

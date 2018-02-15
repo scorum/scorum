@@ -30,8 +30,8 @@ struct genesis_initiate_founders_fixture
 
     genesis_initiate_founders_fixture()
     {
-        mocks.ExpectCall(pservices, data_service_factory_i::account_service).ReturnByRef(*paccount_service);
-        mocks.ExpectCall(pservices, data_service_factory_i::dynamic_global_property_service).ReturnByRef(*pdgp_service);
+        mocks.OnCall(pservices, data_service_factory_i::account_service).ReturnByRef(*paccount_service);
+        mocks.OnCall(pservices, data_service_factory_i::dynamic_global_property_service).ReturnByRef(*pdgp_service);
     }
 
     founders_initializator_impl test_it;

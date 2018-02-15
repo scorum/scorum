@@ -16,13 +16,6 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-namespace {
-uint16_t get_percent(float sp_percent)
-{
-    return (uint16_t)SCORUM_PERCENT(sp_percent);
-}
-}
-
 void founders_initializator_impl::on_apply(initializator_context& ctx)
 {
     if (!is_founders_pool_exists(ctx))
@@ -64,7 +57,7 @@ void founders_initializator_impl::check_founders(initializator_context& ctx)
         FC_ASSERT(founder.sp_percent >= 0.f && founder.sp_percent <= 100.f,
                   "Founder 'sp_percent' should be in range [0, 100]. ${1} received.", ("1", founder.sp_percent));
 
-        total_sp_percent += get_percent(founder.sp_percent);
+        total_sp_percent += SCORUM_PERCENT(founder.sp_percent);
 
         FC_ASSERT(total_sp_percent <= (uint16_t)SCORUM_100_PERCENT, "Total 'sp_percent' more then 100%.");
     }
@@ -76,7 +69,7 @@ asset founders_initializator_impl::distribure_sp_by_percent(initializator_contex
     asset founders_supply_rest = ctx.genesis_state.founders_supply;
     for (auto& founder : ctx.genesis_state.founders)
     {
-        uint16_t percent = get_percent(founder.sp_percent);
+        uint16_t percent = SCORUM_PERCENT(founder.sp_percent);
 
         asset sp_bonus = ctx.genesis_state.founders_supply;
         sp_bonus.amount *= percent;
@@ -100,7 +93,7 @@ void founders_initializator_impl::distribure_sp_rest(initializator_context& ctx,
 {
     static const float sp_percent_limit_for_pitiful = 0.02f;
 
-    FC_ASSERT(rest.amount < ctx.genesis_state.founders_supply.amount * get_percent(sp_percent_limit_for_pitiful)
+    FC_ASSERT(rest.amount < ctx.genesis_state.founders_supply.amount * SCORUM_PERCENT(sp_percent_limit_for_pitiful)
                       / SCORUM_100_PERCENT,
               "Too big rest ${r} for single pitiful. There are many pitiful members in genesis maybe.", ("r", rest));
 
