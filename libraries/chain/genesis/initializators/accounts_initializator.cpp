@@ -16,7 +16,7 @@ namespace genesis {
 using scorum::protocol::asset;
 using scorum::protocol::share_value_type;
 
-void accounts_initializator_impl::apply(initializator_context& ctx)
+void accounts_initializator_impl::on_apply(initializator_context& ctx)
 {
     account_service_i& account_service = ctx.services.account_service();
 

@@ -11,7 +11,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void witness_schedule_initializator_impl::apply(initializator_context& ctx)
+void witness_schedule_initializator_impl::on_apply(initializator_context& ctx)
 {
     witness_service_i& witness_service = ctx.services.witness_service();
 

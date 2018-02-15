@@ -19,11 +19,11 @@ namespace genesis {
 namespace {
 uint16_t get_percent(float sp_percent)
 {
-    return (uint16_t)(sp_percent * SCORUM_1_PERCENT);
+    return (uint16_t)SCORUM_PERCENT(sp_percent);
 }
 }
 
-void founders_initializator_impl::apply(initializator_context& ctx)
+void founders_initializator_impl::on_apply(initializator_context& ctx)
 {
     if (!is_founders_pool_exists(ctx))
     {

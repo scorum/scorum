@@ -14,7 +14,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void rewards_initializator_impl::apply(initializator_context& ctx)
+void rewards_initializator_impl::on_apply(initializator_context& ctx)
 {
     FC_ASSERT(ctx.genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
 

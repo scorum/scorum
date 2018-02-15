@@ -15,7 +15,7 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-void steemit_bounty_account_initializator_impl::apply(initializator_context& ctx)
+void steemit_bounty_account_initializator_impl::on_apply(initializator_context& ctx)
 {
     if (!is_steemit_pool_exists(ctx))
     {

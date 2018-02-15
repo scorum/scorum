@@ -14,65 +14,50 @@ initializator_context::initializator_context(data_service_factory_i& _services,
 {
 }
 
-initializators_registry::initializators_registry(data_service_factory_i& services,
-                                                 const genesis_state_type& genesis_state)
-    : _services(services)
-    , _genesis_state(genesis_state)
+initializator& initializator::after(initializator& impl)
 {
+    _after.push_back(std::ref(impl));
+    return *this;
 }
 
 namespace {
-
-using recursive_lock_memo_type = std::map<initializators, mark>;
-
-class recursive_lock_type
+std::string get_short_name(const std::string& long_name)
 {
-public:
-    explicit recursive_lock_type(initializators t)
-        : _t(t)
+    static const std::string ns_separator("::");
+    std::string ret(long_name);
+    std::size_t pos = ret.rfind(ns_separator);
+    if (pos != std::string::npos)
     {
-        FC_ASSERT(!_locks[t], "Initializator ${1} already locked. Re-entry detected.", ("1", t));
-        _locks[_t] = true;
+        ret = ret.substr(pos + ns_separator.length());
     }
-
-    ~recursive_lock_type()
+    pos = ret.rfind('_');
+    if (pos != std::string::npos)
     {
-        _locks[_t] = false;
+        ret = ret.substr(0, pos);
     }
-
-private:
-    initializators _t;
-    static recursive_lock_memo_type _locks;
-};
-
-recursive_lock_memo_type recursive_lock_type::_locks = recursive_lock_memo_type();
+    return ret;
+}
 }
 
-void initializators_registry::init(initializators t)
+void initializator::apply(initializator_context& ctx)
 {
-    recursive_lock_type lock(t);
+    if (_applied)
+        return;
 
-    initializators_mark_type::iterator it = _initializators.find(t);
-    FC_ASSERT(_initializators.end() != it, "Initializator ${1} is not registered.", ("1", t));
+    _applied = true;
 
-    initializators_ptr_type& _initializator = it->second;
-    if (!_initializator.first)
+    for (initializator& r : _after)
     {
-        const auto& pinitializator = _initializator.second;
-        for (initializators t_reqired : pinitializator->get_reqired_types())
-        {
-            init(t_reqired);
-        }
-
-        dlog("Genesis ${1} is processing.", ("1", t));
-
-        initializator_context ctx(_services, _genesis_state);
-        pinitializator->apply(ctx);
-
-        dlog("Genesis ${1} is done.", ("1", t));
-
-        _initializator.first = true;
+        r.apply(ctx);
     }
+
+    auto impl = get_short_name(boost::typeindex::type_id_runtime(*this).pretty_name());
+
+    dlog("Genesis ${impl} is processing.", ("impl", impl));
+
+    on_apply(ctx);
+
+    dlog("Genesis ${impl} is done.", ("impl", impl));
 }
 }
 }
