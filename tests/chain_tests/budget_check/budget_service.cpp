@@ -7,7 +7,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 
-#include "database_fixture.hpp"
+#include "budget_check_common.hpp"
 
 #include <limits>
 
@@ -19,13 +19,13 @@ using namespace scorum::protocol;
 // usage for all budget tests 'chain_test  -t budget_*'
 //
 
-class budget_service_check_fixture : public timed_blocks_database_fixture
+class budget_service_check_fixture : public budget_check_fixture
 {
 public:
     budget_service_check_fixture()
         : budget_service(db.obtain_service<dbs_budget>())
         , account_service(db.obtain_service<dbs_account>())
-        , public_key(database_fixture::generate_private_key("user private key").get_public_key())
+        , public_key(database_integration_fixture::generate_private_key("user private key").get_public_key())
         , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
                                               TEST_INIT_DELEGATE_NAME,
                                               public_key,

@@ -1,4 +1,5 @@
 add_subdirectory(hippomocks)
+add_subdirectory( ucommon )
 add_subdirectory( utests )
 add_subdirectory( common )
 add_subdirectory( chain_tests )

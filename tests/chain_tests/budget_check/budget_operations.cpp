@@ -8,7 +8,7 @@
 
 #include <scorum/chain/schema/budget_object.hpp>
 
-#include "database_fixture.hpp"
+#include "budget_check_common.hpp"
 
 #include <limits>
 
@@ -21,7 +21,7 @@ using fc::string;
 // usage for all budget tests 'chain_test  -t budget_*'
 //
 
-class budget_operation_check_fixture : public timed_blocks_database_fixture
+class budget_operation_check_fixture : public budget_check_fixture
 {
 public:
     budget_operation_check_fixture()

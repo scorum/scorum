@@ -11,7 +11,7 @@
 
 #include <fc/time.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -22,13 +22,13 @@ using fc::string;
 // usage for all budget tests 'chain_test  -t atomicswap_*'
 //
 
-class atomicswap_service_check_fixture : public timed_blocks_database_fixture
+class atomicswap_service_check_fixture : public database_default_integration_fixture
 {
 public:
     atomicswap_service_check_fixture()
         : atomicswap_service(db.obtain_service<dbs_atomicswap>())
         , account_service(db.obtain_service<dbs_account>())
-        , public_key(database_fixture::generate_private_key("user private key").get_public_key())
+        , public_key(database_integration_fixture::generate_private_key("user private key").get_public_key())
         , alice(account_service.create_account(
               "alice", "initdelegate", public_key, "", authority(), authority(), authority(), ASSET_NULL_SCR))
         , bob(account_service.create_account(

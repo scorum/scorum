@@ -4,21 +4,16 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 namespace scorum {
 namespace chain {
 
-private_key_type generate_private_key(const std::string& str)
-{
-    return private_key_type::regenerate(fc::sha256::hash(std::string(str)));
-}
-
-class create_account_with_data_service_fixture : public clean_database_fixture
+class create_account_with_data_service_fixture : public database_default_integration_fixture
 {
 public:
     create_account_with_data_service_fixture()
-        : public_key(generate_private_key("user private key").get_public_key())
+        : public_key(database_integration_fixture::generate_private_key("user private key").get_public_key())
         , data_service(db.obtain_service<dbs_account>())
     {
     }

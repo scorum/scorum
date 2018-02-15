@@ -28,6 +28,11 @@ bool dbs_witness::is_exists(const account_name_type& name) const
     return nullptr != db_impl().find<witness_object, by_name>(name);
 }
 
+const witness_schedule_object& dbs_witness::create_witness_schedule(const modifier_type& modifier)
+{
+    return db_impl().create<witness_schedule_object>([&](witness_schedule_object& o) { modifier(o); });
+}
+
 const witness_schedule_object& dbs_witness::get_witness_schedule_object() const
 {
     try
@@ -35,6 +40,11 @@ const witness_schedule_object& dbs_witness::get_witness_schedule_object() const
         return db_impl().get<witness_schedule_object>();
     }
     FC_CAPTURE_AND_RETHROW()
+}
+
+bool dbs_witness::is_exists() const
+{
+    return nullptr != db_impl().find<witness_schedule_object>();
 }
 
 const witness_object& dbs_witness::get_top_witness() const
@@ -54,12 +64,33 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
 
     const auto& dprops = db_impl().get_dynamic_global_properties();
 
-    const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
-        w.owner = owner;
+    const auto& new_witness = create_internal(owner, block_signing_key);
+
+    db_impl().modify(new_witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
-        w.signing_key = block_signing_key;
         w.created = dprops.time;
         w.proposed_chain_props = props;
+    });
+
+    return new_witness;
+}
+
+const witness_object& dbs_witness::create_initial_witness(const account_name_type& owner,
+                                                          const public_key_type& block_signing_key)
+{
+    const auto& new_witness = create_internal(owner, block_signing_key);
+
+    db_impl().modify(new_witness, [&](witness_object& w) { w.schedule = witness_object::top20; });
+
+    return new_witness;
+}
+
+const witness_object& dbs_witness::create_internal(const account_name_type& owner,
+                                                   const public_key_type& block_signing_key)
+{
+    const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
+        w.owner = owner;
+        w.signing_key = block_signing_key;
         w.hardfork_time_vote = db_impl().get_genesis_time();
     });
 
