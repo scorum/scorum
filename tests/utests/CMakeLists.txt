@@ -15,22 +15,24 @@ set( SOURCES
   atomicswap_check/atomicswap_helper_check.cpp
   proposal/proposal_create_evaluator_tests.cpp
   proposal_vote_operation_tests.cpp
+  genesis/initializator.cpp
+  genesis/accounts.cpp
+  genesis/founders.cpp
+  serialization_tests.cpp
+  signed_transaction_serialization_tests.cpp
 )
 
 add_executable(utests
               ${SOURCES}
               ${HEADERS})
 target_link_libraries(utests
-                      HippoMocks
-                      chainbase
-                      scorum_chain
-                      scorum_protocol
+                      ucommon_test
                       scorum_app
                       scorum_egenesis_none
-                      cli
-                      fc
-                      ${PLATFORM_SPECIFIC_LIBS}
                       )
 target_include_directories(utests PUBLIC
-                           "${CMAKE_CURRENT_SOURCE_DIR}"
-                           "../common")
+                           "${CMAKE_CURRENT_SOURCE_DIR}")
+
+if(UNIX)
+    set_source_files_properties( genesis/initializator.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
+endif(UNIX)

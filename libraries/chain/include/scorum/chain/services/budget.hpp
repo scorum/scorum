@@ -15,6 +15,8 @@ struct budget_service_i
 {
     using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
 
+    virtual bool is_fund_exists() const = 0;
+
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budget_refs_type get_budgets() const = 0;
@@ -43,6 +45,8 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
+    bool is_fund_exists() const override;
+
     /** Lists all budget owners.
      *
      *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.

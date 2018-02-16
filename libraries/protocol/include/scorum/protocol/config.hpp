@@ -13,6 +13,8 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
+#define SCORUM_BLOCKID_POOL_SIZE 0xffff
+
 #define SCORUM_CURRENCY_PRECISION  9
 
 // SCORUM = SCR with 3 digits of precision
@@ -101,7 +103,6 @@
 #define SCORUM_BLOCKS_PER_YEAR                 (365*24*60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_BLOCKS_PER_DAY                  (24*60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_BLOCKS_PER_HOUR                 (60*60/SCORUM_BLOCK_INTERVAL)
-#define SCORUM_START_VESTING_BLOCK             (SCORUM_BLOCKS_PER_DAY * 7)
 #define SCORUM_START_MINER_VOTING_BLOCK        (SCORUM_BLOCKS_PER_DAY * 30)
 
 #define SCORUM_NUM_INIT_DELEGATES              1
@@ -135,7 +136,7 @@
 #define SCORUM_100_PERCENT                     10000
 #define SCORUM_1_PERCENT                       (SCORUM_100_PERCENT/100)
 #define SCORUM_1_TENTH_PERCENT                 (SCORUM_100_PERCENT/1000)
-#define SCORUM_PERCENT(X)                      (X*SCORUM_1_PERCENT)
+#define SCORUM_PERCENT(X)                      (uint16_t)(X*SCORUM_1_PERCENT)
 
 #define SCORUM_CONTENT_REWARD_PERCENT          (95*SCORUM_1_PERCENT)
 #define SCORUM_CURATION_REWARD_PERCENT         (25*SCORUM_1_PERCENT)

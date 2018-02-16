@@ -27,7 +27,6 @@
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
-#include <scorum/chain/schema/block_summary_object.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -182,14 +181,15 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 void account_create_by_committee_evaluator::do_apply(const account_create_by_committee_operation& o)
 {
     account_service_i& account_service = db().account_service();
+    registration_pool_service_i& registration_pool_service = db().registration_pool_service();
+    registration_committee_service_i& registration_committee_service = db().registration_committee_service();
 
     account_service.check_account_existence(o.creator);
 
-    registration_committee_service_i& registration_committee_service = db().registration_committee_service();
+    FC_ASSERT(registration_pool_service.is_exists(), "Registration pool is exhausted.");
+
     FC_ASSERT(registration_committee_service.is_exists(o.creator), "Account '${1}' is not committee member.",
               ("1", o.creator));
-
-    registration_pool_service_i& registration_pool_service = db().registration_pool_service();
 
     asset bonus = registration_pool_service.allocate_cash(o.creator);
 

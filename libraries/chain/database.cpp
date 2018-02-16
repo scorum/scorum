@@ -18,7 +18,7 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
@@ -267,7 +267,7 @@ block_id_type database::find_block_id_for_num(uint32_t block_num) const
 
         // Reversible blocks are *usually* in the TAPOS buffer.  Since this
         // is the fastest check, we do it first.
-        block_summary_id_type bsid = block_num & 0xFFFF;
+        block_summary_id_type bsid = block_num & SCORUM_BLOCKID_POOL_SIZE;
         const block_summary_object* bs = find<block_summary_object, by_id>(bsid);
         if (bs != nullptr)
         {
@@ -2009,7 +2009,7 @@ void database::create_block_summary(const signed_block& next_block)
 {
     try
     {
-        block_summary_id_type sid(next_block.block_num() & 0xffff);
+        block_summary_id_type sid(next_block.block_num() & SCORUM_BLOCKID_POOL_SIZE);
         modify(get<block_summary_object>(sid), [&](block_summary_object& p) { p.block_id = next_block.id(); });
     }
     FC_CAPTURE_AND_RETHROW()
@@ -2392,79 +2392,6 @@ void database::validate_invariants() const
     FC_CAPTURE_LOG_AND_RETHROW((head_block_num()));
 }
 
-void database::retally_comment_children()
-{
-    const auto& cidx = get_index<comment_index>().indices();
-
-    // Clear children counts
-    for (auto itr = cidx.begin(); itr != cidx.end(); ++itr)
-    {
-        modify(*itr, [&](comment_object& c) { c.children = 0; });
-    }
-
-    for (auto itr = cidx.begin(); itr != cidx.end(); ++itr)
-    {
-        if (itr->parent_author != SCORUM_ROOT_POST_PARENT)
-        {
-// Low memory nodes only need immediate child count, full nodes track total children
-#ifdef IS_LOW_MEM
-            modify(get_comment(itr->parent_author, itr->parent_permlink), [&](comment_object& c) { c.children++; });
-#else
-            const comment_object* parent = &get_comment(itr->parent_author, itr->parent_permlink);
-            while (parent)
-            {
-                modify(*parent, [&](comment_object& c) { c.children++; });
-
-                if (parent->parent_author != SCORUM_ROOT_POST_PARENT)
-                {
-                    parent = &get_comment(parent->parent_author, parent->parent_permlink);
-                }
-                else
-                {
-                    parent = nullptr;
-                }
-            }
-#endif
-        }
-    }
-}
-
-void database::retally_witness_votes()
-{
-    dbs_witness& witness_service = obtain_service<dbs_witness>();
-
-    const auto& witness_idx = get_index<witness_index>().indices();
-
-    // Clear all witness votes
-    for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
-    {
-        modify(*itr, [&](witness_object& w) {
-            w.votes = 0;
-            w.virtual_position = 0;
-        });
-    }
-
-    const auto& account_idx = get_index<account_index>().indices();
-
-    // Apply all existing votes by account
-    for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
-    {
-        if (itr->proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
-        {
-            continue;
-        }
-
-        const auto& a = *itr;
-
-        const auto& vidx = get_index<witness_vote_index>().indices().get<by_account_witness>();
-        auto wit_itr = vidx.lower_bound(boost::make_tuple(a.id, witness_id_type()));
-        while (wit_itr != vidx.end() && wit_itr->account == a.id)
-        {
-            witness_service.adjust_witness_vote(get(wit_itr->witness), a.witness_vote_weight());
-            ++wit_itr;
-        }
-    }
-}
 } // namespace chain
 } // namespace scorum
 

@@ -2,6 +2,7 @@
 #include <scorum/chain/database.hpp>
 
 #include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 namespace scorum {
 namespace chain {
@@ -9,6 +10,16 @@ namespace chain {
 dbs_reward::dbs_reward(database& db)
     : _base_type(db)
 {
+}
+
+const reward_fund_object& dbs_reward::create_fund(const modifier_type& modifier)
+{
+    return db_impl().create<reward_fund_object>([&](reward_fund_object& o) { modifier(o); });
+}
+
+bool dbs_reward::is_fund_exists() const
+{
+    return nullptr != db_impl().find<reward_fund_object>();
 }
 
 const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
@@ -28,6 +39,11 @@ const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
         rp.current_per_block_reward = initial_per_block_reward;
     });
     // clang-format on
+}
+
+bool dbs_reward::is_pool_exists() const
+{
+    return nullptr != db_impl().find<reward_pool_object>();
 }
 
 const reward_pool_object& dbs_reward::get_pool() const

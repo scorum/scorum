@@ -9,7 +9,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
 
 #include <string>
 #include <map>
@@ -18,7 +18,7 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-BOOST_FIXTURE_TEST_SUITE(comment_beneficiaries_tests, clean_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(comment_beneficiaries_tests, database_default_integration_fixture)
 
 struct comment_benefactor_reward_visitor
 {

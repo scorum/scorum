@@ -52,18 +52,6 @@ namespace bpo = boost::program_options;
 using protocol::signed_transaction;
 using chain::account_object;
 
-void new_chain_banner(const scorum::chain::database& db)
-{
-    const std::string welcome = "Welcome to Scorum!";
-    const std::string info_ch = "NEW CHAIN";
-
-    std::cerr << info_ch;
-    std::cerr << std::endl;
-    std::cerr << welcome;
-    std::cerr << std::endl;
-    return;
-}
-
 namespace detail {
 using namespace scorum::chain;
 
@@ -468,7 +456,6 @@ void witness_plugin::plugin_startup()
     try
     {
         ilog("witness plugin:  plugin_startup() begin");
-        chain::database& d = database();
 
         if (!_witnesses.empty())
         {
@@ -477,10 +464,6 @@ void witness_plugin::plugin_startup()
             app().set_block_production(true);
             if (_production_enabled)
             {
-                if (d.head_block_num() == 0)
-                {
-                    new_chain_banner(d);
-                }
                 _production_skip_flags |= scorum::chain::database::skip_undo_history_check;
             }
             schedule_production_loop();

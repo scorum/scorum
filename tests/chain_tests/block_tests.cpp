@@ -30,7 +30,7 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 
 #include <scorum/account_history/account_history_plugin.hpp>
@@ -39,7 +39,33 @@
 
 #include <fc/crypto/digest.hpp>
 
-#include "database_fixture.hpp"
+#include "database_default_integration.hpp"
+#include "database_integration.hpp"
+
+namespace {
+
+using namespace scorum::chain;
+using namespace scorum::protocol;
+
+bool test_push_block(database& db, const signed_block& b, uint32_t skip_flags = 0)
+{
+    return db.push_block(b, skip_flags);
+}
+
+void test_push_transaction(database& db, const signed_transaction& tx, uint32_t skip_flags = 0)
+{
+    try
+    {
+        db.push_transaction(tx, skip_flags);
+    }
+    FC_CAPTURE_AND_RETHROW((tx))
+}
+
+} // namespace test
+
+#define PUSH_TX test_push_transaction
+
+#define PUSH_BLOCK test_push_block
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -51,7 +77,7 @@ void db_setup_and_open(database& db, const fc::path& path)
 {
     genesis_state_type genesis;
 
-    genesis = test::init_genesis();
+    genesis = database_integration_fixture::create_default_genesis_state();
 
     db._log_hardforks = false;
     db.open(path, path, TEST_SHARED_MEM_SIZE_8MB, chainbase::database::read_write, genesis);
@@ -436,7 +462,7 @@ BOOST_AUTO_TEST_CASE(tapos)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(optional_tapos, clean_database_fixture)
+BOOST_FIXTURE_TEST_CASE(optional_tapos, database_default_integration_fixture)
 {
     try
     {
@@ -505,7 +531,7 @@ BOOST_FIXTURE_TEST_CASE(optional_tapos, clean_database_fixture)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(double_sign_check, clean_database_fixture)
+BOOST_FIXTURE_TEST_CASE(double_sign_check, database_default_integration_fixture)
 {
     try
     {
@@ -551,7 +577,7 @@ BOOST_FIXTURE_TEST_CASE(double_sign_check, clean_database_fixture)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
+BOOST_FIXTURE_TEST_CASE(pop_block_twice, database_default_integration_fixture)
 {
     try
     {
@@ -590,7 +616,7 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, clean_database_fixture)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, clean_database_fixture)
+BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, database_default_integration_fixture)
 {
     try
     {
@@ -692,12 +718,11 @@ BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, clean_database_fixture)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_FIXTURE_TEST_CASE(skip_block, clean_database_fixture)
+BOOST_FIXTURE_TEST_CASE(skip_block, database_default_integration_fixture)
 {
     try
     {
         BOOST_TEST_MESSAGE("Skipping blocks through db");
-        BOOST_REQUIRE(db.head_block_num() == 2);
 
         int init_block_num = db.head_block_num();
         int miss_blocks = fc::minutes(1).to_seconds() / SCORUM_BLOCK_INTERVAL;
@@ -719,7 +744,7 @@ BOOST_FIXTURE_TEST_CASE(skip_block, clean_database_fixture)
 
 /*
 
-BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
+BOOST_FIXTURE_TEST_CASE( hardfork_test, database_integration_fixture )
 {
    try
    {

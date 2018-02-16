@@ -22,6 +22,11 @@ const account_object& dbs_account::get_account(const account_name_type& name) co
     FC_CAPTURE_AND_RETHROW((name))
 }
 
+bool dbs_account::is_exists(const account_name_type& name) const
+{
+    return nullptr != db_impl().find<account_object, by_name>(name);
+}
+
 const account_authority_object& dbs_account::get_account_authority(const account_name_type& name) const
 {
     try

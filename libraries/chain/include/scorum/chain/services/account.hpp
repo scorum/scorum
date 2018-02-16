@@ -12,6 +12,8 @@ struct account_service_i
 {
     virtual const account_object& get_account(const account_name_type&) const = 0;
 
+    virtual bool is_exists(const account_name_type&) const = 0;
+
     virtual const account_authority_object& get_account_authority(const account_name_type&) const = 0;
 
     virtual void check_account_existence(const account_name_type&,
@@ -140,6 +142,8 @@ protected:
 
 public:
     virtual const account_object& get_account(const account_name_type&) const override;
+
+    virtual bool is_exists(const account_name_type&) const override;
 
     virtual const account_authority_object& get_account_authority(const account_name_type&) const override;
 

@@ -27,7 +27,7 @@
 
 #include <fc/crypto/sha256.hpp>
 #include <scorum/protocol/types.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 namespace scorum {
 namespace egenesis {

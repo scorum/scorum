@@ -4,7 +4,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
-#include "../common/database_fixture.hpp"
+#include "../common/database_trx_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -12,26 +12,33 @@ using namespace scorum::protocol;
 using namespace scorum::blockchain_statistics;
 using fc::string;
 
-struct stat_database_fixture : public database_fixture
+struct stat_database_fixture : public database_trx_integration_fixture
 {
     std::shared_ptr<scorum::blockchain_statistics::blockchain_statistics_plugin> db_stat;
 
     const char* alice = "alice";
     const char* bob = "bob";
 
-    stat_database_fixture(const genesis_state_type& external_genesis_state = genesis_state_type())
-        : database_fixture(external_genesis_state)
+    stat_database_fixture()
     {
         boost::program_options::variables_map options;
 
-        db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
+        // db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
         db_stat = app.register_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
 
-        db_plugin->logging = false;
-        db_plugin->plugin_initialize(options);
+        // db_plugin->logging = false;
+        // db_plugin->plugin_initialize(options);
         db_stat->plugin_initialize(options);
 
-        open_database();
+        genesis_state_type::registration_schedule_item single_stage{ 1u, 1u, 100u };
+        genesis_state_type genesis = database_integration_fixture::default_genesis_state()
+                                         .registration_supply(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK)
+                                         .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
+                                         .registration_schedule(single_stage)
+                                         .committee(TEST_INIT_DELEGATE_NAME)
+                                         .generate();
+
+        open_database(genesis);
         generate_block();
 
         vest(TEST_INIT_DELEGATE_NAME, 10000);
@@ -269,6 +276,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_finish_stat_test)
     for (int i = 0; i < SCORUM_VESTING_WITHDRAW_INTERVALS; ++i)
     {
         BOOST_REQUIRE_EQUAL(bucket.finished_vesting_withdrawals, orig_val);
+        BOOST_REQUIRE_EQUAL(bucket.vesting_withdrawals_processed, orig_val_processed + i);
         BOOST_REQUIRE_EQUAL(bucket.vesting_withdraw_rate_delta, orig_val_rate + 1);
 
         time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
