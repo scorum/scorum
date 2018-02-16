@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
             comment_operation com;
             com.author = author.name;
             com.permlink = "mypost";
-            com.parent_author = SCORUM_ROOT_POST_PARENT;
+            com.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
             com.parent_permlink = "test";
             com.title = "Hello from " + author.name;
             com.body = "Hello, my name is " + author.name;

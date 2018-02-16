@@ -343,7 +343,7 @@ void dbs_account::add_post(const account_object& author_account, const account_n
     time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(author_account, [&](account_object& a) {
-        if (parent_author_name == SCORUM_ROOT_POST_PARENT)
+        if (parent_author_name == SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             a.last_root_post = t;
         }

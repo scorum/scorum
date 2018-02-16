@@ -168,7 +168,7 @@ struct operation_visitor
 
     void operator()(const comment_operation& o) const
     {
-        if (o.parent_author != SCORUM_ROOT_POST_PARENT)
+        if (o.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             const auto& parent = _db.find_comment(o.parent_author, o.parent_permlink);
 

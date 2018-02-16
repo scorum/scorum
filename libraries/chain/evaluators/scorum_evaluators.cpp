@@ -269,7 +269,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     account_name_type parent_author = comment.parent_author;
     std::string parent_permlink = fc::to_string(comment.parent_permlink);
     /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
-    while (parent_author != SCORUM_ROOT_POST_PARENT)
+    while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
     {
         const comment_object& parent = comment_service.get(parent_author, parent_permlink);
 
@@ -372,7 +372,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
         account_name_type parent_author = o.parent_author;
         std::string parent_permlink = o.parent_permlink;
-        if (parent_author != SCORUM_ROOT_POST_PARENT)
+        if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             const comment_object& parent = comment_service.get(parent_author, parent_permlink);
             FC_ASSERT(parent.depth < SCORUM_MAX_COMMENT_DEPTH,
@@ -387,14 +387,14 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
         if (!comment_service.is_exists(o.author, o.permlink))
         {
-            if (parent_author != SCORUM_ROOT_POST_PARENT)
+            if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 FC_ASSERT(comment_service.get(parent.root_comment).allow_replies,
                           "The parent comment has disabled replies.");
             }
 
-            if (parent_author == SCORUM_ROOT_POST_PARENT)
+            if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 FC_ASSERT((now - auth.last_root_post) > SCORUM_MIN_ROOT_COMMENT_INTERVAL,
                           "You may only post once every 5 minutes.",
                           ("now", now)("last_root_post", auth.last_root_post));
@@ -415,7 +415,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
             uint16_t pr_depth = 0;
             std::string pr_category;
             comment_id_type pr_root_comment;
-            if (parent_author != SCORUM_ROOT_POST_PARENT)
+            if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 pr_parent_author = parent.author;
@@ -436,7 +436,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.max_cashout_time = fc::time_point_sec::maximum();
                 com.reward_weight = reward_weight;
 
-                if (parent_author == SCORUM_ROOT_POST_PARENT)
+                if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
                     com.parent_author = "";
                     fc::from_string(com.parent_permlink, parent_permlink);
@@ -468,7 +468,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
             });
 
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
-            while (parent_author != SCORUM_ROOT_POST_PARENT)
+            while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
 
@@ -493,7 +493,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.active = com.last_update;
                 strcmp_equal equal;
 
-                if (parent_author == SCORUM_ROOT_POST_PARENT)
+                if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
                     FC_ASSERT(com.parent_author == account_name_type(), "The parent of a comment cannot be changed.");
                     FC_ASSERT(equal(com.parent_permlink, parent_permlink), "The permlink of a comment cannot change.");

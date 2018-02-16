@@ -971,7 +971,7 @@ void database_api::set_pending_payout(discussion& d) const
         }
     }
 
-    if (d.parent_author != SCORUM_ROOT_POST_PARENT)
+    if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         d.cashout_time = my->_db.calculate_discussion_payout_time(my->_db.get<comment_object>(d.id));
 
     if (d.body.size() > 1024 * 128)
