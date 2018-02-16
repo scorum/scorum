@@ -1,7 +1,6 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/custom_operation_interpreter.hpp>
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/db_with.hpp>
@@ -1492,9 +1491,6 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_binary_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_evaluator>();
-    _my->_evaluator_registry.register_evaluator<custom_json_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
@@ -1523,24 +1519,6 @@ void database::initialize_evaluators()
                                     this->obtain_service<dbs_registration_committee>(),
                                     this->obtain_service<dbs_dynamic_global_property>()));
     //clang-format on
-}
-
-void database::set_custom_operation_interpreter(const std::string& id,
-                                                std::shared_ptr<custom_operation_interpreter> registry)
-{
-    bool inserted = _custom_operation_interpreters.emplace(id, registry).second;
-    // This assert triggering means we're mis-configured (multiple registrations of custom JSON evaluator for same ID)
-    FC_ASSERT(inserted);
-}
-
-std::shared_ptr<custom_operation_interpreter> database::get_custom_json_evaluator(const std::string& id)
-{
-    auto it = _custom_operation_interpreters.find(id);
-    if (it != _custom_operation_interpreters.end())
-    {
-        return it->second;
-    }
-    return std::shared_ptr<custom_operation_interpreter>();
 }
 
 void database::initialize_indexes()
@@ -2394,5 +2372,6 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
+
 
 
