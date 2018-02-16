@@ -133,6 +133,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.to_account);
     }
 
+    void operator()(const set_withdraw_vesting_route_to_dev_pool_operation& op)
+    {
+        _impacted.insert(op.from_account);
+    }
+
     void operator()(const account_witness_vote_operation& op)
     {
         _impacted.insert(op.account);

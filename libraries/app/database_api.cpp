@@ -4,12 +4,18 @@
 
 #include <scorum/protocol/get_config.hpp>
 
-#include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
+
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/withdraw_vesting_route.hpp>
+
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
+#include <scorum/chain/schema/withdraw_vesting_route_object.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -24,8 +30,6 @@
 #include <cfenv>
 #include <iostream>
 
-#include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/atomicswap.hpp>
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace scorum {
@@ -537,7 +541,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
             {
                 withdraw_route r;
                 r.from_account = account;
-                r.to_account = my->_db.get(route->to_account).name;
+                r.to_account = my->_db.get(route->to_object.as<account_id_type>()).name;
                 r.percent = route->percent;
                 r.auto_vest = route->auto_vest;
 
@@ -550,9 +554,9 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
         if (type == incoming || type == all)
         {
             const auto& by_dest = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_destination>();
-            auto route = by_dest.lower_bound(acc.id);
+            auto route = by_dest.lower_bound(withdraw_route_service::get_to_id(acc.id));
 
-            while (route != by_dest.end() && route->to_account == acc.id)
+            while (route != by_dest.end() && route->to_object.as<account_id_type>() == acc.id)
             {
                 withdraw_route r;
                 r.from_account = my->_db.get(route->from_account).name;

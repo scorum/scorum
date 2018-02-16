@@ -27,6 +27,7 @@
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/schema/withdraw_vesting_route_object.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -823,7 +824,13 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
             FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
                       "Account already has the maximum number of routes.");
 
-            withdraw_route_service.create(from_account.id, to_account.id, o.percent, o.auto_vest);
+            withdraw_route_service.create([&](withdraw_vesting_route_object& wvdo) {
+                wvdo.from_account = from_account.id;
+                wvdo.to_id = withdraw_route_service::get_to_id(to_account);
+                wvdo.to_object = to_account.id;
+                wvdo.percent = o.percent;
+                wvdo.auto_vest = o.auto_vest;
+            });
 
             account_service.increase_withdraw_routes(from_account);
         }
@@ -838,7 +845,13 @@ void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_r
         {
             const auto& wvr = withdraw_route_service.get(from_account.id, to_account.id);
 
-            withdraw_route_service.update(wvr, from_account.id, to_account.id, o.percent, o.auto_vest);
+            withdraw_route_service.update(wvr, [&](withdraw_vesting_route_object& wvdo) {
+                wvdo.from_account = from_account.id;
+                wvdo.to_id = withdraw_route_service::get_to_id(to_account);
+                wvdo.to_object = to_account.id;
+                wvdo.percent = o.percent;
+                wvdo.auto_vest = o.auto_vest;
+            });
         }
 
         uint16_t total_percent = withdraw_route_service.total_percent(from_account.id);

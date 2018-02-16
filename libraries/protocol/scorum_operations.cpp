@@ -170,6 +170,12 @@ void set_withdraw_vesting_route_operation::validate() const
     FC_ASSERT(0 <= percent && percent <= SCORUM_100_PERCENT, "Percent must be valid scorum percent");
 }
 
+void set_withdraw_vesting_route_to_dev_pool_operation::validate() const
+{
+    validate_account_name(from_account);
+    FC_ASSERT(0 <= percent && percent <= SCORUM_100_PERCENT, "Percent must be valid scorum percent");
+}
+
 void witness_update_operation::validate() const
 {
     validate_account_name(owner);

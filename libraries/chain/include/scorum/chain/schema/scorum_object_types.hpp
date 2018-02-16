@@ -95,7 +95,7 @@ class withdraw_vesting_route_object;
 class witness_object;
 class witness_schedule_object;
 class witness_vote_object;
-class dev_committee;
+class dev_committee_object;
 
 typedef oid<account_authority_object> account_authority_id_type;
 typedef oid<account_history_object> account_history_id_type;
@@ -127,7 +127,7 @@ typedef oid<withdraw_vesting_route_object> withdraw_vesting_route_id_type;
 typedef oid<witness_object> witness_id_type;
 typedef oid<witness_schedule_object> witness_schedule_id_type;
 typedef oid<witness_vote_object> witness_vote_id_type;
-typedef oid<dev_committee> dev_committee_id_type;
+typedef oid<dev_committee_object> dev_committee_id_type;
 
 enum bandwidth_type
 {

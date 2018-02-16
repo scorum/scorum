@@ -11,28 +11,28 @@ dbs_dev_pool::dbs_dev_pool(database& db)
 {
 }
 
-const dev_committee& dbs_dev_pool::get() const
+const dev_committee_object& dbs_dev_pool::get() const
 {
     try
     {
-        return db_impl().get<dev_committee>();
+        return db_impl().get<dev_committee_object>();
     }
     FC_CAPTURE_AND_RETHROW()
 }
 
 bool dbs_dev_pool::is_exists() const
 {
-    return nullptr != db_impl().find<dev_committee>();
+    return nullptr != db_impl().find<dev_committee_object>();
 }
 
-const dev_committee& dbs_dev_pool::create(const asset& balance)
+const dev_committee_object& dbs_dev_pool::create(const asset& balance)
 {
-    return db_impl().create<dev_committee>([&](dev_committee& o) { o.balance = balance; });
+    return db_impl().create<dev_committee_object>([&](dev_committee_object& o) { o.balance = balance; });
 }
 
 void dbs_dev_pool::increase_balance(const asset& amount)
 {
-    db_impl().modify(get(), [&](dev_committee& o) { o.balance += amount; });
+    db_impl().modify(get(), [&](dev_committee_object& o) { o.balance += amount; });
 }
 
 void dbs_dev_pool::decrease_balance(const asset& amount)

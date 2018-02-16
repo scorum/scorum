@@ -5,15 +5,15 @@
 namespace scorum {
 namespace chain {
 
-class dev_committee;
+class dev_committee_object;
 
 struct dev_pool_service_i
 {
-    virtual const dev_committee& get() const = 0;
+    virtual const dev_committee_object& get() const = 0;
 
     virtual bool is_exists() const = 0;
 
-    virtual const dev_committee& create(const asset& balance) = 0;
+    virtual const dev_committee_object& create(const asset& balance) = 0;
 
     virtual void increase_balance(const asset& amount) = 0;
     virtual void decrease_balance(const asset& amount) = 0;
@@ -27,11 +27,11 @@ protected:
     explicit dbs_dev_pool(database& db);
 
 public:
-    const dev_committee& get() const override;
+    const dev_committee_object& get() const override;
 
     bool is_exists() const override;
 
-    const dev_committee& create(const asset& balance) override;
+    const dev_committee_object& create(const asset& balance) override;
 
     void increase_balance(const asset& amount) override;
     void decrease_balance(const asset& amount) override;
