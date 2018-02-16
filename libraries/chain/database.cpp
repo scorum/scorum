@@ -17,6 +17,7 @@
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
@@ -1598,7 +1599,8 @@ void database::initialize_indexes()
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
     add_index<atomicswap_contract_index>();
-    
+    add_index<dev_committee_index>();
+
     _plugin_index_signal();
 }
 

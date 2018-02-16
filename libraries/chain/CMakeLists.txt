@@ -46,6 +46,7 @@ add_library( scorum_chain
              services/withdraw_vesting_route.cpp
              services/vesting_delegation.cpp
              services/reward_fund.cpp
+             services/dev_pool.cpp
 
              data_service_factory.cpp
 

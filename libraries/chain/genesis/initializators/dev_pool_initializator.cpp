@@ -5,9 +5,11 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
@@ -31,6 +33,7 @@ void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
 
     increase_total_supply(ctx, dev_supply);
     create_locked_account(ctx, dev_supply);
+    create_dev_pool(ctx);
 
     // TODO
 }
@@ -53,14 +56,20 @@ void dev_pool_initializator_impl::create_locked_account(initializator_context& c
     account_service_i& account_service = ctx.services.account_service();
     dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
 
-    account_name_type locked_name;
-    memset(&locked_name.data, char(0xff), sizeof(locked_name.data));
-
-    const account_object& account
-        = account_service.create_initial_account(locked_name, public_key_type(), asset(), "",
-                                                 R"({"created_at": "GENESIS", "locked": true})");
+    const account_object& account = account_service.create_initial_account(
+        SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT, public_key_type(), asset(), "",
+        R"({"created_at": "GENESIS", "for": "DEVELOPMENT POOL", "locked": true})");
     account_service.increase_vesting_shares(account, sp);
     dgp_service.update([&](dynamic_global_property_object& props) { props.total_vesting_shares += sp; });
+}
+
+void dev_pool_initializator_impl::create_dev_pool(initializator_context& ctx)
+{
+    dev_pool_service_i& dev_pool_service = ctx.services.dev_pool_service();
+
+    FC_ASSERT(!dev_pool_service.is_exists());
+
+    dev_pool_service.create(asset(0, SCORUM_SYMBOL));
 }
 }
 }

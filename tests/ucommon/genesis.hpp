@@ -148,6 +148,12 @@ public:
         return *this;
     }
 
+    Genesis& dev_supply(asset amount)
+    {
+        genesis_state.dev_supply = amount;
+        return *this;
+    }
+
     template <typename... Args> Genesis& registration_schedule(Args... args)
     {
         std::array<registration_stage, sizeof...(args)> list = { args... };

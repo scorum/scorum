@@ -8,9 +8,11 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -262,6 +264,32 @@ BOOST_FIXTURE_TEST_CASE(steemit_bounty_distribution_test, steemit_bounty_test_fi
     BOOST_CHECK_EQUAL(account_service.get_account(luke.name).vesting_shares, pie);
 
     BOOST_CHECK_EQUAL(account_service.get_account(stiven.name).vesting_shares, total_sp - pie * 2);
+}
+
+struct dev_poll_test_fixture : public genesis_base_test_fixture
+{
+    dev_poll_test_fixture()
+        : dev_pool_service(db.dev_pool_service())
+    {
+        make_minimal_valid_genesis();
+    }
+
+    scorum::chain::dev_pool_service_i& dev_pool_service;
+};
+
+BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
+{
+    using scorum::protocol::account_name_type;
+
+    asset dev_sp = ASSET_SP(1e+6);
+
+    genesis.dev_supply(dev_sp);
+
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
+
+    BOOST_REQUIRE_NO_THROW(account_service.check_account_existence(SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT));
+
+    BOOST_REQUIRE(dev_pool_service.is_exists());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

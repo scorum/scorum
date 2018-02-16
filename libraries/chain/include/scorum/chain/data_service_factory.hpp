@@ -21,5 +21,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (withdraw_vesting_route)
         (witness)
         (witness_vote)
+        (dev_pool)
         )
 // clang-format on

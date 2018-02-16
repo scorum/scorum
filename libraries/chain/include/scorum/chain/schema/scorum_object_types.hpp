@@ -62,6 +62,7 @@ enum object_type
     witness_object_type,
     witness_schedule_object_type,
     witness_vote_object_type,
+    dev_committee_object_type,
 };
 
 class account_authority_object;
@@ -94,6 +95,7 @@ class withdraw_vesting_route_object;
 class witness_object;
 class witness_schedule_object;
 class witness_vote_object;
+class dev_committee;
 
 typedef oid<account_authority_object> account_authority_id_type;
 typedef oid<account_history_object> account_history_id_type;
@@ -125,6 +127,7 @@ typedef oid<withdraw_vesting_route_object> withdraw_vesting_route_id_type;
 typedef oid<witness_object> witness_id_type;
 typedef oid<witness_schedule_object> witness_schedule_id_type;
 typedef oid<witness_vote_object> witness_vote_id_type;
+typedef oid<dev_committee> dev_committee_id_type;
 
 enum bandwidth_type
 {
@@ -168,6 +171,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (witness_object_type)
                 (witness_schedule_object_type)
                 (witness_vote_object_type)
+                (dev_committee_object_type)
                )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )

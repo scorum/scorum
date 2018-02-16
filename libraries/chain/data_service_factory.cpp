@@ -19,6 +19,7 @@
 #include <scorum/chain/services/withdraw_vesting_route.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_vote.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -39,5 +40,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (withdraw_vesting_route)
         (witness)
         (witness_vote)
+        (dev_pool)
         )
 // clang-format on
