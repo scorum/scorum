@@ -1,6 +1,4 @@
-#include <scorum/chain/database/tasks/task_process_funds.hpp>
-
-#include <scorum/chain/database/database_virtual_operations.hpp>
+#include <scorum/chain/database/block_tasks/process_funds.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/reward.hpp>
@@ -19,7 +17,7 @@ namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
 
-void task_process_funds_impl::apply(task_context& ctx)
+void process_funds::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services;
     account_service_i& account_service = services.account_service();

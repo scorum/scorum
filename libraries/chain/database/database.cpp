@@ -36,9 +36,6 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/chain/database/tasks/task_process_funds.hpp>
-#include <scorum/chain/database/tasks/task_process_comments_cashout.hpp>
-
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/container/deque.hpp>
@@ -55,6 +52,10 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <scorum/chain/services/atomicswap.hpp>
+
+#include <scorum/chain/database/block_tasks/process_funds.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -67,6 +68,8 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
+    database_ns::process_funds _process_funds;
+    database_ns::process_comments_cashout _process_comments_cashout;
 };
 
 database_impl::database_impl(database& self)
@@ -79,8 +82,6 @@ database::database()
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
-    , database_ns::tasks_registry(static_cast<data_service_factory&>(*this),
-                                  static_cast<database_virtual_operations_emmiter_i&>(*this))
     , _my(new database_impl(*this))
 {
 }
@@ -143,10 +144,6 @@ void database::open(const fc::path& data_dir,
         with_read_lock([&]() {
             init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
-
-        // TODO: place tasks factory for hardforks here
-        register_task(new database_ns::task_process_funds_impl());
-        register_task(new database_ns::task_process_comments_cashout_impl());
     }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
@@ -1570,7 +1567,11 @@ void database::_apply_block(const signed_block& next_block)
         // in dbs_database_witness_schedule.cpp
         update_witness_schedule();
 
-        process_tasks(_current_block_num);
+        database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
+                                      static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                            _current_block_num);
+
+        _my->_process_funds.before(_my->_process_comments_cashout).apply(ctx);
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <functional>
+#include <scorum/chain/tasks_base.hpp>
 
 namespace scorum {
 namespace chain {
@@ -19,25 +18,32 @@ struct initializator_context
     const genesis_state_type& genesis_state;
 };
 
-class initializator
+class single_time_apply_censor : public task_censor_i<initializator_context>
 {
 public:
-    virtual ~initializator()
+    virtual bool is_allowed(initializator_context&)
     {
+        return !_applied;
+    }
+    virtual void apply(initializator_context&)
+    {
+        _applied = true;
     }
 
-    initializator& after(initializator&);
+private:
+    bool _applied = false;
+};
 
-    void apply(initializator_context&);
-
-protected:
-    virtual void on_apply(initializator_context&) = 0;
+class initializator : public task<initializator_context>
+{
+public:
+    initializator()
+    {
+        set_censor(&_applied);
+    }
 
 private:
-    using initializators_reqired_type = std::vector<std::reference_wrapper<initializator>>;
-
-    initializators_reqired_type _after;
-    bool _applied = false;
+    single_time_apply_censor _applied;
 };
 }
 }

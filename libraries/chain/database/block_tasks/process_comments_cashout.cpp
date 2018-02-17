@@ -1,4 +1,4 @@
-#include <scorum/chain/database/tasks/task_process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
 
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
@@ -15,7 +15,7 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-void task_process_comments_cashout_impl::apply(task_context& ctx)
+void process_comments_cashout::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services;
     reward_fund_service_i& reward_fund_service = services.reward_fund_service();
@@ -103,8 +103,8 @@ void task_process_comments_cashout_impl::apply(task_context& ctx)
     });
 }
 
-uint128_t task_process_comments_cashout_impl::get_recent_claims(task_context& ctx,
-                                                                const comment_service_i::comment_refs_type& comments)
+uint128_t process_comments_cashout::get_recent_claims(block_task_context& ctx,
+                                                      const comment_service_i::comment_refs_type& comments)
 {
     data_service_factory_i& services = ctx.services;
     reward_fund_service_i& reward_fund_service = services.reward_fund_service();
@@ -128,9 +128,9 @@ uint128_t task_process_comments_cashout_impl::get_recent_claims(task_context& ct
     return recent_claims;
 }
 
-share_type task_process_comments_cashout_impl::pay_for_comment(task_context& ctx,
-                                                               const comment_object& comment,
-                                                               const share_type& reward_tokens)
+share_type process_comments_cashout::pay_for_comment(block_task_context& ctx,
+                                                     const comment_object& comment,
+                                                     const share_type& reward_tokens)
 {
     data_service_factory_i& services = ctx.services;
     account_service_i& account_service = services.account_service();
@@ -194,9 +194,8 @@ share_type task_process_comments_cashout_impl::pay_for_comment(task_context& ctx
     FC_CAPTURE_AND_RETHROW((comment))
 }
 
-share_type task_process_comments_cashout_impl::pay_curators(task_context& ctx,
-                                                            const comment_object& comment,
-                                                            share_type& max_rewards)
+share_type
+process_comments_cashout::pay_curators(block_task_context& ctx, const comment_object& comment, share_type& max_rewards)
 {
     data_service_factory_i& services = ctx.services;
     account_service_i& account_service = services.account_service();

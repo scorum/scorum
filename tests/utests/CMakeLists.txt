@@ -20,6 +20,7 @@ set( SOURCES
   genesis/founders.cpp
   serialization_tests.cpp
   signed_transaction_serialization_tests.cpp
+  tasks_base_tests.cpp
 )
 
 add_executable(utests

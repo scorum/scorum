@@ -49,7 +49,7 @@ private:
 
 BOOST_AUTO_TEST_SUITE(genesis_initializator_tests)
 
-BOOST_FIXTURE_TEST_CASE(test_appled, genesis_initializator_fixture)
+BOOST_FIXTURE_TEST_CASE(test_applied, genesis_initializator_fixture)
 {
     test_initializator intz;
 
@@ -63,50 +63,22 @@ BOOST_FIXTURE_TEST_CASE(test_double_apply, genesis_initializator_fixture)
     test_initializator intz;
 
     intz.apply(ctx);
-    BOOST_CHECK_NO_THROW(intz.apply(ctx));
+    BOOST_CHECK_NO_THROW(intz.apply(ctx)); // on_apply must not be called
 
     BOOST_CHECK(intz.is_applied());
 }
 
-BOOST_FIXTURE_TEST_CASE(test_after_appled, genesis_initializator_fixture)
+BOOST_FIXTURE_TEST_CASE(test_chain_applied, genesis_initializator_fixture)
 {
-    test_initializator intz_a;
-    test_initializator intz_b;
+    const int sz = 5;
+    test_initializator intz[sz];
 
-    intz_a.after(intz_b).apply(ctx);
+    intz[0].before(intz[1]).before(intz[2]).after(intz[3]).after(intz[4]).apply(ctx);
 
-    BOOST_CHECK(intz_a.is_applied());
-    BOOST_CHECK(intz_b.is_applied());
-}
-
-struct test_initializator_order : public test_initializator
-{
-    void on_apply(initializator_context& ctx)
+    for (int ci = 0; ci < sz; ++ci)
     {
-        test_initializator::on_apply(ctx);
-        _order = ++_next_order;
+        BOOST_CHECK(intz[ci].is_applied());
     }
-
-    int order() const
-    {
-        return _order;
-    }
-
-private:
-    static int _next_order;
-    int _order = 0;
-};
-
-int test_initializator_order::_next_order = 0;
-
-BOOST_FIXTURE_TEST_CASE(test_after_order, genesis_initializator_fixture)
-{
-    test_initializator_order intz_a;
-    test_initializator_order intz_b;
-
-    intz_a.after(intz_b).apply(ctx);
-
-    BOOST_CHECK_LT(intz_b.order(), intz_a.order());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
