@@ -3,11 +3,8 @@
 #include <scorum/chain/genesis/initializators/initializators.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
-#include <fc/exception/exception.hpp>
 
 #include <hippomocks.h>
-
-#include "defines.hpp"
 
 using scorum::chain::genesis::initializator;
 using scorum::chain::genesis::initializator_context;
@@ -18,17 +15,16 @@ struct test_initializator : public initializator
 {
     void on_apply(initializator_context&)
     {
-        FC_ASSERT(!_test_applied);
-        _test_applied = true;
+        _times_applied++;
     }
 
-    bool is_applied() const
+    const int times_applied() const
     {
-        return _test_applied;
+        return _times_applied;
     }
 
 private:
-    bool _test_applied = false;
+    int _times_applied = 0;
 };
 
 struct genesis_initializator_fixture
@@ -54,18 +50,9 @@ BOOST_FIXTURE_TEST_CASE(test_applied, genesis_initializator_fixture)
     test_initializator intz;
 
     intz.apply(ctx);
-
-    BOOST_CHECK(intz.is_applied());
-}
-
-BOOST_FIXTURE_TEST_CASE(test_double_apply, genesis_initializator_fixture)
-{
-    test_initializator intz;
-
+    BOOST_CHECK_EQUAL(intz.times_applied(), 1);
     intz.apply(ctx);
-    BOOST_CHECK_NO_THROW(intz.apply(ctx)); // on_apply must not be called
-
-    BOOST_CHECK(intz.is_applied());
+    BOOST_CHECK_EQUAL(intz.times_applied(), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(test_chain_applied, genesis_initializator_fixture)
@@ -77,7 +64,7 @@ BOOST_FIXTURE_TEST_CASE(test_chain_applied, genesis_initializator_fixture)
 
     for (int ci = 0; ci < sz; ++ci)
     {
-        BOOST_CHECK(intz[ci].is_applied());
+        BOOST_CHECK_EQUAL(intz[ci].times_applied(), 1);
     }
 }
 

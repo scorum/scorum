@@ -1,9 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/tasks_base.hpp>
-#include <fc/exception/exception.hpp>
-
-#include "defines.hpp"
 
 using scorum::chain::task;
 using scorum::chain::task_censor_i;
@@ -34,15 +31,18 @@ struct test_task : public task<test_context>
         set_censor(&_censor);
     }
 
-    void on_apply(test_context& ctx)
+    void on_apply(test_context&)
     {
-        FC_ASSERT(_censor.is_allowed(ctx));
-        test_task_applied = true;
+        _times_applied++;
     }
 
-    bool test_task_applied = false;
+    const int times_applied() const
+    {
+        return _times_applied;
+    }
 
 private:
+    int _times_applied = 0;
     test_censor _censor;
 };
 
@@ -53,30 +53,19 @@ struct tasks_base_tests_fixture
     test_context ctx;
 };
 
-BOOST_FIXTURE_TEST_CASE(test_applied, tasks_base_tests_fixture)
-{
-    test_task t;
-
-    t.apply(ctx);
-
-    BOOST_CHECK(t.test_task_applied);
-}
-
 BOOST_FIXTURE_TEST_CASE(test_censored_apply, tasks_base_tests_fixture)
 {
     test_task t;
 
     t.apply(ctx);
-    BOOST_CHECK(t.test_task_applied);
+    BOOST_CHECK_EQUAL(t.times_applied(), 1);
 
-    t.test_task_applied = false;
     t.apply(ctx);
-    BOOST_CHECK(t.test_task_applied);
+    BOOST_CHECK_EQUAL(t.times_applied(), 2);
 
     ctx.stop_apply = true;
-    t.test_task_applied = false;
     t.apply(ctx);
-    BOOST_CHECK(!t.test_task_applied);
+    BOOST_CHECK_EQUAL(t.times_applied(), 2);
 }
 
 BOOST_FIXTURE_TEST_CASE(test_after_applied, tasks_base_tests_fixture)
@@ -86,8 +75,8 @@ BOOST_FIXTURE_TEST_CASE(test_after_applied, tasks_base_tests_fixture)
 
     t_a.after(t_b).apply(ctx);
 
-    BOOST_CHECK(t_a.test_task_applied);
-    BOOST_CHECK(t_b.test_task_applied);
+    BOOST_CHECK_EQUAL(t_a.times_applied(), 1);
+    BOOST_CHECK_EQUAL(t_b.times_applied(), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(test_before_applied, tasks_base_tests_fixture)
@@ -97,8 +86,8 @@ BOOST_FIXTURE_TEST_CASE(test_before_applied, tasks_base_tests_fixture)
 
     t_a.before(t_b).apply(ctx);
 
-    BOOST_CHECK(t_a.test_task_applied);
-    BOOST_CHECK(t_b.test_task_applied);
+    BOOST_CHECK_EQUAL(t_a.times_applied(), 1);
+    BOOST_CHECK_EQUAL(t_b.times_applied(), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(test_chain_appled, tasks_base_tests_fixture)
@@ -110,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(test_chain_appled, tasks_base_tests_fixture)
 
     for (int ci = 0; ci < sz; ++ci)
     {
-        BOOST_CHECK(t[ci].test_task_applied);
+        BOOST_CHECK_EQUAL(t[ci].times_applied(), 1);
     }
 }
 
@@ -154,9 +143,12 @@ BOOST_FIXTURE_TEST_CASE(test_chain_order, tasks_base_tests_fixture)
 
     BOOST_CHECK_LT(t[0].test_order, t[1].test_order);
     BOOST_CHECK_LT(t[0].test_order, t[2].test_order);
+
     BOOST_CHECK_LT(t[1].test_order, t[2].test_order);
+
     BOOST_CHECK_GT(t[0].test_order, t[3].test_order);
     BOOST_CHECK_GT(t[0].test_order, t[4].test_order);
+
     BOOST_CHECK_LT(t[3].test_order, t[4].test_order);
 }
 
