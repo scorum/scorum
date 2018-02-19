@@ -70,17 +70,6 @@ struct stat_database_fixture : public database_trx_integration_fixture
 
         push_operation(op);
     }
-
-    template <typename T> void push_operation(const T& op)
-    {
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.validate();
-        db.push_transaction(tx, default_skip);
-
-        generate_block();
-    }
 };
 
 BOOST_FIXTURE_TEST_SUITE(statistic_tests, stat_database_fixture)

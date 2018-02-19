@@ -10,19 +10,20 @@ set( SOURCES
     reward_service_tests.cpp
     rewards/vote_apply.cpp
     rewards/comment_beneficiaries_apply.cpp
-    registration_check/committee_service.cpp
-    registration_check/registration_check_common.cpp
-    registration_check/committee_operations.cpp
-    registration_check/pool_service.cpp
-    atomicswap_check/atomicswap_service.cpp
-    atomicswap_check/atomicswap_operations.cpp
-    budget_check/budget_service.cpp
-    budget_check/fund_budget.cpp
-    budget_check/budget_operations.cpp
-    budget_check/budget_check_common.cpp
+    registration/committee_service.cpp
+    registration/registration_check_common.cpp
+    registration/committee_operations.cpp
+    registration/pool_service.cpp
+    atomicswap/atomicswap_service.cpp
+    atomicswap/atomicswap_operations.cpp
+    budget/budget_service.cpp
+    budget/fund_budget.cpp
+    budget/budget_operations.cpp
+    budget/budget_check_common.cpp
     proposal/proposal_tests.cpp
     statistic/statistic_tests.cpp
     genesis_db_tests.cpp
+    withdraw_vesting/route_to_dev_pool.cpp
 )
 
 add_executable(chain_tests
