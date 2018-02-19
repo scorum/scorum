@@ -128,9 +128,6 @@ public:
     const witness_object& get_witness(const account_name_type& name) const;
     const witness_object* find_witness(const account_name_type& name) const;
 
-    const account_object& get_account(const account_name_type& name) const;
-    const account_object* find_account(const account_name_type& name) const;
-
     const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
@@ -284,12 +281,6 @@ public:
                              const asset& author_tokens,
                              const asset& curation_tokens,
                              const asset& beneficiary_value);
-
-    asset get_balance(const account_object& a, asset_symbol_type symbol) const;
-    asset get_balance(const std::string& aname, asset_symbol_type symbol) const
-    {
-        return get_balance(get_account(aname), symbol);
-    }
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to

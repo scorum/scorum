@@ -530,7 +530,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
     return my->_db.with_read_lock([&]() {
         std::vector<withdraw_route> result;
 
-        const auto& acc = my->_db.get_account(account);
+        const auto& acc = my->_db.obtain_service<chain::dbs_account>().get_account(account);
 
         if (type == outgoing || type == all)
         {
@@ -915,7 +915,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
     return my->_db.with_read_lock([&]() {
         std::vector<account_vote> result;
 
-        const auto& voter_acnt = my->_db.get_account(voter);
+        const auto& voter_acnt = my->_db.obtain_service<chain::dbs_account>().get_account(voter);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_voter_comment>();
 
         account_id_type aid(voter_acnt.id);
@@ -1187,17 +1187,22 @@ database_api::get_account_history(const std::string& account, uint64_t from, uin
 std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_author(const std::string& author) const
 {
     return my->_db.with_read_lock([&]() {
-        const auto* acnt = my->_db.find_account(author);
-        FC_ASSERT(acnt != nullptr);
-        const auto& tidx = my->_db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
-        auto itr = tidx.lower_bound(boost::make_tuple(acnt->id, 0));
-        std::vector<std::pair<std::string, uint32_t>> result;
-        while (itr != tidx.end() && itr->author == acnt->id && result.size() < 1000)
+        try
         {
-            result.push_back(std::make_pair(itr->tag, itr->total_posts));
-            ++itr;
+            const auto& acnt = my->_db.obtain_service<dbs_account>().get_account(author);
+
+            const auto& tidx
+                = my->_db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
+            auto itr = tidx.lower_bound(boost::make_tuple(acnt.id, 0));
+            std::vector<std::pair<std::string, uint32_t>> result;
+            while (itr != tidx.end() && itr->author == acnt.id && result.size() < 1000)
+            {
+                result.push_back(std::make_pair(itr->tag, itr->total_posts));
+                ++itr;
+            }
+            return result;
         }
-        return result;
+        FC_CAPTURE_AND_RETHROW()
     });
 }
 
@@ -1513,7 +1518,7 @@ std::vector<discussion> database_api::get_discussions_by_feed(const discussion_q
         auto start_author = query.start_author ? *(query.start_author) : "";
         auto start_permlink = query.start_permlink ? *(query.start_permlink) : "";
 
-        const auto& account = my->_db.get_account(query.tag);
+        const auto& account = my->_db.obtain_service<chain::dbs_account>().get_account(query.tag);
 
         const auto& c_idx = my->_db.get_index<follow::feed_index>().indices().get<follow::by_comment>();
         const auto& f_idx = my->_db.get_index<follow::feed_index>().indices().get<follow::by_feed>();
@@ -1564,7 +1569,7 @@ std::vector<discussion> database_api::get_discussions_by_blog(const discussion_q
         auto start_author = query.start_author ? *(query.start_author) : "";
         auto start_permlink = query.start_permlink ? *(query.start_permlink) : "";
 
-        const auto& account = my->_db.get_account(query.tag);
+        const auto& account = my->_db.obtain_service<chain::dbs_account>().get_account(query.tag);
 
         const auto& tag_idx = my->_db.get_index<tags::tag_index>().indices().get<tags::by_comment>();
 
@@ -1853,7 +1858,8 @@ state database_api::get_state(std::string path) const
             if (part[0].size() && part[0][0] == '@')
             {
                 auto acnt = part[0].substr(1);
-                _state.accounts[acnt] = extended_account(my->_db.get_account(acnt), my->_db);
+                _state.accounts[acnt]
+                    = extended_account(my->_db.obtain_service<chain::dbs_account>().get_account(acnt), my->_db);
                 _state.accounts[acnt].tags_usage = get_tags_used_by_author(acnt);
                 if (my->_follow_api)
                 {
@@ -2234,10 +2240,11 @@ state database_api::get_state(std::string path) const
                 elog("What... no matches");
             }
 
+            chain::dbs_account& account_service = my->_db.obtain_service<chain::dbs_account>();
             for (const auto& a : accounts)
             {
                 _state.accounts.erase("");
-                _state.accounts[a] = extended_account(my->_db.get_account(a), my->_db);
+                _state.accounts[a] = extended_account(account_service.get_account(a), my->_db);
                 if (my->_follow_api)
                 {
                     _state.accounts[a].reputation = my->_follow_api->get_account_reputations(a, 1)[0].reputation;

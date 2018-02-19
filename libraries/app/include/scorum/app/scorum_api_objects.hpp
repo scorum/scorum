@@ -304,8 +304,8 @@ struct account_api_obj
     asset received_vesting_shares = asset(0, VESTS_SYMBOL);
     asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
     time_point_sec next_vesting_withdrawal;
-    share_type withdrawn;
-    share_type to_withdraw;
+    asset withdrawn = asset(0, VESTS_SYMBOL);
+    asset to_withdraw = asset(0, VESTS_SYMBOL);
     uint16_t withdraw_routes = 0;
 
     std::vector<share_type> proxied_vsf_votes;

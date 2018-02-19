@@ -3,6 +3,7 @@ file(GLOB HEADERS "include/scorum/blockchain_statistics/*.hpp")
 add_library( scorum_blockchain_statistics
              blockchain_statistics_plugin.cpp
              blockchain_statistics_api.cpp
+             metrics.cpp
            )
 
 target_link_libraries( scorum_blockchain_statistics
