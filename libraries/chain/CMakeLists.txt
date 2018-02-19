@@ -52,7 +52,7 @@ add_library( scorum_chain
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
-             evaluators/set_withdraw_vesting_route_to_dev_pool_evaluator.cpp
+             evaluators/set_withdraw_vesting_route_evaluators.cpp
              evaluators/withdraw_vesting_evaluator.cpp
 
              schema/shared_authority.cpp

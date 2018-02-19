@@ -36,11 +36,9 @@ DEFINE_EVALUATOR(escrow_transfer)
 DEFINE_EVALUATOR(prove_authority)
 DEFINE_EVALUATOR(recover_account)
 DEFINE_EVALUATOR(request_account_recovery)
-DEFINE_EVALUATOR(set_withdraw_vesting_route)
 DEFINE_EVALUATOR(transfer)
 DEFINE_EVALUATOR(transfer_to_vesting)
 DEFINE_EVALUATOR(vote)
-DEFINE_EVALUATOR(withdraw_vesting)
 DEFINE_EVALUATOR(witness_update)
 } // namespace chain
 } // namespace scorum

@@ -30,7 +30,8 @@
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
-#include <scorum/chain/evaluators/set_withdraw_vesting_route_to_dev_pool_evaluator.hpp>
+#include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
+#include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -1525,16 +1526,17 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<prove_authority_evaluator>();
     _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_evaluator>();
     _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
     _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
     _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>(
         new set_withdraw_vesting_route_to_dev_pool_evaluator(*this));
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>(
+        new set_withdraw_vesting_route_to_account_evaluator(*this));
+    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>(new withdraw_vesting_evaluator(*this));
 
     // clang-format off
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(

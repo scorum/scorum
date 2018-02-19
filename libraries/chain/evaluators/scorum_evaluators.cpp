@@ -17,7 +17,6 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
 #include <scorum/chain/services/vesting_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 
@@ -27,7 +26,6 @@
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
-#include <scorum/chain/schema/withdraw_vesting_route_object.hpp>
 
 #ifndef IS_LOW_MEM
 #include <diff_match_patch.h>
@@ -757,106 +755,6 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     FC_ASSERT(from_account.balance >= o.amount, "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.create_vesting(to_account, o.amount);
-}
-
-void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
-{
-    // clang-format off
-    account_service_i& account_service = db().account_service();
-    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-
-    const auto& account = account_service.get_account(o.account);
-
-    FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL), "Account does not have sufficient Scorum Power for withdraw.");
-    FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares, "Account does not have sufficient Scorum Power for withdraw.");
-
-    if (!account.created_by_genesis)
-    {
-        const auto& dprops = dprops_service.get();
-        asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
-        min_vests *= SCORUM_START_WITHDRAW_COEFFICIENT;
-
-        FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
-                  "Account registered by another account requires 10x account creation fee worth of Scorum Power before it can be powered down.");
-    }
-
-    if (o.vesting_shares.amount == 0)
-    {
-        FC_ASSERT(account.vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
-
-        account_service.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), asset(0, VESTS_SYMBOL));
-    }
-    else
-    {
-        // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
-        // 13 weeks = 1 quarter of a year
-        auto new_vesting_withdraw_rate = o.vesting_shares / SCORUM_VESTING_WITHDRAW_INTERVALS;
-
-        if (new_vesting_withdraw_rate.amount == 0)
-            new_vesting_withdraw_rate.amount = 1;
-
-        FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate, "This operation would not change the vesting withdraw rate.");
-
-        account_service.update_withdraw(account, new_vesting_withdraw_rate,
-                                        dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
-                                        o.vesting_shares);
-    }
-
-    // clang-format on
-}
-
-void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_route_operation& o)
-{
-    account_service_i& account_service = db().account_service();
-    withdraw_vesting_route_service_i& withdraw_route_service = db().withdraw_vesting_route_service();
-
-    try
-    {
-        const auto& from_account = account_service.get_account(o.from_account);
-        const auto& to_account = account_service.get_account(o.to_account);
-
-        if (!withdraw_route_service.is_exists(from_account.id, to_account.id))
-        {
-            FC_ASSERT(o.percent != 0, "Cannot create a 0% destination.");
-            FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
-                      "Account already has the maximum number of routes.");
-
-            withdraw_route_service.create([&](withdraw_vesting_route_object& wvdo) {
-                wvdo.from_account = from_account.id;
-                wvdo.to_id = withdraw_route_service::get_to_id(to_account);
-                wvdo.to_object = to_account.id;
-                wvdo.percent = o.percent;
-                wvdo.auto_vest = o.auto_vest;
-            });
-
-            account_service.increase_withdraw_routes(from_account);
-        }
-        else if (o.percent == 0)
-        {
-            const auto& wvr = withdraw_route_service.get(from_account.id, to_account.id);
-            withdraw_route_service.remove(wvr);
-
-            account_service.decrease_withdraw_routes(from_account);
-        }
-        else
-        {
-            const auto& wvr = withdraw_route_service.get(from_account.id, to_account.id);
-
-            withdraw_route_service.update(wvr, [&](withdraw_vesting_route_object& wvdo) {
-                wvdo.from_account = from_account.id;
-                wvdo.to_id = withdraw_route_service::get_to_id(to_account);
-                wvdo.to_object = to_account.id;
-                wvdo.percent = o.percent;
-                wvdo.auto_vest = o.auto_vest;
-            });
-        }
-
-        uint16_t total_percent = withdraw_route_service.total_percent(from_account.id);
-
-        FC_ASSERT(total_percent <= SCORUM_100_PERCENT,
-                  "More than 100% of vesting withdrawals allocated to destinations.");
-    }
-    FC_CAPTURE_AND_RETHROW()
 }
 
 void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_operation& o)

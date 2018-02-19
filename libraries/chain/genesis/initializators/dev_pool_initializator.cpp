@@ -14,7 +14,7 @@
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
-#include <scorum/chain/evaluators/set_withdraw_vesting_route_to_dev_pool_evaluator.hpp>
+#include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
 
 #include <scorum/protocol/scorum_operations.hpp>
