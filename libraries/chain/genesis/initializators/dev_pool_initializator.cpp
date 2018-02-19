@@ -85,7 +85,7 @@ const dev_committee_object& dev_pool_initializator_impl::create_dev_pool(initial
 
     FC_ASSERT(!dev_pool_service.is_exists());
 
-    return dev_pool_service.create(asset(0, SCORUM_SYMBOL));
+    return dev_pool_service.create();
 }
 }
 }

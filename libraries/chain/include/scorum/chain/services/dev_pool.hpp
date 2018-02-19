@@ -13,7 +13,7 @@ struct dev_pool_service_i
 
     virtual bool is_exists() const = 0;
 
-    virtual const dev_committee_object& create(const asset& balance) = 0;
+    virtual const dev_committee_object& create() = 0;
 
     virtual void increase_balance(const asset& amount) = 0;
     virtual void decrease_balance(const asset& amount) = 0;
@@ -31,7 +31,7 @@ public:
 
     bool is_exists() const override;
 
-    const dev_committee_object& create(const asset& balance) override;
+    const dev_committee_object& create() override;
 
     void increase_balance(const asset& amount) override;
     void decrease_balance(const asset& amount) override;

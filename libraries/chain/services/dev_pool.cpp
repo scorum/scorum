@@ -25,9 +25,10 @@ bool dbs_dev_pool::is_exists() const
     return nullptr != db_impl().find<dev_committee_object>();
 }
 
-const dev_committee_object& dbs_dev_pool::create(const asset& balance)
+const dev_committee_object& dbs_dev_pool::create()
 {
-    return db_impl().create<dev_committee_object>([&](dev_committee_object& o) { o.balance = balance; });
+    return db_impl().create<dev_committee_object>(
+        [&](dev_committee_object& o) { o.balance = asset(0, SCORUM_SYMBOL); });
 }
 
 void dbs_dev_pool::increase_balance(const asset& amount)
