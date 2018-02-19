@@ -10,8 +10,6 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
-#define LIFE_TIME_PERIOD std::numeric_limits<uint32_t>::max()
-
 namespace scorum {
 namespace blockchain_statistics {
 

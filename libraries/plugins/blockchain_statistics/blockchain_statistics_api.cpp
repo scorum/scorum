@@ -67,7 +67,7 @@ statistics blockchain_statistics_api_impl::get_lifetime_stats() const
     statistics result;
 
     const auto& bucket_idx = _app.chain_database()->get_index<bucket_index>().indices().get<by_bucket>();
-    auto itr = bucket_idx.find(boost::make_tuple(std::numeric_limits<uint32_t>::max(), fc::time_point_sec()));
+    auto itr = bucket_idx.find(boost::make_tuple(LIFE_TIME_PERIOD, fc::time_point_sec()));
 
     if (itr != bucket_idx.end())
     {

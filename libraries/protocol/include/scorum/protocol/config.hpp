@@ -32,13 +32,15 @@
 //Got only minimum for transactions bandwidth. Required spend SCR to enlarge up to SCORUM_VOTE_DUST_THRESHOLD
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE        asset(SCORUM_VOTE_DUST_THRESHOLD/2, SCORUM_SYMBOL)
 
-#define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER 30
+#define SCORUM_MIN_COMMENT_PAYOUT                  (asset(5, SCORUM_SYMBOL))
+
+#define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER  30
 
 #define SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER 10
 
-#define SCORUM_MIN_PAYOUT                  (asset(5, SCORUM_SYMBOL))
+#define SCORUM_ADJUST_REWARD_PERCENT                5
 
-#define SCORUM_ADJUST_REWARD_PERCENT                    5
+#define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef IS_TEST_NET

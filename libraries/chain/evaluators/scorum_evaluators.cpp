@@ -773,7 +773,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
     {
         const auto& dprops = dprops_service.get();
         asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
-        min_vests *= 10;
+        min_vests *= SCORUM_START_WITHDRAW_COEFFICIENT;
 
         FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
                   "Account registered by another account requires 10x account creation fee worth of Scorum Power before it can be powered down.");
