@@ -15,6 +15,7 @@
 #include <scorum/chain/genesis/genesis_state.hpp>
 
 #include <scorum/chain/evaluators/set_withdraw_vesting_route_to_dev_pool_evaluator.hpp>
+#include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
 
 #include <scorum/protocol/scorum_operations.hpp>
 
@@ -32,25 +33,18 @@ void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
         return;
     }
 
-    withdraw_vesting_route_service_i& wvr_service = ctx.services.withdraw_vesting_route_service();
-
     asset dev_supply = ctx.genesis_state.dev_supply;
 
     FC_ASSERT(dev_supply.symbol() == VESTS_SYMBOL);
 
+    create_dev_pool(ctx);
+
     increase_total_supply(ctx, dev_supply);
+
     const account_object& account = create_locked_account(ctx, dev_supply);
-    const dev_committee_object& pool = create_dev_pool(ctx);
 
-    set_withdraw_vesting_route_to_dev_pool_evaluator create_route(ctx.services);
-    set_withdraw_vesting_route_to_dev_pool_evaluator::operation_type op;
-    op.from_account = account.name;
-    op.percent = SCORUM_100_PERCENT;
-    create_route.apply(op);
-
-    FC_ASSERT(wvr_service.is_exists(account.id, pool.id));
-
-    // TODO: create_vest
+    create_withdraw_vesting_route(ctx, account);
+    create_withdraw_vesting(ctx, account);
 }
 
 bool dev_pool_initializator_impl::is_dev_pool_exists(initializator_context& ctx)
@@ -79,13 +73,32 @@ const account_object& dev_pool_initializator_impl::create_locked_account(initial
     return account;
 }
 
-const dev_committee_object& dev_pool_initializator_impl::create_dev_pool(initializator_context& ctx)
+void dev_pool_initializator_impl::create_dev_pool(initializator_context& ctx)
 {
     dev_pool_service_i& dev_pool_service = ctx.services.dev_pool_service();
 
     FC_ASSERT(!dev_pool_service.is_exists());
 
-    return dev_pool_service.create();
+    dev_pool_service.create();
+}
+
+void dev_pool_initializator_impl::create_withdraw_vesting_route(initializator_context& ctx,
+                                                                const account_object& account)
+{
+    set_withdraw_vesting_route_to_dev_pool_evaluator create_route(ctx.services);
+    set_withdraw_vesting_route_to_dev_pool_evaluator::operation_type route_op;
+    route_op.from_account = account.name;
+    route_op.percent = SCORUM_100_PERCENT;
+    create_route.apply(route_op);
+}
+
+void dev_pool_initializator_impl::create_withdraw_vesting(initializator_context& ctx, const account_object& account)
+{
+    withdraw_vesting_evaluator create_vesting(ctx.services);
+    withdraw_vesting_evaluator::operation_type vesting_op;
+    vesting_op.account = account.name;
+    vesting_op.vesting_shares = account.vesting_shares;
+    create_vesting.apply(vesting_op);
 }
 }
 }

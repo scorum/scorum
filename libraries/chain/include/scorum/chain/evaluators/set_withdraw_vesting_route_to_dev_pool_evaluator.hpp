@@ -8,6 +8,7 @@ namespace scorum {
 namespace chain {
 
 class account_service_i;
+class dev_pool_service_i;
 class withdraw_vesting_route_service_i;
 
 class data_service_factory_i;
@@ -24,7 +25,8 @@ public:
 
 private:
     account_service_i& _account_service;
-    withdraw_vesting_route_service_i& _withdraw_service;
+    dev_pool_service_i& _dev_pool_service;
+    withdraw_vesting_route_service_i& _withdraw_vesting_route_service;
 };
 
 } // namespace chain

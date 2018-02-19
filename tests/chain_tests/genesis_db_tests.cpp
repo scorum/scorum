@@ -9,6 +9,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/withdraw_vesting_route.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
@@ -270,11 +271,13 @@ struct dev_poll_test_fixture : public genesis_base_test_fixture
 {
     dev_poll_test_fixture()
         : dev_pool_service(db.dev_pool_service())
+        , withdraw_vesting_route_service(db.withdraw_vesting_route_service())
     {
         make_minimal_valid_genesis();
     }
 
     scorum::chain::dev_pool_service_i& dev_pool_service;
+    scorum::chain::withdraw_vesting_route_service_i& withdraw_vesting_route_service;
 };
 
 BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
@@ -290,6 +293,12 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
     BOOST_REQUIRE_NO_THROW(account_service.check_account_existence(SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT));
 
     BOOST_REQUIRE(dev_pool_service.is_exists());
+
+    const auto& account = account_service.get_account(SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT);
+
+    BOOST_REQUIRE(withdraw_vesting_route_service.is_exists(account.id, dev_pool_service.get().id));
+
+    BOOST_REQUIRE_EQUAL(account.to_withdraw, account.vesting_shares);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
