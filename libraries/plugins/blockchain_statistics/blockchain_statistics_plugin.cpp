@@ -339,7 +339,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
 {
     try
     {
-        ilog("chain_stats_plugin: plugin_initialize() begin");
+        dlog("chain_stats_plugin: plugin_initialize() begin");
         chain::database& db = database();
 
         db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
@@ -356,10 +356,10 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
         if (options.count("chain-stats-history-per-bucket"))
             _my->_maximum_history_per_bucket_size = options["chain-stats-history-per-bucket"].as<uint32_t>();
 
-        wlog("chain-stats-bucket-size: ${b}", ("b", _my->_tracked_buckets));
-        wlog("chain-stats-history-per-bucket: ${h}", ("h", _my->_maximum_history_per_bucket_size));
+        ilog("chain-stats-bucket-size: ${b}", ("b", _my->_tracked_buckets));
+        ilog("chain-stats-history-per-bucket: ${h}", ("h", _my->_maximum_history_per_bucket_size));
 
-        ilog("chain_stats_plugin: plugin_initialize() end");
+        dlog("chain_stats_plugin: plugin_initialize() end");
     }
     FC_CAPTURE_AND_RETHROW()
 }
