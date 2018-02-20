@@ -6,18 +6,7 @@
 #include <fc/io/json.hpp>
 
 #include "defines.hpp"
-
-namespace utils {
-
-template <typename T> std::string to_hex(const T& obj)
-{
-    std::stringstream ss;
-    fc::raw::pack(ss, obj);
-    std::string buf = ss.str();
-
-    return fc::to_hex(buf.c_str(), buf.size());
-}
-}
+#include "utils.hpp"
 
 using scorum::protocol::asset;
 using scorum::protocol::signed_transaction;
