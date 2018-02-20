@@ -6,6 +6,8 @@
 #include <scorum/protocol/comment.hpp>
 #include <scorum/protocol/types.hpp>
 
+#include <scorum/protocol/proposal_operations.hpp>
+
 #include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
@@ -726,6 +728,20 @@ struct close_budget_operation : public base_operation
     }
 };
 
+struct proposal_create_operation2 : public base_operation
+{
+    account_name_type creator;
+    uint32_t lifetime_sec = 0;
+
+    proposal_operation operation;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+    }
+
+    void validate() const;
+};
+
 struct proposal_create_operation : public base_operation
 {
     typedef scorum::protocol::proposal_action action_t;
@@ -899,4 +915,8 @@ FC_REFLECT( scorum::protocol::proposal_create_operation,
             (action)
             (lifetime_sec))
 
+FC_REFLECT( scorum::protocol::proposal_create_operation2,
+            (creator)
+            (lifetime_sec)
+            (operation))
 // clang-format on
