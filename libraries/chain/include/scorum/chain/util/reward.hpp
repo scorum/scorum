@@ -40,8 +40,8 @@ inline bool is_comment_payout_dust(uint64_t scorum_payout)
     // SCORUM: original logic of steem
     // return to_sbd( p, asset( scorum_payout, SCORUM_SYMBOL ) ) < SCORUM_MIN_PAYOUT_SBD;
 
-    // SCORUM: it make sense to move SCORUM_MIN_PAYOUT to global properties and let witnesses vote on it
-    return asset(scorum_payout, SCORUM_SYMBOL) < SCORUM_MIN_PAYOUT;
+    // SCORUM: it make sense to move SCORUM_MIN_COMMENT_PAYOUT to global properties and let witnesses vote on it
+    return asset(scorum_payout, SCORUM_SYMBOL) < SCORUM_MIN_COMMENT_PAYOUT;
 
     // SCORUM: no payout limits
     // return scorum_payout <= 0;

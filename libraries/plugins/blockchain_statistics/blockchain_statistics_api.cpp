@@ -1,4 +1,5 @@
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
+#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
 
 namespace scorum {
 namespace blockchain_statistics {
@@ -64,7 +65,14 @@ statistics blockchain_statistics_api_impl::get_stats_for_interval(fc::time_point
 statistics blockchain_statistics_api_impl::get_lifetime_stats() const
 {
     statistics result;
-    result += _app.chain_database()->get(bucket_id_type());
+
+    const auto& bucket_idx = _app.chain_database()->get_index<bucket_index>().indices().get<by_bucket>();
+    auto itr = bucket_idx.find(boost::make_tuple(LIFE_TIME_PERIOD, fc::time_point_sec()));
+
+    if (itr != bucket_idx.end())
+    {
+        result += *itr;
+    }
 
     return result;
 }
@@ -92,63 +100,6 @@ statistics blockchain_statistics_api::get_stats_for_interval(fc::time_point_sec 
 statistics blockchain_statistics_api::get_lifetime_stats() const
 {
     return my->_app.chain_database()->with_read_lock([&]() { return my->get_lifetime_stats(); });
-}
-
-statistics& statistics::operator+=(const bucket_object& b)
-{
-    this->blocks += b.blocks;
-    this->bandwidth += b.bandwidth;
-    this->operations += b.operations;
-    this->transactions += b.transactions;
-    this->transfers += b.transfers;
-    this->scorum_transferred += b.scorum_transferred;
-    this->sbd_transferred += b.sbd_transferred;
-    this->sbd_paid_as_interest += b.sbd_paid_as_interest;
-    this->accounts_created += b.paid_accounts_created + b.mined_accounts_created;
-    this->paid_accounts_created += b.paid_accounts_created;
-    this->mined_accounts_created += b.mined_accounts_created;
-    this->total_comments += b.root_comments + b.replies;
-    this->total_comment_edits += b.root_comment_edits + b.reply_edits;
-    this->total_comments_deleted += b.root_comments_deleted + b.replies_deleted;
-    this->root_comments += b.root_comments;
-    this->root_comment_edits += b.root_comment_edits;
-    this->root_comments_deleted += b.root_comments_deleted;
-    this->replies += b.replies;
-    this->reply_edits += b.reply_edits;
-    this->replies_deleted += b.replies_deleted;
-    this->total_votes += b.new_root_votes + b.changed_root_votes + b.new_reply_votes + b.changed_reply_votes;
-    this->new_votes += b.new_root_votes + b.new_reply_votes;
-    this->changed_votes += b.changed_root_votes + b.changed_reply_votes;
-    this->total_root_votes += b.new_root_votes + b.changed_root_votes;
-    this->new_root_votes += b.new_root_votes;
-    this->changed_root_votes += b.changed_root_votes;
-    this->total_reply_votes += b.new_reply_votes + b.changed_reply_votes;
-    this->new_reply_votes += b.new_reply_votes;
-    this->changed_reply_votes += b.changed_reply_votes;
-    this->payouts += b.payouts;
-    this->scr_paid_to_authors += b.scr_paid_to_authors;
-    this->vests_paid_to_authors += b.vests_paid_to_authors;
-    this->vests_paid_to_curators += b.vests_paid_to_curators;
-    this->transfers_to_vesting += b.transfers_to_vesting;
-    this->scorum_vested += b.scorum_vested;
-    this->new_vesting_withdrawal_requests += b.new_vesting_withdrawal_requests;
-    this->vesting_withdraw_rate_delta += b.vesting_withdraw_rate_delta;
-    this->modified_vesting_withdrawal_requests += b.modified_vesting_withdrawal_requests;
-    this->vesting_withdrawals_processed += b.vesting_withdrawals_processed;
-    this->finished_vesting_withdrawals += b.finished_vesting_withdrawals;
-    this->vests_withdrawn += b.vests_withdrawn;
-    this->vests_transferred += b.vests_transferred;
-    this->sbd_conversion_requests_created += b.sbd_conversion_requests_created;
-    this->sbd_to_be_converted += b.sbd_to_be_converted;
-    this->sbd_conversion_requests_filled += b.sbd_conversion_requests_filled;
-    this->scorum_converted += b.scorum_converted;
-    this->limit_orders_created += b.limit_orders_created;
-    this->limit_orders_filled += b.limit_orders_filled;
-    this->limit_orders_cancelled += b.limit_orders_cancelled;
-    this->total_pow += b.total_pow;
-    this->estimated_hashpower += b.estimated_hashpower;
-
-    return (*this);
 }
 }
 } // scorum::blockchain_statistics

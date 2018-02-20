@@ -31,6 +31,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <scorum/account_history/account_history_plugin.hpp>
 
@@ -307,7 +308,7 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key,
                                     database::skip_nothing);
 
-        auto alice_id = db1.get_account("alice").id;
+        auto alice_id = db1.obtain_service<dbs_account>().get_account("alice").id;
         BOOST_CHECK(db1.get(alice_id).name == "alice");
 
         b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key,
@@ -386,8 +387,8 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
 
         SCORUM_CHECK_THROW(PUSH_TX(db1, trx, skip_sigs), fc::exception);
         SCORUM_CHECK_THROW(PUSH_TX(db2, trx, skip_sigs), fc::exception);
-        BOOST_CHECK_EQUAL(db1.get_balance("alice", SCORUM_SYMBOL).amount.value, 500);
-        BOOST_CHECK_EQUAL(db2.get_balance("alice", SCORUM_SYMBOL).amount.value, 500);
+        BOOST_CHECK_EQUAL(db1.obtain_service<dbs_account>().get_account("alice").balance.amount, 500);
+        BOOST_CHECK_EQUAL(db1.obtain_service<dbs_account>().get_account("alice").balance.amount, 500);
     }
     catch (fc::exception& e)
     {
@@ -465,7 +466,7 @@ BOOST_FIXTURE_TEST_CASE(optional_tapos, database_default_integration_fixture)
 {
     try
     {
-        idump((db.get_account(TEST_INIT_DELEGATE_NAME)));
+        idump((db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME)));
         ACTORS((alice)(bob));
 
         generate_block();
@@ -594,7 +595,7 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, database_default_integration_fixture)
         transaction tx;
         signed_transaction ptx;
 
-        db.get_account(TEST_INIT_DELEGATE_NAME);
+        db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME);
         // transfer from committee account to Sam account
         transfer(TEST_INIT_DELEGATE_NAME, "sam", asset(100000, SCORUM_SYMBOL));
 
