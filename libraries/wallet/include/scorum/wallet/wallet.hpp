@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scorum/app/api.hpp>
-#include <scorum/follow/follow_plugin.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
 #include <scorum/wallet/utils.hpp>
@@ -926,17 +925,6 @@ public:
     std::map<uint32_t, applied_operation>
     get_account_history(const std::string& account, uint32_t from, uint32_t limit);
 
-    /**
-     *  Marks one account as following another account.  Requires the posting authority of the follower.
-     *
-     *  @param follower
-     *  @param following
-     *  @param what - a set of things to follow: posts, comments, votes, ignore
-     *  @param broadcast
-     */
-    annotated_signed_transaction
-    follow(const std::string& follower, const std::string& following, std::set<std::string> what, bool broadcast);
-
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const;
 
     void encrypt_keys();
@@ -1209,7 +1197,6 @@ FC_API( scorum::wallet::wallet_api,
         (update_witness)
         (set_voting_proxy)
         (vote_for_witness)
-        (follow)
         (transfer)
         (escrow_transfer)
         (escrow_approve)

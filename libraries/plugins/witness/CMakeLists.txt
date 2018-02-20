@@ -2,8 +2,6 @@ file(GLOB HEADERS "include/scorum/witness/*.hpp")
 
 add_library( scorum_witness
              witness_plugin.cpp
-             witness_evaluators.cpp
-             witness_operations.cpp
            )
 
 target_link_libraries( scorum_witness

@@ -1,9 +1,6 @@
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
-#include <scorum/chain/custom_operation_interpreter.hpp>
 
 #include <scorum/chain/util/reward.hpp>
-
-#include <scorum/chain/database.hpp> //remove after get_custom_json_evaluator, is_producing removing
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -1131,52 +1128,6 @@ void vote_evaluator::do_apply(const vote_operation& o)
         }
     }
     FC_CAPTURE_AND_RETHROW()
-}
-
-void custom_evaluator::do_apply(const custom_operation&)
-{
-}
-
-void custom_json_evaluator::do_apply(const custom_json_operation& o)
-{
-    std::shared_ptr<custom_operation_interpreter> eval = db().get_custom_json_evaluator(o.id);
-    if (!eval)
-        return;
-
-    try
-    {
-        eval->apply(o);
-    }
-    catch (const fc::exception& e)
-    {
-        if (db().is_producing())
-            throw e;
-    }
-    catch (...)
-    {
-        elog("Unexpected exception applying custom json evaluator.");
-    }
-}
-
-void custom_binary_evaluator::do_apply(const custom_binary_operation& o)
-{
-    std::shared_ptr<custom_operation_interpreter> eval = db().get_custom_json_evaluator(o.id);
-    if (!eval)
-        return;
-
-    try
-    {
-        eval->apply(o);
-    }
-    catch (const fc::exception& e)
-    {
-        if (db().is_producing())
-            throw e;
-    }
-    catch (...)
-    {
-        elog("Unexpected exception applying custom json evaluator.");
-    }
 }
 
 void prove_authority_evaluator::do_apply(const prove_authority_operation& o)
