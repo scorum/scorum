@@ -3,8 +3,6 @@
 #include <scorum/blockchain_statistics/schema/metrics.hpp>
 #include <fc/api.hpp>
 
-#define LIFE_TIME_PERIOD std::numeric_limits<uint32_t>::max()
-
 namespace scorum {
 namespace app {
 struct api_context;

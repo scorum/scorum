@@ -1,5 +1,6 @@
 #include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
+#include <scorum/common_statistic/base_plugin_impl.hpp>
 
 #include <scorum/app/impacted.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
@@ -18,24 +19,22 @@ namespace detail {
 using namespace scorum::protocol;
 
 class blockchain_statistics_plugin_impl
+    : public common_statistics::common_statistics_plugin_impl<bucket_object, blockchain_statistics_plugin>
 {
 public:
     blockchain_statistics_plugin_impl(blockchain_statistics_plugin& plugin)
-        : _self(plugin)
+        : base_plugin_impl(plugin)
     {
     }
     virtual ~blockchain_statistics_plugin_impl()
     {
     }
 
-    void on_block(const signed_block& b);
-    void pre_operation(const operation_notification& o);
-    void post_operation(const operation_notification& o);
+    virtual void process_block(const bucket_object& bucket, const signed_block& b) override;
 
-    blockchain_statistics_plugin& _self;
-    flat_set<uint32_t> _tracked_buckets = { 60, 3600, 21600, 86400, 604800, 2592000, LIFE_TIME_PERIOD };
-    flat_set<bucket_id_type> _current_buckets;
-    uint32_t _maximum_history_per_bucket_size = 100;
+    virtual void process_pre_operation(const bucket_object& bucket, const operation_notification& o) override;
+
+    virtual void process_post_operation(const bucket_object& bucket, const operation_notification& o) override;
 };
 
 class operation_process
@@ -175,11 +174,9 @@ public:
     }
 };
 
-void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
+void blockchain_statistics_plugin_impl::process_block(const bucket_object& bucket, const signed_block& b)
 {
     auto& db = _self.database();
-
-    _current_buckets.clear();
 
     uint32_t trx_size = 0;
     uint32_t num_trx = b.transactions.size();
@@ -189,125 +186,60 @@ void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
         trx_size += fc::raw::pack_size(trx);
     }
 
-    const auto& bucket_idx = db.get_index<bucket_index>().indices().get<by_bucket>();
+    db.modify(bucket, [&](bucket_object& bo) {
+        bo.blocks++;
+        bo.transactions += num_trx;
+        bo.bandwidth += trx_size;
+    });
+}
 
-    for (const auto& bucket : _tracked_buckets)
+void blockchain_statistics_plugin_impl::process_pre_operation(const bucket_object& bucket,
+                                                              const operation_notification& o)
+{
+    auto& db = _self.database();
+
+    if (o.op.which() == operation::tag<delete_comment_operation>::value)
     {
-        auto open = fc::time_point_sec((db.head_block_time().sec_since_epoch() / bucket) * bucket);
+        delete_comment_operation op = o.op.get<delete_comment_operation>();
+        auto comment = db.get_comment(op.author, op.permlink);
 
-        auto itr = bucket_idx.find(boost::make_tuple(bucket, open));
-        if (itr != bucket_idx.end())
-        {
-            _current_buckets.insert(itr->id);
-        }
-        else
-        {
-            _current_buckets.insert(db.create<bucket_object>([&](bucket_object& bo) {
-                                          bo.open = open;
-                                          bo.seconds = bucket;
-                                          bo.blocks = 1;
-                                      }).id);
+        db.modify(bucket, [&](bucket_object& b) {
+            if (comment.parent_author.length())
+                b.replies_deleted++;
+            else
+                b.root_comments_deleted++;
+        });
+    }
+    else if (o.op.which() == operation::tag<withdraw_vesting_operation>::value)
+    {
+        withdraw_vesting_operation op = o.op.get<withdraw_vesting_operation>();
+        const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
 
-            // adjust history
-            if (_maximum_history_per_bucket_size > 0)
-            {
-                try
-                {
-                    auto cutoff = fc::time_point_sec();
-                    if (safe<uint64_t>(bucket) * safe<uint64_t>(_maximum_history_per_bucket_size)
-                        < safe<uint64_t>(LIFE_TIME_PERIOD))
-                    {
-                        cutoff = fc::time_point_sec(
-                            (safe<uint32_t>(db.head_block_time().sec_since_epoch())
-                             - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
-                                .value);
-                    }
+        auto new_vesting_withdrawal_rate = op.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
+        if (op.vesting_shares.amount > 0 && new_vesting_withdrawal_rate == 0)
+            new_vesting_withdrawal_rate = 1;
 
-                    itr = bucket_idx.lower_bound(boost::make_tuple(bucket, fc::time_point_sec()));
+        db.modify(bucket, [&](bucket_object& b) {
+            if (account.vesting_withdraw_rate.amount > 0)
+                b.modified_vesting_withdrawal_requests++;
+            else
+                b.new_vesting_withdrawal_requests++;
 
-                    while (itr->seconds == bucket && itr->open < cutoff)
-                    {
-                        auto old_itr = itr;
-                        ++itr;
-                        db.remove(*old_itr);
-                    }
-                }
-                catch (fc::overflow_exception& e)
-                {
-                }
-                catch (fc::underflow_exception& e)
-                {
-                }
-            }
-        }
-
-        db.modify(*itr, [&](bucket_object& bo) {
-            bo.blocks++;
-            bo.transactions += num_trx;
-            bo.bandwidth += trx_size;
+            b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - account.vesting_withdraw_rate.amount;
         });
     }
 }
 
-void blockchain_statistics_plugin_impl::pre_operation(const operation_notification& o)
+void blockchain_statistics_plugin_impl::process_post_operation(const bucket_object& bucket,
+                                                               const operation_notification& o)
 {
     auto& db = _self.database();
 
-    for (auto bucket_id : _current_buckets)
+    if (!is_virtual_operation(o.op))
     {
-        if (o.op.which() == operation::tag<delete_comment_operation>::value)
-        {
-            delete_comment_operation op = o.op.get<delete_comment_operation>();
-            auto comment = db.get_comment(op.author, op.permlink);
-            const auto& bucket = db.get(bucket_id);
-
-            db.modify(bucket, [&](bucket_object& b) {
-                if (comment.parent_author.length())
-                    b.replies_deleted++;
-                else
-                    b.root_comments_deleted++;
-            });
-        }
-        else if (o.op.which() == operation::tag<withdraw_vesting_operation>::value)
-        {
-            withdraw_vesting_operation op = o.op.get<withdraw_vesting_operation>();
-            const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
-            const auto& bucket = db.get(bucket_id);
-
-            auto new_vesting_withdrawal_rate = op.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
-            if (op.vesting_shares.amount > 0 && new_vesting_withdrawal_rate == 0)
-                new_vesting_withdrawal_rate = 1;
-
-            db.modify(bucket, [&](bucket_object& b) {
-                if (account.vesting_withdraw_rate.amount > 0)
-                    b.modified_vesting_withdrawal_requests++;
-                else
-                    b.new_vesting_withdrawal_requests++;
-
-                b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - account.vesting_withdraw_rate.amount;
-            });
-        }
+        db.modify(bucket, [&](bucket_object& b) { b.operations++; });
     }
-}
-
-void blockchain_statistics_plugin_impl::post_operation(const operation_notification& o)
-{
-    try
-    {
-        auto& db = _self.database();
-
-        for (auto bucket_id : _current_buckets)
-        {
-            const auto& bucket = db.get(bucket_id);
-
-            if (!is_virtual_operation(o.op))
-            {
-                db.modify(bucket, [&](bucket_object& b) { b.operations++; });
-            }
-            o.op.visit(operation_process(db, bucket));
-        }
-    }
-    FC_CAPTURE_AND_RETHROW()
+    o.op.visit(operation_process(db, bucket));
 }
 
 } // detail
@@ -340,13 +272,6 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
     try
     {
         ilog("chain_stats_plugin: plugin_initialize() begin");
-        chain::database& db = database();
-
-        db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
-        db.pre_apply_operation.connect([&](const operation_notification& o) { _my->pre_operation(o); });
-        db.post_apply_operation.connect([&](const operation_notification& o) { _my->post_operation(o); });
-
-        db.add_plugin_index<bucket_index>();
 
         if (options.count("chain-stats-bucket-size"))
         {

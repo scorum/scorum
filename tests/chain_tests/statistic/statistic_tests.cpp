@@ -56,7 +56,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
 
     const bucket_object& get_lifetime_bucket() const
     {
-        const auto& bucket_idx = db.get_index<bucket_index>().indices().get<by_bucket>();
+        const auto& bucket_idx = db.get_index<bucket_index>().indices().get<common_statistics::by_bucket>();
         auto itr = bucket_idx.find(boost::make_tuple(std::numeric_limits<uint32_t>::max(), fc::time_point_sec()));
         FC_ASSERT(itr != bucket_idx.end());
         return *itr;

@@ -10,6 +10,12 @@
 #endif
 
 namespace scorum {
+namespace common_statistics {
+struct by_bucket;
+}
+}
+
+namespace scorum {
 namespace blockchain_statistics {
 
 using namespace scorum::chain;
@@ -32,13 +38,12 @@ struct bucket_object : public base_metric, public object<bucket_object_type, buc
 typedef oid<bucket_object> bucket_id_type;
 
 struct by_id;
-struct by_bucket;
 typedef shared_multi_index_container<bucket_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<bucket_object,
                                                                       bucket_id_type,
                                                                       &bucket_object::id>>,
-                                                ordered_unique<tag<by_bucket>,
+                                                ordered_unique<tag<common_statistics::by_bucket>,
                                                                composite_key<bucket_object,
                                                                              member<bucket_object,
                                                                                     uint32_t,
