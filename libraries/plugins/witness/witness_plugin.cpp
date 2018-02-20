@@ -30,6 +30,7 @@
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <fc/time.hpp>
 
@@ -208,7 +209,7 @@ void witness_plugin_impl::pre_transaction(const signed_transaction& trx)
 
     for (const auto& auth : required)
     {
-        const auto& acnt = _db.get_account(auth);
+        const auto& acnt = _db.obtain_service<dbs_account>().get_account(auth);
 
         update_account_bandwidth(acnt, trx_size, bandwidth_type::forum);
 
@@ -261,7 +262,7 @@ void witness_plugin_impl::on_block(const signed_block& b)
             * the reserve ratio will half. Likewise, if it is at 12% it will increase by 50%.
             *
             * If the reserve ratio is consistently low, then it is probably time to increase
-            * the capcacity of the network.
+            * the capacity of the network.
             *
             * This algorithm is designed to react quickly to observations significantly
             * different from past observed behavior and make small adjustments when

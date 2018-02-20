@@ -21,7 +21,8 @@ public:
     using value_type = typename MultiIndexType::value_type;
     using allocator_type = typename MultiIndexType::allocator_type;
 
-    base_index(const fc::shared_allocator<value_type>& a)
+    template <typename Allocator>
+    base_index(const Allocator& a)
         : _indices(a)
         , _size_of_value_type(sizeof(typename MultiIndexType::node_type))
         , _size_of_this(sizeof(*this))
@@ -148,7 +149,8 @@ private:
     };
 
 public:
-    generic_index(const fc::shared_allocator<value_type>& a)
+    template <typename Allocator>
+    generic_index(const Allocator& a)
         : base_index_type(a)
         , _stack(a)
     {

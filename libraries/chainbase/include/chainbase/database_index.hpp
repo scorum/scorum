@@ -31,7 +31,7 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error(type_name + "::type_id is already in use"));
         }
 
-        index_type* idx_ptr = this->template allocate_index<MultiIndexType>();
+        index_type* idx_ptr = this->template allocate_index<index_type>();
 
         idx_ptr->validate();
 

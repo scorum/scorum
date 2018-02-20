@@ -22,10 +22,8 @@ protected:
 
     void close_segment_file();
 
-    template <typename MultiIndexType> generic_index<MultiIndexType>* allocate_index()
+    template <typename index_type> index_type* allocate_index()
     {
-        typedef generic_index<MultiIndexType> index_type;
-
         std::string type_name = boost::core::demangle(typeid(typename index_type::value_type).name());
 
         index_type* idx_ptr = nullptr;

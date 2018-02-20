@@ -21,6 +21,7 @@ set( SOURCES
     budget_check/budget_operations.cpp
     budget_check/budget_check_common.cpp
     proposal/proposal_tests.cpp
+    statistic/statistic_tests.cpp
     genesis_db_tests.cpp
 )
 

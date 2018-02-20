@@ -16,8 +16,6 @@ struct account_service_i
 
     virtual bool is_exists(const account_name_type&) const = 0;
 
-    //    static asset get_balance(const account_object& account, asset_symbol_type symbol);
-
     virtual const account_authority_object& get_account_authority(const account_name_type&) const = 0;
 
     virtual void check_account_existence(const account_name_type&,
@@ -96,7 +94,7 @@ struct account_service_i
     virtual void update_withdraw(const account_object& account,
                                  const asset& vesting,
                                  const time_point_sec& next_vesting_withdrawal,
-                                 const share_type& to_withdrawn)
+                                 const asset& to_withdraw)
         = 0;
 
     virtual void increase_withdraw_routes(const account_object& account) = 0;
@@ -149,8 +147,6 @@ protected:
     explicit dbs_account(database& db);
 
 public:
-    static asset get_balance(const account_object& account, asset_symbol_type symbol);
-
     virtual const account_object& get(const account_id_type&) const override;
 
     virtual const account_object& get_account(const account_name_type&) const override;
@@ -230,7 +226,7 @@ public:
     virtual void update_withdraw(const account_object& account,
                                  const asset& vesting,
                                  const time_point_sec& next_vesting_withdrawal,
-                                 const share_type& to_withdrawn) override;
+                                 const asset& to_withdraw) override;
 
     virtual void increase_withdraw_routes(const account_object& account) override;
     virtual void decrease_withdraw_routes(const account_object& account) override;

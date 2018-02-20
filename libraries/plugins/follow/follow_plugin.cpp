@@ -11,6 +11,7 @@
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <graphene/schema/schema.hpp>
 #include <graphene/schema/schema_impl.hpp>
@@ -90,7 +91,7 @@ struct pre_operation_visitor
                 return;
 
             const auto& cv_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-            auto cv = cv_idx.find(std::make_tuple(c.id, db.get_account(op.voter).id));
+            auto cv = cv_idx.find(std::make_tuple(c.id, db.obtain_service<dbs_account>().get_account(op.voter).id));
 
             if (cv != cv_idx.end())
             {
@@ -291,7 +292,8 @@ struct post_operation_visitor
                 return;
 
             const auto& cv_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-            auto cv = cv_idx.find(boost::make_tuple(comment.id, db.get_account(op.voter).id));
+            auto cv
+                = cv_idx.find(boost::make_tuple(comment.id, db.obtain_service<dbs_account>().get_account(op.voter).id));
 
             const auto& rep_idx = db.get_index<reputation_index>().indices().get<by_account>();
             auto voter_rep = rep_idx.find(op.voter);

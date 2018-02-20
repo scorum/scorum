@@ -9,6 +9,7 @@
 #include <scorum/chain/operation_notification.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -188,7 +189,7 @@ struct operation_visitor
     void create_tag(const std::string& tag, const comment_object& comment, double hot, double trending) const
     {
         comment_id_type parent;
-        account_id_type author = _db.get_account(comment.author).id;
+        account_id_type author = _db.obtain_service<dbs_account>().get_account(comment.author).id;
 
         if (comment.parent_author.size())
             parent = _db.get_comment(comment.parent_author, comment.parent_permlink).id;
@@ -428,8 +429,8 @@ struct operation_visitor
     {
         update_tags(_db.get_comment(op.author, op.permlink));
         /*
-        update_peer_stats( _db.get_account(op.voter),
-                           _db.get_account(op.author),
+        update_peer_stats( _db.obtain_service<dbs_account>().get_account(op.voter),
+                           _db.obtain_service<dbs_account>().get_account(op.author),
                            _db.get_comment(op.author, op.permlink),
                            op.weight );
                            */
@@ -439,7 +440,7 @@ struct operation_visitor
     {
         const auto& idx = _db.get_index<tag_index>().indices().get<by_author_comment>();
 
-        const auto& auth = _db.get_account(op.author);
+        const auto& auth = _db.obtain_service<dbs_account>().get_account(op.author);
         auto itr = idx.lower_bound(boost::make_tuple(auth.id));
         while (itr != idx.end() && itr->author == auth.id)
         {

@@ -147,10 +147,12 @@ void dbs_registration_pool::increase_already_allocated_count()
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
     asset per_reg = calculate_per_reg();
+    // clang-format off
     FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
-    FC_ASSERT(per_reg.amount <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount
-                      / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK,
-              "Invalid schedule. Always exceeds the limit.");
+    FC_ASSERT(per_reg <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK,
+              "Invalid schedule. Per registration bonus ${1} always exceeds the limit ${2}.",
+              ("1", per_reg)("2",SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK));
+    // clang-format on
 
     dbs_registration_committee& committee_service = db().obtain_service<dbs_registration_committee>();
 

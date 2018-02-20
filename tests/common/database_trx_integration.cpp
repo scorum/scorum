@@ -60,7 +60,7 @@ const account_object& database_trx_integration_fixture::account_create(const std
         trx.operations.clear();
         trx.signatures.clear();
 
-        const account_object& acct = db.get_account(name);
+        const account_object& acct = db.obtain_service<chain::dbs_account>().get_account(name);
 
         return acct;
     }
@@ -211,7 +211,7 @@ void database_trx_integration_fixture::proxy(const std::string& account, const s
 
 const asset& database_trx_integration_fixture::get_balance(const std::string& account_name) const
 {
-    return db.get_account(account_name).balance;
+    return db.obtain_service<chain::dbs_account>().get_account(account_name).balance;
 }
 
 void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)

@@ -36,17 +36,6 @@ bool dbs_account::is_exists(const account_name_type& name) const
     return nullptr != db_impl().find<account_object, by_name>(name);
 }
 
-asset dbs_account::get_balance(const account_object& account, asset_symbol_type symbol)
-{
-    switch (symbol)
-    {
-    case SCORUM_SYMBOL:
-        return account.balance;
-    default:
-        FC_ASSERT(false, "invalid symbol");
-    }
-}
-
 const account_authority_object& dbs_account::get_account_authority(const account_name_type& name) const
 {
     try
@@ -324,13 +313,13 @@ void dbs_account::prove_authority(const account_object& account, bool require_ow
 void dbs_account::update_withdraw(const account_object& account,
                                   const asset& vesting,
                                   const time_point_sec& next_vesting_withdrawal,
-                                  const share_type& to_withdrawn)
+                                  const asset& to_withdraw)
 {
     db_impl().modify(account, [&](account_object& a) {
         a.vesting_withdraw_rate = vesting;
         a.next_vesting_withdrawal = next_vesting_withdrawal;
-        a.to_withdraw = to_withdrawn;
-        a.withdrawn = 0;
+        a.to_withdraw = to_withdraw;
+        a.withdrawn = asset(0, VESTS_SYMBOL);
     });
 }
 

@@ -149,6 +149,14 @@ struct asset
         return ret;
     }
 
+    friend asset operator%(const asset& a, const asset& b)
+    {
+        FC_ASSERT(a._symbol == b._symbol);
+        asset ret(a);
+        ret.amount %= b.amount;
+        return ret;
+    }
+
 private:
     friend struct fc::reflector<asset>;
 
