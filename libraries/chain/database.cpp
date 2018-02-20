@@ -1005,11 +1005,12 @@ void database::process_vesting_withdrawals()
 {
     // clang-format off
     dbs_account& account_service = obtain_service<dbs_account>();
+    auto& dprops_service = obtain_service<dbs_dynamic_global_property>();
 
     const auto& widx = get_index<account_index>().indices().get<by_next_vesting_withdrawal>();
     const auto& didx = get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
 
-    const auto& cprops = get_dynamic_global_properties();
+    
 
     for (auto current = widx.begin(); current != widx.end() && current->next_vesting_withdrawal <= head_block_time();)
     {
@@ -1048,7 +1049,7 @@ void database::process_vesting_withdrawals()
                 {
                     push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name, to_deposit));
 
-                    modify(to_account, [&](account_object& a) { a.vesting_shares += to_deposit; });
+                    account_service.increase_vesting_shares(to_account, to_deposit);
 
                     account_service.adjust_proxied_witness_votes(to_account, to_deposit.amount);  
                 }
@@ -1058,9 +1059,9 @@ void database::process_vesting_withdrawals()
 
                     push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name, converted_scorum));
 
-                    modify(to_account, [&](account_object& a) { a.balance += converted_scorum; });
+                    account_service.increase_balance(to_account, converted_scorum);
 
-                    modify(cprops, [&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_deposit; });
+                    dprops_service.update([&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_deposit; });
                 }
             }
         }
@@ -1089,7 +1090,7 @@ void database::process_vesting_withdrawals()
             }
         });
 
-        modify(cprops, [&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_convert; });
+        dprops_service.update([&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_convert; });
 
         if (to_withdraw.amount > 0)
         {
