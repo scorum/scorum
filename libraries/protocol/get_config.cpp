@@ -122,8 +122,6 @@ fc::variant_object get_config()
 
     result["SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER"] = SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER;
 
-    result["SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT"] = SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT;
-
     return result;
 }
 } // namespace protocol

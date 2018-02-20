@@ -13,10 +13,11 @@ struct dev_pool_service_i
 
     virtual bool is_exists() const = 0;
 
-    virtual const dev_committee_object& create() = 0;
+    using modifier_type = std::function<void(dev_committee_object&)>;
 
-    virtual void increase_balance(const asset& amount) = 0;
-    virtual void decrease_balance(const asset& amount) = 0;
+    virtual const dev_committee_object& create(const modifier_type&) = 0;
+
+    virtual void update(const modifier_type&) = 0;
 };
 
 class dbs_dev_pool : public dbs_base, public dev_pool_service_i
@@ -27,14 +28,13 @@ protected:
     explicit dbs_dev_pool(database& db);
 
 public:
-    const dev_committee_object& get() const override;
+    virtual const dev_committee_object& get() const override;
 
-    bool is_exists() const override;
+    virtual bool is_exists() const override;
 
-    const dev_committee_object& create() override;
+    virtual const dev_committee_object& create(const modifier_type&) override;
 
-    void increase_balance(const asset& amount) override;
-    void decrease_balance(const asset& amount) override;
+    virtual void update(const modifier_type&) override;
 };
 } // namespace chain
 } // namespace scorum

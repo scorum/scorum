@@ -197,8 +197,6 @@
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           (account_name_type())
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
-/// Represents the account that owns SP for development pool but can't spend it
-#define SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT      (account_name_type(std::string(sizeof(account_name_type), 0xff)))
 ///@}
 
 // clang-format on

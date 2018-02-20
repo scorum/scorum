@@ -302,7 +302,7 @@ SCORUM_TEST_CASE(vesting_transfered_stat_test)
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    set_withdraw_vesting_route_operation op;
+    set_withdraw_vesting_route_to_account_operation op;
     op.from_account = "bob";
     op.to_account = alice;
     op.auto_vest = true;

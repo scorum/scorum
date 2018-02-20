@@ -21,10 +21,7 @@ struct route_to_dev_pool_fixture : public database_trx_integration_fixture
         , pool_service(db.dev_pool_service())
         , withdraw_service(db.withdraw_vesting_route_service())
     {
-        genesis_state_type genesis
-            = database_integration_fixture::default_genesis_state().dev_supply(ASSET_NULL_SP).generate();
-
-        open_database(genesis);
+        open_database();
 
         generate_blocks(5);
 
@@ -40,10 +37,17 @@ struct route_to_dev_pool_fixture : public database_trx_integration_fixture
 
     void create_dev_pool()
     {
-        db_plugin->debug_update([&](database&) { pool_service.create(); }, default_skip);
+        db_plugin->debug_update(
+            [&](database&) {
+                pool_service.create([&](dev_committee_object& pool) {
+                    pool.balance_in = ASSET_NULL_SP;
+                    pool.balance_out = ASSET_NULL_SCR;
+                });
+            },
+            default_skip);
     }
 
-    void set_withdraw_route(uint16_t percent)
+    void set_withdraw_route_from_alice_to_pool(uint16_t percent)
     {
         set_withdraw_vesting_route_to_dev_pool_operation op;
 
@@ -51,9 +55,11 @@ struct route_to_dev_pool_fixture : public database_trx_integration_fixture
         op.percent = percent * SCORUM_1_PERCENT;
 
         push_operation(op, alice_key);
+
+        generate_block();
     }
 
-    void start_withdraw(const asset& amount)
+    void start_withdraw_from_alice_to_pool(const asset& amount)
     {
         withdraw_vesting_operation op;
 
@@ -61,6 +67,8 @@ struct route_to_dev_pool_fixture : public database_trx_integration_fixture
         op.vesting_shares = amount;
 
         push_operation(op, alice_key);
+
+        generate_block();
     }
 
     account_service_i& account_service;
@@ -80,13 +88,13 @@ BOOST_FIXTURE_TEST_CASE(set_withdraw_route_check, route_to_dev_pool_fixture)
 
     vest("alice", balance);
 
+    BOOST_CHECK_EQUAL(account_service.get_account("alice").vesting_shares.amount, initial_balance);
+
+    set_withdraw_route_from_alice_to_pool(50);
+
     const account_object& alice_vested = account_service.get_account("alice");
 
-    BOOST_REQUIRE_EQUAL(alice_vested.vesting_shares.amount, initial_balance);
-
-    set_withdraw_route(50);
-
-    BOOST_REQUIRE(withdraw_service.is_exists(alice_vested.id, pool.id));
+    BOOST_CHECK(withdraw_service.is_exists(alice_vested.id, pool.id));
 }
 
 // TODO

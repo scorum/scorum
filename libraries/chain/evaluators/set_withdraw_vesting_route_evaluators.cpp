@@ -7,10 +7,11 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_vesting_route_statistic.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_route_object.hpp>
+#include <scorum/chain/schema/withdraw_vesting_route_objects.hpp>
 
 namespace scorum {
 namespace chain {
@@ -21,54 +22,66 @@ public:
     set_withdraw_vesting_route_evaluator_impl(data_service_factory_i& services)
         : _account_service(services.account_service())
         , _withdraw_vesting_route_service(services.withdraw_vesting_route_service())
+        , _withdraw_vesting_route_statistic_service(services.withdraw_vesting_route_statistic_service())
     {
     }
 
-    template <typename ObjectType>
-    void do_apply(const account_name_type& from_account_name,
+    template <typename FromObjectType, typename ToObjectType>
+    void do_apply(const FromObjectType& from_object,
+                  const ToObjectType& to_object,
                   const uint16_t percent,
-                  const ObjectType& to_object,
                   bool auto_vest = false)
     {
-        const auto& from_account = _account_service.get_account(from_account_name);
+        if (!_withdraw_vesting_route_statistic_service.is_exists(from_object.id))
+        {
+            _withdraw_vesting_route_statistic_service.create(
+                [&](withdraw_vesting_route_statistic_object& wvdso) { wvdso.from_id = from_object.id; });
+        }
 
-        if (!_withdraw_vesting_route_service.is_exists(from_account.id, to_object.id))
+        const withdraw_vesting_route_statistic_object& statistic
+            = _withdraw_vesting_route_statistic_service.get(from_object.id);
+
+        if (!_withdraw_vesting_route_service.is_exists(from_object.id, to_object.id))
         {
             FC_ASSERT(percent != 0, "Cannot create a 0% destination.");
-            FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
+
+            FC_ASSERT(statistic.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
                       "Account already has the maximum number of routes.");
 
             _withdraw_vesting_route_service.create([&](withdraw_vesting_route_object& wvdo) {
-                wvdo.from_account = from_account.id;
-                wvdo.to_id = withdraw_route_service::get_to_id(to_object);
-                wvdo.to_object = to_object.id;
+                wvdo.from_id = from_object.id;
+                wvdo.to_id = to_object.id;
                 wvdo.percent = percent;
                 wvdo.auto_vest = auto_vest;
             });
 
-            _account_service.increase_withdraw_routes(from_account);
+            _withdraw_vesting_route_statistic_service.update(
+                statistic, [&](withdraw_vesting_route_statistic_object& wvdso) { wvdso.withdraw_routes++; });
         }
         else if (percent == 0)
         {
-            const auto& wvr = _withdraw_vesting_route_service.get(from_account.id, to_object.id);
+            const auto& wvr = _withdraw_vesting_route_service.get(from_object.id, to_object.id);
             _withdraw_vesting_route_service.remove(wvr);
 
-            _account_service.decrease_withdraw_routes(from_account);
+            _withdraw_vesting_route_statistic_service.update(
+                statistic, [&](withdraw_vesting_route_statistic_object& wvdso) { wvdso.withdraw_routes--; });
+
+            if (!statistic.withdraw_routes)
+            {
+                _withdraw_vesting_route_statistic_service.remove(statistic);
+            }
         }
         else
         {
-            const auto& wvr = _withdraw_vesting_route_service.get(from_account.id, to_object.id);
+            const auto& wvr = _withdraw_vesting_route_service.get(from_object.id, to_object.id);
 
             _withdraw_vesting_route_service.update(wvr, [&](withdraw_vesting_route_object& wvdo) {
-                wvdo.from_account = from_account.id;
-                wvdo.to_id = withdraw_route_service::get_to_id(to_object);
-                wvdo.to_object = to_object.id;
                 wvdo.percent = percent;
                 wvdo.auto_vest = auto_vest;
             });
         }
 
-        uint16_t total_percent = _withdraw_vesting_route_service.total_percent(from_account.id);
+        uint16_t total_percent = _withdraw_vesting_route_service.total_percent(from_object.id);
 
         FC_ASSERT(total_percent <= SCORUM_100_PERCENT,
                   "More than 100% of vesting withdrawals allocated to destinations.");
@@ -77,6 +90,7 @@ public:
 private:
     account_service_i& _account_service;
     withdraw_vesting_route_service_i& _withdraw_vesting_route_service;
+    withdraw_vesting_route_statistic_service_i& _withdraw_vesting_route_statistic_service;
 };
 
 // set_withdraw_vesting_route_to_account_evaluator
@@ -97,11 +111,13 @@ set_withdraw_vesting_route_to_account_evaluator::~set_withdraw_vesting_route_to_
 void set_withdraw_vesting_route_to_account_evaluator::do_apply(
     const set_withdraw_vesting_route_to_account_evaluator::operation_type& op)
 {
+    _account_service.check_account_existence(op.from_account);
     _account_service.check_account_existence(op.to_account);
 
+    const auto& from_account = _account_service.get_account(op.from_account);
     const auto& to_account = _account_service.get_account(op.to_account);
 
-    _impl->do_apply(op.from_account, op.percent, to_account, op.auto_vest);
+    _impl->do_apply(from_account, to_account, op.percent, op.auto_vest);
 }
 
 // set_withdraw_vesting_route_to_dev_pool_evaluator
@@ -110,6 +126,7 @@ set_withdraw_vesting_route_to_dev_pool_evaluator::set_withdraw_vesting_route_to_
     data_service_factory_i& services)
     : evaluator_impl<data_service_factory_i, set_withdraw_vesting_route_to_dev_pool_evaluator>(services)
     , _impl(new set_withdraw_vesting_route_evaluator_impl(services))
+    , _account_service(services.account_service())
     , _dev_pool_service(services.dev_pool_service())
 {
 }
@@ -122,11 +139,13 @@ set_withdraw_vesting_route_to_dev_pool_evaluator::~set_withdraw_vesting_route_to
 void set_withdraw_vesting_route_to_dev_pool_evaluator::do_apply(
     const set_withdraw_vesting_route_to_dev_pool_evaluator::operation_type& op)
 {
+    _account_service.check_account_existence(op.from_account);
     FC_ASSERT(_dev_pool_service.is_exists());
 
+    const auto& from_account = _account_service.get_account(op.from_account);
     const auto& to_pool = _dev_pool_service.get();
 
-    _impl->do_apply(op.from_account, op.percent, to_pool);
+    _impl->do_apply(from_account, to_pool, op.percent);
 }
 }
 }

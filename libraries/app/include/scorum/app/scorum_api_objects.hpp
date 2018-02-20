@@ -221,7 +221,6 @@ struct account_api_obj
         , next_vesting_withdrawal(a.next_vesting_withdrawal)
         , withdrawn(a.withdrawn)
         , to_withdraw(a.to_withdraw)
-        , withdraw_routes(a.withdraw_routes)
         , witnesses_voted_for(a.witnesses_voted_for)
         , last_post(a.last_post)
         , last_root_post(a.last_root_post)
@@ -306,7 +305,6 @@ struct account_api_obj
     time_point_sec next_vesting_withdrawal;
     asset withdrawn = asset(0, VESTS_SYMBOL);
     asset to_withdraw = asset(0, VESTS_SYMBOL);
-    uint16_t withdraw_routes = 0;
 
     std::vector<share_type> proxied_vsf_votes;
 
@@ -637,7 +635,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
+             (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)
              (curation_rewards)
              (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)

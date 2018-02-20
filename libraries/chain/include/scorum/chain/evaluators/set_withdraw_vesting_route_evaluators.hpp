@@ -20,7 +20,7 @@ class set_withdraw_vesting_route_to_account_evaluator
     : public evaluator_impl<data_service_factory_i, set_withdraw_vesting_route_to_account_evaluator>
 {
 public:
-    using operation_type = scorum::protocol::set_withdraw_vesting_route_operation;
+    using operation_type = scorum::protocol::set_withdraw_vesting_route_to_account_operation;
 
     set_withdraw_vesting_route_to_account_evaluator(data_service_factory_i& services);
     ~set_withdraw_vesting_route_to_account_evaluator();
@@ -45,6 +45,7 @@ public:
 
 private:
     std::unique_ptr<set_withdraw_vesting_route_evaluator_impl> _impl;
+    account_service_i& _account_service;
     dev_pool_service_i& _dev_pool_service;
 };
 

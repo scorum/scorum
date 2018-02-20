@@ -381,7 +381,7 @@ struct withdraw_vesting_operation : public base_operation
  * can be immediately vested again, circumventing the conversion from
  * vests to scorum and back, guaranteeing they maintain their value.
  */
-struct set_withdraw_vesting_route_operation : public base_operation
+struct set_withdraw_vesting_route_to_account_operation : public base_operation
 {
     account_name_type from_account;
     account_name_type to_account;
@@ -869,7 +869,7 @@ FC_REFLECT( scorum::protocol::account_update_operation,
 FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
 FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
 FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(vesting_shares) )
-FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_operation, (from_account)(to_account)(percent)(auto_vest) )
+FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_to_account_operation, (from_account)(to_account)(percent)(auto_vest) )
 FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_to_dev_pool_operation, (from_account)(percent) )
 FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(proposed_chain_props) )
 FC_REFLECT( scorum::protocol::account_witness_vote_operation, (account)(witness)(approve) )

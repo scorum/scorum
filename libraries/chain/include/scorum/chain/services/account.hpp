@@ -91,9 +91,6 @@ struct account_service_i
                                  const asset& to_withdraw)
         = 0;
 
-    virtual void increase_withdraw_routes(const account_object& account) = 0;
-    virtual void decrease_withdraw_routes(const account_object& account) = 0;
-
     virtual void increase_witnesses_voted_for(const account_object& account) = 0;
     virtual void decrease_witnesses_voted_for(const account_object& account) = 0;
 
@@ -215,9 +212,6 @@ public:
                                  const asset& vesting,
                                  const time_point_sec& next_vesting_withdrawal,
                                  const asset& to_withdraw) override;
-
-    virtual void increase_withdraw_routes(const account_object& account) override;
-    virtual void decrease_withdraw_routes(const account_object& account) override;
 
     virtual void increase_witnesses_voted_for(const account_object& account) override;
     virtual void decrease_witnesses_voted_for(const account_object& account) override;

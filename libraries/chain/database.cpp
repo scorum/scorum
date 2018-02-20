@@ -17,7 +17,7 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_route_object.hpp>
+#include <scorum/chain/schema/withdraw_vesting_route_objects.hpp>
 #include <scorum/chain/schema/reward_pool_object.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
@@ -57,6 +57,8 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -1040,8 +1042,8 @@ void database::process_vesting_withdrawals()
         asset deposited_vests = asset(0, VESTS_SYMBOL);
 
         for (auto itr
-             = didx.upper_bound(boost::make_tuple(from_account.id, withdraw_vesting_route_object_to_id_type()));
-             itr != didx.end() && itr->from_account == from_account.id; ++itr)
+             = didx.upper_bound(boost::make_tuple(withdrawable_id_type(from_account.id), withdrawable_id_type()));
+             itr != didx.end() && is_equal_withdrawable_id(itr->from_id, from_account.id); ++itr)
         {
             const withdraw_vesting_route_object& wvro = (*itr);
             asset to_deposit
@@ -1052,7 +1054,7 @@ void database::process_vesting_withdrawals()
             {
                 if (withdraw_route_service::is_to_account(wvro))
                 {
-                    const auto& to_account = get(wvro.to_object.as<account_id_type>());
+                    const auto& to_account = get(wvro.to_id.get<account_id_type>());
 
                     deposited_vests += to_deposit;
 
@@ -1592,6 +1594,8 @@ void database::initialize_indexes()
     add_index<vesting_delegation_expiration_index>();
     add_index<vesting_delegation_index>();
     add_index<withdraw_vesting_route_index>();
+    add_index<withdraw_vesting_route_statistic_index>();
+    add_index<withdraw_vesting_index>();
     add_index<witness_index>();
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
@@ -2394,6 +2398,12 @@ void database::validate_invariants() const
         if (obtain_service<dbs_registration_pool>().is_exists())
         {
             total_supply += obtain_service<dbs_registration_pool>().get().balance;
+        }
+
+        if (obtain_service<dbs_dev_pool>().is_exists())
+        {
+            total_supply += asset(obtain_service<dbs_dev_pool>().get().balance_in.amount, SCORUM_SYMBOL);
+            total_supply += obtain_service<dbs_dev_pool>().get().balance_out;
         }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();

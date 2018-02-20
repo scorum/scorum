@@ -25,20 +25,14 @@ bool dbs_dev_pool::is_exists() const
     return nullptr != db_impl().find<dev_committee_object>();
 }
 
-const dev_committee_object& dbs_dev_pool::create()
+const dev_committee_object& dbs_dev_pool::create(const modifier_type& modifier)
 {
-    return db_impl().create<dev_committee_object>(
-        [&](dev_committee_object& o) { o.balance = asset(0, SCORUM_SYMBOL); });
+    return db_impl().create<dev_committee_object>([&](dev_committee_object& o) { modifier(o); });
 }
 
-void dbs_dev_pool::increase_balance(const asset& amount)
+void dbs_dev_pool::update(const modifier_type& modifier)
 {
-    db_impl().modify(get(), [&](dev_committee_object& o) { o.balance += amount; });
-}
-
-void dbs_dev_pool::decrease_balance(const asset& amount)
-{
-    increase_balance(-amount);
+    db_impl().modify(get(), [&](dev_committee_object& o) { modifier(o); });
 }
 
 } // namespace chain

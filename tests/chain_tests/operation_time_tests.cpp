@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(vesting_withdraw_route)
         tx.signatures.clear();
 
         BOOST_TEST_MESSAGE("Setting up bob destination");
-        set_withdraw_vesting_route_operation op;
+        set_withdraw_vesting_route_to_account_operation op;
         op.from_account = "alice";
         op.to_account = "bob";
         op.percent = SCORUM_1_PERCENT * 50;

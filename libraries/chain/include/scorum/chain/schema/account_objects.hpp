@@ -62,7 +62,6 @@ public:
     time_point_sec next_vesting_withdrawal = fc::time_point_sec::maximum(); ///< after every withdrawal this is incremented by 1 week
     asset withdrawn =   asset(0, VESTS_SYMBOL); /// Track how many shares have been withdrawn
     asset to_withdraw = asset(0, VESTS_SYMBOL); /// Might be able to look this up with operation history.
-    uint16_t withdraw_routes = 0;
 
     fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes; // = std::vector<share_type>(SCORUM_MAX_PROXY_RECURSION_DEPTH, 0 );
                                                                                ///< the total VFS votes proxied to this account
@@ -475,7 +474,7 @@ FC_REFLECT( scorum::chain::account_object,
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)
-             (vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
+             (vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)
              (curation_rewards)
              (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)

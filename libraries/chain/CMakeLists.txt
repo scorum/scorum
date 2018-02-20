@@ -43,10 +43,12 @@ add_library( scorum_chain
              services/escrow.cpp
              services/witness_vote.cpp
              services/decline_voting_rights_request.cpp
-             services/withdraw_vesting_route.cpp
              services/vesting_delegation.cpp
              services/reward_fund.cpp
              services/dev_pool.cpp
+             services/withdraw_vesting_route.cpp
+             services/withdraw_vesting_route_statistic.cpp
+             services/withdraw_vesting.cpp
 
              data_service_factory.cpp
 
@@ -56,7 +58,6 @@ add_library( scorum_chain
              evaluators/withdraw_vesting_evaluator.cpp
 
              schema/shared_authority.cpp
-             schema/withdraw_vesting_route_object.cpp
 
              block_log.cpp
 

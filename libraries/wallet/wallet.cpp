@@ -2103,7 +2103,7 @@ annotated_signed_transaction wallet_api::set_withdraw_vesting_route(
     const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    set_withdraw_vesting_route_operation op;
+    set_withdraw_vesting_route_to_account_operation op;
     op.from_account = from;
     op.to_account = to;
     op.percent = percent;

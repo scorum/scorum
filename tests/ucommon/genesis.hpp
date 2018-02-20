@@ -148,9 +148,15 @@ public:
         return *this;
     }
 
-    Genesis& dev_supply(asset amount)
+    Genesis& dev_in_supply(asset amount)
     {
-        genesis_state.dev_supply = amount;
+        genesis_state.dev_in_supply = amount;
+        return *this;
+    }
+
+    Genesis& dev_out_supply(asset amount)
+    {
+        genesis_state.dev_out_supply = amount;
         return *this;
     }
 

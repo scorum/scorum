@@ -307,16 +307,6 @@ void dbs_account::update_withdraw(const account_object& account,
     });
 }
 
-void dbs_account::increase_withdraw_routes(const account_object& account)
-{
-    db_impl().modify(account, [&](account_object& a) { a.withdraw_routes++; });
-}
-
-void dbs_account::decrease_withdraw_routes(const account_object& account)
-{
-    db_impl().modify(account, [&](account_object& a) { a.withdraw_routes--; });
-}
-
 void dbs_account::increase_witnesses_voted_for(const account_object& account)
 {
     db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for++; });

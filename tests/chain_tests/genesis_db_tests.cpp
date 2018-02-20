@@ -280,25 +280,38 @@ struct dev_poll_test_fixture : public genesis_base_test_fixture
     scorum::chain::withdraw_vesting_route_service_i& withdraw_vesting_route_service;
 };
 
-BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
+BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
 {
-    using scorum::protocol::account_name_type;
-
     asset dev_sp = ASSET_SP(1e+6);
 
-    genesis.dev_supply(dev_sp);
+    genesis.dev_in_supply(dev_sp);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_REQUIRE_NO_THROW(account_service.check_account_existence(SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT));
+    BOOST_REQUIRE(dev_pool_service.is_exists());
+}
+
+BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
+{
+    asset dev_scr = ASSET_SCR(1e+6);
+
+    genesis.dev_out_supply(dev_scr);
+
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_REQUIRE(dev_pool_service.is_exists());
+}
 
-    const auto& account = account_service.get_account(SCORUM_DEV_POOL_SP_LOCKED_ACCOUNT);
+BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
+{
+    asset dev_sp = ASSET_SP(1e+6);
+    asset dev_scr = ASSET_SCR(1e+6);
 
-    BOOST_REQUIRE(withdraw_vesting_route_service.is_exists(account.id, dev_pool_service.get().id));
+    genesis.dev_in_supply(dev_sp).dev_out_supply(dev_scr);
 
-    BOOST_REQUIRE_EQUAL(account.to_withdraw, account.vesting_shares);
+    BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
+
+    BOOST_REQUIRE(dev_pool_service.is_exists());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

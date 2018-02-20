@@ -16,7 +16,8 @@ public:
 
     id_type id;
 
-    asset balance = asset(0, SCORUM_SYMBOL);
+    asset balance_in = asset(0, VESTS_SYMBOL);
+    asset balance_out = asset(0, SCORUM_SYMBOL);
 };
 
 typedef shared_multi_index_container<dev_committee_object,
@@ -29,5 +30,5 @@ typedef shared_multi_index_container<dev_committee_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::dev_committee_object, (id)(balance))
+FC_REFLECT(scorum::chain::dev_committee_object, (id)(balance_in)(balance_out))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_object, scorum::chain::dev_committee_index)

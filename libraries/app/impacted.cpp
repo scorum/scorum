@@ -127,7 +127,7 @@ struct get_impacted_account_visitor
         }
     }
 
-    void operator()(const set_withdraw_vesting_route_operation& op)
+    void operator()(const set_withdraw_vesting_route_to_account_operation& op)
     {
         _impacted.insert(op.from_account);
         _impacted.insert(op.to_account);
