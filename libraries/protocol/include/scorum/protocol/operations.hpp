@@ -52,6 +52,7 @@ using operation = fc::static_variant<vote_operation,
 
                                      proposal_vote_operation,
                                      proposal_create_operation,
+                                     proposal_create_operation2,
 
                                      atomicswap_initiate_operation,
                                      atomicswap_redeem_operation,
