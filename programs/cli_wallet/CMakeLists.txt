@@ -22,7 +22,6 @@ target_link_libraries( cli_wallet
                        scorum_wallet
                        cli
                        scorum_app
-                       scorum_follow
                        fc
                        ${CMAKE_DL_LIBS}
                        ${PLATFORM_SPECIFIC_LIBS} )

@@ -15,7 +15,6 @@ target_link_libraries( scorum_app
                        scorum_chain
                        scorum_protocol
                        scorum_tags
-                       scorum_follow
                        scorum_witness
                        scorum_mf_plugins
                        fc
