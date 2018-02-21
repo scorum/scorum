@@ -1,5 +1,7 @@
 #pragma once
 
+#include <scorum/protocol/proposal_operations.hpp>
+
 #include <scorum/chain/services/dbs_base.hpp>
 #include <vector>
 #include <set>
@@ -10,7 +12,7 @@
 namespace scorum {
 namespace chain {
 
-struct registration_committee_service_i
+struct registration_committee_service_i : public scorum::protocol::registration_committee
 {
     using registration_committee_member_refs_type = std::vector<registration_committee_member_object::cref_type>;
 
@@ -20,10 +22,6 @@ struct registration_committee_service_i
 
     virtual registration_committee_member_refs_type create_committee(const std::vector<account_name_type>& accounts)
         = 0;
-
-    virtual const registration_committee_member_object& add_member(const account_name_type&) = 0;
-
-    virtual void exclude_member(const account_name_type&) = 0;
 
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
     virtual void update_member_info(const registration_committee_member_object&,
@@ -54,7 +52,7 @@ public:
 
     registration_committee_member_refs_type create_committee(const std::vector<account_name_type>& accounts) override;
 
-    const registration_committee_member_object& add_member(const account_name_type&) override;
+    void add_member(const account_name_type&) override;
 
     void exclude_member(const account_name_type&) override;
 
@@ -65,6 +63,10 @@ public:
     bool is_exists(const account_name_type&) const override;
 
     size_t get_members_count() const override;
+
+    void change_add_member_quorum(const uint32_t quorum) override;
+    void change_exclude_member_quorum(const uint32_t quorum) override;
+    void change_quorum(const uint32_t quorum) override;
 
 private:
     const registration_committee_member_object& _add_member(const account_object&);
