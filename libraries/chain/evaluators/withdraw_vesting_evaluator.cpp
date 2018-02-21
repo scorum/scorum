@@ -66,6 +66,7 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_evaluator::oper
                   "This operation would not change the vesting withdraw rate.");
 
         auto lmbNewVesting = [&](withdraw_vesting_object& wv) {
+            wv.from_id = account.id;
             wv.vesting_withdraw_rate = new_vesting_withdraw_rate;
             wv.next_vesting_withdrawal
                 = _dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);

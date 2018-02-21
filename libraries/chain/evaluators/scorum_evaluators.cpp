@@ -146,9 +146,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     // check delegation fee
 
-    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares
-                      - withdraw_vesting_service.get_withdraw_rest(creator.id)
-                  >= o.delegation,
+    asset withdraw_rest = withdraw_vesting_service.get_withdraw_rest(creator.id);
+
+    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares - withdraw_rest >= o.delegation,
               "Insufficient vesting shares to delegate to new account.",
               ("creator.vesting_shares", creator.vesting_shares)(
                   "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));

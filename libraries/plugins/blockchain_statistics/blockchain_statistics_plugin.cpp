@@ -175,8 +175,10 @@ public:
 
             b.vesting_withdrawals_processed++;
 
-            // TODO: b.vests_transferred (auto_vest == true)
-            b.vests_withdrawn += op.withdrawn.amount;
+            if (op.withdrawn.symbol() == SCORUM_SYMBOL)
+                b.vests_withdrawn += op.withdrawn.amount;
+            else
+                b.vests_transferred += op.withdrawn.amount;
 
             if (withdrawn.amount + op.withdrawn.amount >= to_withdraw.amount
                 || account.vesting_shares.amount - op.withdrawn.amount == 0)
