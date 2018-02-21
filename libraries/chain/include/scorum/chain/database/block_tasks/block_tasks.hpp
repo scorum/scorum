@@ -4,6 +4,8 @@
 
 #include <scorum/chain/database/database_virtual_operations.hpp>
 
+#include <fc/exception/exception.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -18,43 +20,49 @@ struct block_task_context : public database_virtual_operations_emmiter_i
     virtual void push_virtual_operation(const operation& op);
 
     data_service_factory_i& services;
-    uint32_t block_num;
+
+    uint32_t block_num() const
+    {
+        return _block_num;
+    }
 
 private:
+    uint32_t _block_num;
     database_virtual_operations_emmiter_i& _vops;
 };
 
-class per_block_num_apply_censor : public task_censor_i<block_task_context>
+template <uint32_t per_block_num> class per_block_num_apply_guard : public task_reentrance_guard_i<block_task_context>
 {
-public:
-    explicit per_block_num_apply_censor(uint32_t per_block_num);
+    static_assert(per_block_num > 0u, "Invalid value for per_block_num.");
 
+public:
     virtual bool is_allowed(block_task_context& ctx)
     {
-        return ctx.block_num - _last_block_num >= _per_block_num;
+        return ctx.block_num() - _last_block_num >= _per_block_num;
     }
     virtual void apply(block_task_context& ctx)
     {
-        _last_block_num = ctx.block_num;
+        _last_block_num = ctx.block_num();
     }
 
 private:
-    uint32_t _per_block_num;
+    uint32_t _per_block_num = per_block_num;
     uint32_t _last_block_num = 0u;
 };
 
-class block_task : public task<block_task_context>
+template <uint32_t per_block_num>
+class block_task_type : public task<block_task_context, per_block_num_apply_guard<per_block_num>>
 {
-public:
-    block_task(uint32_t per_block_num = 1u) // by default, apply for each block
-        : _censor(per_block_num)
+protected:
+    block_task_type()
     {
-        set_censor(&_censor);
     }
-
-private:
-    per_block_num_apply_censor _censor;
 };
+
+// By default guard (per_block_num_apply_guard) controls applying one time per one block.
+// Use class inherited from block_task in this case.
+using block_task = block_task_type<1u>;
+// If it is required applying one time per N block, use class inherited from block_task_type<N>
 
 } // database_ns
 }

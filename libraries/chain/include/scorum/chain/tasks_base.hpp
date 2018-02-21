@@ -8,9 +8,9 @@
 namespace scorum {
 namespace chain {
 
-template <typename ContextType> struct task_censor_i
+template <typename ContextType> struct task_reentrance_guard_i
 {
-    virtual ~task_censor_i()
+    virtual ~task_reentrance_guard_i()
     {
     }
 
@@ -18,20 +18,27 @@ template <typename ContextType> struct task_censor_i
     virtual void apply(ContextType& ctx) = 0;
 };
 
+template <typename ContextType> class dummy_reentrance_guard : public task_reentrance_guard_i<ContextType>
+{
+public:
+    virtual bool is_allowed(ContextType&)
+    {
+        return true;
+    }
+    virtual void apply(ContextType&)
+    {
+    }
+};
+
 class data_service_factory_i;
 
-template <typename ContextType = data_service_factory_i> class task
+template <typename ContextType = data_service_factory_i,
+          typename ReentranceGuardType = dummy_reentrance_guard<ContextType>>
+class task
 {
 public:
     virtual ~task()
     {
-    }
-
-    using censor_type = task_censor_i<ContextType>;
-
-    template <typename CensorType> void set_censor(CensorType* pcensor = nullptr)
-    {
-        _pcensor = static_cast<censor_type*>(pcensor);
     }
 
     task& after(task& impl)
@@ -47,12 +54,9 @@ public:
 
     void apply(ContextType& ctx)
     {
-        if (_pcensor)
-        {
-            if (!_pcensor->is_allowed(ctx))
-                return;
-            _pcensor->apply(ctx);
-        }
+        if (!_guard.is_allowed(ctx))
+            return;
+        _guard.apply(ctx);
 
         for (task& r : _after)
         {
@@ -81,7 +85,7 @@ private:
 
     tasks_reqired_type _after;
     tasks_reqired_type _before;
-    censor_type* _pcensor = nullptr;
+    ReentranceGuardType _guard;
 };
 }
 }

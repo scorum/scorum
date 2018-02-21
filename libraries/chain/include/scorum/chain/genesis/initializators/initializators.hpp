@@ -18,7 +18,7 @@ struct initializator_context
     const genesis_state_type& genesis_state;
 };
 
-class single_time_apply_censor : public task_censor_i<initializator_context>
+class single_time_apply_guard : public task_reentrance_guard_i<initializator_context>
 {
 public:
     virtual bool is_allowed(initializator_context&)
@@ -34,17 +34,14 @@ private:
     bool _applied = false;
 };
 
-class initializator : public task<initializator_context>
+class initializator : public task<initializator_context, single_time_apply_guard>
 {
-public:
+protected:
     initializator()
     {
-        set_censor(&_applied);
     }
-
-private:
-    single_time_apply_censor _applied;
 };
-}
+
+} // genesis
 }
 }

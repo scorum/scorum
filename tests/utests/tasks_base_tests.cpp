@@ -3,7 +3,7 @@
 #include <scorum/chain/tasks_base.hpp>
 
 using scorum::chain::task;
-using scorum::chain::task_censor_i;
+using scorum::chain::task_reentrance_guard_i;
 
 struct test_context
 {
@@ -12,7 +12,7 @@ struct test_context
     int next_order = 0;
 };
 
-struct test_censor : public task_censor_i<test_context>
+struct test_reentrance_guard : public task_reentrance_guard_i<test_context>
 {
     virtual bool is_allowed(test_context& ctx)
     {
@@ -24,13 +24,8 @@ struct test_censor : public task_censor_i<test_context>
     }
 };
 
-struct test_task : public task<test_context>
+struct test_task : public task<test_context, test_reentrance_guard>
 {
-    test_task()
-    {
-        set_censor(&_censor);
-    }
-
     void on_apply(test_context&)
     {
         _times_applied++;
@@ -43,7 +38,6 @@ struct test_task : public task<test_context>
 
 private:
     int _times_applied = 0;
-    test_censor _censor;
 };
 
 BOOST_AUTO_TEST_SUITE(tasks_base_tests)
