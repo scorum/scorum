@@ -1,4 +1,3 @@
-#include <boost/variant.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "defines.hpp"
