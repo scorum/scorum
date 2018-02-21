@@ -1,5 +1,5 @@
 #include <scorum/chain/services/dev_pool.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/dev_committee_object.hpp>
 

@@ -1,6 +1,6 @@
 #include <scorum/chain/services/withdraw_vesting_route_statistic.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 

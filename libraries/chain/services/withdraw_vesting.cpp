@@ -1,6 +1,6 @@
 #include <scorum/chain/services/withdraw_vesting.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
