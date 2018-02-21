@@ -16,11 +16,11 @@ namespace genesis {
 
 void rewards_initializator_impl::on_apply(initializator_context& ctx)
 {
-    FC_ASSERT(ctx.genesis_state.rewards_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().rewards_supply.symbol() == SCORUM_SYMBOL);
 
-    dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
-    reward_service_i& reward_service = ctx.services.reward_service();
-    budget_service_i& budget_service = ctx.services.budget_service();
+    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
+    reward_service_i& reward_service = ctx.services().reward_service();
+    budget_service_i& budget_service = ctx.services().budget_service();
 
     FC_ASSERT(!reward_service.is_fund_exists());
 
@@ -36,10 +36,10 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
     FC_ASSERT(post_rf.id._id == 0);
 
     // We share initial fund between raward_pool and fund budget
-    asset initial_reward_pool_supply(ctx.genesis_state.rewards_supply.amount
+    asset initial_reward_pool_supply(ctx.genesis_state().rewards_supply.amount
                                          * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                          / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                                     ctx.genesis_state.rewards_supply.symbol());
+                                     ctx.genesis_state().rewards_supply.symbol());
     fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     FC_ASSERT(!reward_service.is_pool_exists());
@@ -48,7 +48,7 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
 
     FC_ASSERT(!budget_service.is_fund_exists());
 
-    budget_service.create_fund_budget(ctx.genesis_state.rewards_supply - initial_reward_pool_supply, deadline);
+    budget_service.create_fund_budget(ctx.genesis_state().rewards_supply - initial_reward_pool_supply, deadline);
 }
 }
 }

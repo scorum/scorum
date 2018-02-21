@@ -7,10 +7,9 @@ namespace scorum {
 namespace chain {
 namespace genesis {
 
-initializator_context::initializator_context(data_service_factory_i& _services,
-                                             const genesis_state_type& _genesis_state)
-    : services(_services)
-    , genesis_state(_genesis_state)
+initializator_context::initializator_context(data_service_factory_i& services, const genesis_state_type& genesis_state)
+    : _services(services)
+    , _genesis_state(genesis_state)
 {
 }
 }

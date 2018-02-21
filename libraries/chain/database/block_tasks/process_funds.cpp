@@ -19,7 +19,7 @@ using scorum::protocol::producer_reward_operation;
 
 void process_funds::on_apply(block_task_context& ctx)
 {
-    data_service_factory_i& services = ctx.services;
+    data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
     reward_service_i& reward_service = services.reward_service();
     budget_service_i& budget_service = services.budget_service();

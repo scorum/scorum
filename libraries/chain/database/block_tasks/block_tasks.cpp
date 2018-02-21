@@ -6,12 +6,12 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-block_task_context::block_task_context(data_service_factory_i& _services,
+block_task_context::block_task_context(data_service_factory_i& services,
                                        database_virtual_operations_emmiter_i& vops,
                                        uint32_t block_num)
-    : services(_services)
-    , _block_num(block_num)
+    : _services(services)
     , _vops(vops)
+    , _block_num(block_num)
 {
     FC_ASSERT(_block_num > 0u);
 }

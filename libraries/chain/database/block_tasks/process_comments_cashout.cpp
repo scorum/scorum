@@ -17,7 +17,7 @@ namespace database_ns {
 
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
-    data_service_factory_i& services = ctx.services;
+    data_service_factory_i& services = ctx.services();
     reward_fund_service_i& reward_fund_service = services.reward_fund_service();
     comment_service_i& comment_service = services.comment_service();
     comment_vote_service_i& comment_vote_service = services.comment_vote_service();
@@ -106,7 +106,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 uint128_t process_comments_cashout::get_recent_claims(block_task_context& ctx,
                                                       const comment_service_i::comment_refs_type& comments)
 {
-    data_service_factory_i& services = ctx.services;
+    data_service_factory_i& services = ctx.services();
     reward_fund_service_i& reward_fund_service = services.reward_fund_service();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
@@ -132,7 +132,7 @@ share_type process_comments_cashout::pay_for_comment(block_task_context& ctx,
                                                      const comment_object& comment,
                                                      const share_type& reward_tokens)
 {
-    data_service_factory_i& services = ctx.services;
+    data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
     comment_service_i& comment_service = services.comment_service();
 
@@ -197,7 +197,7 @@ share_type process_comments_cashout::pay_for_comment(block_task_context& ctx,
 share_type
 process_comments_cashout::pay_curators(block_task_context& ctx, const comment_object& comment, share_type& max_rewards)
 {
-    data_service_factory_i& services = ctx.services;
+    data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
     comment_vote_service_i& comment_vote_service = services.comment_vote_service();
 

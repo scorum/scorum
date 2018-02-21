@@ -11,15 +11,19 @@ namespace chain {
 
 namespace database_ns {
 
-struct block_task_context : public database_virtual_operations_emmiter_i
+class block_task_context : public database_virtual_operations_emmiter_i
 {
+public:
     explicit block_task_context(data_service_factory_i& services,
                                 database_virtual_operations_emmiter_i& vops,
                                 uint32_t block_num);
 
     virtual void push_virtual_operation(const operation& op);
 
-    data_service_factory_i& services;
+    data_service_factory_i& services() const
+    {
+        return _services;
+    }
 
     uint32_t block_num() const
     {
@@ -27,8 +31,9 @@ struct block_task_context : public database_virtual_operations_emmiter_i
     }
 
 private:
-    uint32_t _block_num;
+    data_service_factory_i& _services;
     database_virtual_operations_emmiter_i& _vops;
+    uint32_t _block_num;
 };
 
 template <uint32_t per_block_num> class per_block_num_apply_guard : public task_reentrance_guard_i<block_task_context>
