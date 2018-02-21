@@ -16,8 +16,7 @@ using namespace scorum::chain;
 enum witness_plugin_object_type
 {
     account_bandwidth_object_type = (WITNESS_SPACE_ID << 8),
-    content_edit_lock_object_type = (WITNESS_SPACE_ID << 8) + 1,
-    reserve_ratio_object_type = (WITNESS_SPACE_ID << 8) + 2
+    reserve_ratio_object_type = (WITNESS_SPACE_ID << 8) + 1
 };
 
 enum bandwidth_type
@@ -42,18 +41,6 @@ public:
 };
 
 typedef oid<account_bandwidth_object> account_bandwidth_id_type;
-
-class content_edit_lock_object : public object<content_edit_lock_object_type, content_edit_lock_object>
-{
-public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(content_edit_lock_object)
-
-    id_type id;
-    account_name_type account;
-    time_point_sec lock_time;
-};
-
-typedef oid<content_edit_lock_object> content_edit_lock_id_type;
 
 class reserve_ratio_object : public object<reserve_ratio_object_type, reserve_ratio_object>
 {
@@ -111,19 +98,6 @@ typedef shared_multi_index_container<account_bandwidth_object,
                                                                                     &account_bandwidth_object::type>>>>>
     account_bandwidth_index;
 
-struct by_account;
-
-typedef shared_multi_index_container<content_edit_lock_object,
-                                     indexed_by<ordered_unique<tag<by_id>,
-                                                               member<content_edit_lock_object,
-                                                                      content_edit_lock_id_type,
-                                                                      &content_edit_lock_object::id>>,
-                                                ordered_unique<tag<by_account>,
-                                                               member<content_edit_lock_object,
-                                                                      account_name_type,
-                                                                      &content_edit_lock_object::account>>>>
-    content_edit_lock_index;
-
 typedef shared_multi_index_container<reserve_ratio_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<reserve_ratio_object,
@@ -140,9 +114,6 @@ FC_REFLECT_ENUM(scorum::witness::bandwidth_type, (post)(forum)(market))
 FC_REFLECT(scorum::witness::account_bandwidth_object,
     (id)(account)(type)(average_bandwidth)(lifetime_bandwidth)(last_bandwidth_update))
 CHAINBASE_SET_INDEX_TYPE(scorum::witness::account_bandwidth_object, scorum::witness::account_bandwidth_index)
-
-FC_REFLECT(scorum::witness::content_edit_lock_object, (id)(account)(lock_time))
-CHAINBASE_SET_INDEX_TYPE(scorum::witness::content_edit_lock_object, scorum::witness::content_edit_lock_index)
 
 FC_REFLECT(
     scorum::witness::reserve_ratio_object, (id)(average_block_size)(current_reserve_ratio)(max_virtual_bandwidth))

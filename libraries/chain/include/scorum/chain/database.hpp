@@ -32,7 +32,6 @@ using scorum::protocol::operation;
 using scorum::protocol::signed_transaction;
 
 class database_impl;
-class custom_operation_interpreter;
 struct genesis_state_type;
 
 /**
@@ -305,9 +304,6 @@ public:
     //////////////////// db_init.cpp ////////////////////
 
     void initialize_evaluators();
-    void set_custom_operation_interpreter(const std::string& id,
-                                          std::shared_ptr<custom_operation_interpreter> registry);
-    std::shared_ptr<custom_operation_interpreter> get_custom_json_evaluator(const std::string& id);
 
     /// Reset the object graph in-memory
     void initialize_indexes();
@@ -416,8 +412,6 @@ private:
     uint32_t _next_flush_block = 0;
 
     uint32_t _last_free_gb_printed = 0;
-
-    flat_map<std::string, std::shared_ptr<custom_operation_interpreter>> _custom_operation_interpreters;
 
     fc::time_point_sec _const_genesis_time; // should be const
 };

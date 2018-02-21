@@ -34,7 +34,6 @@ target_link_libraries( scorum_wallet PRIVATE
                        scorum_protocol
                        graphene_utilities
                        scorum_app
-                       scorum_follow
                        scorum_account_by_key
                        cli
                        fc
