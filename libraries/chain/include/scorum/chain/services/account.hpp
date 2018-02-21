@@ -126,6 +126,10 @@ struct account_service_i
 
     virtual void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0)
         = 0;
+
+    using modifier_type = std::function<void(account_object&)>;
+
+    virtual void update(const account_object& obj, const modifier_type&) = 0;
 };
 
 // DB operations with account_*** objects
@@ -258,6 +262,8 @@ public:
     /** this updates the votes for all witnesses as a result of account SP changing */
     virtual void
     adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0) override;
+
+    virtual void update(const account_object& obj, const modifier_type&) override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,

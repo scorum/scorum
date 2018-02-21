@@ -577,6 +577,12 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
         witness_service.adjust_witness_votes(account, delta);
     }
 }
+
+void dbs_account::update(const account_object& obj, const modifier_type& modifier)
+{
+    db_impl().modify(obj, [&](account_object& o) { modifier(o); });
+}
+
 const account_object& dbs_account::_create_account_objects(const account_name_type& new_account_name,
                                                            const account_name_type& recovery_account,
                                                            const public_key_type& memo_key,

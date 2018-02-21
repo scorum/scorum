@@ -4,6 +4,10 @@
 
 #include <scorum/chain/evaluators/evaluator.hpp>
 
+#include <scorum/chain/tasks_base.hpp>
+
+#include <memory>
+
 namespace scorum {
 namespace chain {
 
@@ -15,21 +19,51 @@ class data_service_factory_i;
 
 class account_object;
 
+class withdraw_vesting_impl;
+
 class withdraw_vesting_evaluator : public evaluator_impl<data_service_factory_i, withdraw_vesting_evaluator>
 {
 public:
     using operation_type = scorum::protocol::withdraw_vesting_operation;
 
     withdraw_vesting_evaluator(data_service_factory_i& services);
+    ~withdraw_vesting_evaluator();
 
     void do_apply(const operation_type& op);
 
 private:
-    void remove_withdraw_vesting(const account_object&);
+    std::unique_ptr<withdraw_vesting_impl> _impl;
 
     account_service_i& _account_service;
     dynamic_global_property_service_i& _dprops_service;
-    withdraw_vesting_service_i& _withdraw_vesting_service;
+};
+
+using scorum::protocol::asset;
+
+class withdraw_vesting_context
+{
+public:
+    explicit withdraw_vesting_context(data_service_factory_i& services, const asset& vesting_shares);
+
+    data_service_factory_i& services() const
+    {
+        return _services;
+    }
+
+    asset vesting_shares() const
+    {
+        return _vesting_shares;
+    }
+
+private:
+    data_service_factory_i& _services;
+    asset _vesting_shares;
+};
+
+class withdraw_vesting_from_dev_pool_task : public task<withdraw_vesting_context>
+{
+public:
+    void on_apply(withdraw_vesting_context& ctx);
 };
 
 } // namespace chain

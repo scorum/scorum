@@ -5,19 +5,97 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 
 namespace scorum {
 namespace chain {
 
+class withdraw_vesting_impl
+{
+public:
+    withdraw_vesting_impl(data_service_factory_i& services)
+        : _dprops_service(services.dynamic_global_property_service())
+        , _withdraw_vesting_service(services.withdraw_vesting_service())
+    {
+    }
+
+    template <typename FromObjectType> void do_apply(const FromObjectType& from_object, const asset& vesting_shares)
+    {
+        asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
+        if (_withdraw_vesting_service.is_exists(from_object.id))
+        {
+            vesting_withdraw_rate = _withdraw_vesting_service.get(from_object.id).vesting_withdraw_rate;
+        }
+
+        if (vesting_shares.amount == 0)
+        {
+            FC_ASSERT(vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
+
+            remove_withdraw_vesting(from_object);
+        }
+        else
+        {
+            // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
+            // 13 weeks = 1 quarter of a year
+            auto new_vesting_withdraw_rate = vesting_shares / SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+            if (new_vesting_withdraw_rate.amount == 0)
+                new_vesting_withdraw_rate.amount = 1;
+
+            FC_ASSERT(vesting_withdraw_rate != new_vesting_withdraw_rate,
+                      "This operation would not change the vesting withdraw rate.");
+
+            auto lmbNewVesting = [&](withdraw_vesting_object& wv) {
+                wv.from_id = from_object.id;
+                wv.vesting_withdraw_rate = new_vesting_withdraw_rate;
+                wv.next_vesting_withdrawal
+                    = _dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+                wv.to_withdraw = vesting_shares;
+                wv.withdrawn = asset(0, VESTS_SYMBOL);
+            };
+
+            if (!_withdraw_vesting_service.is_exists(from_object.id))
+            {
+                _withdraw_vesting_service.create(lmbNewVesting);
+            }
+            else
+            {
+                const withdraw_vesting_object& wv = _withdraw_vesting_service.get(from_object.id);
+                _withdraw_vesting_service.update(wv, lmbNewVesting);
+            }
+        }
+    }
+
+    template <typename FromObjectType> void remove_withdraw_vesting(const FromObjectType& from_object)
+    {
+        if (_withdraw_vesting_service.is_exists(from_object.id))
+        {
+            const withdraw_vesting_object& wv = _withdraw_vesting_service.get(from_object.id);
+            _withdraw_vesting_service.remove(wv);
+        }
+    }
+
+private:
+    dynamic_global_property_service_i& _dprops_service;
+    withdraw_vesting_service_i& _withdraw_vesting_service;
+};
+
+//
+
 withdraw_vesting_evaluator::withdraw_vesting_evaluator(data_service_factory_i& services)
     : evaluator_impl<data_service_factory_i, withdraw_vesting_evaluator>(services)
+    , _impl(new withdraw_vesting_impl(services))
     , _account_service(db().account_service())
     , _dprops_service(db().dynamic_global_property_service())
-    , _withdraw_vesting_service(db().withdraw_vesting_service())
+{
+}
+
+withdraw_vesting_evaluator::~withdraw_vesting_evaluator()
 {
 }
 
@@ -41,58 +119,28 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_evaluator::oper
                   "before it can be powered down.");
     }
 
-    asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
-    if (_withdraw_vesting_service.is_exists(account.id))
-    {
-        vesting_withdraw_rate = _withdraw_vesting_service.get(account.id).vesting_withdraw_rate;
-    }
-
-    if (o.vesting_shares.amount == 0)
-    {
-        FC_ASSERT(vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
-
-        remove_withdraw_vesting(account);
-    }
-    else
-    {
-        // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
-        // 13 weeks = 1 quarter of a year
-        auto new_vesting_withdraw_rate = o.vesting_shares / SCORUM_VESTING_WITHDRAW_INTERVALS;
-
-        if (new_vesting_withdraw_rate.amount == 0)
-            new_vesting_withdraw_rate.amount = 1;
-
-        FC_ASSERT(vesting_withdraw_rate != new_vesting_withdraw_rate,
-                  "This operation would not change the vesting withdraw rate.");
-
-        auto lmbNewVesting = [&](withdraw_vesting_object& wv) {
-            wv.from_id = account.id;
-            wv.vesting_withdraw_rate = new_vesting_withdraw_rate;
-            wv.next_vesting_withdrawal
-                = _dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-            wv.to_withdraw = o.vesting_shares;
-            wv.withdrawn = asset(0, VESTS_SYMBOL);
-        };
-
-        if (!_withdraw_vesting_service.is_exists(account.id))
-        {
-            _withdraw_vesting_service.create(lmbNewVesting);
-        }
-        else
-        {
-            const withdraw_vesting_object& wv = _withdraw_vesting_service.get(account.id);
-            _withdraw_vesting_service.update(wv, lmbNewVesting);
-        }
-    }
+    _impl->do_apply(account, o.vesting_shares);
 }
 
-void withdraw_vesting_evaluator::remove_withdraw_vesting(const account_object& from_account)
+//
+
+withdraw_vesting_context::withdraw_vesting_context(data_service_factory_i& services, const asset& vesting_shares)
+    : _services(services)
+    , _vesting_shares(vesting_shares)
 {
-    if (_withdraw_vesting_service.is_exists(from_account.id))
-    {
-        const withdraw_vesting_object& wv = _withdraw_vesting_service.get(from_account.id);
-        _withdraw_vesting_service.remove(wv);
-    }
+}
+
+void withdraw_vesting_from_dev_pool_task::on_apply(withdraw_vesting_context& ctx)
+{
+    withdraw_vesting_impl impl(ctx.services());
+
+    dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
+
+    FC_ASSERT(dev_pool_service.is_exists());
+
+    const auto& pool = dev_pool_service.get();
+
+    impl.do_apply(pool, ctx.vesting_shares());
 }
 }
 }

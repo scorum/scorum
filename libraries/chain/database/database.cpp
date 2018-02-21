@@ -39,6 +39,9 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/withdraw_vesting.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -55,12 +58,9 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/core/ignore_unused.hpp>
 
-#include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/dev_pool.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
-
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
 
 namespace scorum {
 namespace chain {
@@ -76,6 +76,7 @@ public:
     evaluator_registry<operation> _evaluator_registry;
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
+    database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
 };
 
 database_impl::database_impl(database& self)
@@ -1013,133 +1014,6 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when) const
     return (when - first_slot_time).to_seconds() / SCORUM_BLOCK_INTERVAL + 1;
 }
 
-void database::process_vesting_withdrawals()
-{
-    dbs_account& account_service = obtain_service<dbs_account>();
-    auto& dprops_service = obtain_service<dbs_dynamic_global_property>();
-    dbs_withdraw_vesting& withdraw_vesting_service = obtain_service<dbs_withdraw_vesting>();
-    dbs_withdraw_vesting_route& withdraw_vesting_route_service = obtain_service<dbs_withdraw_vesting_route>();
-
-    for (const withdraw_vesting_object& wvo : withdraw_vesting_service.get_until(head_block_time()))
-    {
-        asset vesting_shares = asset(0, VESTS_SYMBOL);
-
-        if (withdraw_vesting_objects::is_account(wvo.from_id))
-        {
-            const auto& from_account = get(wvo.from_id.get<account_id_type>());
-
-            vesting_shares = from_account.vesting_shares;
-        }
-
-        /**
-         *  Let T = total tokens in vesting fund
-         *  Let V = total vesting shares
-         *  Let v = total vesting shares being cashed out
-         *
-         *  The user may withdraw  vT / V tokens
-         */
-        asset to_withdraw = asset(0, VESTS_SYMBOL);
-        if (wvo.to_withdraw - wvo.withdrawn < wvo.vesting_withdraw_rate)
-        {
-            to_withdraw = std::min(vesting_shares, wvo.to_withdraw % wvo.vesting_withdraw_rate);
-        }
-        else
-        {
-            to_withdraw = std::min(vesting_shares, wvo.vesting_withdraw_rate);
-        }
-
-        asset deposited_vests = asset(0, VESTS_SYMBOL);
-
-        for (const withdraw_vesting_route_object& wvro : withdraw_vesting_route_service.get_all(wvo.from_id))
-        {
-            asset to_deposit
-                = asset((fc::uint128_t(to_withdraw.amount.value) * wvro.percent / SCORUM_100_PERCENT).to_uint64(),
-                        VESTS_SYMBOL);
-
-            if (to_deposit.amount > 0)
-            {
-                if (withdraw_vesting_objects::is_account(wvro.to_id))
-                {
-                    const auto& from_account = get(wvo.from_id.get<account_id_type>());
-                    const auto& to_account = get(wvro.to_id.get<account_id_type>());
-
-                    deposited_vests += to_deposit;
-
-                    if (wvro.auto_vest) // withdraw SP
-                    {
-                        push_virtual_operation(
-                            fill_vesting_withdraw_operation(from_account.name, to_account.name, to_deposit));
-
-                        account_service.increase_vesting_shares(to_account, to_deposit);
-
-                        account_service.adjust_proxied_witness_votes(to_account, to_deposit.amount);
-                    }
-                    else // convert SP to SCR and withdraw SCR
-                    {
-                        auto converted_scorum = asset(to_deposit.amount, SCORUM_SYMBOL);
-
-                        push_virtual_operation(
-                            fill_vesting_withdraw_operation(from_account.name, to_account.name, converted_scorum));
-
-                        account_service.increase_balance(to_account, converted_scorum);
-
-                        dprops_service.update(
-                            [&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_deposit; });
-                    }
-                }
-                else if (withdraw_vesting_objects::is_dev_committee(wvro.to_id))
-                {
-                    // TODO: dev pool
-                }
-            }
-        }
-
-        // withdraw the rest as SCR
-
-        if (withdraw_vesting_objects::is_account(wvo.from_id))
-        {
-            const auto& from_account = get(wvo.from_id.get<account_id_type>());
-
-            asset to_convert = to_withdraw - deposited_vests;
-            FC_ASSERT(to_convert.amount >= 0, "Deposited more vests than were supposed to be withdrawn");
-
-            asset converted_scorum = asset(to_convert.amount, SCORUM_SYMBOL);
-
-            push_virtual_operation(
-                fill_vesting_withdraw_operation(from_account.name, from_account.name, converted_scorum));
-
-            vesting_shares -= to_withdraw;
-
-            modify(from_account, [&](account_object& a) {
-                a.vesting_shares = vesting_shares;
-                a.balance += converted_scorum;
-            });
-
-            withdraw_vesting_service.update(wvo, [&](withdraw_vesting_object& o) {
-                o.withdrawn += to_withdraw;
-
-                if (o.withdrawn >= o.to_withdraw || vesting_shares.amount == 0)
-                {
-                    o.vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
-                    o.next_vesting_withdrawal = fc::time_point_sec::maximum();
-                }
-                else
-                {
-                    o.next_vesting_withdrawal += fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-                }
-            });
-
-            dprops_service.update([&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_convert; });
-
-            if (to_withdraw.amount > 0)
-            {
-                account_service.adjust_proxied_witness_votes(from_account, -to_withdraw.amount);
-            }
-        }
-    }
-}
-
-
 void database::account_recovery_processing()
 {
     // Clear expired recovery requests
@@ -1566,11 +1440,12 @@ void database::_apply_block(const signed_block& next_block)
                                       static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds.before(_my->_process_comments_cashout).apply(ctx);
+        _my->_process_funds
+                .before(_my->_process_comments_cashout)
+                .before(_my->_process_vesting_withdrawals)
+                .apply(ctx);
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
-
-        process_vesting_withdrawals();
 
         account_recovery_processing();
         expire_escrow_ratification();

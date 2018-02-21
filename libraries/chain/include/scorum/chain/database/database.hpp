@@ -281,12 +281,11 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
      */
-    void process_vesting_withdrawals();
+
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();

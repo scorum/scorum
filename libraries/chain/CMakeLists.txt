@@ -79,6 +79,7 @@ add_library( scorum_chain
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_funds.cpp
              database/block_tasks/process_comments_cashout.cpp
+             database/block_tasks/process_vesting_withdrawals.cpp
 
              util/reward.cpp
 
