@@ -23,7 +23,9 @@ set( SOURCES
     proposal/proposal_tests.cpp
     statistic/statistic_tests.cpp
     genesis_db_tests.cpp
+    withdraw_vesting/old_tests.cpp
     withdraw_vesting/route_to_dev_pool.cpp
+    withdraw_vesting/route_to_account.cpp
 )
 
 add_executable(chain_tests

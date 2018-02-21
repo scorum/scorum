@@ -2,7 +2,7 @@
 
 #include <scorum/chain/database.hpp>
 
-#include <scorum/chain/schema/withdraw_vesting_route_objects.hpp>
+#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 namespace scorum {
 namespace chain {
@@ -40,24 +40,48 @@ dbs_withdraw_vesting::~dbs_withdraw_vesting()
 {
 }
 
-bool dbs_withdraw_vesting::is_exists(account_id_type from) const
+bool dbs_withdraw_vesting::is_exists(const account_id_type& from) const
 {
     return _impl->is_exists(from);
 }
 
-bool dbs_withdraw_vesting::is_exists(dev_committee_id_type from) const
+bool dbs_withdraw_vesting::is_exists(const dev_committee_id_type& from) const
 {
     return _impl->is_exists(from);
 }
 
-const withdraw_vesting_object& dbs_withdraw_vesting::get(account_id_type from) const
+const withdraw_vesting_object& dbs_withdraw_vesting::get(const account_id_type& from) const
 {
     return _impl->get(from);
 }
 
-const withdraw_vesting_object& dbs_withdraw_vesting::get(dev_committee_id_type from) const
+const withdraw_vesting_object& dbs_withdraw_vesting::get(const dev_committee_id_type& from) const
 {
     return _impl->get(from);
+}
+
+dbs_withdraw_vesting::withdraw_vesting_refs_type dbs_withdraw_vesting::get_until(const time_point_sec& until) const
+{
+    withdraw_vesting_refs_type ret;
+
+    const auto& idx = db_impl().get_index<withdraw_vesting_index>().indices().get<by_next_vesting_withdrawal>();
+    auto it = idx.cbegin();
+    const auto it_end = idx.cend();
+    while (it != it_end && it->next_vesting_withdrawal <= until)
+    {
+        ret.push_back(std::cref(*it));
+        ++it;
+    }
+
+    return ret;
+}
+
+asset dbs_withdraw_vesting::get_withdraw_rest(const account_id_type& from) const
+{
+    if (!is_exists(from))
+        return asset(0, VESTS_SYMBOL);
+    const withdraw_vesting_object& wvo = get(from);
+    return wvo.to_withdraw - wvo.withdrawn;
 }
 
 const withdraw_vesting_object& dbs_withdraw_vesting::create(const modifier_type& modifier)

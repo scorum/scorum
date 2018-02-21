@@ -11,7 +11,7 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_route_objects.hpp>
+#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 namespace scorum {
 namespace chain {

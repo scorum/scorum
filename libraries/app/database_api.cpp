@@ -15,7 +15,7 @@
 
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_route_objects.hpp>
+#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>

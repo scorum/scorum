@@ -77,7 +77,7 @@ struct route_to_dev_pool_fixture : public database_trx_integration_fixture
     private_key_type alice_key;
 };
 
-BOOST_FIXTURE_TEST_CASE(set_withdraw_route_check, route_to_dev_pool_fixture)
+BOOST_FIXTURE_TEST_CASE(set_withdraw_route_to_dev_pool_check, route_to_dev_pool_fixture)
 {
     static const share_type balance = share_type(1000);
     share_type initial_balance = balance;

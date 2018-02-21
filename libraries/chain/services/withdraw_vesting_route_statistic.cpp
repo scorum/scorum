@@ -2,7 +2,7 @@
 
 #include <scorum/chain/database.hpp>
 
-#include <scorum/chain/schema/withdraw_vesting_route_objects.hpp>
+#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 namespace scorum {
 namespace chain {
@@ -40,23 +40,24 @@ dbs_withdraw_vesting_route_statistic::~dbs_withdraw_vesting_route_statistic()
 {
 }
 
-bool dbs_withdraw_vesting_route_statistic::is_exists(account_id_type from) const
+bool dbs_withdraw_vesting_route_statistic::is_exists(const account_id_type& from) const
 {
     return _impl->is_exists(from);
 }
 
-bool dbs_withdraw_vesting_route_statistic::is_exists(dev_committee_id_type from) const
+bool dbs_withdraw_vesting_route_statistic::is_exists(const dev_committee_id_type& from) const
 {
     return _impl->is_exists(from);
 }
 
-const withdraw_vesting_route_statistic_object& dbs_withdraw_vesting_route_statistic::get(account_id_type from) const
+const withdraw_vesting_route_statistic_object&
+dbs_withdraw_vesting_route_statistic::get(const account_id_type& from) const
 {
     return _impl->get(from);
 }
 
 const withdraw_vesting_route_statistic_object&
-dbs_withdraw_vesting_route_statistic::get(dev_committee_id_type from) const
+dbs_withdraw_vesting_route_statistic::get(const dev_committee_id_type& from) const
 {
     return _impl->get(from);
 }

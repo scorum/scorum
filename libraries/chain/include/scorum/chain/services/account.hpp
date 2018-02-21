@@ -85,12 +85,6 @@ struct account_service_i
 
     virtual void prove_authority(const account_object& account, bool require_owner) = 0;
 
-    virtual void update_withdraw(const account_object& account,
-                                 const asset& vesting,
-                                 const time_point_sec& next_vesting_withdrawal,
-                                 const asset& to_withdraw)
-        = 0;
-
     virtual void increase_witnesses_voted_for(const account_object& account) = 0;
     virtual void decrease_witnesses_voted_for(const account_object& account) = 0;
 
@@ -207,11 +201,6 @@ public:
     virtual void drop_challenged(const account_object& account) override;
 
     virtual void prove_authority(const account_object& account, bool require_owner) override;
-
-    virtual void update_withdraw(const account_object& account,
-                                 const asset& vesting,
-                                 const time_point_sec& next_vesting_withdrawal,
-                                 const asset& to_withdraw) override;
 
     virtual void increase_witnesses_voted_for(const account_object& account) override;
     virtual void decrease_witnesses_voted_for(const account_object& account) override;

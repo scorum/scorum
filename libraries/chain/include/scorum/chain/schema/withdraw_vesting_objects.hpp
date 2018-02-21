@@ -3,14 +3,11 @@
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
-#include <fc/static_variant.hpp>
 #include <fc/exception/exception.hpp>
 #include <functional>
 
 namespace scorum {
 namespace chain {
-
-using withdrawable_id_type = fc::static_variant<account_id_type, dev_committee_id_type>;
 
 class withdraw_vesting_route_object : public object<withdraw_vesting_route_object_type, withdraw_vesting_route_object>
 {
@@ -58,25 +55,29 @@ public:
     asset to_withdraw = asset(0, VESTS_SYMBOL); /// Might be able to look this up with operation history.
 };
 
-inline bool withdrawable_id_is_account_id(const withdrawable_id_type& id)
+namespace withdraw_vesting_objects {
+
+inline bool is_account(const withdrawable_id_type& id)
 {
     return id.which() == withdrawable_id_type::tag<account_id_type>::value;
 }
-
-inline bool withdrawable_id_is_dev_committee_id(const withdrawable_id_type& id)
+inline bool is_dev_committee(const withdrawable_id_type& id)
 {
     return id.which() == withdrawable_id_type::tag<dev_committee_id_type>::value;
+}
 }
 
 struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_type, withdrawable_id_type, bool>
 {
     bool operator()(const withdrawable_id_type& a, const withdrawable_id_type& b) const
     {
+        using namespace withdraw_vesting_objects;
+
         if (a.which() == b.which()) // both have same type
         {
-            if (withdrawable_id_is_account_id(a))
+            if (is_account(a))
                 return a.get<account_id_type>() < b.get<account_id_type>();
-            else if (withdrawable_id_is_dev_committee_id(a))
+            else if (is_dev_committee(a))
                 return a.get<dev_committee_id_type>() < b.get<dev_committee_id_type>();
             else
             {
@@ -89,11 +90,13 @@ struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_ty
 
 inline bool is_equal_withdrawable_id(const withdrawable_id_type& a, const withdrawable_id_type& b)
 {
+    using namespace withdraw_vesting_objects;
+
     if (a.which() == b.which())
     {
-        if (withdrawable_id_is_account_id(a))
+        if (is_account(a))
             return a.get<account_id_type>() == b.get<account_id_type>();
-        else if (withdrawable_id_is_dev_committee_id(a))
+        else if (is_dev_committee(a))
             return a.get<dev_committee_id_type>() == b.get<dev_committee_id_type>();
         else
         {
@@ -151,6 +154,7 @@ typedef shared_multi_index_container<withdraw_vesting_route_statistic_object,
                                                                less_for_withdrawable_id>>>
     withdraw_vesting_route_statistic_index;
 
+struct by_next_vesting_withdrawal;
 typedef shared_multi_index_container<withdraw_vesting_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<withdraw_vesting_object,
@@ -160,7 +164,16 @@ typedef shared_multi_index_container<withdraw_vesting_object,
                                                                member<withdraw_vesting_object,
                                                                       withdrawable_id_type,
                                                                       &withdraw_vesting_object::from_id>,
-                                                               less_for_withdrawable_id>>>
+                                                               less_for_withdrawable_id>,
+                                                ordered_unique<tag<by_next_vesting_withdrawal>,
+                                                               composite_key<withdraw_vesting_object,
+                                                                             member<withdraw_vesting_object,
+                                                                                    time_point_sec,
+                                                                                    &withdraw_vesting_object::
+                                                                                        next_vesting_withdrawal>,
+                                                                             member<withdraw_vesting_object,
+                                                                                    withdraw_vesting_id_type,
+                                                                                    &withdraw_vesting_object::id>>>>>
     withdraw_vesting_index;
 
 } // namespace chain

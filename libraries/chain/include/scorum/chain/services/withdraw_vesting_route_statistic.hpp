@@ -11,13 +11,13 @@ class withdraw_vesting_route_statistic_object;
 
 struct withdraw_vesting_route_statistic_service_i
 {
-    virtual bool is_exists(account_id_type from) const = 0;
+    virtual bool is_exists(const account_id_type& from) const = 0;
 
-    virtual bool is_exists(dev_committee_id_type from) const = 0;
+    virtual bool is_exists(const dev_committee_id_type& from) const = 0;
 
-    virtual const withdraw_vesting_route_statistic_object& get(account_id_type from) const = 0;
+    virtual const withdraw_vesting_route_statistic_object& get(const account_id_type& from) const = 0;
 
-    virtual const withdraw_vesting_route_statistic_object& get(dev_committee_id_type from) const = 0;
+    virtual const withdraw_vesting_route_statistic_object& get(const dev_committee_id_type& from) const = 0;
 
     using modifier_type = std::function<void(withdraw_vesting_route_statistic_object&)>;
 
@@ -40,13 +40,13 @@ protected:
 public:
     ~dbs_withdraw_vesting_route_statistic();
 
-    virtual bool is_exists(account_id_type from) const override;
+    virtual bool is_exists(const account_id_type& from) const override;
 
-    virtual bool is_exists(dev_committee_id_type from) const override;
+    virtual bool is_exists(const dev_committee_id_type& from) const override;
 
-    virtual const withdraw_vesting_route_statistic_object& get(account_id_type from) const override;
+    virtual const withdraw_vesting_route_statistic_object& get(const account_id_type& from) const override;
 
-    virtual const withdraw_vesting_route_statistic_object& get(dev_committee_id_type from) const override;
+    virtual const withdraw_vesting_route_statistic_object& get(const dev_committee_id_type& from) const override;
 
     virtual const withdraw_vesting_route_statistic_object& create(const modifier_type&) override;
 
