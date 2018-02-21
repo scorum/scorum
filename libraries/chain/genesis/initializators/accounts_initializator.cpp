@@ -18,11 +18,11 @@ using scorum::protocol::share_value_type;
 
 void accounts_initializator_impl::on_apply(initializator_context& ctx)
 {
-    account_service_i& account_service = ctx.services.account_service();
+    account_service_i& account_service = ctx.services().account_service();
 
     check_accounts_supply(ctx);
 
-    for (auto& account : ctx.genesis_state.accounts)
+    for (auto& account : ctx.genesis_state().accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
@@ -33,11 +33,11 @@ void accounts_initializator_impl::on_apply(initializator_context& ctx)
 
 void accounts_initializator_impl::check_accounts_supply(initializator_context& ctx)
 {
-    asset accounts_supply = ctx.genesis_state.accounts_supply;
+    asset accounts_supply = ctx.genesis_state().accounts_supply;
 
     FC_ASSERT(accounts_supply.symbol() == SCORUM_SYMBOL);
 
-    for (auto& account : ctx.genesis_state.accounts)
+    for (auto& account : ctx.genesis_state().accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 

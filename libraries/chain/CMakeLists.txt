@@ -3,7 +3,9 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/schema/*.hpp"
                   "include/scorum/chain/services/*.hpp"
                   "include/scorum/chain/util/*.hpp"
-                  "include/scorum/chain/genesis/*.hpp")
+                  "include/scorum/chain/genesis/*.hpp"
+                  "include/scorum/chain/database/*.hpp"
+                  "include/scorum/chain/database/block_tasks/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -23,9 +25,9 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/h
 add_library( scorum_chain
 
              # As database takes the longest to compile, start it first
-             database.cpp
-             fork_database.cpp
-             database_witness_schedule.cpp
+             database/database.cpp
+             database/fork_database.cpp
+             database/database_witness_schedule.cpp
 
              services/dbs_base.cpp
              services/dbservice_dbs_factory.cpp
@@ -73,6 +75,10 @@ add_library( scorum_chain
              genesis/initializators/registration_bonus_initializator.cpp
              genesis/initializators/steemit_bounty_account_initializator.cpp
              genesis/initializators/dev_pool_initializator.cpp
+
+             database/block_tasks/block_tasks.cpp
+             database/block_tasks/process_funds.cpp
+             database/block_tasks/process_comments_cashout.cpp
 
              util/reward.cpp
 

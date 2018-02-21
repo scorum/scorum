@@ -22,13 +22,11 @@
  * THE SOFTWARE.
  */
 #include <scorum/witness/witness_objects.hpp>
-#include <scorum/witness/witness_operations.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
-#include <scorum/chain/generic_custom_operation_interpreter.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 
@@ -72,17 +70,10 @@ public:
     void update_account_bandwidth(const account_object& a, uint32_t trx_size, const bandwidth_type type);
 
     witness_plugin& _self;
-    std::shared_ptr<generic_custom_operation_interpreter<witness_plugin_operation>> _custom_operation_interpreter;
 };
 
 void witness_plugin_impl::plugin_initialize()
 {
-    _custom_operation_interpreter
-        = std::make_shared<generic_custom_operation_interpreter<witness_plugin_operation>>(_self.database());
-
-    _custom_operation_interpreter->register_evaluator<enable_content_editing_evaluator>(&_self);
-
-    _self.database().set_custom_operation_interpreter(_self.plugin_name(), _custom_operation_interpreter);
 }
 
 void check_memo(const std::string& memo, const account_object& account, const account_authority_object& auth)
@@ -183,10 +174,7 @@ struct operation_visitor
 
         if (itr != nullptr && itr->cashout_time == fc::time_point_sec::maximum())
         {
-            auto edit_lock = _db.find<content_edit_lock_object, by_account>(o.author);
-
-            SCORUM_ASSERT(edit_lock != nullptr && _db.head_block_time() < edit_lock->lock_time, chain::plugin_exception,
-                          "The comment is archived");
+            FC_THROW_EXCEPTION(chain::plugin_exception, "The comment is archived");
         }
     }
 
@@ -445,7 +433,6 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
         db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
 
         db.add_plugin_index<account_bandwidth_index>();
-        db.add_plugin_index<content_edit_lock_index>();
         db.add_plugin_index<reserve_ratio_index>();
     }
     FC_LOG_AND_RETHROW()

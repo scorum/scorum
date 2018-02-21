@@ -2,14 +2,13 @@
 #include <scorum/app/applied_operation.hpp>
 #include <scorum/app/state.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
-#include <scorum/follow/follow_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 
 #include <fc/api.hpp>
@@ -323,8 +322,6 @@ public:
     std::vector<discussion> get_discussions_by_votes(const discussion_query& query) const;
     std::vector<discussion> get_discussions_by_children(const discussion_query& query) const;
     std::vector<discussion> get_discussions_by_hot(const discussion_query& query) const;
-    std::vector<discussion> get_discussions_by_feed(const discussion_query& query) const;
-    std::vector<discussion> get_discussions_by_blog(const discussion_query& query) const;
     std::vector<discussion> get_discussions_by_comments(const discussion_query& query) const;
     std::vector<discussion> get_discussions_by_promoted(const discussion_query& query) const;
 
@@ -450,8 +447,6 @@ FC_API(scorum::app::database_api,
    (get_discussions_by_votes)
    (get_discussions_by_children)
    (get_discussions_by_hot)
-   (get_discussions_by_feed)
-   (get_discussions_by_blog)
    (get_discussions_by_comments)
    (get_discussions_by_promoted)
 

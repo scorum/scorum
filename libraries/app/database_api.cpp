@@ -99,7 +99,6 @@ public:
     std::function<void(const fc::variant&)> _block_applied_callback;
 
     scorum::chain::database& _db;
-    std::shared_ptr<scorum::follow::follow_api> _follow_api;
 
     boost::signals2::scoped_connection _block_applied_connection;
 
@@ -177,16 +176,6 @@ database_api_impl::database_api_impl(const scorum::app::api_context& ctx)
     wlog("creating database api ${x}", ("x", int64_t(this)));
 
     _disable_get_block = ctx.app._disable_get_block;
-
-    try
-    {
-        ctx.app.get_plugin<follow::follow_plugin>(FOLLOW_PLUGIN_NAME);
-        _follow_api = std::make_shared<scorum::follow::follow_api>(ctx);
-    }
-    catch (fc::assert_exception)
-    {
-        ilog("Follow Plugin not loaded");
-    }
 }
 
 database_api_impl::~database_api_impl()
@@ -376,11 +365,6 @@ std::vector<extended_account> database_api_impl::get_accounts(const std::vector<
         if (itr != idx.end())
         {
             results.push_back(extended_account(*itr, _db));
-
-            if (_follow_api)
-            {
-                results.back().reputation = _follow_api->get_account_reputations(itr->name, 1)[0].reputation;
-            }
 
             auto vitr = vidx.lower_bound(boost::make_tuple(itr->id, witness_id_type()));
             while (vitr != vidx.end() && vitr->account == itr->id)
@@ -896,13 +880,6 @@ std::vector<vote_state> database_api::get_active_votes(const std::string& author
             vstate.percent = itr->vote_percent;
             vstate.time = itr->last_update;
 
-            if (my->_follow_api)
-            {
-                auto reps = my->_follow_api->get_account_reputations(vo.name, 1);
-                if (reps.size())
-                    vstate.reputation = reps[0].reputation;
-            }
-
             result.push_back(vstate);
             ++itr;
         }
@@ -968,11 +945,6 @@ void database_api::set_pending_payout(discussion& d) const
         r2 /= total_r2;
 
         d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
-
-        if (my->_follow_api)
-        {
-            d.author_reputation = my->_follow_api->get_account_reputations(d.author, 1)[0].reputation;
-        }
     }
 
     if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
@@ -1510,135 +1482,6 @@ std::vector<discussion> database_api::get_discussions_by_hot(const discussion_qu
     });
 }
 
-std::vector<discussion> database_api::get_discussions_by_feed(const discussion_query& query) const
-{
-    return my->_db.with_read_lock([&]() {
-        query.validate();
-        FC_ASSERT(my->_follow_api, "Node is not running the follow plugin");
-        auto start_author = query.start_author ? *(query.start_author) : "";
-        auto start_permlink = query.start_permlink ? *(query.start_permlink) : "";
-
-        const auto& account = my->_db.obtain_service<chain::dbs_account>().get_account(query.tag);
-
-        const auto& c_idx = my->_db.get_index<follow::feed_index>().indices().get<follow::by_comment>();
-        const auto& f_idx = my->_db.get_index<follow::feed_index>().indices().get<follow::by_feed>();
-        auto feed_itr = f_idx.lower_bound(account.name);
-
-        if (start_author.size() || start_permlink.size())
-        {
-            auto start_c
-                = c_idx.find(boost::make_tuple(my->_db.get_comment(start_author, start_permlink).id, account.name));
-            FC_ASSERT(start_c != c_idx.end(), "Comment is not in account's feed");
-            feed_itr = f_idx.iterator_to(*start_c);
-        }
-
-        std::vector<discussion> result;
-        result.reserve(query.limit);
-
-        while (result.size() < query.limit && feed_itr != f_idx.end())
-        {
-            if (feed_itr->account != account.name)
-                break;
-            try
-            {
-                result.push_back(get_discussion(feed_itr->comment));
-                if (feed_itr->first_reblogged_by != account_name_type())
-                {
-                    result.back().reblogged_by
-                        = std::vector<account_name_type>(feed_itr->reblogged_by.begin(), feed_itr->reblogged_by.end());
-                    result.back().first_reblogged_by = feed_itr->first_reblogged_by;
-                    result.back().first_reblogged_on = feed_itr->first_reblogged_on;
-                }
-            }
-            catch (const fc::exception& e)
-            {
-                edump((e.to_detail_string()));
-            }
-
-            ++feed_itr;
-        }
-        return result;
-    });
-}
-
-std::vector<discussion> database_api::get_discussions_by_blog(const discussion_query& query) const
-{
-    return my->_db.with_read_lock([&]() {
-        query.validate();
-        FC_ASSERT(my->_follow_api, "Node is not running the follow plugin");
-        auto start_author = query.start_author ? *(query.start_author) : "";
-        auto start_permlink = query.start_permlink ? *(query.start_permlink) : "";
-
-        const auto& account = my->_db.obtain_service<chain::dbs_account>().get_account(query.tag);
-
-        const auto& tag_idx = my->_db.get_index<tags::tag_index>().indices().get<tags::by_comment>();
-
-        const auto& c_idx = my->_db.get_index<follow::blog_index>().indices().get<follow::by_comment>();
-        const auto& b_idx = my->_db.get_index<follow::blog_index>().indices().get<follow::by_blog>();
-        auto blog_itr = b_idx.lower_bound(account.name);
-
-        if (start_author.size() || start_permlink.size())
-        {
-            auto start_c
-                = c_idx.find(boost::make_tuple(my->_db.get_comment(start_author, start_permlink).id, account.name));
-            FC_ASSERT(start_c != c_idx.end(), "Comment is not in account's blog");
-            blog_itr = b_idx.iterator_to(*start_c);
-        }
-
-        std::vector<discussion> result;
-        result.reserve(query.limit);
-
-        while (result.size() < query.limit && blog_itr != b_idx.end())
-        {
-            if (blog_itr->account != account.name)
-                break;
-            try
-            {
-                if (query.select_authors.size()
-                    && query.select_authors.find(blog_itr->account) == query.select_authors.end())
-                {
-                    ++blog_itr;
-                    continue;
-                }
-
-                if (query.select_tags.size())
-                {
-                    auto tag_itr = tag_idx.lower_bound(blog_itr->comment);
-
-                    bool found = false;
-                    while (tag_itr != tag_idx.end() && tag_itr->comment == blog_itr->comment)
-                    {
-                        if (query.select_tags.find(tag_itr->tag) != query.select_tags.end())
-                        {
-                            found = true;
-                            break;
-                        }
-                        ++tag_itr;
-                    }
-                    if (!found)
-                    {
-                        ++blog_itr;
-                        continue;
-                    }
-                }
-
-                result.push_back(get_discussion(blog_itr->comment, query.truncate_body));
-                if (blog_itr->reblogged_on > time_point_sec())
-                {
-                    result.back().first_reblogged_on = blog_itr->reblogged_on;
-                }
-            }
-            catch (const fc::exception& e)
-            {
-                edump((e.to_detail_string()));
-            }
-
-            ++blog_itr;
-        }
-        return result;
-    });
-}
-
 std::vector<discussion> database_api::get_discussions_by_comments(const discussion_query& query) const
 {
     return my->_db.with_read_lock([&]() {
@@ -1861,11 +1704,7 @@ state database_api::get_state(std::string path) const
                 _state.accounts[acnt]
                     = extended_account(my->_db.obtain_service<chain::dbs_account>().get_account(acnt), my->_db);
                 _state.accounts[acnt].tags_usage = get_tags_used_by_author(acnt);
-                if (my->_follow_api)
-                {
-                    _state.accounts[acnt].guest_bloggers = my->_follow_api->get_blog_authors(acnt);
-                    _state.accounts[acnt].reputation = my->_follow_api->get_account_reputations(acnt, 1)[0].reputation;
-                }
+
                 auto& eacnt = _state.accounts[acnt];
                 if (part[1] == "transfers")
                 {
@@ -1897,7 +1736,6 @@ state database_api::get_state(std::string path) const
                         case operation::tag<account_create_operation>::value:
                         case operation::tag<account_update_operation>::value:
                         case operation::tag<witness_update_operation>::value:
-                        case operation::tag<custom_operation>::value:
                         case operation::tag<producer_reward_operation>::value:
                         default:
                             eacnt.other_history[item.first] = item.second;
@@ -1912,11 +1750,7 @@ state database_api::get_state(std::string path) const
                     {
                         auto reply_ref = reply.author + "/" + reply.permlink;
                         _state.content[reply_ref] = reply;
-                        if (my->_follow_api)
-                        {
-                            _state.accounts[reply_ref].reputation
-                                = my->_follow_api->get_account_reputations(reply.author, 1)[0].reputation;
-                        }
+
                         eacnt.recent_replies->push_back(reply_ref);
                     }
                 }
@@ -1942,50 +1776,6 @@ state database_api::get_state(std::string path) const
                         ++itr;
                     }
 #endif
-                }
-                else if (part[1].size() == 0 || part[1] == "blog")
-                {
-                    if (my->_follow_api)
-                    {
-                        auto blog = my->_follow_api->get_blog_entries(eacnt.name, 0, 20);
-                        eacnt.blog = std::vector<std::string>();
-
-                        for (auto b : blog)
-                        {
-                            const auto link = b.author + "/" + b.permlink;
-                            eacnt.blog->push_back(link);
-                            _state.content[link] = my->_db.get_comment(b.author, b.permlink);
-                            set_pending_payout(_state.content[link]);
-
-                            if (b.reblog_on > time_point_sec())
-                            {
-                                _state.content[link].first_reblogged_on = b.reblog_on;
-                            }
-                        }
-                    }
-                }
-                else if (part[1].size() == 0 || part[1] == "feed")
-                {
-                    if (my->_follow_api)
-                    {
-                        auto feed = my->_follow_api->get_feed_entries(eacnt.name, 0, 20);
-                        eacnt.feed = std::vector<std::string>();
-
-                        for (auto f : feed)
-                        {
-                            const auto link = f.author + "/" + f.permlink;
-                            eacnt.feed->push_back(link);
-                            _state.content[link] = my->_db.get_comment(f.author, f.permlink);
-                            set_pending_payout(_state.content[link]);
-                            if (f.reblog_by.size())
-                            {
-                                if (f.reblog_by.size())
-                                    _state.content[link].first_reblogged_by = f.reblog_by[0];
-                                _state.content[link].reblogged_by = f.reblog_by;
-                                _state.content[link].first_reblogged_on = f.reblog_on;
-                            }
-                        }
-                    }
                 }
             }
             /// pull a complete discussion
@@ -2245,10 +2035,6 @@ state database_api::get_state(std::string path) const
             {
                 _state.accounts.erase("");
                 _state.accounts[a] = extended_account(account_service.get_account(a), my->_db);
-                if (my->_follow_api)
-                {
-                    _state.accounts[a].reputation = my->_follow_api->get_account_reputations(a, 1)[0].reputation;
-                }
             }
             for (auto& d : _state.content)
             {

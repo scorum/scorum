@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <exception>
 

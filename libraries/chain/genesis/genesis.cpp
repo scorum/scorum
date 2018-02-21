@@ -1,4 +1,4 @@
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/account.hpp>

@@ -41,10 +41,6 @@ using operation = fc::static_variant<vote_operation,
                                      escrow_release_operation,
                                      escrow_transfer_operation,
 
-                                     custom_operation,
-                                     custom_json_operation,
-                                     custom_binary_operation,
-
                                      decline_voting_rights_operation,
                                      delegate_vesting_shares_operation,
 

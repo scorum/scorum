@@ -1,5 +1,5 @@
 #include <scorum/chain/services/comment_vote.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/comment_objects.hpp>
 
@@ -25,6 +25,35 @@ const comment_vote_object& dbs_comment_vote::get(const comment_id_type& comment_
     FC_CAPTURE_AND_RETHROW((comment_id)(voter_id))
 }
 
+dbs_comment_vote::comment_vote_refs_type dbs_comment_vote::get_by_comment(const comment_id_type& comment_id) const
+{
+    comment_vote_refs_type ret;
+
+    const auto& vote_idx = db_impl().get_index<comment_vote_index>().indices().get<by_comment_voter>();
+    auto vote_itr = vote_idx.lower_bound(comment_id);
+    while (vote_itr != vote_idx.end() && vote_itr->comment == comment_id)
+    {
+        ret.push_back(std::cref(*(vote_itr++)));
+    }
+
+    return ret;
+}
+
+dbs_comment_vote::comment_vote_refs_type
+dbs_comment_vote::get_by_comment_weight_voter(const comment_id_type& comment_id) const
+{
+    comment_vote_refs_type ret;
+
+    const auto& vote_idx = db_impl().get_index<comment_vote_index>().indices().get<by_comment_weight_voter>();
+    auto vote_itr = vote_idx.lower_bound(comment_id);
+    while (vote_itr != vote_idx.end() && vote_itr->comment == comment_id)
+    {
+        ret.push_back(std::cref(*(vote_itr++)));
+    }
+
+    return ret;
+}
+
 bool dbs_comment_vote::is_exists(const comment_id_type& comment_id, const account_id_type& voter_id) const
 {
     return nullptr != db_impl().find<comment_vote_object, by_comment_voter>(std::make_tuple(comment_id, voter_id));
@@ -41,6 +70,11 @@ const comment_vote_object& dbs_comment_vote::create(const modifier_type& modifie
 void dbs_comment_vote::update(const comment_vote_object& comment_vote, const modifier_type& modifier)
 {
     db_impl().modify(comment_vote, [&](comment_vote_object& cvo) { modifier(cvo); });
+}
+
+void dbs_comment_vote::remove(const comment_vote_object& comment_vote)
+{
+    db_impl().remove(comment_vote);
 }
 
 void dbs_comment_vote::remove(const comment_id_type& comment_id)
