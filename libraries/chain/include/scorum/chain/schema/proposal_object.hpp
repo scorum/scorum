@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/types.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 namespace scorum {
@@ -15,12 +16,14 @@ public:
 
     id_type id;
     account_name_type creator;
+
+    protocol::proposal_operation operation;
     fc::variant data;
 
     fc::time_point_sec created;
     fc::time_point_sec expiration;
 
-    uint64_t quorum_percent = 0;
+    protocol::percent_type quorum_percent = 0;
 
     scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
     flat_set<account_name_type> voted_accounts;
@@ -51,6 +54,16 @@ typedef shared_multi_index_container<proposal_object,
 } // namespace chain
 } // namespace scorum
 
+// clang-format off
 FC_REFLECT(scorum::chain::proposal_object,
-           (id)(creator)(data)(created)(expiration)(quorum_percent)(action)(voted_accounts))
+           (id)
+           (creator)
+           (operation)
+           (data)
+           (created)
+           (expiration)
+           (quorum_percent)
+           (action)
+           (voted_accounts))
+// clang-format on
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_object, scorum::chain::proposal_object_index)
