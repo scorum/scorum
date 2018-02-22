@@ -28,6 +28,4 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
     // TODO
 }
 
-// TODO
-
 BOOST_AUTO_TEST_SUITE_END()
