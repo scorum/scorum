@@ -1,6 +1,6 @@
 #pragma once
 #include <scorum/app/plugin.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
 

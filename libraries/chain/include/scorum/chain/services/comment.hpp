@@ -14,6 +14,10 @@ struct comment_service_i
     virtual const comment_object& get(const comment_id_type& comment_id) const = 0;
     virtual const comment_object& get(const account_name_type& author, const std::string& permlink) const = 0;
 
+    using comment_refs_type = std::vector<std::reference_wrapper<const comment_object>>;
+
+    virtual comment_refs_type get_by_cashout_time() const = 0;
+
     virtual bool is_exists(const account_name_type& author, const std::string& permlink) const = 0;
 
     using modifier_type = std::function<void(comment_object&)>;
@@ -35,6 +39,8 @@ protected:
 public:
     const comment_object& get(const comment_id_type& comment_id) const override;
     const comment_object& get(const account_name_type& author, const std::string& permlink) const override;
+
+    comment_refs_type get_by_cashout_time() const override;
 
     bool is_exists(const account_name_type& author, const std::string& permlink) const override;
 

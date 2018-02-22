@@ -7,7 +7,7 @@
 #include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
 namespace scorum {
