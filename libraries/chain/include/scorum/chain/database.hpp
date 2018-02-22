@@ -281,13 +281,10 @@ public:
                              const asset& curation_tokens,
                              const asset& beneficiary_value);
 
-    /** clears all vote records for a particular account but does not update the
-     * witness vote totals.  Vote totals should be updated first via a call to
-     * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
-     */
+    asset pay_curators(const comment_object& c, asset& max_rewards);
+    asset pay_for_comment(const comment_object& comment, const asset& reward);
+
     void process_vesting_withdrawals();
-    share_type pay_curators(const comment_object& c, share_type& max_rewards);
-    share_type pay_for_comment(const share_type& reward, const comment_object& comment);
     void process_comments_cashout();
     void process_funds();
     void account_recovery_processing();

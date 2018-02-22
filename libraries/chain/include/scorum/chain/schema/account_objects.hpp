@@ -51,8 +51,8 @@ public:
 
     asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
 
-    share_type curation_rewards = 0;
-    share_type posting_rewards = 0;
+    asset curation_rewards = asset(0, SCORUM_SYMBOL);
+    asset posting_rewards = asset(0, SCORUM_SYMBOL);
 
     asset vesting_shares =              asset(0, VESTS_SYMBOL); ///< total vesting shares held by this account, controls its voting power
     asset delegated_vesting_shares =    asset(0, VESTS_SYMBOL);

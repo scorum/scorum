@@ -63,7 +63,7 @@ public:
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
     asset beneficiary_payout_value = asset(0, SCORUM_SYMBOL);
 
-    share_type author_rewards = 0;
+    asset author_rewards = asset(0, SCORUM_SYMBOL);
 
     int32_t net_votes = 0;
 
