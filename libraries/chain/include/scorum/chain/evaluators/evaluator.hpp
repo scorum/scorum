@@ -61,17 +61,3 @@ private:
                                                                                                                        \
         void do_apply(const X##_operation& o);                                                                         \
     };
-
-#define DEFINE_EVALUATOR_DEPRECATED(X)                                                                                 \
-    class X##_evaluator : public scorum::chain::evaluator_impl<database, X##_evaluator>                                \
-    {                                                                                                                  \
-    public:                                                                                                            \
-        typedef X##_operation operation_type;                                                                          \
-                                                                                                                       \
-        X##_evaluator(database& db)                                                                                    \
-            : scorum::chain::evaluator_impl<database, X##_evaluator>(db)                                               \
-        {                                                                                                              \
-        }                                                                                                              \
-                                                                                                                       \
-        void do_apply(const X##_operation& o);                                                                         \
-    };
