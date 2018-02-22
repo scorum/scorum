@@ -4,7 +4,7 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
-#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator2.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/data_service_factory.hpp>
@@ -62,7 +62,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
         global_property.change_quorum = 73u;
     }
 
-    void create_expectations(const proposal_create_operation& op)
+    void create_expectations(const proposal_create_operation2& op)
     {
         mocks.ExpectCall(committee_service, registration_committee_service_i::is_exists).With(op.creator).Return(true);
 
@@ -73,117 +73,112 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
 
         mocks.ExpectCall(property_service, dynamic_global_property_service_i::head_block_time).Return(current_time);
 
-        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get).ReturnByRef(global_property);
+        //        mocks.ExpectCall(property_service,
+        //        dynamic_global_property_service_i::get).ReturnByRef(global_property);
     }
 
-    void create_proposal(proposal_action expected_action)
+    void create_proposal()
     {
-        proposal_create_operation op;
+        proposal_create_operation2 op;
         op.creator = "alice";
-        op.data = "bob";
         op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
-        op.action = expected_action;
 
         create_expectations(op);
 
-        mocks.ExpectCall(proposal_service, proposal_service_i::create)
-            .With(_, _, expected_action, _, _)
-            .ReturnByRef(proposal);
+        mocks.ExpectCall(proposal_service, proposal_service_i::create2).With(_, _, _, _).ReturnByRef(proposal);
 
-        proposal_create_evaluator evaluator(*services);
+        proposal_create_evaluator2 evaluator(*services);
 
         evaluator.do_apply(op);
     }
 
-    uint64_t get_quorum(proposal_action action)
-    {
-        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get).ReturnByRef(global_property);
+    //    uint64_t get_quorum(proposal_action action)
+    //    {
+    //        mocks.ExpectCall(property_service, dynamic_global_property_service_i::get).ReturnByRef(global_property);
 
-        proposal_create_evaluator evaluator(*services);
+    //        proposal_create_evaluator2 evaluator(*services);
 
-        return evaluator.get_quorum(action);
-    }
+    //        return evaluator.get_quorum(action);
+    //    }
 };
 
 BOOST_AUTO_TEST_SUITE(proposal_create_evaluator_tests)
 
 BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, create_proposal_fixture)
 {
-    proposal_create_operation op;
+    proposal_create_operation2 op;
     op.creator = "alice";
-    op.data = "bob";
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
-    op.action = proposal_action::invite;
 
     create_expectations(op);
 
     const fc::time_point_sec expected_expiration = current_time + op.lifetime_sec;
 
-    mocks.ExpectCall(proposal_service, proposal_service_i::create)
-        .With(_, _, _, expected_expiration, _)
+    mocks.ExpectCall(proposal_service, proposal_service_i::create2)
+        .With(_, _, expected_expiration, _)
         .ReturnByRef(proposal);
 
-    proposal_create_evaluator evaluator(*services);
+    proposal_create_evaluator2 evaluator(*services);
 
     evaluator.do_apply(op);
 }
 
-BOOST_FIXTURE_TEST_CASE(get_quorum_for_invite_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_EQUAL(global_property.invite_quorum, get_quorum(proposal_action::invite));
-}
+// BOOST_FIXTURE_TEST_CASE(get_quorum_for_invite_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_EQUAL(global_property.invite_quorum, get_quorum(proposal_action::invite));
+//}
 
-BOOST_FIXTURE_TEST_CASE(get_quorum_for_dropout_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_EQUAL(global_property.dropout_quorum, get_quorum(proposal_action::dropout));
-}
+// BOOST_FIXTURE_TEST_CASE(get_quorum_for_dropout_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_EQUAL(global_property.dropout_quorum, get_quorum(proposal_action::dropout));
+//}
 
-BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_invite_quorum_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_invite_quorum));
-}
+// BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_invite_quorum_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_invite_quorum));
+//}
 
-BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_dropout_quorum_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_dropout_quorum));
-}
+// BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_dropout_quorum_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_dropout_quorum));
+//}
 
-BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_quorum_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_quorum));
-}
+// BOOST_FIXTURE_TEST_CASE(get_quorum_for_change_quorum_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_EQUAL(global_property.change_quorum, get_quorum(proposal_action::change_quorum));
+//}
 
-BOOST_FIXTURE_TEST_CASE(create_invite_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::invite));
-}
+// BOOST_FIXTURE_TEST_CASE(create_invite_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::invite));
+//}
 
-BOOST_FIXTURE_TEST_CASE(create_dropout_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::dropout));
-}
+// BOOST_FIXTURE_TEST_CASE(create_dropout_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::dropout));
+//}
 
-BOOST_FIXTURE_TEST_CASE(create_change_invite_quorum_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_invite_quorum));
-}
+// BOOST_FIXTURE_TEST_CASE(create_change_invite_quorum_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_invite_quorum));
+//}
 
-BOOST_FIXTURE_TEST_CASE(create_change_dropout_quorum_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_dropout_quorum));
-}
+// BOOST_FIXTURE_TEST_CASE(create_change_dropout_quorum_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_dropout_quorum));
+//}
 
-BOOST_FIXTURE_TEST_CASE(create_change_quorum_proposal, create_proposal_fixture)
-{
-    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_quorum));
-}
+// BOOST_FIXTURE_TEST_CASE(create_change_quorum_proposal, create_proposal_fixture)
+//{
+//    BOOST_CHECK_NO_THROW(create_proposal(proposal_action::change_quorum));
+//}
 
 BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create_evaluator_fixture)
 {
-    proposal_create_operation op;
+    proposal_create_operation2 op;
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS - 1;
 
-    proposal_create_evaluator evaluator(*services);
+    proposal_create_evaluator2 evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
                            "Proposal life time is not in range of 86400 - 864000 seconds.");
@@ -191,10 +186,10 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_small, proposal_create
 
 BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_big, proposal_create_evaluator_fixture)
 {
-    proposal_create_operation op;
+    proposal_create_operation2 op;
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS + 1;
 
-    proposal_create_evaluator evaluator(*services);
+    proposal_create_evaluator2 evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception,
                            "Proposal life time is not in range of 86400 - 864000 seconds.");
@@ -202,13 +197,13 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_if_lifetime_is_to_big, proposal_create_e
 
 BOOST_FIXTURE_TEST_CASE(throw_when_creator_is_not_in_committee, proposal_create_evaluator_fixture)
 {
-    proposal_create_operation op;
+    proposal_create_operation2 op;
     op.creator = "sam";
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
 
     mocks.ExpectCall(committee_service, registration_committee_service_i::is_exists).With(op.creator).Return(false);
 
-    proposal_create_evaluator evaluator(*services);
+    proposal_create_evaluator2 evaluator(*services);
 
     SCORUM_CHECK_EXCEPTION(evaluator.do_apply(op), fc::exception, "Account \"sam\" is not in committee.");
 }

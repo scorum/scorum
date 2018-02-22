@@ -51,6 +51,7 @@ add_library( scorum_chain
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
+             evaluators/proposal_create_evaluator2.cpp
 
              schema/shared_authority.cpp
              block_log.cpp

@@ -27,6 +27,22 @@ const proposal_object& dbs_proposal::create(const protocol::account_name_type& c
     return proposal;
 }
 
+const proposal_object& dbs_proposal::create2(const account_name_type& creator,
+                                             const protocol::proposal_operation& operation,
+                                             const fc::time_point_sec& expiration,
+                                             uint64_t quorum)
+{
+    const auto& proposal = db_impl().create<proposal_object>([&](proposal_object& proposal) {
+        proposal.creator = creator;
+        proposal.operation = operation;
+        proposal.created = db_impl().head_block_time();
+        proposal.expiration = expiration;
+        proposal.quorum_percent = quorum;
+    });
+
+    return proposal;
+}
+
 void dbs_proposal::remove(const proposal_object& proposal)
 {
     db_impl().remove(proposal);
