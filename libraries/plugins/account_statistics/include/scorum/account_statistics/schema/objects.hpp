@@ -1,6 +1,12 @@
+#pragma once
+
 #include <boost/multi_index/composite_key.hpp>
 
+#include <fc/shared_containers.hpp>
+
+#include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/account_statistics/schema/metrics.hpp>
+#include <scorum/common_statistic/base_bucket_object.hpp>
 
 //
 // Plugins should #define their SPACE_ID's so plugins with
@@ -23,48 +29,66 @@ using namespace scorum::chain;
 
 enum account_statistics_plugin_object_types
 {
-    account_stats_bucket_object_type = (ACCOUNT_STATISTICS_SPACE_ID << 8),
-    account_activity_bucket_object_type
+    bucket_object_type = (ACCOUNT_STATISTICS_SPACE_ID << 8),
+    activity_bucket_object_type
 };
 
-struct account_stats_bucket_object : public account_metric,
-                                     public object<account_stats_bucket_object_type, account_stats_bucket_object>
+struct bucket_object : public common_statistics::base_bucket_object, public object<bucket_object_type, bucket_object>
 {
-    CHAINBASE_DEFAULT_CONSTRUCTOR(account_stats_bucket_object)
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(bucket_object, (account_statistic))
 
     id_type id;
 
-    fc::time_point_sec open; ///< Open time of the bucket
-    uint32_t seconds = 0; ///< Seconds accounted for in the bucket
+    fc::shared_map<account_name_type, account_metric> account_statistic;
 };
+typedef bucket_object::id_type bucket_id_type;
 
-struct account_activity_bucket_object
-    : public object<account_activity_bucket_object_type, account_activity_bucket_object>
+struct activity_bucket_object : public common_statistics::base_bucket_object,
+                                public object<activity_bucket_object_type, activity_bucket_object>
 {
-    CHAINBASE_DEFAULT_CONSTRUCTOR(account_activity_bucket_object)
+    CHAINBASE_DEFAULT_CONSTRUCTOR(activity_bucket_object)
 
     id_type id;
 
-    fc::time_point_sec open; ///< Open time for the bucket
-    uint32_t seconds = 0; ///< Seconds accounted for in the bucket
     uint32_t active_market_accounts = 0; ///< Active market accounts in the bucket
     uint32_t active_forum_accounts = 0; ///< Active forum accounts in the bucket
     uint32_t active_market_and_forum_accounts = 0; ///< Active accounts in both the market and the forum
 };
+typedef activity_bucket_object::id_type activity_bucket_id_type;
+
+struct by_id;
+typedef shared_multi_index_container<bucket_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<bucket_object,
+                                                                      bucket_id_type,
+                                                                      &bucket_object::id>>,
+                                                ordered_unique<tag<common_statistics::by_bucket>,
+                                                               composite_key<bucket_object,
+                                                                             member<common_statistics::
+                                                                                        base_bucket_object,
+                                                                                    uint32_t,
+                                                                                    &common_statistics::
+                                                                                        base_bucket_object::seconds>,
+                                                                             member<common_statistics::
+                                                                                        base_bucket_object,
+                                                                                    fc::time_point_sec,
+                                                                                    &common_statistics::
+                                                                                        base_bucket_object::open>>>>>
+    bucket_index;
 }
 } // scorum::account_statistics
 
-FC_REFLECT_DERIVED(scorum::account_statistics::account_stats_bucket_object,
-                   (scorum::account_statistics::account_metric),
-                   (id)(open)(seconds))
+FC_REFLECT_DERIVED(scorum::account_statistics::bucket_object,
+                   (scorum::common_statistics::base_bucket_object)(scorum::account_statistics::account_metric),
+                   (id))
+
+CHAINBASE_SET_INDEX_TYPE(scorum::account_statistics::bucket_object, scorum::account_statistics::bucket_index)
 
 // clang-format off
 
-FC_REFLECT(
-    scorum::account_statistics::account_activity_bucket_object,
+FC_REFLECT_DERIVED(
+    scorum::account_statistics::activity_bucket_object, (scorum::common_statistics::base_bucket_object),
     (id)
-    (open)
-    (seconds)
     (active_market_accounts)
     (active_forum_accounts)
     (active_market_and_forum_accounts)

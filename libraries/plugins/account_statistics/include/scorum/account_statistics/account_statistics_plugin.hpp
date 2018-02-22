@@ -1,3 +1,5 @@
+#pragma once
+
 #include <scorum/app/plugin.hpp>
 
 #include <scorum/account_statistics/schema/objects.hpp>
@@ -32,7 +34,6 @@ public:
 
     const flat_set<uint32_t>& get_tracked_buckets() const;
     uint32_t get_max_history_per_bucket() const;
-    const flat_set<std::string>& get_tracked_accounts() const;
 
 private:
     friend class detail::account_statistics_plugin_impl;

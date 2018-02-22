@@ -4,13 +4,15 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
-#include "../common/database_trx_integration.hpp"
+#include "database_trx_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 using namespace scorum::blockchain_statistics;
 using fc::string;
+
+namespace blockchain_stat {
 
 struct stat_database_fixture : public database_trx_integration_fixture
 {
@@ -23,11 +25,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
     {
         boost::program_options::variables_map options;
 
-        // db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
         db_stat = app.register_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
-
-        // db_plugin->logging = false;
-        // db_plugin->plugin_initialize(options);
         db_stat->plugin_initialize(options);
 
         genesis_state_type::registration_schedule_item single_stage{ 1u, 1u, 100u };
@@ -57,7 +55,8 @@ struct stat_database_fixture : public database_trx_integration_fixture
     const bucket_object& get_lifetime_bucket() const
     {
         const auto& bucket_idx = db.get_index<bucket_index>().indices().get<common_statistics::by_bucket>();
-        auto itr = bucket_idx.find(boost::make_tuple(std::numeric_limits<uint32_t>::max(), fc::time_point_sec()));
+        auto itr = bucket_idx.find(
+            boost::make_tuple(std::numeric_limits<uint32_t>::max() /*LIFE_TIME_PERIOD*/, fc::time_point_sec()));
         FC_ASSERT(itr != bucket_idx.end());
         return *itr;
     }
@@ -82,8 +81,9 @@ struct stat_database_fixture : public database_trx_integration_fixture
         generate_block();
     }
 };
+}
 
-BOOST_FIXTURE_TEST_SUITE(statistic_tests, stat_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(statistic_tests, blockchain_stat::stat_database_fixture)
 
 SCORUM_TEST_CASE(produced_blocks_stat_test)
 {
@@ -150,7 +150,7 @@ SCORUM_TEST_CASE(bandwidth_stat_test)
     BOOST_REQUIRE_EQUAL(bucket.bandwidth, orig_val + fc::raw::pack_size(tx));
 }
 
-SCORUM_TEST_CASE(account_creation_stat_test1)
+SCORUM_TEST_CASE(account_creation_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
@@ -166,7 +166,7 @@ SCORUM_TEST_CASE(account_creation_stat_test1)
     BOOST_REQUIRE_EQUAL(bucket.paid_accounts_created, orig_val + 1);
 }
 
-SCORUM_TEST_CASE(account_creation_stat_test2)
+SCORUM_TEST_CASE(account_creation_with_delegation_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
@@ -182,7 +182,7 @@ SCORUM_TEST_CASE(account_creation_stat_test2)
     BOOST_REQUIRE_EQUAL(bucket.paid_accounts_created, orig_val + 1);
 }
 
-SCORUM_TEST_CASE(account_creation_stat_test3)
+SCORUM_TEST_CASE(account_creation_by_committee_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 

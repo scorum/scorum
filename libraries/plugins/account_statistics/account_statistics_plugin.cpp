@@ -1,4 +1,6 @@
+#include <scorum/account_statistics/account_statistics_plugin.hpp>
 #include <scorum/account_statistics/account_statistics_api.hpp>
+#include <scorum/common_statistic/base_plugin_impl.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
@@ -11,38 +13,28 @@ namespace account_statistics {
 namespace detail {
 
 class account_statistics_plugin_impl
+    : public common_statistics::common_statistics_plugin_impl<bucket_object, account_statistics_plugin>
 {
 public:
     account_statistics_plugin_impl(account_statistics_plugin& plugin)
-        : _self(plugin)
+        : base_plugin_impl(plugin)
     {
     }
     virtual ~account_statistics_plugin_impl()
     {
     }
 
-    void on_operation(const operation_notification& o);
-
-    account_statistics_plugin& _self;
-    flat_set<uint32_t> _tracked_buckets = { 60, 3600, 21600, 86400, 604800, 2592000 };
-    uint32_t _maximum_history_per_bucket_size = 100;
-    flat_set<std::string> _tracked_accounts;
+    virtual void process_post_operation(const bucket_object& bucket, const operation_notification& o) override;
 };
 
-struct operation_process
+struct activity_operation_process
 {
-    const account_statistics_plugin& _plugin;
-    const account_stats_bucket_object& _stats;
-    const account_activity_bucket_object& _activity;
     chain::database& _db;
+    const activity_bucket_object& _bucket;
 
-    operation_process(account_statistics_plugin& asp,
-                      const account_stats_bucket_object& s,
-                      const account_activity_bucket_object& a)
-        : _plugin(asp)
-        , _stats(s)
-        , _activity(a)
-        , _db(asp.database())
+    activity_operation_process(chain::database& db, const activity_bucket_object& b)
+        : _db(db)
+        , _bucket(b)
     {
     }
 
@@ -53,8 +45,44 @@ struct operation_process
     }
 };
 
-void account_statistics_plugin_impl::on_operation(const operation_notification& o)
+struct operation_process
 {
+    chain::database& _db;
+    const bucket_object& _bucket;
+
+    operation_process(chain::database& db, const bucket_object& b)
+        : _db(db)
+        , _bucket(b)
+    {
+    }
+
+    typedef void result_type;
+
+    template <typename T> void operator()(const T&) const
+    {
+    }
+
+    void operator()(const transfer_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) {
+
+            auto& from_stat = b.account_statistic[op.from];
+            from_stat.transfers_from++;
+            from_stat.scorum_sent += op.amount;
+
+            auto& to_stat = b.account_statistic[op.to];
+            to_stat.transfers_to++;
+            to_stat.scorum_received += op.amount;
+        });
+    }
+};
+
+void account_statistics_plugin_impl::process_post_operation(const bucket_object& bucket,
+                                                            const operation_notification& o)
+{
+    auto& db = _self.database();
+
+    o.op.visit(operation_process(db, bucket));
 }
 
 } // detail
@@ -90,8 +118,6 @@ void account_statistics_plugin::plugin_initialize(const boost::program_options::
     {
         ilog("account_stats plugin: plugin_initialize() begin");
 
-        database().post_apply_operation.connect([&](const operation_notification& o) { _my->on_operation(o); });
-
         ilog("account_stats plugin: plugin_initialize() end");
     }
     FC_CAPTURE_AND_RETHROW()
@@ -114,11 +140,6 @@ const flat_set<uint32_t>& account_statistics_plugin::get_tracked_buckets() const
 uint32_t account_statistics_plugin::get_max_history_per_bucket() const
 {
     return _my->_maximum_history_per_bucket_size;
-}
-
-const flat_set<std::string>& account_statistics_plugin::get_tracked_accounts() const
-{
-    return _my->_tracked_accounts;
 }
 }
 } // scorum::account_statistics

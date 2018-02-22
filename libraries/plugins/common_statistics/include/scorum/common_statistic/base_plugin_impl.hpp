@@ -1,6 +1,9 @@
 #pragma once
 
+#include <limits>
 #include <chainbase/generic_index.hpp>
+#include <scorum/protocol/block.hpp>
+#include <scorum/chain/operation_notification.hpp>
 
 #define LIFE_TIME_PERIOD std::numeric_limits<uint32_t>::max()
 
@@ -40,6 +43,9 @@ public:
     {
     }
 
+    virtual void process_bucket_creation(const Bucket& bucket)
+    {
+    }
     virtual void process_block(const Bucket& bucket, const signed_block& b)
     {
     }
@@ -97,11 +103,14 @@ public:
             }
             else
             {
-                _current_buckets.insert(db.template create<Bucket>([&](Bucket& bo) {
-                                              bo.open = open;
-                                              bo.seconds = bucket;
-                                              bo.blocks = 1;
-                                          }).id);
+                const auto& new_bucket_obj = db.template create<Bucket>([&](Bucket& bo) {
+                    bo.open = open;
+                    bo.seconds = bucket;
+                });
+
+                process_bucket_creation(new_bucket_obj);
+
+                _current_buckets.insert(new_bucket_obj.id);
 
                 // adjust history
                 if (_maximum_history_per_bucket_size > 0)

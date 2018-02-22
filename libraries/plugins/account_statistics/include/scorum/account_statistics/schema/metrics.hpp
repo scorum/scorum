@@ -1,3 +1,6 @@
+#pragma once
+
+#include <map>
 #include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/types.hpp>
 
@@ -7,11 +10,11 @@ namespace account_statistics {
 using scorum::protocol::asset;
 using scorum::protocol::account_name_type;
 
+struct bucket_object;
+
 // clang-format off
 struct account_metric
 {
-    account_name_type name; ///< Account name
-
     uint32_t signed_transactions = 0; ///< Transactions this account signed
 
     // bandwidth
@@ -22,8 +25,8 @@ struct account_metric
     uint32_t forum_ops = 0; ///< Forum operations
 
     // money
-    uint32_t transfers_to = 0; ///< Account to account transfers to this account
     uint32_t transfers_from = 0; ///< Account to account transfers from this account
+    uint32_t transfers_to = 0; ///< Account to account transfers to this account
     uint32_t transfers_to_vesting = 0; ///< Transfers to vesting by this account. Note: Transfer to vesting from A to B
                                        ///counts as a transfer from A to B followed by a vesting deposit by B.
 
@@ -63,11 +66,23 @@ struct account_metric
     asset curation_rewards_scorum_value = asset(0, SCORUM_SYMBOL); ///< SCR value of curation rewards
 };
 // clang-format on
+
+struct account_statistic : public account_metric
+{
+    account_statistic& operator+=(const account_metric&);
+};
+
+struct statistics
+{
+    std::map<account_name_type, account_statistic> statistic_map;
+
+    statistics& operator+=(const bucket_object&);
+};
 }
 } // scorum::account_statistics
 
 FC_REFLECT(scorum::account_statistics::account_metric,
-           (name)(signed_transactions)(market_bandwidth)(non_market_bandwidth)(total_ops)(market_ops)(forum_ops)(
+           (signed_transactions)(market_bandwidth)(non_market_bandwidth)(total_ops)(market_ops)(forum_ops)(
                root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(replies_deleted)(
                new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(author_reward_payouts)(
                author_rewards_vests)(author_rewards_total_scorum_value)(curation_reward_payouts)(
@@ -76,3 +91,9 @@ FC_REFLECT(scorum::account_statistics::account_metric,
                new_vesting_withdrawal_requests)(modified_vesting_withdrawal_requests)(vesting_withdrawals_processed)(
                finished_vesting_withdrawals)(vests_withdrawn)(scorum_received_from_withdrawls)(
                scorum_received_from_routes)(vests_received_from_routes))
+
+FC_REFLECT_DERIVED(scorum::account_statistics::account_statistic,
+                   (scorum::account_statistics::account_metric),
+                   BOOST_PP_SEQ_NIL)
+
+FC_REFLECT(scorum::account_statistics::statistics, (statistic_map))

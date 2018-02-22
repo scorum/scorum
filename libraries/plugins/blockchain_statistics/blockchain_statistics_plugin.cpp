@@ -30,6 +30,13 @@ public:
     {
     }
 
+    virtual void process_bucket_creation(const bucket_object& bucket)
+    {
+        auto& db = _self.database();
+
+        db.modify<bucket_object>(bucket, [&](bucket_object& bo) { bo.blocks = 1; });
+    }
+
     virtual void process_block(const bucket_object& bucket, const signed_block& b) override;
 
     virtual void process_pre_operation(const bucket_object& bucket, const operation_notification& o) override;
