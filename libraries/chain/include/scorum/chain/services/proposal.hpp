@@ -19,6 +19,12 @@ struct proposal_service_i
                                           uint64_t quorum)
         = 0;
 
+    virtual const proposal_object& create2(const account_name_type& creator,
+                                           const protocol::proposal_operation& operation,
+                                           const fc::time_point_sec& expiration,
+                                           uint64_t quorum)
+        = 0;
+
     virtual void remove(const proposal_object& proposal) = 0;
 
     virtual bool is_exists(proposal_id_type proposal_id) = 0;
@@ -53,6 +59,11 @@ public:
                                   scorum::protocol::proposal_action action,
                                   const fc::time_point_sec& expiration,
                                   uint64_t quorum) override;
+
+    virtual const proposal_object& create2(const account_name_type& creator,
+                                           const protocol::proposal_operation& operation,
+                                           const fc::time_point_sec& expiration,
+                                           uint64_t quorum) override;
 
     void remove(const proposal_object& proposal) override;
 

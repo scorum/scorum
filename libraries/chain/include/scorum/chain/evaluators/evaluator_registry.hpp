@@ -7,12 +7,14 @@ namespace chain {
 
 class database;
 
-template <typename OperationType> class evaluator_registry
+template <typename OperationType, typename DbType = data_service_factory_i, typename T = evaluator<OperationType>>
+class evaluator_registry
 {
 public:
     typedef OperationType operation_type;
+    typedef T eval_type;
 
-    evaluator_registry(database& d)
+    evaluator_registry(DbType& d)
         : _db(d)
     {
         for (int i = 0; i < OperationType::count(); i++)
@@ -30,7 +32,7 @@ public:
         _op_evaluators[OperationType::template tag<typename EvaluatorType::operation_type>::value].reset(e);
     }
 
-    evaluator<OperationType>& get_evaluator(const OperationType& op)
+    eval_type& get_evaluator(const OperationType& op)
     {
         int i_which = op.which();
         uint64_t u_which = uint64_t(i_which);
@@ -38,14 +40,14 @@ public:
             assert("Negative operation tag" && false);
         if (u_which >= _op_evaluators.size())
             assert("No registered evaluator for this operation" && false);
-        std::unique_ptr<evaluator<OperationType>>& eval = _op_evaluators[u_which];
+        std::unique_ptr<eval_type>& eval = _op_evaluators[u_which];
         if (!eval)
             assert("No registered evaluator for this operation" && false);
         return *eval;
     }
 
-    std::vector<std::unique_ptr<evaluator<OperationType>>> _op_evaluators;
-    database& _db;
+    std::vector<std::unique_ptr<eval_type>> _op_evaluators;
+    DbType& _db;
 };
 
 } // namespace chain

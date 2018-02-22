@@ -96,4 +96,17 @@ BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
     BOOST_CHECK_EQUAL("alice", add_member_op.account_name);
 }
 
+BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex2)
+{
+    registration_committee_exclude_member_operation add_member_op;
+    add_member_op.account_name = "alice";
+
+    proposal_create_operation2 proposal_create_op;
+    proposal_create_op.operation = add_member_op;
+
+    std::cout << proposal_create_op.operation.which();
+
+    //    proposal_create_op.operation.
+}
+
 BOOST_AUTO_TEST_SUITE_END()

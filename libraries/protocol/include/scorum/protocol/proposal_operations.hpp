@@ -7,6 +7,14 @@
 namespace scorum {
 namespace protocol {
 
+enum quorum_type
+{
+    none_quorum,
+    add_member_quorum,
+    exclude_member_quorum,
+    base_quorum
+};
+
 struct committee
 {
     virtual void add_member(const account_name_type&) = 0;
@@ -24,25 +32,41 @@ struct development_committee : public committee
 {
 };
 
-template <typename CommitteeType> struct proposal_base_operation
+template <typename CommitteeType> struct proposal_committee_operation
 {
     typedef CommitteeType committee_type;
-    typedef proposal_base_operation<CommitteeType> base_operation_type;
+    typedef proposal_committee_operation<CommitteeType> committee_operation_type;
 };
 
-struct registration_committee_add_member_operation : public proposal_base_operation<registration_committee>
+template <typename OperationType, typename CommitteeType>
+struct proposal_base_operation : public proposal_committee_operation<CommitteeType>
+{
+    typedef OperationType operation_type;
+};
+
+struct registration_committee_add_member_operation
+    : public proposal_base_operation<registration_committee_add_member_operation, registration_committee>
 {
     account_name_type account_name;
 };
 
-struct registration_committee_exclude_member_operation : public proposal_base_operation<registration_committee>
+struct registration_committee_exclude_member_operation
+    : public proposal_base_operation<registration_committee_exclude_member_operation, registration_committee>
 {
     account_name_type account_name;
+};
+
+struct registration_committee_change_quorum_operation
+    : public proposal_base_operation<registration_committee_change_quorum_operation, registration_committee>
+{
+    protocol::percent_type quorum = 0u;
+    quorum_type committee_quorum = none_quorum;
 };
 
 // clang-format off
 using proposal_operation = fc::static_variant<registration_committee_add_member_operation,
-                                              registration_committee_exclude_member_operation>;
+                                              registration_committee_exclude_member_operation,
+                                              registration_committee_change_quorum_operation>;
 // clang-format on
 
 } // namespace protocol
@@ -50,6 +74,7 @@ using proposal_operation = fc::static_variant<registration_committee_add_member_
 
 FC_REFLECT(scorum::protocol::registration_committee_add_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::registration_committee_exclude_member_operation, (account_name))
+FC_REFLECT(scorum::protocol::registration_committee_change_quorum_operation, (quorum))
 
 DECLARE_OPERATION_SERIALIZATOR(scorum::protocol::proposal_operation)
 FC_REFLECT_TYPENAME(scorum::protocol::proposal_operation)
