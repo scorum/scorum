@@ -20,8 +20,7 @@ class set_withdraw_vesting_route_evaluator_impl
 {
 public:
     set_withdraw_vesting_route_evaluator_impl(data_service_factory_i& services)
-        : _account_service(services.account_service())
-        , _withdraw_vesting_route_service(services.withdraw_vesting_route_service())
+        : _withdraw_vesting_route_service(services.withdraw_vesting_route_service())
         , _withdraw_vesting_route_statistic_service(services.withdraw_vesting_route_statistic_service())
     {
     }
@@ -88,7 +87,6 @@ public:
     }
 
 private:
-    account_service_i& _account_service;
     withdraw_vesting_route_service_i& _withdraw_vesting_route_service;
     withdraw_vesting_route_statistic_service_i& _withdraw_vesting_route_statistic_service;
 };
@@ -145,7 +143,37 @@ void set_withdraw_vesting_route_to_dev_pool_evaluator::do_apply(
     const auto& from_account = _account_service.get_account(op.from_account);
     const auto& to_pool = _dev_pool_service.get();
 
-    _impl->do_apply(from_account, to_pool, op.percent);
+    _impl->do_apply(from_account, to_pool, op.percent, op.auto_vest);
+}
+
+//
+
+set_withdraw_vesting_route_context::set_withdraw_vesting_route_context(data_service_factory_i& services,
+                                                                       const account_name_type& account,
+                                                                       uint16_t percent,
+                                                                       bool auto_vest)
+    : _services(services)
+    , _account(account)
+    , _percent(percent)
+    , _auto_vest(auto_vest)
+{
+}
+
+void set_withdraw_vesting_route_from_dev_pool_task::on_apply(set_withdraw_vesting_route_context& ctx)
+{
+    set_withdraw_vesting_route_evaluator_impl impl(ctx.services());
+
+    dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
+    account_service_i& account_service = ctx.services().account_service();
+
+    FC_ASSERT(dev_pool_service.is_exists());
+
+    account_service.check_account_existence(ctx.account());
+
+    const auto& from_pool = dev_pool_service.get();
+    const auto& to_account = account_service.get_account(ctx.account());
+
+    impl.do_apply(from_pool, to_account, ctx.percent(), ctx.auto_vest());
 }
 }
 }

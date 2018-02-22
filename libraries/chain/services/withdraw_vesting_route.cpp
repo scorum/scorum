@@ -90,6 +90,11 @@ bool dbs_withdraw_vesting_route::is_exists(const dev_committee_id_type& from, co
     return _impl->is_exists(from, to);
 }
 
+bool dbs_withdraw_vesting_route::is_exists(const dev_committee_id_type& from, const account_id_type& to) const
+{
+    return _impl->is_exists(from, to);
+}
+
 const withdraw_vesting_route_object& dbs_withdraw_vesting_route::get(const account_id_type& from,
                                                                      const account_id_type& to) const
 {
@@ -104,6 +109,12 @@ const withdraw_vesting_route_object& dbs_withdraw_vesting_route::get(const accou
 
 const withdraw_vesting_route_object& dbs_withdraw_vesting_route::get(const dev_committee_id_type& from,
                                                                      const dev_committee_id_type& to) const
+{
+    return _impl->get(from, to);
+}
+
+const withdraw_vesting_route_object& dbs_withdraw_vesting_route::get(const dev_committee_id_type& from,
+                                                                     const account_id_type& to) const
 {
     return _impl->get(from, to);
 }

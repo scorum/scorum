@@ -2,6 +2,8 @@
 
 #include <scorum/chain/database/block_tasks/block_tasks.hpp>
 
+#include <memory>
+
 namespace scorum {
 namespace chain {
 namespace database_ns {

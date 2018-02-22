@@ -21,6 +21,8 @@ struct withdraw_vesting_route_service_i
 
     virtual bool is_exists(const dev_committee_id_type& from, const dev_committee_id_type& to) const = 0;
 
+    virtual bool is_exists(const dev_committee_id_type& from, const account_id_type& to) const = 0;
+
     virtual const withdraw_vesting_route_object& get(const account_id_type& from, const account_id_type& to) const = 0;
 
     virtual const withdraw_vesting_route_object& get(const account_id_type& from,
@@ -28,6 +30,9 @@ struct withdraw_vesting_route_service_i
 
     virtual const withdraw_vesting_route_object& get(const dev_committee_id_type& from,
                                                      const dev_committee_id_type& to) const = 0;
+
+    virtual const withdraw_vesting_route_object& get(const dev_committee_id_type& from,
+                                                     const account_id_type& to) const = 0;
 
     using withdraw_vesting_route_refs_type = std::vector<std::reference_wrapper<const withdraw_vesting_route_object>>;
 
@@ -64,6 +69,8 @@ public:
 
     virtual bool is_exists(const dev_committee_id_type& from, const dev_committee_id_type& to) const override;
 
+    virtual bool is_exists(const dev_committee_id_type& from, const account_id_type& to) const override;
+
     virtual const withdraw_vesting_route_object& get(const account_id_type& from,
                                                      const account_id_type& to) const override;
 
@@ -72,6 +79,9 @@ public:
 
     virtual const withdraw_vesting_route_object& get(const dev_committee_id_type& from,
                                                      const dev_committee_id_type& to) const override;
+
+    virtual const withdraw_vesting_route_object& get(const dev_committee_id_type& from,
+                                                     const account_id_type& to) const override;
 
     virtual withdraw_vesting_route_refs_type get_all(const withdrawable_id_type& from) const override;
 

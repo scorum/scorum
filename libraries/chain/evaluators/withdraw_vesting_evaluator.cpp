@@ -130,7 +130,7 @@ withdraw_vesting_context::withdraw_vesting_context(data_service_factory_i& servi
 {
 }
 
-void withdraw_vesting_from_dev_pool_task::on_apply(withdraw_vesting_context& ctx)
+void withdraw_vesting_dev_pool_task::on_apply(withdraw_vesting_context& ctx)
 {
     withdraw_vesting_impl impl(ctx.services());
 

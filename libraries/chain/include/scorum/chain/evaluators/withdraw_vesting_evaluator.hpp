@@ -21,6 +21,8 @@ class account_object;
 
 class withdraw_vesting_impl;
 
+// This evaluator initiates withdraw vesting for account by operation withdraw_vesting_operation.
+//
 class withdraw_vesting_evaluator : public evaluator_impl<data_service_factory_i, withdraw_vesting_evaluator>
 {
 public:
@@ -50,7 +52,7 @@ public:
         return _services;
     }
 
-    asset vesting_shares() const
+    const asset& vesting_shares() const
     {
         return _vesting_shares;
     }
@@ -60,7 +62,9 @@ private:
     asset _vesting_shares;
 };
 
-class withdraw_vesting_from_dev_pool_task : public task<withdraw_vesting_context>
+// This task initiates for withdraw vesting for development pool withount any operation
+// for development commitee purpose.
+class withdraw_vesting_dev_pool_task : public task<withdraw_vesting_context>
 {
 public:
     void on_apply(withdraw_vesting_context& ctx);

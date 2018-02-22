@@ -10,8 +10,8 @@ set( SOURCES
     reward_service_tests.cpp
     rewards/vote_apply.cpp
     rewards/comment_beneficiaries_apply.cpp
-    registration/committee_service.cpp
     registration/registration_check_common.cpp
+    registration/committee_service.cpp
     registration/committee_operations.cpp
     registration/pool_service.cpp
     atomicswap/atomicswap_service.cpp
@@ -24,8 +24,11 @@ set( SOURCES
     statistic/statistic_tests.cpp
     genesis_db_tests.cpp
     withdraw_vesting/old_tests.cpp
-    withdraw_vesting/route_to_dev_pool.cpp
-    withdraw_vesting/route_to_account.cpp
+    withdraw_vesting/withdraw_vesting_check_common.cpp
+    withdraw_vesting/route_from_account_to_account.cpp
+    withdraw_vesting/route_from_account_to_dev_pool.cpp
+    withdraw_vesting/route_from_dev_pool_to_account.cpp
+    withdraw_vesting/route_from_dev_pool_to_dev_pool.cpp
 )
 
 add_executable(chain_tests
