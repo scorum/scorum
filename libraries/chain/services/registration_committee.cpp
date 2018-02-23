@@ -133,6 +133,21 @@ void dbs_registration_committee::change_quorum(const uint32_t quorum)
 {
 }
 
+int dbs_registration_committee::get_add_member_quorum()
+{
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
+int dbs_registration_committee::get_exclude_member_quorum()
+{
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
+int dbs_registration_committee::get_base_quorum()
+{
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)
 {
     FC_ASSERT(!is_exists(account.name), "Member already exists.");
@@ -164,5 +179,51 @@ bool is_quorum(size_t votes, size_t members_count, size_t quorum)
 }
 
 } // namespace utils
+
+void dbs_development_committee::add_member(const account_name_type&)
+{
+}
+
+void dbs_development_committee::exclude_member(const account_name_type&)
+{
+}
+
+void dbs_development_committee::change_add_member_quorum(const uint32_t quorum)
+{
+}
+
+void dbs_development_committee::change_exclude_member_quorum(const uint32_t quorum)
+{
+}
+
+void dbs_development_committee::change_quorum(const uint32_t quorum)
+{
+}
+
+int dbs_development_committee::get_add_member_quorum()
+{
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
+int dbs_development_committee::get_exclude_member_quorum()
+{
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
+int dbs_development_committee::get_base_quorum()
+{
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
+bool dbs_development_committee::is_exists(const account_name_type&) const
+{
+    return true;
+}
+
+dbs_development_committee::dbs_development_committee(database& db)
+    : _base_type(db)
+{
+}
+
 } // namespace chain
 } // namespace scorum

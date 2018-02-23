@@ -1,4 +1,5 @@
 #include <scorum/protocol/scorum_operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/database.hpp>
@@ -6,7 +7,6 @@
 #include <scorum/chain/db_with.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/committee_factory.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
@@ -30,6 +30,7 @@
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator2.hpp>
+#include <scorum/chain/evaluators/proposal_operations_evaluators.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -66,15 +67,13 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
-    //    committee_factory _committee_factory;
-    //    evaluator_registry<proposal_operation, committee_factory> _committee_evaluator_registry;
+    evaluator_registry<proposal_operation> _committee_evaluator_registry;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
-//    , _committee_factory(self)
-//    , _committee_evaluator_registry(_committee_factory)
+    , _committee_evaluator_registry(self)
 {
 }
 
@@ -1529,6 +1528,9 @@ void database::initialize_evaluators()
                                     this->obtain_service<dbs_proposal>(),
                                     this->obtain_service<dbs_registration_committee>(),
                                     this->obtain_service<dbs_dynamic_global_property>()));
+
+    _my->_committee_evaluator_registry.register_evaluator<proposal_add_member_evaluator<registration_committee_add_member_operation>>();
+
     //clang-format on
 }
 

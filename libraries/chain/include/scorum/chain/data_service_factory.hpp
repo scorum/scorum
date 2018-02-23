@@ -14,6 +14,7 @@ DATA_SERVICE_FACTORY_DECLARE(
         (escrow)
         (proposal)
         (registration_committee)
+        (development_committee)
         (registration_pool)
         (reward)
         (reward_fund)

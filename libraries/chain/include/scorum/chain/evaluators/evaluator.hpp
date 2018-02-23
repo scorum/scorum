@@ -1,6 +1,7 @@
 #pragma once
 #include <scorum/protocol/exceptions.hpp>
 #include <scorum/protocol/operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 namespace scorum {
 namespace chain {
@@ -36,7 +37,7 @@ public:
         return OperationType::template tag<typename EvaluatorType::operation_type>::value;
     }
 
-    DataServices& db()
+    DataServices& db() const
     {
         return _services;
     }

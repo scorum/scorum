@@ -34,8 +34,6 @@ struct proposal_create_evaluator_fixture
     {
         mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
         mocks.ExpectCall(services, data_service_factory_i::proposal_service).ReturnByRef(*proposal_service);
-        mocks.ExpectCall(services, data_service_factory_i::registration_committee_service)
-            .ReturnByRef(*committee_service);
         mocks.ExpectCall(services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(*property_service);
     }
@@ -62,19 +60,22 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
         global_property.change_quorum = 73u;
     }
 
-    void create_expectations(const proposal_create_operation2& op)
+    void create_expectations()
     {
-        mocks.ExpectCall(committee_service, registration_committee_service_i::is_exists).With(op.creator).Return(true);
+        mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
+
+        mocks.OnCall(committee_service, committee::is_exists).With(_).Return(true);
 
         mocks
-            .ExpectCallOverload(account_service,
-                                (check_account_existence_signature)&account_service_i::check_account_existence)
-            .With(op.creator, _);
+            .OnCallOverload(account_service,
+                            (check_account_existence_signature)&account_service_i::check_account_existence)
+            .With(_, _);
 
-        mocks.ExpectCall(property_service, dynamic_global_property_service_i::head_block_time).Return(current_time);
+        mocks.OnCall(property_service, dynamic_global_property_service_i::head_block_time).Return(current_time);
 
-        //        mocks.ExpectCall(property_service,
-        //        dynamic_global_property_service_i::get).ReturnByRef(global_property);
+        mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
+
+        mocks.OnCall(committee_service, committee::get_add_member_quorum).Return(0u);
     }
 
     void create_proposal()
@@ -83,7 +84,7 @@ struct create_proposal_fixture : public proposal_create_evaluator_fixture
         op.creator = "alice";
         op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
 
-        create_expectations(op);
+        create_expectations();
 
         mocks.ExpectCall(proposal_service, proposal_service_i::create2).With(_, _, _, _).ReturnByRef(proposal);
 
@@ -110,8 +111,12 @@ BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, 
     op.creator = "alice";
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
 
-    create_expectations(op);
+    registration_committee_add_member_operation add_member_operation;
+    add_member_operation.account_name = "bob";
 
+    op.operation = add_member_operation;
+
+    create_expectations();
     const fc::time_point_sec expected_expiration = current_time + op.lifetime_sec;
 
     mocks.ExpectCall(proposal_service, proposal_service_i::create2)
@@ -119,7 +124,6 @@ BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, 
         .ReturnByRef(proposal);
 
     proposal_create_evaluator2 evaluator(*services);
-
     evaluator.do_apply(op);
 }
 
@@ -201,6 +205,7 @@ BOOST_FIXTURE_TEST_CASE(throw_when_creator_is_not_in_committee, proposal_create_
     op.creator = "sam";
     op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS + 1;
 
+    mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
     mocks.ExpectCall(committee_service, registration_committee_service_i::is_exists).With(op.creator).Return(false);
 
     proposal_create_evaluator2 evaluator(*services);

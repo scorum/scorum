@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_hex)
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("2000000000000005616c696365", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1d00000000000005616c696365", utils::to_hex(op));
 }
 
 std::string to_hex(const std::vector<char>& data)
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 
     //    BOOST_CHECK_EQUAL(12u, buffer.size());
 
-    const std::string hex_str = "2000000000000005616c696365";
+    const std::string hex_str = "1d00000000000005616c696365";
 
     std::vector<char> buffer;
     buffer.resize(hex_str.size() / 2);

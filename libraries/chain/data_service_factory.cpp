@@ -32,6 +32,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (escrow)
         (proposal)
         (registration_committee)
+        (development_committee)
         (registration_pool)
         (reward)
         (reward_fund)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/scorum_operations.hpp>
-//#include <scorum/chain/committee_factory.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/evaluators/evaluator.hpp>
 
@@ -26,12 +26,13 @@ public:
 
     void do_apply(const operation_type& op);
 
-    protocol::percent_type get_quorum(const change_quorum_operation& op) const;
+    protocol::percent_type get_quorum(const protocol::proposal_operation& op);
+
+    protocol::committee& get_committee(const protocol::proposal_operation& op);
 
 private:
     account_service_i& _account_service;
     proposal_service_i& _proposal_service;
-    registration_committee_service_i& _committee_service;
     dynamic_global_property_service_i& _property_service;
 };
 

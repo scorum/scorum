@@ -1,35 +1,30 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/proposal_operations.hpp>
-//#include <scorum/chain/committee_factory.hpp>
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
+#include <scorum/chain/evaluators/proposal_operations_evaluators.hpp>
+#include <scorum/chain/data_service_factory.hpp>
 
 #include <hippomocks.h>
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-struct get_committee_quorum
-{
-    virtual percent_type operator()() = 0;
-};
-
-struct quorum_evaluator : public get_committee_quorum
-{
-    percent_type operator()() override
-    {
-        return 0u;
-    }
-};
-
 BOOST_AUTO_TEST_CASE(test_xxx)
 {
-    //    MockRepository mocks;
-    //    data_service_factory_i* services = mocks.Mock<data_service_factory_i>();
+    MockRepository mocks;
+    data_service_factory_i* services = mocks.Mock<data_service_factory_i>();
 
-    //    committee_factory factory(*services);
+    scorum::chain::evaluator_registry<proposal_operation> reg(*services);
+    reg.register_evaluator<proposal_add_member_evaluator<registration_committee_add_member_operation>>();
+    //    reg.register_evaluator<set_quorum_evaluator<registration_committee_add_member_operation>>();
 
-    //    scorum::chain::evaluator_registry<proposal_operation, committee_factory> reg(factory);
+    registration_committee_add_member_operation op;
+    op.account_name = "alice";
 
-    //    std::vector<std::function>
+    proposal_operation operation = op;
+
+    auto& evaluator = reg.get_evaluator(operation);
+
+    evaluator.apply(operation);
 }

@@ -28,8 +28,6 @@ struct registration_committee_service_i : public scorum::protocol::registration_
                                     const member_info_modifier_type& modifier)
         = 0;
 
-    virtual bool is_exists(const account_name_type&) const = 0;
-
     virtual size_t get_members_count() const = 0;
 };
 
@@ -68,10 +66,40 @@ public:
     void change_exclude_member_quorum(const uint32_t quorum) override;
     void change_quorum(const uint32_t quorum) override;
 
+    int get_add_member_quorum() override;
+    int get_exclude_member_quorum() override;
+    int get_base_quorum() override;
+
 private:
     const registration_committee_member_object& _add_member(const account_object&);
 
     void _exclude_member(const account_object&);
+};
+
+struct development_committee_service_i : public development_committee
+{
+};
+
+struct dbs_development_committee : public dbs_base, public development_committee_service_i
+{
+    void add_member(const account_name_type&) override;
+    void exclude_member(const account_name_type&) override;
+
+    void change_add_member_quorum(const uint32_t quorum) override;
+    void change_exclude_member_quorum(const uint32_t quorum) override;
+    void change_quorum(const uint32_t quorum) override;
+
+    int get_add_member_quorum() override;
+    int get_exclude_member_quorum() override;
+    int get_base_quorum() override;
+
+    bool is_exists(const account_name_type&) const override;
+
+private:
+    friend class dbservice_dbs_factory;
+
+protected:
+    explicit dbs_development_committee(database& db);
 };
 
 namespace utils {
