@@ -6,6 +6,8 @@
 
 #include <hippomocks.h>
 
+#ifdef DEBUG // mocks.Mock does not work in RELEASE
+
 using scorum::chain::genesis::initializator;
 using scorum::chain::genesis::initializator_context;
 using scorum::chain::data_service_factory_i;
@@ -69,3 +71,5 @@ BOOST_FIXTURE_TEST_CASE(test_chain_applied, genesis_initializator_fixture)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // DEBUG
