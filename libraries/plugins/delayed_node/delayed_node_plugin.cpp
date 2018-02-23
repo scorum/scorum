@@ -26,7 +26,7 @@
 
 #include <scorum/protocol/types.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/app/api.hpp>
 #include <scorum/app/database_api.hpp>
 

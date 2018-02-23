@@ -1,5 +1,5 @@
 #include <scorum/chain/services/witness.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>

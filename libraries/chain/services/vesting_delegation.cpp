@@ -1,5 +1,5 @@
 #include <scorum/chain/services/vesting_delegation.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <tuple>
 

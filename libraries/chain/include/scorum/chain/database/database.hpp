@@ -6,7 +6,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/node_property_object.hpp>
-#include <scorum/chain/fork_database.hpp>
+#include <scorum/chain/database/fork_database.hpp>
 #include <scorum/chain/block_log.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
@@ -14,6 +14,8 @@
 
 #include <scorum/chain/services/dbservice_dbs_factory.hpp>
 #include <scorum/chain/data_service_factory.hpp>
+
+#include <scorum/chain/database/database_virtual_operations.hpp>
 
 #include <fc/signals.hpp>
 #include <fc/shared_string.hpp>
@@ -38,7 +40,10 @@ struct genesis_state_type;
  *   @class database
  *   @brief tracks the blockchain state in an extensible manner
  */
-class database : public chainbase::database, public dbservice_dbs_factory, public data_service_factory
+class database : public chainbase::database,
+                 public dbservice_dbs_factory,
+                 public data_service_factory,
+                 public database_virtual_operations_emmiter_i
 {
 
 public:
@@ -276,20 +281,12 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    void adjust_total_payout(const comment_object& a,
-                             const asset& author_tokens,
-                             const asset& curation_tokens,
-                             const asset& beneficiary_value);
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
      */
     void process_vesting_withdrawals();
-    share_type pay_curators(const comment_object& c, share_type& max_rewards);
-    share_type pay_for_comment(const share_type& reward, const comment_object& comment);
-    void process_comments_cashout();
-    void process_funds();
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();

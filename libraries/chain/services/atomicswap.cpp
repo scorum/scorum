@@ -1,5 +1,5 @@
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/services/account.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>

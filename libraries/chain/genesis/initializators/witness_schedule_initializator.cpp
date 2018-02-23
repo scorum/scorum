@@ -13,11 +13,11 @@ namespace genesis {
 
 void witness_schedule_initializator_impl::on_apply(initializator_context& ctx)
 {
-    witness_service_i& witness_service = ctx.services.witness_service();
+    witness_service_i& witness_service = ctx.services().witness_service();
 
     FC_ASSERT(!witness_service.is_exists());
 
-    const std::vector<genesis_state_type::witness_type>& witness_candidates = ctx.genesis_state.witness_candidates;
+    const std::vector<genesis_state_type::witness_type>& witness_candidates = ctx.genesis_state().witness_candidates;
 
     witness_service.create_witness_schedule([&](witness_schedule_object& wso) {
         for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
