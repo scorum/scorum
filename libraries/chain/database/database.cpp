@@ -1971,7 +1971,7 @@ void database::validate_invariants() const
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
         {
-            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "", ("itr", *itr));
+            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
         }
 
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();

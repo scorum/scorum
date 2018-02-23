@@ -22,6 +22,7 @@ public:
         : _ctx(ctx)
         , _account_service(ctx.services().account_service())
         , _dev_pool_service(ctx.services().dev_pool_service())
+        , _dprops_service(ctx.services().dynamic_global_property_service())
     {
     }
 
@@ -111,6 +112,9 @@ private:
         _ctx.push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name, amount));
 
         _account_service.increase_balance(to_account, amount);
+
+        _dprops_service.update(
+            [&](dynamic_global_property_object& o) { o.total_vesting_shares -= asset(amount.amount, VESTS_SYMBOL); });
     }
     void give_sp_to(const account_id_type& from, const account_id_type& to, const asset& amount)
     {
@@ -154,6 +158,11 @@ private:
         // TODO: statistic
 
         _dev_pool_service.update([&](dev_committee_object& pool) { pool.balance_out += amount; });
+
+        _dprops_service.update([&](dynamic_global_property_object& o) {
+            o.total_vesting_shares -= asset(amount.amount, VESTS_SYMBOL);
+            o.circulating_capital -= amount;
+        });
     }
     void give_sp_to(const account_id_type& from, const dev_committee_id_type& to, const asset& amount)
     {
@@ -164,6 +173,11 @@ private:
         // TODO: statistic
 
         _dev_pool_service.update([&](dev_committee_object& pool) { pool.balance_in += amount; });
+
+        _dprops_service.update([&](dynamic_global_property_object& o) {
+            o.total_vesting_shares -= amount;
+            o.circulating_capital -= asset(amount.amount, SCORUM_SYMBOL);
+        });
     }
 
     void give_scr_to(const dev_committee_id_type& from, const account_id_type& to, const asset& amount)
@@ -173,6 +187,9 @@ private:
         // TODO: statistic
 
         _account_service.increase_balance(to_account, amount);
+
+        _dprops_service.update(
+            [&](dynamic_global_property_object& o) { o.circulating_capital += asset(amount.amount, SCORUM_SYMBOL); });
     }
     void give_sp_to(const dev_committee_id_type& from, const account_id_type& to, const asset& amount)
     {
@@ -183,6 +200,11 @@ private:
         _account_service.increase_vesting_shares(to_account, amount);
 
         _account_service.adjust_proxied_witness_votes(to_account, amount.amount);
+
+        _dprops_service.update([&](dynamic_global_property_object& o) {
+            o.total_vesting_shares += amount;
+            o.circulating_capital += asset(amount.amount, SCORUM_SYMBOL);
+        });
     }
 
     void pick_up_from(const account_id_type& from, const asset& to_withdraw, const asset& converted)
@@ -199,6 +221,10 @@ private:
         });
 
         _account_service.adjust_proxied_witness_votes(from_account, -to_withdraw.amount);
+
+        _dprops_service.update([&](dynamic_global_property_object& o) {
+            o.total_vesting_shares -= asset(converted.amount, VESTS_SYMBOL);
+        });
     }
 
     void pick_up_from(const dev_committee_id_type& from, const asset& to_withdraw, const asset& converted)
@@ -218,6 +244,7 @@ private:
     block_task_context& _ctx;
     account_service_i& _account_service;
     dev_pool_service_i& _dev_pool_service;
+    dynamic_global_property_service_i& _dprops_service;
 };
 
 //
@@ -272,9 +299,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
                     auto converted_scorum = asset(to_deposit.amount, SCORUM_SYMBOL);
 
                     actors_impl.give_scr_to(wvro.from_id, wvro.to_id, converted_scorum);
-
-                    dprops_service.update(
-                        [&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_deposit; });
                 }
             }
         }
@@ -287,8 +311,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
         asset converted_scorum = asset(to_convert.amount, SCORUM_SYMBOL);
 
         actors_impl.pick_up_from(wvo.from_id, to_withdraw, converted_scorum);
-
-        dprops_service.update([&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_convert; });
 
         vesting_shares -= to_withdraw;
 

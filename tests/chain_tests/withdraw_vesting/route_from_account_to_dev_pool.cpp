@@ -1,6 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
+
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 #include "withdraw_vesting_check_common.hpp"
@@ -14,18 +19,95 @@ struct withdraw_vesting_route_from_account_to_dev_pool_tests_fixture : public wi
 {
     withdraw_vesting_route_from_account_to_dev_pool_tests_fixture()
     {
+        create_dev_pool();
+
         ACTOR(alice);
         alice_key = alice_private_key;
 
-        generate_blocks(5);
+        alice_to_withdraw_sp = ASSET_SP(1e+4) * SCORUM_VESTING_WITHDRAW_INTERVALS;
+        alice_to_withdraw_scr = asset(alice_to_withdraw_sp.amount, SCORUM_SYMBOL);
+        vest("alice", alice_to_withdraw_scr);
+
+        generate_block();
     }
 
     private_key_type alice_key;
+    asset alice_to_withdraw_sp;
+    asset alice_to_withdraw_scr;
 };
 
 BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_account_to_dev_pool_tests_fixture)
 {
-    // TODO
+    static const int pool_scr_pie_percent = 10;
+    static const int pool_sp_pie_percent = 20;
+    static const int alice_withdrawal_percent = 100 - (pool_scr_pie_percent + pool_sp_pie_percent);
+
+    const auto& alice = account_service.get_account("alice");
+    const auto& pool = pool_service.get();
+
+    asset old_alice_balance_scr = alice.balance;
+    asset old_pool_balance_scr = pool.balance_out;
+    asset old_pool_balance_sp = pool.balance_in;
+
+    withdraw_vesting_operation op_wv;
+    op_wv.account = alice.name;
+    op_wv.vesting_shares = alice_to_withdraw_sp;
+
+    set_withdraw_vesting_route_to_dev_pool_operation op_wvr_scr;
+    op_wvr_scr.percent = pool_scr_pie_percent * SCORUM_1_PERCENT;
+    op_wvr_scr.from_account = alice.name;
+    op_wvr_scr.auto_vest = false; // route to SCR (default)
+
+    set_withdraw_vesting_route_to_dev_pool_operation op_wvr_sp;
+    op_wvr_sp.percent = pool_sp_pie_percent * SCORUM_1_PERCENT;
+    op_wvr_sp.from_account = alice.name;
+    op_wvr_sp.auto_vest = true; // route to SP
+
+    signed_transaction tx;
+    tx.operations.push_back(op_wv);
+    tx.operations.push_back(op_wvr_scr);
+    tx.operations.push_back(op_wvr_sp);
+
+    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(alice_key, db.get_chain_id());
+    db.push_transaction(tx, 0);
+
+    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+
+    validate_database();
+
+    fc::time_point_sec start_time = db.head_block_time();
+
+    auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+
+    generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
+
+    BOOST_REQUIRE_EQUAL(alice.balance - old_alice_balance_scr,
+                        alice_to_withdraw_scr * alice_withdrawal_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_REQUIRE_EQUAL(pool.balance_out - old_pool_balance_scr,
+                        alice_to_withdraw_scr * pool_scr_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
+    asset pool_recived = alice_to_withdraw_scr * pool_sp_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS;
+    BOOST_REQUIRE_EQUAL(pool.balance_in - old_pool_balance_sp, asset(pool_recived.amount, VESTS_SYMBOL));
+
+    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+
+    for (int ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    {
+        next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
+    }
+
+    BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+
+    BOOST_REQUIRE_EQUAL(alice.balance - old_alice_balance_scr, alice_to_withdraw_scr * alice_withdrawal_percent / 100);
+    BOOST_REQUIRE_EQUAL(pool.balance_out - old_pool_balance_scr, alice_to_withdraw_scr * pool_scr_pie_percent / 100);
+    pool_recived = alice_to_withdraw_scr * pool_sp_pie_percent / 100;
+    BOOST_REQUIRE_EQUAL(pool.balance_in - old_pool_balance_sp, asset(pool_recived.amount, VESTS_SYMBOL));
+
+    fc::time_point_sec end_time = db.head_block_time();
+
+    BOOST_REQUIRE_EQUAL((end_time - start_time).to_seconds(),
+                        SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

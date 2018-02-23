@@ -14,9 +14,11 @@ struct withdraw_vesting_route_from_dev_pool_to_account_tests_fixture : public wi
 {
     withdraw_vesting_route_from_dev_pool_to_account_tests_fixture()
     {
+        create_dev_pool();
+
         ACTORS((bob)(sam));
 
-        generate_blocks(5);
+        generate_block();
     }
 };
 
