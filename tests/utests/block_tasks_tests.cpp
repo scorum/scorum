@@ -20,13 +20,13 @@ template <uint32_t per_block_num> struct test_block_task : public block_task_typ
         _times_applied++;
     }
 
-    const int times_applied() const
+    const uint32_t times_applied() const
     {
         return _times_applied;
     }
 
 private:
-    int _times_applied = 0;
+    uint32_t _times_applied = 0;
 };
 
 struct block_task_tests_fixture
