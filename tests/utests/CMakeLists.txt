@@ -37,5 +37,4 @@ target_include_directories(utests PUBLIC
 
 if(UNIX)
     set_source_files_properties( genesis/initializator.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
-    set_source_files_properties( block_tasks_tests.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
 endif(UNIX)

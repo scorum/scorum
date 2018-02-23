@@ -33,10 +33,12 @@ struct block_task_tests_fixture
 {
     block_task_tests_fixture()
     {
+        pservices = mocks.Mock<data_service_factory_i>();
+        pdb = mocks.Mock<database_virtual_operations_emmiter_i>();
     }
 
-    data_service_factory_i* pservices = mocks.Mock<data_service_factory_i>();
-    database_virtual_operations_emmiter_i* pdb = mocks.Mock<database_virtual_operations_emmiter_i>();
+    data_service_factory_i* pservices = nullptr;
+    database_virtual_operations_emmiter_i* pdb = nullptr;
 
 private:
     MockRepository mocks;
