@@ -18,6 +18,7 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
+#include <scorum/chain/services/witness.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -1295,7 +1296,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
 
         db.push_transaction(tx, 0);
 
-        const witness_object& alice_witness = db.get_witness("alice");
+        const witness_object& alice_witness = db.obtain_service<dbs_witness>().get("alice");
 
         BOOST_REQUIRE(alice_witness.owner == "alice");
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
@@ -1433,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(account_witness_vote_apply)
 
         private_key_type sam_witness_key = generate_private_key("sam_key");
         witness_create("sam", sam_private_key, "foo.bar", sam_witness_key.get_public_key(), 1000);
-        const witness_object& sam_witness = db.get_witness("sam");
+        const witness_object& sam_witness = db.obtain_service<dbs_witness>().get("sam");
 
         const auto& witness_vote_idx = db.get_index<witness_vote_index>().indices().get<by_witness_account>();
 
@@ -1747,7 +1748,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(TEST_INIT_DELEGATE_NAME).votes
+        BOOST_REQUIRE(db.obtain_service<dbs_witness>().get(TEST_INIT_DELEGATE_NAME).votes
                       == (alice.vesting_shares + bob.vesting_shares).amount);
         validate_database();
 
@@ -1760,7 +1761,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(TEST_INIT_DELEGATE_NAME).votes == bob.vesting_shares.amount);
+        BOOST_REQUIRE(db.obtain_service<dbs_witness>().get(TEST_INIT_DELEGATE_NAME).votes == bob.vesting_shares.amount);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -3408,8 +3409,8 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         BOOST_REQUIRE(itr == request_idx.end());
 
         const auto& witness_idx = db.get_index<witness_vote_index>().indices().get<by_account_witness>();
-        auto witness_itr = witness_idx.find(
-            boost::make_tuple(db.obtain_service<dbs_account>().get_account("alice").id, db.get_witness("alice").id));
+        auto witness_itr = witness_idx.find(boost::make_tuple(db.obtain_service<dbs_account>().get_account("alice").id,
+                                                              db.obtain_service<dbs_witness>().get("alice").id));
         BOOST_REQUIRE(witness_itr == witness_idx.end());
 
         tx.clear();

@@ -124,9 +124,6 @@ public:
 
     chain_id_type get_chain_id() const;
 
-    const witness_object& get_witness(const account_name_type& name) const;
-    const witness_object* find_witness(const account_name_type& name) const;
-
     const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
 
@@ -226,17 +223,6 @@ public:
      * chain state.
      */
     fc::signal<void(const signed_transaction&)> on_applied_transaction;
-
-    /**
-     *  Emitted After a block has been applied and committed.  The callback
-     *  should not yield and should execute quickly.
-     */
-    // fc::signal<void(const vector< graphene::db2::generic_id >&)> changed_objects;
-
-    /** this signal is emitted any time an object is removed and contains a
-     * pointer to the last value of every object that was removed.
-     */
-    // fc::signal<void(const vector<const object*>&)>  removed_objects;
 
     //////////////////// db_witness_schedule.cpp ////////////////////
 
@@ -349,8 +335,6 @@ private:
     void _update_witness_hardfork_version_votes();
 
 protected:
-    void notify_changed_objects();
-
     void set_producing(bool p)
     {
         _is_producing = p;

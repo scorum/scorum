@@ -1,5 +1,6 @@
 #include <scorum/chain/database.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/services/witness.hpp>
 
 #include <scorum/protocol/config.hpp>
 
@@ -147,13 +148,14 @@ void database::_update_witness_median_props()
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    auto& witness_service = _db.obtain_service<dbs_witness>();
 
     /// fetch all witness objects
     std::vector<const witness_object*> active;
     active.reserve(wso.num_scheduled_witnesses);
     for (int i = 0; i < wso.num_scheduled_witnesses; i++)
     {
-        active.push_back(&_db.get_witness(wso.current_shuffled_witnesses[i]));
+        active.push_back(&witness_service.get(wso.current_shuffled_witnesses[i]));
     }
 
     /// sort them by account_creation_fee
@@ -181,11 +183,12 @@ void database::_update_witness_majority_version()
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    auto& witness_service = _db.obtain_service<dbs_witness>();
 
     flat_map<version, uint32_t, std::greater<version>> witness_versions;
     for (uint32_t i = 0; i < wso.num_scheduled_witnesses; i++)
     {
-        auto witness = _db.get_witness(wso.current_shuffled_witnesses[i]);
+        auto witness = witness_service.get(wso.current_shuffled_witnesses[i]);
         if (witness_versions.find(witness.running_version) == witness_versions.end())
         {
             witness_versions[witness.running_version] = 1;
@@ -219,12 +222,13 @@ void database::_update_witness_hardfork_version_votes()
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    auto& witness_service = _db.obtain_service<dbs_witness>();
 
     flat_map<std::tuple<hardfork_version, time_point_sec>, uint32_t> hardfork_version_votes;
 
     for (uint32_t i = 0; i < wso.num_scheduled_witnesses; i++)
     {
-        auto witness = _db.get_witness(wso.current_shuffled_witnesses[i]);
+        auto witness = witness_service.get(wso.current_shuffled_witnesses[i]);
 
         auto version_vote = std::make_tuple(witness.hardfork_version_vote, witness.hardfork_time_vote);
         if (hardfork_version_votes.find(version_vote) == hardfork_version_votes.end())

@@ -388,20 +388,6 @@ chain_id_type database::get_chain_id() const
     return get<chain_property_object>().chain_id;
 }
 
-const witness_object& database::get_witness(const account_name_type& name) const
-{
-    try
-    {
-        return get<witness_object, by_name>(name);
-    }
-    FC_CAPTURE_AND_RETHROW((name))
-}
-
-const witness_object* database::find_witness(const account_name_type& name) const
-{
-    return find<witness_object, by_name>(name);
-}
-
 const comment_object& database::get_comment(const account_name_type& author, const fc::shared_string& permlink) const
 {
     try
@@ -698,7 +684,6 @@ void database::_push_transaction(const signed_transaction& trx)
     _apply_transaction(trx);
     _pending_tx.push_back(trx);
 
-    notify_changed_objects();
     // The transaction applied successfully. Merge its changes into the pending block session.
     for_each_index([&](chainbase::abstract_generic_index_i& item) { item.squash(); });
     temp_session->push();
@@ -728,13 +713,15 @@ signed_block database::_generate_block(fc::time_point_sec when,
                                        const account_name_type& witness_owner,
                                        const fc::ecc::private_key& block_signing_private_key)
 {
+    auto& witness_service = obtain_service<dbs_witness>();
+
     uint32_t skip = get_node_properties().skip_flags;
     uint32_t slot_num = get_slot_at_time(when);
     FC_ASSERT(slot_num > 0);
     std::string scheduled_witness = get_scheduled_witness(slot_num);
     FC_ASSERT(scheduled_witness == witness_owner);
 
-    const auto& witness_obj = get_witness(witness_owner);
+    const auto& witness_obj = witness_service.get(witness_owner);
 
     if (!(skip & skip_witness_signature))
     {
@@ -820,7 +807,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
     pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();
     pending_block.witness = witness_owner;
 
-    const auto& witness = get_witness(witness_owner);
+    const auto& witness = witness_service.get(witness_owner);
 
     if (witness.running_version != SCORUM_BLOCKCHAIN_VERSION)
     {
@@ -1318,6 +1305,7 @@ void database::process_funds()
     dbs_account& account_service = obtain_service<dbs_account>();
     dbs_reward& reward_service = obtain_service<dbs_reward>();
     dbs_budget& budget_service = obtain_service<dbs_budget>();
+    dbs_witness& witness_service = obtain_service<dbs_witness>();
 
     const auto& props = get_dynamic_global_properties();
     const auto& rf = get_reward_fund();
@@ -1347,7 +1335,7 @@ void database::process_funds()
     });
     // clang-format on
 
-    const auto& cwit = get_witness(props.current_witness);
+    const auto& cwit = witness_service.get(props.current_witness);
 
     if (cwit.schedule != witness_object::top20 && cwit.schedule != witness_object::timeshare)
     {
@@ -1566,34 +1554,6 @@ void database::validate_transaction(const signed_transaction& trx)
     });
 }
 
-void database::notify_changed_objects()
-{
-    try
-    {
-        /*vector< graphene::chainbase::generic_id > ids;
-        get_changed_ids( ids );
-        SCORUM_TRY_NOTIFY( changed_objects, ids )*/
-        /*
-        if( _undo_db.enabled() )
-        {
-           const auto& head_undo = _undo_db.head();
-           vector<object_id_type> changed_ids;  changed_ids.reserve(head_undo.old_values.size());
-           for( const auto& item : head_undo.old_values ) changed_ids.push_back(item.first);
-           for( const auto& item : head_undo.new_ids ) changed_ids.push_back(item);
-           vector<const object*> removed;
-           removed.reserve( head_undo.removed.size() );
-           for( const auto& item : head_undo.removed )
-           {
-              changed_ids.push_back( item.first );
-              removed.emplace_back( item.second.get() );
-           }
-           SCORUM_TRY_NOTIFY( changed_objects, changed_ids )
-        }
-        */
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
 void database::set_flush_interval(uint32_t flush_blocks)
 {
     _flush_blocks = flush_blocks;
@@ -1745,7 +1705,7 @@ void database::_apply_block(const signed_block& next_block)
         /// parse witness version reporting
         process_header_extensions(next_block);
 
-        const auto& witness = get_witness(next_block.witness);
+        const auto& witness = obtain_service<dbs_witness>().get(next_block.witness);
         const auto& hardfork_state = get_hardfork_property_object();
         FC_ASSERT(witness.running_version >= hardfork_state.current_hardfork_version,
                   "Block produced by witness that is not running current hardfork",
@@ -1785,20 +1745,21 @@ void database::_apply_block(const signed_block& next_block)
         expire_escrow_ratification();
         process_decline_voting_rights();
 
-        this->obtain_service<dbs_proposal>().clear_expired_proposals();
+        obtain_service<dbs_proposal>().clear_expired_proposals();
 
         process_hardforks();
 
         // notify observers that the block has been applied
         notify_applied_block(next_block);
 
-        notify_changed_objects();
-    } // FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
+    }
     FC_CAPTURE_LOG_AND_RETHROW((next_block.block_num()))
 }
 
 void database::process_header_extensions(const signed_block& next_block)
 {
+    auto& witness_service = obtain_service<dbs_witness>();
+
     auto itr = next_block.extensions.begin();
 
     while (itr != next_block.extensions.end())
@@ -1810,7 +1771,7 @@ void database::process_header_extensions(const signed_block& next_block)
         case 1: // version
         {
             auto reported_version = itr->get<version>();
-            const auto& signing_witness = get_witness(next_block.witness);
+            const auto& signing_witness = witness_service.get(next_block.witness);
             // idump( (next_block.witness)(signing_witness.running_version)(reported_version) );
 
             if (reported_version != signing_witness.running_version)
@@ -1822,7 +1783,7 @@ void database::process_header_extensions(const signed_block& next_block)
         case 2: // hardfork_version vote
         {
             auto hfv = itr->get<hardfork_version_vote>();
-            const auto& signing_witness = get_witness(next_block.witness);
+            const auto& signing_witness = witness_service.get(next_block.witness);
             // idump( (next_block.witness)(signing_witness.running_version)(hfv) );
 
             if (hfv.hf_version != signing_witness.hardfork_version_vote
@@ -1962,7 +1923,8 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
         FC_ASSERT(
             head_block_time() < next_block.timestamp, "",
             ("head_block_time", head_block_time())("next", next_block.timestamp)("blocknum", next_block.block_num()));
-        const witness_object& witness = get_witness(next_block.witness);
+
+        const witness_object& witness = obtain_service<dbs_witness>().get(next_block.witness);
 
         if (!(skip & skip_witness_signature))
         {
@@ -2000,6 +1962,7 @@ void database::update_global_dynamic_data(const signed_block& b)
     try
     {
         const dynamic_global_property_object& _dgp = get_dynamic_global_properties();
+        auto& witness_service = obtain_service<dbs_witness>();
 
         uint32_t missed_blocks = 0;
         if (head_block_time() != fc::time_point_sec())
@@ -2009,7 +1972,7 @@ void database::update_global_dynamic_data(const signed_block& b)
             missed_blocks--;
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
-                const auto& witness_missed = get_witness(get_scheduled_witness(i + 1));
+                const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
                 if (witness_missed.owner != b.witness)
                 {
                     modify(witness_missed, [&](witness_object& w) {
@@ -2088,12 +2051,13 @@ void database::update_last_irreversible_block()
         else
         {
             const witness_schedule_object& wso = get_witness_schedule_object();
+            auto& witness_service = obtain_service<dbs_witness>();
 
             std::vector<const witness_object*> wit_objs;
             wit_objs.reserve(wso.num_scheduled_witnesses);
             for (int i = 0; i < wso.num_scheduled_witnesses; i++)
             {
-                wit_objs.push_back(&get_witness(wso.current_shuffled_witnesses[i]));
+                wit_objs.push_back(&witness_service.get(wso.current_shuffled_witnesses[i]));
             }
 
             static_assert(SCORUM_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero");
@@ -2374,4 +2338,7 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
+
+
+
 

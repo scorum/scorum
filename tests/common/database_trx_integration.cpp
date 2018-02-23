@@ -9,6 +9,7 @@
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/witness.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -109,7 +110,7 @@ const witness_object& database_trx_integration_fixture::witness_create(const std
         trx.operations.clear();
         trx.signatures.clear();
 
-        return db.get_witness(owner);
+        return db.obtain_service<dbs_witness>().get(owner);
     }
     FC_CAPTURE_AND_RETHROW((owner)(url))
 }
