@@ -26,7 +26,7 @@ void founders_initializator_impl::on_apply(initializator_context& ctx)
 
     FC_ASSERT(SCORUM_100_PERCENT <= std::numeric_limits<uint16_t>::max()); // constant value check
 
-    FC_ASSERT(ctx.genesis_state.founders_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().founders_supply.symbol() == VESTS_SYMBOL);
 
     check_founders(ctx);
 
@@ -40,15 +40,15 @@ void founders_initializator_impl::on_apply(initializator_context& ctx)
 
 bool founders_initializator_impl::is_founders_pool_exists(initializator_context& ctx)
 {
-    return ctx.genesis_state.founders_supply.amount.value || !ctx.genesis_state.founders.empty();
+    return ctx.genesis_state().founders_supply.amount.value || !ctx.genesis_state().founders.empty();
 }
 
 void founders_initializator_impl::check_founders(initializator_context& ctx)
 {
-    account_service_i& account_service = ctx.services.account_service();
+    account_service_i& account_service = ctx.services().account_service();
 
     uint16_t total_sp_percent = 0u;
-    for (auto& founder : ctx.genesis_state.founders)
+    for (auto& founder : ctx.genesis_state().founders)
     {
         FC_ASSERT(!founder.name.empty(), "Founder 'name' should not be empty.");
 
@@ -66,12 +66,12 @@ void founders_initializator_impl::check_founders(initializator_context& ctx)
 
 asset founders_initializator_impl::distribure_sp_by_percent(initializator_context& ctx, account_name_type& pitiful)
 {
-    asset founders_supply_rest = ctx.genesis_state.founders_supply;
-    for (auto& founder : ctx.genesis_state.founders)
+    asset founders_supply_rest = ctx.genesis_state().founders_supply;
+    for (auto& founder : ctx.genesis_state().founders)
     {
         uint16_t percent = SCORUM_PERCENT(founder.sp_percent);
 
-        asset sp_bonus = ctx.genesis_state.founders_supply;
+        asset sp_bonus = ctx.genesis_state().founders_supply;
         sp_bonus.amount *= percent;
         sp_bonus.amount /= SCORUM_100_PERCENT;
         if (sp_bonus.amount > (share_value_type)0)
@@ -93,7 +93,7 @@ void founders_initializator_impl::distribure_sp_rest(initializator_context& ctx,
 {
     static const float sp_percent_limit_for_pitiful = 0.02f;
 
-    FC_ASSERT(rest.amount < ctx.genesis_state.founders_supply.amount * SCORUM_PERCENT(sp_percent_limit_for_pitiful)
+    FC_ASSERT(rest.amount < ctx.genesis_state().founders_supply.amount * SCORUM_PERCENT(sp_percent_limit_for_pitiful)
                       / SCORUM_100_PERCENT,
               "Too big rest ${r} for single pitiful. There are many pitiful members in genesis maybe.", ("r", rest));
 
@@ -111,8 +111,8 @@ void founders_initializator_impl::feed_account(initializator_context& ctx,
                                                const account_name_type& name,
                                                const asset& sp)
 {
-    dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
-    account_service_i& account_service = ctx.services.account_service();
+    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
+    account_service_i& account_service = ctx.services().account_service();
 
     const auto& founder_obj = account_service.get_account(name);
     account_service.increase_vesting_shares(founder_obj, sp);

@@ -1,6 +1,6 @@
 #include <scorum/chain/data_service_factory.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/account.hpp>

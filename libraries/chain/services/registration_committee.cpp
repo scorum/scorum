@@ -1,5 +1,5 @@
 #include <scorum/chain/services/registration_committee.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/services/account.hpp>
 

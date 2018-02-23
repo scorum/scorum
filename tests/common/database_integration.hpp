@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/app/application.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <fc/io/json.hpp>
 #include <fc/smart_ref_impl.hpp>

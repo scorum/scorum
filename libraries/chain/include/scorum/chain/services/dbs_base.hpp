@@ -11,7 +11,7 @@
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/protocol/asset.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 namespace scorum {
 namespace chain {

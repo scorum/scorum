@@ -30,7 +30,7 @@
 
 #include <scorum/protocol/get_config.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <fc/time.hpp>

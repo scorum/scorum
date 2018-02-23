@@ -23,14 +23,14 @@ void steemit_bounty_account_initializator_impl::on_apply(initializator_context& 
         return;
     }
 
-    dynamic_global_property_service_i& dgp_service = ctx.services.dynamic_global_property_service();
-    account_service_i& account_service = ctx.services.account_service();
+    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
+    account_service_i& account_service = ctx.services().account_service();
 
-    FC_ASSERT(ctx.genesis_state.steemit_bounty_accounts_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == VESTS_SYMBOL);
 
     check_accounts(ctx);
 
-    for (auto& account : ctx.genesis_state.steemit_bounty_accounts)
+    for (auto& account : ctx.genesis_state().steemit_bounty_accounts)
     {
         const auto& account_obj = account_service.get_account(account.name);
 
@@ -42,17 +42,17 @@ void steemit_bounty_account_initializator_impl::on_apply(initializator_context& 
 
 bool steemit_bounty_account_initializator_impl::is_steemit_pool_exists(initializator_context& ctx)
 {
-    return ctx.genesis_state.steemit_bounty_accounts_supply.amount.value
-        || !ctx.genesis_state.steemit_bounty_accounts.empty();
+    return ctx.genesis_state().steemit_bounty_accounts_supply.amount.value
+        || !ctx.genesis_state().steemit_bounty_accounts.empty();
 }
 
 void steemit_bounty_account_initializator_impl::check_accounts(initializator_context& ctx)
 {
-    account_service_i& account_service = ctx.services.account_service();
+    account_service_i& account_service = ctx.services().account_service();
 
-    asset sp_accounts_supply = ctx.genesis_state.steemit_bounty_accounts_supply;
+    asset sp_accounts_supply = ctx.genesis_state().steemit_bounty_accounts_supply;
 
-    for (auto& account : ctx.genesis_state.steemit_bounty_accounts)
+    for (auto& account : ctx.genesis_state().steemit_bounty_accounts)
     {
         FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 

@@ -14,14 +14,14 @@ namespace genesis {
 
 void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
 {
-    registration_pool_service_i& registration_pool_service = ctx.services.registration_pool_service();
+    registration_pool_service_i& registration_pool_service = ctx.services().registration_pool_service();
 
     if (registration_pool_service.is_exists())
     {
-        account_service_i& account_service = ctx.services.account_service();
+        account_service_i& account_service = ctx.services().account_service();
 
-        size_t total_unvested = ctx.genesis_state.accounts.size();
-        for (auto& account : ctx.genesis_state.accounts)
+        size_t total_unvested = ctx.genesis_state().accounts.size();
+        for (auto& account : ctx.genesis_state().accounts)
         {
             const auto& account_obj = account_service.get_account(account.name);
             asset bonus = allocate_cash(ctx);
@@ -41,7 +41,7 @@ void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
 
 asset registration_bonus_initializator_impl::allocate_cash(initializator_context& ctx)
 {
-    registration_pool_service_i& registration_pool_service = ctx.services.registration_pool_service();
+    registration_pool_service_i& registration_pool_service = ctx.services().registration_pool_service();
 
     if (!registration_pool_service.is_exists())
         return asset(0, SCORUM_SYMBOL);

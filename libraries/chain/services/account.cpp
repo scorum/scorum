@@ -1,5 +1,5 @@
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/services/witness.hpp>
 
@@ -11,6 +11,15 @@ namespace chain {
 dbs_account::dbs_account(database& db)
     : _base_type(db)
 {
+}
+
+const account_object& dbs_account::get(const account_id_type& account_id) const
+{
+    try
+    {
+        return db_impl().get(account_id);
+    }
+    FC_CAPTURE_AND_RETHROW((account_id))
 }
 
 const account_object& dbs_account::get_account(const account_name_type& name) const
@@ -261,6 +270,16 @@ void dbs_account::increase_received_vesting_shares(const account_object& account
 void dbs_account::decrease_received_vesting_shares(const account_object& account, const asset& amount)
 {
     increase_received_vesting_shares(account, -amount);
+}
+
+void dbs_account::increase_posting_rewards(const account_object& account, const asset& amount)
+{
+    db_impl().modify(account, [&](account_object& a) { a.posting_rewards += amount; });
+}
+
+void dbs_account::increase_curation_rewards(const account_object& account, const asset& amount)
+{
+    db_impl().modify(account, [&](account_object& a) { a.curation_rewards += amount; });
 }
 
 void dbs_account::drop_challenged(const account_object& account)
