@@ -206,29 +206,20 @@ public:
 
     uint64_t get_invite_quorum()
     {
-        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
-
-        auto& prop = prop_service.get();
-
-        return prop.invite_quorum;
+        auto& service = chain().db.obtain_service<dbs_registration_committee>();
+        return service.get_add_member_quorum();
     }
 
     uint64_t get_dropout_quorum()
     {
-        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
-
-        auto& prop = prop_service.get();
-
-        return prop.dropout_quorum;
+        auto& service = chain().db.obtain_service<dbs_registration_committee>();
+        return service.get_exclude_member_quorum();
     }
 
     uint64_t get_change_quorum()
     {
-        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
-
-        auto& prop = prop_service.get();
-
-        return prop.change_quorum;
+        auto& service = chain().db.obtain_service<dbs_registration_committee>();
+        return service.get_base_quorum();
     }
 
     actor_actions actor(const Actor& a)

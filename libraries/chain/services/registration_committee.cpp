@@ -123,14 +123,23 @@ bool dbs_registration_committee::is_exists(const account_name_type& account_name
 
 void dbs_registration_committee::change_add_member_quorum(const protocol::percent_type quorum)
 {
+    auto& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.invite_quorum = quorum; });
 }
 
 void dbs_registration_committee::change_exclude_member_quorum(const percent_type quorum)
 {
+    auto& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.dropout_quorum = quorum; });
 }
 
 void dbs_registration_committee::change_base_quorum(const percent_type quorum)
 {
+    auto& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.change_quorum = quorum; });
 }
 
 percent_type dbs_registration_committee::get_add_member_quorum()
