@@ -177,7 +177,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
-    void operator()(const proposal_create_operation& op)
+    void operator()(const proposal_create_operation2& op)
     {
         _impacted.insert(op.creator);
     }

@@ -12,21 +12,28 @@ class proposal_object : public object<proposal_object_type, proposal_object>
 public:
     using cref_type = std::reference_wrapper<const proposal_object>;
 
-    CHAINBASE_DEFAULT_CONSTRUCTOR(proposal_object)
+    //    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(proposal_object, (voted_accounts))
+
+    proposal_object() = delete;
+
+    template <typename Constructor, typename Allocator>
+    proposal_object(Constructor&& c, Allocator&& a)
+        : voted_accounts(a)
+    {
+        c(*this);
+    }
 
     id_type id;
     account_name_type creator;
 
     protocol::proposal_operation operation;
-    fc::variant data;
 
     fc::time_point_sec created;
     fc::time_point_sec expiration;
 
     protocol::percent_type quorum_percent = 0;
 
-    scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
-    flat_set<account_name_type> voted_accounts;
+    fc::shared_flat_set<account_name_type> voted_accounts;
 };
 
 struct by_expiration;
@@ -59,11 +66,9 @@ FC_REFLECT(scorum::chain::proposal_object,
            (id)
            (creator)
            (operation)
-           (data)
            (created)
            (expiration)
            (quorum_percent)
-           (action)
            (voted_accounts))
 // clang-format on
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::proposal_object, scorum::chain::proposal_object_index)

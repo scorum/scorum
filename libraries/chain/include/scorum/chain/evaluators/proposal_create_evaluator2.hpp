@@ -28,8 +28,6 @@ public:
 
     protocol::percent_type get_quorum(const protocol::proposal_operation& op);
 
-    protocol::committee& get_committee(const protocol::proposal_operation& op);
-
 private:
     account_service_i& _account_service;
     proposal_service_i& _proposal_service;

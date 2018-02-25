@@ -20,15 +20,16 @@ struct committee
     virtual void add_member(const account_name_type&) = 0;
     virtual void exclude_member(const account_name_type&) = 0;
 
-    virtual void change_add_member_quorum(const uint32_t quorum) = 0;
-    virtual void change_exclude_member_quorum(const uint32_t quorum) = 0;
-    virtual void change_quorum(const uint32_t quorum) = 0;
+    virtual void change_add_member_quorum(const protocol::percent_type) = 0;
+    virtual void change_exclude_member_quorum(const protocol::percent_type) = 0;
+    virtual void change_base_quorum(const protocol::percent_type) = 0;
 
-    virtual int get_add_member_quorum() = 0;
-    virtual int get_exclude_member_quorum() = 0;
-    virtual int get_base_quorum() = 0;
+    virtual protocol::percent_type get_add_member_quorum() = 0;
+    virtual protocol::percent_type get_exclude_member_quorum() = 0;
+    virtual protocol::percent_type get_base_quorum() = 0;
 
     virtual bool is_exists(const account_name_type&) const = 0;
+    virtual size_t get_members_count() const = 0;
 };
 
 struct registration_committee : public committee
@@ -109,6 +110,8 @@ struct to_committee_operation
 
 } // namespace protocol
 } // namespace scorum
+
+FC_REFLECT_ENUM(scorum::protocol::quorum_type, (none_quorum)(add_member_quorum)(exclude_member_quorum)(base_quorum))
 
 FC_REFLECT(scorum::protocol::registration_committee_add_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::registration_committee_exclude_member_operation, (account_name))

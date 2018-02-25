@@ -666,24 +666,6 @@ struct proposal_create_operation2 : public base_operation
     void validate() const;
 };
 
-struct proposal_create_operation : public base_operation
-{
-    typedef scorum::protocol::proposal_action action_t;
-
-    account_name_type creator;
-    fc::variant data;
-
-    fc::optional<fc::enum_type<uint8_t, action_t>> action;
-    uint32_t lifetime_sec = 0;
-
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(creator);
-    }
-
-    void validate() const;
-};
-
 struct proposal_vote_operation : public base_operation
 {
     account_name_type voting_account;
@@ -829,12 +811,6 @@ FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiat
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
             (proposal_id))
-
-FC_REFLECT( scorum::protocol::proposal_create_operation,
-            (creator)
-            (data)
-            (action)
-            (lifetime_sec))
 
 FC_REFLECT( scorum::protocol::proposal_create_operation2,
             (creator)

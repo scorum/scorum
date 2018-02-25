@@ -140,15 +140,6 @@ struct extended_private_key_type
     friend bool operator!=(const extended_private_key_type& p1, const extended_private_key_type& p2);
 };
 
-enum proposal_action
-{
-    invite,
-    dropout,
-    change_invite_quorum,
-    change_dropout_quorum,
-    change_quorum
-};
-
 } // namespace protocol
 } // namespace scorum
 
@@ -169,6 +160,3 @@ FC_REFLECT(scorum::protocol::extended_private_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_private_key_type::binary_key, (check)(data))
 
 FC_REFLECT(scorum::void_t, )
-
-FC_REFLECT_ENUM(scorum::protocol::proposal_action,
-                (invite)(dropout)(change_invite_quorum)(change_dropout_quorum)(change_quorum))

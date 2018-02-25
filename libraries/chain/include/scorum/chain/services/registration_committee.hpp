@@ -27,8 +27,6 @@ struct registration_committee_service_i : public scorum::protocol::registration_
     virtual void update_member_info(const registration_committee_member_object&,
                                     const member_info_modifier_type& modifier)
         = 0;
-
-    virtual size_t get_members_count() const = 0;
 };
 
 /** DB service for operations with registration_committee_* objects
@@ -50,25 +48,24 @@ public:
 
     registration_committee_member_refs_type create_committee(const std::vector<account_name_type>& accounts) override;
 
-    void add_member(const account_name_type&) override;
-
-    void exclude_member(const account_name_type&) override;
-
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
     void update_member_info(const registration_committee_member_object&,
                             const member_info_modifier_type& modifier) override;
 
-    bool is_exists(const account_name_type&) const override;
-
     size_t get_members_count() const override;
 
-    void change_add_member_quorum(const uint32_t quorum) override;
-    void change_exclude_member_quorum(const uint32_t quorum) override;
-    void change_quorum(const uint32_t quorum) override;
+    void add_member(const account_name_type&) override;
+    void exclude_member(const account_name_type&) override;
 
-    int get_add_member_quorum() override;
-    int get_exclude_member_quorum() override;
-    int get_base_quorum() override;
+    void change_add_member_quorum(const percent_type quorum) override;
+    void change_exclude_member_quorum(const percent_type quorum) override;
+    void change_base_quorum(const percent_type quorum) override;
+
+    percent_type get_add_member_quorum() override;
+    percent_type get_exclude_member_quorum() override;
+    percent_type get_base_quorum() override;
+
+    bool is_exists(const account_name_type&) const override;
 
 private:
     const registration_committee_member_object& _add_member(const account_object&);
@@ -85,15 +82,17 @@ struct dbs_development_committee : public dbs_base, public development_committee
     void add_member(const account_name_type&) override;
     void exclude_member(const account_name_type&) override;
 
-    void change_add_member_quorum(const uint32_t quorum) override;
-    void change_exclude_member_quorum(const uint32_t quorum) override;
-    void change_quorum(const uint32_t quorum) override;
+    void change_add_member_quorum(const percent_type quorum) override;
+    void change_exclude_member_quorum(const percent_type quorum) override;
+    void change_base_quorum(const percent_type quorum) override;
 
-    int get_add_member_quorum() override;
-    int get_exclude_member_quorum() override;
-    int get_base_quorum() override;
+    percent_type get_add_member_quorum() override;
+    percent_type get_exclude_member_quorum() override;
+    percent_type get_base_quorum() override;
 
     bool is_exists(const account_name_type&) const override;
+
+    virtual size_t get_members_count() const override;
 
 private:
     friend class dbservice_dbs_factory;

@@ -5,6 +5,8 @@
 #include "database_trx_integration.hpp"
 #include "defines.hpp"
 
+#include <scorum/protocol/proposal_operations.hpp>
+
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -44,22 +46,11 @@ public:
             transfer_to_vest(a, ASSET_SCR(100));
         }
 
-        proposal_id_type create_committee_proposal(const Actor& a, proposal_action action)
+        proposal_id_type create_proposal(const protocol::proposal_operation& operation)
         {
-            return create_proposal(action, fc::variant(a.name).as_string());
-        }
-
-        proposal_id_type create_quorum_change_proposal(uint64_t q, proposal_action action)
-        {
-            return create_proposal(action, fc::variant(q).as_uint64());
-        }
-
-        proposal_id_type create_proposal(proposal_action action, const fc::variant& data)
-        {
-            proposal_create_operation op;
+            proposal_create_operation2 op;
             op.creator = actor.name;
-            op.data = data;
-            op.action = action;
+            op.operation = operation;
             op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
 
             op.validate();
@@ -80,31 +71,49 @@ public:
 
         uint64_t invite_in_to_committee(const Actor& invitee)
         {
-            auto proposal = create_committee_proposal(invitee, proposal_action::invite);
+            registration_committee_add_member_operation operation;
+            operation.account_name = invitee.name;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t dropout_from_committee(const Actor& invitee)
         {
-            auto proposal = create_committee_proposal(invitee, proposal_action::dropout);
+            registration_committee_exclude_member_operation operation;
+            operation.account_name = invitee.name;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t change_invite_quorum(uint64_t quorum)
         {
-            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_invite_quorum);
+            registration_committee_change_quorum_operation operation;
+            operation.quorum = quorum;
+            operation.committee_quorum = protocol::add_member_quorum;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t change_dropout_quorum(uint64_t quorum)
         {
-            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_dropout_quorum);
+            registration_committee_change_quorum_operation operation;
+            operation.quorum = quorum;
+            operation.committee_quorum = protocol::exclude_member_quorum;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t change_quorum(uint64_t quorum)
         {
-            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_quorum);
+            registration_committee_change_quorum_operation operation;
+            operation.quorum = quorum;
+            operation.committee_quorum = protocol::base_quorum;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 

@@ -2379,12 +2379,12 @@ annotated_signed_transaction wallet_api::invite_new_committee_member(const std::
                                                                      uint32_t lifetime_sec,
                                                                      bool broadcast)
 {
-    using scorum::protocol::proposal_action;
+    registration_committee_add_member_operation operation;
+    operation.account_name = invitee;
 
-    proposal_create_operation op;
+    proposal_create_operation2 op;
+    op.operation = operation;
     op.creator = inviter;
-    op.data = invitee;
-    op.action = proposal_action::invite;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
@@ -2399,12 +2399,13 @@ annotated_signed_transaction wallet_api::dropout_committee_member(const std::str
                                                                   uint32_t lifetime_sec,
                                                                   bool broadcast)
 {
-    using scorum::protocol::proposal_action;
+    registration_committee_exclude_member_operation operation;
+    operation.account_name = dropout;
 
-    proposal_create_operation op;
+    proposal_create_operation2 op;
+    op.operation = operation;
+
     op.creator = initiator;
-    op.data = dropout;
-    op.action = proposal_action::dropout;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
@@ -2429,10 +2430,13 @@ annotated_signed_transaction wallet_api::propose_new_invite_quorum(const std::st
                                                                    uint32_t lifetime_sec,
                                                                    bool broadcast)
 {
-    proposal_create_operation op;
+    registration_committee_change_quorum_operation operation;
+    operation.quorum = quorum_percent;
+    operation.committee_quorum = add_member_quorum;
+
+    proposal_create_operation2 op;
     op.creator = initiator;
-    op.data = quorum_percent;
-    op.action = proposal_action::change_invite_quorum;
+    op.operation = operation;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
@@ -2447,10 +2451,13 @@ annotated_signed_transaction wallet_api::propose_new_dropout_quorum(const std::s
                                                                     uint32_t lifetime_sec,
                                                                     bool broadcast)
 {
-    proposal_create_operation op;
+    registration_committee_change_quorum_operation operation;
+    operation.quorum = quorum_percent;
+    operation.committee_quorum = exclude_member_quorum;
+
+    proposal_create_operation2 op;
     op.creator = initiator;
-    op.data = quorum_percent;
-    op.action = proposal_action::change_dropout_quorum;
+    op.operation = operation;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;
@@ -2465,10 +2472,13 @@ annotated_signed_transaction wallet_api::propose_new_quorum_for_quorum_change(co
                                                                               uint32_t lifetime_sec,
                                                                               bool broadcast)
 {
-    proposal_create_operation op;
+    registration_committee_change_quorum_operation operation;
+    operation.quorum = quorum_percent;
+    operation.committee_quorum = base_quorum;
+
+    proposal_create_operation2 op;
     op.creator = initiator;
-    op.data = quorum_percent;
-    op.action = proposal_action::change_quorum;
+    op.operation = operation;
     op.lifetime_sec = lifetime_sec;
 
     signed_transaction tx;

@@ -13,6 +13,7 @@ DATA_SERVICE_FACTORY_DECLARE(
         (dynamic_global_property)
         (escrow)
         (proposal)
+        (proposal_executor)
         (registration_committee)
         (development_committee)
         (registration_pool)

@@ -385,13 +385,15 @@ struct proposal_api_obj
 {
     proposal_api_obj(const proposal_object& p)
         : id(p.id)
+        , operation(p.operation)
         , creator(p.creator)
-        , data(p.data)
         , expiration(p.expiration)
         , quorum_percent(p.quorum_percent)
-        , action(p.action)
-        , voted_accounts(p.voted_accounts)
     {
+        for (auto& a : p.voted_accounts)
+        {
+            voted_accounts.insert(a);
+        }
     }
 
     proposal_api_obj()
@@ -400,14 +402,14 @@ struct proposal_api_obj
 
     proposal_object::id_type id;
 
+    protocol::proposal_operation operation;
+
     account_name_type creator;
-    fc::variant data;
 
     fc::time_point_sec expiration;
 
     uint64_t quorum_percent = 0;
 
-    scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
     flat_set<account_name_type> voted_accounts;
 };
 
@@ -687,10 +689,9 @@ FC_REFLECT( scorum::app::proposal_api_obj,
             (id)
             (creator)
             (expiration)
+            (operation)
             (voted_accounts)
             (quorum_percent)
-            (action)
-            (data)
           )
 
 FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),

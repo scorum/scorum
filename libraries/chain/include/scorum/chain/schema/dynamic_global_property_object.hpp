@@ -75,10 +75,6 @@ public:
      * their votes reduced.
      */
     uint32_t vote_power_reserve_rate = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
-
-    uint64_t invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    uint64_t dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    uint64_t change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 typedef shared_multi_index_container<dynamic_global_property_object,
@@ -106,10 +102,7 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (recent_slots_filled)
           (participation_count)
           (last_irreversible_block_num)
-          (vote_power_reserve_rate)
-          (invite_quorum)
-          (dropout_quorum)
-          (change_quorum))
+          (vote_power_reserve_rate))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)

@@ -14,8 +14,9 @@ set( SOURCES
   print_tests.cpp
   atomicswap_check/atomicswap_helper_check.cpp
   proposal/proposal_create_evaluator_tests.cpp
-  proposal/proposal_operations_tests.cpp
-  proposal/proposal_evaluator_register_tests.cpp
+#  proposal/proposal_operations_tests.cpp
+#  proposal/proposal_evaluator_register_tests.cpp
+  proposal/proposal_vote_evaluator_tests.cpp
   proposal_vote_operation_tests.cpp
   genesis/initializator.cpp
   genesis/accounts.cpp
