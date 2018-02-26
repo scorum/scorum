@@ -1,6 +1,6 @@
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
 #include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
-#include <scorum/common_statistic/base_api_impl.hpp>
+#include <scorum/common_statistics/base_api_impl.hpp>
 
 namespace scorum {
 namespace blockchain_statistics {
@@ -14,7 +14,7 @@ public:
     {
     }
 };
-}
+} // namespace detail
 
 blockchain_statistics_api::blockchain_statistics_api(const scorum::app::api_context& ctx)
 {
@@ -25,12 +25,13 @@ void blockchain_statistics_api::on_api_startup()
 {
 }
 
-statistics blockchain_statistics_api::get_stats_for_time(fc::time_point_sec open, uint32_t interval) const
+statistics blockchain_statistics_api::get_stats_for_time(const fc::time_point_sec& open, uint32_t interval) const
 {
     return my->_app.chain_database()->with_read_lock([&]() { return my->get_stats_for_time(open, interval); });
 }
 
-statistics blockchain_statistics_api::get_stats_for_interval(fc::time_point_sec start, fc::time_point_sec end) const
+statistics blockchain_statistics_api::get_stats_for_interval(const fc::time_point_sec& start,
+                                                             const fc::time_point_sec& end) const
 {
     return my->_app.chain_database()->with_read_lock(
         [&]() { return my->get_stats_for_interval<blockchain_statistics_plugin>(start, end); });
@@ -40,5 +41,5 @@ statistics blockchain_statistics_api::get_lifetime_stats() const
 {
     return my->_app.chain_database()->with_read_lock([&]() { return my->get_lifetime_stats(); });
 }
-}
-} // scorum::blockchain_statistics
+} // namespace blockchain_statistics
+} // namespace scorum

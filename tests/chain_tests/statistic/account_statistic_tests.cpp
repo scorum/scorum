@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/account_statistics/account_statistics_plugin.hpp>
+#include <scorum/common_statistics/base_plugin_impl.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
@@ -33,8 +34,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
     const bucket_object& get_lifetime_bucket() const
     {
         const auto& bucket_idx = db.get_index<bucket_index>().indices().get<common_statistics::by_bucket>();
-        auto itr = bucket_idx.find(
-            boost::make_tuple(std::numeric_limits<uint32_t>::max() /*LIFE_TIME_PERIOD*/, fc::time_point_sec()));
+        auto itr = bucket_idx.find(boost::make_tuple(LIFE_TIME_PERIOD, fc::time_point_sec()));
         FC_ASSERT(itr != bucket_idx.end());
         return *itr;
     }
@@ -50,7 +50,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
         generate_block();
     }
 };
-}
+} // namespace account_stat
 
 BOOST_FIXTURE_TEST_SUITE(account_statistic_tests, account_stat::stat_database_fixture)
 
