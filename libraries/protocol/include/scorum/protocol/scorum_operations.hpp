@@ -661,6 +661,7 @@ struct proposal_create_operation2 : public base_operation
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
+        a.insert(creator);
     }
 
     void validate() const;
