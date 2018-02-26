@@ -11,7 +11,8 @@ target_link_libraries( scorum_blockchain_statistics
                        scorum_protocol
                        scorum_app )
 target_include_directories( scorum_blockchain_statistics
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../common_statistics/include")
 
 install( TARGETS
    scorum_blockchain_statistics
