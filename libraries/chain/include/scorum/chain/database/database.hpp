@@ -135,9 +135,6 @@ public:
     const comment_object& get_comment(const account_name_type& author, const std::string& permlink) const;
     const comment_object* find_comment(const account_name_type& author, const std::string& permlink) const;
 
-    const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const;
-    const escrow_object* find_escrow(const account_name_type& name, uint32_t escrow_id) const;
-
     const dynamic_global_property_object& get_dynamic_global_properties() const;
     const node_property_object& get_node_properties() const;
     const witness_schedule_object& get_witness_schedule_object() const;

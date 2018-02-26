@@ -10,6 +10,7 @@
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/escrow.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -494,7 +495,7 @@ optional<escrow_api_obj> database_api::get_escrow(const std::string& from, uint3
 
         try
         {
-            result = my->_db.get_escrow(from, escrow_id);
+            result = my->_db.obtain_service<dbs_escrow>().get(from, escrow_id);
         }
         catch (...)
         {

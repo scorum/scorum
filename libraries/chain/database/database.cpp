@@ -422,20 +422,6 @@ const comment_object* database::find_comment(const account_name_type& author, co
     return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
 }
 
-const escrow_object& database::get_escrow(const account_name_type& name, uint32_t escrow_id) const
-{
-    try
-    {
-        return get<escrow_object, by_from_id>(boost::make_tuple(name, escrow_id));
-    }
-    FC_CAPTURE_AND_RETHROW((name)(escrow_id))
-}
-
-const escrow_object* database::find_escrow(const account_name_type& name, uint32_t escrow_id) const
-{
-    return find<escrow_object, by_from_id>(boost::make_tuple(name, escrow_id));
-}
-
 const dynamic_global_property_object& database::get_dynamic_global_properties() const
 {
     try
