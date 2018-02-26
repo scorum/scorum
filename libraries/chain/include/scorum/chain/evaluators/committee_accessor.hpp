@@ -7,7 +7,7 @@
 namespace scorum {
 namespace chain {
 
-class data_service_factory_i;
+struct data_service_factory_i;
 
 struct committee_accessor
 {
@@ -16,13 +16,7 @@ struct committee_accessor
     {
     }
 
-    //    protocol::committee&
-    //    committee_accessor::get_committee(const
-    //    protocol::proposal_committee_operation<protocol::registration_committee>&) const
-    //    {
-    //        return _services.registration_committee_service();
-    //    }
-    protocol::committee& get_committee(const protocol::proposal_operation& op)
+    protocol::committee_i& get_committee(const protocol::proposal_operation& op)
     {
         using namespace scorum::protocol;
 
@@ -47,7 +41,8 @@ struct committee_accessor
         }
     }
 
-    protocol::committee& get_committee(const protocol::proposal_committee_operation<protocol::registration_committee>&)
+    protocol::committee_i&
+    get_committee(const protocol::proposal_committee_operation<protocol::registration_committee_i>&)
     {
         return _services.registration_committee_service();
     }
@@ -55,14 +50,6 @@ struct committee_accessor
 private:
     data_service_factory_i& _services;
 };
-
-// template <>
-// protocol::committee&
-// committee_accessor::get_committee(const protocol::proposal_committee_operation<protocol::registration_committee>&)
-// const
-//{
-//    return _services.registration_committee_service();
-//}
 
 } // namespace scorum
 } // namespace chain

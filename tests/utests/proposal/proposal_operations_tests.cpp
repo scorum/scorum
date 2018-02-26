@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_json)
     registration_committee_add_member_operation add_member_op;
     add_member_op.account_name = "alice";
 
-    proposal_create_operation2 op;
+    proposal_create_operation op;
     op.operation = add_member_op;
 
     BOOST_CHECK_EQUAL(
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_json)
     fc::variant v = fc::json::from_string(
         R"({"creator":"","lifetime_sec":0,"operation":["registration_committee_add_member",{"account_name":"alice"}]})");
 
-    proposal_create_operation2 op;
+    proposal_create_operation op;
     fc::from_variant(v, op);
 
     registration_committee_add_member_operation& add_member_op
@@ -42,12 +42,12 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_hex)
     registration_committee_add_member_operation add_member_op;
     add_member_op.account_name = "alice";
 
-    proposal_create_operation2 proposal_create_op;
+    proposal_create_operation proposal_create_op;
     proposal_create_op.operation = add_member_op;
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("1d00000000000005616c696365", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1c00000000000005616c696365", utils::to_hex(op));
 }
 
 std::string to_hex(const std::vector<char>& data)
@@ -65,17 +65,7 @@ std::string to_hex(const std::vector<char>& data)
 
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 {
-    //    add_member_operation add_member_op;
-    //    add_member_op.account_name = "alice";
-
-    //    proposal_create_operation2 op;
-    //    op.operation = add_member_op;
-
-    //    std::vector<char> buffer = fc::raw::pack(op);
-
-    //    BOOST_CHECK_EQUAL(12u, buffer.size());
-
-    const std::string hex_str = "1d00000000000005616c696365";
+    const std::string hex_str = "1c00000000000005616c696365";
 
     std::vector<char> buffer;
     buffer.resize(hex_str.size() / 2);
@@ -88,25 +78,12 @@ BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 
     fc::raw::unpack<scorum::protocol::operation>(buffer, op);
 
-    proposal_create_operation2& proposal_create_op = op.get<proposal_create_operation2>();
+    proposal_create_operation& proposal_create_op = op.get<proposal_create_operation>();
 
     registration_committee_add_member_operation& add_member_op
         = proposal_create_op.operation.get<registration_committee_add_member_operation>();
 
     BOOST_CHECK_EQUAL("alice", add_member_op.account_name);
-}
-
-BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex2)
-{
-    registration_committee_exclude_member_operation add_member_op;
-    add_member_op.account_name = "alice";
-
-    proposal_create_operation2 proposal_create_op;
-    proposal_create_op.operation = add_member_op;
-
-    std::cout << proposal_create_op.operation.which();
-
-    //    proposal_create_op.operation.
 }
 
 BOOST_AUTO_TEST_SUITE_END()

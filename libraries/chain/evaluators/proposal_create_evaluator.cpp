@@ -1,4 +1,4 @@
-#include <scorum/chain/evaluators/proposal_create_evaluator2.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
 #include <scorum/chain/evaluators/committee_accessor.hpp>
 
@@ -13,22 +13,22 @@
 namespace scorum {
 namespace chain {
 
-proposal_create_evaluator2::proposal_create_evaluator2(data_service_factory_i& services)
-    : evaluator_impl<data_service_factory_i, proposal_create_evaluator2>(services)
+proposal_create_evaluator::proposal_create_evaluator(data_service_factory_i& services)
+    : evaluator_impl<data_service_factory_i, proposal_create_evaluator>(services)
     , _account_service(db().account_service())
     , _proposal_service(db().proposal_service())
     , _property_service(db().dynamic_global_property_service())
 {
 }
 
-void proposal_create_evaluator2::do_apply(const proposal_create_evaluator2::operation_type& op)
+void proposal_create_evaluator::do_apply(const proposal_create_evaluator::operation_type& op)
 {
     FC_ASSERT((op.lifetime_sec <= SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS
                && op.lifetime_sec >= SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS),
               "Proposal life time is not in range of ${min} - ${max} seconds.",
               ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
-    committee& committee_service = committee_accessor(db()).get_committee(op.operation);
+    committee_i& committee_service = committee_accessor(db()).get_committee(op.operation);
 
     FC_ASSERT(committee_service.is_exists(op.creator), "Account \"${account_name}\" is not in committee.",
               ("account_name", op.creator));
@@ -42,9 +42,9 @@ void proposal_create_evaluator2::do_apply(const proposal_create_evaluator2::oper
     _proposal_service.create(op.creator, op.operation, expiration, quorum);
 }
 
-protocol::percent_type proposal_create_evaluator2::get_quorum(const protocol::proposal_operation& op)
+protocol::percent_type proposal_create_evaluator::get_quorum(const protocol::proposal_operation& op)
 {
-    committee& committee_service = committee_accessor(db()).get_committee(op);
+    committee_i& committee_service = committee_accessor(db()).get_committee(op);
     if (op.which() == proposal_operation::tag<registration_committee_add_member_operation>::value)
     {
         return committee_service.get_add_member_quorum();

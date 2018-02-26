@@ -27,8 +27,8 @@
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
-#include <scorum/chain/evaluators/proposal_vote_evaluator2.hpp>
-#include <scorum/chain/evaluators/proposal_create_evaluator2.hpp>
+#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -1514,8 +1514,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
-    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator2>();
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator2>();
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
 }
 
 void database::initialize_indexes()

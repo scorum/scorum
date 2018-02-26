@@ -14,12 +14,12 @@ class proposal_service_i;
 class dynamic_global_property_service_i;
 class proposal_executor_service_i;
 
-class proposal_vote_evaluator2 : public evaluator_impl<data_service_factory_i, proposal_vote_evaluator2>
+class proposal_vote_evaluator : public evaluator_impl<data_service_factory_i, proposal_vote_evaluator>
 {
 public:
     using operation_type = scorum::protocol::proposal_vote_operation;
 
-    proposal_vote_evaluator2(data_service_factory_i& services);
+    proposal_vote_evaluator(data_service_factory_i& services);
 
     void do_apply(const operation_type& op);
 

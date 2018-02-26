@@ -322,7 +322,7 @@ void proposal_vote_operation::validate() const
     validate_account_name(voting_account);
 }
 
-void proposal_create_operation2::validate() const
+void proposal_create_operation::validate() const
 {
     validate_account_name(creator);
 }

@@ -652,7 +652,7 @@ struct close_budget_operation : public base_operation
     }
 };
 
-struct proposal_create_operation2 : public base_operation
+struct proposal_create_operation : public base_operation
 {
     account_name_type creator;
     uint32_t lifetime_sec = 0;
@@ -813,7 +813,7 @@ FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
             (proposal_id))
 
-FC_REFLECT( scorum::protocol::proposal_create_operation2,
+FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
             (lifetime_sec)
             (operation))

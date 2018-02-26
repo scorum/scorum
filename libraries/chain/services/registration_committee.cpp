@@ -1,4 +1,5 @@
 #include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/database.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -123,38 +124,42 @@ bool dbs_registration_committee::is_exists(const account_name_type& account_name
 
 void dbs_registration_committee::change_add_member_quorum(const protocol::percent_type quorum)
 {
-    auto& reg_committee = db_impl().get<registration_pool_object>();
+    auto& service = db_impl().obtain_service<dbs_registration_pool>();
+    //    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
 
-    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.invite_quorum = quorum; });
+    db_impl().modify(service.get(), [&](registration_pool_object& m) { m.invite_quorum = quorum; });
 }
 
 void dbs_registration_committee::change_exclude_member_quorum(const percent_type quorum)
 {
-    auto& reg_committee = db_impl().get<registration_pool_object>();
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
 
     db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.dropout_quorum = quorum; });
 }
 
 void dbs_registration_committee::change_base_quorum(const percent_type quorum)
 {
-    auto& reg_committee = db_impl().get<registration_pool_object>();
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
 
     db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.change_quorum = quorum; });
 }
 
 percent_type dbs_registration_committee::get_add_member_quorum()
 {
-    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.invite_quorum;
 }
 
 percent_type dbs_registration_committee::get_exclude_member_quorum()
 {
-    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.dropout_quorum;
 }
 
 percent_type dbs_registration_committee::get_base_quorum()
 {
-    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.change_quorum;
 }
 
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)

@@ -12,7 +12,7 @@
 namespace scorum {
 namespace chain {
 
-struct registration_committee_service_i : public scorum::protocol::registration_committee
+struct registration_committee_service_i : public scorum::protocol::registration_committee_i
 {
     using registration_committee_member_refs_type = std::vector<registration_committee_member_object::cref_type>;
 
@@ -73,7 +73,7 @@ private:
     void _exclude_member(const account_object&);
 };
 
-struct development_committee_service_i : public development_committee
+struct development_committee_service_i : public development_committee_i
 {
 };
 

@@ -15,7 +15,7 @@ enum quorum_type
     base_quorum
 };
 
-struct committee
+struct committee_i
 {
     virtual void add_member(const account_name_type&) = 0;
     virtual void exclude_member(const account_name_type&) = 0;
@@ -32,11 +32,11 @@ struct committee
     virtual size_t get_members_count() const = 0;
 };
 
-struct registration_committee : public committee
+struct registration_committee_i : public committee_i
 {
 };
 
-struct development_committee : public committee
+struct development_committee_i : public committee_i
 {
 };
 
@@ -53,38 +53,38 @@ struct proposal_base_operation : public proposal_committee_operation<CommitteeTy
 };
 
 struct registration_committee_add_member_operation
-    : public proposal_base_operation<registration_committee_add_member_operation, registration_committee>
+    : public proposal_base_operation<registration_committee_add_member_operation, registration_committee_i>
 {
     account_name_type account_name;
 };
 
 struct registration_committee_exclude_member_operation
-    : public proposal_base_operation<registration_committee_exclude_member_operation, registration_committee>
+    : public proposal_base_operation<registration_committee_exclude_member_operation, registration_committee_i>
 {
     account_name_type account_name;
 };
 
 struct registration_committee_change_quorum_operation
-    : public proposal_base_operation<registration_committee_change_quorum_operation, registration_committee>
+    : public proposal_base_operation<registration_committee_change_quorum_operation, registration_committee_i>
 {
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;
 };
 
 struct development_committee_add_member_operation
-    : public proposal_base_operation<development_committee_add_member_operation, registration_committee>
+    : public proposal_base_operation<development_committee_add_member_operation, registration_committee_i>
 {
     account_name_type account_name;
 };
 
 struct development_committee_exclude_member_operation
-    : public proposal_base_operation<development_committee_exclude_member_operation, registration_committee>
+    : public proposal_base_operation<development_committee_exclude_member_operation, registration_committee_i>
 {
     account_name_type account_name;
 };
 
 struct development_committee_change_quorum_operation
-    : public proposal_base_operation<development_committee_change_quorum_operation, registration_committee>
+    : public proposal_base_operation<development_committee_change_quorum_operation, registration_committee_i>
 {
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;

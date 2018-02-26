@@ -19,15 +19,9 @@ dbs_proposal_executor::dbs_proposal_executor(database& s)
     , proposal_service(services.proposal_service())
     , evaluators(services)
 {
-    evaluators.register_evaluator<proposal_add_member_evaluator<registration_committee_add_member_operation>>(
-        new proposal_add_member_evaluator<registration_committee_add_member_operation>(services));
-
-    evaluators.register_evaluator<proposal_exclude_member_evaluator<registration_committee_exclude_member_operation>>(
-        new proposal_exclude_member_evaluator<registration_committee_exclude_member_operation>(services,
-                                                                                               removed_members));
-
-    evaluators.register_evaluator<proposal_change_quorum_evaluator<registration_committee_change_quorum_operation>>(
-        new proposal_change_quorum_evaluator<registration_committee_change_quorum_operation>(services));
+    evaluators.register_evaluator<registration_committee::proposal_add_member_evaluator>();
+    evaluators.register_evaluator<registration_committee::proposal_exclude_member_evaluator>(removed_members);
+    evaluators.register_evaluator<registration_committee::proposal_change_quorum_evaluator>();
 }
 
 void dbs_proposal_executor::operator()(const proposal_object& proposal)
@@ -38,7 +32,7 @@ void dbs_proposal_executor::operator()(const proposal_object& proposal)
 
 bool dbs_proposal_executor::is_quorum(const proposal_object& proposal)
 {
-    committee& committee_service = committee_accessor(services).get_committee(proposal.operation);
+    committee_i& committee_service = committee_accessor(services).get_committee(proposal.operation);
     const size_t votes = proposal_service.get_votes(proposal);
     const size_t members_count = committee_service.get_members_count();
 

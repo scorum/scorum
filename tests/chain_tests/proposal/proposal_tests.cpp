@@ -48,7 +48,7 @@ public:
 
         proposal_id_type create_proposal(const protocol::proposal_operation& operation)
         {
-            proposal_create_operation2 op;
+            proposal_create_operation op;
             op.creator = actor.name;
             op.operation = operation;
             op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
@@ -117,11 +117,11 @@ public:
             return proposal._id;
         }
 
-        void vote_for(uint64_t proposal)
+        void vote_for(uint64_t proposal_id)
         {
             proposal_vote_operation op;
             op.voting_account = actor.name;
-            op.proposal_id = proposal;
+            op.proposal_id = proposal_id;
 
             op.validate();
 
@@ -249,12 +249,12 @@ SCORUM_TEST_CASE(proposal)
 
     registration_stage single_stage{ 1u, 1u, 100u };
     genesis = database_integration_fixture::default_genesis_state()
-            .accounts(bob, jim, joe, hue, liz)
-            .registration_supply(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
-            .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
-            .registration_schedule(single_stage)
-             .committee(alice)
-             .generate();
+              .accounts(bob, jim, joe, hue, liz)
+              .registration_supply((SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2) * 100)
+              .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
+              .registration_schedule(single_stage)
+              .committee(alice)
+              .generate();
 
     chain().generate_block();
 
