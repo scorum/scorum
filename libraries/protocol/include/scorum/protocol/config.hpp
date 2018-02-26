@@ -95,7 +95,7 @@
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    10
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    10 /// * registration_bonus
 
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK        2
 
