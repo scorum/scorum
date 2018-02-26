@@ -1514,7 +1514,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator2>();
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator2>();
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator2>();
 }
 
