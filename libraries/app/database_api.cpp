@@ -27,6 +27,8 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/comment.hpp>
+
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace scorum {
@@ -863,7 +865,7 @@ std::vector<vote_state> database_api::get_active_votes(const std::string& author
 {
     return my->_db.with_read_lock([&]() {
         std::vector<vote_state> result;
-        const auto& comment = my->_db.get_comment(author, permlink);
+        const auto& comment = my->_db.obtain_service<dbs_comment>().get(author, permlink);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
         comment_id_type cid(comment.id);
         auto itr = idx.lower_bound(cid);
@@ -1106,7 +1108,7 @@ std::vector<discussion> database_api::get_replies_by_last_update(account_name_ty
 
         if (start_permlink.size())
         {
-            const auto& comment = my->_db.get_comment(start_parent_author, start_permlink);
+            const auto& comment = my->_db.obtain_service<dbs_comment>().get(start_parent_author, start_permlink);
             itr = last_update_idx.iterator_to(comment);
             parent_author = &comment.parent_author;
         }
@@ -1241,7 +1243,7 @@ std::vector<discussion> database_api::get_discussions(const discussion_query& qu
 
     if (query.start_author && query.start_permlink)
     {
-        start = my->_db.get_comment(*query.start_author, *query.start_permlink).id;
+        start = my->_db.obtain_service<dbs_comment>().get(*query.start_author, *query.start_permlink).id;
         auto itr = cidx.find(start);
         while (itr != cidx.end() && itr->comment == start)
         {
@@ -1305,7 +1307,7 @@ comment_id_type database_api::get_parent(const discussion_query& query) const
         comment_id_type parent;
         if (query.parent_author && query.parent_permlink)
         {
-            parent = my->_db.get_comment(*query.parent_author, *query.parent_permlink).id;
+            parent = my->_db.obtain_service<dbs_comment>().get(*query.parent_author, *query.parent_permlink).id;
         }
         return parent;
     });
@@ -1597,7 +1599,7 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
             auto itr = didx.lower_bound(boost::make_tuple(author, time_point_sec::maximum()));
             if (start_permlink.size())
             {
-                const auto& comment = my->_db.get_comment(author, start_permlink);
+                const auto& comment = my->_db.obtain_service<dbs_comment>().get(author, start_permlink);
                 if (comment.created < before_date)
                     itr = didx.iterator_to(comment);
             }

@@ -20,6 +20,7 @@
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/comment.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -457,7 +458,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const comment_object& alice_comment = db.get_comment("alice", string("lorem"));
+        const comment_object& alice_comment = db.obtain_service<dbs_comment>().get("alice", string("lorem"));
 
         BOOST_REQUIRE(alice_comment.author == op.author);
         BOOST_REQUIRE(fc::to_string(alice_comment.permlink) == op.permlink);
@@ -502,7 +503,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const comment_object& bob_comment = db.get_comment("bob", string("ipsum"));
+        const comment_object& bob_comment = db.obtain_service<dbs_comment>().get("bob", string("ipsum"));
 
         BOOST_REQUIRE(bob_comment.author == op.author);
         BOOST_REQUIRE(fc::to_string(bob_comment.permlink) == op.permlink);
@@ -529,7 +530,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const comment_object& sam_comment = db.get_comment("sam", string("dolor"));
+        const comment_object& sam_comment = db.obtain_service<dbs_comment>().get("sam", string("dolor"));
 
         BOOST_REQUIRE(sam_comment.author == op.author);
         BOOST_REQUIRE(fc::to_string(sam_comment.permlink) == op.permlink);
@@ -546,9 +547,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         generate_blocks(60 * 5 / SCORUM_BLOCK_INTERVAL + 1);
 
         BOOST_TEST_MESSAGE("--- Test modifying a comment");
-        const auto& mod_sam_comment = db.get_comment("sam", string("dolor"));
-        //        const auto& mod_bob_comment = db.get_comment("bob", string("ipsum"));
-        //        const auto& mod_alice_comment = db.get_comment("alice", string("lorem"));
+        const auto& mod_sam_comment = db.obtain_service<dbs_comment>().get("sam", string("dolor"));
+        //        const auto& mod_bob_comment = db.obtain_service<dbs_comment>().get("bob", string("ipsum"));
+        //        const auto& mod_alice_comment = db.obtain_service<dbs_comment>().get("alice", string("lorem"));
         fc::time_point_sec created = mod_sam_comment.created;
 
         db.modify(mod_sam_comment, [&](comment_object& com) {
@@ -670,7 +671,8 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         db.push_transaction(tx, 0);
 
         generate_blocks(SCORUM_CASHOUT_WINDOW_SECONDS / SCORUM_BLOCK_INTERVAL);
-        BOOST_REQUIRE(db.get_comment("alice", string("test1")).cashout_time == fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", string("test1")).cashout_time
+                      == fc::time_point_sec::maximum());
 
         tx.clear();
         tx.operations.push_back(op);
@@ -3421,8 +3423,9 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        db.get<comment_vote_object, by_comment_voter>(boost::make_tuple(
-            db.get_comment("alice", string("test")).id, db.obtain_service<dbs_account>().get_account("alice").id));
+        db.get<comment_vote_object, by_comment_voter>(
+            boost::make_tuple(db.obtain_service<dbs_comment>().get("alice", string("test")).id,
+                              db.obtain_service<dbs_account>().get_account("alice").id));
 
         vote.weight = (int16_t)0;
         tx.clear();
@@ -3870,7 +3873,7 @@ BOOST_AUTO_TEST_CASE(delegate_vesting_shares_apply)
 
         const auto& vote_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
 
-        auto& alice_comment = db.get_comment("alice", string("foo"));
+        auto& alice_comment = db.obtain_service<dbs_comment>().get("alice", string("foo"));
         auto itr = vote_idx.find(std::make_tuple(alice_comment.id, bob_acc.id));
         BOOST_REQUIRE_EQUAL(alice_comment.net_rshares.value,
                             bob_acc.effective_vesting_shares().amount.value * (old_voting_power - bob_acc.voting_power)

@@ -29,6 +29,7 @@
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
 
 #include <fc/time.hpp>
 
@@ -160,21 +161,28 @@ struct operation_visitor
 
     void operator()(const comment_operation& o) const
     {
+        auto& comment_service = _db.obtain_service<dbs_comment>();
+
         if (o.parent_author != SCORUM_ROOT_POST_PARENT)
         {
-            const auto& parent = _db.find_comment(o.parent_author, o.parent_permlink);
+            if (comment_service.is_exists(o.parent_author, o.parent_permlink))
+            {
+                const auto& parent = comment_service.get(o.parent_author, o.parent_permlink);
 
-            if (parent != nullptr)
-                SCORUM_ASSERT(parent->depth < SCORUM_SOFT_MAX_COMMENT_DEPTH, chain::plugin_exception,
+                SCORUM_ASSERT(parent.depth < SCORUM_SOFT_MAX_COMMENT_DEPTH, chain::plugin_exception,
                               "Comment is nested ${x} posts deep, maximum depth is ${y}.",
-                              ("x", parent->depth)("y", SCORUM_SOFT_MAX_COMMENT_DEPTH));
+                              ("x", parent.depth)("y", SCORUM_SOFT_MAX_COMMENT_DEPTH));
+            }
         }
 
-        auto itr = _db.find<comment_object, by_permlink>(boost::make_tuple(o.author, o.permlink));
-
-        if (itr != nullptr && itr->cashout_time == fc::time_point_sec::maximum())
+        if (comment_service.is_exists(o.author, o.permlink))
         {
-            FC_THROW_EXCEPTION(chain::plugin_exception, "The comment is archived");
+            const auto& comment = comment_service.get(o.author, o.permlink);
+
+            if (comment.cashout_time == fc::time_point_sec::maximum())
+            {
+                FC_THROW_EXCEPTION(chain::plugin_exception, "The comment is archived");
+            }
         }
     }
 

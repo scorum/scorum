@@ -394,34 +394,6 @@ chain_id_type database::get_chain_id() const
     return get<chain_property_object>().chain_id;
 }
 
-const comment_object& database::get_comment(const account_name_type& author, const fc::shared_string& permlink) const
-{
-    try
-    {
-        return get<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-    }
-    FC_CAPTURE_AND_RETHROW((author)(permlink))
-}
-
-const comment_object* database::find_comment(const account_name_type& author, const fc::shared_string& permlink) const
-{
-    return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-}
-
-const comment_object& database::get_comment(const account_name_type& author, const std::string& permlink) const
-{
-    try
-    {
-        return get<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-    }
-    FC_CAPTURE_AND_RETHROW((author)(permlink))
-}
-
-const comment_object* database::find_comment(const account_name_type& author, const std::string& permlink) const
-{
-    return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-}
-
 const dynamic_global_property_object& database::get_dynamic_global_properties() const
 {
     try

@@ -9,6 +9,7 @@
 #include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
 
 #include <scorum/chain/util/reward.hpp>
 
@@ -132,7 +133,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
         // const auto& rf = db.get< reward_fund_object, by_name >( SCORUM_POST_REWARD_FUND_NAME );
         // idump( (rf) );
 
-        generate_blocks(db.get_comment("alice", std::string("mypost")).cashout_time, true);
+        generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("mypost")).cashout_time, true);
         /*
         for( const auto& author : authors )
         {
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         db.push_transaction(tx, 0);
         validate_database();
 
-        generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
+        generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
         // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
         const auto& rf = db.get_reward_fund();
@@ -279,11 +280,13 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         BOOST_REQUIRE_GT(fund.reward_balance, asset(0, SCORUM_SYMBOL));
         BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), uint64_t(0));
 
-        share_type alice_comment_net_rshares = db.get_comment("alice", std::string("test")).net_rshares;
-        share_type bob_comment_net_rshares = db.get_comment("bob", std::string("test")).net_rshares;
+        share_type alice_comment_net_rshares
+            = db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares;
+        share_type bob_comment_net_rshares
+            = db.obtain_service<dbs_comment>().get("bob", std::string("test")).net_rshares;
 
         {
-            generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
+            generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
             BOOST_REQUIRE_EQUAL(fund.reward_balance, ASSET_SCR(0));
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
@@ -353,8 +356,9 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto alice_vshares = util::evaluate_reward_curve(db.get_comment("alice", std::string("test")).net_rshares.value,
-                                                         db.get_reward_fund().author_reward_curve);
+        auto alice_vshares = util::evaluate_reward_curve(
+            db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value,
+            db.get_reward_fund().author_reward_curve);
 
         generate_blocks(5);
 
@@ -367,7 +371,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        generate_blocks(db.get_comment("alice", std::string("test")).cashout_time);
+        generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
         {
             const auto& post_rf = db.get_reward_fund();
@@ -376,9 +380,10 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
             validate_database();
         }
 
-        auto bob_cashout_time = db.get_comment("bob", std::string("test")).cashout_time;
-        auto bob_vshares = util::evaluate_reward_curve(db.get_comment("bob", std::string("test")).net_rshares.value,
-                                                       db.get_reward_fund().author_reward_curve);
+        auto bob_cashout_time = db.obtain_service<dbs_comment>().get("bob", std::string("test")).cashout_time;
+        auto bob_vshares = util::evaluate_reward_curve(
+            db.obtain_service<dbs_comment>().get("bob", std::string("test")).net_rshares.value,
+            db.get_reward_fund().author_reward_curve);
 
         generate_block();
 
@@ -688,7 +693,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test1")).reward_weight == SCORUM_100_PERCENT);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test1")).reward_weight
+                      == SCORUM_100_PERCENT);
 
         tx.operations.clear();
         tx.signatures.clear();
@@ -702,7 +708,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test2")).reward_weight == SCORUM_100_PERCENT);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test2")).reward_weight
+                      == SCORUM_100_PERCENT);
 
         generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
@@ -716,7 +723,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test3")).reward_weight == SCORUM_100_PERCENT);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test3")).reward_weight
+                      == SCORUM_100_PERCENT);
 
         generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
@@ -730,7 +738,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test4")).reward_weight == SCORUM_100_PERCENT);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test4")).reward_weight
+                      == SCORUM_100_PERCENT);
 
         generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
@@ -744,7 +753,8 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test5")).reward_weight == SCORUM_100_PERCENT);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test5")).reward_weight
+                      == SCORUM_100_PERCENT);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -800,14 +810,19 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).last_payout == fc::time_point_sec::min());
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).cashout_time != fc::time_point_sec::min());
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).cashout_time != fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).last_payout
+                      == fc::time_point_sec::min());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                      != fc::time_point_sec::min());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                      != fc::time_point_sec::maximum());
 
-        generate_blocks(db.get_comment("alice", std::string("test")).cashout_time, true);
+        generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time, true);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).last_payout == db.head_block_time());
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).cashout_time == fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).last_payout
+                      == db.head_block_time());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                      == fc::time_point_sec::maximum());
 
         vote.voter = "sam";
 
@@ -819,9 +834,10 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).cashout_time == fc::time_point_sec::maximum());
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).net_rshares.value == 0);
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).abs_rshares.value == 0);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                      == fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value == 0);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "bob";
         vote.weight = (int16_t)100 * -1;
@@ -834,9 +850,10 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).cashout_time == fc::time_point_sec::maximum());
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).net_rshares.value == 0);
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).abs_rshares.value == 0);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                      == fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value == 0);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "dave";
         vote.weight = (int16_t)0;
@@ -849,9 +866,10 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         tx.sign(dave_private_key, db.get_chain_id());
 
         db.push_transaction(tx, 0);
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).cashout_time == fc::time_point_sec::maximum());
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).net_rshares.value == 0);
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test")).abs_rshares.value == 0);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                      == fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value == 0);
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         comment.body = "test4";
 
