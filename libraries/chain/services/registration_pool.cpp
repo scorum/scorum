@@ -146,12 +146,18 @@ void dbs_registration_pool::increase_already_allocated_count()
 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 {
+    const registration_pool_object& this_pool = get();
+
+    asset limit_per_memeber_asset(
+        this_pool.maximum_bonus.amount * SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK, SCORUM_SYMBOL);
+    limit_per_memeber_asset /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+
     asset per_reg = calculate_per_reg();
     // clang-format off
     FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
-    FC_ASSERT(per_reg <= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK,
+    FC_ASSERT(per_reg <= limit_per_memeber_asset,
               "Invalid schedule. Per registration bonus ${1} always exceeds the limit ${2}.",
-              ("1", per_reg)("2",SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK));
+              ("1", per_reg)("2",limit_per_memeber_asset));
     // clang-format on
 
     dbs_registration_committee& committee_service = db().obtain_service<dbs_registration_committee>();
@@ -171,6 +177,9 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
 
     uint32_t pass_blocks = head_block_num - last_allocated_block;
 
+    wlog("head_block_num = ${head_block_num}, last_allocated_block = ${last_allocated_block}",
+         ("head_block_num", head_block_num)("last_allocated_block", last_allocated_block));
+
     uint32_t per_n_block_remain = member.per_n_block_remain;
     if (pass_blocks > per_n_block_remain)
     {
@@ -185,10 +194,16 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     {
         // check limits
         share_type limit_per_memeber = (share_type)(pass_blocks + 1);
-        limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK.amount;
-        limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-        FC_ASSERT(member.already_allocated_cash + per_reg <= asset(limit_per_memeber, SCORUM_SYMBOL),
-                  "Committee member '${1}' reaches cash limit.", ("1", member_name));
+        limit_per_memeber *= limit_per_memeber_asset.amount;
+
+        wlog("Check for ${pass_blocks} blocks: ${2} + ${3} <= ${4}",
+             ("pass_blocks",
+              pass_blocks)("2", member.already_allocated_cash.amount)("3", per_reg.amount)("4", limit_per_memeber));
+
+        FC_ASSERT(
+            member.already_allocated_cash + per_reg <= asset(limit_per_memeber, SCORUM_SYMBOL),
+            "Committee member '${1}' reaches cash limit. ${2} + ${3} > ${4}",
+            ("1", member_name)("2", member.already_allocated_cash.amount)("3", per_reg.amount)("4", limit_per_memeber));
     }
 
     // return value <= per_reg

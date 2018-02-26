@@ -36,6 +36,17 @@ registration_check_fixture::registration_check_fixture()
     ACTORS((MEMBER_BONUS_BENEFICIARY)(NEXT_MEMBER));
 }
 
+asset registration_check_fixture::registration_bonus()
+{
+    const asset _registration_bonus = ASSET_SCR(100);
+    return _registration_bonus;
+}
+
+asset registration_check_fixture::rest_of_supply()
+{
+    return registration_bonus();
+}
+
 void registration_check_fixture::create_registration_objects(const genesis_state_type& genesis)
 {
     generate_blocks(5);
@@ -58,29 +69,26 @@ void registration_check_fixture::create_registration_objects(const genesis_state
     generate_blocks(5);
 }
 
-genesis_state_type registration_check_fixture::create_registration_genesis(schedule_inputs_type& schedule_input,
-                                                                           asset& rest_of_supply)
+genesis_state_type registration_check_fixture::create_registration_genesis(schedule_inputs_type& schedule_input)
 {
     committee_private_keys_type committee_private_keys;
     schedule_input.clear();
-    return create_registration_genesis_impl(schedule_input, rest_of_supply, committee_private_keys);
+    return create_registration_genesis_impl(schedule_input, committee_private_keys);
 }
 
 genesis_state_type registration_check_fixture::create_registration_genesis()
 {
     committee_private_keys_type committee_private_keys;
     schedule_inputs_type schedule_input;
-    asset rest_of_supply;
-    return create_registration_genesis_impl(schedule_input, rest_of_supply, committee_private_keys);
+    return create_registration_genesis_impl(schedule_input, committee_private_keys);
 }
 
 genesis_state_type
 registration_check_fixture::create_registration_genesis(committee_private_keys_type& committee_private_keys)
 {
     schedule_inputs_type schedule_input;
-    asset rest_of_supply;
     committee_private_keys.clear();
-    return create_registration_genesis_impl(schedule_input, rest_of_supply, committee_private_keys);
+    return create_registration_genesis_impl(schedule_input, committee_private_keys);
 }
 
 const account_object& registration_check_fixture::bonus_beneficiary()
@@ -88,8 +96,9 @@ const account_object& registration_check_fixture::bonus_beneficiary()
     return account_service.get_account(BOOST_PP_STRINGIZE(MEMBER_BONUS_BENEFICIARY));
 }
 
-genesis_state_type registration_check_fixture::create_registration_genesis_impl(
-    schedule_inputs_type& schedule_input, asset& rest_of_supply, committee_private_keys_type& committee_private_keys)
+genesis_state_type
+registration_check_fixture::create_registration_genesis_impl(schedule_inputs_type& schedule_input,
+                                                             committee_private_keys_type& committee_private_keys)
 {
     genesis_state_type genesis_state;
 
@@ -107,20 +116,17 @@ genesis_state_type registration_check_fixture::create_registration_genesis_impl(
     schedule_input.clear();
     schedule_input.reserve(4);
 
-    schedule_input.emplace_back(schedule_input_type{ 1, 2, 100 });
-    schedule_input.emplace_back(schedule_input_type{ 2, 2, 75 });
-    schedule_input.emplace_back(schedule_input_type{ 3, 1, 50 });
-    schedule_input.emplace_back(schedule_input_type{ 4, 3, 25 });
+    schedule_input.emplace_back(schedule_input_type{ 1, 10, 100 });
+    schedule_input.emplace_back(schedule_input_type{ 2, 5, 75 });
+    schedule_input.emplace_back(schedule_input_type{ 3, 5, 50 });
+    schedule_input.emplace_back(schedule_input_type{ 4, 8, 25 });
 
-    // half of limit
-    genesis_state.registration_bonus = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-    genesis_state.registration_bonus.amount /= 2;
+    genesis_state.registration_bonus = registration_bonus();
 
     genesis_state.registration_schedule = schedule_input;
 
     genesis_state.registration_supply = schedule_input_total_bonus(schedule_input, genesis_state.registration_bonus);
-    rest_of_supply = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-    genesis_state.registration_supply += rest_of_supply;
+    genesis_state.registration_supply += rest_of_supply();
 
     return genesis_state;
 }

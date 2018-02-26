@@ -32,9 +32,13 @@ class registration_check_fixture : public database_trx_integration_fixture
 public:
     registration_check_fixture();
 
+    asset registration_bonus();
+
+    asset rest_of_supply();
+
     void create_registration_objects(const genesis_state_type&);
 
-    genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input, asset& rest_of_supply);
+    genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input);
     genesis_state_type create_registration_genesis();
     genesis_state_type create_registration_genesis(committee_private_keys_type& committee_private_keys);
 
@@ -42,7 +46,6 @@ public:
 
 private:
     genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedule_input,
-                                                        asset& rest_of_supply,
                                                         committee_private_keys_type& committee_private_keys);
 
     data_service_factory_i& _services;
