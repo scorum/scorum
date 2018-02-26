@@ -1,6 +1,6 @@
 #include <scorum/account_statistics/account_statistics_plugin.hpp>
 #include <scorum/account_statistics/account_statistics_api.hpp>
-#include <scorum/common_statistic/base_plugin_impl.hpp>
+#include <scorum/common_statistics/base_plugin_impl.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
@@ -65,7 +65,6 @@ struct operation_process
     void operator()(const transfer_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
-
             auto& from_stat = b.account_statistic[op.from];
             from_stat.transfers_from++;
             from_stat.scorum_sent += op.amount;
@@ -85,7 +84,7 @@ void account_statistics_plugin_impl::process_post_operation(const bucket_object&
     o.op.visit(operation_process(db, bucket));
 }
 
-} // detail
+} // namespace detail
 
 account_statistics_plugin::account_statistics_plugin(application* app)
     : plugin(app)
@@ -141,7 +140,7 @@ uint32_t account_statistics_plugin::get_max_history_per_bucket() const
 {
     return _my->_maximum_history_per_bucket_size;
 }
-}
-} // scorum::account_statistics
+} // namespace account_statistics
+} // namespace scorum
 
 SCORUM_DEFINE_PLUGIN(account_statistics, scorum::account_statistics::account_statistics_plugin);

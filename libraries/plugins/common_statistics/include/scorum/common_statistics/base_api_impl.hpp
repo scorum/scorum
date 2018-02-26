@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/common_statistic/base_plugin_impl.hpp>
+#include <scorum/common_statistics/base_plugin_impl.hpp>
 
 namespace scorum {
 namespace common_statistics {
@@ -22,7 +22,7 @@ public:
     {
     }
 
-    Statistic get_stats_for_time(fc::time_point_sec open, uint32_t interval) const
+    Statistic get_stats_for_time(const fc::time_point_sec& open, uint32_t interval) const
     {
         Statistic result;
         const auto& bucket_idx = _app.chain_database()->template get_index<bucket_index>().indices().get<by_bucket>();
@@ -34,7 +34,8 @@ public:
         return result;
     }
 
-    template <typename Plugin> Statistic get_stats_for_interval(fc::time_point_sec start, fc::time_point_sec end) const
+    template <typename Plugin>
+    Statistic get_stats_for_interval(const fc::time_point_sec& start, const fc::time_point_sec& end) const
     {
         Statistic result;
         const auto& bucket_itr = _app.chain_database()->template get_index<bucket_index>().indices().get<by_bucket>();

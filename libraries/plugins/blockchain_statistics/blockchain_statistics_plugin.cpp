@@ -1,6 +1,6 @@
 #include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
-#include <scorum/common_statistic/base_plugin_impl.hpp>
+#include <scorum/common_statistics/base_plugin_impl.hpp>
 
 #include <scorum/app/impacted.hpp>
 #include <scorum/chain/schema/account_objects.hpp>

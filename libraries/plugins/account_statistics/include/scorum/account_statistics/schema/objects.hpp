@@ -6,7 +6,7 @@
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/account_statistics/schema/metrics.hpp>
-#include <scorum/common_statistic/base_bucket_object.hpp>
+#include <scorum/common_statistics/base_bucket_object.hpp>
 
 //
 // Plugins should #define their SPACE_ID's so plugins with
@@ -75,8 +75,8 @@ typedef shared_multi_index_container<bucket_object,
                                                                                     &common_statistics::
                                                                                         base_bucket_object::open>>>>>
     bucket_index;
-}
-} // scorum::account_statistics
+} // namespace account_statistics
+} // namespace scorum
 
 FC_REFLECT_DERIVED(scorum::account_statistics::bucket_object,
                    (scorum::common_statistics::base_bucket_object)(scorum::account_statistics::account_metric),

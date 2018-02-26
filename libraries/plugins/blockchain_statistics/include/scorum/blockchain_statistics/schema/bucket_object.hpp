@@ -4,7 +4,7 @@
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/blockchain_statistics/schema/metrics.hpp>
-#include <scorum/common_statistic/base_bucket_object.hpp>
+#include <scorum/common_statistics/base_bucket_object.hpp>
 
 #ifndef BLOCKCHAIN_STATISTICS_SPACE_ID
 #define BLOCKCHAIN_STATISTICS_SPACE_ID 9
