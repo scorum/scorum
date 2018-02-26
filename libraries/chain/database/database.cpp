@@ -2021,8 +2021,8 @@ void database::validate_invariants() const
 
         if (obtain_service<dbs_dev_pool>().is_exists())
         {
-            total_supply += asset(obtain_service<dbs_dev_pool>().get().balance_in.amount, SCORUM_SYMBOL);
-            total_supply += obtain_service<dbs_dev_pool>().get().balance_out;
+            total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
+            total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
         }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();

@@ -54,8 +54,8 @@
 
   "rewards_supply": "21024.000000000 SCR",
 
-  "dev_in_supply": "100.000000000 SP",
-  "dev_out_supply": "50.500000000 SCR",
+  "development_sp_supply": "100.000000000 SP",
+  "development_scr_supply": "50.500000000 SCR",
 
   "registration_supply": "10000.000000000 SCR",
   "registration_bonus": "0.000000100 SCR",

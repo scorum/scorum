@@ -27,8 +27,8 @@ void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
         return;
     }
 
-    FC_ASSERT(ctx.genesis_state().dev_in_supply.symbol() == VESTS_SYMBOL);
-    FC_ASSERT(ctx.genesis_state().dev_out_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().development_scr_supply.symbol() == SCORUM_SYMBOL);
 
     create_dev_pool(ctx);
 
@@ -37,7 +37,8 @@ void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
 
 bool dev_pool_initializator_impl::is_dev_pool_exists(initializator_context& ctx)
 {
-    return ctx.genesis_state().dev_in_supply.amount.value || ctx.genesis_state().dev_out_supply.amount.value;
+    return ctx.genesis_state().development_sp_supply.amount.value
+        || ctx.genesis_state().development_scr_supply.amount.value;
 }
 
 void dev_pool_initializator_impl::create_dev_pool(initializator_context& ctx)
@@ -47,8 +48,8 @@ void dev_pool_initializator_impl::create_dev_pool(initializator_context& ctx)
     FC_ASSERT(!dev_pool_service.is_exists());
 
     dev_pool_service.create([&](dev_committee_object& pool) {
-        pool.balance_in = ctx.genesis_state().dev_in_supply;
-        pool.balance_out = ctx.genesis_state().dev_out_supply;
+        pool.sp_balance = ctx.genesis_state().development_sp_supply;
+        pool.scr_balance = ctx.genesis_state().development_scr_supply;
     });
 }
 
@@ -57,8 +58,8 @@ void dev_pool_initializator_impl::increase_total_supply(initializator_context& c
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
     dgp_service.update([&](dynamic_global_property_object& props) {
-        props.total_supply += asset(ctx.genesis_state().dev_in_supply.amount, SCORUM_SYMBOL);
-        props.total_supply += asset(ctx.genesis_state().dev_out_supply.amount, SCORUM_SYMBOL);
+        props.total_supply += asset(ctx.genesis_state().development_sp_supply.amount, SCORUM_SYMBOL);
+        props.total_supply += asset(ctx.genesis_state().development_scr_supply.amount, SCORUM_SYMBOL);
     });
 }
 }

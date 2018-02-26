@@ -22,7 +22,7 @@ withdraw_vesting_check_fixture::withdraw_vesting_check_fixture()
     open_database();
 }
 
-void withdraw_vesting_check_fixture::create_dev_pool(const asset& balance_in, const asset& balance_out)
+void withdraw_vesting_check_fixture::create_dev_pool(const asset& sp_balance, const asset& scr_balance)
 {
     FC_ASSERT(!pool_service.is_exists());
 
@@ -31,13 +31,13 @@ void withdraw_vesting_check_fixture::create_dev_pool(const asset& balance_in, co
     db_plugin->debug_update(
         [&](database&) {
             pool_service.create([&](dev_committee_object& pool) {
-                pool.balance_in = balance_in;
-                pool.balance_out = balance_out;
+                pool.sp_balance = sp_balance;
+                pool.scr_balance = scr_balance;
             });
 
             dynamic_global_property_service.update([&](dynamic_global_property_object& props) {
-                props.total_supply += asset(balance_in.amount, SCORUM_SYMBOL);
-                props.total_supply += asset(balance_out.amount, SCORUM_SYMBOL);
+                props.total_supply += asset(sp_balance.amount, SCORUM_SYMBOL);
+                props.total_supply += asset(scr_balance.amount, SCORUM_SYMBOL);
             });
         },
         default_skip);

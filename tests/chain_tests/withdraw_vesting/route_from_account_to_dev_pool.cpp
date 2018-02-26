@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_scr_check, withdraw_vesting_route_from_
     const auto& pool = pool_service.get();
 
     asset old_alice_balance_scr = alice.balance;
-    asset old_pool_balance_scr = pool.balance_out;
+    asset old_pool_balance_scr = pool.scr_balance;
 
     withdraw_vesting_operation op_wv;
     op_wv.account = alice.name;
@@ -76,7 +76,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_scr_check, withdraw_vesting_route_from_
 
     BOOST_CHECK_EQUAL(alice.balance - old_alice_balance_scr,
                       alice_to_withdraw_scr * alice_withdrawal_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
-    BOOST_CHECK_EQUAL(pool.balance_out - old_pool_balance_scr,
+    BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr,
                       alice_to_withdraw_scr * pool_scr_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
 
     BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_scr_check, withdraw_vesting_route_from_
     BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
 
     BOOST_CHECK_EQUAL(alice.balance - old_alice_balance_scr, alice_to_withdraw_scr * alice_withdrawal_percent / 100);
-    BOOST_CHECK_EQUAL(pool.balance_out - old_pool_balance_scr, alice_to_withdraw_scr * pool_scr_pie_percent / 100);
+    BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr, alice_to_withdraw_scr * pool_scr_pie_percent / 100);
 
     fc::time_point_sec end_time = db.head_block_time();
 
@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_sp_check, withdraw_vesting_route_from_a
     const auto& pool = pool_service.get();
 
     asset old_alice_balance_scr = alice.balance;
-    asset old_pool_balance_sp = pool.balance_in;
+    asset old_pool_balance_sp = pool.sp_balance;
 
     withdraw_vesting_operation op_wv;
     op_wv.account = alice.name;
@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_sp_check, withdraw_vesting_route_from_a
     BOOST_CHECK_EQUAL(alice.balance - old_alice_balance_scr,
                       alice_to_withdraw_scr * alice_withdrawal_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
     asset pool_recived = alice_to_withdraw_scr * pool_sp_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS;
-    BOOST_CHECK_EQUAL(pool.balance_in - old_pool_balance_sp, asset(pool_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(pool.sp_balance - old_pool_balance_sp, asset(pool_recived.amount, VESTS_SYMBOL));
 
     BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
 
@@ -153,7 +153,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_sp_check, withdraw_vesting_route_from_a
 
     BOOST_CHECK_EQUAL(alice.balance - old_alice_balance_scr, alice_to_withdraw_scr * alice_withdrawal_percent / 100);
     pool_recived = alice_to_withdraw_scr * pool_sp_pie_percent / 100;
-    BOOST_CHECK_EQUAL(pool.balance_in - old_pool_balance_sp, asset(pool_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(pool.sp_balance - old_pool_balance_sp, asset(pool_recived.amount, VESTS_SYMBOL));
 
     fc::time_point_sec end_time = db.head_block_time();
 

@@ -46,7 +46,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_check, withdraw_vesting_route_from_dev_pool
 
     generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
 
-    BOOST_CHECK_EQUAL(pool.balance_out, pool_to_withdraw_scr / SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_CHECK_EQUAL(pool.scr_balance, pool_to_withdraw_scr / SCORUM_VESTING_WITHDRAW_INTERVALS);
 
     BOOST_REQUIRE(withdraw_vesting_service.is_exists(pool.id));
 
@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_check, withdraw_vesting_route_from_dev_pool
 
     BOOST_REQUIRE(!withdraw_vesting_service.is_exists(pool.id));
 
-    BOOST_CHECK_EQUAL(pool.balance_out, pool_to_withdraw_scr);
+    BOOST_CHECK_EQUAL(pool.scr_balance, pool_to_withdraw_scr);
 
     fc::time_point_sec end_time = db.head_block_time();
 

@@ -284,7 +284,7 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
 {
     asset dev_sp = ASSET_SP(1e+6);
 
-    genesis.dev_in_supply(dev_sp);
+    genesis.development_sp_supply(dev_sp);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
@@ -295,7 +295,7 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
 {
     asset dev_scr = ASSET_SCR(1e+6);
 
-    genesis.dev_out_supply(dev_scr);
+    genesis.development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
@@ -307,7 +307,7 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
     asset dev_sp = ASSET_SP(1e+6);
     asset dev_scr = ASSET_SCR(1e+6);
 
-    genesis.dev_in_supply(dev_sp).dev_out_supply(dev_scr);
+    genesis.development_sp_supply(dev_sp).development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 

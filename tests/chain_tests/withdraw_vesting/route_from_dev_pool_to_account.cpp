@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_dev_p
     const auto& bob = account_service.get_account("bob");
     const auto& sam = account_service.get_account("sam");
 
-    asset old_pool_balance_scr = pool.balance_out;
+    asset old_pool_balance_scr = pool.scr_balance;
     asset old_bob_balance_scr = bob.balance;
     asset old_sam_balance_sp = sam.vesting_shares;
 
@@ -79,7 +79,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_dev_p
 
     generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
 
-    BOOST_CHECK_EQUAL(pool.balance_out - old_pool_balance_scr,
+    BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr,
                       pool_to_withdraw_scr * pool_withdrawal_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr,
                       pool_to_withdraw_scr * bob_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
@@ -96,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_dev_p
 
     BOOST_REQUIRE(!withdraw_vesting_service.is_exists(pool.id));
 
-    BOOST_CHECK_EQUAL(pool.balance_out - old_pool_balance_scr, pool_to_withdraw_scr * pool_withdrawal_percent / 100);
+    BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr, pool_to_withdraw_scr * pool_withdrawal_percent / 100);
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr, pool_to_withdraw_scr * bob_pie_percent / 100);
     sam_recived = pool_to_withdraw_scr * sam_pie_percent / 100;
     BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
