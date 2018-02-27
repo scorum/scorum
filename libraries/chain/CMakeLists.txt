@@ -5,7 +5,8 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/util/*.hpp"
                   "include/scorum/chain/genesis/*.hpp"
                   "include/scorum/chain/database/*.hpp"
-                  "include/scorum/chain/database/block_tasks/*.hpp")
+                  "include/scorum/chain/database/block_tasks/*.hpp"
+                  "database/block_tasks/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -80,6 +81,7 @@ add_library( scorum_chain
              database/block_tasks/process_funds.cpp
              database/block_tasks/process_comments_cashout.cpp
              database/block_tasks/process_vesting_withdrawals.cpp
+             database/block_tasks/withdrawable_actors_impl.cpp
 
              util/reward.cpp
 

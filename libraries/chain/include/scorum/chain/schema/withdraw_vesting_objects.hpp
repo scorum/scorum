@@ -57,14 +57,63 @@ public:
 
 namespace withdraw_vesting_objects {
 
-inline bool is_account(const withdrawable_id_type& id)
+class ids_visitor
 {
-    return id.which() == withdrawable_id_type::tag<account_id_type>::value;
-}
-inline bool is_dev_committee(const withdrawable_id_type& id)
+public:
+    typedef bool result_type;
+
+    template <typename Op> bool operator()(const Op&) const
+    {
+        FC_ASSERT(false, "Unknown type.");
+        return false;
+    }
+
+protected:
+    ids_visitor(const withdrawable_id_type& left)
+        : _left(left)
+    {
+    }
+
+    const withdrawable_id_type& _left;
+};
+
+class less_ids_visitor : public ids_visitor
 {
-    return id.which() == withdrawable_id_type::tag<dev_committee_id_type>::value;
-}
+public:
+    less_ids_visitor(const withdrawable_id_type& left)
+        : ids_visitor(left)
+    {
+    }
+
+    bool operator()(const account_id_type& right) const
+    {
+        return _left.get<account_id_type>() < right;
+    }
+
+    bool operator()(const dev_committee_id_type& right) const
+    {
+        return _left.get<dev_committee_id_type>() < right;
+    }
+};
+
+class equal_ids_visitor : public ids_visitor
+{
+public:
+    equal_ids_visitor(const withdrawable_id_type& left)
+        : ids_visitor(left)
+    {
+    }
+
+    bool operator()(const account_id_type& right) const
+    {
+        return _left.get<account_id_type>() == right;
+    }
+
+    bool operator()(const dev_committee_id_type& right) const
+    {
+        return _left.get<dev_committee_id_type>() == right;
+    }
+};
 }
 
 struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_type, withdrawable_id_type, bool>
@@ -75,14 +124,7 @@ struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_ty
 
         if (a.which() == b.which()) // both have same type
         {
-            if (is_account(a))
-                return a.get<account_id_type>() < b.get<account_id_type>();
-            else if (is_dev_committee(a))
-                return a.get<dev_committee_id_type>() < b.get<dev_committee_id_type>();
-            else
-            {
-                FC_ASSERT(false, "Unknown type");
-            }
+            return b.visit(less_ids_visitor(a));
         }
         return a.which() < b.which(); // compare by type
     }
@@ -94,14 +136,7 @@ inline bool is_equal_withdrawable_id(const withdrawable_id_type& a, const withdr
 
     if (a.which() == b.which())
     {
-        if (is_account(a))
-            return a.get<account_id_type>() == b.get<account_id_type>();
-        else if (is_dev_committee(a))
-            return a.get<dev_committee_id_type>() == b.get<dev_committee_id_type>();
-        else
-        {
-            FC_ASSERT(false, "Unknown type");
-        }
+        return b.visit(equal_ids_visitor(a));
     }
 
     return false;
