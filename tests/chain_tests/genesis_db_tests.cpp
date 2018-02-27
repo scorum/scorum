@@ -289,6 +289,8 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_REQUIRE(dev_pool_service.is_exists());
+
+    BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
 }
 
 BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
@@ -300,18 +302,23 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_REQUIRE(dev_pool_service.is_exists());
+
+    BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);
 }
 
 BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
 {
     asset dev_sp = ASSET_SP(1e+6);
-    asset dev_scr = ASSET_SCR(1e+6);
+    asset dev_scr = ASSET_SCR(2e+6);
 
     genesis.development_sp_supply(dev_sp).development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
     BOOST_REQUIRE(dev_pool_service.is_exists());
+
+    BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
+    BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
