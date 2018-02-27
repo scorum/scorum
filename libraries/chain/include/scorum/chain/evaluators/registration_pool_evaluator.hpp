@@ -20,7 +20,7 @@ class registration_committee_service_i;
 class registration_pool_object;
 class account_object;
 
-class registration_pool_impl;
+class registration_pool_evaluator_impl;
 
 class registration_pool_evaluator : public evaluator_impl<data_service_factory_i, registration_pool_evaluator>
 {
@@ -33,7 +33,7 @@ public:
     void do_apply(const operation_type& op);
 
 private:
-    std::unique_ptr<registration_pool_impl> _impl;
+    std::unique_ptr<registration_pool_evaluator_impl> _impl;
 
     account_service_i& _account_service;
     registration_pool_service_i& _registration_pool_service;
@@ -42,10 +42,11 @@ private:
 
 using scorum::protocol::account_name_type;
 
-class registration_pool_context
+class give_bonus_from_registration_pool_task_context
 {
 public:
-    explicit registration_pool_context(data_service_factory_i& services, const account_object& beneficiary);
+    explicit give_bonus_from_registration_pool_task_context(data_service_factory_i& services,
+                                                            const account_object& beneficiary);
 
     data_service_factory_i& services() const;
 
@@ -67,10 +68,10 @@ private:
     bool _last_result = false;
 };
 
-class registration_pool_task : public task<registration_pool_context>
+class give_bonus_from_registration_pool_task : public task<give_bonus_from_registration_pool_task_context>
 {
 public:
-    void on_apply(registration_pool_context& ctx);
+    void on_apply(give_bonus_from_registration_pool_task_context& ctx);
 };
 
 } // namespace chain

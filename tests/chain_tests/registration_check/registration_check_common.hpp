@@ -10,6 +10,8 @@
 #include <scorum/chain/schema/account_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
 
 #include <fc/crypto/digest.hpp>
 
@@ -42,7 +44,9 @@ public:
     genesis_state_type create_registration_genesis();
     genesis_state_type create_registration_genesis(committee_private_keys_type& committee_private_keys);
 
-    const account_object& bonus_beneficiary();
+    const account_object& committee_member();
+
+    const registration_pool_object& create_pool(const genesis_state_type& genesis_state);
 
 private:
     genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedule_input,
@@ -52,6 +56,8 @@ private:
 
 public:
     account_service_i& account_service;
+    registration_pool_service_i& registration_pool_service;
+    registration_committee_service_i& registration_committee_service;
 };
 }
 }

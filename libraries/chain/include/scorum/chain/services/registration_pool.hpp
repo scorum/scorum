@@ -49,17 +49,6 @@ public:
     void decrease_balance(const asset& amount) override;
 
     void increase_already_allocated_count() override;
-
-private:
-    asset allocate_cash(const account_name_type& committee_member);
-
-    asset calculate_per_reg();
-
-    asset old_decrease_balance(const asset&);
-
-    bool check_autoclose();
-
-    void _close();
 };
 
 } // namespace chain

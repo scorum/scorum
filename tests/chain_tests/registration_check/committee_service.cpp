@@ -10,7 +10,6 @@ class registration_committee_service_check_fixture : public registration_check_f
 {
 public:
     registration_committee_service_check_fixture()
-        : registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
         genesis_state = create_registration_genesis();
         create_registration_objects(genesis_state);
@@ -27,8 +26,6 @@ public:
         }
         return ret;
     }
-
-    dbs_registration_committee& registration_committee_service;
 };
 
 BOOST_FIXTURE_TEST_SUITE(registration_committee_service_check, registration_committee_service_check_fixture)

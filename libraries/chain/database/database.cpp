@@ -28,7 +28,7 @@
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
-#include <scorum/chain/evaluators/registration_pool.hpp>
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>

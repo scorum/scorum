@@ -6,7 +6,7 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 
-#include <scorum/chain/evaluators/registration_pool.hpp>
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
@@ -26,10 +26,10 @@ void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
         for (auto& account : ctx.genesis_state().accounts)
         {
             const auto& account_obj = account_service.get_account(account.name);
-            registration_pool_context ctx(ctx.services(), account_obj);
-            registration_pool_task allocate_cash;
-            allocate_cash.apply(ctx);
-            if (ctx.last_result())
+            give_bonus_from_registration_pool_task_context bonus_ctx(ctx.services(), account_obj);
+            give_bonus_from_registration_pool_task give_bonus;
+            give_bonus.apply(bonus_ctx);
+            if (bonus_ctx.last_result())
             {
                 --total_unvested;
             }

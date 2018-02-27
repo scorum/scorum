@@ -13,7 +13,8 @@ set( SOURCES
     registration_check/committee_service.cpp
     registration_check/registration_check_common.cpp
     registration_check/committee_operations.cpp
-    registration_check/pool_service.cpp
+    registration_check/create_by_committee_evaluator_tests.cpp
+    registration_check/registration_service_tests.cpp
     atomicswap_check/atomicswap_service.cpp
     atomicswap_check/atomicswap_operations.cpp
     budget_check/budget_service.cpp
