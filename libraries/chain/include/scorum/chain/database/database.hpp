@@ -134,8 +134,6 @@ public:
     const witness_schedule_object& get_witness_schedule_object() const;
     const hardfork_property_object& get_hardfork_property_object() const;
 
-    const reward_fund_object& get_reward_fund() const;
-
     const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const;
 
     /**

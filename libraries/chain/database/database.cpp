@@ -32,6 +32,7 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
@@ -424,11 +425,6 @@ const hardfork_property_object& database::get_hardfork_property_object() const
         return get<hardfork_property_object>();
     }
     FC_CAPTURE_AND_RETHROW()
-}
-
-const reward_fund_object& database::get_reward_fund() const
-{
-    return get<reward_fund_object>();
 }
 
 const time_point_sec database::calculate_discussion_payout_time(const comment_object& comment) const
@@ -2010,7 +2006,7 @@ void database::validate_invariants() const
             }
         }
 
-        total_supply += get_reward_fund().reward_balance;
+        total_supply += obtain_service<dbs_reward_fund>().get().reward_balance;
         total_supply += asset(gpo.total_vesting_shares.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
 
@@ -2045,4 +2041,5 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
+
 

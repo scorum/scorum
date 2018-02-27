@@ -11,6 +11,7 @@
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -929,14 +930,16 @@ void database_api::set_pending_payout(discussion& d) const
     {
         d.promoted = asset(itr->promoted_balance, SCORUM_SYMBOL);
     }
-    asset pot = my->_db.get_reward_fund().reward_balance;
-    u256 total_r2 = to256(my->_db.get_reward_fund().recent_claims);
+
+    const auto& reward_fund_obj = my->_db.obtain_service<dbs_reward_fund>().get();
+
+    asset pot = reward_fund_obj.reward_balance;
+    u256 total_r2 = to256(reward_fund_obj.recent_claims);
     if (total_r2 > 0)
     {
         uint128_t vshares;
-        const auto& rf = my->_db.get_reward_fund();
         vshares = d.net_rshares.value > 0
-            ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, rf.author_reward_curve)
+            ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, reward_fund_obj.author_reward_curve)
             : 0;
 
         u256 r2 = to256(vshares); // to256(abs_net_rshares);
