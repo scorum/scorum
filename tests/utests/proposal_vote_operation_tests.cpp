@@ -467,20 +467,4 @@
 
 // BOOST_AUTO_TEST_SUITE_END()
 
-// BOOST_AUTO_TEST_SUITE(test_is_quorum)
-
-// BOOST_AUTO_TEST_CASE(needs_six_and_above_votes)
-//{
-//    BOOST_CHECK_EQUAL(true, scorum::chain::utils::is_quorum(6, 10, 60));
-//    BOOST_CHECK_EQUAL(false, scorum::chain::utils::is_quorum(5, 10, 60));
-//}
-
-// BOOST_AUTO_TEST_CASE(needs_five_and_above_votes_for_quourum)
-//{
-//    BOOST_CHECK_EQUAL(false, scorum::chain::utils::is_quorum(4, 8, 60));
-//    BOOST_CHECK_EQUAL(true, scorum::chain::utils::is_quorum(5, 8, 60));
-//}
-
-// BOOST_AUTO_TEST_SUITE_END()
-
 //} // namespace tests

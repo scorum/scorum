@@ -9,20 +9,20 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
 set(SOURCES
     main.cpp
-#    basic_tests.cpp
-#    genesis_tests.cpp
-#    print_tests.cpp
-#    atomicswap_check/atomicswap_helper_check.cpp
-#    genesis/initializator.cpp
-#    genesis/accounts.cpp
-#    genesis/founders.cpp
+    basic_tests.cpp
+    genesis_tests.cpp
+    print_tests.cpp
+    atomicswap_check/atomicswap_helper_check.cpp
+    genesis/initializator.cpp
+    genesis/accounts.cpp
+    genesis/founders.cpp
     signed_transaction_serialization_tests.cpp
-#    serialization_tests.cpp
-#    proposal/proposal_operations_tests.cpp
-#    proposal/proposal_evaluator_register_tests.cpp
-#    proposal/proposal_create_evaluator_tests.cpp
+    serialization_tests.cpp
+    proposal/proposal_operations_tests.cpp
+    proposal/proposal_evaluator_register_tests.cpp
+    proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
-#    proposal_vote_operation_tests.cpp
+    proposal_vote_operation_tests.cpp
 )
 
 add_executable(utests

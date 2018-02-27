@@ -7,9 +7,9 @@
 namespace scorum {
 namespace chain {
 
-class data_service_factory_i;
+struct data_service_factory_i;
+struct proposal_service_i;
 class proposal_object;
-class proposal_service_i;
 
 struct proposal_executor_service_i
 {

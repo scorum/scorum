@@ -16,8 +16,10 @@
 #include "actor.hpp"
 #include "genesis.hpp"
 
-namespace scorum {
-namespace chain {
+namespace proposal_tests {
+
+using namespace scorum::chain;
+namespace protocol = scorum::protocol;
 
 class proposal_fixture
 {
@@ -236,7 +238,6 @@ private:
 
 BOOST_FIXTURE_TEST_SUITE(proposal_operation_tests, proposal_fixture)
 
-// clang-format off
 SCORUM_TEST_CASE(proposal)
 {
     Actor initdelegate(TEST_INIT_DELEGATE_NAME);
@@ -247,6 +248,7 @@ SCORUM_TEST_CASE(proposal)
     Actor hue("hue");
     Actor liz("liz");
 
+    // clang-format off
     registration_stage single_stage{ 1u, 1u, 100u };
     genesis = database_integration_fixture::default_genesis_state()
               .accounts(bob, jim, joe, hue, liz)
@@ -270,6 +272,7 @@ SCORUM_TEST_CASE(proposal)
     auto hue_invitation = actor(alice).invite_in_to_committee(hue);
     auto liz_invitation = actor(alice).invite_in_to_committee(liz);
     auto bob_invitation = actor(alice).invite_in_to_committee(bob);
+    // clang-format on
 
     {
         fc::time_point_sec expected_expiration = chain().db.head_block_time() + SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
@@ -394,12 +397,10 @@ SCORUM_TEST_CASE(proposal)
         BOOST_CHECK_EQUAL(51u, get_dropout_quorum());
         BOOST_CHECK_EQUAL(100u, get_change_quorum());
     }
-
-} // clang-format on
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace scorum
-} // namespace chain
+} // namespace proposal_tests
 
 #endif
