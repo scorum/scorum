@@ -129,7 +129,6 @@ public:
 
     chain_id_type get_chain_id() const;
 
-    const dynamic_global_property_object& get_dynamic_global_properties() const;
     const node_property_object& get_node_properties() const;
     const witness_schedule_object& get_witness_schedule_object() const;
     const hardfork_property_object& get_hardfork_property_object() const;

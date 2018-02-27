@@ -32,6 +32,7 @@
 #include <scorum/chain/schema/history_objects.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/account_history/account_history_plugin.hpp>
 
@@ -110,7 +111,8 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
                 // BOOST_CHECK( cur_witness != prev_witness );
                 b = db.generate_block(db.get_slot_time(1), cur_witness, init_account_priv_key, database::skip_nothing);
                 BOOST_CHECK(b.witness == cur_witness);
-                uint32_t cutoff_height = db.get_dynamic_global_properties().last_irreversible_block_num;
+                uint32_t cutoff_height
+                    = db.obtain_service<dbs_dynamic_global_property>().get().last_irreversible_block_num;
                 if (cutoff_height >= 200)
                 {
                     auto block = db.fetch_block_by_number(cutoff_height);
@@ -623,7 +625,7 @@ BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, database_default_integration_fixture)
         generate_block();
 
         auto rsf = [&]() -> std::string {
-            fc::uint128 rsf = db.get_dynamic_global_properties().recent_slots_filled;
+            fc::uint128 rsf = db.obtain_service<dbs_dynamic_global_property>().get().recent_slots_filled;
             std::string result = "";
             result.reserve(128);
             for (int i = 0; i < 128; i++)

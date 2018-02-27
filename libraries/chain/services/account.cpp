@@ -1,7 +1,8 @@
-#include <scorum/chain/services/account.hpp>
 #include <scorum/chain/database/database.hpp>
 
+#include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 
@@ -515,14 +516,12 @@ const asset dbs_account::create_vesting(const account_object& to_account, const 
 {
     try
     {
-        const auto& cprops = db_impl().get_dynamic_global_properties();
-
         asset new_vesting = asset(scorum.amount, VESTS_SYMBOL);
 
         db_impl().modify(to_account, [&](account_object& to) { to.vesting_shares += new_vesting; });
 
-        db_impl().modify(cprops,
-                         [&](dynamic_global_property_object& props) { props.total_vesting_shares += new_vesting; });
+        db_impl().obtain_service<dbs_dynamic_global_property>().update(
+            [&](dynamic_global_property_object& props) { props.total_vesting_shares += new_vesting; });
 
         adjust_proxied_witness_votes(to_account, new_vesting.amount);
 
@@ -605,7 +604,7 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
                                                            const authority& active,
                                                            const authority& posting)
 {
-    const auto& props = db_impl().get_dynamic_global_properties();
+    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
         acc.name = new_account_name;

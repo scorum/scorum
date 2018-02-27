@@ -10,6 +10,7 @@
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -74,11 +75,13 @@ const account_object& database_trx_integration_fixture::account_create(const std
 {
     try
     {
-        return account_create(name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
-                              std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
-                                           * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                                       (SUFFICIENT_FEE).amount),
-                              key, post_key, "");
+        return account_create(
+            name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
+            std::max(
+                db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.account_creation_fee.amount
+                    * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
+                (SUFFICIENT_FEE).amount),
+            key, post_key, "");
     }
     FC_CAPTURE_AND_RETHROW((name));
 }

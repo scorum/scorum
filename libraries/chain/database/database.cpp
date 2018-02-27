@@ -395,15 +395,6 @@ chain_id_type database::get_chain_id() const
     return get<chain_property_object>().chain_id;
 }
 
-const dynamic_global_property_object& database::get_dynamic_global_properties() const
-{
-    try
-    {
-        return get<dynamic_global_property_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
 const node_property_object& database::get_node_properties() const
 {
     return _node_property_object;
@@ -434,7 +425,7 @@ const time_point_sec database::calculate_discussion_payout_time(const comment_ob
 
 uint32_t database::witness_participation_rate() const
 {
-    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
     return uint64_t(SCORUM_100_PERCENT) * dpo.recent_slots_filled.popcount() / 128;
 }
 
@@ -612,7 +603,9 @@ void database::push_transaction(const signed_transaction& trx, uint32_t skip)
         try
         {
             size_t trx_size = fc::raw::pack_size(trx);
-            FC_ASSERT(trx_size <= (get_dynamic_global_properties().median_chain_props.maximum_block_size - 256));
+            FC_ASSERT(
+                trx_size
+                <= (obtain_service<dbs_dynamic_global_property>().get().median_chain_props.maximum_block_size - 256));
             set_producing(true);
             detail::with_skip_flags(*this, skip, [&]() { with_write_lock([&]() { _push_transaction(trx); }); });
             set_producing(false);
@@ -689,8 +682,9 @@ signed_block database::_generate_block(fc::time_point_sec when,
     }
 
     static const size_t max_block_header_size = fc::raw::pack_size(signed_block_header()) + 4;
-    auto maximum_block_size
-        = get_dynamic_global_properties().median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
+    auto maximum_block_size = obtain_service<dbs_dynamic_global_property>()
+                                  .get()
+                                  .median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
     size_t total_block_size = max_block_header_size;
 
     signed_block pending_block;
@@ -904,7 +898,7 @@ void database::notify_on_applied_transaction(const signed_transaction& tx)
 
 account_name_type database::get_scheduled_witness(uint32_t slot_num) const
 {
-    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
     const witness_schedule_object& wso = get_witness_schedule_object();
     uint64_t current_aslot = dpo.current_aslot + slot_num;
     return wso.current_shuffled_witnesses[current_aslot % wso.num_scheduled_witnesses];
@@ -918,7 +912,7 @@ fc::time_point_sec database::get_slot_time(uint32_t slot_num) const
     }
 
     auto interval = SCORUM_BLOCK_INTERVAL;
-    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
 
     if (head_block_num() == 0)
     {
@@ -1137,17 +1131,17 @@ void database::process_decline_voting_rights()
 
 time_point_sec database::head_block_time() const
 {
-    return get_dynamic_global_properties().time;
+    return obtain_service<dbs_dynamic_global_property>().get().time;
 }
 
 uint32_t database::head_block_num() const
 {
-    return get_dynamic_global_properties().head_block_number;
+    return obtain_service<dbs_dynamic_global_property>().get().head_block_number;
 }
 
 block_id_type database::head_block_id() const
 {
-    return get_dynamic_global_properties().head_block_id;
+    return obtain_service<dbs_dynamic_global_property>().get().head_block_id;
 }
 
 node_property_object& database::node_properties()
@@ -1157,7 +1151,7 @@ node_property_object& database::node_properties()
 
 uint32_t database::last_non_undoable_block_num() const
 {
-    return get_dynamic_global_properties().last_irreversible_block_num;
+    return obtain_service<dbs_dynamic_global_property>().get().last_irreversible_block_num;
 }
 
 void database::initialize_evaluators()
@@ -1392,7 +1386,7 @@ void database::_apply_block(const signed_block& next_block)
         _current_block_num = next_block_num;
         _current_trx_in_block = 0;
 
-        const auto& gprops = get_dynamic_global_properties();
+        const auto& gprops = obtain_service<dbs_dynamic_global_property>().get();
         auto block_size = fc::raw::pack_size(next_block);
         FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
                   ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
@@ -1664,7 +1658,7 @@ void database::update_global_dynamic_data(const signed_block& b)
 {
     try
     {
-        const dynamic_global_property_object& _dgp = get_dynamic_global_properties();
+        const dynamic_global_property_object& _dgp = obtain_service<dbs_dynamic_global_property>().get();
         auto& witness_service = obtain_service<dbs_witness>();
 
         uint32_t missed_blocks = 0;
@@ -1736,7 +1730,7 @@ void database::update_last_irreversible_block()
 {
     try
     {
-        const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+        const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
 
         /**
          * Prior to voting taking over, we must be more conservative...
@@ -1966,7 +1960,7 @@ void database::validate_invariants() const
         asset total_vesting = asset(0, VESTS_SYMBOL);
         share_type total_vsf_votes = share_type(0);
 
-        const auto& gpo = get_dynamic_global_properties();
+        const auto& gpo = obtain_service<dbs_dynamic_global_property>().get();
 
         /// verify no witness has too many votes
         const auto& witness_idx = get_index<witness_index>().indices();
@@ -2041,5 +2035,6 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
+
 
 

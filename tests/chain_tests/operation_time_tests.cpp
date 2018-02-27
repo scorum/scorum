@@ -11,6 +11,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/util/reward.hpp>
 
@@ -446,7 +447,6 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
         generate_block();
 
         auto fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
-        auto gpo = db.get_dynamic_global_properties();
 
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").vesting_shares.amount.value
                       == (vesting_shares - withdraw_rate).amount.value);
@@ -471,7 +471,6 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
 
             const auto& alice = db.obtain_service<dbs_account>().get_account("alice");
 
-            gpo = db.get_dynamic_global_properties();
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
 
             BOOST_REQUIRE(alice.vesting_shares.amount.value == (vesting_shares - withdraw_rate).amount.value);
@@ -500,7 +499,6 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             BOOST_TEST_MESSAGE("Generating one more block to take care of remainder");
             generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
-            gpo = db.get_dynamic_global_properties();
 
             BOOST_REQUIRE(
                 db.obtain_service<dbs_account>().get_account("alice").next_vesting_withdrawal.sec_since_epoch()
@@ -510,7 +508,7 @@ BOOST_AUTO_TEST_CASE(vesting_withdrawals)
             BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
 
             generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
-            gpo = db.get_dynamic_global_properties();
+
             fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
 
             BOOST_REQUIRE(

@@ -12,6 +12,7 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -264,13 +265,14 @@ dynamic_global_property_api_obj database_api::get_dynamic_global_properties() co
 
 chain_properties database_api::get_chain_properties() const
 {
-    return my->_db.with_read_lock([&]() { return my->_db.get_dynamic_global_properties().median_chain_props; });
+    return my->_db.with_read_lock(
+        [&]() { return my->_db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props; });
 }
 
 dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties() const
 {
     dynamic_global_property_api_obj gpao;
-    gpao = _db.get(dynamic_global_property_id_type());
+    gpao = _db.obtain_service<dbs_dynamic_global_property>().get();
 
     if (_db.has_index<witness::reserve_ratio_index>())
     {

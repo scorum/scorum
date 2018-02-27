@@ -1,9 +1,8 @@
+#include <tuple>
 #include <scorum/chain/services/vesting_delegation.hpp>
 #include <scorum/chain/database/database.hpp>
-
-#include <tuple>
-
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 using namespace scorum::protocol;
 
@@ -34,7 +33,7 @@ const vesting_delegation_object& dbs_vesting_delegation::create(const account_na
                                                                 const account_name_type& delegatee,
                                                                 const asset& vesting_shares)
 {
-    const auto& props = db_impl().get_dynamic_global_properties();
+    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_vd = db_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vd) {
         vd.delegator = delegator;

@@ -1,4 +1,5 @@
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
@@ -62,7 +63,7 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
     FC_ASSERT(owner.size(), "Witness 'owner_name' should not be empty.");
     FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
 
-    const auto& dprops = db_impl().get_dynamic_global_properties();
+    const auto& dprops = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_witness = create_internal(owner, block_signing_key);
 
@@ -124,7 +125,7 @@ void dbs_witness::adjust_witness_votes(const account_object& account, const shar
 
 void dbs_witness::adjust_witness_vote(const witness_object& witness, const share_type& delta)
 {
-    const auto& props = db_impl().get_dynamic_global_properties();
+    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const witness_schedule_object& wso = get_witness_schedule_object();
     db_impl().modify(witness, [&](witness_object& w) {

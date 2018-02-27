@@ -3,6 +3,7 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include "database_default_integration.hpp"
 
@@ -26,7 +27,8 @@ public:
 
     share_type calc_fee()
     {
-        return std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
+        const auto& dprops = db.obtain_service<dbs_dynamic_global_property>().get();
+        return std::max(dprops.median_chain_props.account_creation_fee.amount
                             * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
                         share_type(100));
     }

@@ -1,6 +1,7 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/protocol/config.hpp>
 
@@ -170,7 +171,7 @@ void database::_update_witness_median_props()
     });
     uint32_t median_maximum_block_size = active[active.size() / 2]->proposed_chain_props.maximum_block_size;
 
-    _db.modify(_db.get_dynamic_global_properties(), [&](dynamic_global_property_object& _dgpo) {
+    _db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& _dgpo) {
         _dgpo.median_chain_props.account_creation_fee = median_account_creation_fee;
         _dgpo.median_chain_props.maximum_block_size = median_maximum_block_size;
     });
@@ -199,8 +200,7 @@ void database::_update_witness_majority_version()
         }
     }
 
-    const auto& dgpo = _db.get_dynamic_global_properties();
-    auto majority_version = dgpo.majority_version;
+    auto majority_version = _db.obtain_service<dbs_dynamic_global_property>().get().majority_version;
 
     // The map should be sorted highest version to smallest, so we iterate until we hit the majority of witnesses on
     // at least this version
@@ -214,7 +214,8 @@ void database::_update_witness_majority_version()
         }
     }
 
-    _db.modify(dgpo, [&](dynamic_global_property_object& _dgpo) { _dgpo.majority_version = majority_version; });
+    _db.obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& _dgpo) { _dgpo.majority_version = majority_version; });
 }
 
 void database::_update_witness_hardfork_version_votes()

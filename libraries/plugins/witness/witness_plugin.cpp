@@ -30,6 +30,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <fc/time.hpp>
 
@@ -232,7 +233,8 @@ void witness_plugin_impl::pre_operation(const operation_notification& note)
 void witness_plugin_impl::on_block(const signed_block& b)
 {
     auto& db = _self.database();
-    int64_t max_block_size = db.get_dynamic_global_properties().median_chain_props.maximum_block_size;
+    int64_t max_block_size
+        = db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.maximum_block_size;
 
     auto reserve_ratio_ptr = db.find(reserve_ratio_id_type());
 
@@ -314,7 +316,7 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
                                                    const bandwidth_type type)
 {
     database& _db = _self.database();
-    const auto& props = _db.get_dynamic_global_properties();
+    const auto& props = _db.obtain_service<dbs_dynamic_global_property>().get();
     bool has_bandwidth = true;
 
     if (props.total_vesting_shares.amount > 0)
