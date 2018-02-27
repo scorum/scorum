@@ -3,17 +3,6 @@
 
 #include <scorum/blockchain_statistics/schema/bucket_object.hpp>
 
-//
-// Plugins should #define their SPACE_ID's so plugins with
-// conflicting SPACE_ID assignments can be compiled into the
-// same binary (by simply re-assigning some of the conflicting #defined
-// SPACE_ID's in a build script).
-//
-// Assignment of SPACE_ID's cannot be done at run-time because
-// various template automagic depends on them being known at compile
-// time.
-//
-
 #ifndef BLOCKCHAIN_STATISTICS_PLUGIN_NAME
 #define BLOCKCHAIN_STATISTICS_PLUGIN_NAME "chain_stats"
 #endif

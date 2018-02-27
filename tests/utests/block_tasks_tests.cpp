@@ -6,8 +6,6 @@
 
 #include <hippomocks.h>
 
-#ifdef DEBUG // mocks.Mock does not work in RELEASE
-
 using scorum::chain::database_ns::block_task_context;
 using scorum::chain::database_ns::block_task_type;
 using scorum::chain::data_service_factory_i;
@@ -79,5 +77,3 @@ BOOST_FIXTURE_TEST_CASE(test_block_per_3_applied, block_task_tests_fixture)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif // DEBUG
