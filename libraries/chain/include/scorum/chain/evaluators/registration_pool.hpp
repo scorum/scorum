@@ -18,6 +18,7 @@ class registration_pool_service_i;
 class registration_committee_service_i;
 
 class registration_pool_object;
+class account_object;
 
 class registration_pool_impl;
 
@@ -39,20 +40,31 @@ private:
     registration_committee_service_i& _registration_committee_service;
 };
 
-using scorum::protocol::asset;
+using scorum::protocol::account_name_type;
 
 class registration_pool_context
 {
 public:
-    explicit registration_pool_context(data_service_factory_i& services);
+    explicit registration_pool_context(data_service_factory_i& services, const account_object& beneficiary);
 
-    data_service_factory_i& services() const
+    data_service_factory_i& services() const;
+
+    const account_object& beneficiary() const;
+
+    void set_result(bool result)
     {
-        return _services;
+        _last_result = result;
+    }
+
+    bool last_result() const
+    {
+        return _last_result;
     }
 
 private:
     data_service_factory_i& _services;
+    const account_object& _beneficiary;
+    bool _last_result = false;
 };
 
 class registration_pool_task : public task<registration_pool_context>

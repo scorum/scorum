@@ -62,6 +62,20 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
     return new_pool;
 }
 
+void dbs_registration_pool::decrease_balance(const asset& amount)
+{
+    const registration_pool_object& this_pool = get();
+
+    db_impl().modify(this_pool, [&](registration_pool_object& pool) { pool.balance -= amount; });
+}
+
+void dbs_registration_pool::increase_already_allocated_count()
+{
+    const registration_pool_object& this_pool = get();
+
+    db_impl().modify(this_pool, [&](registration_pool_object& pool) { pool.already_allocated_count++; });
+}
+
 asset dbs_registration_pool::calculate_per_reg()
 {
     const registration_pool_object& this_pool = get();
@@ -98,7 +112,7 @@ asset dbs_registration_pool::calculate_per_reg()
     return asset(current_item.bonus_percent * this_pool.maximum_bonus.amount / 100, SCORUM_SYMBOL);
 }
 
-asset dbs_registration_pool::decrease_balance(const asset& balance)
+asset dbs_registration_pool::old_decrease_balance(const asset& balance)
 {
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
@@ -135,13 +149,6 @@ bool dbs_registration_pool::check_autoclose()
     {
         return false;
     }
-}
-
-void dbs_registration_pool::increase_already_allocated_count()
-{
-    const registration_pool_object& this_pool = get();
-
-    db_impl().modify(this_pool, [&](registration_pool_object& pool) { pool.already_allocated_count++; });
 }
 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
@@ -207,7 +214,7 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     }
 
     // return value <= per_reg
-    per_reg = decrease_balance(per_reg);
+    per_reg = old_decrease_balance(per_reg);
 
     auto modifier = [=](registration_committee_member_object& m) {
         m.last_allocated_block = head_block_num;

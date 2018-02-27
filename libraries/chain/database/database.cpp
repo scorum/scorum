@@ -28,6 +28,8 @@
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
+#include <scorum/chain/evaluators/registration_pool.hpp>
+
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/budget.hpp>
@@ -1105,7 +1107,6 @@ void database::process_vesting_withdrawals()
     // clang-format on
 }
 
-
 void database::account_recovery_processing()
 {
     // Clear expired recovery requests
@@ -1222,10 +1223,7 @@ uint32_t database::last_non_undoable_block_num() const
 
 void database::initialize_evaluators()
 {
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
@@ -1235,14 +1233,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
@@ -1260,6 +1254,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
+
+    _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>(new registration_pool_evaluator(*this));
 
     // clang-format off
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(

@@ -175,31 +175,6 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
                                                    o.active, o.posting, o.fee, o.delegation);
 }
 
-void account_create_by_committee_evaluator::do_apply(const account_create_by_committee_operation& o)
-{
-    account_service_i& account_service = db().account_service();
-    registration_pool_service_i& registration_pool_service = db().registration_pool_service();
-    registration_committee_service_i& registration_committee_service = db().registration_committee_service();
-
-    account_service.check_account_existence(o.creator);
-
-    FC_ASSERT(registration_pool_service.is_exists(), "Registration pool is exhausted.");
-
-    FC_ASSERT(registration_committee_service.is_exists(o.creator), "Account '${1}' is not committee member.",
-              ("1", o.creator));
-
-    asset bonus = registration_pool_service.allocate_cash(o.creator);
-
-    account_service.check_account_existence(o.owner.account_auths);
-
-    account_service.check_account_existence(o.active.account_auths);
-
-    account_service.check_account_existence(o.posting.account_auths);
-
-    account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                              o.active, o.posting, bonus);
-}
-
 void account_update_evaluator::do_apply(const account_update_operation& o)
 {
     if (o.posting)

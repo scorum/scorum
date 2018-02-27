@@ -443,7 +443,6 @@ SCORUM_TEST_CASE(allocate_limits_check)
     // limit must be reached
     BOOST_REQUIRE_THROW(registration_pool_service.allocate_cash("alice"), fc::assert_exception);
 }
-*/
 
 SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 {
@@ -493,7 +492,6 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
     BOOST_REQUIRE_THROW(registration_pool_service.allocate_cash("alice"), fc::assert_exception);
 }
 
-/*
 SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 {
     const registration_pool_object& pool = registration_pool_service.get();

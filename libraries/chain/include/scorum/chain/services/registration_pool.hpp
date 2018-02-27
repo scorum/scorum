@@ -23,13 +23,7 @@ struct registration_pool_service_i
     create_pool(const asset& supply, const asset& maximum_bonus, const schedule_items_type& schedule_items)
         = 0;
 
-    virtual asset allocate_cash(const account_name_type& committee_member) = 0;
-
-    virtual asset calculate_per_reg() = 0;
-
-    virtual asset decrease_balance(const asset&) = 0;
-
-    virtual bool check_autoclose() = 0;
+    virtual void decrease_balance(const asset& amount) = 0;
 
     virtual void increase_already_allocated_count() = 0;
 };
@@ -52,18 +46,19 @@ public:
     const registration_pool_object&
     create_pool(const asset& supply, const asset& maximum_bonus, const schedule_items_type& schedule_items) override;
 
-    // TODO: move to evaluator
-    virtual asset allocate_cash(const account_name_type& committee_member) override;
-
-    asset calculate_per_reg() override;
-
-    asset decrease_balance(const asset&) override;
-
-    bool check_autoclose() override;
+    void decrease_balance(const asset& amount) override;
 
     void increase_already_allocated_count() override;
 
 private:
+    asset allocate_cash(const account_name_type& committee_member);
+
+    asset calculate_per_reg();
+
+    asset old_decrease_balance(const asset&);
+
+    bool check_autoclose();
+
     void _close();
 };
 
