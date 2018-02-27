@@ -115,6 +115,7 @@ private:
         _dprops_service.update(
             [&](dynamic_global_property_object& o) { o.total_vesting_shares -= asset(amount.amount, VESTS_SYMBOL); });
     }
+
     void give_sp_to(const account_id_type& from, const account_id_type& to, const asset& amount)
     {
         const account_object& from_account = _account_service.get(from);
@@ -137,6 +138,7 @@ private:
 
         _dev_pool_service.update([&](dev_committee_object& pool) { pool.scr_balance += amount; });
     }
+
     void give_sp_to(const dev_committee_id_type& from, const dev_committee_id_type& to, const asset& amount)
     {
         const dev_committee_object& to_pool = _dev_pool_service.get();
@@ -163,6 +165,7 @@ private:
             o.circulating_capital -= amount;
         });
     }
+
     void give_sp_to(const account_id_type& from, const dev_committee_id_type& to, const asset& amount)
     {
         const dev_committee_object& to_pool = _dev_pool_service.get();
@@ -190,6 +193,7 @@ private:
         _dprops_service.update(
             [&](dynamic_global_property_object& o) { o.circulating_capital += asset(amount.amount, SCORUM_SYMBOL); });
     }
+
     void give_sp_to(const dev_committee_id_type& from, const account_id_type& to, const asset& amount)
     {
         const account_object& to_account = _account_service.get(to);
