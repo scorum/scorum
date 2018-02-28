@@ -69,49 +69,49 @@ public:
     }
 
 protected:
-    ids_visitor(const withdrawable_id_type& left)
-        : _left(left)
+    ids_visitor(const withdrawable_id_type& right)
+        : _right(right)
     {
     }
 
-    const withdrawable_id_type& _left;
+    const withdrawable_id_type& _right;
 };
 
 class less_ids_visitor : public ids_visitor
 {
 public:
-    less_ids_visitor(const withdrawable_id_type& left)
-        : ids_visitor(left)
+    less_ids_visitor(const withdrawable_id_type& right)
+        : ids_visitor(right)
     {
     }
 
-    bool operator()(const account_id_type& right) const
+    bool operator()(const account_id_type& left) const
     {
-        return _left.get<account_id_type>() < right;
+        return left < _right.get<account_id_type>();
     }
 
-    bool operator()(const dev_committee_id_type& right) const
+    bool operator()(const dev_committee_id_type& left) const
     {
-        return _left.get<dev_committee_id_type>() < right;
+        return left < _right.get<dev_committee_id_type>();
     }
 };
 
 class equal_ids_visitor : public ids_visitor
 {
 public:
-    equal_ids_visitor(const withdrawable_id_type& left)
-        : ids_visitor(left)
+    equal_ids_visitor(const withdrawable_id_type& right)
+        : ids_visitor(right)
     {
     }
 
-    bool operator()(const account_id_type& right) const
+    bool operator()(const account_id_type& left) const
     {
-        return _left.get<account_id_type>() == right;
+        return _right.get<account_id_type>() == left;
     }
 
-    bool operator()(const dev_committee_id_type& right) const
+    bool operator()(const dev_committee_id_type& left) const
     {
-        return _left.get<dev_committee_id_type>() == right;
+        return _right.get<dev_committee_id_type>() == left;
     }
 };
 }
@@ -124,7 +124,7 @@ struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_ty
 
         if (a.which() == b.which()) // both have same type
         {
-            return b.visit(less_ids_visitor(a));
+            return a.visit(less_ids_visitor(b));
         }
         return a.which() < b.which(); // compare by type
     }
@@ -136,7 +136,7 @@ inline bool is_equal_withdrawable_id(const withdrawable_id_type& a, const withdr
 
     if (a.which() == b.which())
     {
-        return b.visit(equal_ids_visitor(a));
+        return a.visit(equal_ids_visitor(b));
     }
 
     return false;
