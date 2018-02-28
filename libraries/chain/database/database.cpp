@@ -1,41 +1,11 @@
-#include <scorum/protocol/scorum_operations.hpp>
+#include <cstdint>
+#include <deque>
+#include <fstream>
+#include <functional>
+#include <openssl/md5.h>
 
-#include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/database/database.hpp>
-#include <scorum/chain/database_exceptions.hpp>
-#include <scorum/chain/db_with.hpp>
-#include <scorum/chain/evaluators/evaluator_registry.hpp>
-#include <scorum/chain/schema/dynamic_global_property_object.hpp>
-#include <scorum/chain/schema/chain_property_object.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
-#include <scorum/chain/evaluators/scorum_evaluators.hpp>
-#include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/transaction_object.hpp>
-#include <scorum/chain/shared_db_merkle.hpp>
-#include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
-#include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/atomicswap_objects.hpp>
-
-#include <scorum/chain/genesis/genesis_state.hpp>
-
-#include <scorum/chain/util/asset.hpp>
-#include <scorum/chain/util/reward.hpp>
-#include <scorum/chain/util/uint256.hpp>
-
-#include <scorum/chain/schema/reward_pool_object.hpp>
-
-#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
-#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
-
-#include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/witness.hpp>
-#include <scorum/chain/services/budget.hpp>
-#include <scorum/chain/services/reward.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
-#include <scorum/chain/services/registration_pool.hpp>
-#include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/witness_schedule.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -43,19 +13,49 @@
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
 
-#include <cstdint>
-#include <deque>
-#include <fstream>
-#include <functional>
+#include <scorum/protocol/scorum_operations.hpp>
 
-#include <openssl/md5.h>
-#include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/core/ignore_unused.hpp>
+#include <scorum/chain/util/asset.hpp>
+#include <scorum/chain/util/reward.hpp>
+#include <scorum/chain/util/uint256.hpp>
 
-#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/shared_db_merkle.hpp>
+#include <scorum/chain/operation_notification.hpp>
 
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/database_exceptions.hpp>
+#include <scorum/chain/db_with.hpp>
+
+#include <scorum/chain/genesis/genesis_state.hpp>
+
+#include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
+
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
+
+#include <scorum/chain/evaluators/evaluator_registry.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/scorum_evaluators.hpp>
 
 namespace scorum {
 namespace chain {
@@ -399,15 +399,6 @@ chain_id_type database::get_chain_id() const
 const node_property_object& database::get_node_properties() const
 {
     return _node_property_object;
-}
-
-const hardfork_property_object& database::get_hardfork_property_object() const
-{
-    try
-    {
-        return get<hardfork_property_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
 }
 
 const time_point_sec database::calculate_discussion_payout_time(const comment_object& comment) const
@@ -760,7 +751,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
         pending_block.extensions.insert(block_header_extensions(SCORUM_BLOCKCHAIN_VERSION));
     }
 
-    const auto& hfp = get_hardfork_property_object();
+    const auto& hfp = obtain_service<dbs_hardfork_property>().get();
 
     if (hfp.current_hardfork_version
             < SCORUM_BLOCKCHAIN_HARDFORK_VERSION // Binary is newer hardfork than has been applied
@@ -1392,7 +1383,7 @@ void database::_apply_block(const signed_block& next_block)
         process_header_extensions(next_block);
 
         const auto& witness = obtain_service<dbs_witness>().get(next_block.witness);
-        const auto& hardfork_state = get_hardfork_property_object();
+        const auto& hardfork_state = obtain_service<dbs_hardfork_property>().get();
         FC_ASSERT(witness.running_version >= hardfork_state.current_hardfork_version,
                   "Block produced by witness that is not running current hardfork",
                   ("witness", witness)("next_block.witness", next_block.witness)("hardfork_state", hardfork_state));
@@ -1861,7 +1852,7 @@ void database::init_hardforks(time_point_sec genesis_time)
     //_hardfork_times[ SCORUM_HARDFORK_0_1 ] = fc::time_point_sec( SCORUM_HARDFORK_0_1_TIME );
     //_hardfork_versions[ SCORUM_HARDFORK_0_1 ] = SCORUM_HARDFORK_0_1_VERSION;
 
-    const auto& hardforks = get_hardfork_property_object();
+    const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
               ("hardforks.last_hardfork", hardforks.last_hardfork)("SCORUM_NUM_HARDFORKS", SCORUM_NUM_HARDFORKS));
     FC_ASSERT(_hardfork_versions[hardforks.last_hardfork] <= SCORUM_BLOCKCHAIN_VERSION,
@@ -1874,7 +1865,7 @@ void database::process_hardforks()
     try
     {
         // If there are upcoming hardforks and the next one is later, do nothing
-        const auto& hardforks = get_hardfork_property_object();
+        const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
 
         while (_hardfork_versions[hardforks.last_hardfork] < hardforks.next_hardfork
                && hardforks.next_hardfork_time <= head_block_time())
@@ -1894,12 +1885,12 @@ void database::process_hardforks()
 
 bool database::has_hardfork(uint32_t hardfork) const
 {
-    return get_hardfork_property_object().processed_hardforks.size() > hardfork;
+    return obtain_service<dbs_hardfork_property>().get().processed_hardforks.size() > hardfork;
 }
 
 void database::set_hardfork(uint32_t hardfork, bool apply_now)
 {
-    auto const& hardforks = get_hardfork_property_object();
+    auto const& hardforks = obtain_service<dbs_hardfork_property>().get();
 
     for (uint32_t i = hardforks.last_hardfork + 1; i <= hardfork && i <= SCORUM_NUM_HARDFORKS; i++)
     {
@@ -1928,7 +1919,7 @@ void database::apply_hardfork(uint32_t hardfork)
         break;
     }
 
-    modify(get_hardfork_property_object(), [&](hardfork_property_object& hfp) {
+    obtain_service<dbs_hardfork_property>().update([&](hardfork_property_object& hfp) {
         FC_ASSERT(hardfork == hfp.last_hardfork + 1, "Hardfork being applied out of order",
                   ("hardfork", hardfork)("hfp.last_hardfork", hfp.last_hardfork));
         FC_ASSERT(hfp.processed_hardforks.size() == hardfork, "Hardfork being applied out of order");

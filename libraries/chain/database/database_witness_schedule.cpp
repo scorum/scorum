@@ -3,6 +3,7 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/protocol/config.hpp>
 
@@ -254,7 +255,7 @@ void database::_update_witness_hardfork_version_votes()
     {
         if (hf_itr->second >= SCORUM_HARDFORK_REQUIRED_WITNESSES)
         {
-            const auto& hfp = _db.get_hardfork_property_object();
+            const auto& hfp = _db.obtain_service<dbs_hardfork_property>().get();
             if (hfp.next_hardfork != std::get<0>(hf_itr->first) || hfp.next_hardfork_time != std::get<1>(hf_itr->first))
             {
 
@@ -272,8 +273,8 @@ void database::_update_witness_hardfork_version_votes()
     // We no longer have a majority
     if (hf_itr == hardfork_version_votes.end())
     {
-        _db.modify(_db.get_hardfork_property_object(),
-                   [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
+        _db.obtain_service<dbs_hardfork_property>().update(
+            [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
     }
 }
 

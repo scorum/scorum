@@ -130,7 +130,6 @@ public:
     chain_id_type get_chain_id() const;
 
     const node_property_object& get_node_properties() const;
-    const hardfork_property_object& get_hardfork_property_object() const;
 
     const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const;
 

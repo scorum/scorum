@@ -9,6 +9,7 @@
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
@@ -30,6 +31,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (comment_vote)
         (decline_voting_rights_request)
         (dynamic_global_property)
+        (hardfork_property)
         (escrow)
         (proposal)
         (registration_committee)

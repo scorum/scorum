@@ -38,6 +38,7 @@ add_library( scorum_chain
              services/dbservice_dbs_factory.cpp
              services/decline_voting_rights_request.cpp
              services/dynamic_global_property.cpp
+             services/hardfork_property.cpp
              services/escrow.cpp
              services/proposal.cpp
              services/registration_committee.cpp

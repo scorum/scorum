@@ -11,6 +11,7 @@ DATA_SERVICE_FACTORY_DECLARE(
         (comment_vote)
         (decline_voting_rights_request)
         (dynamic_global_property)
+        (hardfork_property)
         (escrow)
         (proposal)
         (registration_committee)
