@@ -23,6 +23,7 @@ set( SOURCES
     budget_check/budget_check_common.cpp
     proposal/proposal_tests.cpp
     statistic/statistic_tests.cpp
+    statistic/account_statistic_tests.cpp
     genesis_db_tests.cpp
 )
 
@@ -33,6 +34,8 @@ target_link_libraries(chain_tests
                       common_test
                       scorum_app
                       scorum_egenesis_none
+                      scorum_blockchain_statistics
+                      scorum_account_statistics
                       )
 target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
