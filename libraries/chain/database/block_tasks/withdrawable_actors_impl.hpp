@@ -23,11 +23,19 @@ public:
 
     asset get_available_vesting_shares(const withdrawable_id_type& from);
 
-    void give_scr(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
+    void update_statistic(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
 
-    void give_sp(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
+    void
+    update_global_scr_properties(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
 
-    void take_sp(const withdrawable_id_type& from, const asset& amount);
+    void
+    update_global_sp_properties(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
+
+    void increase_scr(const withdrawable_id_type& id, const asset& amount);
+
+    void increase_sp(const withdrawable_id_type& id, const asset& amount);
+
+    void decrease_sp(const withdrawable_id_type& id, const asset& amount);
 
 private:
     block_task_context& _ctx;

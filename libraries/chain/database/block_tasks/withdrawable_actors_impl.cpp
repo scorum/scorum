@@ -63,36 +63,20 @@ struct void_return_visitor
     }
 };
 
-class give_scr_visitor : public void_return_visitor
+class update_global_scr_properties_visitor : public void_return_visitor
 {
-    class give_scr_from_account_visitor : public void_return_visitor
+    class update_global_scr_properties_from_account_visitor : public void_return_visitor
     {
     public:
-        give_scr_from_account_visitor(account_service_i& account_service,
-                                      dev_pool_service_i& dev_pool_service,
-                                      dynamic_global_property_service_i& dprops_service,
-                                      database_virtual_operations_emmiter_i& emmiter,
-                                      const account_id_type& from,
-                                      const asset& amount)
-            : _account_service(account_service)
-            , _dev_pool_service(dev_pool_service)
-            , _dprops_service(dprops_service)
-            , _emmiter(emmiter)
-            , _from(from)
+        update_global_scr_properties_from_account_visitor(dynamic_global_property_service_i& dprops_service,
+                                                          const asset& amount)
+            : _dprops_service(dprops_service)
             , _amount(amount)
         {
         }
 
         void operator()(const account_id_type& to) const
         {
-            const account_object& from_account = _account_service.get(_from);
-            const account_object& to_account = _account_service.get(to);
-
-            _emmiter.push_virtual_operation(
-                fill_vesting_withdraw_operation(from_account.name, to_account.name, _amount));
-
-            _account_service.increase_balance(to_account, _amount);
-
             _dprops_service.update([&](dynamic_global_property_object& o) {
                 o.total_vesting_shares -= asset(_amount.amount, VESTS_SYMBOL);
             });
@@ -100,14 +84,6 @@ class give_scr_visitor : public void_return_visitor
 
         void operator()(const dev_committee_id_type& to) const
         {
-            const dev_committee_object& to_pool = _dev_pool_service.get();
-
-            FC_ASSERT(to == to_pool.id);
-
-            // TODO: statistic from account_id_type to dev_committee_id_type
-
-            _dev_pool_service.update([&](dev_committee_object& pool) { pool.scr_balance += _amount; });
-
             _dprops_service.update([&](dynamic_global_property_object& o) {
                 o.total_vesting_shares -= asset(_amount.amount, VESTS_SYMBOL);
                 o.circulating_capital -= _amount;
@@ -115,40 +91,22 @@ class give_scr_visitor : public void_return_visitor
         }
 
     private:
-        account_service_i& _account_service;
-        dev_pool_service_i& _dev_pool_service;
         dynamic_global_property_service_i& _dprops_service;
-        database_virtual_operations_emmiter_i& _emmiter;
-        const account_id_type& _from;
         const asset& _amount;
     };
 
-    class give_scr_from_dev_committee_visitor : public void_return_visitor
+    class update_global_scr_properties_from_dev_committee_visitor : public void_return_visitor
     {
     public:
-        give_scr_from_dev_committee_visitor(account_service_i& account_service,
-                                            dev_pool_service_i& dev_pool_service,
-                                            dynamic_global_property_service_i& dprops_service,
-                                            database_virtual_operations_emmiter_i& emmiter,
-                                            const dev_committee_id_type& from,
-                                            const asset& amount)
-            : _account_service(account_service)
-            , _dev_pool_service(dev_pool_service)
-            , _dprops_service(dprops_service)
-            , _emmiter(emmiter)
-            , _from(from)
+        update_global_scr_properties_from_dev_committee_visitor(dynamic_global_property_service_i& dprops_service,
+                                                                const asset& amount)
+            : _dprops_service(dprops_service)
             , _amount(amount)
         {
         }
 
         void operator()(const account_id_type& to) const
         {
-            const account_object& to_account = _account_service.get(to);
-
-            // TODO: statistic from dev_committee_id_type to account_id_type
-
-            _account_service.increase_balance(to_account, _amount);
-
             _dprops_service.update([&](dynamic_global_property_object& o) {
                 o.circulating_capital += asset(_amount.amount, SCORUM_SYMBOL);
             });
@@ -156,35 +114,18 @@ class give_scr_visitor : public void_return_visitor
 
         void operator()(const dev_committee_id_type& to) const
         {
-            const dev_committee_object& to_pool = _dev_pool_service.get();
-
-            FC_ASSERT(to == to_pool.id);
-
-            // TODO: statistic from dev_committee_id_type to dev_committee_id_type
-
-            _dev_pool_service.update([&](dev_committee_object& pool) { pool.scr_balance += _amount; });
         }
 
     private:
-        account_service_i& _account_service;
-        dev_pool_service_i& _dev_pool_service;
         dynamic_global_property_service_i& _dprops_service;
-        database_virtual_operations_emmiter_i& _emmiter;
-        const dev_committee_id_type& _from;
         const asset& _amount;
     };
 
 public:
-    give_scr_visitor(account_service_i& account_service,
-                     dev_pool_service_i& dev_pool_service,
-                     dynamic_global_property_service_i& dprops_service,
-                     database_virtual_operations_emmiter_i& emmiter,
-                     const withdrawable_id_type& to,
-                     const asset& amount)
-        : _account_service(account_service)
-        , _dev_pool_service(dev_pool_service)
-        , _dprops_service(dprops_service)
-        , _emmiter(emmiter)
+    update_global_scr_properties_visitor(dynamic_global_property_service_i& dprops_service,
+                                         const withdrawable_id_type& to,
+                                         const asset& amount)
+        : _dprops_service(dprops_service)
         , _to(to)
         , _amount(amount)
     {
@@ -192,68 +133,38 @@ public:
 
     void operator()(const account_id_type& from) const
     {
-        _to.visit(give_scr_from_account_visitor(_account_service, _dev_pool_service, _dprops_service, _emmiter, from,
-                                                _amount));
+        _to.visit(update_global_scr_properties_from_account_visitor(_dprops_service, _amount));
     }
 
     void operator()(const dev_committee_id_type& from) const
     {
-        _to.visit(give_scr_from_dev_committee_visitor(_account_service, _dev_pool_service, _dprops_service, _emmiter,
-                                                      from, _amount));
+        _to.visit(update_global_scr_properties_from_dev_committee_visitor(_dprops_service, _amount));
     }
 
 private:
-    account_service_i& _account_service;
-    dev_pool_service_i& _dev_pool_service;
     dynamic_global_property_service_i& _dprops_service;
-    database_virtual_operations_emmiter_i& _emmiter;
     const withdrawable_id_type& _to;
     const asset& _amount;
 };
 
-class give_sp_visitor : public void_return_visitor
+class update_global_sp_properties_visitor : public void_return_visitor
 {
-    class give_sp_from_account_visitor : public void_return_visitor
+    class update_global_sp_properties_from_account_visitor : public void_return_visitor
     {
     public:
-        give_sp_from_account_visitor(account_service_i& account_service,
-                                     dev_pool_service_i& dev_pool_service,
-                                     dynamic_global_property_service_i& dprops_service,
-                                     database_virtual_operations_emmiter_i& emmiter,
-                                     const account_id_type& from,
-                                     const asset& amount)
-            : _account_service(account_service)
-            , _dev_pool_service(dev_pool_service)
-            , _dprops_service(dprops_service)
-            , _emmiter(emmiter)
-            , _from(from)
+        update_global_sp_properties_from_account_visitor(dynamic_global_property_service_i& dprops_service,
+                                                         const asset& amount)
+            : _dprops_service(dprops_service)
             , _amount(amount)
         {
         }
 
         void operator()(const account_id_type& to) const
         {
-            const account_object& from_account = _account_service.get(_from);
-            const account_object& to_account = _account_service.get(to);
-
-            _emmiter.push_virtual_operation(
-                fill_vesting_withdraw_operation(from_account.name, to_account.name, _amount));
-
-            _account_service.increase_vesting_shares(to_account, _amount);
-
-            _account_service.adjust_proxied_witness_votes(to_account, _amount.amount);
         }
 
         void operator()(const dev_committee_id_type& to) const
         {
-            const dev_committee_object& to_pool = _dev_pool_service.get();
-
-            FC_ASSERT(to == to_pool.id);
-
-            // TODO: statistic from account_id_type to dev_committee_id_type
-
-            _dev_pool_service.update([&](dev_committee_object& pool) { pool.sp_balance += _amount; });
-
             _dprops_service.update([&](dynamic_global_property_object& o) {
                 o.total_vesting_shares -= _amount;
                 o.circulating_capital -= asset(_amount.amount, SCORUM_SYMBOL);
@@ -261,42 +172,22 @@ class give_sp_visitor : public void_return_visitor
         }
 
     private:
-        account_service_i& _account_service;
-        dev_pool_service_i& _dev_pool_service;
         dynamic_global_property_service_i& _dprops_service;
-        database_virtual_operations_emmiter_i& _emmiter;
-        const account_id_type& _from;
         const asset& _amount;
     };
 
-    class give_sp_from_dev_committee_visitor : public void_return_visitor
+    class update_global_sp_properties_from_dev_committee_visitor : public void_return_visitor
     {
     public:
-        give_sp_from_dev_committee_visitor(account_service_i& account_service,
-                                           dev_pool_service_i& dev_pool_service,
-                                           dynamic_global_property_service_i& dprops_service,
-                                           database_virtual_operations_emmiter_i& emmiter,
-                                           const dev_committee_id_type& from,
-                                           const asset& amount)
-            : _account_service(account_service)
-            , _dev_pool_service(dev_pool_service)
-            , _dprops_service(dprops_service)
-            , _emmiter(emmiter)
-            , _from(from)
+        update_global_sp_properties_from_dev_committee_visitor(dynamic_global_property_service_i& dprops_service,
+                                                               const asset& amount)
+            : _dprops_service(dprops_service)
             , _amount(amount)
         {
         }
 
         void operator()(const account_id_type& to) const
         {
-            const account_object& to_account = _account_service.get(to);
-
-            // TODO: statistic from dev_committee_id_type to account_id_type
-
-            _account_service.increase_vesting_shares(to_account, _amount);
-
-            _account_service.adjust_proxied_witness_votes(to_account, _amount.amount);
-
             _dprops_service.update([&](dynamic_global_property_object& o) {
                 o.total_vesting_shares += _amount;
                 o.circulating_capital += asset(_amount.amount, SCORUM_SYMBOL);
@@ -305,35 +196,18 @@ class give_sp_visitor : public void_return_visitor
 
         void operator()(const dev_committee_id_type& to) const
         {
-            const dev_committee_object& to_pool = _dev_pool_service.get();
-
-            FC_ASSERT(to == to_pool.id);
-
-            // TODO: statistic from dev_committee_id_type to dev_committee_id_type
-
-            _dev_pool_service.update([&](dev_committee_object& pool) { pool.sp_balance += _amount; });
         }
 
     private:
-        account_service_i& _account_service;
-        dev_pool_service_i& _dev_pool_service;
         dynamic_global_property_service_i& _dprops_service;
-        database_virtual_operations_emmiter_i& _emmiter;
-        const dev_committee_id_type& _from;
         const asset& _amount;
     };
 
 public:
-    give_sp_visitor(account_service_i& account_service,
-                    dev_pool_service_i& dev_pool_service,
-                    dynamic_global_property_service_i& dprops_service,
-                    database_virtual_operations_emmiter_i& emmiter,
-                    const withdrawable_id_type& to,
-                    const asset& amount)
-        : _account_service(account_service)
-        , _dev_pool_service(dev_pool_service)
-        , _dprops_service(dprops_service)
-        , _emmiter(emmiter)
+    update_global_sp_properties_visitor(dynamic_global_property_service_i& dprops_service,
+                                        const withdrawable_id_type& to,
+                                        const asset& amount)
+        : _dprops_service(dprops_service)
         , _to(to)
         , _amount(amount)
     {
@@ -341,29 +215,24 @@ public:
 
     void operator()(const account_id_type& from) const
     {
-        _to.visit(give_sp_from_account_visitor(_account_service, _dev_pool_service, _dprops_service, _emmiter, from,
-                                               _amount));
+        _to.visit(update_global_sp_properties_from_account_visitor(_dprops_service, _amount));
     }
 
     void operator()(const dev_committee_id_type& from) const
     {
-        _to.visit(give_sp_from_dev_committee_visitor(_account_service, _dev_pool_service, _dprops_service, _emmiter,
-                                                     from, _amount));
+        _to.visit(update_global_sp_properties_from_dev_committee_visitor(_dprops_service, _amount));
     }
 
 private:
-    account_service_i& _account_service;
-    dev_pool_service_i& _dev_pool_service;
     dynamic_global_property_service_i& _dprops_service;
-    database_virtual_operations_emmiter_i& _emmiter;
     const withdrawable_id_type& _to;
     const asset& _amount;
 };
 
-class take_sp_visitor : public void_return_visitor
+class decrease_sp_visitor : public void_return_visitor
 {
 public:
-    take_sp_visitor(account_service_i& account_service, dev_pool_service_i& dev_pool_service, const asset& amount)
+    decrease_sp_visitor(account_service_i& account_service, dev_pool_service_i& dev_pool_service, const asset& amount)
         : _account_service(account_service)
         , _dev_pool_service(dev_pool_service)
         , _amount(amount)
@@ -394,6 +263,166 @@ private:
     const asset& _amount;
 };
 
+class increase_scr_visitor : public void_return_visitor
+{
+public:
+    increase_scr_visitor(account_service_i& account_service, dev_pool_service_i& dev_pool_service, const asset& amount)
+        : _account_service(account_service)
+        , _dev_pool_service(dev_pool_service)
+        , _amount(amount)
+    {
+    }
+
+    void operator()(const account_id_type& to) const
+    {
+        const account_object& to_account = _account_service.get(to);
+
+        _account_service.increase_balance(to_account, _amount);
+    }
+
+    void operator()(const dev_committee_id_type& to) const
+    {
+        const dev_committee_object& to_pool = _dev_pool_service.get();
+
+        FC_ASSERT(to == to_pool.id);
+
+        _dev_pool_service.update([&](dev_committee_object& pool) { pool.scr_balance += _amount; });
+    }
+
+private:
+    account_service_i& _account_service;
+    dev_pool_service_i& _dev_pool_service;
+    const asset& _amount;
+};
+
+class increase_sp_visitor : public void_return_visitor
+{
+public:
+    increase_sp_visitor(account_service_i& account_service, dev_pool_service_i& dev_pool_service, const asset& amount)
+        : _account_service(account_service)
+        , _dev_pool_service(dev_pool_service)
+        , _amount(amount)
+    {
+    }
+
+    void operator()(const account_id_type& id) const
+    {
+        const account_object& to_account = _account_service.get(id);
+
+        _account_service.increase_vesting_shares(to_account, _amount);
+
+        _account_service.adjust_proxied_witness_votes(to_account, _amount.amount);
+    }
+
+    void operator()(const dev_committee_id_type& id) const
+    {
+        const dev_committee_object& to_pool = _dev_pool_service.get();
+
+        FC_ASSERT(id == to_pool.id);
+
+        _dev_pool_service.update([&](dev_committee_object& pool) { pool.sp_balance += _amount; });
+    }
+
+private:
+    account_service_i& _account_service;
+    dev_pool_service_i& _dev_pool_service;
+    const asset& _amount;
+};
+
+class update_statistic_visitor : public void_return_visitor
+{
+    class update_statistic_from_account_visitor : public void_return_visitor
+    {
+    public:
+        update_statistic_from_account_visitor(account_service_i& account_service,
+                                              database_virtual_operations_emmiter_i& emmiter,
+                                              const account_id_type& from,
+                                              const asset& amount)
+            : _account_service(account_service)
+            , _emmiter(emmiter)
+            , _from(from)
+            , _amount(amount)
+        {
+        }
+
+        void operator()(const account_id_type& to) const
+        {
+            const account_object& from_account = _account_service.get(_from);
+            const account_object& to_account = _account_service.get(to);
+
+            _emmiter.push_virtual_operation(
+                fill_vesting_withdraw_operation(from_account.name, to_account.name, _amount));
+        }
+
+        void operator()(const dev_committee_id_type& to) const
+        {
+            // TODO: statistic from account_id_type to dev_committee_id_type
+        }
+
+    private:
+        account_service_i& _account_service;
+        database_virtual_operations_emmiter_i& _emmiter;
+        const account_id_type& _from;
+        const asset& _amount;
+    };
+
+    class update_statistic_from_dev_committee_visitor : public void_return_visitor
+    {
+    public:
+        update_statistic_from_dev_committee_visitor(database_virtual_operations_emmiter_i& emmiter,
+                                                    const dev_committee_id_type& from,
+                                                    const asset& amount)
+            : _emmiter(emmiter)
+            , _from(from)
+            , _amount(amount)
+        {
+        }
+
+        void operator()(const account_id_type& to) const
+        {
+            // TODO: statistic from dev_committee_id_type to account_id_type
+        }
+
+        void operator()(const dev_committee_id_type& to) const
+        {
+            // TODO: statistic from dev_committee_id_type to dev_committee_id_type
+        }
+
+    private:
+        database_virtual_operations_emmiter_i& _emmiter;
+        const dev_committee_id_type& _from;
+        const asset& _amount;
+    };
+
+public:
+    update_statistic_visitor(account_service_i& account_service,
+                             database_virtual_operations_emmiter_i& emmiter,
+                             const withdrawable_id_type& to,
+                             const asset& amount)
+        : _account_service(account_service)
+        , _emmiter(emmiter)
+        , _to(to)
+        , _amount(amount)
+    {
+    }
+
+    void operator()(const account_id_type& from) const
+    {
+        _to.visit(update_statistic_from_account_visitor(_account_service, _emmiter, from, _amount));
+    }
+
+    void operator()(const dev_committee_id_type& from) const
+    {
+        _to.visit(update_statistic_from_dev_committee_visitor(_emmiter, from, _amount));
+    }
+
+private:
+    account_service_i& _account_service;
+    database_virtual_operations_emmiter_i& _emmiter;
+    const withdrawable_id_type& _to;
+    const asset& _amount;
+};
+
 // withdrawable_actors_impl
 //
 
@@ -410,34 +439,62 @@ asset withdrawable_actors_impl::get_available_vesting_shares(const withdrawable_
     return from.visit(get_available_vesting_shares_visitor(_account_service, _dev_pool_service));
 }
 
-void withdrawable_actors_impl::give_scr(const withdrawable_id_type& from,
-                                        const withdrawable_id_type& to,
-                                        const asset& amount)
+void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from,
+                                                const withdrawable_id_type& to,
+                                                const asset& amount)
+{
+    if (amount.amount > 0)
+    {
+        from.visit(update_statistic_visitor(_account_service, _ctx, to, amount));
+    }
+}
+
+void withdrawable_actors_impl::update_global_scr_properties(const withdrawable_id_type& from,
+                                                            const withdrawable_id_type& to,
+                                                            const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL);
     if (amount.amount > 0)
     {
-        from.visit(give_scr_visitor(_account_service, _dev_pool_service, _dprops_service, _ctx, to, amount));
+        from.visit(update_global_scr_properties_visitor(_dprops_service, to, amount));
     }
 }
 
-void withdrawable_actors_impl::give_sp(const withdrawable_id_type& from,
-                                       const withdrawable_id_type& to,
-                                       const asset& amount)
+void withdrawable_actors_impl::update_global_sp_properties(const withdrawable_id_type& from,
+                                                           const withdrawable_id_type& to,
+                                                           const asset& amount)
 {
     FC_ASSERT(amount.symbol() == VESTS_SYMBOL);
     if (amount.amount > 0)
     {
-        from.visit(give_sp_visitor(_account_service, _dev_pool_service, _dprops_service, _ctx, to, amount));
+        from.visit(update_global_sp_properties_visitor(_dprops_service, to, amount));
     }
 }
 
-void withdrawable_actors_impl::take_sp(const withdrawable_id_type& from, const asset& amount)
+void withdrawable_actors_impl::increase_scr(const withdrawable_id_type& id, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL);
+    if (amount.amount > 0)
+    {
+        id.visit(increase_scr_visitor(_account_service, _dev_pool_service, amount));
+    }
+}
+
+void withdrawable_actors_impl::increase_sp(const withdrawable_id_type& id, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == VESTS_SYMBOL);
+    if (amount.amount > 0)
+    {
+        id.visit(increase_sp_visitor(_account_service, _dev_pool_service, amount));
+    }
+}
+
+void withdrawable_actors_impl::decrease_sp(const withdrawable_id_type& from, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == VESTS_SYMBOL);
     FC_ASSERT(amount.amount > 0);
 
-    from.visit(take_sp_visitor(_account_service, _dev_pool_service, amount));
+    from.visit(decrease_sp_visitor(_account_service, _dev_pool_service, amount));
 }
 }
 }
