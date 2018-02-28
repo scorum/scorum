@@ -25,12 +25,12 @@ void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
         size_t total_unvested = ctx.genesis_state().accounts.size();
         for (auto& account : ctx.genesis_state().accounts)
         {
-            const auto& account_obj = account_service.get_account(account.name);
-            give_bonus_from_registration_pool_task_context bonus_ctx(ctx.services(), account_obj);
-            give_bonus_from_registration_pool_task give_bonus;
-            give_bonus.apply(bonus_ctx);
-            if (bonus_ctx.last_result())
+            if (registration_pool_service.get().balance.amount > 0)
             {
+                const auto& account_obj = account_service.get_account(account.name);
+                give_bonus_from_registration_pool_task_context bonus_ctx(ctx.services(), account_obj);
+                give_bonus_from_registration_pool_task give_bonus;
+                give_bonus.apply(bonus_ctx);
                 --total_unvested;
             }
             else

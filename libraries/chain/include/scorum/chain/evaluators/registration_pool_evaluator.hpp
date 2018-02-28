@@ -52,20 +52,9 @@ public:
 
     const account_object& beneficiary() const;
 
-    void set_result(bool result)
-    {
-        _last_result = result;
-    }
-
-    bool last_result() const
-    {
-        return _last_result;
-    }
-
 private:
     data_service_factory_i& _services;
     const account_object& _beneficiary;
-    bool _last_result = false;
 };
 
 class give_bonus_from_registration_pool_task : public task<give_bonus_from_registration_pool_task_context>

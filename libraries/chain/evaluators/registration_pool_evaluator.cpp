@@ -243,21 +243,9 @@ void give_bonus_from_registration_pool_task::on_apply(give_bonus_from_registrati
 {
     registration_pool_evaluator_impl impl(ctx.services());
 
-    FC_ASSERT(!ctx.last_result());
-
-    asset bonus;
-    try
-    {
-        bonus = impl.allocate_cash();
-        ctx.set_result(true);
-    }
-    FC_CAPTURE_AND_LOG(())
-
-    if (ctx.last_result())
-    {
-        account_service_i& account_service = ctx.services().account_service();
-        account_service.create_vesting(ctx.beneficiary(), bonus);
-    }
+    asset bonus = impl.allocate_cash();
+    account_service_i& account_service = ctx.services().account_service();
+    account_service.create_vesting(ctx.beneficiary(), bonus);
 }
 }
 }
