@@ -5,7 +5,8 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/util/*.hpp"
                   "include/scorum/chain/genesis/*.hpp"
                   "include/scorum/chain/database/*.hpp"
-                  "include/scorum/chain/database/block_tasks/*.hpp")
+                  "include/scorum/chain/database/block_tasks/*.hpp"
+                  "database/block_tasks/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -45,16 +46,22 @@ add_library( scorum_chain
              services/escrow.cpp
              services/witness_vote.cpp
              services/decline_voting_rights_request.cpp
-             services/withdraw_vesting_route.cpp
              services/vesting_delegation.cpp
              services/reward_fund.cpp
+             services/dev_pool.cpp
+             services/withdraw_vesting_route.cpp
+             services/withdraw_vesting_route_statistic.cpp
+             services/withdraw_vesting.cpp
 
              data_service_factory.cpp
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
+             evaluators/set_withdraw_vesting_route_evaluators.cpp
+             evaluators/withdraw_vesting_evaluator.cpp
 
              schema/shared_authority.cpp
+
              block_log.cpp
 
              genesis/genesis.cpp
@@ -68,10 +75,13 @@ add_library( scorum_chain
              genesis/initializators/witness_schedule_initializator.cpp
              genesis/initializators/registration_bonus_initializator.cpp
              genesis/initializators/steemit_bounty_account_initializator.cpp
+             genesis/initializators/dev_pool_initializator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_funds.cpp
              database/block_tasks/process_comments_cashout.cpp
+             database/block_tasks/process_vesting_withdrawals.cpp
+             database/block_tasks/withdrawable_actors_impl.cpp
 
              util/reward.cpp
 

@@ -26,7 +26,7 @@ public:
         : budget_service(db.obtain_service<dbs_budget>())
         , account_service(db.obtain_service<dbs_account>())
         , public_key(database_integration_fixture::generate_private_key("user private key").get_public_key())
-        , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT,
+        , fake(account_service.create_account(SCORUM_ROOT_POST_PARENT_ACCOUNT,
                                               TEST_INIT_DELEGATE_NAME,
                                               public_key,
                                               "",
@@ -219,7 +219,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
                       fc::assert_exception);
 
     {
-        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT_ACCOUNT, SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 2);
     }
 
@@ -234,7 +234,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
     }
 
     {
-        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT, 1);
+        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT_ACCOUNT, 1);
         BOOST_REQUIRE(owners.size() == 1);
     }
 }

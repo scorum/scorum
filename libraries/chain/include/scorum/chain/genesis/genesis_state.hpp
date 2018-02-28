@@ -56,6 +56,8 @@ struct genesis_state_type
     asset rewards_supply = asset(0, SCORUM_SYMBOL);
     asset founders_supply = asset(0, VESTS_SYMBOL);
     asset steemit_bounty_accounts_supply = asset(0, VESTS_SYMBOL);
+    asset development_sp_supply = asset(0, VESTS_SYMBOL);
+    asset development_scr_supply = asset(0, SCORUM_SYMBOL);
     time_point_sec initial_timestamp = time_point_sec::min();
     std::vector<account_type> accounts;
     std::vector<founder_type> founders;
@@ -101,6 +103,8 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (rewards_supply)
            (founders_supply)
            (steemit_bounty_accounts_supply)
+           (development_sp_supply)
+           (development_scr_supply)
            (initial_timestamp)
            (accounts)
            (founders)

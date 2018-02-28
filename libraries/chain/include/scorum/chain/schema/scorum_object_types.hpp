@@ -6,6 +6,8 @@
 
 #include <fc/shared_string.hpp>
 #include <fc/shared_containers.hpp>
+#include <fc/static_variant.hpp>
+
 #include <chainbase/chainbase.hpp>
 
 #include <scorum/protocol/types.hpp>
@@ -59,9 +61,12 @@ enum object_type
     vesting_delegation_expiration_object_type,
     vesting_delegation_object_type,
     withdraw_vesting_route_object_type,
+    withdraw_vesting_route_statistic_object_type,
+    withdraw_vesting_object_type,
     witness_object_type,
     witness_schedule_object_type,
     witness_vote_object_type,
+    dev_committee_object_type,
 };
 
 class account_authority_object;
@@ -91,40 +96,48 @@ class transaction_object;
 class vesting_delegation_expiration_object;
 class vesting_delegation_object;
 class withdraw_vesting_route_object;
+class withdraw_vesting_route_statistic_object;
+class withdraw_vesting_object;
 class witness_object;
 class witness_schedule_object;
 class witness_vote_object;
+class dev_committee_object;
 
-typedef oid<account_authority_object> account_authority_id_type;
-typedef oid<account_history_object> account_history_id_type;
-typedef oid<account_object> account_id_type;
-typedef oid<account_recovery_request_object> account_recovery_request_id_type;
-typedef oid<atomicswap_contract_object> atomicswap_contract_id_type;
-typedef oid<block_stats_object> block_stats_id_type;
-typedef oid<block_summary_object> block_summary_id_type;
-typedef oid<budget_object> budget_id_type;
-typedef oid<chain_property_object> chain_property_id_type;
-typedef oid<change_recovery_account_request_object> change_recovery_account_request_id_type;
-typedef oid<comment_object> comment_id_type;
-typedef oid<comment_vote_object> comment_vote_id_type;
-typedef oid<decline_voting_rights_request_object> decline_voting_rights_request_id_type;
-typedef oid<dynamic_global_property_object> dynamic_global_property_id_type;
-typedef oid<escrow_object> escrow_id_type;
-typedef oid<hardfork_property_object> hardfork_property_id_type;
-typedef oid<operation_object> operation_id_type;
-typedef oid<owner_authority_history_object> owner_authority_history_id_type;
-typedef oid<proposal_object> proposal_id_type;
-typedef oid<registration_committee_member_object> registration_committee_member_id_type;
-typedef oid<registration_pool_object> registration_pool_id_type;
-typedef oid<reward_fund_object> reward_fund_id_type;
-typedef oid<reward_pool_object> reward_pool_id_type;
-typedef oid<transaction_object> transaction_object_id_type;
-typedef oid<vesting_delegation_expiration_object> vesting_delegation_expiration_id_type;
-typedef oid<vesting_delegation_object> vesting_delegation_id_type;
-typedef oid<withdraw_vesting_route_object> withdraw_vesting_route_id_type;
-typedef oid<witness_object> witness_id_type;
-typedef oid<witness_schedule_object> witness_schedule_id_type;
-typedef oid<witness_vote_object> witness_vote_id_type;
+using account_authority_id_type = oid<account_authority_object>;
+using account_history_id_type = oid<account_history_object>;
+using account_id_type = oid<account_object>;
+using account_recovery_request_id_type = oid<account_recovery_request_object>;
+using atomicswap_contract_id_type = oid<atomicswap_contract_object>;
+using block_stats_id_type = oid<block_stats_object>;
+using block_summary_id_type = oid<block_summary_object>;
+using budget_id_type = oid<budget_object>;
+using chain_property_id_type = oid<chain_property_object>;
+using change_recovery_account_request_id_type = oid<change_recovery_account_request_object>;
+using comment_id_type = oid<comment_object>;
+using comment_vote_id_type = oid<comment_vote_object>;
+using decline_voting_rights_request_id_type = oid<decline_voting_rights_request_object>;
+using dynamic_global_property_id_type = oid<dynamic_global_property_object>;
+using escrow_id_type = oid<escrow_object>;
+using hardfork_property_id_type = oid<hardfork_property_object>;
+using operation_id_type = oid<operation_object>;
+using owner_authority_history_id_type = oid<owner_authority_history_object>;
+using proposal_id_type = oid<proposal_object>;
+using registration_committee_member_id_type = oid<registration_committee_member_object>;
+using registration_pool_id_type = oid<registration_pool_object>;
+using reward_fund_id_type = oid<reward_fund_object>;
+using reward_pool_id_type = oid<reward_pool_object>;
+using transaction_object_id_type = oid<transaction_object>;
+using vesting_delegation_expiration_id_type = oid<vesting_delegation_expiration_object>;
+using vesting_delegation_id_type = oid<vesting_delegation_object>;
+using withdraw_vesting_route_id_type = oid<withdraw_vesting_route_object>;
+using withdraw_vesting_route_statistic_id_type = oid<withdraw_vesting_route_statistic_object>;
+using withdraw_vesting_id_type = oid<withdraw_vesting_object>;
+using witness_id_type = oid<witness_object>;
+using witness_schedule_id_type = oid<witness_schedule_object>;
+using witness_vote_id_type = oid<witness_vote_object>;
+using dev_committee_id_type = oid<dev_committee_object>;
+
+using withdrawable_id_type = fc::static_variant<account_id_type, dev_committee_id_type>;
 
 enum bandwidth_type
 {
@@ -165,9 +178,12 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (vesting_delegation_expiration_object_type)
                 (vesting_delegation_object_type)
                 (withdraw_vesting_route_object_type)
+                (withdraw_vesting_route_statistic_object_type)
+                (withdraw_vesting_object_type)
                 (witness_object_type)
                 (witness_schedule_object_type)
                 (witness_vote_object_type)
+                (dev_committee_object_type)
                )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )

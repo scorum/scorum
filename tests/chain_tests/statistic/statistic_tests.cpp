@@ -69,17 +69,6 @@ struct stat_database_fixture : public database_trx_integration_fixture
 
         push_operation(op);
     }
-
-    template <typename T> void push_operation(const T& op)
-    {
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.validate();
-        db.push_transaction(tx, default_skip);
-
-        generate_block();
-    }
 };
 } // namespace blockchain_stat
 
@@ -313,7 +302,7 @@ SCORUM_TEST_CASE(vesting_transfered_stat_test)
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    set_withdraw_vesting_route_operation op;
+    set_withdraw_vesting_route_to_account_operation op;
     op.from_account = "bob";
     op.to_account = alice;
     op.auto_vest = true;
