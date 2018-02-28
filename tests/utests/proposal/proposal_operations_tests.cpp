@@ -6,6 +6,8 @@
 
 #include "utils.hpp"
 
+namespace proposal_operations_tests {
+
 using namespace scorum::protocol;
 
 BOOST_AUTO_TEST_SUITE(proposal_create_operation_tests)
@@ -50,19 +52,6 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_hex)
     BOOST_CHECK_EQUAL("1c00000000000005616c696365", utils::to_hex(op));
 }
 
-std::string to_hex(const std::vector<char>& data)
-{
-    std::string r;
-    const char* to_hex = "0123456789abcdef";
-    for (uint8_t c : data)
-    {
-        r += to_hex[(c >> 4)];
-        r += to_hex[(c & 0x0f)];
-    }
-
-    return r;
-}
-
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 {
     const std::string hex_str = "1c00000000000005616c696365";
@@ -87,3 +76,5 @@ BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+} // namespace proposal_operations_tests

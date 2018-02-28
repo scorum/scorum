@@ -178,9 +178,7 @@ SCORUM_TEST_CASE(vote_for_proposal_if_it_is_not_expired_and_execute)
         .With(operation.voting_account, _);
 
     mocks.ExpectCall(proposal_service, proposal_service_i::is_expired).With(_).Return(false);
-
     mocks.ExpectCall(proposal_service, proposal_service_i::vote_for).With(operation.voting_account, _);
-
     mocks.ExpectCall(proposal_executor, proposal_executor_service_i::operator()).With(_);
 
     proposal_vote_evaluator evaluator(*services);

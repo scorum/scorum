@@ -14,17 +14,6 @@
 namespace scorum {
 namespace protocol {
 
-inline void validate_account_name(const std::string& name)
-{
-    FC_ASSERT(is_valid_account_name(name), "Account name ${n} is invalid", ("n", name));
-}
-
-inline void validate_permlink(const std::string& permlink)
-{
-    FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
-    FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
-}
-
 struct account_create_operation : public base_operation
 {
     asset fee = asset(0, SCORUM_SYMBOL);

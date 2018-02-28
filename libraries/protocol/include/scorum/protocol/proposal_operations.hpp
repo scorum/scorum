@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scorum/protocol/base.hpp>
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/operation_util.hpp>
 #include <fc/static_variant.hpp>
@@ -14,6 +15,13 @@ enum quorum_type
     exclude_member_quorum,
     base_quorum
 };
+
+inline void validate_quorum(quorum_type t, protocol::percent_type quorum)
+{
+    FC_ASSERT(t != none_quorum, "Quorum type is not set.");
+    FC_ASSERT(quorum >= SCORUM_MIN_QUORUM_VALUE_PERCENT, "Quorum is to small.");
+    FC_ASSERT(quorum <= SCORUM_MAX_QUORUM_VALUE_PERCENT, "Quorum is to large.");
+}
 
 struct committee_i
 {
@@ -56,12 +64,32 @@ struct registration_committee_add_member_operation
     : public proposal_base_operation<registration_committee_add_member_operation, registration_committee_i>
 {
     account_name_type account_name;
+
+    void validate() const
+    {
+        validate_account_name(account_name);
+    }
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const
+    {
+        return committee_service.get_add_member_quorum();
+    }
 };
 
 struct registration_committee_exclude_member_operation
     : public proposal_base_operation<registration_committee_exclude_member_operation, registration_committee_i>
 {
     account_name_type account_name;
+
+    void validate() const
+    {
+        validate_account_name(account_name);
+    }
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const
+    {
+        return committee_service.get_exclude_member_quorum();
+    }
 };
 
 struct registration_committee_change_quorum_operation
@@ -69,18 +97,48 @@ struct registration_committee_change_quorum_operation
 {
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;
+
+    void validate() const
+    {
+        validate_quorum(committee_quorum, quorum);
+    }
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const
+    {
+        return committee_service.get_base_quorum();
+    }
 };
 
 struct development_committee_add_member_operation
     : public proposal_base_operation<development_committee_add_member_operation, registration_committee_i>
 {
     account_name_type account_name;
+
+    void validate() const
+    {
+        validate_account_name(account_name);
+    }
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const
+    {
+        return committee_service.get_add_member_quorum();
+    }
 };
 
 struct development_committee_exclude_member_operation
     : public proposal_base_operation<development_committee_exclude_member_operation, registration_committee_i>
 {
     account_name_type account_name;
+
+    void validate() const
+    {
+        validate_account_name(account_name);
+    }
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const
+    {
+        return committee_service.get_exclude_member_quorum();
+    }
 };
 
 struct development_committee_change_quorum_operation
@@ -88,6 +146,16 @@ struct development_committee_change_quorum_operation
 {
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;
+
+    void validate() const
+    {
+        validate_quorum(committee_quorum, quorum);
+    }
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const
+    {
+        return committee_service.get_base_quorum();
+    }
 };
 
 // clang-format off
@@ -107,6 +175,27 @@ struct to_committee_operation
         return operation;
     }
 };
+
+struct operation_get_required_quorum_visitor
+{
+    typedef scorum::protocol::percent_type result_type;
+
+    operation_get_required_quorum_visitor(committee_i& committee_service)
+        : _committee_service(committee_service)
+    {
+    }
+
+    template <typename T> protocol::percent_type operator()(const T& v) const
+    {
+        return v.get_required_quorum(_committee_service);
+    }
+
+private:
+    committee_i& _committee_service;
+};
+
+void operation_validate(const proposal_operation& op);
+protocol::percent_type operation_get_required_quorum(committee_i& committee_service, const proposal_operation& op);
 
 } // namespace protocol
 } // namespace scorum

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include <fc/io/json.hpp>
 #include <fc/crypto/hex.hpp>
-#include <string>
 
 namespace utils {
 

@@ -26,8 +26,6 @@ public:
 
     void do_apply(const operation_type& op);
 
-    protocol::percent_type get_quorum(const protocol::proposal_operation& op);
-
 private:
     account_service_i& _account_service;
     proposal_service_i& _proposal_service;

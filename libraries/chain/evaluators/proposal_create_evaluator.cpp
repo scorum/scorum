@@ -37,30 +37,9 @@ void proposal_create_evaluator::do_apply(const proposal_create_evaluator::operat
 
     const fc::time_point_sec expiration = _property_service.head_block_time() + op.lifetime_sec;
 
-    const protocol::percent_type quorum = get_quorum(op.operation);
+    const protocol::percent_type quorum = operation_get_required_quorum(committee_service, op.operation);
 
     _proposal_service.create(op.creator, op.operation, expiration, quorum);
-}
-
-protocol::percent_type proposal_create_evaluator::get_quorum(const protocol::proposal_operation& op)
-{
-    committee_i& committee_service = committee_accessor(db()).get_committee(op);
-    if (op.which() == proposal_operation::tag<registration_committee_add_member_operation>::value)
-    {
-        return committee_service.get_add_member_quorum();
-    }
-    else if (op.which() == proposal_operation::tag<registration_committee_exclude_member_operation>::value)
-    {
-        return committee_service.get_exclude_member_quorum();
-    }
-    else if (op.which() == proposal_operation::tag<registration_committee_change_quorum_operation>::value)
-    {
-        return committee_service.get_base_quorum();
-    }
-    else
-    {
-        FC_THROW_EXCEPTION(fc::assert_exception, "Unknow operation.");
-    }
 }
 
 } // namespace chain
