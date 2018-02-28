@@ -35,6 +35,7 @@
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -398,15 +399,6 @@ chain_id_type database::get_chain_id() const
 const node_property_object& database::get_node_properties() const
 {
     return _node_property_object;
-}
-
-const witness_schedule_object& database::get_witness_schedule_object() const
-{
-    try
-    {
-        return get<witness_schedule_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
 }
 
 const hardfork_property_object& database::get_hardfork_property_object() const
@@ -899,7 +891,8 @@ void database::notify_on_applied_transaction(const signed_transaction& tx)
 account_name_type database::get_scheduled_witness(uint32_t slot_num) const
 {
     const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
-    const witness_schedule_object& wso = get_witness_schedule_object();
+    const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
+
     uint64_t current_aslot = dpo.current_aslot + slot_num;
     return wso.current_shuffled_witnesses[current_aslot % wso.num_scheduled_witnesses];
 }
@@ -1747,8 +1740,8 @@ void database::update_last_irreversible_block()
         }
         else
         {
-            const witness_schedule_object& wso = get_witness_schedule_object();
             auto& witness_service = obtain_service<dbs_witness>();
+            const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
 
             std::vector<const witness_object*> wit_objs;
             wit_objs.reserve(wso.num_scheduled_witnesses);
@@ -2035,6 +2028,4 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
-
-
 

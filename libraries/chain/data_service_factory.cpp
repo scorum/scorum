@@ -2,8 +2,8 @@
 
 #include <scorum/chain/database/database.hpp>
 
-#include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
@@ -18,6 +18,7 @@
 #include <scorum/chain/services/vesting_delegation.hpp>
 #include <scorum/chain/services/withdraw_vesting_route.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/witness_vote.hpp>
 
 // clang-format off
@@ -38,6 +39,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (vesting_delegation)
         (withdraw_vesting_route)
         (witness)
+        (witness_schedule)
         (witness_vote)
         )
 // clang-format on

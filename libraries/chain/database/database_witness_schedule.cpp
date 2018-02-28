@@ -1,6 +1,7 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/protocol/config.hpp>
@@ -18,7 +19,9 @@ void database::update_witness_schedule()
 
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
-        const witness_schedule_object& wso = _db.get_witness_schedule_object();
+        auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
+
+        const witness_schedule_object& wso = schedule_service.get();
 
         using active_witnesses_container = boost::container::flat_map<witness_id_type, account_name_type>;
 
@@ -83,7 +86,7 @@ void database::update_witness_schedule()
             });
         }
 
-        _db.modify(wso, [&](witness_schedule_object& _wso) {
+        schedule_service.update([&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)
             {
                 _wso.current_shuffled_witnesses[i] = active_witnesses.nth(i)->second;
@@ -126,10 +129,13 @@ void database::_reset_witness_virtual_schedule_time()
 {
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    _db.modify(wso, [&](witness_schedule_object& o) {
+    auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
+
+    schedule_service.update([&](witness_schedule_object& o) {
         o.current_virtual_time = fc::uint128(); // reset it 0
     });
+
+    const witness_schedule_object& wso = schedule_service.get();
 
     const auto& idx = _db.get_index<witness_index>().indices();
     for (const auto& witness : idx)
@@ -148,7 +154,7 @@ void database::_update_witness_median_props()
 
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
     auto& witness_service = _db.obtain_service<dbs_witness>();
 
     /// fetch all witness objects
@@ -183,7 +189,7 @@ void database::_update_witness_majority_version()
 {
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
     auto& witness_service = _db.obtain_service<dbs_witness>();
 
     flat_map<version, uint32_t, std::greater<version>> witness_versions;
@@ -222,7 +228,7 @@ void database::_update_witness_hardfork_version_votes()
 {
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
     auto& witness_service = _db.obtain_service<dbs_witness>();
 
     flat_map<std::tuple<hardfork_version, time_point_sec>, uint32_t> hardfork_version_votes;

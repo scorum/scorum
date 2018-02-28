@@ -7,12 +7,16 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/budget.hpp>
-#include <scorum/chain/services/registration_committee.hpp>
-#include <scorum/chain/services/proposal.hpp>
-#include <scorum/chain/services/escrow.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -26,10 +30,6 @@
 
 #include <cfenv>
 #include <iostream>
-
-#include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/comment.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -1573,7 +1573,7 @@ void database_api::recursively_fetch_content(state& _state,
 std::vector<account_name_type> database_api::get_active_witnesses() const
 {
     return my->_db.with_read_lock([&]() {
-        const auto& wso = my->_db.get_witness_schedule_object();
+        const auto& wso = my->_db.obtain_service<chain::dbs_witness_schedule>().get();
         size_t n = wso.current_shuffled_witnesses.size();
         std::vector<account_name_type> result;
         result.reserve(n);
@@ -2045,7 +2045,7 @@ state database_api::get_state(std::string path) const
                 d.second.active_votes = get_active_votes(d.second.author, d.second.permlink);
             }
 
-            _state.witness_schedule = my->_db.get_witness_schedule_object();
+            _state.witness_schedule = my->_db.obtain_service<dbs_witness_schedule>().get();
         }
         catch (const fc::exception& e)
         {

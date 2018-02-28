@@ -1,4 +1,5 @@
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/database/database.hpp>
 
@@ -27,25 +28,6 @@ const witness_object& dbs_witness::get(const account_name_type& name) const
 bool dbs_witness::is_exists(const account_name_type& name) const
 {
     return nullptr != db_impl().find<witness_object, by_name>(name);
-}
-
-const witness_schedule_object& dbs_witness::create_witness_schedule(const modifier_type& modifier)
-{
-    return db_impl().create<witness_schedule_object>([&](witness_schedule_object& o) { modifier(o); });
-}
-
-const witness_schedule_object& dbs_witness::get_witness_schedule_object() const
-{
-    try
-    {
-        return db_impl().get<witness_schedule_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
-bool dbs_witness::is_exists() const
-{
-    return nullptr != db_impl().find<witness_schedule_object>();
 }
 
 const witness_object& dbs_witness::get_top_witness() const
@@ -127,7 +109,7 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
 {
     const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
-    const witness_schedule_object& wso = get_witness_schedule_object();
+    const witness_schedule_object& wso = db_impl().obtain_service<dbs_witness_schedule>().get();
     db_impl().modify(witness, [&](witness_object& w) {
         auto delta_pos = w.votes.value * (wso.current_virtual_time - w.virtual_last_update);
         w.virtual_position += delta_pos;
