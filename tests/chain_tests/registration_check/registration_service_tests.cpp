@@ -122,7 +122,6 @@ class registration_service_create_check_fixture : public registration_service_ch
 public:
     registration_service_create_check_fixture()
     {
-        open_database();
         Actor alice("alice");
         Actor bob("bob");
 

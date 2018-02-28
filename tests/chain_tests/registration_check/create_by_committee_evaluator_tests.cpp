@@ -12,10 +12,10 @@
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-class pool_evaluator_check_fixture : public registration_check_fixture
+class create_by_committee_evaluator_check_fixture : public registration_check_fixture
 {
 public:
-    pool_evaluator_check_fixture()
+    create_by_committee_evaluator_check_fixture()
     {
         genesis_state = create_registration_genesis(schedule_input);
         create_registration_objects(genesis_state);
@@ -125,15 +125,13 @@ public:
                 break;
             }
 
-            ++pos;
-
             if (allocated + predicted_bonus > predicted_limit)
             {
                 // limit is reached
                 return true;
             }
 
-            allocated += allocate_cash(pos);
+            allocated += allocate_cash(pos++);
         }
         return false;
     }
@@ -179,7 +177,7 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(pool_evaluator_check, pool_evaluator_check_fixture)
+BOOST_FIXTURE_TEST_SUITE(create_by_committee_evaluator_check, create_by_committee_evaluator_check_fixture)
 
 SCORUM_TEST_CASE(sin_f_check)
 {
@@ -328,7 +326,6 @@ SCORUM_TEST_CASE(allocate_limits_check)
     auto fn = [&](uint64_t) -> asset {
         const account_object& account = create_new_by_committee();
         asset allocated_bonus(account.vesting_shares.amount, SCORUM_SYMBOL);
-        BOOST_CHECK_GT(allocated_bonus.amount, share_type(0));
         return allocated_bonus;
     };
 
@@ -349,13 +346,18 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 
     asset predicted_limit = schedule_input_predicted_limit(1);
 
-    asset allocated_bonus(0, SCORUM_SYMBOL);
     auto fn = [&](uint64_t) -> asset {
+        const account_object& account = create_new_by_committee();
+        asset allocated_bonus(account.vesting_shares.amount, SCORUM_SYMBOL);
+        return allocated_bonus;
+    };
+
+    asset allocated_bonus(0, SCORUM_SYMBOL);
+    auto fn_db = [&](uint64_t) -> asset {
         db_plugin->debug_update(
             [&](database&) {
-                const account_object& account = create_new_by_committee();
-                allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
-                BOOST_CHECK_GT(allocated_bonus.amount, share_type(0));
+                // std::cout << allocated_bonus << std::endl;
+                allocated_bonus = fn(0);
             },
             default_skip);
         return allocated_bonus;
@@ -367,7 +369,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
     generate_block();
 
     bool found_limit
-        = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn);
+        = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn_db);
     BOOST_REQUIRE(found_limit);
 
     BOOST_REQUIRE_THROW(fn(0), fc::assert_exception);
@@ -381,14 +383,12 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
     predicted_limit = schedule_input_predicted_limit(1);
 
     // find next limit
-    found_limit = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn);
+    found_limit = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn_db);
     BOOST_REQUIRE(found_limit);
 
     // limit must be reached
     BOOST_REQUIRE_THROW(fn(0), fc::assert_exception);
 }
-
-/*
 
 SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 {
@@ -412,9 +412,8 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
         asset allocated_bonus(0, SCORUM_SYMBOL);
         db_plugin->debug_update(
             [&](database&) {
-                allocated_bonus = registration_pool_service.allocate_cash("alice");
-                // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
+                const account_object& account = create_new_by_committee();
+                allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
             },
             default_skip);
         return allocated_bonus;
@@ -442,9 +441,8 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
         asset allocated_bonus(0, SCORUM_SYMBOL);
         db_plugin->debug_update(
             [&](database&) {
-                allocated_bonus = registration_pool_service.allocate_cash("alice");
-                // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
+                const account_object& account = create_new_by_committee();
+                allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
             },
             default_skip);
         return allocated_bonus;
@@ -467,18 +465,11 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
         // to prevent reaching limit
         generate_blocks(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK);
 
-        db_plugin->debug_update(
-            [&](database&) {
-                auto allocated_bonus = registration_pool_service.allocate_cash("alice");
-                // to save invariants we must give allocated bonus to someone
-                account_service.create_vesting(bonus_beneficiary(), allocated_bonus);
-            },
-            default_skip);
+        db_plugin->debug_update([&](database&) { create_new_by_committee(); }, default_skip);
     }
 
-    BOOST_REQUIRE_THROW(registration_pool_service.get(), fc::exception);
+    BOOST_CHECK_EQUAL(registration_pool_service.get().balance, ASSET_NULL_SCR);
 }
-*/
 
 BOOST_AUTO_TEST_SUITE_END()
 

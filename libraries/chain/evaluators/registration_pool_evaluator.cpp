@@ -48,6 +48,8 @@ public:
                                per_reg);
         }
 
+        _registration_pool_service.decrease_balance(per_reg);
+
         _registration_pool_service.increase_already_allocated_count();
 
         return per_reg;
@@ -96,16 +98,27 @@ private:
 
         if (pool.balance.amount > 0 && balance <= pool.balance)
         {
-            _registration_pool_service.decrease_balance(balance);
             ret = balance;
         }
         else
         {
             ret = pool.balance;
-            _registration_pool_service.decrease_balance(ret);
         }
 
         return ret;
+    }
+
+    void check_bandwidth(const registration_pool_object& pool,
+                         const account_name_type& member_name,
+                         uint32_t pass_blocks,
+                         const asset& allocated_cash)
+    {
+        share_type limit_per_memeber = (share_type)(pass_blocks + 1);
+        limit_per_memeber *= pool.maximum_bonus.amount;
+        limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+        limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+        FC_ASSERT(allocated_cash <= asset(limit_per_memeber, SCORUM_SYMBOL),
+                  "Committee member '${1}' reaches cash limit.", ("1", member_name));
     }
 
     void validate_bandwidth(const registration_pool_object& pool,
@@ -123,14 +136,9 @@ private:
         if (last_allocated_block > 0)
         {
             pass_blocks = head_block_num - last_allocated_block;
+        }
 
-            share_type limit_per_memeber = (share_type)(pass_blocks + 1);
-            limit_per_memeber *= pool.maximum_bonus.amount;
-            limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-            limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-            FC_ASSERT(member.already_allocated_cash + amount <= asset(limit_per_memeber, SCORUM_SYMBOL),
-                      "Committee member '${1}' reaches cash limit.", ("1", member_name));
-        } // else first time allocation by this member. No bandwidth check
+        last_allocated_block = head_block_num;
 
         // move floating window position
         uint32_t per_n_block_remain = member.per_n_block_remain;
@@ -143,18 +151,26 @@ private:
             per_n_block_remain -= pass_blocks;
         }
 
+        asset already_allocated_cash(0, SCORUM_SYMBOL);
+        asset allocated_cash = member.already_allocated_cash;
+        if (per_n_block_remain > 0)
+        {
+            allocated_cash += amount;
+            already_allocated_cash = allocated_cash;
+        }
+        else
+        {
+            allocated_cash = asset(0, SCORUM_SYMBOL); // to prevent checking at the begining of floating window
+            already_allocated_cash = amount;
+            per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+        }
+
+        check_bandwidth(pool, member_name, pass_blocks, allocated_cash);
+
         auto modifier = [=](registration_committee_member_object& m) {
-            m.last_allocated_block = head_block_num;
-            if (per_n_block_remain > 0)
-            {
-                m.per_n_block_remain = per_n_block_remain;
-                m.already_allocated_cash += amount;
-            }
-            else
-            {
-                m.per_n_block_remain = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-                m.already_allocated_cash = asset(0, SCORUM_SYMBOL);
-            }
+            m.last_allocated_block = last_allocated_block;
+            m.per_n_block_remain = per_n_block_remain;
+            m.already_allocated_cash = already_allocated_cash;
         };
 
         _registration_committee_service.update_member_info(member, modifier);
