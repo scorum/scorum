@@ -12,10 +12,10 @@ set(SOURCES
     basic_tests.cpp
     genesis_tests.cpp
     print_tests.cpp
-    atomicswap_check/atomicswap_helper_check.cpp
-    genesis/initializator.cpp
-    genesis/accounts.cpp
-    genesis/founders.cpp
+    atomicswap_check/atomicswap_helper_tests.cpp
+    genesis/initializator_tests.cpp
+    genesis/accounts_tests.cpp
+    genesis/founders_tests.cpp
     signed_transaction_serialization_tests.cpp
     serialization_tests.cpp
     proposal/proposal_operations_tests.cpp
@@ -41,5 +41,4 @@ target_include_directories(utests PUBLIC
 
 if(UNIX)
     set_source_files_properties( genesis/initializator.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
-    set_source_files_properties( block_tasks_tests.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
 endif(UNIX)

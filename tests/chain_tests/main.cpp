@@ -26,7 +26,7 @@ boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
 
     fc::logger_config lg;
     lg.name = "default";
-    lg.level = fc::log_level::info;
+    lg.level = fc::log_level::warn;
     lg.appenders.push_back("stderr");
     log_conf.loggers.push_back(lg);
     fc::configure_logging(log_conf);

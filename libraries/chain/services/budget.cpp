@@ -17,7 +17,7 @@ dbs_budget::dbs_budget(database& db)
 
 bool dbs_budget::is_fund_exists() const
 {
-    return nullptr != db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT);
+    return nullptr != db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT_ACCOUNT);
 }
 
 dbs_budget::budget_refs_type dbs_budget::get_budgets() const
@@ -49,7 +49,7 @@ std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_
     for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
          limit && itr != budgets_by_owner_name.end(); ++itr)
     {
-        if (itr->owner == SCORUM_ROOT_POST_PARENT)
+        if (itr->owner == SCORUM_ROOT_POST_PARENT_ACCOUNT)
             continue;
 
         --limit;
@@ -60,7 +60,7 @@ std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_
 
 dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& owner) const
 {
-    FC_ASSERT(owner != SCORUM_ROOT_POST_PARENT, "Owner name reserved for fund budget.");
+    FC_ASSERT(owner != SCORUM_ROOT_POST_PARENT_ACCOUNT, "Owner name reserved for fund budget.");
 
     budget_refs_type ret;
 
@@ -80,7 +80,7 @@ const budget_object& dbs_budget::get_fund_budget() const
 {
     const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
 
-    auto itr = budgets_by_owner_name.lower_bound(SCORUM_ROOT_POST_PARENT);
+    auto itr = budgets_by_owner_name.lower_bound(SCORUM_ROOT_POST_PARENT_ACCOUNT);
     FC_ASSERT(itr != budgets_by_owner_name.end(), "Fund budget does not exist.");
 
     return *itr;
@@ -98,7 +98,7 @@ const budget_object& dbs_budget::get_budget(budget_id_type id) const
 const budget_object& dbs_budget::create_fund_budget(const asset& balance, const time_point_sec& deadline)
 {
     // clang-format off
-    FC_ASSERT((db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT) == nullptr), "Recreation of fund budget is not allowed.");
+    FC_ASSERT((db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT_ACCOUNT) == nullptr), "Recreation of fund budget is not allowed.");
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
@@ -113,7 +113,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
     share_type per_block = _calculate_per_block(start_date, deadline, balance.amount);
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
-        budget.owner = SCORUM_ROOT_POST_PARENT;
+        budget.owner = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         budget.created = start_date;
         budget.deadline = deadline;
         budget.balance = balance;
@@ -131,8 +131,8 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
                                                const time_point_sec& deadline,
                                                const optional<std::string>& content_permlink)
 {
-    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT, "'${1}' name is not allowed for ordinary budget.",
-              ("1", SCORUM_ROOT_POST_PARENT));
+    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT_ACCOUNT, "'${1}' name is not allowed for ordinary budget.",
+              ("1", SCORUM_ROOT_POST_PARENT_ACCOUNT));
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
@@ -176,7 +176,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 
 void dbs_budget::close_budget(const budget_object& budget)
 {
-    FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT, "Can't close fund budget.");
+    FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT_ACCOUNT, "Can't close fund budget.");
 
     _close_owned_budget(budget);
 }
@@ -279,7 +279,7 @@ bool dbs_budget::_check_autoclose(const budget_object& budget)
 
 bool dbs_budget::_is_fund_budget(const budget_object& budget) const
 {
-    return budget.owner == SCORUM_ROOT_POST_PARENT;
+    return budget.owner == SCORUM_ROOT_POST_PARENT_ACCOUNT;
 }
 
 void dbs_budget::_close_budget(const budget_object& budget)

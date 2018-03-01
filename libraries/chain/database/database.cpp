@@ -7,27 +7,31 @@
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
-#include <scorum/chain/genesis/genesis_state.hpp>
-
 #include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 #include <scorum/chain/schema/reward_pool_object.hpp>
+
+#include <scorum/chain/genesis/genesis_state.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
 #include <scorum/chain/util/uint256.hpp>
 
-#include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
+#include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
+#include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
+#include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -36,10 +40,10 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/withdraw_vesting_route.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-
-#include <scorum/chain/database/block_tasks/process_funds.hpp>
-#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/withdraw_vesting.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -56,6 +60,9 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/core/ignore_unused.hpp>
 
+#include <scorum/chain/database/block_tasks/process_funds.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
 
 namespace scorum {
 namespace chain {
@@ -71,6 +78,7 @@ public:
     evaluator_registry<operation> _evaluator_registry;
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
+    database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
 };
 
 database_impl::database_impl(database& self)
@@ -1008,106 +1016,6 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when) const
     return (when - first_slot_time).to_seconds() / SCORUM_BLOCK_INTERVAL + 1;
 }
 
-void database::process_vesting_withdrawals()
-{
-    // clang-format off
-    dbs_account& account_service = obtain_service<dbs_account>();
-    auto& dprops_service = obtain_service<dbs_dynamic_global_property>();
-
-    const auto& widx = get_index<account_index>().indices().get<by_next_vesting_withdrawal>();
-    const auto& didx = get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
-
-    
-
-    for (auto current = widx.begin(); current != widx.end() && current->next_vesting_withdrawal <= head_block_time();)
-    {
-        const auto& from_account = *(current++);
-
-        /**
-         *  Let T = total tokens in vesting fund
-         *  Let V = total vesting shares
-         *  Let v = total vesting shares being cashed out
-         *
-         *  The user may withdraw  vT / V tokens
-         */
-        asset to_withdraw = asset(0, VESTS_SYMBOL);
-        if (from_account.to_withdraw - from_account.withdrawn < from_account.vesting_withdraw_rate)
-        {
-            to_withdraw = std::min(from_account.vesting_shares, from_account.to_withdraw % from_account.vesting_withdraw_rate);
-        }
-        else
-        {
-            to_withdraw = std::min(from_account.vesting_shares, from_account.vesting_withdraw_rate);
-        }
-
-        asset deposited_vests = asset(0, VESTS_SYMBOL);
-
-        for (auto itr = didx.upper_bound(boost::make_tuple(from_account.id, account_id_type())); itr != didx.end() && itr->from_account == from_account.id; ++itr)
-        {
-            asset to_deposit = asset((fc::uint128_t(to_withdraw.amount.value) * itr->percent / SCORUM_100_PERCENT).to_uint64(), VESTS_SYMBOL);
-
-            if (to_deposit.amount > 0)
-            {
-                const auto& to_account = get(itr->to_account);
-
-                deposited_vests += to_deposit;
-
-                if (itr->auto_vest)//withdraw SP
-                {
-                    push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name, to_deposit));
-
-                    account_service.increase_vesting_shares(to_account, to_deposit);
-
-                    account_service.adjust_proxied_witness_votes(to_account, to_deposit.amount);  
-                }
-                else //convert SP to SCR and withdraw SCR
-                {
-                    auto converted_scorum = asset(to_deposit.amount, SCORUM_SYMBOL);
-
-                    push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, to_account.name, converted_scorum));
-
-                    account_service.increase_balance(to_account, converted_scorum);
-
-                    dprops_service.update([&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_deposit; });
-                }
-            }
-        }
-
-        // withdraw the rest as SCR
-        asset to_convert = to_withdraw - deposited_vests;
-        FC_ASSERT(to_convert.amount >= 0, "Deposited more vests than were supposed to be withdrawn");
-
-        asset converted_scorum = asset(to_convert.amount, SCORUM_SYMBOL);
-
-        push_virtual_operation(fill_vesting_withdraw_operation(from_account.name, from_account.name, converted_scorum));
-
-        modify(from_account, [&](account_object& a) {
-            a.vesting_shares -= to_withdraw;
-            a.balance += converted_scorum;
-            a.withdrawn += to_withdraw;
-
-            if (a.withdrawn >= a.to_withdraw || a.vesting_shares.amount == 0)
-            {
-                a.vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
-                a.next_vesting_withdrawal = fc::time_point_sec::maximum();
-            }
-            else
-            {
-                a.next_vesting_withdrawal += fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-            }
-        });
-
-        dprops_service.update([&](dynamic_global_property_object& o) { o.total_vesting_shares -= to_convert; });
-
-        if (to_withdraw.amount > 0)
-        {
-            account_service.adjust_proxied_witness_votes(from_account, -to_withdraw.amount);
-        }
-    }
-    // clang-format on
-}
-
-
 void database::account_recovery_processing()
 {
     // Clear expired recovery requests
@@ -1254,15 +1162,19 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<prove_authority_evaluator>();
     _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_evaluator>();
     _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
     _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>(
+        new set_withdraw_vesting_route_to_dev_pool_evaluator(*this));
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>(
+        new set_withdraw_vesting_route_to_account_evaluator(*this));
+    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>(new withdraw_vesting_evaluator(*this));
 }
 
 void database::initialize_indexes()
@@ -1292,10 +1204,14 @@ void database::initialize_indexes()
     add_index<vesting_delegation_expiration_index>();
     add_index<vesting_delegation_index>();
     add_index<withdraw_vesting_route_index>();
+    add_index<withdraw_vesting_route_statistic_index>();
+    add_index<withdraw_vesting_index>();
     add_index<witness_index>();
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
     add_index<atomicswap_contract_index>();
+
+    add_index<dev_committee_index>();
 
     _plugin_index_signal();
 }
@@ -1521,11 +1437,12 @@ void database::_apply_block(const signed_block& next_block)
                                       static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds.before(_my->_process_comments_cashout).apply(ctx);
+        _my->_process_funds
+                .before(_my->_process_comments_cashout)
+                .before(_my->_process_vesting_withdrawals)
+                .apply(ctx);
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
-
-        process_vesting_withdrawals();
 
         account_recovery_processing();
         expire_escrow_ratification();
@@ -2051,7 +1968,7 @@ void database::validate_invariants() const
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
         {
-            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "", ("itr", *itr));
+            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
         }
 
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();
@@ -2097,6 +2014,12 @@ void database::validate_invariants() const
         if (obtain_service<dbs_registration_pool>().is_exists())
         {
             total_supply += obtain_service<dbs_registration_pool>().get().balance;
+        }
+
+        if (obtain_service<dbs_dev_pool>().is_exists())
+        {
+            total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
+            total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
         }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();

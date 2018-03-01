@@ -37,8 +37,9 @@ public:
     account_name_type current_witness;
 
     asset total_supply = asset(0, SCORUM_SYMBOL); ///< circulating_capital + reward and registration pools supply
-    asset circulating_capital
-        = asset(0, SCORUM_SYMBOL); ///< total SCR on circulating. circulating_capital <= total_supply
+    asset circulating_capital = asset(
+        0,
+        SCORUM_SYMBOL); ///< total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
     asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
 
     /**
