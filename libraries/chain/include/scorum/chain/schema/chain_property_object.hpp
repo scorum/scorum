@@ -5,8 +5,6 @@
 namespace scorum {
 namespace chain {
 
-class chain_property_object;
-
 class chain_property_object : public object<chain_property_object_type, chain_property_object>
 {
 public:

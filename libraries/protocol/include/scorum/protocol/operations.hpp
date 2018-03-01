@@ -28,7 +28,8 @@ using operation = fc::static_variant<vote_operation,
 
                                      delete_comment_operation,
                                      comment_options_operation,
-                                     set_withdraw_vesting_route_operation,
+                                     set_withdraw_vesting_route_to_account_operation,
+                                     set_withdraw_vesting_route_to_dev_pool_operation,
 
                                      prove_authority_operation,
 

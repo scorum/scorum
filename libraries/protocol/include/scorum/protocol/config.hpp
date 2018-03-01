@@ -188,14 +188,15 @@
 #define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS    (DAYS_TO_SECONDS(1u))
 #define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS    (DAYS_TO_SECONDS(10u))
 
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK        2
+
 /**
  *  Reserved Account IDs with special meaning
  */
 /// Represents the canonical account for specifying you will vote for directly (as opposed to a proxy)
-#define SCORUM_PROXY_TO_SELF_ACCOUNT           ""
+#define SCORUM_PROXY_TO_SELF_ACCOUNT           (account_name_type())
 /// Represents the canonical root post parent account
-#define SCORUM_ROOT_POST_PARENT                (account_name_type())
-
+#define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
 ///@}
 
 // clang-format on

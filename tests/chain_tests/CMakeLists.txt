@@ -8,23 +8,29 @@ set( SOURCES
     account_data_service_tests.cpp
     operation_time_tests.cpp
     reward_service_tests.cpp
-    rewards/vote_apply.cpp
-    rewards/comment_beneficiaries_apply.cpp
-    registration_check/committee_service.cpp
-    registration_check/registration_check_common.cpp
-    registration_check/committee_operations.cpp
-    registration_check/create_by_committee_evaluator_tests.cpp
-    registration_check/registration_service_tests.cpp
-    atomicswap_check/atomicswap_service.cpp
-    atomicswap_check/atomicswap_operations.cpp
-    budget_check/budget_service.cpp
-    budget_check/fund_budget.cpp
-    budget_check/budget_operations.cpp
-    budget_check/budget_check_common.cpp
+    rewards/vote_apply_tests.cpp
+    rewards/comment_beneficiaries_apply_tests.cpp
+    registration/registration_check_common.cpp
+    registration/committee_service_tests.cpp
+    registration/committee_operations_tests.cpp
+    registration/create_by_committee_evaluator_tests.cpp
+    registration/registration_service_tests.cpp
+    atomicswap/atomicswap_service_tests.cpp
+    atomicswap/atomicswap_operations_tests.cpp
+    budget/budget_service_tests.cpp
+    budget/fund_budget_tests.cpp
+    budget/budget_operations_tests.cpp
+    budget/budget_check_common.cpp
     proposal/proposal_tests.cpp
     statistic/statistic_tests.cpp
     statistic/account_statistic_tests.cpp
     genesis_db_tests.cpp
+    withdraw_vesting/old_tests.cpp
+    withdraw_vesting/withdraw_vesting_check_common.cpp
+    withdraw_vesting/route_from_account_to_account_tests.cpp
+    withdraw_vesting/route_from_account_to_dev_pool_tests.cpp
+    withdraw_vesting/route_from_dev_pool_to_account_tests.cpp
+    withdraw_vesting/route_from_dev_pool_to_dev_pool_tests.cpp
 )
 
 add_executable(chain_tests

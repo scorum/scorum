@@ -14,9 +14,9 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
 #include <scorum/chain/services/vesting_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/withdraw_vesting.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -132,6 +132,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     account_service_i& account_service = db().account_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+    withdraw_vesting_service_i& withdraw_vesting_service = db().withdraw_vesting_service();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -142,8 +143,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     // check delegation fee
 
-    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares - (creator.to_withdraw - creator.withdrawn)
-                  >= o.delegation,
+    asset withdraw_rest = withdraw_vesting_service.get_withdraw_rest(creator.id);
+
+    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares - withdraw_rest >= o.delegation,
               "Insufficient vesting shares to delegate to new account.",
               ("creator.vesting_shares", creator.vesting_shares)(
                   "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
@@ -240,7 +242,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     account_name_type parent_author = comment.parent_author;
     std::string parent_permlink = fc::to_string(comment.parent_permlink);
     /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
-    while (parent_author != SCORUM_ROOT_POST_PARENT)
+    while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
     {
         const comment_object& parent = comment_service.get(parent_author, parent_permlink);
 
@@ -343,7 +345,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
         account_name_type parent_author = o.parent_author;
         std::string parent_permlink = o.parent_permlink;
-        if (parent_author != SCORUM_ROOT_POST_PARENT)
+        if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             const comment_object& parent = comment_service.get(parent_author, parent_permlink);
             FC_ASSERT(parent.depth < SCORUM_MAX_COMMENT_DEPTH,
@@ -358,14 +360,14 @@ void comment_evaluator::do_apply(const comment_operation& o)
 
         if (!comment_service.is_exists(o.author, o.permlink))
         {
-            if (parent_author != SCORUM_ROOT_POST_PARENT)
+            if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 FC_ASSERT(comment_service.get(parent.root_comment).allow_replies,
                           "The parent comment has disabled replies.");
             }
 
-            if (parent_author == SCORUM_ROOT_POST_PARENT)
+            if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 FC_ASSERT((now - auth.last_root_post) > SCORUM_MIN_ROOT_COMMENT_INTERVAL,
                           "You may only post once every 5 minutes.",
                           ("now", now)("last_root_post", auth.last_root_post));
@@ -386,7 +388,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
             uint16_t pr_depth = 0;
             std::string pr_category;
             comment_id_type pr_root_comment;
-            if (parent_author != SCORUM_ROOT_POST_PARENT)
+            if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 pr_parent_author = parent.author;
@@ -407,7 +409,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.max_cashout_time = fc::time_point_sec::maximum();
                 com.reward_weight = reward_weight;
 
-                if (parent_author == SCORUM_ROOT_POST_PARENT)
+                if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
                     com.parent_author = "";
                     fc::from_string(com.parent_permlink, parent_permlink);
@@ -439,7 +441,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
             });
 
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
-            while (parent_author != SCORUM_ROOT_POST_PARENT)
+            while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
 
@@ -464,7 +466,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.active = com.last_update;
                 strcmp_equal equal;
 
-                if (parent_author == SCORUM_ROOT_POST_PARENT)
+                if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
                     FC_ASSERT(com.parent_author == account_name_type(), "The parent of a comment cannot be changed.");
                     FC_ASSERT(equal(com.parent_permlink, parent_permlink), "The permlink of a comment cannot change.");
@@ -728,94 +730,6 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
     FC_ASSERT(from_account.balance >= o.amount, "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
     account_service.create_vesting(to_account, o.amount);
-}
-
-void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_operation& o)
-{
-    // clang-format off
-    account_service_i& account_service = db().account_service();
-    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-
-    const auto& account = account_service.get_account(o.account);
-
-    FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL), "Account does not have sufficient Scorum Power for withdraw.");
-    FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares, "Account does not have sufficient Scorum Power for withdraw.");
-
-    if (!account.created_by_genesis)
-    {
-        const auto& dprops = dprops_service.get();
-        asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
-        min_vests *= SCORUM_START_WITHDRAW_COEFFICIENT;
-
-        FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
-                  "Account registered by another account requires 10x account creation fee worth of Scorum Power before it can be powered down.");
-    }
-
-    if (o.vesting_shares.amount == 0)
-    {
-        FC_ASSERT(account.vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
-
-        account_service.update_withdraw(account, asset(0, VESTS_SYMBOL), time_point_sec::maximum(), asset(0, VESTS_SYMBOL));
-    }
-    else
-    {
-        // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
-        // 13 weeks = 1 quarter of a year
-        auto new_vesting_withdraw_rate = o.vesting_shares / SCORUM_VESTING_WITHDRAW_INTERVALS;
-
-        if (new_vesting_withdraw_rate.amount == 0)
-            new_vesting_withdraw_rate.amount = 1;
-
-        FC_ASSERT(account.vesting_withdraw_rate != new_vesting_withdraw_rate, "This operation would not change the vesting withdraw rate.");
-
-        account_service.update_withdraw(account, new_vesting_withdraw_rate,
-                                        dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS),
-                                        o.vesting_shares);
-    }
-
-    // clang-format on
-}
-
-void set_withdraw_vesting_route_evaluator::do_apply(const set_withdraw_vesting_route_operation& o)
-{
-    account_service_i& account_service = db().account_service();
-    withdraw_vesting_route_service_i& withdraw_route_service = db().withdraw_vesting_route_service();
-
-    try
-    {
-        const auto& from_account = account_service.get_account(o.from_account);
-        const auto& to_account = account_service.get_account(o.to_account);
-
-        if (!withdraw_route_service.is_exists(from_account.id, to_account.id))
-        {
-            FC_ASSERT(o.percent != 0, "Cannot create a 0% destination.");
-            FC_ASSERT(from_account.withdraw_routes < SCORUM_MAX_WITHDRAW_ROUTES,
-                      "Account already has the maximum number of routes.");
-
-            withdraw_route_service.create(from_account.id, to_account.id, o.percent, o.auto_vest);
-
-            account_service.increase_withdraw_routes(from_account);
-        }
-        else if (o.percent == 0)
-        {
-            const auto& wvr = withdraw_route_service.get(from_account.id, to_account.id);
-            withdraw_route_service.remove(wvr);
-
-            account_service.decrease_withdraw_routes(from_account);
-        }
-        else
-        {
-            const auto& wvr = withdraw_route_service.get(from_account.id, to_account.id);
-
-            withdraw_route_service.update(wvr, from_account.id, to_account.id, o.percent, o.auto_vest);
-        }
-
-        uint16_t total_percent = withdraw_route_service.total_percent(from_account.id);
-
-        FC_ASSERT(total_percent <= SCORUM_100_PERCENT,
-                  "More than 100% of vesting withdrawals allocated to destinations.");
-    }
-    FC_CAPTURE_AND_RETHROW()
 }
 
 void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_operation& o)
@@ -1182,12 +1096,13 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     account_service_i& account_service = db().account_service();
     vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+    withdraw_vesting_service_i& withdraw_vesting_service = db().withdraw_vesting_service();
 
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
 
-    auto available_shares
-        = delegator.vesting_shares - delegator.delegated_vesting_shares - (delegator.to_withdraw - delegator.withdrawn);
+    auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
+        - withdraw_vesting_service.get_withdraw_rest(delegator.id);
 
     const auto dprops = dprops_service.get();
     auto min_delegation
