@@ -53,6 +53,7 @@ add_library( scorum_chain
              services/withdraw_vesting_route.cpp
              services/withdraw_vesting_route_statistic.cpp
              services/withdraw_vesting.cpp
+             services/development_committee.cpp
 
              data_service_factory.cpp
 

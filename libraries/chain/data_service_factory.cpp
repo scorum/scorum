@@ -23,6 +23,7 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/development_committee.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
