@@ -23,6 +23,8 @@ set(SOURCES
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal_vote_operation_tests.cpp
+    tasks_base_tests.cpp
+    block_tasks_tests.cpp
 )
 
 add_executable(utests
@@ -39,4 +41,5 @@ target_include_directories(utests PUBLIC
 
 if(UNIX)
     set_source_files_properties( genesis/initializator.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
+    set_source_files_properties( block_tasks_tests.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
 endif(UNIX)

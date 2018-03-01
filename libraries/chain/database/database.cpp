@@ -1,8 +1,7 @@
 #include <scorum/protocol/scorum_operations.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
 
-#include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/db_with.hpp>
 #include <scorum/chain/shared_db_merkle.hpp>
@@ -39,6 +38,9 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
 
+#include <scorum/chain/database/block_tasks/process_funds.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/container/deque.hpp>
@@ -54,6 +56,7 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/core/ignore_unused.hpp>
 
+
 namespace scorum {
 namespace chain {
 
@@ -66,6 +69,8 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
+    database_ns::process_funds _process_funds;
+    database_ns::process_comments_cashout _process_comments_cashout;
 };
 
 database_impl::database_impl(database& self)
@@ -1102,264 +1107,6 @@ void database::process_vesting_withdrawals()
     // clang-format on
 }
 
-void database::adjust_total_payout(const comment_object& cur,
-                                   const asset& author_tokens,
-                                   const asset& curation_tokens,
-                                   const asset& beneficiary_value)
-{
-    modify(cur, [&](comment_object& c) {
-        c.total_payout_value += author_tokens;
-        c.curator_payout_value += curation_tokens;
-        c.beneficiary_payout_value += beneficiary_value;
-    });
-    /// TODO: potentially modify author's total payout numbers as well
-}
-
-/**
- *  This method will iterate through all comment_vote_objects and give them
- *  (max_rewards * weight) / c.total_vote_weight.
- *
- *  @returns unclaimed rewards.
- */
-share_type database::pay_curators(const comment_object& c, share_type& max_rewards)
-{
-    dbs_account& account_service = obtain_service<dbs_account>();
-    try
-    {
-        uint128_t total_weight(c.total_vote_weight);
-        // edump( (total_weight)(max_rewards) );
-        share_type unclaimed_rewards = max_rewards;
-
-        if (!c.allow_curation_rewards)
-        {
-            // TODO: if allow_curation_rewards == false we loose money, it brings us to break invariants - need to
-            // rework
-            unclaimed_rewards = 0;
-            max_rewards = 0;
-        }
-        else if (c.total_vote_weight > 0)
-        {
-            const auto& cvidx = get_index<comment_vote_index>().indices().get<by_comment_weight_voter>();
-            auto itr = cvidx.lower_bound(c.id);
-            while (itr != cvidx.end() && itr->comment == c.id)
-            {
-                uint128_t weight(itr->weight);
-                auto claim = ((max_rewards.value * weight) / total_weight).to_uint64();
-                if (claim > 0) // min_amt is non-zero satoshis
-                {
-                    unclaimed_rewards -= claim;
-                    const auto& voter = get(itr->voter);
-                    auto reward = account_service.create_vesting(voter, asset(claim, SCORUM_SYMBOL));
-
-                    push_virtual_operation(
-                        curation_reward_operation(voter.name, reward, c.author, fc::to_string(c.permlink)));
-
-#ifndef IS_LOW_MEM
-                    modify(voter, [&](account_object& a) { a.curation_rewards += claim; });
-#endif
-                }
-                ++itr;
-            }
-        }
-        max_rewards -= unclaimed_rewards;
-
-        return unclaimed_rewards;
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
-share_type database::pay_for_comment(const share_type& reward_tokens, const comment_object& comment)
-{
-    try
-    {
-        if (reward_tokens > 0)
-        {
-            // clang-format off
-            dbs_account& account_service = obtain_service<dbs_account>();
-
-            share_type curation_tokens = ((uint128_t(reward_tokens.value) * SCORUM_CURATION_REWARD_PERCENT) / SCORUM_100_PERCENT).to_uint64();
-            share_type author_tokens = reward_tokens - curation_tokens;
-
-            author_tokens += pay_curators(comment, curation_tokens); //curation_tokens can be changed inside pay_curators()
-
-            share_type claimed_reward = author_tokens + curation_tokens;
-
-            share_type total_beneficiary = 0;
-            for (auto& b : comment.beneficiaries)
-            {
-                auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                asset vest_created = account_service.create_vesting(account_service.get_account(b.account), asset(benefactor_tokens, SCORUM_SYMBOL));
-                push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), vest_created));
-                total_beneficiary += benefactor_tokens;
-            }
-
-            author_tokens -= total_beneficiary;
-
-            adjust_total_payout(comment, asset(author_tokens, SCORUM_SYMBOL), asset(curation_tokens, SCORUM_SYMBOL), asset(total_beneficiary, SCORUM_SYMBOL));
-
-            auto payout_scorum  = asset((author_tokens * comment.percent_scrs) / (2 * SCORUM_100_PERCENT), SCORUM_SYMBOL);
-            auto vesting_scorum = asset((author_tokens - payout_scorum.amount), SCORUM_SYMBOL);
-
-            const auto& author = account_service.get_account(comment.author);
-            account_service.increase_balance(author, payout_scorum);
-            asset vest_created = account_service.create_vesting(author, vesting_scorum);
-
-            push_virtual_operation( author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, vest_created));
-            push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), asset(claimed_reward, SCORUM_SYMBOL)));
-
-#ifndef IS_LOW_MEM
-            modify(comment, [&](comment_object& c) { c.author_rewards += author_tokens; });
-
-            modify(author, [&](account_object& a) { a.posting_rewards += author_tokens; });
-#endif
-            return claimed_reward;
-            // clang-format on
-        }
-
-        return 0;
-    }
-    FC_CAPTURE_AND_RETHROW((comment))
-}
-
-void database::process_comments_cashout()
-{
-    const auto& rf = get_reward_fund();
-
-    // Add all reward funds to the local cache and decay their recent rshares
-    modify(rf, [&](reward_fund_object& rfo) {
-        fc::microseconds decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
-        rfo.recent_claims
-            -= (rfo.recent_claims * (head_block_time() - rfo.last_update).to_seconds()) / decay_rate.to_seconds();
-        rfo.last_update = head_block_time();
-    });
-
-    const auto& cidx = get_index<comment_index>().indices().get<by_cashout_time>();
-
-    //  add all rshares about to be cashed out to the reward funds. This ensures equal satoshi per rshare payment
-    uint128_t recent_claims = rf.recent_claims;
-    for (auto current = cidx.begin(); current != cidx.end() && current->cashout_time <= head_block_time(); ++current)
-    {
-        if (current->net_rshares > 0)
-        {
-            recent_claims += util::evaluate_reward_curve(current->net_rshares.value, rf.author_reward_curve);
-        }
-    }
-
-    /*
-     * Payout all comments
-     *
-     * Each payout follows a similar pattern, but for a different reason.
-     * The helper only does token allocation based on curation rewards and the SCR
-     * global %, etc.
-     *
-     * Each context is used by get_rshare_reward to determine what part of each budget
-     * the comment is entitled to. Each payout is done
-     * against a reward fund state that is snapshotted before all payouts in the block.
-     */
-    asset scorum_awarded = asset(0, SCORUM_SYMBOL);
-    for (auto current = cidx.begin(); current != cidx.end() && current->cashout_time <= head_block_time();)
-    {
-        const comment_object& comment = *(current++);
-
-        if (comment.net_rshares > 0)
-        {
-            util::comment_reward_context ctx;
-            ctx.total_reward_shares2 = recent_claims;
-            ctx.total_reward_fund_scorum = rf.reward_balance;
-            ctx.reward_curve = rf.author_reward_curve;
-            ctx.rshares = comment.net_rshares;
-            ctx.reward_weight = comment.reward_weight;
-            ctx.max_scr = comment.max_accepted_payout;
-
-            scorum_awarded.amount += pay_for_comment(util::get_rshare_reward(ctx), comment);
-        }
-
-        modify(comment, [&](comment_object& c) {
-            /**
-             * A payout is only made for positive rshares, negative rshares hang around
-             * for the next time this post might get an upvote.
-             */
-            if (c.net_rshares > 0)
-            {
-                c.net_rshares = 0;
-            }
-            c.children_abs_rshares = 0;
-            c.abs_rshares = 0;
-            c.vote_rshares = 0;
-            c.total_vote_weight = 0;
-            c.max_cashout_time = fc::time_point_sec::maximum();
-            c.cashout_time = fc::time_point_sec::maximum();
-            c.last_payout = head_block_time();
-        });
-
-        push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
-
-#ifdef CLEAR_VOTES
-        const auto& vote_idx = get_index<comment_vote_index>().indices().get<by_comment_voter>();
-        auto vote_itr = vote_idx.lower_bound(comment.id);
-        while (vote_itr != vote_idx.end() && vote_itr->comment == comment.id)
-        {
-            remove(*(vote_itr++));
-        }
-#endif
-    }
-
-    // Write the cached fund state back to the database
-    modify(rf, [&](reward_fund_object& rfo) {
-        rfo.recent_claims = recent_claims;
-        rfo.reward_balance -= scorum_awarded;
-    });
-}
-
-/**
- *  This method pays out vesting and reward shares every block, and liquidity shares once per day.
- *  This method does not pay out witnesses.
- */
-void database::process_funds()
-{
-    dbs_account& account_service = obtain_service<dbs_account>();
-    dbs_reward& reward_service = obtain_service<dbs_reward>();
-    dbs_budget& budget_service = obtain_service<dbs_budget>();
-
-    const auto& props = get_dynamic_global_properties();
-    const auto& rf = get_reward_fund();
-
-    // We don't have inflation.
-    // We just get per block reward from reward pool and expect that after initial supply is handed out(fund budget is
-    // over) reward budgets will be created by our users.
-
-    asset budgets_reward = asset(0, SCORUM_SYMBOL);
-    for (const budget_object& budget : budget_service.get_budgets())
-    {
-        budgets_reward += budget_service.allocate_cash(budget);
-    }
-    reward_service.increase_pool_ballance(budgets_reward);
-
-    auto total_block_reward = reward_service.take_block_reward();
-    // clang-format off
-    auto content_reward = asset(total_block_reward.amount * SCORUM_CONTENT_REWARD_PERCENT / SCORUM_100_PERCENT, total_block_reward.symbol());
-    auto witness_reward = total_block_reward - content_reward; /// Remaining 5% to witness pay
-
-    modify(rf, [&](reward_fund_object& rfo) {
-        rfo.reward_balance += content_reward;
-    });
-    
-    modify(props, [&](dynamic_global_property_object& p) {
-        p.circulating_capital += total_block_reward;
-    });
-    // clang-format on
-
-    const auto& cwit = get_witness(props.current_witness);
-
-    if (cwit.schedule != witness_object::top20 && cwit.schedule != witness_object::timeshare)
-    {
-        wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
-    }
-
-    const auto producer_reward
-        = account_service.create_vesting(account_service.get_account(cwit.owner), witness_reward);
-    push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
-}
 
 void database::account_recovery_processing()
 {
@@ -1622,16 +1369,15 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
         /// check invariants
-        if (is_producing() || !(skip & skip_validate_invariants))
+        if( is_producing() || !( skip & skip_validate_invariants ) )
         {
-            try
-            {
+            try{
                 validate_invariants();
             }
 #ifdef DEBUG
-            FC_CAPTURE_AND_RETHROW((next_block));
+        FC_CAPTURE_AND_RETHROW( (next_block) );
 #else
-            FC_CAPTURE_AND_LOG((next_block));
+        FC_CAPTURE_AND_LOG( (next_block) );
 #endif
         }
 
@@ -1732,8 +1478,7 @@ void database::_apply_block(const signed_block& next_block)
         const auto& gprops = get_dynamic_global_properties();
         auto block_size = fc::raw::pack_size(next_block);
         FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size",
-                                                     block_size)("max", gprops.median_chain_props.maximum_block_size));
+                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -1772,10 +1517,14 @@ void database::_apply_block(const signed_block& next_block)
         // in dbs_database_witness_schedule.cpp
         update_witness_schedule();
 
-        process_funds();
+        database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
+                                      static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                            _current_block_num);
+
+        _my->_process_funds.before(_my->_process_comments_cashout).apply(ctx);
+
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
-        process_comments_cashout();
         process_vesting_withdrawals();
 
         account_recovery_processing();
@@ -2031,7 +1780,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 dgp.recent_slots_filled = (dgp.recent_slots_filled << 1) + (i == 0 ? 1 : 0);
                 dgp.participation_count += (i == 0 ? 1 : 0);
             }
-
+            
             dgp.head_block_number = b.block_num();
             dgp.head_block_id = b.id();
             dgp.time = b.timestamp;
@@ -2056,7 +1805,9 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 {
     try
     {
-        modify(signing_witness, [&](witness_object& _wit) { _wit.last_confirmed_block_num = new_block.block_num(); });
+        modify(signing_witness, [&](witness_object& _wit) {
+            _wit.last_confirmed_block_num = new_block.block_num();
+        });
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -2115,8 +1866,7 @@ void database::update_last_irreversible_block()
             }
         }
 
-        for_each_index(
-            [&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
+        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
 
         if (!(get_node_properties().skip_flags & skip_block_log))
         {

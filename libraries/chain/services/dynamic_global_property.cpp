@@ -1,6 +1,6 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
@@ -38,7 +38,7 @@ const dynamic_global_property_object& dbs_dynamic_global_property::create(const 
 
 void dbs_dynamic_global_property::update(const modifier_type& modifier)
 {
-    db_impl().modify(get(), [&](dynamic_global_property_object& cvo) { modifier(cvo); });
+    db_impl().modify(get(), [&](dynamic_global_property_object& o) { modifier(o); });
 }
 
 fc::time_point_sec dbs_dynamic_global_property::head_block_time() const

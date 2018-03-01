@@ -1,6 +1,6 @@
 #include <scorum/chain/services/witness_vote.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/witness_objects.hpp>
 

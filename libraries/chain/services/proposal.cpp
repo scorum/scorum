@@ -1,5 +1,5 @@
 #include <scorum/chain/services/proposal.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 namespace scorum {
 namespace chain {

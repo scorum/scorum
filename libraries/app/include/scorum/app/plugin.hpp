@@ -26,7 +26,7 @@
 #include <scorum/app/application.hpp>
 
 #include <scorum/chain/evaluators/evaluator.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <boost/program_options.hpp>
 

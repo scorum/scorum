@@ -1,5 +1,5 @@
 #include <scorum/chain/services/escrow.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 

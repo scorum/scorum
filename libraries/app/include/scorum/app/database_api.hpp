@@ -2,7 +2,7 @@
 #include <scorum/app/applied_operation.hpp>
 #include <scorum/app/state.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/chain/schema/history_objects.hpp>
