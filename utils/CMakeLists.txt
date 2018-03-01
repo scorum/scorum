@@ -1,1 +1,1 @@
-add_subdirectory(import_mongodb)
+add_subdirectory(create_genesis)
