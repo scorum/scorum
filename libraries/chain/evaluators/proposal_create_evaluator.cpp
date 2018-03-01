@@ -28,7 +28,7 @@ void proposal_create_evaluator::do_apply(const proposal_create_evaluator::operat
               "Proposal life time is not in range of ${min} - ${max} seconds.",
               ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
-    committee_i& committee_service = committee_accessor(db()).get_committee(op.operation);
+    committee_i& committee_service = op.operation.visit(get_operation_committee_visitor(db()));
 
     FC_ASSERT(committee_service.is_exists(op.creator), "Account \"${account_name}\" is not in committee.",
               ("account_name", op.creator));

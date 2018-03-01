@@ -34,7 +34,7 @@ struct proposal_add_member_evaluator : public proposal_operation_evaluator<propo
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = committee_accessor(this->db()).get_committee(o);
+        committee_i& committee_service = get_committee(this->db(), o);
         committee_service.add_member(o.account_name);
     }
 };
@@ -53,7 +53,7 @@ struct proposal_exclude_member_evaluator
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = committee_accessor(this->db()).get_committee(o);
+        committee_i& committee_service = get_committee(this->db(), o);
         committee_service.exclude_member(o.account_name);
 
         removed_members.insert(o.account_name);
@@ -76,7 +76,7 @@ struct proposal_change_quorum_evaluator
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = committee_accessor(this->db()).get_committee(o);
+        committee_i& committee_service = get_committee(this->db(), o);
 
         if (o.committee_quorum == add_member_quorum)
         {

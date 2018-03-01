@@ -31,7 +31,7 @@ void proposal_vote_evaluator::do_apply(const proposal_vote_evaluator::operation_
 
     const proposal_object& proposal = _proposal_service.get(op.proposal_id);
 
-    committee_i& committee_service = committee_accessor(db()).get_committee(proposal.operation);
+    committee_i& committee_service = proposal.operation.visit(get_operation_committee_visitor(db()));
 
     FC_ASSERT(committee_service.is_exists(op.voting_account), "Account \"${account_name}\" is not in committee.",
               ("account_name", op.voting_account));
