@@ -12,7 +12,7 @@ set(SOURCES
     basic_tests.cpp
     genesis_tests.cpp
     print_tests.cpp
-    atomicswap_check/atomicswap_helper_tests.cpp
+    atomicswap/atomicswap_helper_tests.cpp
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp

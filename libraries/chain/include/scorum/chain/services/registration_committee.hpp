@@ -29,9 +29,6 @@ struct registration_committee_service_i : public scorum::protocol::registration_
         = 0;
 };
 
-/** DB service for operations with registration_committee_* objects
- *  --------------------------------------------
- */
 class dbs_registration_committee : public dbs_base, public registration_committee_service_i
 {
     friend class dbservice_dbs_factory;
