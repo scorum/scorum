@@ -52,7 +52,6 @@ add_library( scorum_chain
              services/withdraw_vesting_route.cpp
              services/withdraw_vesting_route_statistic.cpp
              services/witness.cpp
-             services/witness_schedule.cpp
              services/witness_vote.cpp
 
              data_service_factory.cpp
