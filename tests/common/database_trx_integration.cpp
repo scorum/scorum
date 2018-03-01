@@ -248,7 +248,7 @@ void database_trx_integration_fixture::open_database_impl(const genesis_state_ty
 
     if (db.find<witness_object, by_name>(TEST_INIT_DELEGATE_NAME))
     {
-        generate_blocks(5);
+        generate_blocks(2);
 
         vest(TEST_INIT_DELEGATE_NAME, 10000);
 
@@ -261,7 +261,7 @@ void database_trx_integration_fixture::open_database_impl(const genesis_state_ty
                            init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
         }
 
-        generate_blocks(5);
+        generate_blocks(2);
     }
 }
 

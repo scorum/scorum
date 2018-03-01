@@ -137,7 +137,6 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         /// because init_witness has created vesting shares and blocks have been produced, 100 SCR is worth less than
         /// 100 vesting shares due to rounding
         BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
-        BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
         BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
         validate_database();
@@ -153,7 +152,6 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_REQUIRE(acct.created == db.head_block_time());
         BOOST_REQUIRE(acct.balance.amount.value == ASSET_SCR(0).amount.value);
         BOOST_REQUIRE_EQUAL(acct.vesting_shares.amount.value, op.fee.amount.value);
-        BOOST_REQUIRE(acct.vesting_withdraw_rate.amount.value == ASSET_SP(0).amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
         BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
         validate_database();
@@ -1093,118 +1091,6 @@ BOOST_AUTO_TEST_CASE(withdraw_vesting_authorities)
         tx.sign(alice_post_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, database::skip_transaction_dupe_check), tx_missing_active_auth);
 
-        validate_database();
-    }
-    FC_LOG_AND_RETHROW()
-}
-
-BOOST_AUTO_TEST_CASE(withdraw_vesting_apply)
-{
-    try
-    {
-        BOOST_TEST_MESSAGE("Testing: withdraw_vesting_apply");
-
-        ACTORS((alice))
-        generate_block();
-        vest("alice", ASSET_SCR(10e+3));
-
-        generate_block();
-        validate_database();
-        BOOST_TEST_MESSAGE("--- Test withdraw of existing SP");
-
-        {
-            const auto& alice = db.obtain_service<dbs_account>().get_account("alice");
-
-            withdraw_vesting_operation op;
-            op.account = "alice";
-            op.vesting_shares = asset(alice.vesting_shares.amount / 2, VESTS_SYMBOL);
-
-            auto old_vesting_shares = alice.vesting_shares;
-
-            signed_transaction tx;
-            tx.operations.push_back(op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
-            BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
-                          == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 2)).value);
-            BOOST_REQUIRE(alice.to_withdraw == op.vesting_shares);
-            BOOST_REQUIRE(alice.next_vesting_withdrawal
-                          == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test changing vesting withdrawal");
-            tx.operations.clear();
-            tx.signatures.clear();
-
-            op.vesting_shares = asset(alice.vesting_shares.amount / 3, VESTS_SYMBOL);
-            tx.operations.push_back(op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
-            BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
-                          == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
-            BOOST_REQUIRE(alice.to_withdraw == op.vesting_shares);
-            BOOST_REQUIRE(alice.next_vesting_withdrawal
-                          == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test withdrawing more vests than available");
-
-            tx.operations.clear();
-            tx.signatures.clear();
-
-            op.vesting_shares = asset(alice.vesting_shares.amount * 2, VESTS_SYMBOL);
-            tx.operations.push_back(op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(alice_private_key, db.get_chain_id());
-            SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
-
-            BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
-            BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value
-                          == (old_vesting_shares.amount / (SCORUM_VESTING_WITHDRAW_INTERVALS * 3)).value);
-            BOOST_REQUIRE(alice.next_vesting_withdrawal
-                          == db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-            validate_database();
-
-            BOOST_TEST_MESSAGE("--- Test withdrawing 0 to reset vesting withdraw");
-            tx.operations.clear();
-            tx.signatures.clear();
-
-            op.vesting_shares = asset(0, VESTS_SYMBOL);
-            tx.operations.push_back(op);
-            tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-
-            BOOST_REQUIRE(alice.vesting_shares.amount.value == old_vesting_shares.amount.value);
-            BOOST_REQUIRE(alice.vesting_withdraw_rate.amount.value == 0);
-            BOOST_REQUIRE(alice.to_withdraw == asset(0, VESTS_SYMBOL));
-            BOOST_REQUIRE(alice.next_vesting_withdrawal == fc::time_point_sec::maximum());
-
-            BOOST_TEST_MESSAGE("--- Test cancelling a withdraw when below the account creation fee");
-            op.vesting_shares = alice.vesting_shares;
-            tx.clear();
-            tx.operations.push_back(op);
-            tx.sign(alice_private_key, db.get_chain_id());
-            db.push_transaction(tx, 0);
-            generate_block();
-        }
-
-        withdraw_vesting_operation op;
-        signed_transaction tx;
-        op.account = "alice";
-        op.vesting_shares = ASSET_SP(0);
-        tx.operations.push_back(op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").vesting_withdraw_rate == ASSET_SP(0));
         validate_database();
     }
     FC_LOG_AND_RETHROW()

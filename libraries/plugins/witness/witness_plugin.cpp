@@ -164,7 +164,7 @@ struct operation_visitor
     {
         auto& comment_service = _db.obtain_service<dbs_comment>();
 
-        if (o.parent_author != SCORUM_ROOT_POST_PARENT)
+        if (o.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             if (comment_service.is_exists(o.parent_author, o.parent_permlink))
             {

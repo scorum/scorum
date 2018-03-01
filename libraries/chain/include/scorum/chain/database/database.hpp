@@ -253,7 +253,6 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    void process_vesting_withdrawals();
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();

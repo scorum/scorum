@@ -91,15 +91,6 @@ struct account_service_i
 
     virtual void prove_authority(const account_object& account, bool require_owner) = 0;
 
-    virtual void update_withdraw(const account_object& account,
-                                 const asset& vesting,
-                                 const time_point_sec& next_vesting_withdrawal,
-                                 const asset& to_withdraw)
-        = 0;
-
-    virtual void increase_withdraw_routes(const account_object& account) = 0;
-    virtual void decrease_withdraw_routes(const account_object& account) = 0;
-
     virtual void increase_witnesses_voted_for(const account_object& account) = 0;
     virtual void decrease_witnesses_voted_for(const account_object& account) = 0;
 
@@ -135,6 +126,10 @@ struct account_service_i
 
     virtual void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0)
         = 0;
+
+    using modifier_type = std::function<void(account_object&)>;
+
+    virtual void update(const account_object& obj, const modifier_type&) = 0;
 };
 
 // DB operations with account_*** objects
@@ -223,14 +218,6 @@ public:
 
     virtual void prove_authority(const account_object& account, bool require_owner) override;
 
-    virtual void update_withdraw(const account_object& account,
-                                 const asset& vesting,
-                                 const time_point_sec& next_vesting_withdrawal,
-                                 const asset& to_withdraw) override;
-
-    virtual void increase_withdraw_routes(const account_object& account) override;
-    virtual void decrease_withdraw_routes(const account_object& account) override;
-
     virtual void increase_witnesses_voted_for(const account_object& account) override;
     virtual void decrease_witnesses_voted_for(const account_object& account) override;
 
@@ -275,6 +262,8 @@ public:
     /** this updates the votes for all witnesses as a result of account SP changing */
     virtual void
     adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0) override;
+
+    virtual void update(const account_object& obj, const modifier_type&) override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,

@@ -58,12 +58,6 @@ public:
     asset delegated_vesting_shares =    asset(0, VESTS_SYMBOL);
     asset received_vesting_shares =     asset(0, VESTS_SYMBOL);
 
-    asset vesting_withdraw_rate =       asset(0, VESTS_SYMBOL); ///< at the time this is updated it can be at most vesting_shares/104
-    time_point_sec next_vesting_withdrawal = fc::time_point_sec::maximum(); ///< after every withdrawal this is incremented by 1 week
-    asset withdrawn =   asset(0, VESTS_SYMBOL); /// Track how many shares have been withdrawn
-    asset to_withdraw = asset(0, VESTS_SYMBOL); /// Might be able to look this up with operation history.
-    uint16_t withdraw_routes = 0;
-
     fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes; // = std::vector<share_type>(SCORUM_MAX_PROXY_RECURSION_DEPTH, 0 );
                                                                                ///< the total VFS votes proxied to this account
 
@@ -173,7 +167,6 @@ public:
 struct by_name;
 struct by_proxy;
 struct by_last_post;
-struct by_next_vesting_withdrawal;
 struct by_scorum_balance;
 struct by_smp_balance;
 struct by_post_count;
@@ -206,18 +199,6 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::id>> /// composite
                                                                /// key by
                                                                /// proxy
-                                                               >,
-                                                ordered_unique<tag<by_next_vesting_withdrawal>,
-                                                               composite_key<account_object,
-                                                                             member<account_object,
-                                                                                    time_point_sec,
-                                                                                    &account_object::
-                                                                                        next_vesting_withdrawal>,
-                                                                             member<account_object,
-                                                                                    account_id_type,
-                                                                                    &account_object::id>> /// composite
-                                                               /// key
-                                                               /// by_next_vesting_withdrawal
                                                                >,
                                                 ordered_unique<tag<by_last_post>,
                                                                composite_key<account_object,
@@ -475,7 +456,6 @@ FC_REFLECT( scorum::chain::account_object,
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
              (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)
-             (vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
              (curation_rewards)
              (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)

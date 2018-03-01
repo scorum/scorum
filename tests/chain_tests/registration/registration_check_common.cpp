@@ -38,7 +38,7 @@ registration_check_fixture::registration_check_fixture()
 
 void registration_check_fixture::create_registration_objects(const genesis_state_type& genesis)
 {
-    generate_blocks(5);
+    generate_blocks(2);
 
     db_plugin->debug_update(
         [&](database&) {
@@ -55,7 +55,7 @@ void registration_check_fixture::create_registration_objects(const genesis_state
         },
         default_skip);
 
-    generate_blocks(5);
+    generate_blocks(2);
 }
 
 genesis_state_type registration_check_fixture::create_registration_genesis(schedule_inputs_type& schedule_input,

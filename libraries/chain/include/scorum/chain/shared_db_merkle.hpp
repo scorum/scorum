@@ -1,3 +1,5 @@
+#pragma once
+
 #include <scorum/protocol/types.hpp>
 
 namespace scorum {

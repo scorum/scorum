@@ -70,7 +70,7 @@ public:
     {
         BOOST_REQUIRE_NO_THROW(validate_database());
 
-        if (comment_ops[actor].parent_author != SCORUM_ROOT_POST_PARENT)
+        if (comment_ops[actor].parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             if (!comment_service.is_exists(comment_ops[actor].parent_author, comment_ops[actor].parent_permlink))
                 comment(comment_ops[actor].parent_author);

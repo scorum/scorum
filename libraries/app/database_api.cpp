@@ -4,9 +4,8 @@
 
 #include <scorum/protocol/get_config.hpp>
 
-#include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/util/reward.hpp>
+
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/budget.hpp>
@@ -16,7 +15,12 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/withdraw_vesting_route.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
+
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
+#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -521,13 +525,13 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
         if (type == outgoing || type == all)
         {
             const auto& by_route = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
-            auto route = by_route.lower_bound(acc.id);
+            auto route = by_route.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
-            while (route != by_route.end() && route->from_account == acc.id)
+            while (route != by_route.end() && is_equal_withdrawable_id(route->from_id, acc.id))
             {
                 withdraw_route r;
                 r.from_account = account;
-                r.to_account = my->_db.get(route->to_account).name;
+                r.to_account = my->_db.get(route->to_id.get<account_id_type>()).name;
                 r.percent = route->percent;
                 r.auto_vest = route->auto_vest;
 
@@ -540,12 +544,12 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
         if (type == incoming || type == all)
         {
             const auto& by_dest = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_destination>();
-            auto route = by_dest.lower_bound(acc.id);
+            auto route = by_dest.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
-            while (route != by_dest.end() && route->to_account == acc.id)
+            while (route != by_dest.end() && is_equal_withdrawable_id(route->to_id, acc.id))
             {
                 withdraw_route r;
-                r.from_account = my->_db.get(route->from_account).name;
+                r.from_account = my->_db.get(route->from_id.get<account_id_type>()).name;
                 r.to_account = account;
                 r.percent = route->percent;
                 r.auto_vest = route->auto_vest;
@@ -951,7 +955,7 @@ void database_api::set_pending_payout(discussion& d) const
         d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
     }
 
-    if (d.parent_author != SCORUM_ROOT_POST_PARENT)
+    if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         d.cashout_time = my->_db.calculate_discussion_payout_time(my->_db.get<comment_object>(d.id));
 
     if (d.body.size() > 1024 * 128)

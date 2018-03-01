@@ -43,6 +43,20 @@ public:
 
     std::vector<operation> get_last_operations(uint32_t ops);
 
+    template <typename T> void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key())
+    {
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+        if (key != fc::ecc::private_key())
+        {
+            tx.sign(key, db.get_chain_id());
+        }
+        db.push_transaction(tx, default_skip);
+
+        generate_block();
+    }
+
 protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 

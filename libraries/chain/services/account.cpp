@@ -79,8 +79,11 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol) for balance.");
 
     authority owner;
-    owner.add_authority(memo_key, 1);
-    owner.weight_threshold = 1;
+    if (memo_key != public_key_type())
+    {
+        owner.add_authority(memo_key, 1);
+        owner.weight_threshold = 1;
+    }
     const auto& new_account
         = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
 
@@ -311,29 +314,6 @@ void dbs_account::prove_authority(const account_object& account, bool require_ow
     });
 }
 
-void dbs_account::update_withdraw(const account_object& account,
-                                  const asset& vesting,
-                                  const time_point_sec& next_vesting_withdrawal,
-                                  const asset& to_withdraw)
-{
-    db_impl().modify(account, [&](account_object& a) {
-        a.vesting_withdraw_rate = vesting;
-        a.next_vesting_withdrawal = next_vesting_withdrawal;
-        a.to_withdraw = to_withdraw;
-        a.withdrawn = asset(0, VESTS_SYMBOL);
-    });
-}
-
-void dbs_account::increase_withdraw_routes(const account_object& account)
-{
-    db_impl().modify(account, [&](account_object& a) { a.withdraw_routes++; });
-}
-
-void dbs_account::decrease_withdraw_routes(const account_object& account)
-{
-    db_impl().modify(account, [&](account_object& a) { a.withdraw_routes--; });
-}
-
 void dbs_account::increase_witnesses_voted_for(const account_object& account)
 {
     db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for++; });
@@ -349,7 +329,7 @@ void dbs_account::add_post(const account_object& author_account, const account_n
     time_point_sec t = db_impl().head_block_time();
 
     db_impl().modify(author_account, [&](account_object& a) {
-        if (parent_author_name == SCORUM_ROOT_POST_PARENT)
+        if (parent_author_name == SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             a.last_root_post = t;
         }
@@ -596,6 +576,12 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
         witness_service.adjust_witness_votes(account, delta);
     }
 }
+
+void dbs_account::update(const account_object& obj, const modifier_type& modifier)
+{
+    db_impl().modify(obj, [&](account_object& o) { modifier(o); });
+}
+
 const account_object& dbs_account::_create_account_objects(const account_name_type& new_account_name,
                                                            const account_name_type& recovery_account,
                                                            const public_key_type& memo_key,
@@ -617,13 +603,16 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
 #endif
     });
 
-    db_impl().create<account_authority_object>([&](account_authority_object& auth) {
-        auth.account = new_account_name;
-        auth.owner = owner;
-        auth.active = active;
-        auth.posting = posting;
-        auth.last_owner_update = fc::time_point_sec::min();
-    });
+    if (memo_key != public_key_type())
+    {
+        db_impl().create<account_authority_object>([&](account_authority_object& auth) {
+            auth.account = new_account_name;
+            auth.owner = owner;
+            auth.active = active;
+            auth.posting = posting;
+            auth.last_owner_update = fc::time_point_sec::min();
+        });
+    }
 
     return new_account;
 }
