@@ -18,6 +18,10 @@ public:
 
     asset sp_balance = asset(0, VESTS_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
+
+    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>
@@ -54,7 +58,16 @@ typedef shared_multi_index_container<dev_committee_member_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::dev_committee_object, (id)(sp_balance)(scr_balance))
+// clang-format off
+FC_REFLECT(scorum::chain::dev_committee_object,
+           (id)
+           (sp_balance)
+           (scr_balance)
+           (invite_quorum)
+           (dropout_quorum)
+           (change_quorum))
+// clang-format on
+
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_object, scorum::chain::dev_committee_index)
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_member_object, scorum::chain::dev_committee_member_index)
