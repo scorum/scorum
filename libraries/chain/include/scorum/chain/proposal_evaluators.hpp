@@ -76,7 +76,6 @@ struct proposal_change_quorum_evaluator
 
     void do_apply(const operation_type& o)
     {
-        //        const typename operation_type::committee_operation_type& bo = o;
         committee_i& committee_service = committee_accessor(this->db()).get_committee(o);
 
         if (o.committee_quorum == add_member_quorum)

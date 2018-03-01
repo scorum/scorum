@@ -20,8 +20,6 @@ class proposal_create_evaluator : public evaluator_impl<data_service_factory_i, 
 public:
     using operation_type = scorum::protocol::proposal_create_operation;
 
-    using change_quorum_operation = scorum::protocol::registration_committee_change_quorum_operation;
-
     proposal_create_evaluator(data_service_factory_i& services);
 
     void do_apply(const operation_type& op);

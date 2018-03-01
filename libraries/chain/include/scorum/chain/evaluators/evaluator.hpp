@@ -1,7 +1,6 @@
 #pragma once
 #include <scorum/protocol/exceptions.hpp>
 #include <scorum/protocol/operations.hpp>
-#include <scorum/protocol/proposal_operations.hpp>
 
 namespace scorum {
 namespace chain {
