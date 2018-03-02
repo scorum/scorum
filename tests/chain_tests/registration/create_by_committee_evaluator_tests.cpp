@@ -5,6 +5,7 @@
 
 #include "registration_check_common.hpp"
 #include "registration_helpers.hpp"
+#include "actor.hpp"
 
 #include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 
@@ -33,24 +34,21 @@ public:
         static int next_id = 1;
         std::stringstream store;
         store << "user" << next_id++;
-
-        std::string new_account_name(store.str());
-        fc::ecc::private_key new_private_key = generate_private_key(new_account_name);
-        fc::ecc::public_key new_public_key = new_private_key.get_public_key();
+        Actor new_account(store.str());
 
         account_create_by_committee_operation op;
         op.creator = committee_member().name;
-        op.new_account_name = new_account_name;
-        op.owner = authority(1, new_public_key, 1);
-        op.active = authority(1, new_public_key, 1);
-        op.posting = authority(1, new_public_key, 1);
-        op.memo_key = new_public_key;
+        op.new_account_name = new_account.name;
+        op.owner = authority(1, new_account.public_key, 1);
+        op.active = authority(1, new_account.public_key, 1);
+        op.posting = authority(1, new_account.public_key, 1);
+        op.memo_key = new_account.public_key;
         op.json_metadata = "";
 
         registration_pool_evaluator ev(db);
         ev.do_apply(op);
 
-        return account_service.get_account(new_account_name);
+        return account_service.get_account(new_account.name);
     }
 };
 

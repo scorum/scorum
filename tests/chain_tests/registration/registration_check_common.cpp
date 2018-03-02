@@ -8,8 +8,7 @@
 #include <scorum/chain/genesis/initializators/registration_initializator.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#define MEMBER_BONUS_BENEFICIARY alice
-#define NEXT_MEMBER bob
+#include "actoractions.hpp"
 
 namespace scorum {
 namespace chain {
@@ -37,7 +36,17 @@ registration_check_fixture::registration_check_fixture()
 {
     open_database();
 
-    ACTORS((MEMBER_BONUS_BENEFICIARY)(NEXT_MEMBER));
+    Actor alice("alice");
+    Actor bob("bob");
+
+    _committee[alice.name] = alice;
+    _committee[bob.name] = bob;
+
+    for (const auto& item : _committee)
+    {
+        ActorActions actor(*this, item.second);
+        actor.create();
+    }
 }
 
 asset registration_check_fixture::registration_supply()
@@ -49,18 +58,17 @@ asset registration_check_fixture::registration_supply()
 
 asset registration_check_fixture::registration_bonus()
 {
-    const asset _registration_bonus = ASSET_SCR(100);
     return _registration_bonus;
-}
-
-const account_object& registration_check_fixture::committee_member()
-{
-    return account_service.get_account(BOOST_PP_STRINGIZE(MEMBER_BONUS_BENEFICIARY));
 }
 
 asset registration_check_fixture::rest_of_supply()
 {
     return registration_bonus();
+}
+
+const account_object& registration_check_fixture::committee_member()
+{
+    return account_service.get_account(_committee.begin()->first);
 }
 
 void registration_check_fixture::create_registration_objects(const genesis_state_type& genesis)
@@ -129,8 +137,10 @@ registration_check_fixture::create_registration_genesis_impl(schedule_inputs_typ
 {
     genesis_state_type genesis_state;
 
-    genesis_state.registration_committee.emplace_back(BOOST_PP_STRINGIZE(MEMBER_BONUS_BENEFICIARY));
-    genesis_state.registration_committee.emplace_back(BOOST_PP_STRINGIZE(NEXT_MEMBER));
+    for (const auto& item : _committee)
+    {
+        genesis_state.registration_committee.emplace_back(item.first);
+    }
 
     committee_private_keys.clear();
     for (const account_name_type& member : genesis_state.registration_committee)

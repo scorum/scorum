@@ -19,6 +19,7 @@
 #include <map>
 
 #include "database_trx_integration.hpp"
+#include "actor.hpp"
 
 namespace scorum {
 namespace chain {
@@ -38,8 +39,8 @@ public:
 
     asset registration_supply();
     asset registration_bonus();
-    const account_object& committee_member();
     asset rest_of_supply();
+    const account_object& committee_member();
 
     void create_registration_objects(const genesis_state_type&);
     const registration_pool_object& create_pool(const genesis_state_type& genesis_state);
@@ -54,6 +55,8 @@ private:
 
     data_service_factory_i& _services;
     asset _registration_supply = asset(0, SCORUM_SYMBOL);
+    const asset _registration_bonus = ASSET_SCR(100);
+    Actors _committee;
 
 public:
     account_service_i& account_service;
