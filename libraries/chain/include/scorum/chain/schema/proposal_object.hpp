@@ -12,14 +12,7 @@ class proposal_object : public object<proposal_object_type, proposal_object>
 public:
     using cref_type = std::reference_wrapper<const proposal_object>;
 
-    proposal_object() = delete;
-
-    template <typename Constructor, typename Allocator>
-    proposal_object(Constructor&& c, Allocator&& a)
-        : voted_accounts(a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(proposal_object, (voted_accounts))
 
     id_type id;
     account_name_type creator;

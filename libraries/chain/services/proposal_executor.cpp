@@ -3,7 +3,7 @@
 #include <scorum/chain/services/proposal.hpp>
 
 #include <scorum/chain/evaluators/committee_accessor.hpp>
-#include <scorum/chain/proposal_evaluators.hpp>
+#include <scorum/chain/evaluators/proposal_evaluators.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
@@ -33,7 +33,7 @@ void dbs_proposal_executor::operator()(const proposal_object& proposal)
 
 bool dbs_proposal_executor::is_quorum(const proposal_object& proposal)
 {
-    committee_i& committee_service = committee_accessor(services).get_committee(proposal.operation);
+    committee_i& committee_service = proposal.operation.visit(get_operation_committee_visitor(services));
     const size_t votes = proposal_service.get_votes(proposal);
     const size_t members_count = committee_service.get_members_count();
 

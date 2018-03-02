@@ -2,7 +2,7 @@
 
 #include <scorum/protocol/proposal_operations.hpp>
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
-#include <scorum/chain/proposal_evaluators.hpp>
+#include <scorum/chain/evaluators/proposal_evaluators.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <scorum/chain/services/registration_committee.hpp>
