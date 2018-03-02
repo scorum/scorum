@@ -262,7 +262,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     if (comment.net_rshares > 0)
         return;
 
-    comment_vote_service.remove(comment_id_type(comment.id));
+    comment_vote_service.remove_by_comment(comment_id_type(comment.id));
 
     account_name_type parent_author = comment.parent_author;
     std::string parent_permlink = fc::to_string(comment.parent_permlink);

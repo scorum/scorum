@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <scorum/chain/services/dbs_base.hpp>
 
 namespace scorum {
@@ -18,7 +20,11 @@ template <class T> struct base_service_i
 
     virtual void update(const modifier_type& modifier) = 0;
 
+    virtual void update(const object_type& o, const modifier_type& modifier) = 0;
+
     virtual void remove() = 0;
+
+    virtual void remove(const object_type& o) = 0;
 
     virtual bool is_exists() const = 0;
 
@@ -35,11 +41,12 @@ protected:
     {
     }
 
+    using base_service_type = dbs_service_base;
+
 public:
     using modifier_type = typename service_interface::modifier_type;
     using object_type = typename service_interface::object_type;
 
-    // for service operating with single object
     virtual const object_type& create(const modifier_type& modifier) override
     {
         return db_impl().template create<object_type>([&](object_type& o) { modifier(o); });
@@ -50,9 +57,19 @@ public:
         db_impl().modify(get(), [&](object_type& o) { modifier(o); });
     }
 
+    virtual void update(const object_type& o, const modifier_type& modifier) override
+    {
+        db_impl().modify(o, [&](object_type& c) { modifier(c); });
+    }
+
     virtual void remove() override
     {
         db_impl().remove(get());
+    }
+
+    virtual void remove(const object_type& o) override
+    {
+        db_impl().remove(o);
     }
 
     virtual bool is_exists() const override
@@ -65,6 +82,15 @@ public:
         try
         {
             return db_impl().template get<object_type>();
+        }
+        FC_CAPTURE_AND_RETHROW()
+    }
+
+    template <class... IndexBy, class Key> const object_type& get_by(const Key& arg) const
+    {
+        try
+        {
+            return db_impl().template get<object_type, IndexBy...>(arg);
         }
         FC_CAPTURE_AND_RETHROW()
     }

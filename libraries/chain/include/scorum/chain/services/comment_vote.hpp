@@ -1,18 +1,13 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <functional>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-class comment_vote_object;
-
-struct comment_vote_service_i
+struct comment_vote_service_i : public base_service_i<comment_vote_object>
 {
-    using modifier_type = std::function<void(comment_vote_object&)>;
-
     virtual const comment_vote_object& get(const comment_id_type& comment_id,
                                            const account_id_type& voter_id) const = 0;
 
@@ -24,15 +19,10 @@ struct comment_vote_service_i
 
     virtual bool is_exists(const comment_id_type& comment_id, const account_id_type& voter_id) const = 0;
 
-    virtual const comment_vote_object& create(const modifier_type& modifier) = 0;
-    virtual void update(const comment_vote_object& comment_vote, const modifier_type& modifier) = 0;
-
-    virtual void remove(const comment_vote_object& comment_vote) = 0;
-
-    virtual void remove(const comment_id_type& comment_id) = 0;
+    virtual void remove_by_comment(const comment_id_type& comment_id) = 0;
 };
 
-class dbs_comment_vote : public dbs_base, public comment_vote_service_i
+class dbs_comment_vote : public dbs_service_base<comment_vote_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -48,13 +38,7 @@ public:
 
     bool is_exists(const comment_id_type& comment_id, const account_id_type& voter_id) const override;
 
-    const comment_vote_object& create(const modifier_type& modifier) override;
-
-    void update(const comment_vote_object& comment_vote, const modifier_type& modifier) override;
-
-    void remove(const comment_vote_object& comment_vote) override;
-
-    void remove(const comment_id_type& comment_id) override;
+    void remove_by_comment(const comment_id_type& comment_id) override;
 };
 } // namespace chain
 } // namespace scorum

@@ -48,9 +48,7 @@ void process_funds::on_apply(block_task_context& ctx)
 
     dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += total_block_reward; });
 
-    const auto& props = dgp_service.get();
-
-    const auto& cwit = witness_service.get(props.current_witness);
+    const auto& cwit = witness_service.get(dgp_service.get().current_witness);
 
     if (cwit.schedule != witness_object::top20 && cwit.schedule != witness_object::timeshare)
     {

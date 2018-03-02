@@ -20,9 +20,6 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     data_service_factory_i& services = ctx.services();
     reward_fund_service_i& reward_fund_service = services.reward_fund_service();
     comment_service_i& comment_service = services.comment_service();
-#ifdef CLEAR_VOTES
-    comment_vote_service_i& comment_vote_service = services.comment_vote_service();
-#endif
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
     // Add all reward funds to the local cache and decay their recent rshares
@@ -90,6 +87,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
         ctx.push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
 
 #ifdef CLEAR_VOTES
+        comment_vote_service_i& comment_vote_service = services.comment_vote_service();
         auto comment_votes = comment_vote_service.get_by_comment(comment.id);
         for (const comment_vote_object& vote : comment_votes)
         {
