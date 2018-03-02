@@ -7,12 +7,12 @@ namespace chain {
 
 class database;
 
-template <typename OperationType> class evaluator_registry
+template <typename OperationType, typename DbType = data_service_factory_i> class evaluator_registry
 {
 public:
     typedef OperationType operation_type;
 
-    evaluator_registry(database& d)
+    evaluator_registry(DbType& d)
         : _db(d)
     {
         for (int i = 0; i < OperationType::count(); i++)
@@ -45,7 +45,7 @@ public:
     }
 
     std::vector<std::unique_ptr<evaluator<OperationType>>> _op_evaluators;
-    database& _db;
+    DbType& _db;
 };
 
 } // namespace chain

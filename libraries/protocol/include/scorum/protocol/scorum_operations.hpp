@@ -6,22 +6,13 @@
 #include <scorum/protocol/comment.hpp>
 #include <scorum/protocol/types.hpp>
 
+#include <scorum/protocol/proposal_operations.hpp>
+
 #include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
 namespace protocol {
-
-inline void validate_account_name(const std::string& name)
-{
-    FC_ASSERT(is_valid_account_name(name), "Account name ${n} is invalid", ("n", name));
-}
-
-inline void validate_permlink(const std::string& permlink)
-{
-    FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
-    FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
-}
 
 struct account_create_operation : public base_operation
 {
@@ -665,13 +656,10 @@ struct close_budget_operation : public base_operation
 
 struct proposal_create_operation : public base_operation
 {
-    typedef scorum::protocol::proposal_action action_t;
-
     account_name_type creator;
-    fc::variant data;
-
-    fc::optional<fc::enum_type<uint8_t, action_t>> action;
     uint32_t lifetime_sec = 0;
+
+    proposal_operation operation;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -830,8 +818,6 @@ FC_REFLECT( scorum::protocol::proposal_vote_operation,
 
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
-            (data)
-            (action)
-            (lifetime_sec))
-
+            (lifetime_sec)
+            (operation))
 // clang-format on

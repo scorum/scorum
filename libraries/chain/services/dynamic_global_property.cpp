@@ -46,23 +46,5 @@ fc::time_point_sec dbs_dynamic_global_property::head_block_time() const
     return get().time;
 }
 
-void dbs_dynamic_global_property::set_invite_quorum(uint64_t quorum)
-{
-    const dynamic_global_property_object& properties = get();
-    db_impl().modify(properties, [&](dynamic_global_property_object& p) { p.invite_quorum = quorum; });
-}
-
-void dbs_dynamic_global_property::set_dropout_quorum(uint64_t quorum)
-{
-    const dynamic_global_property_object& properties = get();
-    db_impl().modify(properties, [&](dynamic_global_property_object& p) { p.dropout_quorum = quorum; });
-}
-
-void dbs_dynamic_global_property::set_quorum(uint64_t quorum)
-{
-    const dynamic_global_property_object& properties = get();
-    db_impl().modify(properties, [&](dynamic_global_property_object& p) { p.change_quorum = quorum; });
-}
-
 } // namespace scorum
 } // namespace chain

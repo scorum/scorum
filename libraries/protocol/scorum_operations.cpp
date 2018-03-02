@@ -332,20 +332,7 @@ void proposal_create_operation::validate() const
 {
     validate_account_name(creator);
 
-    FC_ASSERT(action.valid(), "Proposal is not set.");
-
-    if (action == action_t::dropout || action == action_t::invite)
-    {
-        validate_account_name(data.as_string());
-    }
-    else
-    {
-        uint64_t quorum = data.as_uint64();
-
-        FC_ASSERT(quorum >= SCORUM_MIN_QUORUM_VALUE_PERCENT, "Quorum is to small.");
-
-        FC_ASSERT(quorum <= SCORUM_MAX_QUORUM_VALUE_PERCENT, "Quorum is to large.");
-    }
+    operation_validate(operation);
 }
 
 } // namespace protocol
