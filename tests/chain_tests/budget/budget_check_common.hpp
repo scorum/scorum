@@ -2,8 +2,9 @@
 
 #include "database_default_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace budget_fixtures {
+
+using namespace scorum::chain;
 
 struct budget_check_fixture : public database_default_integration_fixture
 {
@@ -15,5 +16,4 @@ struct budget_check_fixture : public database_default_integration_fixture
 private:
     static bool _time_printed;
 };
-}
 }

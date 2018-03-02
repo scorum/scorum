@@ -13,7 +13,7 @@
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
-using namespace scorum::chain::registration_fixtures;
+using namespace registration_fixtures;
 
 class create_by_committee_evaluator_check_fixture : public registration_check_fixture
 {

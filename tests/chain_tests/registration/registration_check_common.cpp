@@ -10,9 +10,6 @@
 
 #include "actoractions.hpp"
 
-namespace scorum {
-namespace chain {
-
 namespace registration_fixtures {
 
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
@@ -167,7 +164,5 @@ registration_check_fixture::create_registration_genesis_impl(schedule_inputs_typ
     genesis_state.registration_supply = _registration_supply;
 
     return genesis_state;
-}
-}
 }
 }

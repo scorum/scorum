@@ -92,7 +92,7 @@ uint64_t predictor::schedule_input_max_pos()
 
 asset predictor::schedule_input_total_bonus(const asset& maximum_bonus)
 {
-    return scorum::chain::registration_fixtures::schedule_input_total_bonus(get_registration_schedule(), maximum_bonus);
+    return registration_fixtures::schedule_input_total_bonus(get_registration_schedule(), maximum_bonus);
 }
 
 int predictor::schedule_input_bonus_percent_by_pos(uint64_t pos)
@@ -182,11 +182,11 @@ asset predictor::schedule_input_vest_all(std::function<asset()> allocate_cash)
     return total_allocated_bonus;
 }
 
-struct predictor_fixture : public scorum::chain::registration_fixtures::registration_check_fixture, public predictor
+struct predictor_fixture : public registration_fixtures::registration_check_fixture, public predictor
 {
     predictor_fixture()
     {
-        scorum::chain::registration_fixtures::schedule_inputs_type schedule_input;
+        registration_fixtures::schedule_inputs_type schedule_input;
         create_registration_genesis(schedule_input);
         initialize(registration_supply(), registration_bonus(), schedule_input);
     }

@@ -21,10 +21,9 @@
 #include "database_trx_integration.hpp"
 #include "actor.hpp"
 
-namespace scorum {
-namespace chain {
-
 namespace registration_fixtures {
+
+using namespace scorum::chain;
 
 using schedule_input_type = genesis_state_type::registration_schedule_item;
 using schedule_inputs_type = std::vector<schedule_input_type>;
@@ -63,6 +62,4 @@ public:
     registration_pool_service_i& registration_pool_service;
     registration_committee_service_i& registration_committee_service;
 };
-}
-}
 }
