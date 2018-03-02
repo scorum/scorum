@@ -4,6 +4,3 @@
 [submodule "hippomocks"]
 	path = tests/hippomocks
 	url = https://github.com/scorum/hippomocks
-[submodule "autoscrorum"]
-	path = autoscrorum
-	url = https://github.com/scorum/autoscrorum.git
