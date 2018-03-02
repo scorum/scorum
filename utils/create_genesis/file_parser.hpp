@@ -1,6 +1,7 @@
 #pragma once
 
 #include "parsers.hpp"
+#include "genesis_mapper.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -16,6 +17,7 @@ public:
 
 private:
     boost::filesystem::path _path;
+    genesis_mapper _mapper;
 };
 }
 }

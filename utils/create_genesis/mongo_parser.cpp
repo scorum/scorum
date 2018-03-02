@@ -29,6 +29,8 @@ mongo_parser::mongo_parser(const std::string& connection_uri)
 
 void mongo_parser::update(genesis_state_type& result)
 {
+    _mapper.reset(result);
+
     mongocxx::instance inst{};
     mongocxx::client conn{ mongocxx::uri{ _connection_uri } };
 
@@ -36,17 +38,17 @@ void mongo_parser::update(genesis_state_type& result)
 
     auto cursor = collection.find({}); // request: TODO
 
-    result.steemit_bounty_accounts.clear();
-
     for (auto&& doc : cursor)
     {
         process_document(bsoncxx::to_json(doc), result);
     }
+
+    _mapper.save(result);
 }
 
 void mongo_parser::process_document(const std::string& doc_json, genesis_state_type& result)
 {
-    // TODO
+    // TODO: _mapper.update(...);
 }
 }
 }

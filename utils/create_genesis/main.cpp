@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 #endif
                 ("import-json,i",     bpo::value<std::string>(), "Path for Json data file to parse.")
                 ("input-genesis-json,j",     bpo::value<std::string>(), "Path for Json genesis file to concatenate with result.")
+                ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
                 ("output-genesis-json,o", bpo::value<std::string>(), "Path for result Json genesis file.");
         // clang-format on
 
@@ -77,6 +78,11 @@ int main(int argc, char** argv)
             std::cout << opts << std::endl;
             return 1;
 #endif
+        }
+
+        if (options.count("test-resut-genesis"))
+        {
+            // TODO: genesis_tester
         }
 
         if (options.count("output-genesis-json"))
