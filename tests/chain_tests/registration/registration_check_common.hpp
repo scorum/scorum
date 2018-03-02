@@ -23,6 +23,8 @@
 namespace scorum {
 namespace chain {
 
+namespace registration_fixtures {
+
 using schedule_input_type = genesis_state_type::registration_schedule_item;
 using schedule_inputs_type = std::vector<schedule_input_type>;
 using committee_private_keys_type = std::map<account_name_type, private_key_type>;
@@ -34,30 +36,30 @@ class registration_check_fixture : public database_trx_integration_fixture
 public:
     registration_check_fixture();
 
+    asset registration_supply();
     asset registration_bonus();
-
+    const account_object& committee_member();
     asset rest_of_supply();
 
     void create_registration_objects(const genesis_state_type&);
+    const registration_pool_object& create_pool(const genesis_state_type& genesis_state);
 
     genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input);
     genesis_state_type create_registration_genesis();
     genesis_state_type create_registration_genesis(committee_private_keys_type& committee_private_keys);
-
-    const account_object& committee_member();
-
-    const registration_pool_object& create_pool(const genesis_state_type& genesis_state);
 
 private:
     genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedule_input,
                                                         committee_private_keys_type& committee_private_keys);
 
     data_service_factory_i& _services;
+    asset _registration_supply = asset(0, SCORUM_SYMBOL);
 
 public:
     account_service_i& account_service;
     registration_pool_service_i& registration_pool_service;
     registration_committee_service_i& registration_committee_service;
 };
+}
 }
 }

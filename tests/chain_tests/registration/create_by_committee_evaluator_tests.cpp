@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "registration_check_common.hpp"
+#include "registration_helpers.hpp"
 
 #include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 
@@ -11,6 +12,7 @@
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
+using namespace scorum::chain::registration_fixtures;
 
 class create_by_committee_evaluator_check_fixture : public registration_check_fixture
 {
@@ -19,137 +21,12 @@ public:
     {
         genesis_state = create_registration_genesis(schedule_input);
         create_registration_objects(genesis_state);
+        predictor.initialize(registration_supply(), registration_bonus(), schedule_input);
     }
 
-    scorum::chain::schedule_inputs_type schedule_input;
-
-    uint64_t get_sin_f(uint64_t pos, uint64_t max_pos, uint64_t max_result)
-    {
-        BOOST_REQUIRE(max_pos > 0);
-        const float fpi = 3.141592653589793f;
-        float fpos = pos * fpi;
-        fpos /= max_pos;
-
-        float ret = std::sin(fpos);
-        ret *= max_result;
-
-        if (pos <= max_pos / 2)
-        {
-            ret += 0.5f;
-        }
-        else
-        {
-            ret -= 0.5f;
-        }
-
-        if (ret < 0.f)
-        {
-            ret = 0.f;
-        }
-        return (uint64_t)floor(ret);
-    }
-
-    uint64_t schedule_input_max_pos()
-    {
-        uint64_t ret = 0;
-        for (const auto& item : schedule_input)
-        {
-            ret += item.users;
-        }
-        return ret;
-    }
-
-    asset schedule_input_total_bonus(const asset& maximum_bonus)
-    {
-        return scorum::chain::schedule_input_total_bonus(schedule_input, maximum_bonus);
-    }
-
-    int schedule_input_bonus_percent_by_pos(uint64_t pos)
-    {
-        uint64_t rest = pos;
-        auto it = schedule_input.begin();
-        for (uint64_t stage = 0; it != schedule_input.end(); ++it, ++stage)
-        {
-            uint64_t item_users_limit = (*it).users;
-
-            if (rest >= item_users_limit)
-            {
-                rest -= item_users_limit;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        if (it != schedule_input.end())
-        {
-            return (*it).bonus_percent;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    asset schedule_input_predicted_allocate_by_pos(uint64_t pos, asset maximum_bonus)
-    {
-        share_type ret = (share_type)schedule_input_bonus_percent_by_pos(pos);
-        ret *= maximum_bonus.amount;
-        ret /= 100;
-        return asset(ret, maximum_bonus.symbol());
-    }
-
-    asset schedule_input_predicted_limit(uint64_t pass_through_blocks)
-    {
-        asset ret = registration_bonus();
-        ret *= pass_through_blocks;
-        ret *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-        ret /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-        return ret;
-    }
-
-    bool schedule_input_pos_reach_limit(uint64_t& pos,
-                                        uint64_t max_pos,
-                                        asset predicted_limit,
-                                        asset maximum_bonus,
-                                        std::function<asset(uint64_t pos)> allocate_cash)
-    {
-        asset allocated(0, SCORUM_SYMBOL);
-        while (pos < max_pos)
-        {
-            asset predicted_bonus = schedule_input_predicted_allocate_by_pos(pos, maximum_bonus);
-
-            if (predicted_bonus.amount == share_type(0))
-            {
-                break;
-            }
-
-            if (allocated + predicted_bonus > predicted_limit)
-            {
-                // limit is reached
-                return true;
-            }
-
-            allocated += allocate_cash(pos++);
-        }
-        return false;
-    }
-
-    asset schedule_input_vest_all(std::function<asset()> allocate_cash)
-    {
-        asset total_allocated_bonus(0, SCORUM_SYMBOL);
-        auto it = schedule_input.begin();
-        for (uint64_t input_pos = 0, stage = 0; it != schedule_input.end(); ++it, ++stage)
-        {
-            for (uint64_t register_attempts = 0; register_attempts < (uint64_t)(*it).users;
-                 ++register_attempts, ++input_pos)
-            {
-                total_allocated_bonus += allocate_cash();
-            }
-        }
-        return total_allocated_bonus;
-    }
+    schedule_inputs_type schedule_input;
+    registration_helpers::predictor predictor;
+    registration_helpers::fuzzer fuzzer;
 
     const account_object& create_new_by_committee()
     {
@@ -179,73 +56,6 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(create_by_committee_evaluator_check, create_by_committee_evaluator_check_fixture)
 
-SCORUM_TEST_CASE(sin_f_check)
-{
-    BOOST_CHECK_EQUAL(get_sin_f(0, 10, 5), (uint64_t)0);
-    BOOST_CHECK_EQUAL(get_sin_f(1, 10, 5), (uint64_t)2);
-    BOOST_CHECK_EQUAL(get_sin_f(2, 10, 5), (uint64_t)3);
-    BOOST_CHECK_EQUAL(get_sin_f(3, 10, 5), (uint64_t)4);
-    BOOST_CHECK_EQUAL(get_sin_f(4, 10, 5), (uint64_t)5);
-    BOOST_CHECK_EQUAL(get_sin_f(5, 10, 5), (uint64_t)5);
-    BOOST_CHECK_EQUAL(get_sin_f(6, 10, 5), (uint64_t)4);
-    BOOST_CHECK_EQUAL(get_sin_f(7, 10, 5), (uint64_t)3);
-    BOOST_CHECK_EQUAL(get_sin_f(8, 10, 5), (uint64_t)2);
-    BOOST_CHECK_EQUAL(get_sin_f(9, 10, 5), (uint64_t)1);
-
-    BOOST_CHECK_EQUAL(get_sin_f(0, 5, 5), (uint64_t)0);
-    BOOST_CHECK_EQUAL(get_sin_f(1, 5, 5), (uint64_t)3);
-    BOOST_CHECK_EQUAL(get_sin_f(2, 5, 5), (uint64_t)5);
-    BOOST_CHECK_EQUAL(get_sin_f(3, 5, 5), (uint64_t)4);
-    BOOST_CHECK_EQUAL(get_sin_f(4, 5, 5), (uint64_t)2);
-
-    BOOST_CHECK_EQUAL(get_sin_f(0, 4, 3), (uint64_t)0);
-    BOOST_CHECK_EQUAL(get_sin_f(1, 4, 3), (uint64_t)2);
-    BOOST_CHECK_EQUAL(get_sin_f(2, 4, 3), (uint64_t)3);
-    BOOST_CHECK_EQUAL(get_sin_f(3, 4, 3), (uint64_t)1);
-}
-
-SCORUM_TEST_CASE(schedule_input_bonus_percent_by_pos_check)
-{
-    size_t accounts = 0;
-    for (size_t stages = 0; stages < schedule_input.size(); ++stages)
-    {
-        for (size_t stage_accounts = 0; stage_accounts < schedule_input[stages].users; ++stage_accounts, ++accounts)
-        {
-            BOOST_CHECK_EQUAL((share_type)schedule_input[stages].bonus_percent,
-                              schedule_input_bonus_percent_by_pos(accounts));
-        }
-    }
-}
-
-SCORUM_TEST_CASE(schedule_input_predicted_allocate_by_pos_check)
-{
-    asset maximum_bonus(5, SCORUM_SYMBOL);
-
-    size_t pos = 0;
-    for (size_t stages = 0; stages < schedule_input.size(); ++stages)
-    {
-        BOOST_CHECK_EQUAL((share_type)schedule_input[stages].bonus_percent * maximum_bonus.amount / 100,
-                          schedule_input_predicted_allocate_by_pos(pos, maximum_bonus).amount);
-        pos += schedule_input[stages].users;
-    }
-}
-
-SCORUM_TEST_CASE(schedule_input_pos_reach_limit_check)
-{
-    asset maximum_bonus(5, SCORUM_SYMBOL);
-
-    uint64_t pos = 0;
-    uint64_t max_pos = schedule_input_max_pos();
-    asset predicted_limit = maximum_bonus * 2;
-    auto fn = [this, maximum_bonus](uint64_t p) -> asset {
-        return this->schedule_input_predicted_allocate_by_pos(p, maximum_bonus);
-    };
-
-    BOOST_REQUIRE(schedule_input_pos_reach_limit(pos, max_pos, predicted_limit, maximum_bonus, fn));
-
-    BOOST_REQUIRE_LT(pos, max_pos);
-}
-
 SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
 {
     const registration_pool_object& pool = registration_pool_service.get();
@@ -261,7 +71,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
         {
             generate_block();
 
-            asset predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, pool.maximum_bonus);
+            asset predicted_bonus = predictor.schedule_input_predicted_allocate_by_pos(input_pos, pool.maximum_bonus);
 
             asset allocated_bonus(0, SCORUM_SYMBOL);
             db_plugin->debug_update(
@@ -282,7 +92,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
-    uint64_t input_max_pos = schedule_input_max_pos();
+    uint64_t input_max_pos = predictor.schedule_input_max_pos();
     asset maximum_bonus = pool.maximum_bonus;
 
     // alice registers users per block from stage #1 to #schedule_input_size (step is named as input_pos)
@@ -292,7 +102,8 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
         for (uint64_t register_attempts = 0; register_attempts < (uint64_t)(*it).users;
              ++register_attempts, ++input_pos)
         {
-            uint64_t ampl = get_sin_f(input_pos, input_max_pos, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK + 1);
+            uint64_t ampl
+                = fuzzer.get_sin_f(input_pos, input_max_pos, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK + 1);
             // produce enough block amount to break out of sliding window in center of schedule
             ampl++; // make at least one generate_block
             for (uint64_t cblock = 0; cblock < ampl; ++cblock)
@@ -300,7 +111,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
                 generate_block();
             }
 
-            asset predicted_bonus = schedule_input_predicted_allocate_by_pos(input_pos, maximum_bonus);
+            asset predicted_bonus = predictor.schedule_input_predicted_allocate_by_pos(input_pos, maximum_bonus);
 
             asset allocated_bonus(0, SCORUM_SYMBOL);
             db_plugin->debug_update(
@@ -321,7 +132,7 @@ SCORUM_TEST_CASE(allocate_limits_check)
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
-    asset predicted_limit = schedule_input_predicted_limit(1);
+    asset predicted_limit = predictor.schedule_input_predicted_limit(1);
 
     auto fn = [&](uint64_t) -> asset {
         const account_object& account = create_new_by_committee();
@@ -330,8 +141,8 @@ SCORUM_TEST_CASE(allocate_limits_check)
     };
 
     uint64_t input_pos = 0;
-    bool found_limit
-        = schedule_input_pos_reach_limit(input_pos, schedule_input_max_pos(), predicted_limit, pool.maximum_bonus, fn);
+    bool found_limit = predictor.schedule_input_pos_reach_limit(input_pos, predictor.schedule_input_max_pos(),
+                                                                predicted_limit, pool.maximum_bonus, fn);
     BOOST_REQUIRE(found_limit);
 
     // limit must be reached
@@ -344,7 +155,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
-    asset predicted_limit = schedule_input_predicted_limit(1);
+    asset predicted_limit = predictor.schedule_input_predicted_limit(1);
 
     auto fn = [&](uint64_t) -> asset {
         const account_object& account = create_new_by_committee();
@@ -364,12 +175,12 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
     };
 
     uint64_t input_pos = 0;
-    uint64_t input_max_pos = schedule_input_max_pos();
+    uint64_t input_max_pos = predictor.schedule_input_max_pos();
 
     generate_block();
 
-    bool found_limit
-        = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn_db);
+    bool found_limit = predictor.schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit,
+                                                                pool.maximum_bonus, fn_db);
     BOOST_REQUIRE(found_limit);
 
     BOOST_REQUIRE_THROW(fn(0), fc::assert_exception);
@@ -380,10 +191,11 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
         generate_block();
     }
 
-    predicted_limit = schedule_input_predicted_limit(1);
+    predicted_limit = predictor.schedule_input_predicted_limit(1);
 
     // find next limit
-    found_limit = schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit, pool.maximum_bonus, fn_db);
+    found_limit = predictor.schedule_input_pos_reach_limit(input_pos, input_max_pos, predicted_limit,
+                                                           pool.maximum_bonus, fn_db);
     BOOST_REQUIRE(found_limit);
 
     // limit must be reached
@@ -398,7 +210,7 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
 
     BOOST_REQUIRE_EQUAL(pool.schedule_items.size(), schedule_input.size());
 
-    uint64_t input_max_pos = schedule_input_max_pos();
+    uint64_t input_max_pos = predictor.schedule_input_max_pos();
 
     asset total_balance = pool.balance;
     asset total_allocated_bonus(0, SCORUM_SYMBOL);
@@ -418,9 +230,9 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
             default_skip);
         return allocated_bonus;
     };
-    total_allocated_bonus = schedule_input_vest_all(fn);
+    total_allocated_bonus = predictor.schedule_input_vest_all(fn);
 
-    BOOST_CHECK_EQUAL(total_allocated_bonus, schedule_input_total_bonus(pool.maximum_bonus));
+    BOOST_CHECK_EQUAL(total_allocated_bonus, predictor.schedule_input_total_bonus(pool.maximum_bonus));
     BOOST_CHECK_EQUAL(pool.balance, total_balance - total_allocated_bonus);
     BOOST_CHECK_EQUAL(pool.already_allocated_count, input_max_pos);
     BOOST_CHECK_EQUAL(pool.balance, rest_of_supply());
@@ -447,13 +259,14 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
             default_skip);
         return allocated_bonus;
     };
-    total_allocated_bonus = schedule_input_vest_all(fn);
+    total_allocated_bonus = predictor.schedule_input_vest_all(fn);
 
-    BOOST_REQUIRE_EQUAL(total_allocated_bonus, schedule_input_total_bonus(pool.maximum_bonus));
+    BOOST_REQUIRE_EQUAL(total_allocated_bonus, predictor.schedule_input_total_bonus(pool.maximum_bonus));
 
     BOOST_REQUIRE_GT(rest_of_supply(), asset(0, SCORUM_SYMBOL));
 
-    asset last_bonus = schedule_input_predicted_allocate_by_pos(schedule_input_max_pos() - 1, pool.maximum_bonus);
+    asset last_bonus = predictor.schedule_input_predicted_allocate_by_pos(predictor.schedule_input_max_pos() - 1,
+                                                                          pool.maximum_bonus);
 
     BOOST_REQUIRE_GT(last_bonus, asset(0, SCORUM_SYMBOL));
 

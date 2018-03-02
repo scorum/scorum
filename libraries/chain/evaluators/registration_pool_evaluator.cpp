@@ -113,11 +113,11 @@ private:
                          uint32_t pass_blocks,
                          const asset& allocated_cash)
     {
-        share_type limit_per_memeber = (share_type)(pass_blocks + 1);
-        limit_per_memeber *= pool.maximum_bonus.amount;
-        limit_per_memeber *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-        limit_per_memeber /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
-        FC_ASSERT(allocated_cash <= asset(limit_per_memeber, SCORUM_SYMBOL),
+        share_type limit_per_member = (share_type)(pass_blocks + 1);
+        limit_per_member *= pool.maximum_bonus.amount;
+        limit_per_member *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
+        limit_per_member /= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK;
+        FC_ASSERT(allocated_cash <= asset(limit_per_member, SCORUM_SYMBOL),
                   "Committee member '${1}' reaches cash limit.", ("1", member_name));
     }
 

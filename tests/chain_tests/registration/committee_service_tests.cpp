@@ -5,6 +5,7 @@
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
+using namespace scorum::chain::registration_fixtures;
 
 class registration_committee_service_check_fixture : public registration_check_fixture
 {

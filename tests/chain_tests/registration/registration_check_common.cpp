@@ -14,6 +14,8 @@
 namespace scorum {
 namespace chain {
 
+namespace registration_fixtures {
+
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
 {
     asset ret(0, SCORUM_SYMBOL);
@@ -38,10 +40,22 @@ registration_check_fixture::registration_check_fixture()
     ACTORS((MEMBER_BONUS_BENEFICIARY)(NEXT_MEMBER));
 }
 
+asset registration_check_fixture::registration_supply()
+{
+    FC_ASSERT(_registration_supply.amount > 0,
+              "Registration data is not initialized. Call create_registration_genesis.");
+    return _registration_supply;
+}
+
 asset registration_check_fixture::registration_bonus()
 {
     const asset _registration_bonus = ASSET_SCR(100);
     return _registration_bonus;
+}
+
+const account_object& registration_check_fixture::committee_member()
+{
+    return account_service.get_account(BOOST_PP_STRINGIZE(MEMBER_BONUS_BENEFICIARY));
 }
 
 asset registration_check_fixture::rest_of_supply()
@@ -71,6 +85,22 @@ void registration_check_fixture::create_registration_objects(const genesis_state
     generate_blocks(2);
 }
 
+const registration_pool_object& registration_check_fixture::create_pool(const genesis_state_type& genesis_state)
+{
+    // create sorted items list form genesis unordered data
+    using schedule_item_type = registration_pool_object::schedule_item;
+    using sorted_type = std::map<uint8_t, schedule_item_type>;
+    sorted_type items;
+    for (const auto& genesis_item : genesis_state.registration_schedule)
+    {
+        items.insert(sorted_type::value_type(genesis_item.stage,
+                                             schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
+    }
+
+    return registration_pool_service.create_pool(genesis_state.registration_supply, genesis_state.registration_bonus,
+                                                 items);
+}
+
 genesis_state_type registration_check_fixture::create_registration_genesis(schedule_inputs_type& schedule_input)
 {
     committee_private_keys_type committee_private_keys;
@@ -91,27 +121,6 @@ registration_check_fixture::create_registration_genesis(committee_private_keys_t
     schedule_inputs_type schedule_input;
     committee_private_keys.clear();
     return create_registration_genesis_impl(schedule_input, committee_private_keys);
-}
-
-const account_object& registration_check_fixture::committee_member()
-{
-    return account_service.get_account(BOOST_PP_STRINGIZE(MEMBER_BONUS_BENEFICIARY));
-}
-
-const registration_pool_object& registration_check_fixture::create_pool(const genesis_state_type& genesis_state)
-{
-    // create sorted items list form genesis unordered data
-    using schedule_item_type = registration_pool_object::schedule_item;
-    using sorted_type = std::map<uint8_t, schedule_item_type>;
-    sorted_type items;
-    for (const auto& genesis_item : genesis_state.registration_schedule)
-    {
-        items.insert(sorted_type::value_type(genesis_item.stage,
-                                             schedule_item_type{ genesis_item.users, genesis_item.bonus_percent }));
-    }
-
-    return registration_pool_service.create_pool(genesis_state.registration_supply, genesis_state.registration_bonus,
-                                                 items);
 }
 
 genesis_state_type
@@ -143,10 +152,12 @@ registration_check_fixture::create_registration_genesis_impl(schedule_inputs_typ
 
     genesis_state.registration_schedule = schedule_input;
 
-    genesis_state.registration_supply = schedule_input_total_bonus(schedule_input, genesis_state.registration_bonus);
-    genesis_state.registration_supply += rest_of_supply();
+    _registration_supply = schedule_input_total_bonus(schedule_input, genesis_state.registration_bonus);
+    _registration_supply += rest_of_supply();
+    genesis_state.registration_supply = _registration_supply;
 
     return genesis_state;
+}
 }
 }
 }
