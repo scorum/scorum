@@ -90,6 +90,28 @@ struct operation_get_required_auth_visitor
 // functions related to your operation type
 //
 #define DEFINE_OPERATION_TYPE(OperationType)                                                                           \
+    DEFINE_OPERATION_SERIALIZATOR(OperationType)                                                                       \
+                                                                                                                       \
+    namespace scorum {                                                                                                 \
+    namespace protocol {                                                                                               \
+                                                                                                                       \
+    void operation_validate(const OperationType& op)                                                                   \
+    {                                                                                                                  \
+        op.visit(scorum::protocol::operation_validate_visitor());                                                      \
+    }                                                                                                                  \
+                                                                                                                       \
+    void operation_get_required_authorities(const OperationType& op,                                                   \
+                                            flat_set<account_name_type>& active,                                       \
+                                            flat_set<account_name_type>& owner,                                        \
+                                            flat_set<account_name_type>& posting,                                      \
+                                            std::vector<authority>& other)                                             \
+    {                                                                                                                  \
+        op.visit(scorum::protocol::operation_get_required_auth_visitor(active, owner, posting, other));                \
+    }                                                                                                                  \
+    }                                                                                                                  \
+    } /* scorum::protocol */
+
+#define DEFINE_OPERATION_SERIALIZATOR(OperationType)                                                                   \
     namespace fc {                                                                                                     \
                                                                                                                        \
     void to_variant(const OperationType& var, fc::variant& vo)                                                         \
@@ -125,23 +147,4 @@ struct operation_get_required_auth_visitor
         }                                                                                                              \
         vo.visit(fc::to_static_variant(ar[1]));                                                                        \
     }                                                                                                                  \
-    }                                                                                                                  \
-                                                                                                                       \
-    namespace scorum {                                                                                                 \
-    namespace protocol {                                                                                               \
-                                                                                                                       \
-    void operation_validate(const OperationType& op)                                                                   \
-    {                                                                                                                  \
-        op.visit(scorum::protocol::operation_validate_visitor());                                                      \
-    }                                                                                                                  \
-                                                                                                                       \
-    void operation_get_required_authorities(const OperationType& op,                                                   \
-                                            flat_set<account_name_type>& active,                                       \
-                                            flat_set<account_name_type>& owner,                                        \
-                                            flat_set<account_name_type>& posting,                                      \
-                                            std::vector<authority>& other)                                             \
-    {                                                                                                                  \
-        op.visit(scorum::protocol::operation_get_required_auth_visitor(active, owner, posting, other));                \
-    }                                                                                                                  \
-    }                                                                                                                  \
-    } /* scorum::protocol */
+    } // namespace fc

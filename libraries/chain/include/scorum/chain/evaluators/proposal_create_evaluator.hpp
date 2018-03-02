@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/scorum_operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/evaluators/evaluator.hpp>
 
@@ -23,12 +24,9 @@ public:
 
     void do_apply(const operation_type& op);
 
-    uint64_t get_quorum(scorum::protocol::proposal_action action);
-
 private:
     account_service_i& _account_service;
     proposal_service_i& _proposal_service;
-    registration_committee_service_i& _committee_service;
     dynamic_global_property_service_i& _property_service;
 };
 

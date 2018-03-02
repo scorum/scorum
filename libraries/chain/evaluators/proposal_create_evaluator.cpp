@@ -1,5 +1,7 @@
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 
+#include <scorum/chain/evaluators/committee_accessor.hpp>
+
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
@@ -15,7 +17,6 @@ proposal_create_evaluator::proposal_create_evaluator(data_service_factory_i& ser
     : evaluator_impl<data_service_factory_i, proposal_create_evaluator>(services)
     , _account_service(db().account_service())
     , _proposal_service(db().proposal_service())
-    , _committee_service(db().registration_committee_service())
     , _property_service(db().dynamic_global_property_service())
 {
 }
@@ -27,40 +28,18 @@ void proposal_create_evaluator::do_apply(const proposal_create_evaluator::operat
               "Proposal life time is not in range of ${min} - ${max} seconds.",
               ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
-    FC_ASSERT(_committee_service.is_exists(op.creator), "Account \"${account_name}\" is not in committee.",
+    committee_i& committee_service = op.operation.visit(get_operation_committee_visitor(db()));
+
+    FC_ASSERT(committee_service.is_exists(op.creator), "Account \"${account_name}\" is not in committee.",
               ("account_name", op.creator));
 
     _account_service.check_account_existence(op.creator);
 
-    fc::time_point_sec expiration = _property_service.head_block_time() + op.lifetime_sec;
+    const fc::time_point_sec expiration = _property_service.head_block_time() + op.lifetime_sec;
 
-    _proposal_service.create(op.creator, op.data, *op.action, expiration, get_quorum(*op.action));
-}
+    const protocol::percent_type quorum = operation_get_required_quorum(committee_service, op.operation);
 
-uint64_t proposal_create_evaluator::get_quorum(scorum::protocol::proposal_action action)
-{
-    using proposal_action = scorum::protocol::proposal_action;
-
-    const dynamic_global_property_object& properties = _property_service.get();
-
-    switch (action)
-    {
-    case proposal_action::invite:
-        return properties.invite_quorum;
-
-    case proposal_action::dropout:
-        return properties.dropout_quorum;
-
-    case proposal_action::change_invite_quorum:
-    case proposal_action::change_dropout_quorum:
-    case proposal_action::change_quorum:
-        return properties.change_quorum;
-
-    default:
-        FC_ASSERT("invalid action type.");
-    }
-
-    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+    _proposal_service.create(op.creator, op.operation, expiration, quorum);
 }
 
 } // namespace chain
