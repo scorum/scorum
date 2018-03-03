@@ -13,9 +13,6 @@ using scorum::protocol::asset;
 struct registration_bonus_initializator_impl : public initializator
 {
     virtual void on_apply(initializator_context&);
-
-private:
-    asset allocate_cash(initializator_context&);
 };
 }
 }
