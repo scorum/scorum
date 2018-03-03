@@ -36,7 +36,10 @@ public:
     get_account_history(const std::string& account, uint64_t from, uint32_t limit) const;
 
     std::map<uint32_t, applied_operation>
-    get_account_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
+    get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
+
+    std::map<uint32_t, applied_operation>
+    get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
 
 private:
     std::shared_ptr<detail::account_history_api_impl> my;
@@ -44,4 +47,5 @@ private:
 } // namespace account_history
 } // namespace scorum
 
-FC_API(scorum::account_history::account_history_api, (get_account_history)(get_account_transfers))
+FC_API(scorum::account_history::account_history_api,
+       (get_account_history)(get_account_scr_to_scr_transfers)(get_account_scr_to_sp_transfers))

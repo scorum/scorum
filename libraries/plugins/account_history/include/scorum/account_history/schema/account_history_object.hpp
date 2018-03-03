@@ -24,15 +24,18 @@ namespace account_history {
 
 using namespace scorum::chain;
 
-enum history_object_type
+enum account_history_object_type
 {
-    account_history_object_type = (ACCOUNT_HISTORY_SPACE_ID << 8)
+    all_operations_history = (ACCOUNT_HISTORY_SPACE_ID << 8),
+    scr_to_scr_transfers_history,
+    scr_to_sp_transfers_history
 };
 
-class account_history_object : public object<account_history_object_type, account_history_object>
+template <uint16_t HistoryType> struct history_object : public object<HistoryType, history_object<HistoryType>>
 {
-public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(account_history_object)
+    CHAINBASE_DEFAULT_CONSTRUCTOR(history_object)
+
+    typedef typename object<HistoryType, history_object<HistoryType>>::id_type id_type;
 
     id_type id;
 
@@ -41,28 +44,46 @@ public:
     operation_id_type op;
 };
 
-using account_history_id_type = oid<account_history_object>;
-
 struct by_account;
-typedef shared_multi_index_container<account_history_object,
-                                     indexed_by<ordered_unique<tag<by_id>,
-                                                               member<account_history_object,
-                                                                      account_history_id_type,
-                                                                      &account_history_object::id>>,
-                                                ordered_unique<tag<by_account>,
-                                                               composite_key<account_history_object,
-                                                                             member<account_history_object,
-                                                                                    account_name_type,
-                                                                                    &account_history_object::account>,
-                                                                             member<account_history_object,
-                                                                                    uint32_t,
-                                                                                    &account_history_object::sequence>>,
-                                                               composite_key_compare<std::less<account_name_type>,
-                                                                                     std::greater<uint32_t>>>>>
-    account_history_index;
+
+template <typename history_object_t>
+using history_index
+    = shared_multi_index_container<history_object_t,
+                                   indexed_by<ordered_unique<tag<by_id>,
+                                                             member<history_object_t,
+                                                                    typename history_object_t::id_type,
+                                                                    &history_object_t::id>>,
+                                              ordered_unique<tag<by_account>,
+                                                             composite_key<history_object_t,
+                                                                           member<history_object_t,
+                                                                                  account_name_type,
+                                                                                  &history_object_t::account>,
+                                                                           member<history_object_t,
+                                                                                  uint32_t,
+                                                                                  &history_object_t::sequence>>,
+                                                             composite_key_compare<std::less<account_name_type>,
+                                                                                   std::greater<uint32_t>>>>>;
+
+using account_history_object = history_object<all_operations_history>;
+using transfers_to_scr_history_object = history_object<scr_to_scr_transfers_history>;
+using transfers_to_sp_history_object = history_object<scr_to_sp_transfers_history>;
+
+using account_full_history_index = history_index<account_history_object>;
+using transfers_to_scr_history_index = history_index<transfers_to_scr_history_object>;
+using transfers_to_sp_history_index = history_index<transfers_to_sp_history_object>;
+//
 } // namespace account_history
 } // namespace scorum
 
 FC_REFLECT(scorum::account_history::account_history_object, (id)(account)(sequence)(op))
+FC_REFLECT(scorum::account_history::transfers_to_scr_history_object, (id)(account)(sequence)(op))
+FC_REFLECT(scorum::account_history::transfers_to_sp_history_object, (id)(account)(sequence)(op))
+
 CHAINBASE_SET_INDEX_TYPE(scorum::account_history::account_history_object,
-                         scorum::account_history::account_history_index)
+                         scorum::account_history::account_full_history_index)
+
+CHAINBASE_SET_INDEX_TYPE(scorum::account_history::transfers_to_scr_history_object,
+                         scorum::account_history::transfers_to_scr_history_index)
+
+CHAINBASE_SET_INDEX_TYPE(scorum::account_history::transfers_to_sp_history_object,
+                         scorum::account_history::transfers_to_sp_history_index)

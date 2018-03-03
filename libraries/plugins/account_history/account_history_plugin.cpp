@@ -30,8 +30,15 @@ public:
     account_history_plugin_impl(account_history_plugin& _plugin)
         : _self(_plugin)
     {
+        chain::database& db = database();
+
+        db.add_plugin_index<account_full_history_index>();
+
+        db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
     }
-    virtual ~account_history_plugin_impl();
+    virtual ~account_history_plugin_impl()
+    {
+    }
 
     scorum::chain::database& database()
     {
@@ -47,13 +54,15 @@ public:
     flat_set<std::string> _op_list;
 };
 
-account_history_plugin_impl::~account_history_plugin_impl()
+class operation_visitor
 {
-    return;
-}
+    database& _db;
+    const operation_notification& _note;
+    account_name_type item;
 
-struct operation_visitor
-{
+public:
+    typedef void result_type;
+
     operation_visitor(database& db, const operation_notification& note, const account_name_type& i)
         : _db(db)
         , _note(note)
@@ -61,15 +70,31 @@ struct operation_visitor
     {
     }
 
-    typedef void result_type;
-
-    database& _db;
-    const operation_notification& _note;
-    account_name_type item;
-
     template <typename Op> void operator()(Op&&) const
     {
-        const auto& new_obj = _db.create<operation_object>([&](operation_object& obj) {
+        push_history<account_history_object>(create_operation_obj());
+    }
+
+    void operator()(transfer_operation&&) const
+    {
+        const auto& new_obj = create_operation_obj();
+
+        push_history<account_history_object>(new_obj);
+        push_history<transfers_to_scr_history_object>(new_obj);
+    }
+
+    void operator()(transfer_to_vesting_operation&&) const
+    {
+        const auto& new_obj = create_operation_obj();
+
+        push_history<account_history_object>(new_obj);
+        push_history<transfers_to_sp_history_object>(new_obj);
+    }
+
+private:
+    const operation_object& create_operation_obj() const
+    {
+        return _db.create<operation_object>([&](operation_object& obj) {
             obj.trx_id = _note.trx_id;
             obj.block = _note.block;
             obj.trx_in_block = _note.trx_in_block;
@@ -82,17 +107,20 @@ struct operation_visitor
             fc::datastream<char*> ds(obj.serialized_op.data(), size);
             fc::raw::pack(ds, _note.op);
         });
+    }
 
-        const auto& hist_idx = _db.get_index<account_history_index>().indices().get<by_account>();
+    template <typename history_object_type> void push_history(const operation_object& op) const
+    {
+        const auto& hist_idx = _db.get_index<history_index<history_object_type>>().indices().get<by_account>();
         auto hist_itr = hist_idx.lower_bound(boost::make_tuple(item, uint32_t(-1)));
         uint32_t sequence = 0;
         if (hist_itr != hist_idx.end() && hist_itr->account == item)
             sequence = hist_itr->sequence + 1;
 
-        _db.create<account_history_object>([&](account_history_object& ahist) {
+        _db.create<history_object_type>([&](history_object_type& ahist) {
             ahist.account = item;
             ahist.sequence = sequence;
-            ahist.op = new_obj.id;
+            ahist.op = op.id;
         });
     }
 };
@@ -185,9 +213,6 @@ account_history_plugin::account_history_plugin(application* app)
     , my(new detail::account_history_plugin_impl(*this))
 {
     // ilog("Loading account history plugin" );
-    chain::database& db = database();
-
-    db.add_plugin_index<account_history_index>();
 }
 
 account_history_plugin::~account_history_plugin()
@@ -214,8 +239,7 @@ void account_history_plugin::plugin_set_program_options(boost::program_options::
 
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    // ilog("Intializing account history plugin" );
-    database().pre_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+    ilog("Intializing account history plugin");
 
     typedef std::pair<account_name_type, account_name_type> pairstring;
     LOAD_VALUE_SET(options, "track-account-range", my->_tracked_accounts, pairstring);
