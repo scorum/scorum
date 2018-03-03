@@ -11,6 +11,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/proposal_executor.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward.hpp>
@@ -22,6 +23,7 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/development_committee.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -34,7 +36,9 @@ DATA_SERVICE_FACTORY_IMPL(
         (dynamic_global_property)
         (escrow)
         (proposal)
+        (proposal_executor)
         (registration_committee)
+        (development_committee)
         (registration_pool)
         (reward)
         (reward_fund)

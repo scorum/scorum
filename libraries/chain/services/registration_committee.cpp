@@ -1,5 +1,8 @@
 #include <scorum/chain/services/registration_committee.hpp>
+
 #include <scorum/chain/database/database.hpp>
+
+#include <scorum/chain/services/registration_pool.hpp>
 
 #include <scorum/chain/services/account.hpp>
 
@@ -80,8 +83,7 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
     return get_committee();
 }
 
-const registration_committee_member_object&
-dbs_registration_committee::add_member(const account_name_type& account_name)
+void dbs_registration_committee::add_member(const account_name_type& account_name)
 {
     // to fill empty committee it is used create_committee
     FC_ASSERT(!get_committee().empty(), "No committee to add member.");
@@ -90,7 +92,7 @@ dbs_registration_committee::add_member(const account_name_type& account_name)
 
     const account_object& accout = account_service.get_account(account_name);
 
-    return _add_member(accout);
+    _add_member(accout);
 }
 
 void dbs_registration_committee::exclude_member(const account_name_type& account_name)
@@ -120,6 +122,45 @@ bool dbs_registration_committee::is_exists(const account_name_type& account_name
 {
     const auto& idx = db_impl().get_index<registration_committee_member_index>().indices().get<by_account_name>();
     return idx.find(account_name) != idx.cend();
+}
+
+void dbs_registration_committee::change_add_member_quorum(const protocol::percent_type quorum)
+{
+    auto& service = db_impl().obtain_service<dbs_registration_pool>();
+
+    db_impl().modify(service.get(), [&](registration_pool_object& m) { m.invite_quorum = quorum; });
+}
+
+void dbs_registration_committee::change_exclude_member_quorum(const percent_type quorum)
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.dropout_quorum = quorum; });
+}
+
+void dbs_registration_committee::change_base_quorum(const percent_type quorum)
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.change_quorum = quorum; });
+}
+
+percent_type dbs_registration_committee::get_add_member_quorum()
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.invite_quorum;
+}
+
+percent_type dbs_registration_committee::get_exclude_member_quorum()
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.dropout_quorum;
+}
+
+percent_type dbs_registration_committee::get_base_quorum()
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.change_quorum;
 }
 
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)

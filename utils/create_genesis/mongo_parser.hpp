@@ -1,6 +1,7 @@
 #pragma once
 
 #include "parsers.hpp"
+#include "genesis_mapper.hpp"
 
 #include <string>
 
@@ -18,6 +19,7 @@ private:
     void process_document(const std::string&, genesis_state_type&);
 
     std::string _connection_uri;
+    genesis_mapper _mapper;
 };
 }
 }

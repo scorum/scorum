@@ -21,8 +21,10 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 set( SOURCES
    main.cpp
    genesis_parser.cpp
+   genesis_mapper.cpp
    file_parser.cpp
    mongo_parser.cpp
+   genesis_tester.cpp
    )
 
 add_executable(create_genesis

@@ -48,17 +48,21 @@ add_library( scorum_chain
              services/decline_voting_rights_request.cpp
              services/vesting_delegation.cpp
              services/reward_fund.cpp
+             services/proposal_executor.cpp
              services/dev_pool.cpp
              services/withdraw_vesting_route.cpp
              services/withdraw_vesting_route_statistic.cpp
              services/withdraw_vesting.cpp
+             services/development_committee.cpp
 
              data_service_factory.cpp
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
+             evaluators/proposal_vote_evaluator.cpp
              evaluators/set_withdraw_vesting_route_evaluators.cpp
              evaluators/withdraw_vesting_evaluator.cpp
+             evaluators/committee_accessor.cpp
 
              schema/shared_authority.cpp
 

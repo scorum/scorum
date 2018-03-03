@@ -16,6 +16,7 @@ add_library( scorum_protocol
              transaction.cpp
              types.cpp
              version.cpp
+             proposal_operations.cpp
 
              ${HEADERS}
            )

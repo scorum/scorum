@@ -1,4 +1,5 @@
 #include <scorum/protocol/scorum_operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
@@ -36,6 +37,7 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/withdraw_vesting_route.hpp>
@@ -1165,20 +1167,14 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
 
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+
     _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>(
         new set_withdraw_vesting_route_to_dev_pool_evaluator(*this));
     _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>(
         new set_withdraw_vesting_route_to_account_evaluator(*this));
     _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>(new withdraw_vesting_evaluator(*this));
-
-    // clang-format off
-    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
-        new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
-                                    this->obtain_service<dbs_proposal>(),
-                                    this->obtain_service<dbs_registration_committee>(),
-                                    this->obtain_service<dbs_dynamic_global_property>()));
-    //clang-format on
 }
 
 void database::initialize_indexes()
@@ -1214,6 +1210,7 @@ void database::initialize_indexes()
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
     add_index<atomicswap_contract_index>();
+
     add_index<dev_committee_index>();
 
     _plugin_index_signal();
@@ -2046,6 +2043,3 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
-
-
-

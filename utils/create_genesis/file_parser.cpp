@@ -52,6 +52,8 @@ file_parser::file_parser(const boost::filesystem::path& path)
 
 void file_parser::update(genesis_state_type& result)
 {
+    _mapper.reset(result);
+
     ilog("Loading ${file}.", ("file", _path.string()));
 
     boost::filesystem::ifstream fl;
@@ -67,14 +69,12 @@ void file_parser::update(genesis_state_type& result)
 
     file_format_type input = fc::json::from_string(ss.str()).as<file_format_type>();
 
-    result.steemit_bounty_accounts.clear();
-
     for (const auto& user : input.users)
     {
-        // TODO
-
-        result.accounts.push_back({ user.name, "", user.public_key, user.scr_amount });
+        _mapper.update(user.name, "", user.public_key, user.scr_amount, user.sp_amount);
     }
+
+    _mapper.save(result);
 }
 }
 }

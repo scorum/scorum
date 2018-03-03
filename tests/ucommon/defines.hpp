@@ -76,6 +76,8 @@ template <class T> T make_test_index_object()
     {                                                                                                                  \
         BOOST_REQUIRE(e.get_log().size() == 1);                                                                        \
         bool check_exception_message = e.get_log().front().get_message().find(message) != std::string::npos;           \
+        if (!check_exception_message)                                                                                  \
+            std::cout << "EXCEPTION:" << e.get_log().front().get_message() << std::endl;                               \
         BOOST_CHECK(check_exception_message);                                                                          \
     }
 

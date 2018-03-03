@@ -43,10 +43,6 @@ public:
     virtual void update(const modifier_type& modifier) override;
 
     virtual fc::time_point_sec head_block_time() const override;
-
-    void set_invite_quorum(uint64_t quorum);
-    void set_dropout_quorum(uint64_t quorum);
-    void set_quorum(uint64_t quorum);
 };
 
 } // namespace chain
