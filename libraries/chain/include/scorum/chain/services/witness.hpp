@@ -1,6 +1,7 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -9,11 +10,10 @@ class chain_properties;
 namespace chain {
 
 class account_object;
-class witness_object;
 
 using chain_properties = scorum::protocol::chain_properties;
 
-struct witness_service_i
+struct witness_service_i : public base_service_i<witness_object>
 {
     virtual const witness_object& get(const account_name_type& owner) const = 0;
 
@@ -44,7 +44,7 @@ struct witness_service_i
     virtual void adjust_witness_votes(const account_object& account, const share_type& delta) = 0;
 };
 
-class dbs_witness : public dbs_base, public witness_service_i
+class dbs_witness : public dbs_service_base<witness_service_i>
 {
     friend class dbservice_dbs_factory;
 

@@ -3,6 +3,7 @@
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/budget.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -20,11 +21,12 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
 
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
     reward_service_i& reward_service = ctx.services().reward_service();
+    reward_fund_service_i& reward_fund_service = ctx.services().reward_fund_service();
     budget_service_i& budget_service = ctx.services().budget_service();
 
-    FC_ASSERT(!reward_service.is_fund_exists());
+    FC_ASSERT(!reward_fund_service.is_exists());
 
-    const auto& post_rf = reward_service.create_fund([&](reward_fund_object& rfo) {
+    const auto& post_rf = reward_fund_service.create([&](reward_fund_object& rfo) {
         rfo.last_update = dgp_service.head_block_time();
         rfo.reward_balance = asset(0, SCORUM_SYMBOL);
         rfo.author_reward_curve = curve_id::linear;
@@ -42,7 +44,7 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
                                      ctx.genesis_state().rewards_supply.symbol());
     fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
-    FC_ASSERT(!reward_service.is_pool_exists());
+    FC_ASSERT(!reward_service.is_exists());
 
     reward_service.create_pool(initial_reward_pool_supply);
 

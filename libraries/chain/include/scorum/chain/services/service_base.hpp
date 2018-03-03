@@ -94,6 +94,15 @@ public:
         }
         FC_CAPTURE_AND_RETHROW()
     }
+
+    template <class... IndexBy, class Key> const object_type* find_by(const Key& arg) const
+    {
+        try
+        {
+            return db_impl().template find<object_type, IndexBy...>(arg);
+        }
+        FC_CAPTURE_AND_RETHROW()
+    }
 };
 } // namespace chain
 } // namespace scorum

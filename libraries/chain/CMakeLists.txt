@@ -46,7 +46,6 @@ add_library( scorum_chain
              services/registration_committee.cpp
              services/registration_pool.cpp
              services/reward.cpp
-             services/reward_fund.cpp
              services/vesting_delegation.cpp
              services/withdraw_vesting.cpp
              services/withdraw_vesting_route.cpp

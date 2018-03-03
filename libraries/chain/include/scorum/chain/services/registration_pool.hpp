@@ -1,23 +1,15 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-#include <vector>
-#include <set>
-#include <functional>
-
+#include <scorum/chain/services/service_base.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-struct registration_pool_service_i
+struct registration_pool_service_i : public base_service_i<registration_pool_object>
 {
     using schedule_item_type = registration_pool_object::schedule_item;
     using schedule_items_type = std::map<uint8_t /*stage field*/, schedule_item_type /*all other fields*/>;
-
-    virtual const registration_pool_object& get() const = 0;
-
-    virtual bool is_exists() const = 0;
 
     virtual const registration_pool_object&
     create_pool(const asset& supply, const asset& maximum_bonus, const schedule_items_type& schedule_items)
@@ -37,7 +29,7 @@ struct registration_pool_service_i
 /**
  * DB service for operations with registration_pool object
  */
-class dbs_registration_pool : public dbs_base, public registration_pool_service_i
+class dbs_registration_pool : public dbs_service_base<registration_pool_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -45,10 +37,6 @@ protected:
     explicit dbs_registration_pool(database& db);
 
 public:
-    const registration_pool_object& get() const override;
-
-    bool is_exists() const override;
-
     const registration_pool_object&
     create_pool(const asset& supply, const asset& maximum_bonus, const schedule_items_type& schedule_items) override;
 
@@ -62,9 +50,6 @@ public:
     bool check_autoclose() override;
 
     void increase_already_allocated_count() override;
-
-private:
-    void _close();
 };
 
 } // namespace chain

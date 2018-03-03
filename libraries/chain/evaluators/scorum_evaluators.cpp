@@ -795,7 +795,10 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
         FC_ASSERT(voter.witnesses_voted_for < SCORUM_MAX_ACCOUNT_WITNESS_VOTES,
                   "Account has voted for too many witnesses."); // TODO: Remove after hardfork 2
 
-        witness_vote_service.create(witness.id, voter.id);
+        witness_vote_service.create([&](witness_vote_object& v) {
+            v.witness = witness.id;
+            v.account = voter.id;
+        });
 
         witness_service.adjust_witness_vote(witness, voter.witness_vote_weight());
 
@@ -1129,7 +1132,7 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
     auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
         - withdraw_vesting_service.get_withdraw_rest(delegator.id);
 
-    const auto dprops = dprops_service.get();
+    const auto& dprops = dprops_service.get();
     auto min_delegation
         = asset(dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER,
                 VESTS_SYMBOL);
@@ -1142,7 +1145,12 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
         FC_ASSERT(op.vesting_shares >= min_delegation, "Account must delegate a minimum of ${v}",
                   ("v", min_delegation));
 
-        vd_service.create(op.delegator, op.delegatee, op.vesting_shares);
+        vd_service.create([&](vesting_delegation_object& vd) {
+            vd.delegator = op.delegator;
+            vd.delegatee = op.delegatee;
+            vd.vesting_shares = op.vesting_shares;
+            vd.min_delegation_time = dprops.time;
+        });
 
         account_service.increase_delegated_vesting_shares(delegator, op.vesting_shares);
         account_service.increase_received_vesting_shares(delegatee, op.vesting_shares);
@@ -1164,7 +1172,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
             account_service.increase_delegated_vesting_shares(delegator, delta);
             account_service.increase_received_vesting_shares(delegatee, delta);
 
-            vd_service.update(delegation, op.vesting_shares);
+            vd_service.update(delegation,
+                              [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
         }
         // Else the delegation is decreasing
         else /* delegation.vesting_shares > op.vesting_shares */
@@ -1194,7 +1203,8 @@ void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_o
 
             if (op.vesting_shares.amount > 0)
             {
-                vd_service.update(delegation, op.vesting_shares);
+                vd_service.update(delegation,
+                                  [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
             }
             else
             {

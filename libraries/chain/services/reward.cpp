@@ -8,18 +8,8 @@ namespace scorum {
 namespace chain {
 
 dbs_reward::dbs_reward(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
-}
-
-const reward_fund_object& dbs_reward::create_fund(const modifier_type& modifier)
-{
-    return db_impl().create<reward_fund_object>([&](reward_fund_object& o) { modifier(o); });
-}
-
-bool dbs_reward::is_fund_exists() const
-{
-    return nullptr != db_impl().find<reward_fund_object>();
 }
 
 const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
@@ -27,35 +17,25 @@ const reward_pool_object& dbs_reward::create_pool(const asset& initial_supply)
     // clang-format off
     asset initial_per_block_reward(initial_supply.amount / (SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY), initial_supply.symbol());
 
-    FC_ASSERT(db_impl().find<reward_pool_object>() == nullptr, "recreation of reward_pool_object is not allowed");
+    FC_ASSERT(!is_exists(), "recreation of reward_pool_object is not allowed");
     FC_ASSERT(initial_supply.symbol() == SCORUM_SYMBOL, "initial supply for reward_pool must in ${1}", ("1", asset(0, SCORUM_SYMBOL).symbol_name()));
     FC_ASSERT(initial_supply > asset(0, SCORUM_SYMBOL), "initial supply for reward_pool must not be null");
     FC_ASSERT(initial_per_block_reward > asset(0, SCORUM_SYMBOL),
               "initial supply for reward_pool is not sufficient to make per_block_reward > 0. It should be at least ${1}, but current value is ${2}",
               ("1", asset(SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS * SCORUM_BLOCKS_PER_DAY, SCORUM_SYMBOL)) ("2", initial_supply));
 
-    return db_impl().create<reward_pool_object>([&](reward_pool_object& rp) {
+    return create([&](reward_pool_object& rp) {
         rp.balance = initial_supply;
         rp.current_per_block_reward = initial_per_block_reward;
     });
     // clang-format on
 }
 
-bool dbs_reward::is_pool_exists() const
-{
-    return nullptr != db_impl().find<reward_pool_object>();
-}
-
-const reward_pool_object& dbs_reward::get_pool() const
-{
-    return db_impl().get<reward_pool_object>();
-}
-
 const asset& dbs_reward::increase_pool_ballance(const asset& delta)
 {
-    const auto& pool = get_pool();
+    const auto& pool = get();
 
-    db_impl().modify(pool, [&](reward_pool_object& pool) {
+    update(pool, [&](reward_pool_object& pool) {
         switch (delta.symbol())
         {
         case SCORUM_SYMBOL:
@@ -73,13 +53,13 @@ const asset& dbs_reward::increase_pool_ballance(const asset& delta)
 // clang-format off
 const asset dbs_reward::take_block_reward()
 {
-    const auto& pool = get_pool();
+    const auto& pool = get();
 
     FC_ASSERT(pool.current_per_block_reward > asset(0, SCORUM_SYMBOL));
 
     asset real_per_block_reward(0, SCORUM_SYMBOL);
 
-    db_impl().modify(pool, [&](reward_pool_object& pool) 
+    update(pool, [&](reward_pool_object& pool) 
     { 
         if (pool.balance > asset(pool.current_per_block_reward.amount * SCORUM_BLOCKS_PER_DAY * SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS, SCORUM_SYMBOL))
         {

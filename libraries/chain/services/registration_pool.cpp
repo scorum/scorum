@@ -7,23 +7,8 @@ namespace scorum {
 namespace chain {
 
 dbs_registration_pool::dbs_registration_pool(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
-}
-
-const registration_pool_object& dbs_registration_pool::get() const
-{
-    try
-    {
-        // This method uses get(id == 0). It is correct because we create object only one time
-        return db_impl().get<registration_pool_object>();
-    }
-    FC_CAPTURE_AND_RETHROW(("Pool does not exist."))
-}
-
-bool dbs_registration_pool::is_exists() const
-{
-    return nullptr != db_impl().find<registration_pool_object>();
 }
 
 const registration_pool_object& dbs_registration_pool::create_pool(const asset& supply,
@@ -46,10 +31,10 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
 
     // Check existence here to allow unit tests check input data even if object exists in DB
     // This method uses get(id == 0). Look get_pool.
-    FC_ASSERT(db_impl().find<registration_pool_object>() == nullptr, "Can't create more than one pool.");
+    FC_ASSERT(!is_exists(), "Can't create more than one pool.");
 
     // create pool
-    const auto& new_pool = db_impl().create<registration_pool_object>([&](registration_pool_object& pool) {
+    return create([&](registration_pool_object& pool) {
         pool.balance = supply;
         pool.maximum_bonus = maximum_bonus;
         pool.schedule_items.reserve(schedule_items.size());
@@ -58,8 +43,6 @@ const registration_pool_object& dbs_registration_pool::create_pool(const asset& 
             pool.schedule_items.push_back(value.second);
         }
     });
-
-    return new_pool;
 }
 
 asset dbs_registration_pool::calculate_per_reg()
@@ -106,7 +89,7 @@ asset dbs_registration_pool::decrease_balance(const asset& balance)
 
     asset ret(0, SCORUM_SYMBOL);
 
-    db_impl().modify(this_pool, [&](registration_pool_object& pool) {
+    update(this_pool, [&](registration_pool_object& pool) {
         if (pool.balance.amount > 0 && balance <= pool.balance)
         {
             pool.balance -= balance;
@@ -128,7 +111,7 @@ bool dbs_registration_pool::check_autoclose()
 
     if (this_pool.balance.amount <= 0)
     {
-        _close();
+        remove(this_pool);
         return true;
     }
     else
@@ -139,9 +122,7 @@ bool dbs_registration_pool::check_autoclose()
 
 void dbs_registration_pool::increase_already_allocated_count()
 {
-    const registration_pool_object& this_pool = get();
-
-    db_impl().modify(this_pool, [&](registration_pool_object& pool) { pool.already_allocated_count++; });
+    update([&](registration_pool_object& pool) { pool.already_allocated_count++; });
 }
 
 asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
@@ -217,10 +198,5 @@ asset dbs_registration_pool::allocate_cash(const account_name_type& member_name)
     return per_reg;
 }
 
-void dbs_registration_pool::_close()
-{
-    const registration_pool_object& this_pool = get();
-    db_impl().remove(this_pool);
-}
 } // namespace chain
 } // namespace scorum

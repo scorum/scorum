@@ -51,7 +51,7 @@ dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time() const
 
 bool dbs_comment::is_exists(const account_name_type& author, const std::string& permlink) const
 {
-    return nullptr != db_impl().find<comment_object, by_permlink>(std::make_tuple(author, permlink));
+    return find_by<by_permlink>(std::make_tuple(author, permlink));
 }
 
 } // namespace chain
