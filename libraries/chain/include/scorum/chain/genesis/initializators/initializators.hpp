@@ -50,7 +50,6 @@ class initializator : public task<initializator_context, single_time_apply_guard
 {
 protected:
     initializator()
-        : task<initializator_context, single_time_apply_guard>(false)
     {
     }
 };

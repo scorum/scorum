@@ -60,7 +60,6 @@ class block_task_type : public task<block_task_context, per_block_num_apply_guar
 {
 protected:
     block_task_type()
-        : task<block_task_context, per_block_num_apply_guard<per_block_num>>(false)
     {
     }
 };

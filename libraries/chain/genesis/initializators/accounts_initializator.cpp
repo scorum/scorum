@@ -24,7 +24,7 @@ void accounts_initializator_impl::on_apply(initializator_context& ctx)
 
     for (auto& account : ctx.genesis_state().accounts)
     {
-        scorum::protocol::validate_account_name(account.name);
+        FC_ASSERT(!account.name.empty(), "Account 'name' should not be empty.");
 
         account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
                                                account.recovery_account, R"({"created_at": "GENESIS"})");
