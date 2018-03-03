@@ -33,6 +33,7 @@ int main(int argc, char** argv)
                 ("input-genesis-json,g",     bpo::value<std::string>(), "Path for Json genesis file to concatenate with result.")
                 ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
                 ("shared-memory-reserved-size,m",  bpo::value<unsigned int>()->default_value(100), "Reserved disk size (Mb) for database test.")
+                ("suppress-output-json,s", "Do not print result Json genesis.")
                 ("output-genesis-json,o", bpo::value<std::string>(), "Path for result Json genesis file.");
         // clang-format on
 
@@ -78,8 +79,7 @@ int main(int argc, char** argv)
 
             mongo.update(genesis);
 #else
-            std::cout << opts << std::endl;
-            return 1;
+            FC_ASSERT(options.count("input-genesis-json"));
 #endif
         }
 
@@ -88,12 +88,16 @@ int main(int argc, char** argv)
             unsigned int shared_mem_mb_size = options.at("shared-memory-reserved-size").as<unsigned int>();
             scorum::util::test_database(genesis, shared_mem_mb_size);
         }
+        else
+        {
+            FC_ASSERT(!options.count("suppress-output-json"));
+        }
 
         if (options.count("output-genesis-json"))
         {
             scorum::util::save_to_file(genesis, options.at("output-genesis-json").as<std::string>());
         }
-        else
+        else if (!options.count("suppress-output-json"))
         {
             scorum::util::print(genesis);
         }
