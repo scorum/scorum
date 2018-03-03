@@ -6,6 +6,8 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
+
 #include <scorum/chain/genesis/genesis_state.hpp>
 
 namespace scorum {
@@ -23,11 +25,12 @@ void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
         size_t total_unvested = ctx.genesis_state().accounts.size();
         for (auto& account : ctx.genesis_state().accounts)
         {
-            const auto& account_obj = account_service.get_account(account.name);
-            asset bonus = allocate_cash(ctx);
-            if (bonus.amount > (share_value_type)0)
+            if (registration_pool_service.get().balance.amount > 0)
             {
-                account_service.create_vesting(account_obj, bonus);
+                const auto& account_obj = account_service.get_account(account.name);
+                give_bonus_from_registration_pool_task_context bonus_ctx(ctx.services(), account_obj);
+                give_bonus_from_registration_pool_task give_bonus;
+                give_bonus.apply(bonus_ctx);
                 --total_unvested;
             }
             else
@@ -37,27 +40,6 @@ void registration_bonus_initializator_impl::on_apply(initializator_context& ctx)
             }
         }
     }
-}
-
-asset registration_bonus_initializator_impl::allocate_cash(initializator_context& ctx)
-{
-    registration_pool_service_i& registration_pool_service = ctx.services().registration_pool_service();
-
-    if (!registration_pool_service.is_exists())
-        return asset(0, SCORUM_SYMBOL);
-
-    asset per_reg = registration_pool_service.calculate_per_reg();
-    FC_ASSERT(per_reg.amount > 0, "Invalid schedule. Zero bonus return.");
-
-    // return value <= per_reg
-    per_reg = registration_pool_service.decrease_balance(per_reg);
-
-    if (!registration_pool_service.check_autoclose())
-    {
-        registration_pool_service.increase_already_allocated_count();
-    }
-
-    return per_reg;
 }
 }
 }
