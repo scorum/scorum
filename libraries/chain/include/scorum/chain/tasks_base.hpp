@@ -37,6 +37,14 @@ template <typename ContextType = data_service_factory_i,
 class task
 {
 public:
+    task()
+    {
+    }
+    task(bool silent)
+        : _silent(silent)
+    {
+    }
+
     virtual ~task()
     {
     }
@@ -65,11 +73,17 @@ public:
 
         auto impl = boost::typeindex::type_id_runtime(*this).pretty_name();
 
-        dlog("Task ${impl} is processing.", ("impl", impl));
+        if (!_silent)
+        {
+            dlog("Task ${impl} is processing.", ("impl", impl));
+        }
 
         on_apply(ctx);
 
-        dlog("Task ${impl} is done.", ("impl", impl));
+        if (!_silent)
+        {
+            dlog("Task ${impl} is done.", ("impl", impl));
+        }
 
         for (task& r : _before)
         {
@@ -86,6 +100,7 @@ private:
     tasks_reqired_type _after;
     tasks_reqired_type _before;
     ReentranceGuardType _guard;
+    bool _silent = true;
 };
 }
 }

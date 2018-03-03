@@ -1,8 +1,15 @@
 #pragma once
 
 namespace scorum {
+
+namespace chain {
+class genesis_state_type;
+}
+
 namespace util {
 
-// TODO: Try open test database by resulted genesis
+using scorum::chain::genesis_state_type;
+
+void test_database(const genesis_state_type&, unsigned int shared_mem_mb_size);
 }
 }

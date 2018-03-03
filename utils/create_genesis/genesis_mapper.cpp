@@ -20,6 +20,21 @@ struct get_name_visitor
     }
 };
 
+struct init_empty_item_visitor
+{
+    using result_type = genesis_account_info_item_type;
+
+    genesis_account_info_item_type operator()(const account_type&) const
+    {
+        return account_type{};
+    }
+
+    genesis_account_info_item_type operator()(const steemit_bounty_account_type&) const
+    {
+        return steemit_bounty_account_type{};
+    }
+};
+
 class update_visitor
 {
 public:
@@ -129,7 +144,7 @@ void genesis_mapper::update(const genesis_account_info_item_type& item)
 {
     genesis_account_info_item_type& genesis_item = _uniq_items[item.visit(get_name_visitor())][item.which()];
     if (!genesis_item.which())
-        genesis_item = item;
+        genesis_item = item.visit(init_empty_item_visitor());
 
     item.visit(update_visitor(genesis_item, _accounts_supply, _steemit_bounty_accounts_supply));
 }

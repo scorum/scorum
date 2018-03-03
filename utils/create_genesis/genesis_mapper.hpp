@@ -40,7 +40,7 @@ private:
     using genesis_account_info_items_type = std::map<std::string, genesis_account_info_item_map_by_type>;
     genesis_account_info_items_type _uniq_items;
     asset _accounts_supply = asset(0, SCORUM_SYMBOL);
-    asset _steemit_bounty_accounts_supply = asset(0, SCORUM_SYMBOL);
+    asset _steemit_bounty_accounts_supply = asset(0, VESTS_SYMBOL);
 };
 }
 }

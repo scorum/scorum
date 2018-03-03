@@ -12,6 +12,8 @@
 namespace scorum {
 namespace util {
 
+using scorum::protocol::chain_id_type;
+
 void load(const std::string& path, genesis_state_type& genesis)
 {
     boost::filesystem::path path_to_load(path);
@@ -35,7 +37,7 @@ void load(const std::string& path, genesis_state_type& genesis)
     genesis = fc::json::from_string(ss.str()).as<genesis_state_type>();
 }
 
-void save_to_string(const genesis_state_type& genesis, std::string& output_json, bool pretty_print)
+void save_to_string(genesis_state_type& genesis, std::string& output_json, bool pretty_print)
 {
     fc::variant vo;
     fc::to_variant(genesis, vo);
@@ -51,12 +53,17 @@ void save_to_string(const genesis_state_type& genesis, std::string& output_json,
     }
 }
 
-void save_to_file(const genesis_state_type& genesis, const std::string& path, bool pretty_print)
+void save_to_file(genesis_state_type& genesis, const std::string& path, bool pretty_print)
 {
     std::string output_json;
     save_to_string(genesis, output_json, pretty_print);
 
     boost::filesystem::path path_to_save(path);
+
+    path_to_save.normalize();
+
+    ilog("Saving ${file}.", ("file", path_to_save.string()));
+
     boost::filesystem::ofstream fl;
     fl.open(path_to_save);
 
@@ -66,7 +73,7 @@ void save_to_file(const genesis_state_type& genesis, const std::string& path, bo
     fl.close();
 }
 
-void print(const genesis_state_type& genesis)
+void print(genesis_state_type& genesis)
 {
     std::string output_json;
     save_to_string(genesis, output_json, true);

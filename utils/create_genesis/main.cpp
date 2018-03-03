@@ -11,6 +11,8 @@
 #include "mongo_parser.hpp"
 #endif
 
+#include "genesis_tester.hpp"
+
 using scorum::chain::genesis_state_type;
 
 int main(int argc, char** argv)
@@ -28,8 +30,9 @@ int main(int argc, char** argv)
                 ("mongodb-endpoint,m", bpo::value<std::string>()->default_value("mongodb://localhost:27017"), "Server MongoDB connection string")
 #endif
                 ("import-json,i",     bpo::value<std::string>(), "Path for Json data file to parse.")
-                ("input-genesis-json,j",     bpo::value<std::string>(), "Path for Json genesis file to concatenate with result.")
+                ("input-genesis-json,g",     bpo::value<std::string>(), "Path for Json genesis file to concatenate with result.")
                 ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
+                ("shared-memory-reserved-size,m",  bpo::value<unsigned int>()->default_value(100), "Reserved disk size (Mb) for database test.")
                 ("output-genesis-json,o", bpo::value<std::string>(), "Path for result Json genesis file.");
         // clang-format on
 
@@ -82,7 +85,8 @@ int main(int argc, char** argv)
 
         if (options.count("test-resut-genesis"))
         {
-            // TODO: genesis_tester
+            unsigned int shared_mem_mb_size = options.at("shared-memory-reserved-size").as<unsigned int>();
+            scorum::util::test_database(genesis, shared_mem_mb_size);
         }
 
         if (options.count("output-genesis-json"))

@@ -22,9 +22,9 @@ struct file_format_type
     struct user
     {
         std::string name;
-        public_key_type public_key;
-        asset scr_amount;
-        asset sp_amount;
+        public_key_type key;
+        asset scr;
+        asset sp;
     };
 
     std::vector<user> users;
@@ -32,7 +32,7 @@ struct file_format_type
 }
 }
 
-FC_REFLECT(scorum::util::file_format_type::user, (name)(public_key)(scr_amount)(sp_amount))
+FC_REFLECT(scorum::util::file_format_type::user, (name)(key)(scr)(sp))
 
 FC_REFLECT(scorum::util::file_format_type, (users))
 
@@ -71,7 +71,7 @@ void file_parser::update(genesis_state_type& result)
 
     for (const auto& user : input.users)
     {
-        _mapper.update(user.name, "", user.public_key, user.scr_amount, user.sp_amount);
+        _mapper.update(user.name, "", user.key, user.scr, user.sp);
     }
 
     _mapper.save(result);
