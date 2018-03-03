@@ -65,6 +65,7 @@ struct genesis_state_type
     std::vector<witness_type> witness_candidates;
     std::vector<registration_schedule_item> registration_schedule;
     std::vector<std::string> registration_committee;
+    std::vector<std::string> development_committee;
 
     chain_id_type initial_chain_id;
 };
@@ -112,5 +113,6 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (witness_candidates)
            (registration_schedule)
            (registration_committee)
+           (development_committee)
            (initial_chain_id))
 // clang-format on
