@@ -1,17 +1,22 @@
 #pragma once
 
-#include <scorum/protocol/proposal_operations.hpp>
-
-#include <scorum/chain/services/dbs_base.hpp>
 #include <vector>
 #include <set>
 #include <functional>
+
+#include <scorum/protocol/proposal_operations.hpp>
+
+#include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 
 namespace scorum {
 namespace chain {
 
 struct development_committee_service_i : public development_committee_i
 {
+    using member_object_cref_type = std::vector<dev_committee_member_object::cref_type>;
+
+    virtual member_object_cref_type get_committee() const = 0;
 };
 
 struct dbs_development_committee : public dbs_base, public development_committee_service_i
@@ -29,7 +34,9 @@ struct dbs_development_committee : public dbs_base, public development_committee
 
     bool is_exists(const account_name_type&) const override;
 
-    virtual size_t get_members_count() const override;
+    size_t get_members_count() const override;
+
+    member_object_cref_type get_committee() const override;
 
 private:
     friend class dbservice_dbs_factory;
