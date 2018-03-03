@@ -10,7 +10,7 @@
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
@@ -1180,7 +1180,6 @@ void database::initialize_evaluators()
 void database::initialize_indexes()
 {
     add_index<account_authority_index>();
-    add_index<account_history_index>();
     add_index<account_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
@@ -1285,15 +1284,16 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
         /// check invariants
-        if( is_producing() || !( skip & skip_validate_invariants ) )
+        if (is_producing() || !(skip & skip_validate_invariants))
         {
-            try{
+            try
+            {
                 validate_invariants();
             }
 #ifdef DEBUG
-        FC_CAPTURE_AND_RETHROW( (next_block) );
+            FC_CAPTURE_AND_RETHROW((next_block));
 #else
-        FC_CAPTURE_AND_LOG( (next_block) );
+            FC_CAPTURE_AND_LOG((next_block));
 #endif
         }
 
@@ -1394,7 +1394,8 @@ void database::_apply_block(const signed_block& next_block)
         const auto& gprops = get_dynamic_global_properties();
         auto block_size = fc::raw::pack_size(next_block);
         FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
+                  ("next_block_num", next_block_num)("block_size",
+                                                     block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -1434,13 +1435,10 @@ void database::_apply_block(const signed_block& next_block)
         update_witness_schedule();
 
         database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
-                                      static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                            static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds
-                .before(_my->_process_comments_cashout)
-                .before(_my->_process_vesting_withdrawals)
-                .apply(ctx);
+        _my->_process_funds.before(_my->_process_comments_cashout).before(_my->_process_vesting_withdrawals).apply(ctx);
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
@@ -1697,7 +1695,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 dgp.recent_slots_filled = (dgp.recent_slots_filled << 1) + (i == 0 ? 1 : 0);
                 dgp.participation_count += (i == 0 ? 1 : 0);
             }
-            
+
             dgp.head_block_number = b.block_num();
             dgp.head_block_id = b.id();
             dgp.time = b.timestamp;
@@ -1722,9 +1720,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 {
     try
     {
-        modify(signing_witness, [&](witness_object& _wit) {
-            _wit.last_confirmed_block_num = new_block.block_num();
-        });
+        modify(signing_witness, [&](witness_object& _wit) { _wit.last_confirmed_block_num = new_block.block_num(); });
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -1783,7 +1779,8 @@ void database::update_last_irreversible_block()
             }
         }
 
-        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
+        for_each_index(
+            [&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
 
         if (!(get_node_properties().skip_flags & skip_block_log))
         {
@@ -1968,7 +1965,8 @@ void database::validate_invariants() const
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
         {
-            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
+            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}",
+                      ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
         }
 
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();

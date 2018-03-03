@@ -4,11 +4,12 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/account_history/account_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/account_history/schema/account_history_object.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -222,7 +223,7 @@ void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::e
 std::vector<operation> database_trx_integration_fixture::get_last_operations(uint32_t num_ops)
 {
     std::vector<operation> ops;
-    const auto& acc_hist_idx = db.get_index<account_history_index>().indices().get<by_id>();
+    const auto& acc_hist_idx = db.get_index<account_history::account_history_index>().indices().get<by_id>();
     auto itr = acc_hist_idx.end();
 
     while (itr != acc_hist_idx.begin() && ops.size() < num_ops)

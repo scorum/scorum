@@ -8,6 +8,7 @@
 #include <scorum/wallet/reflect_util.hpp>
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
+#include <scorum/account_history/account_history_api.hpp>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 
@@ -894,6 +895,23 @@ public:
         }
     }
 
+    void use_remote_account_history_api()
+    {
+        if (_remote_account_history_api.valid())
+            return;
+
+        try
+        {
+            _remote_account_history_api
+                = _remote_api->get_api_by_name("account_history_api")->as<account_history::account_history_api>();
+        }
+        catch (const fc::exception& e)
+        {
+            elog("Couldn't get account_history API");
+            throw(e);
+        }
+    }
+
     void network_add_nodes(const std::vector<std::string>& nodes)
     {
         use_network_node_api();
@@ -939,6 +957,8 @@ public:
     fc::api<network_broadcast_api> _remote_net_broadcast;
     optional<fc::api<network_node_api>> _remote_net_node;
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
+    optional<fc::api<account_history::account_history_api>> _remote_account_history_api;
+
     uint32_t _tx_expiration_seconds = 30;
 
     flat_map<std::string, operation> _prototype_ops;
@@ -2160,18 +2180,31 @@ annotated_signed_transaction wallet_api::decline_voting_rights(const std::string
 std::map<uint32_t, applied_operation>
 wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
 {
-    auto result = my->_remote_db->get_account_history(account, from, limit);
-    if (!is_locked())
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
+
+    std::map<uint32_t, applied_operation> result;
+
+    try
     {
-        for (auto& item : result)
+        my->use_remote_account_history_api();
+    }
+    catch (fc::exception& e)
+    {
+        elog("Connected node needs to enable account_by_key_api");
+        return result;
+    }
+
+    result = (*my->_remote_account_history_api)->get_account_history(account, from, limit);
+
+    for (auto& item : result)
+    {
+        if (item.second.op.which() == operation::tag<transfer_operation>::value)
         {
-            if (item.second.op.which() == operation::tag<transfer_operation>::value)
-            {
-                auto& top = item.second.op.get<transfer_operation>();
-                top.memo = decrypt_memo(top.memo);
-            }
+            auto& top = item.second.op.get<transfer_operation>();
+            top.memo = decrypt_memo(top.memo);
         }
     }
+
     return result;
 }
 
