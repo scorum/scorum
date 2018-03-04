@@ -4,6 +4,7 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/services/*.hpp"
                   "include/scorum/chain/util/*.hpp"
                   "include/scorum/chain/genesis/*.hpp"
+                  "include/scorum/chain/genesis/initializators/*.hpp"
                   "include/scorum/chain/database/*.hpp"
                   "include/scorum/chain/database/block_tasks/*.hpp"
                   "database/block_tasks/*.hpp")
@@ -80,6 +81,7 @@ add_library( scorum_chain
              genesis/initializators/registration_bonus_initializator.cpp
              genesis/initializators/steemit_bounty_account_initializator.cpp
              genesis/initializators/dev_pool_initializator.cpp
+             genesis/initializators/dev_committee_initialiazator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_funds.cpp

@@ -268,6 +268,7 @@ public:
                   .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
                   .registration_schedule(single_stage)
                   .committee(alice)
+                  .dev_committee(alice)
                   .generate();
         // clang-format on
 

@@ -21,27 +21,26 @@ namespace genesis {
 
 void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
 {
-    if (!is_dev_pool_exists(ctx))
+    if (!is_zero_supply(ctx))
     {
-        dlog("There is no development supply.");
-        return;
+        dlog("Development pool supply is zero.");
     }
 
     FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == VESTS_SYMBOL);
     FC_ASSERT(ctx.genesis_state().development_scr_supply.symbol() == SCORUM_SYMBOL);
 
-    create_dev_pool(ctx);
+    create_dev_committee_and_set_pool_balance(ctx);
 
     increase_total_supply(ctx);
 }
 
-bool dev_pool_initializator_impl::is_dev_pool_exists(initializator_context& ctx)
+bool dev_pool_initializator_impl::is_zero_supply(initializator_context& ctx)
 {
     return ctx.genesis_state().development_sp_supply.amount.value
         || ctx.genesis_state().development_scr_supply.amount.value;
 }
 
-void dev_pool_initializator_impl::create_dev_pool(initializator_context& ctx)
+void dev_pool_initializator_impl::create_dev_committee_and_set_pool_balance(initializator_context& ctx)
 {
     dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
 
@@ -62,6 +61,7 @@ void dev_pool_initializator_impl::increase_total_supply(initializator_context& c
         props.total_supply += asset(ctx.genesis_state().development_scr_supply.amount, SCORUM_SYMBOL);
     });
 }
-}
-}
-}
+
+} // namespace genesis
+} // namespace chain
+} // namespace scorum

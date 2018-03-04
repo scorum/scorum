@@ -110,7 +110,7 @@ struct registration_committee_change_quorum_operation
 };
 
 struct development_committee_add_member_operation
-    : public proposal_base_operation<development_committee_add_member_operation, registration_committee_i>
+    : public proposal_base_operation<development_committee_add_member_operation, development_committee_i>
 {
     account_name_type account_name;
 
@@ -126,7 +126,7 @@ struct development_committee_add_member_operation
 };
 
 struct development_committee_exclude_member_operation
-    : public proposal_base_operation<development_committee_exclude_member_operation, registration_committee_i>
+    : public proposal_base_operation<development_committee_exclude_member_operation, development_committee_i>
 {
     account_name_type account_name;
 
@@ -142,7 +142,7 @@ struct development_committee_exclude_member_operation
 };
 
 struct development_committee_change_quorum_operation
-    : public proposal_base_operation<development_committee_change_quorum_operation, registration_committee_i>
+    : public proposal_base_operation<development_committee_change_quorum_operation, development_committee_i>
 {
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;

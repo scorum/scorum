@@ -110,5 +110,18 @@ using proposal_change_quorum_evaluator
 
 } // namespace registration_committee
 
+namespace development_committee {
+
+using proposal_add_member_evaluator
+    = scorum::chain::proposal_add_member_evaluator<development_committee_add_member_operation>;
+
+using proposal_exclude_member_evaluator
+    = scorum::chain::proposal_exclude_member_evaluator<development_committee_exclude_member_operation>;
+
+using proposal_change_quorum_evaluator
+    = scorum::chain::proposal_change_quorum_evaluator<development_committee_change_quorum_operation>;
+
+} // namespace development_committee
+
 } // namespace chain
 } // namespace scorum

@@ -23,6 +23,11 @@ dbs_proposal_executor::dbs_proposal_executor(database& s)
     evaluators.register_evaluator<registration_committee::proposal_change_quorum_evaluator>();
     evaluators.register_evaluator<registration_committee::proposal_exclude_member_evaluator>(
         new registration_committee::proposal_exclude_member_evaluator(services, removed_members));
+
+    evaluators.register_evaluator<development_committee::proposal_add_member_evaluator>();
+    evaluators.register_evaluator<development_committee::proposal_change_quorum_evaluator>();
+    evaluators.register_evaluator<development_committee::proposal_exclude_member_evaluator>(
+        new development_committee::proposal_exclude_member_evaluator(services, removed_members));
 }
 
 void dbs_proposal_executor::operator()(const proposal_object& proposal)
