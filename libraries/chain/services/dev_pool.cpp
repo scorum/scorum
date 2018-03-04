@@ -35,5 +35,35 @@ void dbs_dev_pool::update(const modifier_type& modifier)
     db_impl().modify(get(), [&](dev_committee_object& o) { modifier(o); });
 }
 
+asset dbs_dev_pool::get_sp_balance() const
+{
+    return get().sp_balance;
+}
+
+asset dbs_dev_pool::get_scr_balace() const
+{
+    return get().scr_balance;
+}
+
+void dbs_dev_pool::increase_scr_balance(const asset& amount)
+{
+    db_impl().modify(get(), [&](dev_committee_object& o) { o.scr_balance += amount; });
+}
+
+void dbs_dev_pool::decrease_scr_balance(const asset& amount)
+{
+    db_impl().modify(get(), [&](dev_committee_object& o) { o.scr_balance -= amount; });
+}
+
+void dbs_dev_pool::increase_sp_balance(const asset& amount)
+{
+    db_impl().modify(get(), [&](dev_committee_object& o) { o.sp_balance += amount; });
+}
+
+void dbs_dev_pool::decrease_sp_balance(const asset& amount)
+{
+    db_impl().modify(get(), [&](dev_committee_object& o) { o.sp_balance -= amount; });
+}
+
 } // namespace chain
 } // namespace scorum

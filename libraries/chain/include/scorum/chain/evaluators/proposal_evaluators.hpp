@@ -1,22 +1,17 @@
 #pragma once
 
+#include <scorum/protocol/types.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/evaluators/evaluator.hpp>
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
-#include <scorum/chain/data_service_factory.hpp>
-
-#include <scorum/protocol/types.hpp>
-
-#include <scorum/chain/schema/proposal_object.hpp>
-
-#include <scorum/chain/services/registration_committee.hpp>
-
 #include <scorum/chain/evaluators/committee_accessor.hpp>
 
 namespace scorum {
 namespace chain {
+
+class data_service_factory_i;
 
 template <typename EvaluatorType>
 using proposal_operation_evaluator
@@ -102,15 +97,9 @@ struct development_committee_withdraw_vesting_evaluator
 {
     typedef development_committee_withdraw_vesting_operation operation_type;
 
-    development_committee_withdraw_vesting_evaluator(data_service_factory_i& r)
-        : proposal_operation_evaluator<development_committee_withdraw_vesting_evaluator>(r)
-    {
-    }
+    development_committee_withdraw_vesting_evaluator(data_service_factory_i& r);
 
-    void do_apply(const operation_type& o)
-    {
-        FC_ASSERT(false, "development_committee_withdraw_vesting_evaluator not implemented");
-    }
+    void do_apply(const operation_type& o);
 };
 
 struct development_committee_transfer_evaluator
@@ -118,15 +107,9 @@ struct development_committee_transfer_evaluator
 {
     typedef development_committee_transfer_operation operation_type;
 
-    development_committee_transfer_evaluator(data_service_factory_i& r)
-        : proposal_operation_evaluator<development_committee_transfer_evaluator>(r)
-    {
-    }
+    development_committee_transfer_evaluator(data_service_factory_i& r);
 
-    void do_apply(const operation_type& o)
-    {
-        FC_ASSERT(false, "development_committee_transfer_evaluator not implemented");
-    }
+    void do_apply(const operation_type& o);
 };
 
 namespace registration_committee {
