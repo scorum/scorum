@@ -2550,7 +2550,7 @@ annotated_signed_transaction wallet_api::development_committee_change_base_quoru
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::development_committee_transfer_proposal(
+annotated_signed_transaction wallet_api::development_pool_transfer(
     const std::string& initiator, const std::string& to_account, asset amount, uint32_t lifetime_sec, bool broadcast)
 {
     using operation_type = development_committee_transfer_operation;
@@ -2563,10 +2563,10 @@ annotated_signed_transaction wallet_api::development_committee_transfer_proposal
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::development_committee_withdraw_vesting_proposal(const std::string& initiator,
-                                                                                         asset amount,
-                                                                                         uint32_t lifetime_sec,
-                                                                                         bool broadcast)
+annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const std::string& initiator,
+                                                                           asset amount,
+                                                                           uint32_t lifetime_sec,
+                                                                           bool broadcast)
 {
     using operation_type = development_committee_withdraw_vesting_operation;
 

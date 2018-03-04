@@ -1089,16 +1089,16 @@ public:
                                                                           uint32_t lifetime_sec,
                                                                           bool broadcast);
 
-    annotated_signed_transaction development_committee_transfer_proposal(const std::string& initiator,
-                                                                         const std::string& to_account,
-                                                                         asset amount,
-                                                                         uint32_t lifetime_sec,
-                                                                         bool broadcast);
+    annotated_signed_transaction development_pool_transfer(const std::string& initiator,
+                                                           const std::string& to_account,
+                                                           asset amount,
+                                                           uint32_t lifetime_sec,
+                                                           bool broadcast);
 
-    annotated_signed_transaction development_committee_withdraw_vesting_proposal(const std::string& initiator,
-                                                                                 asset amount,
-                                                                                 uint32_t lifetime_sec,
-                                                                                 bool broadcast);
+    annotated_signed_transaction development_pool_withdraw_vesting(const std::string& initiator,
+                                                                   asset amount,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast);
 
     /**
      * Get development committee
@@ -1320,6 +1320,8 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_exclude_member_quorum)
         (development_committee_change_base_quorum)
         (get_development_committee)
+        (development_pool_transfer)
+        (development_pool_withdraw_vesting)
 
         //Atomic Swap API
         (atomicswap_initiate)
