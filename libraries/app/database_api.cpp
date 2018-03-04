@@ -8,6 +8,7 @@
 
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -82,8 +83,12 @@ public:
     uint64_t get_witness_count() const;
 
     // Committee
-    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<account_name_type> lookup_registration_committee(const std::string& lower_bound_name,
+                                                              uint32_t limit) const;
     std::vector<proposal_api_obj> lookup_proposals() const;
+
+    std::set<account_name_type> lookup_development_committee(const std::string& lower_bound_name, uint32_t limit) const;
+    std::vector<proposal_api_obj> lookup_development_committee_proposals() const;
 
     // Authority / validation
     std::string get_transaction_hex(const signed_transaction& trx) const;
@@ -103,6 +108,31 @@ public:
     boost::signals2::scoped_connection _block_applied_connection;
 
     bool _disable_get_block = false;
+
+    template <typename MemberObject, typename Service>
+    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const
+    {
+        FC_ASSERT(limit <= 1000);
+
+        auto& committee_service = _db.obtain_service<Service>();
+        auto committee = committee_service.get_committee();
+
+        std::set<account_name_type> members_by_account_name;
+        for (const MemberObject& member : committee)
+        {
+            if (member.account >= lower_bound_name)
+            {
+                members_by_account_name.insert(member.account);
+            }
+        }
+
+        fc::limit_left_cut_right(members_by_account_name, limit);
+
+        return members_by_account_name;
+    }
+
+    registration_committee_api_obj get_registration_committee() const;
+    development_committee_api_obj get_development_committee() const;
 };
 
 applied_operation::applied_operation()
@@ -680,32 +710,29 @@ uint64_t database_api_impl::get_witness_count() const
     return _db.get_index<witness_index>().indices().size();
 }
 
-std::set<account_name_type> database_api::lookup_committee_accounts(const std::string& lower_bound_name,
-                                                                    uint32_t limit) const
+std::set<account_name_type> database_api::lookup_registration_committee(const std::string& lower_bound_name,
+                                                                        uint32_t limit) const
 {
-    return my->_db.with_read_lock([&]() { return my->lookup_committee_accounts(lower_bound_name, limit); });
+    return my->_db.with_read_lock([&]() { return my->lookup_registration_committee(lower_bound_name, limit); });
 }
 
-std::set<account_name_type> database_api_impl::lookup_committee_accounts(const std::string& lower_bound_name,
-                                                                         uint32_t limit) const
+std::set<account_name_type> database_api_impl::lookup_registration_committee(const std::string& lower_bound_name,
+                                                                             uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    return lookup_committee_accounts<registration_committee_member_object, dbs_registration_committee>(lower_bound_name,
+                                                                                                       limit);
+}
 
-    auto& committee_service = _db.obtain_service<dbs_registration_committee>();
-    auto committee = committee_service.get_committee();
+std::set<account_name_type> database_api::lookup_development_committee(const std::string& lower_bound_name,
+                                                                       uint32_t limit) const
+{
+    return my->_db.with_read_lock([&]() { return my->lookup_development_committee(lower_bound_name, limit); });
+}
 
-    std::set<account_name_type> members_by_account_name;
-    for (const registration_committee_member_object& member : committee)
-    {
-        if (member.account >= lower_bound_name)
-        {
-            members_by_account_name.insert(member.account);
-        }
-    }
-
-    fc::limit_left_cut_right(members_by_account_name, limit);
-
-    return members_by_account_name;
+std::set<account_name_type> database_api_impl::lookup_development_committee(const std::string& lower_bound_name,
+                                                                            uint32_t limit) const
+{
+    return lookup_committee_accounts<dev_committee_member_object, dbs_development_committee>(lower_bound_name, limit);
 }
 
 std::vector<proposal_api_obj> database_api::lookup_proposals() const
@@ -724,6 +751,31 @@ std::vector<proposal_api_obj> database_api_impl::lookup_proposals() const
     }
 
     return proposals;
+}
+
+registration_committee_api_obj database_api::get_registration_committee() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_registration_committee(); });
+}
+
+registration_committee_api_obj database_api_impl::get_registration_committee() const
+{
+    registration_committee_api_obj committee(_db.get(registration_pool_id_type()));
+
+    return committee;
+}
+
+development_committee_api_obj database_api::get_development_committee() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_development_committee(); });
+}
+
+development_committee_api_obj database_api_impl::get_development_committee() const
+{
+    development_committee_api_obj committee;
+    committee = _db.get(dev_committee_id_type());
+
+    return committee;
 }
 
 //////////////////////////////////////////////////////////////////////

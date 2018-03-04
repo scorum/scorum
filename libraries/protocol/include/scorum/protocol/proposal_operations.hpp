@@ -136,8 +136,8 @@ struct development_committee_withdraw_vesting_operation
 struct development_committee_transfer_operation
     : public proposal_base_operation<development_committee_withdraw_vesting_operation, development_committee_i>
 {
-    asset amount = asset(0, SCORUM_SYMBOL);
     account_name_type to_account;
+    asset amount = asset(0, SCORUM_SYMBOL);
 
     void validate() const;
 

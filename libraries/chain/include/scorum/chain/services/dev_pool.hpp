@@ -22,11 +22,7 @@ struct dev_pool_service_i
     virtual asset get_sp_balance() const = 0;
     virtual asset get_scr_balace() const = 0;
 
-    virtual void increase_scr_balance(const asset& amount) = 0;
     virtual void decrease_scr_balance(const asset& amount) = 0;
-
-    virtual void increase_sp_balance(const asset& amount) = 0;
-    virtual void decrease_sp_balance(const asset& amount) = 0;
 };
 
 class dbs_dev_pool : public dbs_base, public dev_pool_service_i
@@ -48,10 +44,7 @@ public:
     asset get_sp_balance() const override;
     asset get_scr_balace() const override;
 
-    void increase_scr_balance(const asset& amount) override;
     void decrease_scr_balance(const asset& amount) override;
-    void increase_sp_balance(const asset& amount) override;
-    void decrease_sp_balance(const asset& amount) override;
 };
 } // namespace chain
 } // namespace scorum
