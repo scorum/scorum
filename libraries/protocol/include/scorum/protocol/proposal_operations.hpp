@@ -2,6 +2,7 @@
 
 #include <scorum/protocol/base.hpp>
 #include <scorum/protocol/types.hpp>
+#include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/operation_util.hpp>
 #include <fc/static_variant.hpp>
 
@@ -65,15 +66,9 @@ struct registration_committee_add_member_operation
 {
     account_name_type account_name;
 
-    void validate() const
-    {
-        validate_account_name(account_name);
-    }
+    void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const
-    {
-        return committee_service.get_add_member_quorum();
-    }
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 struct registration_committee_exclude_member_operation
@@ -81,15 +76,9 @@ struct registration_committee_exclude_member_operation
 {
     account_name_type account_name;
 
-    void validate() const
-    {
-        validate_account_name(account_name);
-    }
+    void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const
-    {
-        return committee_service.get_exclude_member_quorum();
-    }
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 struct registration_committee_change_quorum_operation
@@ -98,15 +87,9 @@ struct registration_committee_change_quorum_operation
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;
 
-    void validate() const
-    {
-        validate_quorum(committee_quorum, quorum);
-    }
+    void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const
-    {
-        return committee_service.get_base_quorum();
-    }
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 struct development_committee_add_member_operation
@@ -114,15 +97,9 @@ struct development_committee_add_member_operation
 {
     account_name_type account_name;
 
-    void validate() const
-    {
-        validate_account_name(account_name);
-    }
+    void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const
-    {
-        return committee_service.get_add_member_quorum();
-    }
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 struct development_committee_exclude_member_operation
@@ -130,15 +107,9 @@ struct development_committee_exclude_member_operation
 {
     account_name_type account_name;
 
-    void validate() const
-    {
-        validate_account_name(account_name);
-    }
+    void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const
-    {
-        return committee_service.get_exclude_member_quorum();
-    }
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 struct development_committee_change_quorum_operation
@@ -147,25 +118,36 @@ struct development_committee_change_quorum_operation
     protocol::percent_type quorum = 0u;
     quorum_type committee_quorum = none_quorum;
 
-    void validate() const
-    {
-        validate_quorum(committee_quorum, quorum);
-    }
+    void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const
-    {
-        return committee_service.get_base_quorum();
-    }
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
-// clang-format off
+struct development_committee_withdraw_vesting_operation
+    : public proposal_base_operation<development_committee_withdraw_vesting_operation, development_committee_i>
+{
+    asset vesting_shares = asset(0, VESTS_SYMBOL);
+
+    void validate() const;
+};
+
+struct development_committee_transfer_operation
+    : public proposal_base_operation<development_committee_withdraw_vesting_operation, development_committee_i>
+{
+    asset amount = asset(0, SCORUM_SYMBOL);
+    account_name_type to;
+
+    void validate() const;
+};
+
 using proposal_operation = fc::static_variant<registration_committee_add_member_operation,
                                               registration_committee_exclude_member_operation,
                                               registration_committee_change_quorum_operation,
                                               development_committee_add_member_operation,
                                               development_committee_exclude_member_operation,
-                                              development_committee_change_quorum_operation>;
-// clang-format on
+                                              development_committee_change_quorum_operation,
+                                              development_committee_withdraw_vesting_operation,
+                                              development_committee_transfer_operation>;
 
 struct to_committee_operation
 {
