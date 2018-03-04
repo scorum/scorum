@@ -18,9 +18,9 @@
 namespace scorum {
 namespace chain {
 
-template <typename T>
+template <typename EvaluatorType>
 using proposal_operation_evaluator
-    = scorum::chain::evaluator_impl<data_service_factory_i, T, protocol::proposal_operation>;
+    = scorum::chain::evaluator_impl<data_service_factory_i, EvaluatorType, protocol::proposal_operation>;
 
 template <typename OperationType>
 struct proposal_add_member_evaluator : public proposal_operation_evaluator<proposal_add_member_evaluator<OperationType>>
@@ -97,6 +97,38 @@ struct proposal_change_quorum_evaluator
     }
 };
 
+struct development_committee_withdraw_vesting_evaluator
+    : public proposal_operation_evaluator<development_committee_withdraw_vesting_evaluator>
+{
+    typedef development_committee_withdraw_vesting_operation operation_type;
+
+    development_committee_withdraw_vesting_evaluator(data_service_factory_i& r)
+        : proposal_operation_evaluator<development_committee_withdraw_vesting_evaluator>(r)
+    {
+    }
+
+    void do_apply(const operation_type& o)
+    {
+        FC_ASSERT(false, "development_committee_withdraw_vesting_evaluator not implemented");
+    }
+};
+
+struct development_committee_transfer_evaluator
+    : public proposal_operation_evaluator<development_committee_transfer_evaluator>
+{
+    typedef development_committee_transfer_operation operation_type;
+
+    development_committee_transfer_evaluator(data_service_factory_i& r)
+        : proposal_operation_evaluator<development_committee_transfer_evaluator>(r)
+    {
+    }
+
+    void do_apply(const operation_type& o)
+    {
+        FC_ASSERT(false, "development_committee_transfer_evaluator not implemented");
+    }
+};
+
 namespace registration_committee {
 
 using proposal_add_member_evaluator
@@ -120,6 +152,9 @@ using proposal_exclude_member_evaluator
 
 using proposal_change_quorum_evaluator
     = scorum::chain::proposal_change_quorum_evaluator<development_committee_change_quorum_operation>;
+
+using proposal_withdraw_vesting_evaluator = development_committee_withdraw_vesting_evaluator;
+using proposal_transfer_evaluator = development_committee_transfer_evaluator;
 
 } // namespace development_committee
 

@@ -129,15 +129,19 @@ struct development_committee_withdraw_vesting_operation
     asset vesting_shares = asset(0, VESTS_SYMBOL);
 
     void validate() const;
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 struct development_committee_transfer_operation
     : public proposal_base_operation<development_committee_withdraw_vesting_operation, development_committee_i>
 {
     asset amount = asset(0, SCORUM_SYMBOL);
-    account_name_type to;
+    account_name_type to_account;
 
     void validate() const;
+
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
 using proposal_operation = fc::static_variant<registration_committee_add_member_operation,
@@ -191,6 +195,9 @@ FC_REFLECT(scorum::protocol::registration_committee_change_quorum_operation, (qu
 FC_REFLECT(scorum::protocol::development_committee_add_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::development_committee_exclude_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quorum))
+
+FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
+FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
 
 DECLARE_OPERATION_SERIALIZATOR(scorum::protocol::proposal_operation)
 FC_REFLECT_TYPENAME(scorum::protocol::proposal_operation)

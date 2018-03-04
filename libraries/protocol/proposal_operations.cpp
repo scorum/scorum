@@ -16,14 +16,24 @@ percent_type operation_get_required_quorum(committee_i& committee_service, const
 
 void development_committee_transfer_operation::validate() const
 {
-    validate_account_name(to);
+    validate_account_name(to_account);
 
     FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Must transfer a nonzero amount");
+}
+
+percent_type development_committee_transfer_operation::get_required_quorum(committee_i& committee_service) const
+{
+    return committee_service.get_base_quorum();
 }
 
 void development_committee_withdraw_vesting_operation::validate() const
 {
     FC_ASSERT(vesting_shares > asset(0, VESTS_SYMBOL), "Must withdraw a nonzero amount");
+}
+
+percent_type development_committee_withdraw_vesting_operation::get_required_quorum(committee_i& committee_service) const
+{
+    return committee_service.get_base_quorum();
 }
 
 void development_committee_change_quorum_operation::validate() const
