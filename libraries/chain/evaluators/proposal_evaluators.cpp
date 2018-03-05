@@ -3,6 +3,8 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 
+#include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -35,7 +37,9 @@ development_committee_withdraw_vesting_evaluator::development_committee_withdraw
 void development_committee_withdraw_vesting_evaluator::do_apply(
     const development_committee_withdraw_vesting_evaluator::operation_type& o)
 {
-    FC_ASSERT(false, "development_committee_withdraw_vesting_evaluator not implemented");
+    withdraw_vesting_dev_pool_task create_withdraw;
+    withdraw_vesting_context ctx(db(), o.vesting_shares);
+    create_withdraw.apply(ctx);
 }
 
 } // namespace chain
