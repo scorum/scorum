@@ -1097,6 +1097,9 @@ void application::set_program_options(boost::program_options::options_descriptio
     default_apis.push_back("database_api");
     default_apis.push_back("login_api");
     default_apis.push_back("account_by_key_api");
+    default_apis.push_back("account_history_api");
+    default_apis.push_back("account_stats_api");
+    default_apis.push_back("chain_stats_api");
     std::string str_default_apis = boost::algorithm::join(default_apis, " ");
 
     std::vector<std::string> default_plugins;
