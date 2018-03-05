@@ -32,7 +32,9 @@ public:
     {
         chain::database& db = database();
 
-        db.add_plugin_index<account_full_history_index>();
+        db.add_plugin_index<account_operations_full_history_index>();
+        db.add_plugin_index<transfers_to_scr_history_index>();
+        db.add_plugin_index<transfers_to_sp_history_index>();
 
         db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
     }
@@ -70,12 +72,12 @@ public:
     {
     }
 
-    template <typename Op> void operator()(Op&&) const
+    template <typename Op> void operator()(const Op&) const
     {
         push_history<account_history_object>(create_operation_obj());
     }
 
-    void operator()(transfer_operation&&) const
+    void operator()(const transfer_operation&) const
     {
         const auto& new_obj = create_operation_obj();
 
@@ -83,7 +85,7 @@ public:
         push_history<transfers_to_scr_history_object>(new_obj);
     }
 
-    void operator()(transfer_to_vesting_operation&&) const
+    void operator()(const transfer_to_vesting_operation&) const
     {
         const auto& new_obj = create_operation_obj();
 

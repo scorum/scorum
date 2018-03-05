@@ -16,7 +16,7 @@
 //
 
 #ifndef ACCOUNT_HISTORY_SPACE_ID
-#define ACCOUNT_HISTORY_SPACE_ID 5
+#define ACCOUNT_HISTORY_SPACE_ID 7
 #endif
 
 namespace scorum {
@@ -68,7 +68,7 @@ using account_history_object = history_object<all_operations_history>;
 using transfers_to_scr_history_object = history_object<scr_to_scr_transfers_history>;
 using transfers_to_sp_history_object = history_object<scr_to_sp_transfers_history>;
 
-using account_full_history_index = history_index<account_history_object>;
+using account_operations_full_history_index = history_index<account_history_object>;
 using transfers_to_scr_history_index = history_index<transfers_to_scr_history_object>;
 using transfers_to_sp_history_index = history_index<transfers_to_sp_history_object>;
 //
@@ -80,7 +80,7 @@ FC_REFLECT(scorum::account_history::transfers_to_scr_history_object, (id)(accoun
 FC_REFLECT(scorum::account_history::transfers_to_sp_history_object, (id)(account)(sequence)(op))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::account_history::account_history_object,
-                         scorum::account_history::account_full_history_index)
+                         scorum::account_history::account_operations_full_history_index)
 
 CHAINBASE_SET_INDEX_TYPE(scorum::account_history::transfers_to_scr_history_object,
                          scorum::account_history::transfers_to_scr_history_index)

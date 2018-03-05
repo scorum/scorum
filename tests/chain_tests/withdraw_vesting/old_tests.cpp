@@ -10,6 +10,8 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
+#include <scorum/account_history/account_history_plugin.hpp>
+
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
@@ -143,10 +145,22 @@ SCORUM_TEST_CASE(withdraw_vesting_apply)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct withdraw_vesting_withdrawals_tests_fixture : public withdraw_vesting_tests_fixture
+struct withdraw_vesting_withdrawals_tests_fixture : public database_trx_integration_fixture
 {
+    account_service_i& account_service;
+    withdraw_vesting_service_i& withdraw_vesting_service;
+    private_key_type sign_key;
+
     withdraw_vesting_withdrawals_tests_fixture()
+        : account_service(db.account_service())
+        , withdraw_vesting_service(db.withdraw_vesting_service())
     {
+        boost::program_options::variables_map options;
+        auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
+        ahplugin->plugin_initialize(options);
+
+        open_database();
+
         ACTORS((alice))
         fund("alice", ASSET_SCR(100e+3));
         vest("alice", ASSET_SCR(100e+3));
