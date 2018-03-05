@@ -9,7 +9,6 @@
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
-
 namespace scorum {
 namespace chain {
 namespace genesis {
@@ -19,12 +18,19 @@ void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
     FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == VESTS_SYMBOL);
     FC_ASSERT(ctx.genesis_state().development_scr_supply.symbol() == SCORUM_SYMBOL);
 
-    create_dev_committee_and_set_pool_balance(ctx);
+    create_dev_committee(ctx);
 
-    increase_total_supply(ctx);
+    if (!is_zero_supply(ctx))
+        increase_total_supply(ctx);
 }
 
-void dev_pool_initializator_impl::create_dev_committee_and_set_pool_balance(initializator_context& ctx)
+bool dev_pool_initializator_impl::is_zero_supply(initializator_context& ctx)
+{
+    dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
+    return !dev_pool_service.get().scr_balance.amount.value && !dev_pool_service.get().sp_balance.amount.value;
+}
+
+void dev_pool_initializator_impl::create_dev_committee(initializator_context& ctx)
 {
     dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
 
