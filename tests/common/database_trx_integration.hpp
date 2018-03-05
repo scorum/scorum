@@ -2,8 +2,7 @@
 
 #include "database_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 class database_trx_integration_fixture : public database_integration_fixture
 {
@@ -62,5 +61,5 @@ protected:
 
     signed_transaction trx;
 };
-}
-}
+
+} // database_fixture

@@ -10,8 +10,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 struct withdraw_vesting_tests_fixture : public database_default_integration_fixture
 {

@@ -11,8 +11,7 @@
 #define MEMBER_BONUS_BENEFICIARY alice
 #define NEXT_MEMBER bob
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
 {
@@ -124,5 +123,5 @@ genesis_state_type registration_check_fixture::create_registration_genesis_impl(
 
     return genesis_state;
 }
-}
-}
+
+} // namespace database_fixture

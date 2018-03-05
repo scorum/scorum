@@ -8,10 +8,8 @@
 #include "database_trx_integration.hpp"
 
 using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
 using namespace scorum::blockchain_statistics;
-using fc::string;
+using namespace database_fixture;
 
 namespace blockchain_stat {
 
@@ -42,11 +40,11 @@ struct stat_database_fixture : public database_trx_integration_fixture
 
         vest(TEST_INIT_DELEGATE_NAME, 10000);
 
-        account_create(alice, init_account_pub_key);
+        account_create(alice, initdelegate.public_key);
         fund(alice, SCORUM_MIN_PRODUCER_REWARD);
         vest(alice, SCORUM_MIN_PRODUCER_REWARD);
 
-        account_create(bob, init_account_pub_key);
+        account_create(bob, initdelegate.public_key);
         vest(bob, SCORUM_MIN_PRODUCER_REWARD);
 
         generate_block();
@@ -268,7 +266,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_finish_stat_test)
         BOOST_REQUIRE_EQUAL(bucket.vesting_withdrawals_processed, orig_val_processed + i);
         BOOST_REQUIRE_EQUAL(bucket.vesting_withdraw_rate_delta, orig_val_rate + 1);
 
-        time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+        fc::time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
 
         generate_blocks(advance, true);
         generate_block(); // call full apply_block procedure
@@ -287,7 +285,7 @@ SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+    fc::time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
     generate_blocks(advance, true);
     generate_block(); // call full apply_block procedure
 
@@ -310,7 +308,7 @@ SCORUM_TEST_CASE(vesting_transfered_stat_test)
 
     push_operation(op);
 
-    time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
+    fc::time_point_sec advance = db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
     generate_blocks(advance, true);
     generate_block(); // call full apply_block procedure
 

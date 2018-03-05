@@ -18,8 +18,7 @@
 
 #include "database_trx_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 using schedule_input_type = genesis_state_type::registration_schedule_item;
 using schedule_inputs_type = std::vector<schedule_input_type>;
@@ -50,5 +49,5 @@ private:
 public:
     account_service_i& account_service;
 };
-}
-}
+
+} // namespace database_fixture

@@ -9,8 +9,7 @@
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 withdraw_vesting_check_fixture::withdraw_vesting_check_fixture()
     : account_service(db.account_service())
@@ -42,6 +41,5 @@ void withdraw_vesting_check_fixture::set_dev_pool_balance(const asset& sp_balanc
 
     validate_database();
     generate_blocks(2);
-}
 }
 }

@@ -3,8 +3,7 @@
 
 #include "registration_check_common.hpp"
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class registration_committee_service_check_fixture : public registration_check_fixture
 {

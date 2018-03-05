@@ -3,11 +3,7 @@
 
 #include "registration_check_common.hpp"
 
-//
-// usage for all budget tests 'chain_test  -t registration_*'
-//
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class registration_committee_create_account_check_fixture : public registration_check_fixture
 {
@@ -32,7 +28,7 @@ public:
         transfer_to_vest("initdelegate", creator_name, 100);
     }
 
-    static scorum::chain::committee_private_keys_type committee_private_keys;
+    static committee_private_keys_type committee_private_keys;
     const account_name_type creator_name = "alice";
     const account_name_type new_account_name = "andrew";
 
@@ -40,7 +36,7 @@ public:
     account_create_by_committee_operation account_committee_op;
 };
 
-scorum::chain::committee_private_keys_type registration_committee_create_account_check_fixture::committee_private_keys;
+committee_private_keys_type registration_committee_create_account_check_fixture::committee_private_keys;
 
 BOOST_FIXTURE_TEST_SUITE(registration_committee_create_account_operation_check,
                          registration_committee_create_account_check_fixture)

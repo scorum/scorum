@@ -5,11 +5,7 @@
 
 #include "registration_check_common.hpp"
 
-//
-// usage for all registration tests 'chain_test  -t registration_*'
-//
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class registration_pool_service_check_fixture : public registration_check_fixture
 {
@@ -22,7 +18,7 @@ public:
         create_registration_objects(genesis_state);
     }
 
-    static scorum::chain::schedule_inputs_type schedule_input;
+    static schedule_inputs_type schedule_input;
     static asset rest_of_supply;
     dbs_registration_pool& registration_pool_service;
     dbs_registration_committee& registration_committee_service;
@@ -105,7 +101,7 @@ public:
 
     asset schedule_input_total_bonus(const asset& maximum_bonus)
     {
-        return scorum::chain::schedule_input_total_bonus(schedule_input, maximum_bonus);
+        return database_fixture::schedule_input_total_bonus(schedule_input, maximum_bonus);
     }
 
     int schedule_input_bonus_percent_by_pos(uint64_t pos)

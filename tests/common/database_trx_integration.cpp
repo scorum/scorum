@@ -19,8 +19,7 @@
 
 #include "database_trx_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 database_trx_integration_fixture::database_trx_integration_fixture()
 {
@@ -60,7 +59,7 @@ const account_object& database_trx_integration_fixture::account_create(const std
         trx.operations.clear();
         trx.signatures.clear();
 
-        const account_object& acct = db.obtain_service<chain::dbs_account>().get_account(name);
+        const account_object& acct = db.obtain_service<dbs_account>().get_account(name);
 
         return acct;
     }
@@ -73,7 +72,7 @@ const account_object& database_trx_integration_fixture::account_create(const std
 {
     try
     {
-        return account_create(name, TEST_INIT_DELEGATE_NAME, init_account_priv_key,
+        return account_create(name, initdelegate.name, initdelegate.private_key,
                               std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
                                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
                                        (SUFFICIENT_FEE).amount),
@@ -211,7 +210,7 @@ void database_trx_integration_fixture::proxy(const std::string& account, const s
 
 const asset& database_trx_integration_fixture::get_balance(const std::string& account_name) const
 {
-    return db.obtain_service<chain::dbs_account>().get_account(account_name).balance;
+    return db.obtain_service<dbs_account>().get_account(account_name).balance;
 }
 
 void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)
@@ -242,24 +241,23 @@ void database_trx_integration_fixture::open_database_impl(const genesis_state_ty
     db.set_hardfork(SCORUM_NUM_HARDFORKS);
     generate_block();
 
-    if (db.find<witness_object, by_name>(TEST_INIT_DELEGATE_NAME))
+    if (db.find<witness_object, by_name>(initdelegate.name))
     {
         generate_blocks(2);
 
-        vest(TEST_INIT_DELEGATE_NAME, 10000);
+        vest(initdelegate.name, 10000);
 
         // Fill up the rest of the required miners
         for (int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
         {
-            account_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_pub_key);
-            fund(TEST_INIT_DELEGATE_NAME + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD);
-            witness_create(TEST_INIT_DELEGATE_NAME + fc::to_string(i), init_account_priv_key, "foo.bar",
-                           init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount);
+            account_create(initdelegate.name + fc::to_string(i), initdelegate.public_key);
+            fund(initdelegate.name + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD);
+            witness_create(initdelegate.name + fc::to_string(i), initdelegate.private_key, "foo.bar",
+                           initdelegate.public_key, SCORUM_MIN_PRODUCER_REWARD.amount);
         }
 
         generate_blocks(2);
     }
 }
 
-} // namespace chain
-} // namespace scorum
+} // database_fixture
