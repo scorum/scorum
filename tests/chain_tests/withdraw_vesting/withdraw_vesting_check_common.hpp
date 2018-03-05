@@ -23,7 +23,7 @@ public:
     dynamic_global_property_service_i& dynamic_global_property_service;
 
 protected:
-    void create_dev_pool(const asset& sp_balance = ASSET_NULL_SP, const asset& scr_balance = ASSET_NULL_SCR);
+    void set_dev_pool_balance(const asset& sp_balance = ASSET_NULL_SP, const asset& scr_balance = ASSET_NULL_SCR);
 };
 }
 }

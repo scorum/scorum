@@ -138,7 +138,6 @@ void set_withdraw_vesting_route_to_dev_pool_evaluator::do_apply(
     const set_withdraw_vesting_route_to_dev_pool_evaluator::operation_type& op)
 {
     _account_service.check_account_existence(op.from_account);
-    FC_ASSERT(_dev_pool_service.is_exists());
 
     const auto& from_account = _account_service.get_account(op.from_account);
     const auto& to_pool = _dev_pool_service.get();
@@ -165,8 +164,6 @@ void set_withdraw_vesting_route_from_dev_pool_task::on_apply(set_withdraw_vestin
 
     dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
     account_service_i& account_service = ctx.services().account_service();
-
-    FC_ASSERT(dev_pool_service.is_exists());
 
     account_service.check_account_existence(ctx.account());
 

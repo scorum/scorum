@@ -20,11 +20,6 @@ const dev_committee_object& dbs_dev_pool::get() const
     FC_CAPTURE_AND_RETHROW()
 }
 
-bool dbs_dev_pool::is_exists() const
-{
-    return nullptr != db_impl().find<dev_committee_object>();
-}
-
 const dev_committee_object& dbs_dev_pool::create(const modifier_type& modifier)
 {
     return db_impl().create<dev_committee_object>([&](dev_committee_object& o) { modifier(o); });

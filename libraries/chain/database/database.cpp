@@ -2016,11 +2016,8 @@ void database::validate_invariants() const
             total_supply += obtain_service<dbs_registration_pool>().get().balance;
         }
 
-        if (obtain_service<dbs_dev_pool>().is_exists())
-        {
-            total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
-            total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
-        }
+        total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
+        total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)

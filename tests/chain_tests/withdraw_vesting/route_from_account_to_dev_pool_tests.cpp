@@ -19,7 +19,7 @@ struct withdraw_vesting_route_from_account_to_dev_pool_tests_fixture : public wi
 {
     withdraw_vesting_route_from_account_to_dev_pool_tests_fixture()
     {
-        create_dev_pool(ASSET_SP(1000), ASSET_SCR(2000));
+        set_dev_pool_balance(ASSET_SP(1000), ASSET_SCR(2000));
 
         ACTOR(alice);
         alice_key = alice_private_key;
