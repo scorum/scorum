@@ -13,7 +13,9 @@ set( SOURCES
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
-    registration/pool_service_tests.cpp
+    registration/create_by_committee_evaluator_tests.cpp
+    registration/registration_service_tests.cpp
+    registration/registration_helpers.cpp
     atomicswap/atomicswap_service_tests.cpp
     atomicswap/atomicswap_operations_tests.cpp
     budget/budget_service_tests.cpp

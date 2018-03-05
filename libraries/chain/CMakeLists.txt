@@ -65,6 +65,7 @@ add_library( scorum_chain
              evaluators/withdraw_vesting_evaluator.cpp
              evaluators/committee_accessor.cpp
              evaluators/proposal_evaluators.cpp
+             evaluators/registration_pool_evaluator.cpp
 
              schema/shared_authority.cpp
 

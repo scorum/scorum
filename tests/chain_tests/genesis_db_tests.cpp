@@ -153,7 +153,7 @@ struct genesis_registration_bonus_test_fixture : public genesis_base_test_fixtur
         for (size_t ci = 0; ci < sz_investors; ++ci)
         {
             std::stringstream name;
-            name << "Mr. " << ci;
+            name << "user" << ci;
             investors[ci] = name.str();
         }
         make_minimal_valid_genesis();
