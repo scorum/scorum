@@ -248,12 +248,12 @@ SCORUM_TEST_CASE(proposal)
     Actor hue("hue");
     Actor liz("liz");
 
-    // clang-format off
+    static const asset registration_bonus = ASSET_SCR(100);
     registration_stage single_stage{ 1u, 1u, 100u };
     genesis = database_integration_fixture::default_genesis_state()
               .accounts(bob, jim, joe, hue, liz)
-              .registration_supply((SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2) * 100)
-              .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
+            .registration_supply(registration_bonus * 100)
+            .registration_bonus(registration_bonus)
               .registration_schedule(single_stage)
               .committee(alice)
               .generate();

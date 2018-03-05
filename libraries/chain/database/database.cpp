@@ -33,6 +33,8 @@
 #include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
 
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
+
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/budget.hpp>
@@ -1132,10 +1134,7 @@ uint32_t database::last_non_undoable_block_num() const
 
 void database::initialize_evaluators()
 {
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
@@ -1145,14 +1144,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
@@ -1166,15 +1161,14 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
-
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
 
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>(
-        new set_withdraw_vesting_route_to_dev_pool_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>(
-        new set_withdraw_vesting_route_to_account_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>(new withdraw_vesting_evaluator(*this));
 }
 
 void database::initialize_indexes()
