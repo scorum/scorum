@@ -10,7 +10,6 @@ namespace chain {
 using namespace scorum::protocol;
 
 DEFINE_EVALUATOR(account_create)
-DEFINE_EVALUATOR(account_create_by_committee)
 DEFINE_EVALUATOR(account_create_with_delegation)
 DEFINE_EVALUATOR(account_update)
 DEFINE_EVALUATOR(account_witness_proxy)
