@@ -85,10 +85,10 @@ public:
     // Committee
     std::set<account_name_type> lookup_registration_committee(const std::string& lower_bound_name,
                                                               uint32_t limit) const;
-    std::vector<proposal_api_obj> lookup_proposals() const;
 
     std::set<account_name_type> lookup_development_committee(const std::string& lower_bound_name, uint32_t limit) const;
-    std::vector<proposal_api_obj> lookup_development_committee_proposals() const;
+
+    std::vector<proposal_api_obj> lookup_proposals() const;
 
     // Authority / validation
     std::string get_transaction_hex(const signed_transaction& trx) const;

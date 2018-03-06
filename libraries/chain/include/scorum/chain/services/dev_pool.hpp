@@ -17,7 +17,6 @@ struct dev_pool_service_i
 
     virtual void update(const modifier_type&) = 0;
 
-    virtual asset get_sp_balance() const = 0;
     virtual asset get_scr_balace() const = 0;
 
     virtual void decrease_scr_balance(const asset& amount) = 0;
@@ -37,7 +36,6 @@ public:
 
     virtual void update(const modifier_type&) override;
 
-    asset get_sp_balance() const override;
     asset get_scr_balace() const override;
 
     void decrease_scr_balance(const asset& amount) override;
