@@ -23,7 +23,7 @@
 BOOST_AUTO_TEST_SUITE(genesis_db_tests)
 
 #ifdef SRC_DIR
-BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::database_integration_fixture)
+BOOST_FIXTURE_TEST_CASE(validate_src_json_test, database_fixture::database_integration_fixture)
 {
     boost::filesystem::path path_to_src_json(BOOST_PP_STRINGIZE(SRC_DIR));
     if (boost::filesystem::exists(path_to_src_json))
@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::database_integrat
 }
 #endif
 
-struct genesis_base_test_fixture : public scorum::chain::database_integration_fixture
+struct genesis_base_test_fixture : public database_fixture::database_integration_fixture
 {
     genesis_base_test_fixture()
         : account_service(db.account_service())
@@ -288,8 +288,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_REQUIRE(dev_pool_service.is_exists());
-
     BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
 }
 
@@ -300,8 +298,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
     genesis.development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
-
-    BOOST_REQUIRE(dev_pool_service.is_exists());
 
     BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);
 }
@@ -314,8 +310,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
     genesis.development_sp_supply(dev_sp).development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
-
-    BOOST_REQUIRE(dev_pool_service.is_exists());
 
     BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
     BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);

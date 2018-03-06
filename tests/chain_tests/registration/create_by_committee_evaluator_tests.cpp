@@ -11,9 +11,7 @@
 
 #include <sstream>
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using namespace registration_fixtures;
+using namespace database_fixture;
 
 class create_by_committee_evaluator_check_fixture : public registration_check_fixture
 {

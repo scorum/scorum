@@ -252,9 +252,31 @@ public:
      */
     std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
 
-    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+    /**
+     * @brief Get account names in registration committee
+     */
+    std::set<account_name_type> lookup_registration_committee(const std::string& lower_bound_name,
+                                                              uint32_t limit) const;
 
+    /**
+     * @brief Get account names in development committee
+     */
+    std::set<account_name_type> lookup_development_committee(const std::string& lower_bound_name, uint32_t limit) const;
+
+    /**
+     * @brief Get proposals
+     */
     std::vector<proposal_api_obj> lookup_proposals() const;
+
+    /**
+     * @brief Get development committee
+     */
+    development_committee_api_obj get_development_committee() const;
+
+    /**
+     * @brief Get registration committee
+     */
+    registration_committee_api_obj get_registration_committee() const;
 
     /**
      * @brief Get the total number of witnesses registered with the blockchain
@@ -506,14 +528,19 @@ FC_API(scorum::app::database_api,
    (get_witness_by_account)
    (get_witnesses_by_vote)
    (lookup_witness_accounts)
-   (lookup_committee_accounts)
-   (lookup_proposals)
    (get_witness_count)
    (get_active_witnesses)
 
     // Budget
    (get_budgets)
    (lookup_budget_owners)
+
+   // Committee
+   (lookup_registration_committee)
+   (lookup_development_committee)
+   (lookup_proposals)
+   (get_registration_committee)
+   (get_development_committee)
 
     // Atomic Swap
    (get_atomicswap_contracts)

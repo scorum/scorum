@@ -8,10 +8,8 @@
 #include "database_trx_integration.hpp"
 
 using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
 using namespace scorum::account_statistics;
-using fc::string;
+using namespace database_fixture;
 
 namespace account_stat {
 
@@ -61,8 +59,8 @@ SCORUM_TEST_CASE(account_transfers_stat_test)
 
     const auto& stat_map = get_lifetime_bucket().account_statistic;
 
-    account_create(buratino, init_account_pub_key);
-    account_create(maugli, init_account_pub_key);
+    account_create(buratino, initdelegate.public_key);
+    account_create(maugli, initdelegate.public_key);
 
     BOOST_REQUIRE(stat_map.find(buratino) == stat_map.end());
     BOOST_REQUIRE(stat_map.find(maugli) == stat_map.end());

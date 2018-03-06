@@ -3,9 +3,7 @@
 
 #include "registration_check_common.hpp"
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using namespace registration_fixtures;
+using namespace database_fixture;
 
 class registration_committee_service_check_fixture : public registration_check_fixture
 {
@@ -40,7 +38,7 @@ SCORUM_TEST_CASE(create_invalid_genesis_state_check)
 
 SCORUM_TEST_CASE(create_check)
 {
-    using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
+    using committee_members = dbs_registration_committee::member_object_cref_type;
     const committee_members& members = registration_committee_service.get_committee();
 
     BOOST_REQUIRE_EQUAL(members.size(), size_t(2));

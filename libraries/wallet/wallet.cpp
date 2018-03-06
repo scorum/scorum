@@ -2360,6 +2360,24 @@ wallet_api::close_budget(const int64_t id, const std::string& budget_owner, cons
     return my->sign_transaction(tx, broadcast);
 }
 
+template <typename T, typename C>
+signed_transaction proposal(const std::string& initiator, uint32_t lifetime_sec, C&& constructor)
+{
+    T operation;
+    constructor(operation);
+
+    proposal_create_operation op;
+    op.creator = initiator;
+    op.operation = operation;
+    op.lifetime_sec = lifetime_sec;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return tx;
+}
+
 annotated_signed_transaction
 wallet_api::vote_for_committee_proposal(const std::string& voting_account, int64_t proposal_id, bool broadcast)
 {
@@ -2374,50 +2392,40 @@ wallet_api::vote_for_committee_proposal(const std::string& voting_account, int64
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::invite_new_committee_member(const std::string& inviter,
-                                                                     const std::string& invitee,
-                                                                     uint32_t lifetime_sec,
-                                                                     bool broadcast)
+annotated_signed_transaction wallet_api::registration_committee_add_member(const std::string& initiator,
+                                                                           const std::string& invitee,
+                                                                           uint32_t lifetime_sec,
+                                                                           bool broadcast)
 {
-    registration_committee_add_member_operation operation;
-    operation.account_name = invitee;
+    using operation_type = registration_committee_add_member_operation;
 
-    proposal_create_operation op;
-    op.operation = operation;
-    op.creator = inviter;
-    op.lifetime_sec = lifetime_sec;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account_name = invitee; });
 
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::dropout_committee_member(const std::string& initiator,
-                                                                  const std::string& dropout,
-                                                                  uint32_t lifetime_sec,
-                                                                  bool broadcast)
+annotated_signed_transaction wallet_api::registration_committee_exclude_member(const std::string& initiator,
+                                                                               const std::string& dropout,
+                                                                               uint32_t lifetime_sec,
+                                                                               bool broadcast)
 {
-    registration_committee_exclude_member_operation operation;
-    operation.account_name = dropout;
+    using operation_type = registration_committee_exclude_member_operation;
 
-    proposal_create_operation op;
-    op.operation = operation;
-
-    op.creator = initiator;
-    op.lifetime_sec = lifetime_sec;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account_name = dropout; });
 
     return my->sign_transaction(tx, broadcast);
 }
 
-std::set<account_name_type> wallet_api::list_committee(const std::string& lowerbound, uint32_t limit)
+std::set<account_name_type> wallet_api::list_registration_committee(const std::string& lowerbound, uint32_t limit)
 {
-    return my->_remote_db->lookup_committee_accounts(lowerbound, limit);
+    return my->_remote_db->lookup_registration_committee(lowerbound, limit);
+}
+
+registration_committee_api_obj wallet_api::get_registration_committee()
+{
+    return my->_remote_db->get_registration_committee();
 }
 
 std::vector<proposal_api_obj> wallet_api::list_proposals()
@@ -2425,67 +2433,152 @@ std::vector<proposal_api_obj> wallet_api::list_proposals()
     return my->_remote_db->lookup_proposals();
 }
 
-annotated_signed_transaction wallet_api::propose_new_invite_quorum(const std::string& initiator,
-                                                                   uint64_t quorum_percent,
-                                                                   uint32_t lifetime_sec,
-                                                                   bool broadcast)
+annotated_signed_transaction wallet_api::registration_committee_change_add_member_quorum(const std::string& initiator,
+                                                                                         uint64_t quorum_percent,
+                                                                                         uint32_t lifetime_sec,
+                                                                                         bool broadcast)
 {
-    registration_committee_change_quorum_operation operation;
-    operation.quorum = quorum_percent;
-    operation.committee_quorum = add_member_quorum;
+    using operation_type = registration_committee_change_quorum_operation;
 
-    proposal_create_operation op;
-    op.creator = initiator;
-    op.operation = operation;
-    op.lifetime_sec = lifetime_sec;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = add_member_quorum;
+    });
 
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::propose_new_dropout_quorum(const std::string& initiator,
-                                                                    uint64_t quorum_percent,
-                                                                    uint32_t lifetime_sec,
-                                                                    bool broadcast)
+annotated_signed_transaction wallet_api::registration_committee_change_exclude_member_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
 {
-    registration_committee_change_quorum_operation operation;
-    operation.quorum = quorum_percent;
-    operation.committee_quorum = exclude_member_quorum;
+    using operation_type = registration_committee_change_quorum_operation;
 
-    proposal_create_operation op;
-    op.creator = initiator;
-    op.operation = operation;
-    op.lifetime_sec = lifetime_sec;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = exclude_member_quorum;
+    });
 
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::propose_new_quorum_for_quorum_change(const std::string& initiator,
-                                                                              uint64_t quorum_percent,
+annotated_signed_transaction wallet_api::registration_committee_change_base_quorum(const std::string& initiator,
+                                                                                   uint64_t quorum_percent,
+                                                                                   uint32_t lifetime_sec,
+                                                                                   bool broadcast)
+{
+    using operation_type = registration_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = base_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_add_member(const std::string& initiator,
+                                                                          const std::string& invitee,
+                                                                          uint32_t lifetime_sec,
+                                                                          bool broadcast)
+{
+    using operation_type = development_committee_add_member_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account_name = invitee; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_exclude_member(const std::string& initiator,
+                                                                              const std::string& dropout,
                                                                               uint32_t lifetime_sec,
                                                                               bool broadcast)
 {
-    registration_committee_change_quorum_operation operation;
-    operation.quorum = quorum_percent;
-    operation.committee_quorum = base_quorum;
+    using operation_type = development_committee_exclude_member_operation;
 
-    proposal_create_operation op;
-    op.creator = initiator;
-    op.operation = operation;
-    op.lifetime_sec = lifetime_sec;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account_name = dropout; });
 
     return my->sign_transaction(tx, broadcast);
+}
+
+std::set<account_name_type> wallet_api::list_development_committee(const std::string& lowerbound, uint32_t limit)
+{
+    return my->_remote_db->lookup_registration_committee(lowerbound, limit);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_add_member_quorum(const std::string& initiator,
+                                                                                        uint64_t quorum_percent,
+                                                                                        uint32_t lifetime_sec,
+                                                                                        bool broadcast)
+{
+    using operation_type = registration_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = add_member_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_exclude_member_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = registration_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = exclude_member_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_base_quorum(const std::string& initiator,
+                                                                                  uint64_t quorum_percent,
+                                                                                  uint32_t lifetime_sec,
+                                                                                  bool broadcast)
+{
+    using operation_type = registration_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = base_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_pool_transfer(
+    const std::string& initiator, const std::string& to_account, asset amount, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_transfer_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.to_account = to_account;
+        o.amount = amount;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const std::string& initiator,
+                                                                           asset amount,
+                                                                           uint32_t lifetime_sec,
+                                                                           bool broadcast)
+{
+    using operation_type = development_committee_withdraw_vesting_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.vesting_shares = amount; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+development_committee_api_obj wallet_api::get_development_committee()
+{
+    return my->_remote_db->get_development_committee();
 }
 
 atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::string& initiator,

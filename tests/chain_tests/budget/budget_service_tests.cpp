@@ -11,13 +11,7 @@
 
 #include <limits>
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using namespace budget_fixtures;
-
-//
-// usage for all budget tests 'chain_test  -t budget_*'
-//
+using namespace database_fixture;
 
 class budget_service_check_fixture : public budget_check_fixture
 {

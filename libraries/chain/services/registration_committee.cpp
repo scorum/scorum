@@ -17,9 +17,9 @@ dbs_registration_committee::dbs_registration_committee(database& db)
 {
 }
 
-dbs_registration_committee::registration_committee_member_refs_type dbs_registration_committee::get_committee() const
+dbs_registration_committee::member_object_cref_type dbs_registration_committee::get_committee() const
 {
-    registration_committee_member_refs_type ret;
+    member_object_cref_type ret;
 
     const auto& idx = db_impl().get_index<registration_committee_member_index>().indices().get<by_id>();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)
@@ -40,7 +40,7 @@ dbs_registration_committee::get_member(const account_name_type& account) const
     FC_CAPTURE_AND_RETHROW((account))
 }
 
-dbs_registration_committee::registration_committee_member_refs_type
+dbs_registration_committee::member_object_cref_type
 dbs_registration_committee::create_committee(const std::vector<account_name_type>& accounts)
 {
     FC_ASSERT(!accounts.empty(), "Registration committee must have at least one member.");
