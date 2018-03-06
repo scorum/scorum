@@ -745,7 +745,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
-    transfer_to_vesting(const std::string& from, const std::string& to, const asset& amount, bool broadcast = false);
+    transfer_to_scorumpower(const std::string& from, const std::string& to, const asset& amount, bool broadcast = false);
 
     /**
      * Set up a vesting withdraw request. The request is fulfilled once a week over the next 13 weeks.
@@ -1202,7 +1202,7 @@ FC_API( scorum::wallet::wallet_api,
         (escrow_approve)
         (escrow_dispute)
         (escrow_release)
-        (transfer_to_vesting)
+        (transfer_to_scorumpower)
         (withdraw_scorumpower)
         (set_withdraw_scorumpower_route)
         (post_comment)

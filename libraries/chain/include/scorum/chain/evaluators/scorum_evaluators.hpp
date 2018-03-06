@@ -33,7 +33,7 @@ DEFINE_EVALUATOR(prove_authority)
 DEFINE_EVALUATOR(recover_account)
 DEFINE_EVALUATOR(request_account_recovery)
 DEFINE_EVALUATOR(transfer)
-DEFINE_EVALUATOR(transfer_to_vesting)
+DEFINE_EVALUATOR(transfer_to_scorumpower)
 DEFINE_EVALUATOR(vote)
 DEFINE_EVALUATOR(witness_update)
 } // namespace chain

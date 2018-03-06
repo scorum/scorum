@@ -1158,7 +1158,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
     _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
-    _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<transfer_to_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();

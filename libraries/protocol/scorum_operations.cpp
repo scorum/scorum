@@ -148,7 +148,7 @@ void transfer_operation::validate() const
     FC_CAPTURE_AND_RETHROW((*this))
 }
 
-void transfer_to_vesting_operation::validate() const
+void transfer_to_scorumpower_operation::validate() const
 {
     validate_account_name(from);
     FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Amount must be SCR");

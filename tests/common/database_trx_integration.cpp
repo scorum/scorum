@@ -158,7 +158,7 @@ void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
 {
     try
     {
-        transfer_to_vesting_operation op;
+        transfer_to_scorumpower_operation op;
         op.from = from;
         op.to = to;
         op.amount = amount;

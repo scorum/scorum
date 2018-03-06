@@ -152,7 +152,7 @@ public:
         _db.modify(_bucket, [&](bucket_object& b) { b.scorumpower_paid_to_curators += op.reward.amount; });
     }
 
-    void operator()(const transfer_to_vesting_operation& op) const
+    void operator()(const transfer_to_scorumpower_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             b.transfers_to_vesting++;

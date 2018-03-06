@@ -14,7 +14,7 @@ using operation = fc::static_variant<vote_operation,
                                      comment_operation,
 
                                      transfer_operation,
-                                     transfer_to_vesting_operation,
+                                     transfer_to_scorumpower_operation,
                                      withdraw_scorumpower_operation,
 
                                      account_create_by_committee_operation,

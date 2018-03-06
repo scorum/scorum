@@ -907,27 +907,27 @@ BOOST_AUTO_TEST_CASE(transfer_apply)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(transfer_to_vesting_validate)
+BOOST_AUTO_TEST_CASE(transfer_to_scorumpower_validate)
 {
     try
     {
-        BOOST_TEST_MESSAGE("Testing: transfer_to_vesting_validate");
+        BOOST_TEST_MESSAGE("Testing: transfer_to_scorumpower_validate");
 
         validate_database();
     }
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(transfer_to_vesting_authorities)
+BOOST_AUTO_TEST_CASE(transfer_to_scorumpower_authorities)
 {
     try
     {
         ACTORS((alice)(bob))
         fund("alice", 10000);
 
-        BOOST_TEST_MESSAGE("Testing: transfer_to_vesting_authorities");
+        BOOST_TEST_MESSAGE("Testing: transfer_to_scorumpower_authorities");
 
-        transfer_to_vesting_operation op;
+        transfer_to_scorumpower_operation op;
         op.from = "alice";
         op.to = "bob";
         op.amount = ASSET_SCR(25e+2);
@@ -965,11 +965,11 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_authorities)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
+BOOST_AUTO_TEST_CASE(transfer_to_scorumpower_apply)
 {
     try
     {
-        BOOST_TEST_MESSAGE("Testing: transfer_to_vesting_apply");
+        BOOST_TEST_MESSAGE("Testing: transfer_to_scorumpower_apply");
 
         ACTORS((alice)(bob))
         fund("alice", 10000);
@@ -982,7 +982,7 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
         auto alice_shares = alice.scorumpower;
         auto bob_shares = bob.scorumpower;
 
-        transfer_to_vesting_operation op;
+        transfer_to_scorumpower_operation op;
         op.from = "alice";
         op.to = "";
         op.amount = ASSET_SCR(75e+2);

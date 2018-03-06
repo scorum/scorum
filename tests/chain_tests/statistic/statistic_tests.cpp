@@ -212,7 +212,7 @@ SCORUM_TEST_CASE(transfers_to_vesting_stat_test)
     auto orig_val = bucket.transfers_to_vesting;
     auto orig_val_scr = bucket.scorum_transferred_to_vesting;
 
-    transfer_to_vesting_operation op;
+    transfer_to_scorumpower_operation op;
     op.from = TEST_INIT_DELEGATE_NAME;
     op.to = alice;
     op.amount = asset(1, SCORUM_SYMBOL);

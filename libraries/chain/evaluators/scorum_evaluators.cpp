@@ -720,7 +720,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
     account_service.increase_balance(to_account, o.amount);
 }
 
-void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation& o)
+void transfer_to_scorumpower_evaluator::do_apply(const transfer_to_scorumpower_operation& o)
 {
     account_service_i& account_service = db().account_service();
 

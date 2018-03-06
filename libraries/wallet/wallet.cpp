@@ -2051,10 +2051,10 @@ annotated_signed_transaction wallet_api::escrow_release(const std::string& from,
 }
 
 annotated_signed_transaction
-wallet_api::transfer_to_vesting(const std::string& from, const std::string& to, const asset& amount, bool broadcast)
+wallet_api::transfer_to_scorumpower(const std::string& from, const std::string& to, const asset& amount, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    transfer_to_vesting_operation op;
+    transfer_to_scorumpower_operation op;
     op.from = from;
     op.to = (to == from ? "" : to);
     op.amount = amount;

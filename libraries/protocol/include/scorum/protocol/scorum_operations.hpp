@@ -328,7 +328,7 @@ struct escrow_release_operation : public base_operation
  *  give another account vesting shares so that faucets can
  *  pre-fund new accounts with vesting shares.
  */
-struct transfer_to_vesting_operation : public base_operation
+struct transfer_to_scorumpower_operation : public base_operation
 {
     account_name_type from;
     account_name_type to; ///< if null, then same as from
@@ -780,7 +780,7 @@ FC_REFLECT( scorum::protocol::account_update_operation,
             (json_metadata) )
 
 FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
-FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
+FC_REFLECT( scorum::protocol::transfer_to_scorumpower_operation, (from)(to)(amount) )
 FC_REFLECT( scorum::protocol::withdraw_scorumpower_operation, (account)(scorumpower) )
 FC_REFLECT( scorum::protocol::set_withdraw_scorumpower_route_to_account_operation, (from_account)(to_account)(percent)(auto_vest) )
 FC_REFLECT( scorum::protocol::set_withdraw_scorumpower_route_to_dev_pool_operation, (from_account)(percent)(auto_vest) )
