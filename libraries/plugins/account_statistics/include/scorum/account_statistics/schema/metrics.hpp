@@ -27,13 +27,13 @@ struct account_metric
     // money
     uint32_t transfers_from = 0; ///< Account to account transfers from this account
     uint32_t transfers_to = 0; ///< Account to account transfers to this account
-    uint32_t transfers_to_vesting = 0; ///< Transfers to vesting by this account. Note: Transfer to vesting from A to B
-                                       ///counts as a transfer from A to B followed by a vesting deposit by B.
+    uint32_t transfers_to_scorumpower = 0; ///< Transfers to scorumpower by this account. Note: Transfer to scorumpower from A to B
+                                       ///counts as a transfer from A to B followed by a scorumpower deposit by B.
 
     asset scorum_sent = asset(0, SCORUM_SYMBOL); ///< SCR sent from this account
     asset scorum_received = asset(0, SCORUM_SYMBOL); ///< SCR received by this account
-    asset scorum_transferred_to_vesting = asset(0, SCORUM_SYMBOL); ///< SCR vested by the account
-    asset scorumpower_received_by_transfers = asset(0, SP_SYMBOL); ///< New SP by vesting transfers
+    asset scorum_transferred_to_scorumpower = asset(0, SCORUM_SYMBOL); ///< SCR vested by the account
+    asset scorumpower_received_by_transfers = asset(0, SP_SYMBOL); ///< New SP by scorumpower transfers
 
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
     uint32_t modified_vesting_withdrawal_requests = 0; ///< Changes to vesting withdraw requests
@@ -81,16 +81,17 @@ struct statistics
 }
 } // scorum::account_statistics
 
-FC_REFLECT(scorum::account_statistics::account_metric,
-           (signed_transactions)(market_bandwidth)(non_market_bandwidth)(total_ops)(market_ops)(forum_ops)(
-               root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(replies_deleted)(
-               new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(author_reward_payouts)(
-               author_rewards_scorumpower)(author_rewards_total_scorum_value)(curation_reward_payouts)(
-               curation_rewards_scorumpower)(curation_rewards_scorum_value)(transfers_to)(transfers_from)(scorum_sent)(
-               scorum_received)(transfers_to_vesting)(scorum_transferred_to_vesting)(scorumpower_received_by_transfers)(
-               new_vesting_withdrawal_requests)(modified_vesting_withdrawal_requests)(vesting_withdrawals_processed)(
-               finished_vesting_withdrawals)(scorumpower_withdrawn)(scorum_received_from_withdrawls)(
-               scorum_received_from_routes)(scorumpower_received_from_routes))
+FC_REFLECT(
+    scorum::account_statistics::account_metric,
+    (signed_transactions)(market_bandwidth)(non_market_bandwidth)(total_ops)(market_ops)(forum_ops)(root_comments)(
+        root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(replies_deleted)(new_root_votes)(
+        changed_root_votes)(new_reply_votes)(changed_reply_votes)(author_reward_payouts)(author_rewards_scorumpower)(
+        author_rewards_total_scorum_value)(curation_reward_payouts)(curation_rewards_scorumpower)(
+        curation_rewards_scorum_value)(transfers_to)(transfers_from)(scorum_sent)(scorum_received)(
+        transfers_to_scorumpower)(scorum_transferred_to_scorumpower)(scorumpower_received_by_transfers)(
+        new_vesting_withdrawal_requests)(modified_vesting_withdrawal_requests)(vesting_withdrawals_processed)(
+        finished_vesting_withdrawals)(scorumpower_withdrawn)(scorum_received_from_withdrawls)(
+        scorum_received_from_routes)(scorumpower_received_from_routes))
 
 FC_REFLECT_DERIVED(scorum::account_statistics::account_statistic,
                    (scorum::account_statistics::account_metric),

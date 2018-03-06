@@ -40,7 +40,7 @@ public:
     asset circulating_capital = asset(
         0,
         SCORUM_SYMBOL); ///< total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
-    asset total_scorumpower = asset(0, SP_SYMBOL); ///< total SP on accounts vesting shares
+    asset total_scorumpower = asset(0, SP_SYMBOL); ///< total SP on accounts scorumpower
 
     /**
      *  Chain properties are decided by the set of active witnesses which change every round.

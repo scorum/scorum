@@ -252,10 +252,10 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
     increase_balance(account, -scorums);
 }
 
-void dbs_account::increase_scorumpower(const account_object& account, const asset& vesting)
+void dbs_account::increase_scorumpower(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(vesting.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.scorumpower += vesting; });
+    FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.scorumpower += amount; });
 }
 
 void dbs_account::increase_delegated_scorumpower(const account_object& account, const asset& amount)
@@ -497,16 +497,16 @@ const asset dbs_account::create_scorumpower(const account_object& to_account, co
     {
         const auto& cprops = db_impl().get_dynamic_global_properties();
 
-        asset new_vesting = asset(scorum.amount, SP_SYMBOL);
+        asset new_scorumpower = asset(scorum.amount, SP_SYMBOL);
 
-        db_impl().modify(to_account, [&](account_object& to) { to.scorumpower += new_vesting; });
+        db_impl().modify(to_account, [&](account_object& to) { to.scorumpower += new_scorumpower; });
 
         db_impl().modify(cprops,
-                         [&](dynamic_global_property_object& props) { props.total_scorumpower += new_vesting; });
+                         [&](dynamic_global_property_object& props) { props.total_scorumpower += new_scorumpower; });
 
-        adjust_proxied_witness_votes(to_account, new_vesting.amount);
+        adjust_proxied_witness_votes(to_account, new_scorumpower.amount);
 
-        return new_vesting;
+        return new_scorumpower;
     }
     FC_CAPTURE_AND_RETHROW((to_account.name)(scorum))
 }

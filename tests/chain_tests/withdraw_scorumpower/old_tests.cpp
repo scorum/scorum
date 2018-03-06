@@ -195,7 +195,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
     asset scorumpower = alice.scorumpower;
     asset to_withdraw = op.scorumpower;
-    asset original_vesting = scorumpower;
+    asset original_sp = scorumpower;
     asset withdraw_rate = alice_wvo.vesting_withdraw_rate;
 
     BOOST_TEST_MESSAGE("Generating block up to first withdrawal");
@@ -295,7 +295,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     }
 
     BOOST_REQUIRE(account_service.get_account("alice").scorumpower.amount.value
-                  == (original_vesting - op.scorumpower).amount.value);
+                  == (original_sp - op.scorumpower).amount.value);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -306,13 +306,13 @@ struct withdraw_scorumpower_withdraw_route_tests_fixture : public withdraw_scoru
     {
         ACTORS((alice)(bob)(sam))
 
-        auto original_vesting = alice.scorumpower;
+        auto original_sp = alice.scorumpower;
 
         fund("alice", ASSET_SCR(104e+4));
         vest("alice", ASSET_SCR(104e+4));
 
         sign_key = alice_private_key;
-        withdraw_amount = alice.scorumpower - original_vesting;
+        withdraw_amount = alice.scorumpower - original_sp;
 
         generate_block();
         validate_database();
@@ -366,11 +366,11 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
 
     auto vesting_withdraw_rate = alice_wvo.vesting_withdraw_rate;
     auto old_alice_balance = alice.balance;
-    auto old_alice_vesting = alice.scorumpower;
+    auto old_alice_sp = alice.scorumpower;
     auto old_bob_balance = bob.balance;
-    auto old_bob_vesting = bob.scorumpower;
+    auto old_bob_sp = bob.scorumpower;
     auto old_sam_balance = sam.balance;
-    auto old_sam_vesting = sam.scorumpower;
+    auto old_sam_sp = sam.scorumpower;
     generate_blocks(alice_wvo.next_vesting_withdrawal, true);
 
     {
@@ -378,28 +378,27 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
         const auto& bob = account_service.get_account("bob");
         const auto& sam = account_service.get_account("sam");
 
-        BOOST_REQUIRE(alice.scorumpower == old_alice_vesting - vesting_withdraw_rate);
+        BOOST_REQUIRE(alice.scorumpower == old_alice_sp - vesting_withdraw_rate);
         BOOST_REQUIRE(
             alice.balance
             == old_alice_balance
                 + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 20) / SCORUM_100_PERCENT, SCORUM_SYMBOL));
-        BOOST_REQUIRE(
-            bob.scorumpower
-            == old_bob_vesting
-                + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT, SP_SYMBOL));
+        BOOST_REQUIRE(bob.scorumpower
+                      == old_bob_sp + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT,
+                                            SP_SYMBOL));
         BOOST_REQUIRE(bob.balance == old_bob_balance);
-        BOOST_REQUIRE(sam.scorumpower == old_sam_vesting);
+        BOOST_REQUIRE(sam.scorumpower == old_sam_sp);
         BOOST_REQUIRE(
             sam.balance
             == old_sam_balance
                 + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 30) / SCORUM_100_PERCENT, SCORUM_SYMBOL));
 
         old_alice_balance = alice.balance;
-        old_alice_vesting = alice.scorumpower;
+        old_alice_sp = alice.scorumpower;
         old_bob_balance = bob.balance;
-        old_bob_vesting = bob.scorumpower;
+        old_bob_sp = bob.scorumpower;
         old_sam_balance = sam.balance;
-        old_sam_vesting = sam.scorumpower;
+        old_sam_sp = sam.scorumpower;
     }
 
     BOOST_TEST_MESSAGE("Test failure with greater than 100% destination assignment");
@@ -431,14 +430,13 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
         const auto& bob = account_service.get_account("bob");
         const auto& sam = account_service.get_account("sam");
 
-        BOOST_REQUIRE(alice.scorumpower == old_alice_vesting - vesting_withdraw_rate);
+        BOOST_REQUIRE(alice.scorumpower == old_alice_sp - vesting_withdraw_rate);
         BOOST_REQUIRE(alice.balance == old_alice_balance);
-        BOOST_REQUIRE(
-            bob.scorumpower
-            == old_bob_vesting
-                + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT, SP_SYMBOL));
+        BOOST_REQUIRE(bob.scorumpower
+                      == old_bob_sp + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT,
+                                            SP_SYMBOL));
         BOOST_REQUIRE(bob.balance == old_bob_balance);
-        BOOST_REQUIRE(sam.scorumpower == old_sam_vesting);
+        BOOST_REQUIRE(sam.scorumpower == old_sam_sp);
         BOOST_REQUIRE(
             sam.balance
             == old_sam_balance

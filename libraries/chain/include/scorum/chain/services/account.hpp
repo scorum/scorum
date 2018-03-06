@@ -76,7 +76,7 @@ struct account_service_i
     virtual void increase_balance(const account_object& account, const asset& amount) = 0;
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_scorumpower(const account_object& account, const asset& vesting) = 0;
+    virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
@@ -203,7 +203,7 @@ public:
     virtual void increase_balance(const account_object& account, const asset& amount) override;
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
-    virtual void increase_scorumpower(const account_object& account, const asset& vesting) override;
+    virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
@@ -241,8 +241,8 @@ public:
                                      const optional<account_object>& proxy_account) override;
 
     /**
-     * @param to_account - the account to receive the new vesting shares
-     * @param scorum - SCR to be converted to vesting shares
+     * @param to_account - the account to receive the new scorumpower
+     * @param scorum - SCR to be converted to SP
      * @param to_reward_balance
      * @return the SP created and deposited to account
      */

@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_REQUIRE(acct.balance.amount.value == ASSET_SCR(0).amount.value);
         BOOST_REQUIRE(acct.id._id == acct_auth.id._id);
 
-        /// because init_witness has created vesting shares and blocks have been produced, 100 SCR is worth less than
-        /// 100 vesting shares due to rounding
+        /// because init_witness has created scorumpower and blocks have been produced, 100 SCR is worth less than
+        /// 100 scorumpower due to rounding
         BOOST_REQUIRE_EQUAL(acct.scorumpower.amount.value, op.fee.amount.value);
         BOOST_REQUIRE(acct.proxied_vsf_votes_total().value == 0);
         BOOST_REQUIRE_EQUAL((init_starting_balance - SUFFICIENT_FEE).amount.value, init.balance.amount.value);
@@ -1587,8 +1587,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
         BOOST_REQUIRE(sam.proxy == "dave");
         BOOST_REQUIRE(sam.proxied_vsf_votes_total() == (bob.scorumpower + alice.scorumpower).amount);
         BOOST_REQUIRE(dave.proxy == SCORUM_PROXY_TO_SELF_ACCOUNT);
-        BOOST_REQUIRE(dave.proxied_vsf_votes_total()
-                      == (sam.scorumpower + bob.scorumpower + alice.scorumpower).amount);
+        BOOST_REQUIRE(dave.proxied_vsf_votes_total() == (sam.scorumpower + bob.scorumpower + alice.scorumpower).amount);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test removing a grandchild proxy");
@@ -1633,8 +1632,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(TEST_INIT_DELEGATE_NAME).votes
-                      == (alice.scorumpower + bob.scorumpower).amount);
+        BOOST_REQUIRE(db.get_witness(TEST_INIT_DELEGATE_NAME).votes == (alice.scorumpower + bob.scorumpower).amount);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test votes are removed when a proxy is removed");
@@ -3514,8 +3512,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_REQUIRE_EQUAL(alice_acc.delegated_scorumpower, to_delegate);
         BOOST_REQUIRE_EQUAL(bob_acc.received_scorumpower, to_delegate);
         BOOST_REQUIRE_EQUAL(bob_acc.effective_scorumpower(),
-                            bob_acc.scorumpower - bob_acc.delegated_scorumpower
-                                + bob_acc.received_scorumpower);
+                            bob_acc.scorumpower - bob_acc.delegated_scorumpower + bob_acc.received_scorumpower);
 
         BOOST_TEST_MESSAGE("--- Test delegator object integrety. ");
         auto delegation
@@ -3722,7 +3719,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         BOOST_REQUIRE_EQUAL(alice_acc.delegated_scorumpower, to_delegate * 2);
         BOOST_REQUIRE_EQUAL(bob_acc.received_scorumpower, to_delegate * 2);
 
-        BOOST_TEST_MESSAGE("--- Test that effective vesting shares is accurate and being applied.");
+        BOOST_TEST_MESSAGE("--- Test that effective scorumpower is accurate and being applied.");
         tx.operations.clear();
         tx.signatures.clear();
 
@@ -3780,14 +3777,14 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
 
-        BOOST_TEST_MESSAGE("--- Testing failure delegating more vesting shares than account has.");
+        BOOST_TEST_MESSAGE("--- Testing failure delegating more scorumpower than account has.");
         tx.clear();
         op.scorumpower = asset(sam_vest.amount + 1, SP_SYMBOL);
         tx.operations.push_back(op);
         tx.sign(sam_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
 
-        BOOST_TEST_MESSAGE("--- Test failure delegating vesting shares that are part of a power down");
+        BOOST_TEST_MESSAGE("--- Test failure delegating scorumpower that are part of a power down");
         tx.clear();
         sam_vest = asset(sam_vest.amount / 2, SP_SYMBOL);
         withdraw_scorumpower_operation withdraw;
@@ -3809,7 +3806,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_TEST_MESSAGE("--- Test failure powering down vesting shares that are delegated");
+        BOOST_TEST_MESSAGE("--- Test failure powering down scorumpower that are delegated");
         sam_vest.amount += 1000;
         op.scorumpower = sam_vest;
         tx.clear();
@@ -3839,7 +3836,8 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         BOOST_REQUIRE(exp_obj->expiration == db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("sam").delegated_scorumpower == sam_vest);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("dave").received_scorumpower == ASSET_SP(0));
-        delegation = db.find<scorumpower_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
+        delegation
+            = db.find<scorumpower_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
         BOOST_REQUIRE(delegation == nullptr);
 
         generate_blocks(exp_obj->expiration + SCORUM_BLOCK_INTERVAL);
@@ -3848,8 +3846,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         end = db.get_index<scorumpower_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj == end);
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").delegated_scorumpower,
-                            ASSET_NULL_SP);
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").delegated_scorumpower, ASSET_NULL_SP);
     }
     FC_LOG_AND_RETHROW()
 }

@@ -54,7 +54,7 @@ public:
     share_type curation_rewards = 0;
     share_type posting_rewards = 0;
 
-    asset scorumpower =              asset(0, SP_SYMBOL); ///< total vesting shares held by this account, controls its voting power
+    asset scorumpower =              asset(0, SP_SYMBOL); ///< total scorumpower (SP) held by this account, controls its voting power
     asset delegated_scorumpower =    asset(0, SP_SYMBOL);
     asset received_scorumpower =     asset(0, SP_SYMBOL);
 

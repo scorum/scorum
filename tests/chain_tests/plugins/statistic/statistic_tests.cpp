@@ -205,12 +205,12 @@ SCORUM_TEST_CASE(transfers_stat_test)
     BOOST_REQUIRE_EQUAL(bucket.scorum_transferred, orig_val_scr + 1);
 }
 
-SCORUM_TEST_CASE(transfers_to_vesting_stat_test)
+SCORUM_TEST_CASE(transfers_to_scorumpower_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    auto orig_val = bucket.transfers_to_vesting;
-    auto orig_val_scr = bucket.scorum_transferred_to_vesting;
+    auto orig_val = bucket.transfers_to_scorumpower;
+    auto orig_val_scr = bucket.scorum_transferred_to_scorumpower;
 
     transfer_to_scorumpower_operation op;
     op.from = TEST_INIT_DELEGATE_NAME;
@@ -219,8 +219,8 @@ SCORUM_TEST_CASE(transfers_to_vesting_stat_test)
 
     push_operation(op);
 
-    BOOST_REQUIRE_EQUAL(bucket.transfers_to_vesting, orig_val + 1);
-    BOOST_REQUIRE_EQUAL(bucket.scorum_transferred_to_vesting, orig_val_scr + 1);
+    BOOST_REQUIRE_EQUAL(bucket.transfers_to_scorumpower, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorum_transferred_to_scorumpower, orig_val_scr + 1);
 }
 
 SCORUM_TEST_CASE(vesting_withdrawals_stat_test)

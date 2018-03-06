@@ -21,7 +21,7 @@ class account_object;
 
 class withdraw_scorumpower_impl;
 
-// This evaluator initiates withdraw vesting for account by operation withdraw_scorumpower_operation.
+// This evaluator initiates withdraw scorumpower for account by operation withdraw_scorumpower_operation.
 //
 class withdraw_scorumpower_evaluator : public evaluator_impl<data_service_factory_i, withdraw_scorumpower_evaluator>
 {
@@ -62,8 +62,8 @@ private:
     asset _scorumpower;
 };
 
-// This task initiates for withdraw vesting for development pool withount any operation
-// for development commitee purpose.
+// This task initiates withdraw scorumpower for development pool withount any operation
+// (for development commitee purpose).
 class withdraw_scorumpower_dev_pool_task : public task<withdraw_scorumpower_context>
 {
 public:

@@ -325,8 +325,8 @@ struct escrow_release_operation : public base_operation
 /**
  *  This operation converts SCR into SP at
  *  the current exchange rate. With this operation it is possible to
- *  give another account vesting shares so that faucets can
- *  pre-fund new accounts with vesting shares.
+ *  give another account scorumpower so that faucets can
+ *  pre-fund new accounts with scorumpower.
  */
 struct transfer_to_scorumpower_operation : public base_operation
 {
@@ -343,15 +343,15 @@ struct transfer_to_scorumpower_operation : public base_operation
 
 /**
  * At any given point in time an account can be withdrawing from their
- * vesting shares. A user may change the number of shares they wish to
- * cash out at any time between 0 and their total vesting stake.
+ * scorumpower. A user may change the number of shares they wish to
+ * cash out at any time between 0 and their total scorumpower stake.
  *
  * After applying this operation, scorumpower will be withdrawn
  * at a rate of scorumpower/SCORUM_VESTING_WITHDRAW_INTERVALS
  * per week for two years starting
  * one week after this operation is included in the blockchain.
  *
- * This operation is not valid if the user has no vesting shares.
+ * This operation is not valid if the user has no scorumpower.
  */
 struct withdraw_scorumpower_operation : public base_operation
 {
@@ -606,7 +606,7 @@ struct decline_voting_rights_operation : public base_operation
 };
 
 /**
- * Delegate vesting shares from one account to the other. The vesting shares are still owned
+ * Delegate scorumpower from one account to the other. The scorumpower are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
  * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
  * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
@@ -616,9 +616,9 @@ struct decline_voting_rights_operation : public base_operation
  */
 struct delegate_scorumpower_operation : public base_operation
 {
-    account_name_type delegator; ///< The account delegating vesting shares
-    account_name_type delegatee; ///< The account receiving vesting shares
-    asset scorumpower = asset(0, SP_SYMBOL); ///< The amount of vesting shares delegated
+    account_name_type delegator; ///< The account delegating scorumpower
+    account_name_type delegatee; ///< The account receiving scorumpower
+    asset scorumpower = asset(0, SP_SYMBOL); ///< The amount of scorumpower delegated
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {

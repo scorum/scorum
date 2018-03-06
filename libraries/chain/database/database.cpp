@@ -1949,7 +1949,7 @@ void database::validate_invariants() const
     try
     {
         asset total_supply = asset(0, SCORUM_SYMBOL);
-        asset total_vesting = asset(0, SP_SYMBOL);
+        asset total_scorumpower = asset(0, SP_SYMBOL);
         share_type total_vsf_votes = share_type(0);
 
         const auto& gpo = get_dynamic_global_properties();
@@ -1966,7 +1966,7 @@ void database::validate_invariants() const
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
-            total_vesting += itr->scorumpower;
+            total_scorumpower += itr->scorumpower;
             total_vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
                                     ? itr->witness_vote_weight()
                                     : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0
@@ -2020,12 +2020,12 @@ void database::validate_invariants() const
         }
 
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
-        FC_ASSERT(total_vesting <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
+        FC_ASSERT(total_scorumpower <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
-        FC_ASSERT(gpo.total_scorumpower == total_vesting, "",
-                  ("gpo.total_scorumpower", gpo.total_scorumpower)("total_vesting", total_vesting));
+        FC_ASSERT(gpo.total_scorumpower == total_scorumpower, "",
+                  ("gpo.total_scorumpower", gpo.total_scorumpower)("total_scorumpower", total_scorumpower));
         FC_ASSERT(gpo.total_scorumpower.amount == total_vsf_votes, "",
                   ("total_scorumpower", gpo.total_scorumpower)("total_vsf_votes", total_vsf_votes));
     }

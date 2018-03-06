@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, ASSET_SCR(0));
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, ASSET_SCR(0));
 
-        asset bob_vesting_before = db.obtain_service<dbs_account>().get_account("bob").scorumpower;
-        asset sam_vesting_before = db.obtain_service<dbs_account>().get_account("sam").scorumpower;
+        asset bob_sp_before = db.obtain_service<dbs_account>().get_account("bob").scorumpower;
+        asset sam_sp_before = db.obtain_service<dbs_account>().get_account("sam").scorumpower;
 
         comment_benefactor_reward_visitor visitor(db);
 
@@ -163,9 +163,9 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
 
         BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"],
-                            (db.obtain_service<dbs_account>().get_account("bob").scorumpower - bob_vesting_before));
+                            (db.obtain_service<dbs_account>().get_account("bob").scorumpower - bob_sp_before));
         BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"],
-                            (db.obtain_service<dbs_account>().get_account("sam").scorumpower - sam_vesting_before));
+                            (db.obtain_service<dbs_account>().get_account("sam").scorumpower - sam_sp_before));
 
         // clang-format off
         BOOST_REQUIRE_EQUAL(asset(db.get_comment("alice", std::string("test")).beneficiary_payout_value.amount, SP_SYMBOL),

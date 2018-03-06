@@ -13,8 +13,8 @@ namespace protocol {
 struct chain_properties
 {
     /**
-    *  This fee, paid in SCORUM, is converted into VESTING SHARES for the new account. Accounts
-    *  without vesting shares cannot earn usage rations and therefore are powerless. This minimum
+    *  This fee, paid in SCR, is converted into SP for the new account. Accounts
+    *  without scorumpower cannot earn usage rations and therefore are powerless. This minimum
     *  fee requires all accounts to have some kind of commitment to the network that includes the
     *  ability to vote and make transactions.
     */

@@ -155,8 +155,8 @@ public:
     void operator()(const transfer_to_scorumpower_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
-            b.transfers_to_vesting++;
-            b.scorum_transferred_to_vesting += op.amount.amount;
+            b.transfers_to_scorumpower++;
+            b.scorum_transferred_to_scorumpower += op.amount.amount;
         });
     }
 

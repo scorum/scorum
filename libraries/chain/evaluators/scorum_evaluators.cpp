@@ -146,9 +146,9 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
     asset withdraw_rest = withdraw_scorumpower_service.get_withdraw_rest(creator.id);
 
     FC_ASSERT(creator.scorumpower - creator.delegated_scorumpower - withdraw_rest >= o.delegation,
-              "Insufficient vesting shares to delegate to new account.",
-              ("creator.scorumpower", creator.scorumpower)(
-                  "creator.delegated_scorumpower", creator.delegated_scorumpower)("required", o.delegation));
+              "Insufficient scorumpower to delegate to new account.",
+              ("creator.scorumpower", creator.scorumpower)("creator.delegated_scorumpower",
+                                                           creator.delegated_scorumpower)("required", o.delegation));
 
     const auto median_creation_fee = dprops_service.get().median_chain_props.account_creation_fee;
 
@@ -859,8 +859,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
 
         int64_t abs_rshares
-            = ((uint128_t(voter.effective_scorumpower().amount.value) * used_power) / (SCORUM_100_PERCENT))
-                  .to_uint64();
+            = ((uint128_t(voter.effective_scorumpower().amount.value) * used_power) / (SCORUM_100_PERCENT)).to_uint64();
 
         FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || weight == 0,
                   "Voting weight is too small, please accumulate more voting power or scorum power.");
@@ -1105,17 +1104,15 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
         - withdraw_scorumpower_service.get_withdraw_rest(delegator.id);
 
     const auto dprops = dprops_service.get();
-    auto min_delegation
-        = asset(dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER,
-                SP_SYMBOL);
+    auto min_delegation = asset(
+        dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER, SP_SYMBOL);
     auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, SP_SYMBOL);
 
     // If delegation doesn't exist, create it
     if (!vd_service.is_exists(op.delegator, op.delegatee))
     {
-        FC_ASSERT(available_shares >= op.scorumpower, "Account does not have enough vesting shares to delegate.");
-        FC_ASSERT(op.scorumpower >= min_delegation, "Account must delegate a minimum of ${v}",
-                  ("v", min_delegation));
+        FC_ASSERT(available_shares >= op.scorumpower, "Account does not have enough scorumpower to delegate.");
+        FC_ASSERT(op.scorumpower >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation));
 
         vd_service.create(op.delegator, op.delegatee, op.scorumpower);
 
@@ -1134,7 +1131,7 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
             FC_ASSERT(delta >= min_update, "Scorum Power increase is not enough of a difference. min_update: ${min}",
                       ("min", min_update));
             FC_ASSERT(available_shares >= op.scorumpower - delegation.scorumpower,
-                      "Account does not have enough vesting shares to delegate.");
+                      "Account does not have enough scorumpower to delegate.");
 
             account_service.increase_delegated_scorumpower(delegator, delta);
             account_service.increase_received_scorumpower(delegatee, delta);

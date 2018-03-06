@@ -18,11 +18,11 @@ account_statistic& account_statistic::operator+=(const account_metric& stat)
     // money
     this->transfers_from += stat.transfers_from;
     this->transfers_to += stat.transfers_to;
-    this->transfers_to_vesting += stat.transfers_to_vesting;
+    this->transfers_to_scorumpower += stat.transfers_to_scorumpower;
 
     this->scorum_sent += stat.scorum_sent;
     this->scorum_received += stat.scorum_received;
-    this->scorum_transferred_to_vesting += stat.scorum_transferred_to_vesting;
+    this->scorum_transferred_to_scorumpower += stat.scorum_transferred_to_scorumpower;
     this->scorumpower_received_by_transfers += stat.scorumpower_received_by_transfers;
 
     this->new_vesting_withdrawal_requests += stat.new_vesting_withdrawal_requests;

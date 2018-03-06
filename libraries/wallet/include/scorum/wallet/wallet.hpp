@@ -624,7 +624,7 @@ public:
      * Vote for a witness to become a block producer. By default an account has not voted
      * positively or negatively for a witness. The account can either vote for with positively
      * votes or against with negative votes. The vote will remain until updated with another
-     * vote. Vote strength is determined by the accounts vesting shares.
+     * vote. Vote strength is determined by the accounts scorumpower.
      *
      * @param account_to_vote_with The account voting for a witness
      * @param witness_to_vote_for The witness that is being voted for
@@ -735,7 +735,7 @@ public:
                                                 bool broadcast = false);
 
     /**
-     * Transfer SCR into a vesting fund represented by vesting shares (SP). SP are required to vesting
+     * Transfer SCR into a scorumpower fund represented by scorumpower (SP). SP are required to vesting
      * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
      * SP are protected against dilution up until 90% of SCR is vesting.
      *
@@ -744,8 +744,10 @@ public:
      * @param amount The amount of SCR to scorum power i.e. "100.000000000 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction
-    transfer_to_scorumpower(const std::string& from, const std::string& to, const asset& amount, bool broadcast = false);
+    annotated_signed_transaction transfer_to_scorumpower(const std::string& from,
+                                                         const std::string& to,
+                                                         const asset& amount,
+                                                         bool broadcast = false);
 
     /**
      * Set up a vesting withdraw request. The request is fulfilled once a week over the next 13 weeks.
@@ -759,7 +761,7 @@ public:
     withdraw_scorumpower(const std::string& from, const asset& scorumpower, bool broadcast = false);
 
     /**
-     * Set up a vesting withdraw route. When vesting shares are withdrawn, they will be routed to these accounts
+     * Set up a vesting withdraw route. When scorumpower are withdrawn, they will be routed to these accounts
      * based on the specified weights.
      *
      * @param from The account the SP are withdrawn from.

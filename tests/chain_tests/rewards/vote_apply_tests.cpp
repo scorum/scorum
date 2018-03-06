@@ -161,7 +161,7 @@ SCORUM_TEST_CASE(voting_with_zerro_weight_check)
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(voting_with_dust_vesting_check)
+SCORUM_TEST_CASE(voting_with_dust_sp_check)
 {
     comment("alice");
 
