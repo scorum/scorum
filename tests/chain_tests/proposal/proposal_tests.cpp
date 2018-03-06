@@ -5,6 +5,8 @@
 #include "database_trx_integration.hpp"
 #include "defines.hpp"
 
+#include <scorum/protocol/proposal_operations.hpp>
+
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -14,8 +16,10 @@
 #include "actor.hpp"
 #include "genesis.hpp"
 
-namespace scorum {
-namespace chain {
+namespace proposal_tests {
+
+using namespace scorum::chain;
+namespace protocol = scorum::protocol;
 
 class proposal_fixture
 {
@@ -44,22 +48,11 @@ public:
             transfer_to_vest(a, ASSET_SCR(100));
         }
 
-        proposal_id_type create_committee_proposal(const Actor& a, proposal_action action)
-        {
-            return create_proposal(action, fc::variant(a.name).as_string());
-        }
-
-        proposal_id_type create_quorum_change_proposal(uint64_t q, proposal_action action)
-        {
-            return create_proposal(action, fc::variant(q).as_uint64());
-        }
-
-        proposal_id_type create_proposal(proposal_action action, const fc::variant& data)
+        proposal_id_type create_proposal(const protocol::proposal_operation& operation)
         {
             proposal_create_operation op;
             op.creator = actor.name;
-            op.data = data;
-            op.action = action;
+            op.operation = operation;
             op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
 
             op.validate();
@@ -80,39 +73,57 @@ public:
 
         uint64_t invite_in_to_committee(const Actor& invitee)
         {
-            auto proposal = create_committee_proposal(invitee, proposal_action::invite);
+            registration_committee_add_member_operation operation;
+            operation.account_name = invitee.name;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t dropout_from_committee(const Actor& invitee)
         {
-            auto proposal = create_committee_proposal(invitee, proposal_action::dropout);
+            registration_committee_exclude_member_operation operation;
+            operation.account_name = invitee.name;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t change_invite_quorum(uint64_t quorum)
         {
-            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_invite_quorum);
+            registration_committee_change_quorum_operation operation;
+            operation.quorum = quorum;
+            operation.committee_quorum = protocol::add_member_quorum;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t change_dropout_quorum(uint64_t quorum)
         {
-            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_dropout_quorum);
+            registration_committee_change_quorum_operation operation;
+            operation.quorum = quorum;
+            operation.committee_quorum = protocol::exclude_member_quorum;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
         uint64_t change_quorum(uint64_t quorum)
         {
-            auto proposal = create_quorum_change_proposal(quorum, proposal_action::change_quorum);
+            registration_committee_change_quorum_operation operation;
+            operation.quorum = quorum;
+            operation.committee_quorum = protocol::base_quorum;
+
+            auto proposal = create_proposal(operation);
             return proposal._id;
         }
 
-        void vote_for(uint64_t proposal)
+        void vote_for(uint64_t proposal_id)
         {
             proposal_vote_operation op;
             op.voting_account = actor.name;
-            op.proposal_id = proposal;
+            op.proposal_id = proposal_id;
 
             op.validate();
 
@@ -197,29 +208,20 @@ public:
 
     uint64_t get_invite_quorum()
     {
-        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
-
-        auto& prop = prop_service.get();
-
-        return prop.invite_quorum;
+        auto& service = chain().db.obtain_service<dbs_registration_committee>();
+        return service.get_add_member_quorum();
     }
 
     uint64_t get_dropout_quorum()
     {
-        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
-
-        auto& prop = prop_service.get();
-
-        return prop.dropout_quorum;
+        auto& service = chain().db.obtain_service<dbs_registration_committee>();
+        return service.get_exclude_member_quorum();
     }
 
     uint64_t get_change_quorum()
     {
-        dbs_dynamic_global_property& prop_service = chain().db.obtain_service<dbs_dynamic_global_property>();
-
-        auto& prop = prop_service.get();
-
-        return prop.change_quorum;
+        auto& service = chain().db.obtain_service<dbs_registration_committee>();
+        return service.get_base_quorum();
     }
 
     actor_actions actor(const Actor& a)
@@ -236,7 +238,6 @@ private:
 
 BOOST_FIXTURE_TEST_SUITE(proposal_operation_tests, proposal_fixture)
 
-// clang-format off
 SCORUM_TEST_CASE(proposal)
 {
     Actor initdelegate(TEST_INIT_DELEGATE_NAME);
@@ -247,14 +248,15 @@ SCORUM_TEST_CASE(proposal)
     Actor hue("hue");
     Actor liz("liz");
 
+    static const asset registration_bonus = ASSET_SCR(100);
     registration_stage single_stage{ 1u, 1u, 100u };
     genesis = database_integration_fixture::default_genesis_state()
-            .accounts(bob, jim, joe, hue, liz)
-            .registration_supply(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
-            .registration_bonus(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK / 2)
-            .registration_schedule(single_stage)
-             .committee(alice)
-             .generate();
+                  .accounts(bob, jim, joe, hue, liz)
+                  .registration_supply(registration_bonus * 100)
+                  .registration_bonus(registration_bonus)
+                  .registration_schedule(single_stage)
+                  .committee(alice)
+                  .generate();
 
     chain().generate_block();
 
@@ -270,6 +272,7 @@ SCORUM_TEST_CASE(proposal)
     auto hue_invitation = actor(alice).invite_in_to_committee(hue);
     auto liz_invitation = actor(alice).invite_in_to_committee(liz);
     auto bob_invitation = actor(alice).invite_in_to_committee(bob);
+    // clang-format on
 
     {
         fc::time_point_sec expected_expiration = chain().db.head_block_time() + SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
@@ -394,12 +397,10 @@ SCORUM_TEST_CASE(proposal)
         BOOST_CHECK_EQUAL(51u, get_dropout_quorum());
         BOOST_CHECK_EQUAL(100u, get_change_quorum());
     }
-
-} // clang-format on
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace scorum
-} // namespace chain
+} // namespace proposal_tests
 
 #endif

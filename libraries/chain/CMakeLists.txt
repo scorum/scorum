@@ -39,10 +39,12 @@ add_library( scorum_chain
              services/dbservice_dbs_factory.cpp
              services/decline_voting_rights_request.cpp
              services/dev_pool.cpp
+			 services/development_committee.cpp
              services/dynamic_global_property.cpp
              services/escrow.cpp
              services/hardfork_property.cpp
              services/proposal.cpp
+			 services/proposal_executor.cpp
              services/registration_committee.cpp
              services/registration_pool.cpp
              services/reward.cpp
@@ -59,8 +61,11 @@ add_library( scorum_chain
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
+             evaluators/proposal_vote_evaluator.cpp
              evaluators/set_withdraw_vesting_route_evaluators.cpp
              evaluators/withdraw_vesting_evaluator.cpp
+             evaluators/committee_accessor.cpp
+             evaluators/registration_pool_evaluator.cpp
 
              schema/shared_authority.cpp
 

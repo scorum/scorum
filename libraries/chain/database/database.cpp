@@ -14,6 +14,7 @@
 #include <fc/io/json.hpp>
 
 #include <scorum/protocol/scorum_operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
@@ -48,6 +49,7 @@
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
+#include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
@@ -61,6 +63,7 @@
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
 #include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
@@ -1050,10 +1053,7 @@ uint32_t database::last_non_undoable_block_num() const
 
 void database::initialize_evaluators()
 {
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
@@ -1063,14 +1063,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
@@ -1084,21 +1080,13 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
-
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>(
-        new set_withdraw_vesting_route_to_dev_pool_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>(
-        new set_withdraw_vesting_route_to_account_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>(new withdraw_vesting_evaluator(*this));
-
-    // clang-format off
-    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
-        new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
-                                    this->obtain_service<dbs_proposal>(),
-                                    this->obtain_service<dbs_registration_committee>(),
-                                    this->obtain_service<dbs_dynamic_global_property>()));
-    //clang-format on
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -1134,6 +1122,7 @@ void database::initialize_indexes()
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
     add_index<atomicswap_contract_index>();
+
     add_index<dev_committee_index>();
 
     _plugin_index_signal();
@@ -1180,15 +1169,16 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
         /// check invariants
-        if( is_producing() || !( skip & skip_validate_invariants ) )
+        if (is_producing() || !(skip & skip_validate_invariants))
         {
-            try{
+            try
+            {
                 validate_invariants();
             }
 #ifdef DEBUG
-        FC_CAPTURE_AND_RETHROW( (next_block) );
+            FC_CAPTURE_AND_RETHROW((next_block));
 #else
-        FC_CAPTURE_AND_LOG( (next_block) );
+            FC_CAPTURE_AND_LOG((next_block));
 #endif
         }
 
@@ -1289,7 +1279,8 @@ void database::_apply_block(const signed_block& next_block)
         const auto& gprops = obtain_service<dbs_dynamic_global_property>().get();
         auto block_size = fc::raw::pack_size(next_block);
         FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
+                  ("next_block_num", next_block_num)("block_size",
+                                                     block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -1329,13 +1320,10 @@ void database::_apply_block(const signed_block& next_block)
         update_witness_schedule();
 
         database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
-                                      static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                            static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds
-                .before(_my->_process_comments_cashout)
-                .before(_my->_process_vesting_withdrawals)
-                .apply(ctx);
+        _my->_process_funds.before(_my->_process_comments_cashout).before(_my->_process_vesting_withdrawals).apply(ctx);
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
@@ -1349,7 +1337,6 @@ void database::_apply_block(const signed_block& next_block)
 
         // notify observers that the block has been applied
         notify_applied_block(next_block);
-
     }
     FC_CAPTURE_LOG_AND_RETHROW((next_block.block_num()))
 }
@@ -1595,7 +1582,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 dgp.recent_slots_filled = (dgp.recent_slots_filled << 1) + (i == 0 ? 1 : 0);
                 dgp.participation_count += (i == 0 ? 1 : 0);
             }
-            
+
             dgp.head_block_number = b.block_num();
             dgp.head_block_id = b.id();
             dgp.time = b.timestamp;
@@ -1620,9 +1607,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 {
     try
     {
-        modify(signing_witness, [&](witness_object& _wit) {
-            _wit.last_confirmed_block_num = new_block.block_num();
-        });
+        modify(signing_witness, [&](witness_object& _wit) { _wit.last_confirmed_block_num = new_block.block_num(); });
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -1682,7 +1667,8 @@ void database::update_last_irreversible_block()
             }
         }
 
-        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
+        for_each_index(
+            [&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
 
         if (!(get_node_properties().skip_flags & skip_block_log))
         {
@@ -1867,7 +1853,8 @@ void database::validate_invariants() const
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
         {
-            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
+            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}",
+                      ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
         }
 
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();
@@ -1942,4 +1929,3 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
-
