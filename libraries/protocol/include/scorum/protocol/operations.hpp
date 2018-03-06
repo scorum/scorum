@@ -15,7 +15,7 @@ using operation = fc::static_variant<vote_operation,
 
                                      transfer_operation,
                                      transfer_to_vesting_operation,
-                                     withdraw_vesting_operation,
+                                     withdraw_scorumpower_operation,
 
                                      account_create_by_committee_operation,
                                      account_create_operation,
@@ -28,8 +28,8 @@ using operation = fc::static_variant<vote_operation,
 
                                      delete_comment_operation,
                                      comment_options_operation,
-                                     set_withdraw_vesting_route_to_account_operation,
-                                     set_withdraw_vesting_route_to_dev_pool_operation,
+                                     set_withdraw_scorumpower_route_to_account_operation,
+                                     set_withdraw_scorumpower_route_to_dev_pool_operation,
 
                                      prove_authority_operation,
 

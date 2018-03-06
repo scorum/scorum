@@ -756,7 +756,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
-    withdraw_vesting(const std::string& from, const asset& scorumpower, bool broadcast = false);
+    withdraw_scorumpower(const std::string& from, const asset& scorumpower, bool broadcast = false);
 
     /**
      * Set up a vesting withdraw route. When vesting shares are withdrawn, they will be routed to these accounts
@@ -770,7 +770,7 @@ public:
      *    them as SCR.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction set_withdraw_vesting_route(
+    annotated_signed_transaction set_withdraw_scorumpower_route(
         const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast = false);
 
     /** Signs a transaction.
@@ -1203,8 +1203,8 @@ FC_API( scorum::wallet::wallet_api,
         (escrow_dispute)
         (escrow_release)
         (transfer_to_vesting)
-        (withdraw_vesting)
-        (set_withdraw_vesting_route)
+        (withdraw_scorumpower)
+        (set_withdraw_scorumpower_route)
         (post_comment)
         (vote)
         (set_transaction_expiration)

@@ -60,9 +60,9 @@ enum object_type
     transaction_object_type,
     vesting_delegation_expiration_object_type,
     vesting_delegation_object_type,
-    withdraw_vesting_route_object_type,
-    withdraw_vesting_route_statistic_object_type,
-    withdraw_vesting_object_type,
+    withdraw_scorumpower_route_object_type,
+    withdraw_scorumpower_route_statistic_object_type,
+    withdraw_scorumpower_object_type,
     witness_object_type,
     witness_schedule_object_type,
     witness_vote_object_type,
@@ -95,9 +95,9 @@ class reward_pool_object;
 class transaction_object;
 class vesting_delegation_expiration_object;
 class vesting_delegation_object;
-class withdraw_vesting_route_object;
-class withdraw_vesting_route_statistic_object;
-class withdraw_vesting_object;
+class withdraw_scorumpower_route_object;
+class withdraw_scorumpower_route_statistic_object;
+class withdraw_scorumpower_object;
 class witness_object;
 class witness_schedule_object;
 class witness_vote_object;
@@ -129,9 +129,9 @@ using reward_pool_id_type = oid<reward_pool_object>;
 using transaction_object_id_type = oid<transaction_object>;
 using vesting_delegation_expiration_id_type = oid<vesting_delegation_expiration_object>;
 using vesting_delegation_id_type = oid<vesting_delegation_object>;
-using withdraw_vesting_route_id_type = oid<withdraw_vesting_route_object>;
-using withdraw_vesting_route_statistic_id_type = oid<withdraw_vesting_route_statistic_object>;
-using withdraw_vesting_id_type = oid<withdraw_vesting_object>;
+using withdraw_scorumpower_route_id_type = oid<withdraw_scorumpower_route_object>;
+using withdraw_scorumpower_route_statistic_id_type = oid<withdraw_scorumpower_route_statistic_object>;
+using withdraw_scorumpower_id_type = oid<withdraw_scorumpower_object>;
 using witness_id_type = oid<witness_object>;
 using witness_schedule_id_type = oid<witness_schedule_object>;
 using witness_vote_id_type = oid<witness_vote_object>;
@@ -177,9 +177,9 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (transaction_object_type)
                 (vesting_delegation_expiration_object_type)
                 (vesting_delegation_object_type)
-                (withdraw_vesting_route_object_type)
-                (withdraw_vesting_route_statistic_object_type)
-                (withdraw_vesting_object_type)
+                (withdraw_scorumpower_route_object_type)
+                (withdraw_scorumpower_route_statistic_object_type)
+                (withdraw_scorumpower_object_type)
                 (witness_object_type)
                 (witness_schedule_object_type)
                 (witness_vote_object_type)

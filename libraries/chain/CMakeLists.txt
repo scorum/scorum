@@ -50,9 +50,9 @@ add_library( scorum_chain
              services/reward_fund.cpp
              services/proposal_executor.cpp
              services/dev_pool.cpp
-             services/withdraw_vesting_route.cpp
-             services/withdraw_vesting_route_statistic.cpp
-             services/withdraw_vesting.cpp
+             services/withdraw_scorumpower_route.cpp
+             services/withdraw_scorumpower_route_statistic.cpp
+             services/withdraw_scorumpower.cpp
              services/development_committee.cpp
 
              data_service_factory.cpp
@@ -60,8 +60,8 @@ add_library( scorum_chain
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
              evaluators/proposal_vote_evaluator.cpp
-             evaluators/set_withdraw_vesting_route_evaluators.cpp
-             evaluators/withdraw_vesting_evaluator.cpp
+             evaluators/set_withdraw_scorumpower_route_evaluators.cpp
+             evaluators/withdraw_scorumpower_evaluator.cpp
              evaluators/committee_accessor.cpp
              evaluators/registration_pool_evaluator.cpp
 

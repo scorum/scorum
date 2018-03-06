@@ -11,11 +11,11 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -518,7 +518,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == outgoing || type == all)
         {
-            const auto& by_route = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
+            const auto& by_route = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_withdraw_route>();
             auto route = by_route.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_route.end() && is_equal_withdrawable_id(route->from_id, acc.id))
@@ -537,7 +537,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == incoming || type == all)
         {
-            const auto& by_dest = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_destination>();
+            const auto& by_dest = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_destination>();
             auto route = by_dest.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_dest.end() && is_equal_withdrawable_id(route->to_id, acc.id))
@@ -1714,7 +1714,7 @@ state database_api::get_state(std::string path) const
                         switch (item.second.op.which())
                         {
                         case operation::tag<transfer_to_vesting_operation>::value:
-                        case operation::tag<withdraw_vesting_operation>::value:
+                        case operation::tag<withdraw_scorumpower_operation>::value:
                         case operation::tag<transfer_operation>::value:
                         case operation::tag<author_reward_operation>::value:
                         case operation::tag<curation_reward_operation>::value:

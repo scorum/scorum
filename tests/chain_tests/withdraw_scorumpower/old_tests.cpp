@@ -3,32 +3,32 @@
 #include "database_default_integration.hpp"
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
-#include <scorum/chain/services/withdraw_vesting_route_statistic.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route_statistic.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-struct withdraw_vesting_tests_fixture : public database_default_integration_fixture
+struct withdraw_scorumpower_tests_fixture : public database_default_integration_fixture
 {
-    withdraw_vesting_tests_fixture()
+    withdraw_scorumpower_tests_fixture()
         : account_service(db.account_service())
-        , withdraw_vesting_service(db.withdraw_vesting_service())
+        , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
     {
     }
 
     account_service_i& account_service;
-    withdraw_vesting_service_i& withdraw_vesting_service;
+    withdraw_scorumpower_service_i& withdraw_scorumpower_service;
     private_key_type sign_key;
 };
 
-struct withdraw_vesting_apply_tests_fixture : public withdraw_vesting_tests_fixture
+struct withdraw_scorumpower_apply_tests_fixture : public withdraw_scorumpower_tests_fixture
 {
-    withdraw_vesting_apply_tests_fixture()
+    withdraw_scorumpower_apply_tests_fixture()
     {
         ACTORS((alice))
         generate_block();
@@ -41,15 +41,15 @@ struct withdraw_vesting_apply_tests_fixture : public withdraw_vesting_tests_fixt
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(withdraw_vesting_apply_tests, withdraw_vesting_apply_tests_fixture)
+BOOST_FIXTURE_TEST_SUITE(withdraw_scorumpower_apply_tests, withdraw_scorumpower_apply_tests_fixture)
 
-SCORUM_TEST_CASE(withdraw_vesting_apply)
+SCORUM_TEST_CASE(withdraw_scorumpower_apply)
 {
     const auto& alice = account_service.get_account("alice");
 
     BOOST_TEST_MESSAGE("--- Test withdraw of existing SP");
 
-    withdraw_vesting_operation op;
+    withdraw_scorumpower_operation op;
     op.account = "alice";
     op.scorumpower = asset(alice.scorumpower.amount / 2, SP_SYMBOL);
 
@@ -61,9 +61,9 @@ SCORUM_TEST_CASE(withdraw_vesting_apply)
     tx.sign(sign_key, db.get_chain_id());
     db.push_transaction(tx, 0);
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
-    const auto& alice_wvo = withdraw_vesting_service.get(alice.id);
+    const auto& alice_wvo = withdraw_scorumpower_service.get(alice.id);
 
     BOOST_REQUIRE(alice.scorumpower.amount.value == old_scorumpower.amount.value);
     BOOST_REQUIRE(alice_wvo.vesting_withdraw_rate.amount.value
@@ -117,7 +117,7 @@ SCORUM_TEST_CASE(withdraw_vesting_apply)
     db.push_transaction(tx, 0);
 
     BOOST_REQUIRE(alice.scorumpower.amount.value == old_scorumpower.amount.value);
-    BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
 
     BOOST_TEST_MESSAGE("--- Test cancelling a withdraw when below the account creation fee");
     op.scorumpower = alice.scorumpower;
@@ -127,7 +127,7 @@ SCORUM_TEST_CASE(withdraw_vesting_apply)
     db.push_transaction(tx, 0);
     generate_block();
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     tx.clear();
     op.account = "alice";
@@ -137,15 +137,15 @@ SCORUM_TEST_CASE(withdraw_vesting_apply)
     tx.sign(sign_key, db.get_chain_id());
     db.push_transaction(tx, 0);
 
-    BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
     validate_database();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct withdraw_vesting_withdrawals_tests_fixture : public withdraw_vesting_tests_fixture
+struct withdraw_scorumpower_withdrawals_tests_fixture : public withdraw_scorumpower_tests_fixture
 {
-    withdraw_vesting_withdrawals_tests_fixture()
+    withdraw_scorumpower_withdrawals_tests_fixture()
     {
         ACTORS((alice))
         fund("alice", ASSET_SCR(100e+3));
@@ -158,7 +158,7 @@ struct withdraw_vesting_withdrawals_tests_fixture : public withdraw_vesting_test
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(withdraw_vesting_withdrawals_tests, withdraw_vesting_withdrawals_tests_fixture)
+BOOST_FIXTURE_TEST_SUITE(withdraw_scorumpower_withdrawals_tests, withdraw_scorumpower_withdrawals_tests_fixture)
 
 SCORUM_TEST_CASE(vesting_withdrawals)
 {
@@ -167,7 +167,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     BOOST_TEST_MESSAGE("Setting up withdrawal");
 
     signed_transaction tx;
-    withdraw_vesting_operation op;
+    withdraw_scorumpower_operation op;
     op.account = "alice";
     op.scorumpower = asset(alice.scorumpower.amount / 2, SP_SYMBOL);
     tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -176,7 +176,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     db.push_transaction(tx, 0);
 
     auto alice_id = alice.id;
-    const auto& alice_wvo = withdraw_vesting_service.get(alice_id);
+    const auto& alice_wvo = withdraw_scorumpower_service.get(alice_id);
 
     auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
     asset scorumpower = alice.scorumpower;
@@ -209,7 +209,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
 
     scorumpower = account_service.get_account("alice").scorumpower;
     auto balance = account_service.get_account("alice").balance;
-    auto old_next_vesting = withdraw_vesting_service.get(alice_id).next_vesting_withdrawal;
+    auto old_next_vesting = withdraw_scorumpower_service.get(alice_id).next_vesting_withdrawal;
 
     for (int i = 1; i < SCORUM_VESTING_WITHDRAW_INTERVALS - 1; i++)
     {
@@ -228,17 +228,17 @@ SCORUM_TEST_CASE(vesting_withdrawals)
         BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
 
         if (i == SCORUM_VESTING_WITHDRAW_INTERVALS - 1)
-            BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+            BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
         else
-            BOOST_REQUIRE(withdraw_vesting_service.get(alice.id).next_vesting_withdrawal.sec_since_epoch()
+            BOOST_REQUIRE(withdraw_scorumpower_service.get(alice.id).next_vesting_withdrawal.sec_since_epoch()
                           == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
 
         validate_database();
 
         scorumpower = alice.scorumpower;
         balance = alice.balance;
-        if (withdraw_vesting_service.is_exists(alice.id))
-            old_next_vesting = withdraw_vesting_service.get(alice.id).next_vesting_withdrawal;
+        if (withdraw_scorumpower_service.is_exists(alice.id))
+            old_next_vesting = withdraw_scorumpower_service.get(alice.id).next_vesting_withdrawal;
     }
 
     if (to_withdraw.amount.value % withdraw_rate.amount.value != 0)
@@ -248,7 +248,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
         fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
         gpo = db.get_dynamic_global_properties();
 
-        const auto& alice_wvo = withdraw_vesting_service.get(alice_id);
+        const auto& alice_wvo = withdraw_scorumpower_service.get(alice_id);
 
         BOOST_REQUIRE(alice_wvo.next_vesting_withdrawal.sec_since_epoch()
                       == (old_next_vesting + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS).sec_since_epoch());
@@ -272,7 +272,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     {
         generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
 
-        BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice_id));
+        BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice_id));
 
         fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
         BOOST_REQUIRE(fill_op.from_account == "alice");
@@ -286,9 +286,9 @@ SCORUM_TEST_CASE(vesting_withdrawals)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct withdraw_vesting_withdraw_route_tests_fixture : public withdraw_vesting_tests_fixture
+struct withdraw_scorumpower_withdraw_route_tests_fixture : public withdraw_scorumpower_tests_fixture
 {
-    withdraw_vesting_withdraw_route_tests_fixture()
+    withdraw_scorumpower_withdraw_route_tests_fixture()
     {
         ACTORS((alice)(bob)(sam))
 
@@ -307,7 +307,7 @@ struct withdraw_vesting_withdraw_route_tests_fixture : public withdraw_vesting_t
     asset withdraw_amount = asset(0, SP_SYMBOL);
 };
 
-BOOST_FIXTURE_TEST_SUITE(withdraw_vesting_withdraw_route_tests, withdraw_vesting_withdraw_route_tests_fixture)
+BOOST_FIXTURE_TEST_SUITE(withdraw_scorumpower_withdraw_route_tests, withdraw_scorumpower_withdraw_route_tests_fixture)
 
 SCORUM_TEST_CASE(vesting_withdraw_route)
 {
@@ -316,7 +316,7 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
     const auto& sam = account_service.get_account("sam");
 
     BOOST_TEST_MESSAGE("Setup vesting withdraw");
-    withdraw_vesting_operation wv;
+    withdraw_scorumpower_operation wv;
     wv.account = "alice";
     wv.scorumpower = withdraw_amount;
 
@@ -330,7 +330,7 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
     tx.signatures.clear();
 
     BOOST_TEST_MESSAGE("Setting up bob destination");
-    set_withdraw_vesting_route_to_account_operation op;
+    set_withdraw_scorumpower_route_to_account_operation op;
     op.from_account = "alice";
     op.to_account = "bob";
     op.percent = SCORUM_1_PERCENT * 50;
@@ -348,7 +348,7 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
     BOOST_TEST_MESSAGE("Setting up first withdraw");
 
     auto alice_id = alice.id;
-    const auto& alice_wvo = withdraw_vesting_service.get(alice_id);
+    const auto& alice_wvo = withdraw_scorumpower_service.get(alice_id);
 
     auto vesting_withdraw_rate = alice_wvo.vesting_withdraw_rate;
     auto old_alice_balance = alice.balance;
@@ -411,7 +411,7 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
     tx.sign(sign_key, db.get_chain_id());
     db.push_transaction(tx, 0);
 
-    generate_blocks(withdraw_vesting_service.get(alice_id).next_vesting_withdrawal, true);
+    generate_blocks(withdraw_scorumpower_service.get(alice_id).next_vesting_withdrawal, true);
     {
         const auto& alice = account_service.get_account("alice");
         const auto& bob = account_service.get_account("bob");

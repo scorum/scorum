@@ -9,10 +9,11 @@
 namespace scorum {
 namespace chain {
 
-class withdraw_vesting_route_object : public object<withdraw_vesting_route_object_type, withdraw_vesting_route_object>
+class withdraw_scorumpower_route_object
+    : public object<withdraw_scorumpower_route_object_type, withdraw_scorumpower_route_object>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_vesting_route_object)
+    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_scorumpower_route_object)
 
     id_type id;
 
@@ -23,11 +24,11 @@ public:
     bool auto_vest = false;
 };
 
-class withdraw_vesting_route_statistic_object
-    : public object<withdraw_vesting_route_statistic_object_type, withdraw_vesting_route_statistic_object>
+class withdraw_scorumpower_route_statistic_object
+    : public object<withdraw_scorumpower_route_statistic_object_type, withdraw_scorumpower_route_statistic_object>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_vesting_route_statistic_object)
+    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_scorumpower_route_statistic_object)
 
     id_type id;
 
@@ -38,10 +39,10 @@ public:
 
 using scorum::protocol::asset;
 
-class withdraw_vesting_object : public object<withdraw_vesting_object_type, withdraw_vesting_object>
+class withdraw_scorumpower_object : public object<withdraw_scorumpower_object_type, withdraw_scorumpower_object>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_vesting_object)
+    CHAINBASE_DEFAULT_CONSTRUCTOR(withdraw_scorumpower_object)
 
     id_type id;
 
@@ -55,7 +56,7 @@ public:
     asset to_withdraw = asset(0, SP_SYMBOL); /// Might be able to look this up with operation history.
 };
 
-namespace withdraw_vesting_objects {
+namespace withdraw_scorumpower_objects {
 
 class ids_visitor
 {
@@ -120,7 +121,7 @@ struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_ty
 {
     bool operator()(const withdrawable_id_type& a, const withdrawable_id_type& b) const
     {
-        using namespace withdraw_vesting_objects;
+        using namespace withdraw_scorumpower_objects;
 
         if (a.which() == b.which()) // both have same type
         {
@@ -132,7 +133,7 @@ struct less_for_withdrawable_id : public std::binary_function<withdrawable_id_ty
 
 inline bool is_equal_withdrawable_id(const withdrawable_id_type& a, const withdrawable_id_type& b)
 {
-    using namespace withdraw_vesting_objects;
+    using namespace withdraw_scorumpower_objects;
 
     if (a.which() == b.which())
     {
@@ -144,98 +145,100 @@ inline bool is_equal_withdrawable_id(const withdrawable_id_type& a, const withdr
 
 struct by_withdraw_route;
 struct by_destination;
-typedef shared_multi_index_container<withdraw_vesting_route_object,
+typedef shared_multi_index_container<withdraw_scorumpower_route_object,
                                      indexed_by<ordered_unique<tag<by_id>,
-                                                               member<withdraw_vesting_route_object,
-                                                                      withdraw_vesting_route_id_type,
-                                                                      &withdraw_vesting_route_object::id>>,
+                                                               member<withdraw_scorumpower_route_object,
+                                                                      withdraw_scorumpower_route_id_type,
+                                                                      &withdraw_scorumpower_route_object::id>>,
                                                 ordered_unique<tag<by_withdraw_route>,
-                                                               composite_key<withdraw_vesting_route_object,
-                                                                             member<withdraw_vesting_route_object,
+                                                               composite_key<withdraw_scorumpower_route_object,
+                                                                             member<withdraw_scorumpower_route_object,
                                                                                     withdrawable_id_type,
-                                                                                    &withdraw_vesting_route_object::
+                                                                                    &withdraw_scorumpower_route_object::
                                                                                         from_id>,
-                                                                             member<withdraw_vesting_route_object,
+                                                                             member<withdraw_scorumpower_route_object,
                                                                                     withdrawable_id_type,
-                                                                                    &withdraw_vesting_route_object::
+                                                                                    &withdraw_scorumpower_route_object::
                                                                                         to_id>>,
                                                                composite_key_compare<less_for_withdrawable_id,
                                                                                      less_for_withdrawable_id>>,
                                                 ordered_unique<tag<by_destination>,
-                                                               composite_key<withdraw_vesting_route_object,
-                                                                             member<withdraw_vesting_route_object,
+                                                               composite_key<withdraw_scorumpower_route_object,
+                                                                             member<withdraw_scorumpower_route_object,
                                                                                     withdrawable_id_type,
-                                                                                    &withdraw_vesting_route_object::
+                                                                                    &withdraw_scorumpower_route_object::
                                                                                         to_id>,
-                                                                             member<withdraw_vesting_route_object,
-                                                                                    withdraw_vesting_route_id_type,
-                                                                                    &withdraw_vesting_route_object::
+                                                                             member<withdraw_scorumpower_route_object,
+                                                                                    withdraw_scorumpower_route_id_type,
+                                                                                    &withdraw_scorumpower_route_object::
                                                                                         id>>,
                                                                composite_key_compare<less_for_withdrawable_id,
                                                                                      std::
-                                                                                         less<withdraw_vesting_route_id_type>>>>>
-    withdraw_vesting_route_index;
+                                                                                         less<withdraw_scorumpower_route_id_type>>>>>
+    withdraw_scorumpower_route_index;
 
-typedef shared_multi_index_container<withdraw_vesting_route_statistic_object,
+typedef shared_multi_index_container<withdraw_scorumpower_route_statistic_object,
                                      indexed_by<ordered_unique<tag<by_id>,
-                                                               member<withdraw_vesting_route_statistic_object,
-                                                                      withdraw_vesting_route_statistic_id_type,
-                                                                      &withdraw_vesting_route_statistic_object::id>>,
+                                                               member<withdraw_scorumpower_route_statistic_object,
+                                                                      withdraw_scorumpower_route_statistic_id_type,
+                                                                      &withdraw_scorumpower_route_statistic_object::
+                                                                          id>>,
                                                 ordered_unique<tag<by_destination>,
-                                                               member<withdraw_vesting_route_statistic_object,
+                                                               member<withdraw_scorumpower_route_statistic_object,
                                                                       withdrawable_id_type,
-                                                                      &withdraw_vesting_route_statistic_object::
+                                                                      &withdraw_scorumpower_route_statistic_object::
                                                                           from_id>,
                                                                less_for_withdrawable_id>>>
-    withdraw_vesting_route_statistic_index;
+    withdraw_scorumpower_route_statistic_index;
 
 struct by_next_vesting_withdrawal;
-typedef shared_multi_index_container<withdraw_vesting_object,
+typedef shared_multi_index_container<withdraw_scorumpower_object,
                                      indexed_by<ordered_unique<tag<by_id>,
-                                                               member<withdraw_vesting_object,
-                                                                      withdraw_vesting_id_type,
-                                                                      &withdraw_vesting_object::id>>,
+                                                               member<withdraw_scorumpower_object,
+                                                                      withdraw_scorumpower_id_type,
+                                                                      &withdraw_scorumpower_object::id>>,
                                                 ordered_unique<tag<by_destination>,
-                                                               member<withdraw_vesting_object,
+                                                               member<withdraw_scorumpower_object,
                                                                       withdrawable_id_type,
-                                                                      &withdraw_vesting_object::from_id>,
+                                                                      &withdraw_scorumpower_object::from_id>,
                                                                less_for_withdrawable_id>,
                                                 ordered_unique<tag<by_next_vesting_withdrawal>,
-                                                               composite_key<withdraw_vesting_object,
-                                                                             member<withdraw_vesting_object,
+                                                               composite_key<withdraw_scorumpower_object,
+                                                                             member<withdraw_scorumpower_object,
                                                                                     time_point_sec,
-                                                                                    &withdraw_vesting_object::
+                                                                                    &withdraw_scorumpower_object::
                                                                                         next_vesting_withdrawal>,
-                                                                             member<withdraw_vesting_object,
-                                                                                    withdraw_vesting_id_type,
-                                                                                    &withdraw_vesting_object::id>>>>>
-    withdraw_vesting_index;
+                                                                             member<withdraw_scorumpower_object,
+                                                                                    withdraw_scorumpower_id_type,
+                                                                                    &withdraw_scorumpower_object::
+                                                                                        id>>>>>
+    withdraw_scorumpower_index;
 
 } // namespace chain
 } // namespace scorum
 
 // clang-format off
 FC_REFLECT_TYPENAME(scorum::chain::withdrawable_id_type)
-FC_REFLECT(scorum::chain::withdraw_vesting_route_object,
+FC_REFLECT(scorum::chain::withdraw_scorumpower_route_object,
            (id)
            (from_id)
            (to_id)
            (percent)
            (auto_vest))
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::withdraw_vesting_route_object, scorum::chain::withdraw_vesting_route_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::withdraw_scorumpower_route_object, scorum::chain::withdraw_scorumpower_route_index)
 
-FC_REFLECT(scorum::chain::withdraw_vesting_route_statistic_object,
+FC_REFLECT(scorum::chain::withdraw_scorumpower_route_statistic_object,
            (id)
            (from_id)
            (withdraw_routes))
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::withdraw_vesting_route_statistic_object, scorum::chain::withdraw_vesting_route_statistic_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::withdraw_scorumpower_route_statistic_object, scorum::chain::withdraw_scorumpower_route_statistic_index)
 
-FC_REFLECT(scorum::chain::withdraw_vesting_object,
+FC_REFLECT(scorum::chain::withdraw_scorumpower_object,
            (id)
            (from_id)
            (vesting_withdraw_rate)
            (next_vesting_withdrawal)
            (withdrawn)
            (to_withdraw))
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::withdraw_vesting_object, scorum::chain::withdraw_vesting_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::withdraw_scorumpower_object, scorum::chain::withdraw_scorumpower_index)
 // clang-format on

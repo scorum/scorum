@@ -1035,28 +1035,28 @@ BOOST_AUTO_TEST_CASE(transfer_to_vesting_apply)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(withdraw_vesting_validate)
+BOOST_AUTO_TEST_CASE(withdraw_scorumpower_validate)
 {
     try
     {
-        BOOST_TEST_MESSAGE("Testing: withdraw_vesting_validate");
+        BOOST_TEST_MESSAGE("Testing: withdraw_scorumpower_validate");
 
         validate_database();
     }
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(withdraw_vesting_authorities)
+BOOST_AUTO_TEST_CASE(withdraw_scorumpower_authorities)
 {
     try
     {
-        BOOST_TEST_MESSAGE("Testing: withdraw_vesting_authorities");
+        BOOST_TEST_MESSAGE("Testing: withdraw_scorumpower_authorities");
 
         ACTORS((alice)(bob))
         fund("alice", 10000);
         vest("alice", 10000);
 
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = "alice";
         op.scorumpower = ASSET_SP(1e+3);
 
@@ -3485,7 +3485,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         generate_block();
 
         BOOST_TEST_MESSAGE("--- Test failure when SP are powering down.");
-        withdraw_vesting_operation withdraw;
+        withdraw_scorumpower_operation withdraw;
         withdraw.account = "alice";
         withdraw.scorumpower = alice_vested.scorumpower;
         account_create_with_delegation_operation op;
@@ -3790,7 +3790,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         BOOST_TEST_MESSAGE("--- Test failure delegating vesting shares that are part of a power down");
         tx.clear();
         sam_vest = asset(sam_vest.amount / 2, SP_SYMBOL);
-        withdraw_vesting_operation withdraw;
+        withdraw_scorumpower_operation withdraw;
         withdraw.account = "sam";
         withdraw.scorumpower = sam_vest;
         tx.operations.push_back(withdraw);

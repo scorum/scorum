@@ -157,20 +157,20 @@ void transfer_to_vesting_operation::validate() const
     FC_ASSERT(amount > asset(0, SCORUM_SYMBOL), "Must transfer a nonzero amount");
 }
 
-void withdraw_vesting_operation::validate() const
+void withdraw_scorumpower_operation::validate() const
 {
     validate_account_name(account);
     FC_ASSERT(is_asset_type(scorumpower, SP_SYMBOL), "Amount must be SP");
 }
 
-void set_withdraw_vesting_route_to_account_operation::validate() const
+void set_withdraw_scorumpower_route_to_account_operation::validate() const
 {
     validate_account_name(from_account);
     validate_account_name(to_account);
     FC_ASSERT(0 <= percent && percent <= SCORUM_100_PERCENT, "Percent must be valid scorum percent");
 }
 
-void set_withdraw_vesting_route_to_dev_pool_operation::validate() const
+void set_withdraw_scorumpower_route_to_dev_pool_operation::validate() const
 {
     validate_account_name(from_account);
     FC_ASSERT(0 <= percent && percent <= SCORUM_100_PERCENT, "Percent must be valid scorum percent");

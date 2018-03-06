@@ -17,9 +17,9 @@
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/vesting_delegation.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
-#include <scorum/chain/services/withdraw_vesting_route_statistic.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route_statistic.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
@@ -43,9 +43,9 @@ DATA_SERVICE_FACTORY_IMPL(
         (reward)
         (reward_fund)
         (vesting_delegation)
-        (withdraw_vesting_route)
-        (withdraw_vesting_route_statistic)
-        (withdraw_vesting)
+        (withdraw_scorumpower_route)
+        (withdraw_scorumpower_route_statistic)
+        (withdraw_scorumpower)
         (witness)
         (witness_vote)
         (dev_pool)

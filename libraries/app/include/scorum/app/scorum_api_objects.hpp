@@ -54,7 +54,7 @@ typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
 typedef api_obj<scorum::chain::reward_fund_object> reward_fund_api_obj;
 typedef api_obj<scorum::chain::vesting_delegation_expiration_object> vesting_delegation_expiration_api_obj;
 typedef api_obj<scorum::chain::vesting_delegation_object> vesting_delegation_api_obj;
-typedef api_obj<scorum::chain::withdraw_vesting_route_object> withdraw_vesting_route_api_obj;
+typedef api_obj<scorum::chain::withdraw_scorumpower_route_object> withdraw_scorumpower_route_api_obj;
 typedef api_obj<scorum::chain::witness_schedule_object> witness_schedule_api_obj;
 typedef api_obj<scorum::chain::witness_vote_object> witness_vote_api_obj;
 typedef api_obj<scorum::witness::account_bandwidth_object> account_bandwidth_api_obj;
@@ -603,7 +603,7 @@ FC_REFLECT_EMPTY(scorum::app::escrow_api_obj)
 FC_REFLECT_EMPTY(scorum::app::reward_fund_api_obj)
 FC_REFLECT_EMPTY(scorum::app::vesting_delegation_api_obj)
 FC_REFLECT_EMPTY(scorum::app::vesting_delegation_expiration_api_obj)
-FC_REFLECT_EMPTY(scorum::app::withdraw_vesting_route_api_obj)
+FC_REFLECT_EMPTY(scorum::app::withdraw_scorumpower_route_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
 

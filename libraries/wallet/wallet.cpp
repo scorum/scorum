@@ -2067,10 +2067,10 @@ wallet_api::transfer_to_vesting(const std::string& from, const std::string& to, 
 }
 
 annotated_signed_transaction
-wallet_api::withdraw_vesting(const std::string& from, const asset& scorumpower, bool broadcast)
+wallet_api::withdraw_scorumpower(const std::string& from, const asset& scorumpower, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    withdraw_vesting_operation op;
+    withdraw_scorumpower_operation op;
     op.account = from;
     op.scorumpower = scorumpower;
 
@@ -2081,11 +2081,11 @@ wallet_api::withdraw_vesting(const std::string& from, const asset& scorumpower, 
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::set_withdraw_vesting_route(
+annotated_signed_transaction wallet_api::set_withdraw_scorumpower_route(
     const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    set_withdraw_vesting_route_to_account_operation op;
+    set_withdraw_scorumpower_route_to_account_operation op;
     op.from_account = from;
     op.to_account = to;
     op.percent = percent;

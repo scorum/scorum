@@ -17,7 +17,7 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 #include <scorum/chain/schema/reward_pool_object.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
@@ -30,8 +30,8 @@
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
-#include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
-#include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
+#include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
+#include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
 #include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 
@@ -42,10 +42,10 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -1164,9 +1164,9 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>();
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_scorumpower_route_to_dev_pool_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_scorumpower_route_to_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<withdraw_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
 
 }
@@ -1197,9 +1197,9 @@ void database::initialize_indexes()
     add_index<transaction_index>();
     add_index<vesting_delegation_expiration_index>();
     add_index<vesting_delegation_index>();
-    add_index<withdraw_vesting_route_index>();
-    add_index<withdraw_vesting_route_statistic_index>();
-    add_index<withdraw_vesting_index>();
+    add_index<withdraw_scorumpower_route_index>();
+    add_index<withdraw_scorumpower_route_statistic_index>();
+    add_index<withdraw_scorumpower_index>();
     add_index<witness_index>();
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();

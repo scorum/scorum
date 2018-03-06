@@ -16,7 +16,7 @@
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/vesting_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -132,7 +132,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     account_service_i& account_service = db().account_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-    withdraw_vesting_service_i& withdraw_vesting_service = db().withdraw_vesting_service();
+    withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -143,7 +143,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     // check delegation fee
 
-    asset withdraw_rest = withdraw_vesting_service.get_withdraw_rest(creator.id);
+    asset withdraw_rest = withdraw_scorumpower_service.get_withdraw_rest(creator.id);
 
     FC_ASSERT(creator.scorumpower - creator.delegated_scorumpower - withdraw_rest >= o.delegation,
               "Insufficient vesting shares to delegate to new account.",
@@ -1096,13 +1096,13 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
     account_service_i& account_service = db().account_service();
     vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-    withdraw_vesting_service_i& withdraw_vesting_service = db().withdraw_vesting_service();
+    withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
 
     auto available_shares = delegator.scorumpower - delegator.delegated_scorumpower
-        - withdraw_vesting_service.get_withdraw_rest(delegator.id);
+        - withdraw_scorumpower_service.get_withdraw_rest(delegator.id);
 
     const auto dprops = dprops_service.get();
     auto min_delegation

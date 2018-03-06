@@ -64,7 +64,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
 
     void start_withdraw(share_type to_withdraw)
     {
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = bob;
         op.scorumpower = asset(to_withdraw, SP_SYMBOL);
 
@@ -232,7 +232,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
     {
         auto orig_val = bucket.new_vesting_withdrawal_requests;
 
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = alice;
         op.scorumpower = alice_acc.scorumpower;
 
@@ -243,7 +243,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
     {
         auto orig_val = bucket.modified_vesting_withdrawal_requests;
 
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = alice;
         op.scorumpower = alice_acc.scorumpower / 2;
 
@@ -303,7 +303,7 @@ SCORUM_TEST_CASE(vesting_transfered_stat_test)
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    set_withdraw_vesting_route_to_account_operation op;
+    set_withdraw_scorumpower_route_to_account_operation op;
     op.from_account = "bob";
     op.to_account = alice;
     op.auto_vest = true;
