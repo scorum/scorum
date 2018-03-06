@@ -35,7 +35,6 @@ struct by_id;
 enum object_type
 {
     account_authority_object_type,
-    account_history_object_type,
     account_object_type,
     account_recovery_request_object_type,
     atomicswap_contract_object_type,
@@ -70,7 +69,6 @@ enum object_type
 };
 
 class account_authority_object;
-class account_history_object;
 class account_object;
 class account_recovery_request_object;
 class atomicswap_contract_object;
@@ -104,7 +102,6 @@ class witness_vote_object;
 class dev_committee_object;
 
 using account_authority_id_type = oid<account_authority_object>;
-using account_history_id_type = oid<account_history_object>;
 using account_id_type = oid<account_object>;
 using account_recovery_request_id_type = oid<account_recovery_request_object>;
 using atomicswap_contract_id_type = oid<atomicswap_contract_object>;
@@ -152,7 +149,6 @@ enum bandwidth_type
 
 FC_REFLECT_ENUM(scorum::chain::object_type,
                 (account_authority_object_type)
-                (account_history_object_type)
                 (account_object_type)
                 (account_recovery_request_object_type)
                 (atomicswap_contract_object_type)
