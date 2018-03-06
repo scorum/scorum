@@ -6,6 +6,8 @@
 #include <scorum/chain/schema/operation_object.hpp>
 #include <map>
 
+#define MAX_HISTORY_DEPTH 10000
+
 namespace scorum {
 namespace account_history {
 
@@ -26,14 +28,13 @@ public:
     {
         const auto db = _app.chain_database();
 
-        FC_ASSERT(limit <= 10000, "Limit of ${l} is greater than maxmimum allowed", ("l", limit));
+        FC_ASSERT(limit <= MAX_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", MAX_HISTORY_DEPTH));
         FC_ASSERT(from >= limit, "From must be greater than limit");
-        //   idump((account)(from)(limit));
+
         const auto& idx = db->get_index<history_index<history_object_type>>().indices().get<by_account>();
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
-        //   if( itr != idx.end() ) idump((*itr));
         auto end = idx.upper_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
-        //   if( end != idx.end() ) idump((*end));
 
         std::map<uint32_t, applied_operation> result;
         while (itr != end)

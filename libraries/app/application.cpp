@@ -1106,6 +1106,9 @@ void application::set_program_options(boost::program_options::options_descriptio
     default_plugins.push_back("witness");
     default_plugins.push_back("account_history");
     default_plugins.push_back("account_by_key");
+    default_plugins.push_back("account_stats");
+    default_plugins.push_back("chain_stats");
+
     std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
 
     // clang-format off

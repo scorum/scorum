@@ -1685,6 +1685,7 @@ state database_api::get_state(std::string path) const
                 auto& eacnt = _state.accounts[acnt];
                 if (part[1] == "transfers")
                 {
+                    // TODO: rework this garbage method - split it into sensible parts
                     // auto history = get_account_history(acnt, uint64_t(-1), 10000);
                     // for (auto& item : history)
                     //{
