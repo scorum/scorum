@@ -29,10 +29,25 @@ database_trx_integration_fixture::~database_trx_integration_fixture()
 {
 }
 
+ActorActions database_trx_integration_fixture::actor(const Actor& a)
+{
+    ActorActions c(*this, a);
+    return c;
+}
+
+share_type database_trx_integration_fixture::get_account_creation_fee() const
+{
+    const share_type current_account_creation_fee
+        = db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
+        * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
+
+    return std::max(current_account_creation_fee, (SUFFICIENT_FEE).amount);
+}
+
 const account_object& database_trx_integration_fixture::account_create(const std::string& name,
                                                                        const std::string& creator,
                                                                        const private_key_type& creator_key,
-                                                                       const share_type& fee,
+                                                                       share_type fee,
                                                                        const public_key_type& key,
                                                                        const public_key_type& post_key,
                                                                        const std::string& json_metadata)
@@ -72,11 +87,15 @@ const account_object& database_trx_integration_fixture::account_create(const std
 {
     try
     {
-        return account_create(name, initdelegate.name, initdelegate.private_key,
-                              std::max(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
-                                           * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                                       (SUFFICIENT_FEE).amount),
-                              key, post_key, "");
+        // clang-format off
+        return account_create(name,
+                              initdelegate.name,
+                              initdelegate.private_key,
+                              get_account_creation_fee(),
+                              key,
+                              post_key,
+                              "");
+        // clang-format on
     }
     FC_CAPTURE_AND_RETHROW((name));
 }

@@ -10,7 +10,7 @@
 
 #include "actoractions.hpp"
 
-namespace registration_fixtures {
+namespace database_fixture {
 
 using namespace database_fixture;
 
@@ -43,8 +43,7 @@ registration_check_fixture::registration_check_fixture()
 
     for (const auto& item : _committee)
     {
-        ActorActions actor(*this, item.second);
-        actor.create();
+        actor(initdelegate).create_account(Actor(item.second));
     }
 }
 
