@@ -5,7 +5,7 @@
 #include <scorum/app/impacted.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/withdraw_vesting_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
