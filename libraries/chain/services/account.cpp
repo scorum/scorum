@@ -112,7 +112,7 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
     if (fee.amount > 0)
-        create_vesting(new_account, fee);
+        create_scorumpower(new_account, fee);
 
     return new_account;
 }
@@ -155,7 +155,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
     }
 
     if (fee.amount > 0)
-        create_vesting(new_account, fee);
+        create_scorumpower(new_account, fee);
 
     return new_account;
 }
@@ -176,7 +176,7 @@ const account_object& dbs_account::create_account_with_bonus(const account_name_
 
     if (bonus.amount > 0)
     {
-        create_vesting(new_account, bonus);
+        create_scorumpower(new_account, bonus);
     }
 
     return new_account;
@@ -491,7 +491,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-const asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum)
+const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
 {
     try
     {

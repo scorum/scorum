@@ -115,7 +115,7 @@ struct account_service_i
 
     virtual void update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account) = 0;
 
-    virtual const asset create_vesting(const account_object& to_account, const asset& scorum) = 0;
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void clear_witness_votes(const account_object& account) = 0;
 
@@ -246,7 +246,7 @@ public:
      * @param to_reward_balance
      * @return the SP created and deposited to account
      */
-    virtual const asset create_vesting(const account_object& to_account, const asset& scorum) override;
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to

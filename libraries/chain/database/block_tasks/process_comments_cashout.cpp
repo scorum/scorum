@@ -155,8 +155,8 @@ share_type process_comments_cashout::pay_for_comment(block_task_context& ctx,
             for (auto& b : comment.beneficiaries)
             {
                 auto benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                asset vest_created = account_service.create_vesting(account_service.get_account(b.account),
-                                                                    asset(benefactor_tokens, SCORUM_SYMBOL));
+                asset vest_created = account_service.create_scorumpower(account_service.get_account(b.account),
+                                                                        asset(benefactor_tokens, SCORUM_SYMBOL));
                 ctx.push_virtual_operation(comment_benefactor_reward_operation(
                     b.account, comment.author, fc::to_string(comment.permlink), vest_created));
                 total_beneficiary += benefactor_tokens;
@@ -176,7 +176,7 @@ share_type process_comments_cashout::pay_for_comment(block_task_context& ctx,
 
             const auto& author = account_service.get_account(comment.author);
             account_service.increase_balance(author, payout_scorum);
-            asset vest_created = account_service.create_vesting(author, vesting_scorum);
+            asset vest_created = account_service.create_scorumpower(author, vesting_scorum);
 
             ctx.push_virtual_operation(
                 author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, vest_created));
@@ -227,7 +227,7 @@ process_comments_cashout::pay_curators(block_task_context& ctx, const comment_ob
                 {
                     unclaimed_rewards -= claim;
                     const auto& voter = account_service.get(vote.voter);
-                    auto reward = account_service.create_vesting(voter, asset(claim, SCORUM_SYMBOL));
+                    auto reward = account_service.create_scorumpower(voter, asset(claim, SCORUM_SYMBOL));
 
                     ctx.push_virtual_operation(
                         curation_reward_operation(voter.name, reward, comment.author, fc::to_string(comment.permlink)));

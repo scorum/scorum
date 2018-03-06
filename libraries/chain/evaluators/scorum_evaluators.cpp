@@ -729,7 +729,7 @@ void transfer_to_scorumpower_evaluator::do_apply(const transfer_to_scorumpower_o
 
     FC_ASSERT(from_account.balance >= o.amount, "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
-    account_service.create_vesting(to_account, o.amount);
+    account_service.create_scorumpower(to_account, o.amount);
 }
 
 void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_operation& o)
