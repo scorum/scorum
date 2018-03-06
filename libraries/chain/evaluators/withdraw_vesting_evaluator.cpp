@@ -24,15 +24,15 @@ public:
     {
     }
 
-    template <typename FromObjectType> void do_apply(const FromObjectType& from_object, const asset& vesting_shares)
+    template <typename FromObjectType> void do_apply(const FromObjectType& from_object, const asset& scorumpower)
     {
-        asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
+        asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
         if (_withdraw_vesting_service.is_exists(from_object.id))
         {
             vesting_withdraw_rate = _withdraw_vesting_service.get(from_object.id).vesting_withdraw_rate;
         }
 
-        if (vesting_shares.amount == 0)
+        if (scorumpower.amount == 0)
         {
             FC_ASSERT(vesting_withdraw_rate.amount != 0, "This operation would not change the vesting withdraw rate.");
 
@@ -42,7 +42,7 @@ public:
         {
             // SCORUM: We have to decide whether we use 13 weeks vesting period or low it down
             // 13 weeks = 1 quarter of a year
-            auto new_vesting_withdraw_rate = vesting_shares / SCORUM_VESTING_WITHDRAW_INTERVALS;
+            auto new_vesting_withdraw_rate = scorumpower / SCORUM_VESTING_WITHDRAW_INTERVALS;
 
             if (new_vesting_withdraw_rate.amount == 0)
                 new_vesting_withdraw_rate.amount = 1;
@@ -55,8 +55,8 @@ public:
                 wv.vesting_withdraw_rate = new_vesting_withdraw_rate;
                 wv.next_vesting_withdrawal
                     = _dprops_service.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
-                wv.to_withdraw = vesting_shares;
-                wv.withdrawn = asset(0, VESTS_SYMBOL);
+                wv.to_withdraw = scorumpower;
+                wv.withdrawn = asset(0, SP_SYMBOL);
             };
 
             if (!_withdraw_vesting_service.is_exists(from_object.id))
@@ -103,30 +103,30 @@ void withdraw_vesting_evaluator::do_apply(const withdraw_vesting_evaluator::oper
 {
     const auto& account = _account_service.get_account(o.account);
 
-    FC_ASSERT(account.vesting_shares >= asset(0, VESTS_SYMBOL),
+    FC_ASSERT(account.scorumpower >= asset(0, SP_SYMBOL),
               "Account does not have sufficient Scorum Power for withdraw.");
-    FC_ASSERT(account.vesting_shares - account.delegated_vesting_shares >= o.vesting_shares,
+    FC_ASSERT(account.scorumpower - account.delegated_scorumpower >= o.scorumpower,
               "Account does not have sufficient Scorum Power for withdraw.");
 
     if (!account.created_by_genesis)
     {
         const auto& dprops = _dprops_service.get();
-        asset min_vests = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
-        min_vests *= SCORUM_START_WITHDRAW_COEFFICIENT;
+        asset min_scorumpower = asset(dprops.median_chain_props.account_creation_fee.amount, SP_SYMBOL);
+        min_scorumpower *= SCORUM_START_WITHDRAW_COEFFICIENT;
 
-        FC_ASSERT(account.vesting_shares > min_vests || o.vesting_shares.amount == 0,
+        FC_ASSERT(account.scorumpower > min_scorumpower || o.scorumpower.amount == 0,
                   "Account registered by another account requires 10x account creation fee worth of Scorum Power "
                   "before it can be powered down.");
     }
 
-    _impl->do_apply(account, o.vesting_shares);
+    _impl->do_apply(account, o.scorumpower);
 }
 
 //
 
-withdraw_vesting_context::withdraw_vesting_context(data_service_factory_i& services, const asset& vesting_shares)
+withdraw_vesting_context::withdraw_vesting_context(data_service_factory_i& services, const asset& scorumpower)
     : _services(services)
-    , _vesting_shares(vesting_shares)
+    , _scorumpower(scorumpower)
 {
 }
 
@@ -140,7 +140,7 @@ void withdraw_vesting_dev_pool_task::on_apply(withdraw_vesting_context& ctx)
 
     const auto& pool = dev_pool_service.get();
 
-    impl.do_apply(pool, ctx.vesting_shares());
+    impl.do_apply(pool, ctx.scorumpower());
 }
 }
 }

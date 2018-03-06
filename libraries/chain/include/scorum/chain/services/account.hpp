@@ -51,7 +51,7 @@ struct account_service_i
                                                                  const authority& active,
                                                                  const authority& posting,
                                                                  const asset& fee_in_scorums,
-                                                                 const asset& delegation_in_vests)
+                                                                 const asset& delegation_in_scorumpower)
         = 0;
 
     virtual const account_object& create_account_with_bonus(const account_name_type& new_account_name,
@@ -76,12 +76,12 @@ struct account_service_i
     virtual void increase_balance(const account_object& account, const asset& amount) = 0;
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_vesting_shares(const account_object& account, const asset& vesting) = 0;
+    virtual void increase_scorumpower(const account_object& account, const asset& vesting) = 0;
 
-    virtual void increase_delegated_vesting_shares(const account_object& account, const asset& amount) = 0;
+    virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_received_vesting_shares(const account_object& account, const asset& amount) = 0;
-    virtual void decrease_received_vesting_shares(const account_object& account, const asset& amount) = 0;
+    virtual void increase_received_scorumpower(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_posting_rewards(const account_object& account, const share_type& amount) = 0;
 
@@ -181,7 +181,7 @@ public:
                                                                  const authority& active,
                                                                  const authority& posting,
                                                                  const asset& fee_in_scorums,
-                                                                 const asset& delegation_in_vests) override;
+                                                                 const asset& delegation_in_scorumpower) override;
 
     virtual const account_object& create_account_with_bonus(const account_name_type& new_account_name,
                                                             const account_name_type& creator_name,
@@ -203,12 +203,12 @@ public:
     virtual void increase_balance(const account_object& account, const asset& amount) override;
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
-    virtual void increase_vesting_shares(const account_object& account, const asset& vesting) override;
+    virtual void increase_scorumpower(const account_object& account, const asset& vesting) override;
 
-    virtual void increase_delegated_vesting_shares(const account_object& account, const asset& amount) override;
+    virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual void increase_received_vesting_shares(const account_object& account, const asset& amount) override;
-    virtual void decrease_received_vesting_shares(const account_object& account, const asset& amount) override;
+    virtual void increase_received_scorumpower(const account_object& account, const asset& amount) override;
+    virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) override;
 
     virtual void increase_posting_rewards(const account_object& account, const share_type& amount) override;
 

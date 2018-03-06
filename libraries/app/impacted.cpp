@@ -166,7 +166,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.account_to_recover);
     }
 
-    void operator()(const delegate_vesting_shares_operation& op)
+    void operator()(const delegate_scorumpower_operation& op)
     {
         _impacted.insert(op.delegator);
         _impacted.insert(op.delegatee);

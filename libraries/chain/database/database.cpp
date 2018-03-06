@@ -1088,7 +1088,7 @@ void database::process_decline_voting_rights()
 
         /// remove all current votes
         std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
-        delta[0] = -account.vesting_shares.amount;
+        delta[0] = -account.scorumpower.amount;
         for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
         {
             delta[i + 1] = -account.proxied_vsf_votes[i];
@@ -1148,7 +1148,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delegate_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_dispute_evaluator>();
@@ -1830,9 +1830,9 @@ void database::clear_expired_delegations()
     while (itr != delegations_by_exp.end() && itr->expiration < now)
     {
         modify(account_service.get_account(itr->delegator),
-               [&](account_object& a) { a.delegated_vesting_shares -= itr->vesting_shares; });
+               [&](account_object& a) { a.delegated_scorumpower -= itr->scorumpower; });
 
-        push_virtual_operation(return_vesting_delegation_operation(itr->delegator, itr->vesting_shares));
+        push_virtual_operation(return_vesting_delegation_operation(itr->delegator, itr->scorumpower));
 
         remove(*itr);
         itr = delegations_by_exp.begin();
@@ -1953,7 +1953,7 @@ void database::validate_invariants() const
     try
     {
         asset total_supply = asset(0, SCORUM_SYMBOL);
-        asset total_vesting = asset(0, VESTS_SYMBOL);
+        asset total_vesting = asset(0, SP_SYMBOL);
         share_type total_vsf_votes = share_type(0);
 
         const auto& gpo = get_dynamic_global_properties();
@@ -1962,19 +1962,19 @@ void database::validate_invariants() const
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
         {
-            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
+            FC_ASSERT(itr->votes <= gpo.total_scorumpower.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_scorumpower.amount));
         }
 
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
-            total_vesting += itr->vesting_shares;
+            total_vesting += itr->scorumpower;
             total_vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
                                     ? itr->witness_vote_weight()
                                     : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0
                                            ? itr->proxied_vsf_votes[SCORUM_MAX_PROXY_RECURSION_DEPTH - 1]
-                                           : itr->vesting_shares.amount));
+                                           : itr->scorumpower.amount));
         }
 
         const auto& escrow_idx = get_index<escrow_index>().indices().get<by_id>();
@@ -1997,7 +1997,7 @@ void database::validate_invariants() const
         }
 
         total_supply += get_reward_fund().reward_balance;
-        total_supply += asset(gpo.total_vesting_shares.amount, SCORUM_SYMBOL);
+        total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
@@ -2023,14 +2023,14 @@ void database::validate_invariants() const
         }
 
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
-        FC_ASSERT(total_vesting <= asset::maximum(VESTS_SYMBOL), "Assets SP overflow");
+        FC_ASSERT(total_vesting <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
-        FC_ASSERT(gpo.total_vesting_shares == total_vesting, "",
-                  ("gpo.total_vesting_shares", gpo.total_vesting_shares)("total_vesting", total_vesting));
-        FC_ASSERT(gpo.total_vesting_shares.amount == total_vsf_votes, "",
-                  ("total_vesting_shares", gpo.total_vesting_shares)("total_vsf_votes", total_vsf_votes));
+        FC_ASSERT(gpo.total_scorumpower == total_vesting, "",
+                  ("gpo.total_scorumpower", gpo.total_scorumpower)("total_vesting", total_vesting));
+        FC_ASSERT(gpo.total_scorumpower.amount == total_vsf_votes, "",
+                  ("total_scorumpower", gpo.total_scorumpower)("total_vsf_votes", total_vsf_votes));
     }
     FC_CAPTURE_LOG_AND_RETHROW((head_block_num()));
 }

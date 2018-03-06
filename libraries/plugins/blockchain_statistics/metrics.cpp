@@ -25,8 +25,8 @@ statistics& statistics::operator+=(const base_metric& stat)
     this->changed_reply_votes += stat.changed_reply_votes;
     this->payouts += stat.payouts;
     this->scr_paid_to_authors += stat.scr_paid_to_authors;
-    this->vests_paid_to_authors += stat.vests_paid_to_authors;
-    this->vests_paid_to_curators += stat.vests_paid_to_curators;
+    this->scorumpower_paid_to_authors += stat.scorumpower_paid_to_authors;
+    this->scorumpower_paid_to_curators += stat.scorumpower_paid_to_curators;
     this->transfers_to_vesting += stat.transfers_to_vesting;
     this->scorum_transferred_to_vesting += stat.scorum_transferred_to_vesting;
     this->new_vesting_withdrawal_requests += stat.new_vesting_withdrawal_requests;
@@ -34,8 +34,8 @@ statistics& statistics::operator+=(const base_metric& stat)
     this->modified_vesting_withdrawal_requests += stat.modified_vesting_withdrawal_requests;
     this->vesting_withdrawals_processed += stat.vesting_withdrawals_processed;
     this->finished_vesting_withdrawals += stat.finished_vesting_withdrawals;
-    this->vests_withdrawn += stat.vests_withdrawn;
-    this->vests_transferred += stat.vests_transferred;
+    this->scorumpower_withdrawn += stat.scorumpower_withdrawn;
+    this->scorumpower_transferred += stat.scorumpower_transferred;
 
     // total
     this->total_accounts_created += stat.paid_accounts_created + stat.free_accounts_created;

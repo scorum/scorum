@@ -24,7 +24,7 @@ struct author_reward_operation : public virtual_operation
     account_name_type author;
     std::string permlink;
     asset scorum_payout = asset(0, SCORUM_SYMBOL);
-    asset vesting_payout = asset(0, VESTS_SYMBOL);
+    asset vesting_payout = asset(0, SP_SYMBOL);
 };
 
 struct curation_reward_operation : public virtual_operation
@@ -41,7 +41,7 @@ struct curation_reward_operation : public virtual_operation
     }
 
     account_name_type curator;
-    asset reward = asset(0, VESTS_SYMBOL);
+    asset reward = asset(0, SP_SYMBOL);
     account_name_type comment_author;
     std::string comment_permlink;
 };
@@ -77,7 +77,7 @@ struct fill_vesting_withdraw_operation : public virtual_operation
 
     account_name_type from_account;
     account_name_type to_account;
-    asset withdrawn = asset(0, VESTS_SYMBOL);
+    asset withdrawn = asset(0, SP_SYMBOL);
 };
 
 struct shutdown_witness_operation : public virtual_operation
@@ -128,12 +128,12 @@ struct return_vesting_delegation_operation : public virtual_operation
     }
     return_vesting_delegation_operation(const account_name_type& a, const asset& v)
         : account(a)
-        , vesting_shares(v)
+        , scorumpower(v)
     {
     }
 
     account_name_type account;
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 };
 
 struct comment_benefactor_reward_operation : public virtual_operation
@@ -155,7 +155,7 @@ struct comment_benefactor_reward_operation : public virtual_operation
     account_name_type benefactor;
     account_name_type author;
     std::string permlink;
-    asset reward = asset(0, VESTS_SYMBOL);
+    asset reward = asset(0, SP_SYMBOL);
 };
 
 struct producer_reward_operation : public virtual_operation
@@ -165,12 +165,12 @@ struct producer_reward_operation : public virtual_operation
     }
     producer_reward_operation(const std::string& p, const asset& v)
         : producer(p)
-        , vesting_shares(v)
+        , scorumpower(v)
     {
     }
 
     account_name_type producer;
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 };
 }
 } // scorum::protocol
@@ -182,6 +182,6 @@ FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
 FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
 FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink))
-FC_REFLECT(scorum::protocol::return_vesting_delegation_operation, (account)(vesting_shares))
+FC_REFLECT(scorum::protocol::return_vesting_delegation_operation, (account)(scorumpower))
 FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward))
-FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(vesting_shares))
+FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(scorumpower))

@@ -724,18 +724,18 @@ public:
             cli::formatter p;
 
             asset total_scorum(0, SCORUM_SYMBOL);
-            asset total_vest(0, VESTS_SYMBOL);
+            asset total_vest(0, SP_SYMBOL);
 
             FC_ASSERT(p.create_table(16, 20, 10, 20));
 
             for (const auto& a : accounts)
             {
                 total_scorum += a.balance;
-                total_vest += a.vesting_shares;
+                total_vest += a.scorumpower;
                 p.print_cell(a.name);
                 p.print_cell(a.balance);
                 p.print_cell("");
-                p.print_cell(a.vesting_shares);
+                p.print_cell(a.scorumpower);
             }
             p.print_endl();
             p.print_line('-', accounts.empty());
@@ -757,7 +757,7 @@ public:
             p.print_cell("Scorums:");
             p.print_cell(rt.balance);
             p.print_cell("Vests:");
-            p.print_cell(rt.vesting_shares);
+            p.print_cell(rt.scorumpower);
 
             return p.str();
         };
@@ -1300,7 +1300,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
  */
 annotated_signed_transaction wallet_api::create_account_with_keys_delegated(const std::string& creator,
                                                                             const asset& scorum_fee,
-                                                                            const asset& delegated_vests,
+                                                                            const asset& delegated_scorumpower,
                                                                             const std::string& newname,
                                                                             const std::string& json_meta,
                                                                             const public_key_type& owner,
@@ -1321,7 +1321,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(cons
         op.memo_key = memo;
         op.json_metadata = json_meta;
         op.fee = scorum_fee;
-        op.delegation = delegated_vests;
+        op.delegation = delegated_scorumpower;
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -1697,10 +1697,10 @@ wallet_api::update_account_memo_key(const std::string& account_name, const publi
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::delegate_vesting_shares(const std::string& delegator,
-                                                                 const std::string& delegatee,
-                                                                 const asset& vesting_shares,
-                                                                 bool broadcast)
+annotated_signed_transaction wallet_api::delegate_scorumpower(const std::string& delegator,
+                                                              const std::string& delegatee,
+                                                              const asset& scorumpower,
+                                                              bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1709,10 +1709,10 @@ annotated_signed_transaction wallet_api::delegate_vesting_shares(const std::stri
     FC_ASSERT(delegator == accounts[0].name, "Delegator account is not right?");
     FC_ASSERT(delegatee == accounts[1].name, "Delegator account is not right?");
 
-    delegate_vesting_shares_operation op;
+    delegate_scorumpower_operation op;
     op.delegator = delegator;
     op.delegatee = delegatee;
-    op.vesting_shares = vesting_shares;
+    op.scorumpower = scorumpower;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -1753,7 +1753,7 @@ annotated_signed_transaction wallet_api::create_account(const std::string& creat
  */
 annotated_signed_transaction wallet_api::create_account_delegated(const std::string& creator,
                                                                   const asset& scorum_fee,
-                                                                  const asset& delegated_vests,
+                                                                  const asset& delegated_scorumpower,
                                                                   const std::string& newname,
                                                                   const std::string& json_meta,
                                                                   bool broadcast)
@@ -1769,7 +1769,7 @@ annotated_signed_transaction wallet_api::create_account_delegated(const std::str
         import_key(active.wif_priv_key);
         import_key(posting.wif_priv_key);
         import_key(memo.wif_priv_key);
-        return create_account_with_keys_delegated(creator, scorum_fee, delegated_vests, newname, json_meta,
+        return create_account_with_keys_delegated(creator, scorum_fee, delegated_scorumpower, newname, json_meta,
                                                   owner.pub_key, active.pub_key, posting.pub_key, memo.pub_key,
                                                   broadcast);
     }
@@ -2067,12 +2067,12 @@ wallet_api::transfer_to_vesting(const std::string& from, const std::string& to, 
 }
 
 annotated_signed_transaction
-wallet_api::withdraw_vesting(const std::string& from, const asset& vesting_shares, bool broadcast)
+wallet_api::withdraw_vesting(const std::string& from, const asset& scorumpower, bool broadcast)
 {
     FC_ASSERT(!is_locked());
     withdraw_vesting_operation op;
     op.account = from;
-    op.vesting_shares = vesting_shares;
+    op.scorumpower = scorumpower;
 
     signed_transaction tx;
     tx.operations.push_back(op);

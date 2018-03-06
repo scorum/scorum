@@ -214,9 +214,9 @@ struct account_api_obj
         , balance(a.balance)
         , curation_rewards(a.curation_rewards)
         , posting_rewards(a.posting_rewards)
-        , vesting_shares(a.vesting_shares)
-        , delegated_vesting_shares(a.delegated_vesting_shares)
-        , received_vesting_shares(a.received_vesting_shares)
+        , scorumpower(a.scorumpower)
+        , delegated_scorumpower(a.delegated_scorumpower)
+        , received_scorumpower(a.received_scorumpower)
         , witnesses_voted_for(a.witnesses_voted_for)
         , last_post(a.last_post)
         , last_root_post(a.last_root_post)
@@ -294,9 +294,9 @@ struct account_api_obj
     share_type curation_rewards;
     share_type posting_rewards;
 
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
-    asset delegated_vesting_shares = asset(0, VESTS_SYMBOL);
-    asset received_vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
+    asset delegated_scorumpower = asset(0, SP_SYMBOL);
+    asset received_scorumpower = asset(0, SP_SYMBOL);
 
     std::vector<share_type> proxied_vsf_votes;
 
@@ -318,7 +318,7 @@ struct account_balance_info_api_obj
 {
     account_balance_info_api_obj(const account_api_obj& a)
         : balance(a.balance)
-        , vesting_shares(a.vesting_shares)
+        , scorumpower(a.scorumpower)
     {
     }
 
@@ -327,7 +327,7 @@ struct account_balance_info_api_obj
     }
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 };
 
 struct owner_authority_history_api_obj
@@ -629,7 +629,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)
+             (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (curation_rewards)
              (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)
@@ -639,7 +639,7 @@ FC_REFLECT( scorum::app::account_api_obj,
           )
 
 FC_REFLECT (scorum::app::account_balance_info_api_obj,
-            (balance)(vesting_shares))
+            (balance)(scorumpower))
 
 FC_REFLECT( scorum::app::owner_authority_history_api_obj,
              (id)

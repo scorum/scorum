@@ -17,10 +17,10 @@
 
 #define SCORUM_CURRENCY_PRECISION  9
 
-// SCORUM = SCR with 3 digits of precision
+// Scorum Coin = SCR with 9 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
-// VESTS = SP with 6 digits of precision
-#define VESTS_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
+// Scorum Power = SP with 9 digits of precision
+#define SP_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
 #define SCORUM_MAX_SHARE_SUPPLY                share_value_type(100000000e+9) //100 million
 

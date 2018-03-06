@@ -28,13 +28,13 @@ public:
 
     Actor& scorum(asset scr);
 
-    Actor& vests(asset vests);
+    Actor& scorumpower(asset scorumpower);
 
     Actor& percent(float prc);
 
     std::string name;
     asset scr_amount = asset(0, SCORUM_SYMBOL);
-    asset sp_amount = asset(0, VESTS_SYMBOL);
+    asset sp_amount = asset(0, SP_SYMBOL);
     float sp_percent = 0.f;
     private_key_type private_key;
     private_key_type post_key;

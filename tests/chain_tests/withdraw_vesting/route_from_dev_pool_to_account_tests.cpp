@@ -47,7 +47,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_dev_p
 
     asset old_pool_balance_scr = pool.scr_balance;
     asset old_bob_balance_scr = bob.balance;
-    asset old_sam_balance_sp = sam.vesting_shares;
+    asset old_sam_balance_sp = sam.scorumpower;
 
     db_plugin->debug_update(
         [&](database&) {
@@ -84,7 +84,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_dev_p
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr,
                       pool_to_withdraw_scr * bob_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
     asset sam_recived = pool_to_withdraw_scr * sam_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS;
-    BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
 
     BOOST_REQUIRE(withdraw_vesting_service.is_exists(pool.id));
 
@@ -99,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_dev_p
     BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr, pool_to_withdraw_scr * pool_withdrawal_percent / 100);
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr, pool_to_withdraw_scr * bob_pie_percent / 100);
     sam_recived = pool_to_withdraw_scr * sam_pie_percent / 100;
-    BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
 
     fc::time_point_sec end_time = db.head_block_time();
 

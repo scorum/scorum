@@ -16,14 +16,14 @@ struct vesting_delegation_service_i
     virtual bool is_exists(const account_name_type& delegator, const account_name_type& delegatee) const = 0;
 
     virtual const vesting_delegation_object&
-    create(const account_name_type& delegator, const account_name_type& delegatee, const asset& vesting_shares)
+    create(const account_name_type& delegator, const account_name_type& delegatee, const asset& scorumpower)
         = 0;
 
     virtual const vesting_delegation_expiration_object&
-    create_expiration(const account_name_type& delegator, const asset& vesting_shares, const time_point_sec& expiration)
+    create_expiration(const account_name_type& delegator, const asset& scorumpower, const time_point_sec& expiration)
         = 0;
 
-    virtual void update(const vesting_delegation_object& vd, const asset& vesting_shares) = 0;
+    virtual void update(const vesting_delegation_object& vd, const asset& scorumpower) = 0;
 
     virtual void remove(const vesting_delegation_object& vd) = 0;
 };
@@ -43,13 +43,13 @@ public:
 
     const vesting_delegation_object& create(const account_name_type& delegator,
                                             const account_name_type& delegatee,
-                                            const asset& vesting_shares) override;
+                                            const asset& scorumpower) override;
 
     const vesting_delegation_expiration_object& create_expiration(const account_name_type& delegator,
-                                                                  const asset& vesting_shares,
+                                                                  const asset& scorumpower,
                                                                   const time_point_sec& expiration) override;
 
-    void update(const vesting_delegation_object& vd, const asset& vesting_shares) override;
+    void update(const vesting_delegation_object& vd, const asset& scorumpower) override;
 
     void remove(const vesting_delegation_object& vd) override;
 };

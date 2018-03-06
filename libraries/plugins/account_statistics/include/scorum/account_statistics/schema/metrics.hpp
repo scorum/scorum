@@ -33,17 +33,17 @@ struct account_metric
     asset scorum_sent = asset(0, SCORUM_SYMBOL); ///< SCR sent from this account
     asset scorum_received = asset(0, SCORUM_SYMBOL); ///< SCR received by this account
     asset scorum_transferred_to_vesting = asset(0, SCORUM_SYMBOL); ///< SCR vested by the account
-    asset vests_received_by_transfers = asset(0, VESTS_SYMBOL); ///< New SP by vesting transfers
+    asset scorumpower_received_by_transfers = asset(0, SP_SYMBOL); ///< New SP by vesting transfers
 
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
     uint32_t modified_vesting_withdrawal_requests = 0; ///< Changes to vesting withdraw requests
     uint32_t vesting_withdrawals_processed = 0; ///< Vesting withdrawals processed for this account
     uint32_t finished_vesting_withdrawals = 0; ///< Processed vesting withdrawals that are now finished
 
-    asset vests_withdrawn = asset(0, VESTS_SYMBOL); ///< SP withdrawn from the account
+    asset scorumpower_withdrawn = asset(0, SP_SYMBOL); ///< SP withdrawn from the account
     asset scorum_received_from_withdrawls = asset(0, SCORUM_SYMBOL); ///< SCR received from this account's vesting withdrawals
     asset scorum_received_from_routes = asset(0, SCORUM_SYMBOL); ///< SCR received from another account's vesting withdrawals
-    asset vests_received_from_routes = asset(0, VESTS_SYMBOL); ///< SP received from another account's vesting withdrawals
+    asset scorumpower_received_from_routes = asset(0, SP_SYMBOL); ///< SP received from another account's vesting withdrawals
 
     // comments
     uint32_t root_comments = 0; ///< Top level root comments
@@ -58,11 +58,11 @@ struct account_metric
     uint32_t changed_reply_votes = 0; ///< Changed votes for replies
 
     uint32_t author_reward_payouts = 0; ///< Number of author reward payouts
-    asset author_rewards_vests = asset(0, VESTS_SYMBOL); ///< SP paid for author rewards
+    asset author_rewards_scorumpower = asset(0, SP_SYMBOL); ///< SP paid for author rewards
     asset author_rewards_total_scorum_value = asset(0, SCORUM_SYMBOL); ///< SCR value of author rewards
 
     uint32_t curation_reward_payouts = 0; ///< Number of curation reward payouts.
-    asset curation_rewards_vests = asset(0, VESTS_SYMBOL); ///< SP paid for curation rewards
+    asset curation_rewards_scorumpower = asset(0, SP_SYMBOL); ///< SP paid for curation rewards
     asset curation_rewards_scorum_value = asset(0, SCORUM_SYMBOL); ///< SCR value of curation rewards
 };
 // clang-format on
@@ -85,12 +85,12 @@ FC_REFLECT(scorum::account_statistics::account_metric,
            (signed_transactions)(market_bandwidth)(non_market_bandwidth)(total_ops)(market_ops)(forum_ops)(
                root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(replies_deleted)(
                new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(author_reward_payouts)(
-               author_rewards_vests)(author_rewards_total_scorum_value)(curation_reward_payouts)(
-               curation_rewards_vests)(curation_rewards_scorum_value)(transfers_to)(transfers_from)(scorum_sent)(
-               scorum_received)(transfers_to_vesting)(scorum_transferred_to_vesting)(vests_received_by_transfers)(
+               author_rewards_scorumpower)(author_rewards_total_scorum_value)(curation_reward_payouts)(
+               curation_rewards_scorumpower)(curation_rewards_scorum_value)(transfers_to)(transfers_from)(scorum_sent)(
+               scorum_received)(transfers_to_vesting)(scorum_transferred_to_vesting)(scorumpower_received_by_transfers)(
                new_vesting_withdrawal_requests)(modified_vesting_withdrawal_requests)(vesting_withdrawals_processed)(
-               finished_vesting_withdrawals)(vests_withdrawn)(scorum_received_from_withdrawls)(
-               scorum_received_from_routes)(vests_received_from_routes))
+               finished_vesting_withdrawals)(scorumpower_withdrawn)(scorum_received_from_withdrawls)(
+               scorum_received_from_routes)(scorumpower_received_from_routes))
 
 FC_REFLECT_DERIVED(scorum::account_statistics::account_statistic,
                    (scorum::account_statistics::account_metric),

@@ -79,7 +79,7 @@ dbs_withdraw_vesting::withdraw_vesting_refs_type dbs_withdraw_vesting::get_until
 asset dbs_withdraw_vesting::get_withdraw_rest(const account_id_type& from) const
 {
     if (!is_exists(from))
-        return asset(0, VESTS_SYMBOL);
+        return asset(0, SP_SYMBOL);
     const withdraw_vesting_object& wvo = get(from);
     return wvo.to_withdraw - wvo.withdrawn;
 }

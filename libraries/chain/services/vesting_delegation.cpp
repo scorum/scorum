@@ -32,34 +32,34 @@ bool dbs_vesting_delegation::is_exists(const account_name_type& delegator, const
 
 const vesting_delegation_object& dbs_vesting_delegation::create(const account_name_type& delegator,
                                                                 const account_name_type& delegatee,
-                                                                const asset& vesting_shares)
+                                                                const asset& scorumpower)
 {
     const auto& props = db_impl().get_dynamic_global_properties();
 
     const auto& new_vd = db_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vd) {
         vd.delegator = delegator;
         vd.delegatee = delegatee;
-        vd.vesting_shares = vesting_shares;
+        vd.scorumpower = scorumpower;
         vd.min_delegation_time = props.time;
     });
     return new_vd;
 }
 
 const vesting_delegation_expiration_object& dbs_vesting_delegation::create_expiration(
-    const account_name_type& delegator, const asset& vesting_shares, const time_point_sec& expiration)
+    const account_name_type& delegator, const asset& scorumpower, const time_point_sec& expiration)
 {
     const auto& new_vd
         = db_impl().create<vesting_delegation_expiration_object>([&](vesting_delegation_expiration_object& vd) {
               vd.delegator = delegator;
-              vd.vesting_shares = vesting_shares;
+              vd.scorumpower = scorumpower;
               vd.expiration = expiration;
           });
     return new_vd;
 }
 
-void dbs_vesting_delegation::update(const vesting_delegation_object& vd, const asset& vesting_shares)
+void dbs_vesting_delegation::update(const vesting_delegation_object& vd, const asset& scorumpower)
 {
-    db_impl().modify(vd, [&](vesting_delegation_object& obj) { obj.vesting_shares = vesting_shares; });
+    db_impl().modify(vd, [&](vesting_delegation_object& obj) { obj.scorumpower = scorumpower; });
 }
 
 void dbs_vesting_delegation::remove(const vesting_delegation_object& vd)

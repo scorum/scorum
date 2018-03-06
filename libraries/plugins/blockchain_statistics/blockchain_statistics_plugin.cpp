@@ -143,13 +143,13 @@ public:
         _db.modify(_bucket, [&](bucket_object& b) {
             b.payouts++;
             b.scr_paid_to_authors += op.scorum_payout.amount;
-            b.vests_paid_to_authors += op.vesting_payout.amount;
+            b.scorumpower_paid_to_authors += op.vesting_payout.amount;
         });
     }
 
     void operator()(const curation_reward_operation& op) const
     {
-        _db.modify(_bucket, [&](bucket_object& b) { b.vests_paid_to_curators += op.reward.amount; });
+        _db.modify(_bucket, [&](bucket_object& b) { b.scorumpower_paid_to_curators += op.reward.amount; });
     }
 
     void operator()(const transfer_to_vesting_operation& op) const
@@ -165,9 +165,9 @@ public:
         const auto& account = _db.obtain_service<chain::dbs_account>().get_account(op.from_account);
         const auto& withdraw_vesting_service = _db.obtain_service<chain::dbs_withdraw_vesting>();
 
-        asset withdrawn = asset(0, VESTS_SYMBOL);
-        asset to_withdraw = asset(0, VESTS_SYMBOL);
-        asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
+        asset withdrawn = asset(0, SP_SYMBOL);
+        asset to_withdraw = asset(0, SP_SYMBOL);
+        asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
 
         if (withdraw_vesting_service.is_exists(account.id))
         {
@@ -182,12 +182,12 @@ public:
             b.vesting_withdrawals_processed++;
 
             if (op.withdrawn.symbol() == SCORUM_SYMBOL)
-                b.vests_withdrawn += op.withdrawn.amount;
+                b.scorumpower_withdrawn += op.withdrawn.amount;
             else
-                b.vests_transferred += op.withdrawn.amount;
+                b.scorumpower_transferred += op.withdrawn.amount;
 
             if (withdrawn.amount + op.withdrawn.amount >= to_withdraw.amount
-                || account.vesting_shares.amount - op.withdrawn.amount == 0)
+                || account.scorumpower.amount - op.withdrawn.amount == 0)
             {
                 b.finished_vesting_withdrawals++;
 
@@ -238,27 +238,27 @@ void blockchain_statistics_plugin_impl::process_pre_operation(const bucket_objec
         withdraw_vesting_operation op = o.op.get<withdraw_vesting_operation>();
         const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
 
-        auto new_vesting_withdrawal_rate = op.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
-        if (op.vesting_shares.amount > 0 && new_vesting_withdrawal_rate == 0)
+        auto new_vesting_withdrawal_rate = op.scorumpower.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
+        if (op.scorumpower.amount > 0 && new_vesting_withdrawal_rate == 0)
             new_vesting_withdrawal_rate = 1;
 
-            const auto& withdraw_vesting_service = db.obtain_service<chain::dbs_withdraw_vesting>();
+        const auto& withdraw_vesting_service = db.obtain_service<chain::dbs_withdraw_vesting>();
 
-            asset vesting_withdraw_rate = asset(0, VESTS_SYMBOL);
+        asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
 
-            if (withdraw_vesting_service.is_exists(account.id))
-            {
-                const auto& wvo = withdraw_vesting_service.get(account.id);
-                vesting_withdraw_rate = wvo.vesting_withdraw_rate;
-            }
+        if (withdraw_vesting_service.is_exists(account.id))
+        {
+            const auto& wvo = withdraw_vesting_service.get(account.id);
+            vesting_withdraw_rate = wvo.vesting_withdraw_rate;
+        }
 
         db.modify(bucket, [&](bucket_object& b) {
-                if (vesting_withdraw_rate.amount > 0)
+            if (vesting_withdraw_rate.amount > 0)
                 b.modified_vesting_withdrawal_requests++;
             else
                 b.new_vesting_withdrawal_requests++;
 
-                b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - vesting_withdraw_rate.amount;
+            b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - vesting_withdraw_rate.amount;
         });
     }
 }

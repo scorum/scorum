@@ -35,7 +35,7 @@ struct account_create_operation : public base_operation
 struct account_create_with_delegation_operation : public base_operation
 {
     asset fee = asset(0, SCORUM_SYMBOL);
-    asset delegation = asset(0, VESTS_SYMBOL);
+    asset delegation = asset(0, SP_SYMBOL);
     account_name_type creator;
     account_name_type new_account_name;
     authority owner;
@@ -346,8 +346,8 @@ struct transfer_to_vesting_operation : public base_operation
  * vesting shares. A user may change the number of shares they wish to
  * cash out at any time between 0 and their total vesting stake.
  *
- * After applying this operation, vesting_shares will be withdrawn
- * at a rate of vesting_shares/SCORUM_VESTING_WITHDRAW_INTERVALS
+ * After applying this operation, scorumpower will be withdrawn
+ * at a rate of scorumpower/SCORUM_VESTING_WITHDRAW_INTERVALS
  * per week for two years starting
  * one week after this operation is included in the blockchain.
  *
@@ -356,7 +356,7 @@ struct transfer_to_vesting_operation : public base_operation
 struct withdraw_vesting_operation : public base_operation
 {
     account_name_type account;
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -370,7 +370,7 @@ struct withdraw_vesting_operation : public base_operation
  * request for the funds to be transferred directly to another account's
  * balance rather than the withdrawing account. In addition, those funds
  * can be immediately vested again, circumventing the conversion from
- * vests to scorum and back, guaranteeing they maintain their value.
+ * scorum power to scorum and back, guaranteeing they maintain their value.
  */
 struct set_withdraw_vesting_route_to_account_operation : public base_operation
 {
@@ -608,17 +608,17 @@ struct decline_voting_rights_operation : public base_operation
 /**
  * Delegate vesting shares from one account to the other. The vesting shares are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
- * to the receiving account. This sets the delegation to `vesting_shares`, increasing it or
+ * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
  * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
  *
  * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
  * of SP from voting on the same content twice.
  */
-struct delegate_vesting_shares_operation : public base_operation
+struct delegate_scorumpower_operation : public base_operation
 {
     account_name_type delegator; ///< The account delegating vesting shares
     account_name_type delegatee; ///< The account receiving vesting shares
-    asset vesting_shares = asset(0, VESTS_SYMBOL); ///< The amount of vesting shares delegated
+    asset scorumpower = asset(0, SP_SYMBOL); ///< The amount of vesting shares delegated
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -781,7 +781,7 @@ FC_REFLECT( scorum::protocol::account_update_operation,
 
 FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
 FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
-FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(vesting_shares) )
+FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(scorumpower) )
 FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_to_account_operation, (from_account)(to_account)(percent)(auto_vest) )
 FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_to_dev_pool_operation, (from_account)(percent)(auto_vest) )
 FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(proposed_chain_props) )
@@ -802,7 +802,7 @@ FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_acco
 FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) )
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
-FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) )
+FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )

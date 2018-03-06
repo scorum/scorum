@@ -45,21 +45,21 @@ using scorum::protocol::asset;
 class withdraw_vesting_context
 {
 public:
-    explicit withdraw_vesting_context(data_service_factory_i& services, const asset& vesting_shares);
+    explicit withdraw_vesting_context(data_service_factory_i& services, const asset& scorumpower);
 
     data_service_factory_i& services() const
     {
         return _services;
     }
 
-    const asset& vesting_shares() const
+    const asset& scorumpower() const
     {
-        return _vesting_shares;
+        return _scorumpower;
     }
 
 private:
     data_service_factory_i& _services;
-    asset _vesting_shares;
+    asset _scorumpower;
 };
 
 // This task initiates for withdraw vesting for development pool withount any operation

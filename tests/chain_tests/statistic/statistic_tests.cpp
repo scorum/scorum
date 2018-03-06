@@ -66,7 +66,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
     {
         withdraw_vesting_operation op;
         op.account = bob;
-        op.vesting_shares = asset(to_withdraw, VESTS_SYMBOL);
+        op.scorumpower = asset(to_withdraw, SP_SYMBOL);
 
         push_operation(op);
     }
@@ -234,7 +234,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
 
         withdraw_vesting_operation op;
         op.account = alice;
-        op.vesting_shares = alice_acc.vesting_shares;
+        op.scorumpower = alice_acc.scorumpower;
 
         push_operation(op);
 
@@ -245,7 +245,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
 
         withdraw_vesting_operation op;
         op.account = alice;
-        op.vesting_shares = alice_acc.vesting_shares / 2;
+        op.scorumpower = alice_acc.scorumpower / 2;
 
         push_operation(op);
 
@@ -284,7 +284,7 @@ SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    auto orig_val = bucket.vests_withdrawn;
+    auto orig_val = bucket.scorumpower_withdrawn;
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
@@ -292,14 +292,14 @@ SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
     generate_blocks(advance, true);
     generate_block(); // call full apply_block procedure
 
-    BOOST_REQUIRE_EQUAL(bucket.vests_withdrawn, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorumpower_withdrawn, orig_val + 1);
 }
 
 SCORUM_TEST_CASE(vesting_transfered_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    auto orig_val = bucket.vests_transferred;
+    auto orig_val = bucket.scorumpower_transferred;
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
@@ -315,7 +315,7 @@ SCORUM_TEST_CASE(vesting_transfered_stat_test)
     generate_blocks(advance, true);
     generate_block(); // call full apply_block procedure
 
-    BOOST_REQUIRE_EQUAL(bucket.vests_transferred, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorumpower_transferred, orig_val + 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

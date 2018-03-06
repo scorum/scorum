@@ -40,7 +40,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_vesting_route_from_
 
     withdraw_vesting_operation op;
     op.account = alice.name;
-    op.vesting_shares = alice_to_withdraw_sp;
+    op.scorumpower = alice_to_withdraw_sp;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -95,7 +95,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_fro
 
     withdraw_vesting_operation op;
     op.account = alice.name;
-    op.vesting_shares = alice_to_withdraw_sp;
+    op.scorumpower = alice_to_withdraw_sp;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -145,11 +145,11 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
 
     asset old_alice_balance_scr = alice.balance;
     asset old_bob_balance_scr = bob.balance;
-    asset old_sam_balance_sp = sam.vesting_shares;
+    asset old_sam_balance_sp = sam.scorumpower;
 
     withdraw_vesting_operation op_wv;
     op_wv.account = alice.name;
-    op_wv.vesting_shares = alice_to_withdraw_sp;
+    op_wv.scorumpower = alice_to_withdraw_sp;
 
     set_withdraw_vesting_route_to_account_operation op_wvr_bob;
     op_wvr_bob.percent = bob_pie_percent * SCORUM_1_PERCENT;
@@ -187,7 +187,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr,
                       alice_to_withdraw_scr * bob_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
     asset sam_recived = alice_to_withdraw_scr * sam_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS;
-    BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
 
     BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
 
@@ -202,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
     BOOST_CHECK_EQUAL(alice.balance - old_alice_balance_scr, alice_to_withdraw_scr * alice_withdrawal_percent / 100);
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr, alice_to_withdraw_scr * bob_pie_percent / 100);
     sam_recived = alice_to_withdraw_scr * sam_pie_percent / 100;
-    BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
 
     fc::time_point_sec end_time = db.head_block_time();
 

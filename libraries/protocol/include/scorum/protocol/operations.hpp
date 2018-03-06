@@ -42,7 +42,7 @@ using operation = fc::static_variant<vote_operation,
                                      escrow_transfer_operation,
 
                                      decline_voting_rights_operation,
-                                     delegate_vesting_shares_operation,
+                                     delegate_scorumpower_operation,
 
                                      create_budget_operation,
                                      close_budget_operation,

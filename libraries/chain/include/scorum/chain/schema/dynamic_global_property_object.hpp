@@ -40,7 +40,7 @@ public:
     asset circulating_capital = asset(
         0,
         SCORUM_SYMBOL); ///< total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
-    asset total_vesting_shares = asset(0, VESTS_SYMBOL); ///< total SP on accounts vesting shares
+    asset total_scorumpower = asset(0, SP_SYMBOL); ///< total SP on accounts vesting shares
 
     /**
      *  Chain properties are decided by the set of active witnesses which change every round.
@@ -96,7 +96,7 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (current_witness)
           (total_supply)
           (circulating_capital)
-          (total_vesting_shares)
+          (total_scorumpower)
           (median_chain_props)
           (majority_version)
           (current_aslot)
