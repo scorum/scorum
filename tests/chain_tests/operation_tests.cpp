@@ -3519,7 +3519,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         BOOST_TEST_MESSAGE("--- Test delegator object integrety. ");
         auto delegation
-            = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.creator, op.new_account_name));
+            = db.find<scorumpower_delegation_object, by_delegation>(boost::make_tuple(op.creator, op.new_account_name));
 
         BOOST_REQUIRE(delegation != nullptr);
         BOOST_REQUIRE_EQUAL(delegation->delegator, op.creator);
@@ -3573,8 +3573,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto itr = db.get_index<vesting_delegation_expiration_index, by_id>().begin();
-        auto end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
+        auto itr = db.get_index<scorumpower_delegation_expiration_index, by_id>().begin();
+        auto end = db.get_index<scorumpower_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(itr != end);
         BOOST_REQUIRE(itr->delegator == "alice");
@@ -3701,7 +3701,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
 
         BOOST_TEST_MESSAGE("--- Test that the delegation object is correct. ");
         auto delegation
-            = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
+            = db.find<scorumpower_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
 
         BOOST_REQUIRE(delegation != nullptr);
         BOOST_REQUIRE_EQUAL(delegation->delegator, op.delegator);
@@ -3830,8 +3830,8 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto exp_obj = db.get_index<vesting_delegation_expiration_index, by_id>().begin();
-        auto end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
+        auto exp_obj = db.get_index<scorumpower_delegation_expiration_index, by_id>().begin();
+        auto end = db.get_index<scorumpower_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj != end);
         BOOST_REQUIRE(exp_obj->delegator == "sam");
@@ -3839,13 +3839,13 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         BOOST_REQUIRE(exp_obj->expiration == db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("sam").delegated_scorumpower == sam_vest);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("dave").received_scorumpower == ASSET_SP(0));
-        delegation = db.find<vesting_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
+        delegation = db.find<scorumpower_delegation_object, by_delegation>(boost::make_tuple(op.delegator, op.delegatee));
         BOOST_REQUIRE(delegation == nullptr);
 
         generate_blocks(exp_obj->expiration + SCORUM_BLOCK_INTERVAL);
 
-        exp_obj = db.get_index<vesting_delegation_expiration_index, by_id>().begin();
-        end = db.get_index<vesting_delegation_expiration_index, by_id>().end();
+        exp_obj = db.get_index<scorumpower_delegation_expiration_index, by_id>().begin();
+        end = db.get_index<scorumpower_delegation_expiration_index, by_id>().end();
 
         BOOST_REQUIRE(exp_obj == end);
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").delegated_scorumpower,

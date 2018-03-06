@@ -1195,8 +1195,8 @@ void database::initialize_indexes()
     add_index<reward_fund_index>();
     add_index<reward_pool_index>();
     add_index<transaction_index>();
-    add_index<vesting_delegation_expiration_index>();
-    add_index<vesting_delegation_index>();
+    add_index<scorumpower_delegation_expiration_index>();
+    add_index<scorumpower_delegation_index>();
     add_index<withdraw_scorumpower_route_index>();
     add_index<withdraw_scorumpower_route_statistic_index>();
     add_index<withdraw_scorumpower_index>();
@@ -1824,7 +1824,7 @@ void database::clear_expired_transactions()
 void database::clear_expired_delegations()
 {
     auto now = head_block_time();
-    const auto& delegations_by_exp = get_index<vesting_delegation_expiration_index, by_expiration>();
+    const auto& delegations_by_exp = get_index<scorumpower_delegation_expiration_index, by_expiration>();
     const auto& account_service = obtain_service<dbs_account>();
     auto itr = delegations_by_exp.begin();
     while (itr != delegations_by_exp.end() && itr->expiration < now)
@@ -1832,7 +1832,7 @@ void database::clear_expired_delegations()
         modify(account_service.get_account(itr->delegator),
                [&](account_object& a) { a.delegated_scorumpower -= itr->scorumpower; });
 
-        push_virtual_operation(return_vesting_delegation_operation(itr->delegator, itr->scorumpower));
+        push_virtual_operation(return_scorumpower_delegation_operation(itr->delegator, itr->scorumpower));
 
         remove(*itr);
         itr = delegations_by_exp.begin();

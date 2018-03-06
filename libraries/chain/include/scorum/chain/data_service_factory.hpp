@@ -19,7 +19,7 @@ DATA_SERVICE_FACTORY_DECLARE(
         (registration_pool)
         (reward)
         (reward_fund)
-        (vesting_delegation)
+        (scorumpower_delegation)
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)
         (withdraw_scorumpower)

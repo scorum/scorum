@@ -16,7 +16,7 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
-#include <scorum/chain/services/vesting_delegation.hpp>
+#include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route_statistic.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
@@ -42,7 +42,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (registration_pool)
         (reward)
         (reward_fund)
-        (vesting_delegation)
+        (scorumpower_delegation)
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)
         (withdraw_scorumpower)

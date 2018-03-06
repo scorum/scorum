@@ -46,7 +46,7 @@ add_library( scorum_chain
              services/escrow.cpp
              services/witness_vote.cpp
              services/decline_voting_rights_request.cpp
-             services/vesting_delegation.cpp
+             services/scorumpower_delegation.cpp
              services/reward_fund.cpp
              services/proposal_executor.cpp
              services/dev_pool.cpp

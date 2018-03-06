@@ -212,10 +212,10 @@ public:
     optional<account_bandwidth_api_obj> get_account_bandwidth(const std::string& account,
                                                               witness::bandwidth_type type) const;
 
-    std::vector<vesting_delegation_api_obj>
-    get_vesting_delegations(const std::string& account, const std::string& from, uint32_t limit = 100) const;
-    std::vector<vesting_delegation_expiration_api_obj>
-    get_expiring_vesting_delegations(const std::string& account, time_point_sec from, uint32_t limit = 100) const;
+    std::vector<scorumpower_delegation_api_obj>
+    get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit = 100) const;
+    std::vector<scorumpower_delegation_expiration_api_obj>
+    get_expiring_scorumpower_delegations(const std::string& account, time_point_sec from, uint32_t limit = 100) const;
 
     ///////////////
     // Witnesses //
@@ -480,8 +480,8 @@ FC_API(scorum::app::database_api,
    (get_escrow)
    (get_withdraw_routes)
    (get_account_bandwidth)
-   (get_vesting_delegations)
-   (get_expiring_vesting_delegations)
+   (get_scorumpower_delegations)
+   (get_expiring_scorumpower_delegations)
 
    // Authority / validation
    (get_transaction_hex)

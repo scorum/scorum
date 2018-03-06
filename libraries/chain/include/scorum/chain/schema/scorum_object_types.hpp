@@ -58,8 +58,8 @@ enum object_type
     reward_fund_object_type,
     reward_pool_object_type,
     transaction_object_type,
-    vesting_delegation_expiration_object_type,
-    vesting_delegation_object_type,
+    scorumpower_delegation_expiration_object_type,
+    scorumpower_delegation_object_type,
     withdraw_scorumpower_route_object_type,
     withdraw_scorumpower_route_statistic_object_type,
     withdraw_scorumpower_object_type,
@@ -93,8 +93,8 @@ class registration_pool_object;
 class reward_fund_object;
 class reward_pool_object;
 class transaction_object;
-class vesting_delegation_expiration_object;
-class vesting_delegation_object;
+class scorumpower_delegation_expiration_object;
+class scorumpower_delegation_object;
 class withdraw_scorumpower_route_object;
 class withdraw_scorumpower_route_statistic_object;
 class withdraw_scorumpower_object;
@@ -127,8 +127,8 @@ using registration_pool_id_type = oid<registration_pool_object>;
 using reward_fund_id_type = oid<reward_fund_object>;
 using reward_pool_id_type = oid<reward_pool_object>;
 using transaction_object_id_type = oid<transaction_object>;
-using vesting_delegation_expiration_id_type = oid<vesting_delegation_expiration_object>;
-using vesting_delegation_id_type = oid<vesting_delegation_object>;
+using scorumpower_delegation_expiration_id_type = oid<scorumpower_delegation_expiration_object>;
+using scorumpower_delegation_id_type = oid<scorumpower_delegation_object>;
 using withdraw_scorumpower_route_id_type = oid<withdraw_scorumpower_route_object>;
 using withdraw_scorumpower_route_statistic_id_type = oid<withdraw_scorumpower_route_statistic_object>;
 using withdraw_scorumpower_id_type = oid<withdraw_scorumpower_object>;
@@ -175,8 +175,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (reward_fund_object_type)
                 (reward_pool_object_type)
                 (transaction_object_type)
-                (vesting_delegation_expiration_object_type)
-                (vesting_delegation_object_type)
+                (scorumpower_delegation_expiration_object_type)
+                (scorumpower_delegation_object_type)
                 (withdraw_scorumpower_route_object_type)
                 (withdraw_scorumpower_route_statistic_object_type)
                 (withdraw_scorumpower_object_type)

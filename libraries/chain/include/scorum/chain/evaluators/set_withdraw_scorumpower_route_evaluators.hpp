@@ -18,7 +18,7 @@ class set_withdraw_scorumpower_route_evaluator_impl;
 
 class data_service_factory_i;
 
-// This evaluator sets withdraw vesting route from account to account
+// This evaluator sets withdraw scorumpower route from account to account
 // by operation set_withdraw_scorumpower_route_to_account_operation.
 class set_withdraw_scorumpower_route_to_account_evaluator
     : public evaluator_impl<data_service_factory_i, set_withdraw_scorumpower_route_to_account_evaluator>
@@ -36,7 +36,7 @@ private:
     account_service_i& _account_service;
 };
 
-// This evaluator sets withdraw vesting route from account to development pool
+// This evaluator sets withdraw scorumpower route from account to development pool
 // by operation set_withdraw_scorumpower_route_to_dev_pool_operation.
 class set_withdraw_scorumpower_route_to_dev_pool_evaluator
     : public evaluator_impl<data_service_factory_i, set_withdraw_scorumpower_route_to_dev_pool_evaluator>
@@ -62,9 +62,9 @@ class set_withdraw_scorumpower_route_context
 {
 public:
     explicit set_withdraw_scorumpower_route_context(data_service_factory_i& services,
-                                                const account_name_type& account,
-                                                uint16_t percent,
-                                                bool auto_vest);
+                                                    const account_name_type& account,
+                                                    uint16_t percent,
+                                                    bool auto_vest);
 
     data_service_factory_i& services() const
     {
@@ -93,7 +93,7 @@ private:
     bool _auto_vest;
 };
 
-// This task sets withdraw vesting route from development pool to account
+// This task sets withdraw scorumpower route from development pool to account
 // withount any operation for development commitee purpose.
 class set_withdraw_scorumpower_route_from_dev_pool_task : public task<set_withdraw_scorumpower_route_context>
 {

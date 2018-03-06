@@ -14,7 +14,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
-#include <scorum/chain/services/vesting_delegation.hpp>
+#include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 
@@ -1094,7 +1094,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operation& op)
 {
     account_service_i& account_service = db().account_service();
-    vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
+    scorumpower_delegation_service_i& vd_service = db().scorumpower_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
     withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 

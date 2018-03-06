@@ -146,7 +146,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
     {
         time_point_sec t = db_impl().head_block_time();
 
-        db_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vdo) {
+        db_impl().create<scorumpower_delegation_object>([&](scorumpower_delegation_object& vdo) {
             vdo.delegator = creator_name;
             vdo.delegatee = new_account_name;
             vdo.scorumpower = delegation;
