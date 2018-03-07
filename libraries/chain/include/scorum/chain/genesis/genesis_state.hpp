@@ -111,6 +111,5 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (steemit_bounty_accounts)
            (witness_candidates)
            (registration_schedule)
-           (registration_committee)
-           (initial_chain_id))
+           (registration_committee))
 // clang-format on
