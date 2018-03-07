@@ -60,7 +60,7 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_amount)
 
 SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_currency)
 {
-    create_budget_op.balance = asset(BUDGET_BALANCE_DEFAULT, VESTS_SYMBOL);
+    create_budget_op.balance = asset(BUDGET_BALANCE_DEFAULT, SP_SYMBOL);
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }

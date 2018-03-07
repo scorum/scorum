@@ -126,8 +126,8 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_sp_hi
     BOOST_REQUIRE_EQUAL(buratino_sp_ops.size(), 1u);
 
     BOOST_REQUIRE(buratino_full_ops[0].op.which() == operation::tag<account_create_with_delegation_operation>::value);
-    BOOST_REQUIRE(buratino_full_ops[1].op.which() == operation::tag<transfer_to_vesting_operation>::value);
-    BOOST_REQUIRE(buratino_sp_ops[0].op.which() == operation::tag<transfer_to_vesting_operation>::value);
+    BOOST_REQUIRE(buratino_full_ops[1].op.which() == operation::tag<transfer_to_scorumpower_operation>::value);
+    BOOST_REQUIRE(buratino_sp_ops[0].op.which() == operation::tag<transfer_to_scorumpower_operation>::value);
 
     BOOST_REQUIRE(buratino_sp_ops[0].op == buratino_full_ops[1].op);
 }
@@ -177,7 +177,7 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
     }
 }
 
-SCORUM_TEST_CASE(check_account_transfer_to_vesting_operation_history_test)
+SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 {
     const char* buratino = "buratino";
     const char* maugli = "maugli";
@@ -197,7 +197,7 @@ SCORUM_TEST_CASE(check_account_transfer_to_vesting_operation_history_test)
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 0u);
     }
 
-    transfer_to_vesting_operation op;
+    transfer_to_scorumpower_operation op;
     op.from = buratino;
     op.to = maugli;
     op.amount = SCORUM_MIN_PRODUCER_REWARD / 2;

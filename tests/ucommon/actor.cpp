@@ -37,9 +37,9 @@ Actor& Actor::scorum(asset scr)
     return *this;
 }
 
-Actor& Actor::vests(asset vests)
+Actor& Actor::scorumpower(asset scorumpower)
 {
-    sp_amount = vests;
+    sp_amount = scorumpower;
     return *this;
 }
 

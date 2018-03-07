@@ -85,7 +85,7 @@ public:
         push_history<transfers_to_scr_history_object>(new_obj);
     }
 
-    void operator()(const transfer_to_vesting_operation&) const
+    void operator()(const transfer_to_scorumpower_operation&) const
     {
         const auto& new_obj = create_operation_obj();
 

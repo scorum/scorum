@@ -1,21 +1,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
-#include "withdraw_vesting_check_common.hpp"
+#include "withdraw_scorumpower_check_common.hpp"
 
 using namespace scorum::protocol;
 using namespace scorum::chain;
 
-BOOST_AUTO_TEST_SUITE(withdraw_vesting_route_from_account_to_account_tests)
+BOOST_AUTO_TEST_SUITE(withdraw_scorumpower_route_from_account_to_account_tests)
 
-struct withdraw_vesting_route_from_account_to_account_tests_fixture : public withdraw_vesting_check_fixture
+struct withdraw_scorumpower_route_from_account_to_account_tests_fixture : public withdraw_scorumpower_check_fixture
 {
-    withdraw_vesting_route_from_account_to_account_tests_fixture()
+    withdraw_scorumpower_route_from_account_to_account_tests_fixture()
     {
         ACTORS((alice)(bob)(sam));
         alice_key = alice_private_key;
@@ -32,15 +32,15 @@ struct withdraw_vesting_route_from_account_to_account_tests_fixture : public wit
     asset alice_to_withdraw_scr;
 };
 
-BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_vesting_route_from_account_to_account_tests_fixture)
+BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
 {
     const auto& alice = account_service.get_account("alice");
 
     asset old_balance = alice.balance;
 
-    withdraw_vesting_operation op;
+    withdraw_scorumpower_operation op;
     op.account = alice.name;
-    op.vesting_shares = alice_to_withdraw_sp;
+    op.scorumpower = alice_to_withdraw_sp;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -48,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_vesting_route_from_
     tx.sign(alice_key, db.get_chain_id());
     db.push_transaction(tx, 0);
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     validate_database();
 
@@ -60,7 +60,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_vesting_route_from_
 
     BOOST_CHECK_EQUAL(alice.balance - old_balance, alice_to_withdraw_scr / SCORUM_VESTING_WITHDRAW_INTERVALS);
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     for (int ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
     {
@@ -68,7 +68,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_vesting_route_from_
         generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
     }
 
-    BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
 
     BOOST_CHECK_EQUAL(alice.balance - old_balance, alice_to_withdraw_scr);
 
@@ -78,7 +78,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_vesting_route_from_
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
 }
 
-BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_from_account_to_account_tests_fixture)
+BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
 {
     // add rest
     asset rest_sp = alice_to_withdraw_sp / SCORUM_VESTING_WITHDRAW_INTERVALS / 2;
@@ -93,9 +93,9 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_fro
 
     asset old_balance = alice.balance;
 
-    withdraw_vesting_operation op;
+    withdraw_scorumpower_operation op;
     op.account = alice.name;
-    op.vesting_shares = alice_to_withdraw_sp;
+    op.scorumpower = alice_to_withdraw_sp;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -103,7 +103,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_fro
     tx.sign(alice_key, db.get_chain_id());
     db.push_transaction(tx, 0);
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     validate_database();
 
@@ -115,7 +115,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_fro
 
     BOOST_CHECK_EQUAL(alice.balance - old_balance, alice_to_withdraw_scr / SCORUM_VESTING_WITHDRAW_INTERVALS);
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     for (int ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS + 1; ++ci)
     {
@@ -123,7 +123,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_fro
         generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
     }
 
-    BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
 
     BOOST_CHECK_EQUAL(alice.balance - old_balance, alice_to_withdraw_scr);
 
@@ -133,7 +133,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_vesting_route_fro
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * (SCORUM_VESTING_WITHDRAW_INTERVALS + 1));
 }
 
-BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_account_to_account_tests_fixture)
+BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
 {
     static const int bob_pie_percent = 10;
     static const int sam_pie_percent = 20;
@@ -145,19 +145,19 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
 
     asset old_alice_balance_scr = alice.balance;
     asset old_bob_balance_scr = bob.balance;
-    asset old_sam_balance_sp = sam.vesting_shares;
+    asset old_sam_balance_sp = sam.scorumpower;
 
-    withdraw_vesting_operation op_wv;
+    withdraw_scorumpower_operation op_wv;
     op_wv.account = alice.name;
-    op_wv.vesting_shares = alice_to_withdraw_sp;
+    op_wv.scorumpower = alice_to_withdraw_sp;
 
-    set_withdraw_vesting_route_to_account_operation op_wvr_bob;
+    set_withdraw_scorumpower_route_to_account_operation op_wvr_bob;
     op_wvr_bob.percent = bob_pie_percent * SCORUM_1_PERCENT;
     op_wvr_bob.from_account = alice.name;
     op_wvr_bob.to_account = bob.name;
     op_wvr_bob.auto_vest = false; // route to SCR (default)
 
-    set_withdraw_vesting_route_to_account_operation op_wvr_sam;
+    set_withdraw_scorumpower_route_to_account_operation op_wvr_sam;
     op_wvr_sam.percent = sam_pie_percent * SCORUM_1_PERCENT;
     op_wvr_sam.from_account = alice.name;
     op_wvr_sam.to_account = sam.name;
@@ -172,7 +172,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
     tx.sign(alice_key, db.get_chain_id());
     db.push_transaction(tx, 0);
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     validate_database();
 
@@ -187,9 +187,9 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr,
                       alice_to_withdraw_scr * bob_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
     asset sam_recived = alice_to_withdraw_scr * sam_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS;
-    BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
 
-    BOOST_REQUIRE(withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
     for (int ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
     {
@@ -197,12 +197,12 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_vesting_route_from_accou
         generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
     }
 
-    BOOST_REQUIRE(!withdraw_vesting_service.is_exists(alice.id));
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
 
     BOOST_CHECK_EQUAL(alice.balance - old_alice_balance_scr, alice_to_withdraw_scr * alice_withdrawal_percent / 100);
     BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr, alice_to_withdraw_scr * bob_pie_percent / 100);
     sam_recived = alice_to_withdraw_scr * sam_pie_percent / 100;
-    BOOST_CHECK_EQUAL(sam.vesting_shares - old_sam_balance_sp, asset(sam_recived.amount, VESTS_SYMBOL));
+    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
 
     fc::time_point_sec end_time = db.head_block_time();
 

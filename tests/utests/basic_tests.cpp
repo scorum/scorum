@@ -42,11 +42,11 @@ BOOST_AUTO_TEST_CASE(check_asset_limits)
 
     BOOST_CHECK_EQUAL(asset::maximum(SCORUM_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
 
-    BOOST_CHECK_EQUAL(asset::maximum(VESTS_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
+    BOOST_CHECK_EQUAL(asset::maximum(SP_SYMBOL).amount, SCORUM_MAX_SHARE_SUPPLY);
 
     BOOST_CHECK_GT(asset::maximum(SCORUM_SYMBOL), asset::min(SCORUM_SYMBOL));
 
-    BOOST_CHECK_GT(asset::maximum(VESTS_SYMBOL), asset::min(VESTS_SYMBOL));
+    BOOST_CHECK_GT(asset::maximum(SP_SYMBOL), asset::min(SP_SYMBOL));
 }
 
 BOOST_AUTO_TEST_CASE(check_asset_value_transformations)
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(asset_symbol_test)
         = (uint64_t(SCORUM_CURRENCY_PRECISION / 2) | (uint64_t('S') << 8) | (uint64_t('P') << 16));
 
     BOOST_REQUIRE_NO_THROW(asset(10, SCORUM_SYMBOL));
-    BOOST_REQUIRE_NO_THROW(asset(10, VESTS_SYMBOL));
+    BOOST_REQUIRE_NO_THROW(asset(10, SP_SYMBOL));
     SCORUM_REQUIRE_THROW(asset(10, invald_symbol_name), fc::assert_exception);
     SCORUM_REQUIRE_THROW(asset(10, invald_symbol_precision), fc::assert_exception);
 }
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(asset_operation_test)
     BOOST_CHECK(tmp2 > tmp);
     BOOST_CHECK(tmp2 >= tmp);
 
-    BOOST_CHECK_THROW(asset(2, SCORUM_SYMBOL) + asset(1, VESTS_SYMBOL), fc::assert_exception);
-    BOOST_CHECK_THROW(asset(3, SCORUM_SYMBOL) - asset(1, VESTS_SYMBOL), fc::assert_exception);
+    BOOST_CHECK_THROW(asset(2, SCORUM_SYMBOL) + asset(1, SP_SYMBOL), fc::assert_exception);
+    BOOST_CHECK_THROW(asset(3, SCORUM_SYMBOL) - asset(1, SP_SYMBOL), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

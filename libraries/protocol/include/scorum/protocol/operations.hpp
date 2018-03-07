@@ -14,8 +14,8 @@ using operation = fc::static_variant<vote_operation,
                                      comment_operation,
 
                                      transfer_operation,
-                                     transfer_to_vesting_operation,
-                                     withdraw_vesting_operation,
+                                     transfer_to_scorumpower_operation,
+                                     withdraw_scorumpower_operation,
 
                                      account_create_by_committee_operation,
                                      account_create_operation,
@@ -28,8 +28,8 @@ using operation = fc::static_variant<vote_operation,
 
                                      delete_comment_operation,
                                      comment_options_operation,
-                                     set_withdraw_vesting_route_to_account_operation,
-                                     set_withdraw_vesting_route_to_dev_pool_operation,
+                                     set_withdraw_scorumpower_route_to_account_operation,
+                                     set_withdraw_scorumpower_route_to_dev_pool_operation,
 
                                      prove_authority_operation,
 
@@ -42,7 +42,7 @@ using operation = fc::static_variant<vote_operation,
                                      escrow_transfer_operation,
 
                                      decline_voting_rights_operation,
-                                     delegate_vesting_shares_operation,
+                                     delegate_scorumpower_operation,
 
                                      create_budget_operation,
                                      close_budget_operation,
@@ -63,7 +63,7 @@ using operation = fc::static_variant<vote_operation,
                                      fill_vesting_withdraw_operation,
                                      hardfork_operation,
                                      producer_reward_operation,
-                                     return_vesting_delegation_operation,
+                                     return_scorumpower_delegation_operation,
                                      shutdown_witness_operation>;
 
 /*void operation_get_required_authorities( const operation& op,

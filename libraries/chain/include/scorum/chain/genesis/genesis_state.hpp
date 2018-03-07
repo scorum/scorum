@@ -54,9 +54,9 @@ struct genesis_state_type
     asset registration_bonus = asset(0, SCORUM_SYMBOL);
     asset accounts_supply = asset(0, SCORUM_SYMBOL);
     asset rewards_supply = asset(0, SCORUM_SYMBOL);
-    asset founders_supply = asset(0, VESTS_SYMBOL);
-    asset steemit_bounty_accounts_supply = asset(0, VESTS_SYMBOL);
-    asset development_sp_supply = asset(0, VESTS_SYMBOL);
+    asset founders_supply = asset(0, SP_SYMBOL);
+    asset steemit_bounty_accounts_supply = asset(0, SP_SYMBOL);
+    asset development_sp_supply = asset(0, SP_SYMBOL);
     asset development_scr_supply = asset(0, SCORUM_SYMBOL);
     time_point_sec initial_timestamp = time_point_sec::min();
     std::vector<account_type> accounts;
