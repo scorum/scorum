@@ -1,9 +1,9 @@
-#include "withdraw_vesting_check_common.hpp"
+#include "withdraw_scorumpower_check_common.hpp"
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/schema/dev_committee_object.hpp>
@@ -12,17 +12,17 @@
 namespace scorum {
 namespace chain {
 
-withdraw_vesting_check_fixture::withdraw_vesting_check_fixture()
+withdraw_scorumpower_check_fixture::withdraw_scorumpower_check_fixture()
     : account_service(db.account_service())
     , pool_service(db.dev_pool_service())
-    , withdraw_vesting_service(db.withdraw_vesting_service())
-    , withdraw_vesting_route_service(db.withdraw_vesting_route_service())
+    , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
+    , withdraw_scorumpower_route_service(db.withdraw_scorumpower_route_service())
     , dynamic_global_property_service(db.dynamic_global_property_service())
 {
     open_database();
 }
 
-void withdraw_vesting_check_fixture::create_dev_pool(const asset& sp_balance, const asset& scr_balance)
+void withdraw_scorumpower_check_fixture::create_dev_pool(const asset& sp_balance, const asset& scr_balance)
 {
     FC_ASSERT(!pool_service.is_exists());
 

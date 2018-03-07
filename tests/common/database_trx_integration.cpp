@@ -45,7 +45,7 @@ const account_object& database_trx_integration_fixture::account_create(const std
         op.new_account_name = name;
         op.creator = creator;
         op.fee = asset(fee, SCORUM_SYMBOL);
-        op.delegation = asset(0, VESTS_SYMBOL);
+        op.delegation = asset(0, SP_SYMBOL);
         op.owner = authority(1, key, 1);
         op.active = authority(1, key, 1);
         op.posting = authority(1, post_key, 1);
@@ -153,13 +153,13 @@ void database_trx_integration_fixture::transfer(const std::string& from, const s
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
+void database_trx_integration_fixture::transfer_to_scorumpower(const std::string& from,
                                                         const std::string& to,
                                                         const asset& amount)
 {
     try
     {
-        transfer_to_vesting_operation op;
+        transfer_to_scorumpower_operation op;
         op.from = from;
         op.to = to;
         op.amount = amount;
@@ -173,11 +173,11 @@ void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
+void database_trx_integration_fixture::transfer_to_scorumpower(const std::string& from,
                                                         const std::string& to,
                                                         const share_type& amount)
 {
-    transfer_to_vest(from, to, asset(amount, SCORUM_SYMBOL));
+    transfer_to_scorumpower(from, to, asset(amount, SCORUM_SYMBOL));
 }
 
 void database_trx_integration_fixture::vest(const std::string& account_name, const asset& amount)
@@ -186,7 +186,7 @@ void database_trx_integration_fixture::vest(const std::string& account_name, con
 
     try
     {
-        transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, amount);
+        transfer_to_scorumpower(TEST_INIT_DELEGATE_NAME, account_name, amount);
     }
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }

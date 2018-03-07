@@ -33,8 +33,8 @@ public:
     void fund(const std::string& account_name, const share_type& amount);
     void fund(const std::string& account_name, const asset& amount);
     void transfer(const std::string& from, const std::string& to, const asset& amount);
-    void transfer_to_vest(const std::string& from, const std::string& to, const asset& amount);
-    void transfer_to_vest(const std::string& from, const std::string& to, const share_type& amount);
+    void transfer_to_scorumpower(const std::string& from, const std::string& to, const asset& amount);
+    void transfer_to_scorumpower(const std::string& from, const std::string& to, const share_type& amount);
     void vest(const std::string& account, const asset& amount);
     void vest(const std::string& from, const share_type& amount);
     void proxy(const std::string& account, const std::string& proxy);

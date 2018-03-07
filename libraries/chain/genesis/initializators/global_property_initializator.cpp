@@ -13,8 +13,8 @@ void global_property_initializator_impl::on_apply(initializator_context& ctx)
 {
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
-    FC_ASSERT(ctx.genesis_state().founders_supply.symbol() == VESTS_SYMBOL);
-    FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().founders_supply.symbol() == SP_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == SP_SYMBOL);
     FC_ASSERT(ctx.genesis_state().accounts_supply.symbol() == SCORUM_SYMBOL);
     FC_ASSERT(ctx.genesis_state().rewards_supply.symbol() == SCORUM_SYMBOL);
     FC_ASSERT(ctx.genesis_state().registration_supply.symbol() == SCORUM_SYMBOL);

@@ -58,7 +58,7 @@ void process_funds::on_apply(block_task_context& ctx)
     }
 
     const auto producer_reward
-        = account_service.create_vesting(account_service.get_account(cwit.owner), witness_reward);
+        = account_service.create_scorumpower(account_service.get_account(cwit.owner), witness_reward);
     ctx.push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 }
 }

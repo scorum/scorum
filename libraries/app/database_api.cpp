@@ -11,11 +11,11 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -518,7 +518,8 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == outgoing || type == all)
         {
-            const auto& by_route = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
+            const auto& by_route
+                = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_withdraw_route>();
             auto route = by_route.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_route.end() && is_equal_withdrawable_id(route->from_id, acc.id))
@@ -537,7 +538,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == incoming || type == all)
         {
-            const auto& by_dest = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_destination>();
+            const auto& by_dest = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_destination>();
             auto route = by_dest.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_dest.end() && is_equal_withdrawable_id(route->to_id, acc.id))
@@ -1601,16 +1602,16 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
     });
 }
 
-std::vector<vesting_delegation_api_obj>
-database_api::get_vesting_delegations(const std::string& account, const std::string& from, uint32_t limit) const
+std::vector<scorumpower_delegation_api_obj>
+database_api::get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
 
     return my->_db.with_read_lock([&]() {
-        std::vector<vesting_delegation_api_obj> result;
+        std::vector<scorumpower_delegation_api_obj> result;
         result.reserve(limit);
 
-        const auto& delegation_idx = my->_db.get_index<vesting_delegation_index, by_delegation>();
+        const auto& delegation_idx = my->_db.get_index<scorumpower_delegation_index, by_delegation>();
         auto itr = delegation_idx.lower_bound(boost::make_tuple(account, from));
         while (result.size() < limit && itr != delegation_idx.end() && itr->delegator == account)
         {
@@ -1622,16 +1623,16 @@ database_api::get_vesting_delegations(const std::string& account, const std::str
     });
 }
 
-std::vector<vesting_delegation_expiration_api_obj>
-database_api::get_expiring_vesting_delegations(const std::string& account, time_point_sec from, uint32_t limit) const
+std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expiring_scorumpower_delegations(
+    const std::string& account, time_point_sec from, uint32_t limit) const
 {
     FC_ASSERT(limit <= 1000);
 
     return my->_db.with_read_lock([&]() {
-        std::vector<vesting_delegation_expiration_api_obj> result;
+        std::vector<scorumpower_delegation_expiration_api_obj> result;
         result.reserve(limit);
 
-        const auto& exp_idx = my->_db.get_index<vesting_delegation_expiration_index, by_account_expiration>();
+        const auto& exp_idx = my->_db.get_index<scorumpower_delegation_expiration_index, by_account_expiration>();
         auto itr = exp_idx.lower_bound(boost::make_tuple(account, from));
         while (result.size() < limit && itr != exp_idx.end() && itr->delegator == account)
         {
@@ -1691,8 +1692,8 @@ state database_api::get_state(std::string path) const
                     //{
                     //    switch (item.second.op.which())
                     //    {
-                    //    case operation::tag<transfer_to_vesting_operation>::value:
-                    //    case operation::tag<withdraw_vesting_operation>::value:
+                    //    case operation::tag<transfer_to_scorumpower_operation>::value:
+                    //    case operation::tag<withdraw_scorumpower_operation>::value:
                     //    case operation::tag<transfer_operation>::value:
                     //    case operation::tag<author_reward_operation>::value:
                     //    case operation::tag<curation_reward_operation>::value:

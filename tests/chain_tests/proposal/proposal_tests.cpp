@@ -38,14 +38,14 @@ public:
         {
         }
 
-        void transfer_to_vest(const Actor& a, asset amount)
+        void transfer_to_scorumpower(const Actor& a, asset amount)
         {
-            f.chain().transfer_to_vest(actor.name, a.name, amount);
+            f.chain().transfer_to_scorumpower(actor.name, a.name, amount);
         }
 
         void give_power(const Actor& a)
         {
-            transfer_to_vest(a, ASSET_SCR(100));
+            transfer_to_scorumpower(a, ASSET_SCR(100));
         }
 
         proposal_id_type create_proposal(const protocol::proposal_operation& operation)
@@ -251,12 +251,12 @@ SCORUM_TEST_CASE(proposal)
     static const asset registration_bonus = ASSET_SCR(100);
     registration_stage single_stage{ 1u, 1u, 100u };
     genesis = database_integration_fixture::default_genesis_state()
-              .accounts(bob, jim, joe, hue, liz)
-            .registration_supply(registration_bonus * 100)
-            .registration_bonus(registration_bonus)
-              .registration_schedule(single_stage)
-              .committee(alice)
-              .generate();
+                  .accounts(bob, jim, joe, hue, liz)
+                  .registration_supply(registration_bonus * 100)
+                  .registration_bonus(registration_bonus)
+                  .registration_schedule(single_stage)
+                  .committee(alice)
+                  .generate();
 
     chain().generate_block();
 
