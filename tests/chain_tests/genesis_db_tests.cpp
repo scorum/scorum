@@ -73,8 +73,13 @@ struct genesis_base_test_fixture : public scorum::chain::database_integration_fi
         initdelegate.scorum(as);
 
         asset rw = ASSET_SCR(1000e+9);
-        genesis
-            = Genesis::create().accounts_supply(as).rewards_supply(rw).accounts(initdelegate).witnesses(initdelegate);
+
+        genesis = Genesis::create()
+                      .accounts_supply(as)
+                      .rewards_supply(rw)
+                      .accounts(initdelegate)
+                      .witnesses(initdelegate)
+                      .dev_committee(initdelegate);
     }
 
     scorum::chain::account_service_i& account_service;

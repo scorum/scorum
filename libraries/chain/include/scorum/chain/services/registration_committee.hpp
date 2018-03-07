@@ -1,26 +1,28 @@
 #pragma once
 
-#include <scorum/protocol/proposal_operations.hpp>
-
-#include <scorum/chain/services/dbs_base.hpp>
 #include <vector>
 #include <set>
 #include <functional>
 
-#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
+
+#include <scorum/chain/services/dbs_base.hpp>
 
 namespace scorum {
 namespace chain {
 
+class registration_committee_member_object;
+
 struct registration_committee_service_i : public scorum::protocol::registration_committee_i
 {
-    using member_object_cref_type = std::vector<registration_committee_member_object::cref_type>;
+    using committee_member_object_cref_type = std::reference_wrapper<const registration_committee_member_object>;
+    using committee_members_cref_type = std::vector<committee_member_object_cref_type>;
 
-    virtual member_object_cref_type get_committee() const = 0;
+    virtual committee_members_cref_type get_committee() const = 0;
 
     virtual const registration_committee_member_object& get_member(const account_name_type&) const = 0;
 
-    virtual member_object_cref_type create_committee(const std::vector<account_name_type>& accounts) = 0;
+    virtual committee_members_cref_type create_committee(const std::vector<account_name_type>& accounts) = 0;
 
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
     virtual void update_member_info(const registration_committee_member_object&,
@@ -36,11 +38,11 @@ protected:
     explicit dbs_registration_committee(database& db);
 
 public:
-    member_object_cref_type get_committee() const override;
+    committee_members_cref_type get_committee() const override;
 
     const registration_committee_member_object& get_member(const account_name_type&) const override;
 
-    member_object_cref_type create_committee(const std::vector<account_name_type>& accounts) override;
+    committee_members_cref_type create_committee(const std::vector<account_name_type>& accounts) override;
 
     using member_info_modifier_type = std::function<void(registration_committee_member_object&)>;
     void update_member_info(const registration_committee_member_object&,

@@ -53,6 +53,7 @@ Genesis database_integration_fixture::default_genesis_state()
         default_genesis = Genesis::create()
                               .accounts_supply(TEST_ACCOUNTS_INITIAL_SUPPLY)
                               .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+                              .dev_committee(initdelegate)
                               .accounts(initdelegate)
                               .witnesses(initdelegate);
     }
