@@ -32,10 +32,12 @@ struct committee_i
     virtual void change_add_member_quorum(const protocol::percent_type) = 0;
     virtual void change_exclude_member_quorum(const protocol::percent_type) = 0;
     virtual void change_base_quorum(const protocol::percent_type) = 0;
+    virtual void change_transfer_quorum(const protocol::percent_type) = 0;
 
     virtual protocol::percent_type get_add_member_quorum() = 0;
     virtual protocol::percent_type get_exclude_member_quorum() = 0;
     virtual protocol::percent_type get_base_quorum() = 0;
+    virtual protocol::percent_type get_transfer_quorum() = 0;
 
     virtual bool is_exists(const account_name_type&) const = 0;
     virtual size_t get_members_count() const = 0;

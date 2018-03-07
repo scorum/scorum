@@ -2512,7 +2512,7 @@ annotated_signed_transaction wallet_api::development_committee_change_add_member
                                                                                         uint32_t lifetime_sec,
                                                                                         bool broadcast)
 {
-    using operation_type = registration_committee_change_quorum_operation;
+    using operation_type = development_committee_change_quorum_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
         o.quorum = quorum_percent;
@@ -2525,7 +2525,7 @@ annotated_signed_transaction wallet_api::development_committee_change_add_member
 annotated_signed_transaction wallet_api::development_committee_change_exclude_member_quorum(
     const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
 {
-    using operation_type = registration_committee_change_quorum_operation;
+    using operation_type = development_committee_change_quorum_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
         o.quorum = quorum_percent;
@@ -2540,7 +2540,22 @@ annotated_signed_transaction wallet_api::development_committee_change_base_quoru
                                                                                   uint32_t lifetime_sec,
                                                                                   bool broadcast)
 {
-    using operation_type = registration_committee_change_quorum_operation;
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = base_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_transfer_quorum(const std::string& initiator,
+                                                                                      uint64_t quorum_percent,
+                                                                                      uint32_t lifetime_sec,
+                                                                                      bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
         o.quorum = quorum_percent;

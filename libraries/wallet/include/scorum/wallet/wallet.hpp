@@ -1089,12 +1089,26 @@ public:
                                                                           uint32_t lifetime_sec,
                                                                           bool broadcast);
 
+    /**
+     * Change development committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction development_committee_change_transfer_quorum(const std::string& creator,
+                                                                              uint64_t quorum_percent,
+                                                                              uint32_t lifetime_sec,
+                                                                              bool broadcast);
+
+    /**
+     * Create proposal for transfering SCR from development pool to account
+     */
     annotated_signed_transaction development_pool_transfer(const std::string& initiator,
                                                            const std::string& to_account,
                                                            asset amount,
                                                            uint32_t lifetime_sec,
                                                            bool broadcast);
 
+    /**
+     * Create proposal for set up a vesting withdraw request.
+     */
     annotated_signed_transaction development_pool_withdraw_vesting(const std::string& initiator,
                                                                    asset amount,
                                                                    uint32_t lifetime_sec,
