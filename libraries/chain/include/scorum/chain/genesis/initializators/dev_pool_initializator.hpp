@@ -20,7 +20,7 @@ struct dev_pool_initializator_impl : public initializator
 
 private:
     bool is_zero_supply(initializator_context&);
-    void create_dev_committee_and_set_pool_balance(initializator_context&);
+    void setup_dev_pool(initializator_context&);
     void increase_total_supply(initializator_context&);
 };
 

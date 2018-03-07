@@ -18,7 +18,7 @@ void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
     FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == VESTS_SYMBOL);
     FC_ASSERT(ctx.genesis_state().development_scr_supply.symbol() == SCORUM_SYMBOL);
 
-    create_dev_committee_and_set_pool_balance(ctx);
+    setup_dev_pool(ctx);
 
     if (!is_zero_supply(ctx))
         increase_total_supply(ctx);
@@ -30,7 +30,7 @@ bool dev_pool_initializator_impl::is_zero_supply(initializator_context& ctx)
     return !dev_pool_service.get().scr_balance.amount.value && !dev_pool_service.get().sp_balance.amount.value;
 }
 
-void dev_pool_initializator_impl::create_dev_committee_and_set_pool_balance(initializator_context& ctx)
+void dev_pool_initializator_impl::setup_dev_pool(initializator_context& ctx)
 {
     dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
 

@@ -2420,7 +2420,7 @@ annotated_signed_transaction wallet_api::registration_committee_exclude_member(c
 
 std::set<account_name_type> wallet_api::list_registration_committee(const std::string& lowerbound, uint32_t limit)
 {
-    return my->_remote_db->lookup_registration_committee(lowerbound, limit);
+    return my->_remote_db->lookup_registration_committee_members(lowerbound, limit);
 }
 
 registration_committee_api_obj wallet_api::get_registration_committee()
@@ -2504,7 +2504,7 @@ annotated_signed_transaction wallet_api::development_committee_exclude_member(co
 
 std::set<account_name_type> wallet_api::list_development_committee(const std::string& lowerbound, uint32_t limit)
 {
-    return my->_remote_db->lookup_registration_committee(lowerbound, limit);
+    return my->_remote_db->lookup_registration_committee_members(lowerbound, limit);
 }
 
 annotated_signed_transaction wallet_api::development_committee_change_add_member_quorum(const std::string& initiator,

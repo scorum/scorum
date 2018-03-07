@@ -255,13 +255,14 @@ public:
     /**
      * @brief Get account names in registration committee
      */
-    std::set<account_name_type> lookup_registration_committee(const std::string& lower_bound_name,
-                                                              uint32_t limit) const;
+    std::set<account_name_type> lookup_registration_committee_members(const std::string& lower_bound_name,
+                                                                      uint32_t limit) const;
 
     /**
      * @brief Get account names in development committee
      */
-    std::set<account_name_type> lookup_development_committee(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<account_name_type> lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                     uint32_t limit) const;
 
     /**
      * @brief Get proposals
@@ -536,8 +537,8 @@ FC_API(scorum::app::database_api,
    (lookup_budget_owners)
 
    // Committee
-   (lookup_registration_committee)
-   (lookup_development_committee)
+   (lookup_registration_committee_members)
+   (lookup_development_committee_members)
    (lookup_proposals)
    (get_registration_committee)
    (get_development_committee)

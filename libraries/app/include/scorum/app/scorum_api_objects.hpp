@@ -49,6 +49,7 @@ public:
     }
 };
 
+typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
 typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
 typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
@@ -610,21 +611,12 @@ struct registration_committee_api_obj
     protocol::percent_type change_quorum = 0u;
 };
 
-struct development_committee_api_obj : public api_obj<scorum::chain::dev_committee_object>
-{
-    template <class T> development_committee_api_obj& operator=(const T& other)
-    {
-        T& base = static_cast<T&>(*this);
-        base = other;
-        return *this;
-    }
-};
-
 } // namespace app
 } // namespace scorum
 
 // clang-format off
 
+FC_REFLECT_EMPTY(scorum::app::development_committee_api_obj)
 FC_REFLECT_EMPTY(scorum::app::account_bandwidth_api_obj)
 FC_REFLECT_EMPTY(scorum::app::block_summary_api_obj)
 FC_REFLECT_EMPTY(scorum::app::change_recovery_account_request_api_obj)
@@ -639,8 +631,6 @@ FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
 
 FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
-
-FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), BOOST_PP_SEQ_NIL)
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 
