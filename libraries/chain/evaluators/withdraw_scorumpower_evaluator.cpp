@@ -26,6 +26,13 @@ public:
 
     template <typename FromObjectType> void do_apply(const FromObjectType& from_object, const asset& scorumpower)
     {
+#ifdef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
+        static time_point_sec lock_until = time_point_sec::from_iso_string("2018-08-01T00:00:00");
+
+        FC_ASSERT(_dprops_service.head_block_time() > lock_until,
+                  "Withdraw scorumpower operation is locked until ${t}.", ("t", block_until));
+#endif // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
+
         asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
         if (_withdraw_scorumpower_service.is_exists(from_object.id))
         {
