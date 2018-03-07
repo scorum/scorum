@@ -14,7 +14,7 @@ public:
     ActorActions(database_trx_integration_fixture& fix, const Actor& a);
 
     void create();
-    void transfer_to_vest(const Actor& a, asset amount);
+    void transfer_to_scorumpower(const Actor& a, asset amount);
     void transfer(const Actor& a, asset amount);
     void give_sp(const Actor& a, int amount);
     void give_scr(const Actor& a, int amount);

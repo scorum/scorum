@@ -27,7 +27,7 @@ public:
         account_committee_op.json_metadata = "";
 
         // Only "initdelegate" has money. He gift some to creator
-        transfer_to_vest("initdelegate", creator_name, 100);
+        transfer_to_scorumpower("initdelegate", creator_name, 100);
     }
 
     committee_private_keys_type committee_private_keys;

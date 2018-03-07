@@ -153,7 +153,7 @@ void database_trx_integration_fixture::transfer(const std::string& from, const s
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
+void database_trx_integration_fixture::transfer_to_scorumpower(const std::string& from,
                                                         const std::string& to,
                                                         const asset& amount)
 {
@@ -173,11 +173,11 @@ void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
 }
 
-void database_trx_integration_fixture::transfer_to_vest(const std::string& from,
+void database_trx_integration_fixture::transfer_to_scorumpower(const std::string& from,
                                                         const std::string& to,
                                                         const share_type& amount)
 {
-    transfer_to_vest(from, to, asset(amount, SCORUM_SYMBOL));
+    transfer_to_scorumpower(from, to, asset(amount, SCORUM_SYMBOL));
 }
 
 void database_trx_integration_fixture::vest(const std::string& account_name, const asset& amount)
@@ -186,7 +186,7 @@ void database_trx_integration_fixture::vest(const std::string& account_name, con
 
     try
     {
-        transfer_to_vest(TEST_INIT_DELEGATE_NAME, account_name, amount);
+        transfer_to_scorumpower(TEST_INIT_DELEGATE_NAME, account_name, amount);
     }
     FC_CAPTURE_AND_RETHROW((account_name)(amount))
 }

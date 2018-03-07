@@ -295,7 +295,7 @@ SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
     BOOST_REQUIRE_EQUAL(bucket.scorumpower_withdrawn, orig_val + 1);
 }
 
-SCORUM_TEST_CASE(vesting_transfered_stat_test)
+SCORUM_TEST_CASE(scorumpower_transfered_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
