@@ -12,11 +12,11 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 
 #include <scorum/chain/schema/committee.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -530,7 +530,8 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == outgoing || type == all)
         {
-            const auto& by_route = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
+            const auto& by_route
+                = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_withdraw_route>();
             auto route = by_route.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_route.end() && is_equal_withdrawable_id(route->from_id, acc.id))
@@ -549,7 +550,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == incoming || type == all)
         {
-            const auto& by_dest = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_destination>();
+            const auto& by_dest = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_destination>();
             auto route = by_dest.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_dest.end() && is_equal_withdrawable_id(route->to_id, acc.id))
@@ -1171,29 +1172,6 @@ std::vector<discussion> database_api::get_replies_by_last_update(account_name_ty
     });
 }
 
-std::map<uint32_t, applied_operation>
-database_api::get_account_history(const std::string& account, uint64_t from, uint32_t limit) const
-{
-    return my->_db.with_read_lock([&]() {
-        FC_ASSERT(limit <= GET_ACCOUNT_HISTORY_LIMIT, "Limit of ${l} is greater than maxmimum allowed", ("l", limit));
-        FC_ASSERT(from >= limit, "From must be greater than limit");
-        //   idump((account)(from)(limit));
-        const auto& idx = my->_db.get_index<account_history_index>().indices().get<by_account>();
-        auto itr = idx.lower_bound(boost::make_tuple(account, from));
-        //   if( itr != idx.end() ) idump((*itr));
-        auto end = idx.upper_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
-        //   if( end != idx.end() ) idump((*end));
-
-        std::map<uint32_t, applied_operation> result;
-        while (itr != end)
-        {
-            result[itr->sequence] = my->_db.get(itr->op);
-            ++itr;
-        }
-        return result;
-    });
-}
-
 std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_author(const std::string& author) const
 {
     return my->_db.with_read_lock([&]() {
@@ -1662,16 +1640,16 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
     });
 }
 
-std::vector<vesting_delegation_api_obj>
-database_api::get_vesting_delegations(const std::string& account, const std::string& from, uint32_t limit) const
+std::vector<scorumpower_delegation_api_obj>
+database_api::get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit) const
 {
     FC_ASSERT(limit <= LOOKUP_LIMIT);
 
     return my->_db.with_read_lock([&]() {
-        std::vector<vesting_delegation_api_obj> result;
+        std::vector<scorumpower_delegation_api_obj> result;
         result.reserve(limit);
 
-        const auto& delegation_idx = my->_db.get_index<vesting_delegation_index, by_delegation>();
+        const auto& delegation_idx = my->_db.get_index<scorumpower_delegation_index, by_delegation>();
         auto itr = delegation_idx.lower_bound(boost::make_tuple(account, from));
         while (result.size() < limit && itr != delegation_idx.end() && itr->delegator == account)
         {
@@ -1683,16 +1661,16 @@ database_api::get_vesting_delegations(const std::string& account, const std::str
     });
 }
 
-std::vector<vesting_delegation_expiration_api_obj>
-database_api::get_expiring_vesting_delegations(const std::string& account, time_point_sec from, uint32_t limit) const
+std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expiring_scorumpower_delegations(
+    const std::string& account, time_point_sec from, uint32_t limit) const
 {
     FC_ASSERT(limit <= LOOKUP_LIMIT);
 
     return my->_db.with_read_lock([&]() {
-        std::vector<vesting_delegation_expiration_api_obj> result;
+        std::vector<scorumpower_delegation_expiration_api_obj> result;
         result.reserve(limit);
 
-        const auto& exp_idx = my->_db.get_index<vesting_delegation_expiration_index, by_account_expiration>();
+        const auto& exp_idx = my->_db.get_index<scorumpower_delegation_expiration_index, by_account_expiration>();
         auto itr = exp_idx.lower_bound(boost::make_tuple(account, from));
         while (result.size() < limit && itr != exp_idx.end() && itr->delegator == account)
         {
@@ -1746,39 +1724,40 @@ state database_api::get_state(std::string path) const
                 auto& eacnt = _state.accounts[acnt];
                 if (part[1] == "transfers")
                 {
-                    auto history = get_account_history(acnt, uint64_t(-1), GET_ACCOUNT_HISTORY_LIMIT);
-                    for (auto& item : history)
-                    {
-                        switch (item.second.op.which())
-                        {
-                        case operation::tag<transfer_to_vesting_operation>::value:
-                        case operation::tag<withdraw_vesting_operation>::value:
-                        case operation::tag<transfer_operation>::value:
-                        case operation::tag<author_reward_operation>::value:
-                        case operation::tag<curation_reward_operation>::value:
-                        case operation::tag<comment_benefactor_reward_operation>::value:
-                        case operation::tag<escrow_transfer_operation>::value:
-                        case operation::tag<escrow_approve_operation>::value:
-                        case operation::tag<escrow_dispute_operation>::value:
-                        case operation::tag<escrow_release_operation>::value:
-                            eacnt.transfer_history[item.first] = item.second;
-                            break;
-                        case operation::tag<comment_operation>::value:
-                            //   eacnt.post_history[item.first] =  item.second;
-                            break;
-                        case operation::tag<vote_operation>::value:
-                        case operation::tag<account_witness_vote_operation>::value:
-                        case operation::tag<account_witness_proxy_operation>::value:
-                            //   eacnt.vote_history[item.first] =  item.second;
-                            break;
-                        case operation::tag<account_create_operation>::value:
-                        case operation::tag<account_update_operation>::value:
-                        case operation::tag<witness_update_operation>::value:
-                        case operation::tag<producer_reward_operation>::value:
-                        default:
-                            eacnt.other_history[item.first] = item.second;
-                        }
-                    }
+                    // TODO: rework this garbage method - split it into sensible parts
+                    // auto history = get_account_history(acnt, uint64_t(-1), 10000);
+                    // for (auto& item : history)
+                    //{
+                    //    switch (item.second.op.which())
+                    //    {
+                    //    case operation::tag<transfer_to_scorumpower_operation>::value:
+                    //    case operation::tag<withdraw_scorumpower_operation>::value:
+                    //    case operation::tag<transfer_operation>::value:
+                    //    case operation::tag<author_reward_operation>::value:
+                    //    case operation::tag<curation_reward_operation>::value:
+                    //    case operation::tag<comment_benefactor_reward_operation>::value:
+                    //    case operation::tag<escrow_transfer_operation>::value:
+                    //    case operation::tag<escrow_approve_operation>::value:
+                    //    case operation::tag<escrow_dispute_operation>::value:
+                    //    case operation::tag<escrow_release_operation>::value:
+                    //        eacnt.transfer_history[item.first] = item.second;
+                    //        break;
+                    //    case operation::tag<comment_operation>::value:
+                    //        //   eacnt.post_history[item.first] =  item.second;
+                    //        break;
+                    //    case operation::tag<vote_operation>::value:
+                    //    case operation::tag<account_witness_vote_operation>::value:
+                    //    case operation::tag<account_witness_proxy_operation>::value:
+                    //        //   eacnt.vote_history[item.first] =  item.second;
+                    //        break;
+                    //    case operation::tag<account_create_operation>::value:
+                    //    case operation::tag<account_update_operation>::value:
+                    //    case operation::tag<witness_update_operation>::value:
+                    //    case operation::tag<producer_reward_operation>::value:
+                    //    default:
+                    //        eacnt.other_history[item.first] = item.second;
+                    //    }
+                    //}
                 }
                 else if (part[1] == "recent-replies")
                 {

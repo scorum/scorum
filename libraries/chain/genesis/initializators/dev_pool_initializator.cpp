@@ -15,7 +15,7 @@ namespace genesis {
 
 void dev_pool_initializator_impl::on_apply(initializator_context& ctx)
 {
-    FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == SP_SYMBOL);
     FC_ASSERT(ctx.genesis_state().development_scr_supply.symbol() == SCORUM_SYMBOL);
 
     setup_dev_pool(ctx);

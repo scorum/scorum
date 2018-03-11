@@ -33,7 +33,7 @@ struct fake_account_object
 
     account_name_type name;
     asset balance = asset(0, SCORUM_SYMBOL);
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 
     Actor config;
 };

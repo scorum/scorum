@@ -6,7 +6,7 @@
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/hardfork.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 
@@ -234,13 +234,13 @@ BOOST_AUTO_TEST_CASE(reward_fund)
 
         generate_block();
 
-        asset account_initial_vest_supply = db.obtain_service<dbs_account>().get_account("alice").vesting_shares;
+        asset account_initial_vest_supply = db.obtain_service<dbs_account>().get_account("alice").scorumpower;
 
         const auto blocks_between_comments = 5;
 
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").balance, asset(0, SCORUM_SYMBOL));
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, asset(0, SCORUM_SYMBOL));
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").vesting_shares,
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
                             account_initial_vest_supply);
 
         comment_operation comment;
@@ -289,12 +289,12 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
 
             // clang-format off
-            BOOST_REQUIRE_GT   (db.obtain_service<dbs_account>().get_account("alice").vesting_shares, account_initial_vest_supply);
-            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").vesting_shares,
+            BOOST_REQUIRE_GT   (db.obtain_service<dbs_account>().get_account("alice").scorumpower, account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").scorumpower,
                                 account_initial_vest_supply + ASSET_SP(db.obtain_service<dbs_account>().get_account("alice").balance.amount.value));
 
-            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").vesting_shares, account_initial_vest_supply);
-            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").vesting_shares,
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower, account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
                                 account_initial_vest_supply + ASSET_SP(db.obtain_service<dbs_account>().get_account("bob").balance.amount.value));
             // clang-format on
 
@@ -312,8 +312,8 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
             BOOST_REQUIRE_GT(fund.reward_balance, ASSET_SCR(0));
 
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").vesting_shares, account_initial_vest_supply);
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").vesting_shares, account_initial_vest_supply);
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower, account_initial_vest_supply);
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").scorumpower, account_initial_vest_supply);
             // clang-format on
 
             validate_database();

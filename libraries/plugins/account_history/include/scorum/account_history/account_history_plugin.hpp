@@ -26,32 +26,14 @@
 #include <scorum/app/plugin.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#include <fc/thread/future.hpp>
+#ifndef ACCOUNT_HISTORY_PLUGIN_NAME
+#define ACCOUNT_HISTORY_PLUGIN_NAME "account_history"
+#endif
 
 namespace scorum {
 namespace account_history {
 using namespace chain;
 using app::application;
-
-//
-// Plugins should #define their SPACE_ID's so plugins with
-// conflicting SPACE_ID assignments can be compiled into the
-// same binary (by simply re-assigning some of the conflicting #defined
-// SPACE_ID's in a build script).
-//
-// Assignment of SPACE_ID's cannot be done at run-time because
-// various template automagic depends on them being known at compile
-// time.
-//
-#ifndef ACCOUNT_HISTORY_SPACE_ID
-#define ACCOUNT_HISTORY_SPACE_ID 5
-#endif
-
-enum account_history_object_type
-{
-    key_account_object_type = 0,
-    bucket_object_type = 1 ///< used in market_history_plugin
-};
 
 namespace detail {
 class account_history_plugin_impl;
@@ -68,8 +50,8 @@ public:
     virtual ~account_history_plugin();
 
     std::string plugin_name() const override;
-    virtual void plugin_set_program_options(
-        boost::program_options::options_description& cli, boost::program_options::options_description& cfg) override;
+    virtual void plugin_set_program_options(boost::program_options::options_description& cli,
+                                            boost::program_options::options_description& cfg) override;
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
 

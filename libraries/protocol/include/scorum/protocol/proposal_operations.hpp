@@ -128,7 +128,7 @@ struct development_committee_change_quorum_operation
 struct development_committee_withdraw_vesting_operation
     : public proposal_base_operation<development_committee_withdraw_vesting_operation, development_committee_i>
 {
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset vesting_shares = asset(0, SP_SYMBOL);
 
     void validate() const;
 

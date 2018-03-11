@@ -1,4 +1,6 @@
 #include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/account_history/account_history_api.hpp>
+#include <scorum/account_history/schema/account_history_object.hpp>
 
 #include <scorum/app/impacted.hpp>
 
@@ -6,7 +8,7 @@
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -28,8 +30,17 @@ public:
     account_history_plugin_impl(account_history_plugin& _plugin)
         : _self(_plugin)
     {
+        chain::database& db = database();
+
+        db.add_plugin_index<account_operations_full_history_index>();
+        db.add_plugin_index<transfers_to_scr_history_index>();
+        db.add_plugin_index<transfers_to_sp_history_index>();
+
+        db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
     }
-    virtual ~account_history_plugin_impl();
+    virtual ~account_history_plugin_impl()
+    {
+    }
 
     scorum::chain::database& database()
     {
@@ -45,57 +56,73 @@ public:
     flat_set<std::string> _op_list;
 };
 
-account_history_plugin_impl::~account_history_plugin_impl()
+class operation_visitor
 {
-    return;
-}
+    database& _db;
+    const operation_notification& _note;
+    account_name_type item;
 
-struct operation_visitor
-{
-    operation_visitor(database& db, const operation_notification& note, const operation_object*& n, account_name_type i)
+public:
+    typedef void result_type;
+
+    operation_visitor(database& db, const operation_notification& note, const account_name_type& i)
         : _db(db)
         , _note(note)
-        , new_obj(n)
         , item(i)
     {
     }
 
-    typedef void result_type;
-
-    database& _db;
-    const operation_notification& _note;
-    const operation_object*& new_obj;
-    account_name_type item;
-
-    template <typename Op> void operator()(Op&&) const
+    template <typename Op> void operator()(const Op&) const
     {
-        const auto& hist_idx = _db.get_index<account_history_index>().indices().get<by_account>();
-        if (!new_obj)
-        {
-            new_obj = &_db.create<operation_object>([&](operation_object& obj) {
-                obj.trx_id = _note.trx_id;
-                obj.block = _note.block;
-                obj.trx_in_block = _note.trx_in_block;
-                obj.op_in_trx = _note.op_in_trx;
-                obj.virtual_op = _note.virtual_op;
-                obj.timestamp = _db.head_block_time();
-                // fc::raw::pack( obj.serialized_op , _note.op);  //call to 'pack' is ambiguous
-                auto size = fc::raw::pack_size(_note.op);
-                obj.serialized_op.resize(size);
-                fc::datastream<char*> ds(obj.serialized_op.data(), size);
-                fc::raw::pack(ds, _note.op);
-            });
-        }
+        push_history<account_history_object>(create_operation_obj());
+    }
 
+    void operator()(const transfer_operation&) const
+    {
+        const auto& new_obj = create_operation_obj();
+
+        push_history<account_history_object>(new_obj);
+        push_history<transfers_to_scr_history_object>(new_obj);
+    }
+
+    void operator()(const transfer_to_scorumpower_operation&) const
+    {
+        const auto& new_obj = create_operation_obj();
+
+        push_history<account_history_object>(new_obj);
+        push_history<transfers_to_sp_history_object>(new_obj);
+    }
+
+private:
+    const operation_object& create_operation_obj() const
+    {
+        return _db.create<operation_object>([&](operation_object& obj) {
+            obj.trx_id = _note.trx_id;
+            obj.block = _note.block;
+            obj.trx_in_block = _note.trx_in_block;
+            obj.op_in_trx = _note.op_in_trx;
+            obj.virtual_op = _note.virtual_op;
+            obj.timestamp = _db.head_block_time();
+            // fc::raw::pack( obj.serialized_op , _note.op);  //call to 'pack' is ambiguous
+            auto size = fc::raw::pack_size(_note.op);
+            obj.serialized_op.resize(size);
+            fc::datastream<char*> ds(obj.serialized_op.data(), size);
+            fc::raw::pack(ds, _note.op);
+        });
+    }
+
+    template <typename history_object_type> void push_history(const operation_object& op) const
+    {
+        const auto& hist_idx = _db.get_index<history_index<history_object_type>>().indices().get<by_account>();
         auto hist_itr = hist_idx.lower_bound(boost::make_tuple(item, uint32_t(-1)));
         uint32_t sequence = 0;
         if (hist_itr != hist_idx.end() && hist_itr->account == item)
             sequence = hist_itr->sequence + 1;
 
-        _db.create<account_history_object>([&](account_history_object& ahist) {
+        _db.create<history_object_type>([&](history_object_type& ahist) {
             ahist.account = item;
             ahist.sequence = sequence;
-            ahist.op = new_obj->id;
+            ahist.op = op.id;
         });
     }
 };
@@ -104,11 +131,10 @@ struct operation_visitor_filter : operation_visitor
 {
     operation_visitor_filter(database& db,
                              const operation_notification& note,
-                             const operation_object*& n,
-                             account_name_type i,
+                             const account_name_type& i,
                              const flat_set<std::string>& filter,
                              bool blacklist)
-        : operation_visitor(db, note, n, i)
+        : operation_visitor(db, note, i)
         , _filter(filter)
         , _blacklist(blacklist)
     {
@@ -137,7 +163,6 @@ void account_history_plugin_impl::on_operation(const operation_notification& not
     flat_set<account_name_type> impacted;
     scorum::chain::database& db = database();
 
-    const operation_object* new_obj = nullptr;
     app::operation_get_impacted_accounts(note.op, impacted);
 
     for (const auto& item : impacted)
@@ -173,11 +198,11 @@ void account_history_plugin_impl::on_operation(const operation_notification& not
         {
             if (_filter_content)
             {
-                note.op.visit(operation_visitor_filter(db, note, new_obj, item, _op_list, _blacklist));
+                note.op.visit(operation_visitor_filter(db, note, item, _op_list, _blacklist));
             }
             else
             {
-                note.op.visit(operation_visitor(db, note, new_obj, item));
+                note.op.visit(operation_visitor(db, note, item));
             }
         }
     }
@@ -198,7 +223,7 @@ account_history_plugin::~account_history_plugin()
 
 std::string account_history_plugin::plugin_name() const
 {
-    return "account_history";
+    return ACCOUNT_HISTORY_PLUGIN_NAME;
 }
 
 void account_history_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
@@ -216,8 +241,7 @@ void account_history_plugin::plugin_set_program_options(boost::program_options::
 
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    // ilog("Intializing account history plugin" );
-    database().pre_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+    ilog("Intializing account history plugin");
 
     typedef std::pair<account_name_type, account_name_type> pairstring;
     LOAD_VALUE_SET(options, "track-account-range", my->_tracked_accounts, pairstring);
@@ -264,6 +288,8 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
 void account_history_plugin::plugin_startup()
 {
     ilog("account_history plugin: plugin_startup() begin");
+
+    app().register_api_factory<account_history_api>("account_history_api");
 
     ilog("account_history plugin: plugin_startup() end");
 }

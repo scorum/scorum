@@ -64,9 +64,9 @@ struct stat_database_fixture : public database_trx_integration_fixture
 
     void start_withdraw(share_type to_withdraw)
     {
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = bob;
-        op.vesting_shares = asset(to_withdraw, VESTS_SYMBOL);
+        op.scorumpower = asset(to_withdraw, SP_SYMBOL);
 
         push_operation(op);
     }
@@ -205,22 +205,22 @@ SCORUM_TEST_CASE(transfers_stat_test)
     BOOST_REQUIRE_EQUAL(bucket.scorum_transferred, orig_val_scr + 1);
 }
 
-SCORUM_TEST_CASE(transfers_to_vesting_stat_test)
+SCORUM_TEST_CASE(transfers_to_scorumpower_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    auto orig_val = bucket.transfers_to_vesting;
-    auto orig_val_scr = bucket.scorum_transferred_to_vesting;
+    auto orig_val = bucket.transfers_to_scorumpower;
+    auto orig_val_scr = bucket.scorum_transferred_to_scorumpower;
 
-    transfer_to_vesting_operation op;
+    transfer_to_scorumpower_operation op;
     op.from = TEST_INIT_DELEGATE_NAME;
     op.to = alice;
     op.amount = asset(1, SCORUM_SYMBOL);
 
     push_operation(op);
 
-    BOOST_REQUIRE_EQUAL(bucket.transfers_to_vesting, orig_val + 1);
-    BOOST_REQUIRE_EQUAL(bucket.scorum_transferred_to_vesting, orig_val_scr + 1);
+    BOOST_REQUIRE_EQUAL(bucket.transfers_to_scorumpower, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorum_transferred_to_scorumpower, orig_val_scr + 1);
 }
 
 SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
@@ -232,9 +232,9 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
     {
         auto orig_val = bucket.new_vesting_withdrawal_requests;
 
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = alice;
-        op.vesting_shares = alice_acc.vesting_shares;
+        op.scorumpower = alice_acc.scorumpower;
 
         push_operation(op);
 
@@ -243,9 +243,9 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
     {
         auto orig_val = bucket.modified_vesting_withdrawal_requests;
 
-        withdraw_vesting_operation op;
+        withdraw_scorumpower_operation op;
         op.account = alice;
-        op.vesting_shares = alice_acc.vesting_shares / 2;
+        op.scorumpower = alice_acc.scorumpower / 2;
 
         push_operation(op);
 
@@ -284,7 +284,7 @@ SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    auto orig_val = bucket.vests_withdrawn;
+    auto orig_val = bucket.scorumpower_withdrawn;
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
@@ -292,18 +292,18 @@ SCORUM_TEST_CASE(vesting_withdrawn_stat_test)
     generate_blocks(advance, true);
     generate_block(); // call full apply_block procedure
 
-    BOOST_REQUIRE_EQUAL(bucket.vests_withdrawn, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorumpower_withdrawn, orig_val + 1);
 }
 
-SCORUM_TEST_CASE(vesting_transfered_stat_test)
+SCORUM_TEST_CASE(scorumpower_transfered_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    auto orig_val = bucket.vests_transferred;
+    auto orig_val = bucket.scorumpower_transferred;
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    set_withdraw_vesting_route_to_account_operation op;
+    set_withdraw_scorumpower_route_to_account_operation op;
     op.from_account = "bob";
     op.to_account = alice;
     op.auto_vest = true;
@@ -315,7 +315,7 @@ SCORUM_TEST_CASE(vesting_transfered_stat_test)
     generate_blocks(advance, true);
     generate_block(); // call full apply_block procedure
 
-    BOOST_REQUIRE_EQUAL(bucket.vests_transferred, orig_val + 1);
+    BOOST_REQUIRE_EQUAL(bucket.scorumpower_transferred, orig_val + 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

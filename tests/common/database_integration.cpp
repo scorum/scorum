@@ -4,8 +4,7 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
@@ -84,14 +83,13 @@ void database_integration_fixture::open_database(const genesis_state_type& genes
             if (arg == "--show-test-names")
                 std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
         }
-        auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
+
         db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
         auto wit_plugin = app.register_plugin<scorum::witness::witness_plugin>();
 
         boost::program_options::variables_map options;
 
         db_plugin->logging = false;
-        ahplugin->plugin_initialize(options);
         db_plugin->plugin_initialize(options);
         wit_plugin->plugin_initialize(options);
 

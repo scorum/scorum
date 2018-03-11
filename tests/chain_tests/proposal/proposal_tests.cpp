@@ -58,14 +58,14 @@ public:
         {
         }
 
-        void transfer_to_vest(const Actor& a, asset amount)
+        void transfer_to_scorumpower(const Actor& a, asset amount)
         {
-            f.chain().transfer_to_vest(actor.name, a.name, amount);
+            f.chain().transfer_to_scorumpower(actor.name, a.name, amount);
         }
 
         void give_power(const Actor& a)
         {
-            transfer_to_vest(a, ASSET_SCR(100));
+            transfer_to_scorumpower(a, ASSET_SCR(100));
         }
 
         proposal_id_type create_proposal(const protocol::proposal_operation& operation)

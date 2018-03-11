@@ -18,9 +18,9 @@ typedef boost::multiprecision::int128_t int128_t;
 
 void asset::_check_symbol()
 {
-    FC_ASSERT(SCORUM_SYMBOL == _symbol || VESTS_SYMBOL == _symbol,
+    FC_ASSERT(SCORUM_SYMBOL == _symbol || SP_SYMBOL == _symbol,
               "Invalid asset symbol received. ${1} not either ${2} or ${3}.",
-              ("1", _symbol)("2", SCORUM_SYMBOL)("3", VESTS_SYMBOL));
+              ("1", _symbol)("2", SCORUM_SYMBOL)("3", SP_SYMBOL));
 }
 
 void asset::_set_decimals(uint8_t d)
