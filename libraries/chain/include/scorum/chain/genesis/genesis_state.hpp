@@ -15,7 +15,12 @@ using scorum::protocol::asset;
 using scorum::protocol::chain_id_type;
 using scorum::protocol::public_key_type;
 
-struct genesis_state_type
+struct genesis_chain_id_type
+{
+    chain_id_type initial_chain_id;
+};
+
+struct genesis_state_type : public genesis_chain_id_type
 {
     struct account_type
     {
@@ -65,8 +70,6 @@ struct genesis_state_type
     std::vector<witness_type> witness_candidates;
     std::vector<registration_schedule_item> registration_schedule;
     std::vector<std::string> registration_committee;
-
-    chain_id_type initial_chain_id;
 };
 
 } // namespace chain
