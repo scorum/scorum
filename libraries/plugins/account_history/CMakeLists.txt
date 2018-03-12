@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/scorum/account_history/*.hpp")
 
 add_library( scorum_account_history
              account_history_plugin.cpp
+             account_history_api.cpp
            )
 
 target_link_libraries( scorum_account_history

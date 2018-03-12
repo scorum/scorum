@@ -21,7 +21,7 @@ class withdrawable_actors_impl
 public:
     explicit withdrawable_actors_impl(block_task_context&);
 
-    asset get_available_vesting_shares(const withdrawable_id_type& from);
+    asset get_available_scorumpower(const withdrawable_id_type& from);
 
     void update_statistic(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
 

@@ -1,5 +1,6 @@
 #include <scorum/account_by_key/account_by_key_plugin.hpp>
 #include <scorum/account_by_key/account_by_key_objects.hpp>
+#include <scorum/account_by_key/account_by_key_api.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/database/database.hpp>

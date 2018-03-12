@@ -5,7 +5,7 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -212,10 +212,10 @@ public:
     optional<account_bandwidth_api_obj> get_account_bandwidth(const std::string& account,
                                                               witness::bandwidth_type type) const;
 
-    std::vector<vesting_delegation_api_obj>
-    get_vesting_delegations(const std::string& account, const std::string& from, uint32_t limit = 100) const;
-    std::vector<vesting_delegation_expiration_api_obj>
-    get_expiring_vesting_delegations(const std::string& account, time_point_sec from, uint32_t limit = 100) const;
+    std::vector<scorumpower_delegation_api_obj>
+    get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit = 100) const;
+    std::vector<scorumpower_delegation_expiration_api_obj>
+    get_expiring_scorumpower_delegations(const std::string& account, time_point_sec from, uint32_t limit = 100) const;
 
     ///////////////
     // Witnesses //
@@ -367,16 +367,6 @@ public:
                                                                   time_point_sec before_date,
                                                                   uint32_t limit) const;
 
-    /**
-     *  Account operations have sequence numbers from 0 to N where N is the most recent operation. This method
-     *  returns operations in the range [from-limit, from]
-     *
-     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
-     *  @param limit - the maximum number of items that can be queried (0 to 1000], must be less than from
-     */
-    std::map<uint32_t, applied_operation>
-    get_account_history(const std::string& account, uint64_t from, uint32_t limit) const;
-
     ////////////////////////////
     // Handlers - not exposed //
     ////////////////////////////
@@ -474,14 +464,13 @@ FC_API(scorum::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
-   (get_account_history)
    (get_owner_history)
    (get_recovery_request)
    (get_escrow)
    (get_withdraw_routes)
    (get_account_bandwidth)
-   (get_vesting_delegations)
-   (get_expiring_vesting_delegations)
+   (get_scorumpower_delegations)
+   (get_expiring_scorumpower_delegations)
 
    // Authority / validation
    (get_transaction_hex)

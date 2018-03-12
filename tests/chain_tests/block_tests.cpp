@@ -29,7 +29,7 @@
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -809,7 +809,7 @@ init_account_pub_key, SCORUM_MIN_PRODUCER_REWARD.amount );
       generate_block();
 
       std::string op_msg = "Testnet: Hardfork applied";
-      auto itr = db.get_index< account_history_index >().indices().get< by_id >().end();
+      auto itr = db.get_index< account_operations_full_history_index >().indices().get< by_id >().end();
       itr--;
 
       BOOST_REQUIRE( db.has_hardfork( 0 ) );
@@ -821,7 +821,7 @@ op_msg.end() ) );
       BOOST_TEST_MESSAGE( "Testing hardfork is only applied once" );
       generate_block();
 
-      itr = db.get_index< account_history_index >().indices().get< by_id >().end();
+      itr = db.get_index< account_operations_full_history_index >().indices().get< by_id >().end();
       itr--;
 
       BOOST_REQUIRE( db.has_hardfork( 0 ) );

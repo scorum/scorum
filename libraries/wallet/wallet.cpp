@@ -8,6 +8,7 @@
 #include <scorum/wallet/reflect_util.hpp>
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
+#include <scorum/account_history/account_history_api.hpp>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 
@@ -724,18 +725,18 @@ public:
             cli::formatter p;
 
             asset total_scorum(0, SCORUM_SYMBOL);
-            asset total_vest(0, VESTS_SYMBOL);
+            asset total_vest(0, SP_SYMBOL);
 
             FC_ASSERT(p.create_table(16, 20, 10, 20));
 
             for (const auto& a : accounts)
             {
                 total_scorum += a.balance;
-                total_vest += a.vesting_shares;
+                total_vest += a.scorumpower;
                 p.print_cell(a.name);
                 p.print_cell(a.balance);
                 p.print_cell("");
-                p.print_cell(a.vesting_shares);
+                p.print_cell(a.scorumpower);
             }
             p.print_endl();
             p.print_line('-', accounts.empty());
@@ -757,11 +758,12 @@ public:
             p.print_cell("Scorums:");
             p.print_cell(rt.balance);
             p.print_cell("Vests:");
-            p.print_cell(rt.vesting_shares);
+            p.print_cell(rt.scorumpower);
 
             return p.str();
         };
-        m["get_account_history"] = [this](variant result, const fc::variants& a) {
+
+        auto account_history_formatter = [this](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
             cli::formatter p;
@@ -788,6 +790,11 @@ public:
             }
             return p.str();
         };
+
+        m["get_account_history"] = account_history_formatter;
+        m["get_account_scr_to_scr_transfers"] = account_history_formatter;
+        m["get_account_scr_to_sp_transfers"] = account_history_formatter;
+
         m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
 
@@ -894,6 +901,23 @@ public:
         }
     }
 
+    void use_remote_account_history_api()
+    {
+        if (_remote_account_history_api.valid())
+            return;
+
+        try
+        {
+            _remote_account_history_api
+                = _remote_api->get_api_by_name("account_history_api")->as<account_history::account_history_api>();
+        }
+        catch (const fc::exception& e)
+        {
+            elog("Couldn't get account_history API");
+            throw(e);
+        }
+    }
+
     void network_add_nodes(const std::vector<std::string>& nodes)
     {
         use_network_node_api();
@@ -939,6 +963,8 @@ public:
     fc::api<network_broadcast_api> _remote_net_broadcast;
     optional<fc::api<network_node_api>> _remote_net_node;
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
+    optional<fc::api<account_history::account_history_api>> _remote_account_history_api;
+
     uint32_t _tx_expiration_seconds = 30;
 
     flat_map<std::string, operation> _prototype_ops;
@@ -1300,7 +1326,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
  */
 annotated_signed_transaction wallet_api::create_account_with_keys_delegated(const std::string& creator,
                                                                             const asset& scorum_fee,
-                                                                            const asset& delegated_vests,
+                                                                            const asset& delegated_scorumpower,
                                                                             const std::string& newname,
                                                                             const std::string& json_meta,
                                                                             const public_key_type& owner,
@@ -1321,7 +1347,7 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(cons
         op.memo_key = memo;
         op.json_metadata = json_meta;
         op.fee = scorum_fee;
-        op.delegation = delegated_vests;
+        op.delegation = delegated_scorumpower;
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -1697,10 +1723,10 @@ wallet_api::update_account_memo_key(const std::string& account_name, const publi
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::delegate_vesting_shares(const std::string& delegator,
-                                                                 const std::string& delegatee,
-                                                                 const asset& vesting_shares,
-                                                                 bool broadcast)
+annotated_signed_transaction wallet_api::delegate_scorumpower(const std::string& delegator,
+                                                              const std::string& delegatee,
+                                                              const asset& scorumpower,
+                                                              bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -1709,10 +1735,10 @@ annotated_signed_transaction wallet_api::delegate_vesting_shares(const std::stri
     FC_ASSERT(delegator == accounts[0].name, "Delegator account is not right?");
     FC_ASSERT(delegatee == accounts[1].name, "Delegator account is not right?");
 
-    delegate_vesting_shares_operation op;
+    delegate_scorumpower_operation op;
     op.delegator = delegator;
     op.delegatee = delegatee;
-    op.vesting_shares = vesting_shares;
+    op.scorumpower = scorumpower;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -1753,7 +1779,7 @@ annotated_signed_transaction wallet_api::create_account(const std::string& creat
  */
 annotated_signed_transaction wallet_api::create_account_delegated(const std::string& creator,
                                                                   const asset& scorum_fee,
-                                                                  const asset& delegated_vests,
+                                                                  const asset& delegated_scorumpower,
                                                                   const std::string& newname,
                                                                   const std::string& json_meta,
                                                                   bool broadcast)
@@ -1769,7 +1795,7 @@ annotated_signed_transaction wallet_api::create_account_delegated(const std::str
         import_key(active.wif_priv_key);
         import_key(posting.wif_priv_key);
         import_key(memo.wif_priv_key);
-        return create_account_with_keys_delegated(creator, scorum_fee, delegated_vests, newname, json_meta,
+        return create_account_with_keys_delegated(creator, scorum_fee, delegated_scorumpower, newname, json_meta,
                                                   owner.pub_key, active.pub_key, posting.pub_key, memo.pub_key,
                                                   broadcast);
     }
@@ -2051,10 +2077,10 @@ annotated_signed_transaction wallet_api::escrow_release(const std::string& from,
 }
 
 annotated_signed_transaction
-wallet_api::transfer_to_vesting(const std::string& from, const std::string& to, const asset& amount, bool broadcast)
+wallet_api::transfer_to_scorumpower(const std::string& from, const std::string& to, const asset& amount, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    transfer_to_vesting_operation op;
+    transfer_to_scorumpower_operation op;
     op.from = from;
     op.to = (to == from ? "" : to);
     op.amount = amount;
@@ -2067,12 +2093,12 @@ wallet_api::transfer_to_vesting(const std::string& from, const std::string& to, 
 }
 
 annotated_signed_transaction
-wallet_api::withdraw_vesting(const std::string& from, const asset& vesting_shares, bool broadcast)
+wallet_api::withdraw_scorumpower(const std::string& from, const asset& scorumpower, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    withdraw_vesting_operation op;
+    withdraw_scorumpower_operation op;
     op.account = from;
-    op.vesting_shares = vesting_shares;
+    op.scorumpower = scorumpower;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2081,11 +2107,11 @@ wallet_api::withdraw_vesting(const std::string& from, const asset& vesting_share
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::set_withdraw_vesting_route(
+annotated_signed_transaction wallet_api::set_withdraw_scorumpower_route(
     const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    set_withdraw_vesting_route_to_account_operation op;
+    set_withdraw_scorumpower_route_to_account_operation op;
     op.from_account = from;
     op.to_account = to;
     op.percent = percent;
@@ -2160,18 +2186,93 @@ annotated_signed_transaction wallet_api::decline_voting_rights(const std::string
 std::map<uint32_t, applied_operation>
 wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
 {
-    auto result = my->_remote_db->get_account_history(account, from, limit);
-    if (!is_locked())
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
+
+    std::map<uint32_t, applied_operation> result;
+
+    try
     {
-        for (auto& item : result)
+        my->use_remote_account_history_api();
+    }
+    catch (fc::exception& e)
+    {
+        elog("Connected node needs to enable account_by_key_api");
+        return result;
+    }
+
+    result = (*my->_remote_account_history_api)->get_account_history(account, from, limit);
+
+    for (auto& item : result)
+    {
+        if (item.second.op.which() == operation::tag<transfer_operation>::value)
         {
-            if (item.second.op.which() == operation::tag<transfer_operation>::value)
-            {
-                auto& top = item.second.op.get<transfer_operation>();
-                top.memo = decrypt_memo(top.memo);
-            }
+            auto& top = item.second.op.get<transfer_operation>();
+            top.memo = decrypt_memo(top.memo);
         }
     }
+
+    return result;
+}
+
+std::map<uint32_t, applied_operation>
+wallet_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
+
+    std::map<uint32_t, applied_operation> result;
+
+    try
+    {
+        my->use_remote_account_history_api();
+    }
+    catch (fc::exception& e)
+    {
+        elog("Connected node needs to enable account_by_key_api");
+        return result;
+    }
+
+    result = (*my->_remote_account_history_api)->get_account_scr_to_scr_transfers(account, from, limit);
+
+    for (auto& item : result)
+    {
+        if (item.second.op.which() == operation::tag<transfer_operation>::value)
+        {
+            auto& top = item.second.op.get<transfer_operation>();
+            top.memo = decrypt_memo(top.memo);
+        }
+    }
+
+    return result;
+}
+
+std::map<uint32_t, applied_operation>
+wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
+
+    std::map<uint32_t, applied_operation> result;
+
+    try
+    {
+        my->use_remote_account_history_api();
+    }
+    catch (fc::exception& e)
+    {
+        elog("Connected node needs to enable account_by_key_api");
+        return result;
+    }
+
+    result = (*my->_remote_account_history_api)->get_account_scr_to_sp_transfers(account, from, limit);
+
+    for (auto& item : result)
+    {
+        if (item.second.op.which() == operation::tag<transfer_operation>::value)
+        {
+            auto& top = item.second.op.get<transfer_operation>();
+            top.memo = decrypt_memo(top.memo);
+        }
+    }
+
     return result;
 }
 

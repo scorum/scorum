@@ -26,7 +26,7 @@ void founders_initializator_impl::on_apply(initializator_context& ctx)
 
     FC_ASSERT(SCORUM_100_PERCENT <= std::numeric_limits<uint16_t>::max()); // constant value check
 
-    FC_ASSERT(ctx.genesis_state().founders_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().founders_supply.symbol() == SP_SYMBOL);
 
     check_founders(ctx);
 
@@ -115,8 +115,8 @@ void founders_initializator_impl::feed_account(initializator_context& ctx,
     account_service_i& account_service = ctx.services().account_service();
 
     const auto& founder_obj = account_service.get_account(name);
-    account_service.increase_vesting_shares(founder_obj, sp);
-    dgp_service.update([&](dynamic_global_property_object& props) { props.total_vesting_shares += sp; });
+    account_service.increase_scorumpower(founder_obj, sp);
+    dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += sp; });
 }
 }
 }

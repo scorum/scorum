@@ -154,8 +154,8 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
             for (auto& b : comment.beneficiaries)
             {
                 asset benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                asset vest_created = account_service.create_vesting(account_service.get_account(b.account), benefactor_tokens);
-                ctx.push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), vest_created));
+                asset sp_created = account_service.create_scorumpower(account_service.get_account(b.account), benefactor_tokens);
+                ctx.push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), sp_created));
                 total_beneficiary += benefactor_tokens;
             }
 
@@ -172,9 +172,9 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
 
             const auto& author = account_service.get_account(comment.author);
             account_service.increase_balance(author, payout_scorum);
-            asset vest_created = account_service.create_vesting(author, vesting_scorum);
+            asset sp_created = account_service.create_scorumpower(author, vesting_scorum);
 
-            ctx.push_virtual_operation(author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, vest_created));
+            ctx.push_virtual_operation(author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, sp_created));
             ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), claimed_reward));
 
 #ifndef IS_LOW_MEM
@@ -221,7 +221,7 @@ process_comments_cashout::pay_curators(block_task_context& ctx, const comment_ob
                 {
                     unclaimed_rewards -= claim;
                     const auto& voter = account_service.get(vote.voter);
-                    auto reward = account_service.create_vesting(voter, claim);
+                    auto reward = account_service.create_scorumpower(voter, claim);
 
                     ctx.push_virtual_operation(
                         curation_reward_operation(voter.name, reward, comment.author, fc::to_string(comment.permlink)));

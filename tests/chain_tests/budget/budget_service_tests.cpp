@@ -133,7 +133,7 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
     BOOST_CHECK_THROW(budget_service.create_budget(fake, balance, deadline), fc::assert_exception);
 
-    asset wrong_currency_balance(BUDGET_BALANCE_DEFAULT, VESTS_SYMBOL);
+    asset wrong_currency_balance(BUDGET_BALANCE_DEFAULT, SP_SYMBOL);
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, wrong_currency_balance, deadline), fc::assert_exception);
 
@@ -153,7 +153,7 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, balance, invalid_deadline), fc::assert_exception);
 
-    asset too_large_balance(ALICE_ACCOUNT_BUDGET * 2, VESTS_SYMBOL);
+    asset too_large_balance(ALICE_ACCOUNT_BUDGET * 2, SP_SYMBOL);
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, too_large_balance, deadline), fc::assert_exception);
 }

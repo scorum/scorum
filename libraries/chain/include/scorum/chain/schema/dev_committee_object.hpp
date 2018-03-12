@@ -16,7 +16,7 @@ public:
 
     id_type id;
 
-    asset sp_balance = asset(0, VESTS_SYMBOL);
+    asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
 };
 
