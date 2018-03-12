@@ -27,10 +27,10 @@ public:
     template <typename FromObjectType> void do_apply(const FromObjectType& from_object, const asset& scorumpower)
     {
 #ifdef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
-        static time_point_sec lock_until = time_point_sec::from_iso_string("2018-08-01T00:00:00");
+        static const time_point_sec lock_until = time_point_sec::from_iso_string("2018-08-01T00:00:00");
 
         FC_ASSERT(_dprops_service.head_block_time() > lock_until,
-                  "Withdraw scorumpower operation is locked until ${t}.", ("t", block_until));
+                  "Withdraw scorumpower operation is locked until ${t}.", ("t", lock_until));
 #endif // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
         asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
