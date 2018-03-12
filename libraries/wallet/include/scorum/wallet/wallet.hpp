@@ -992,7 +992,7 @@ public:
     annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
 
     /**
-     * Vote for registration committee proposal
+     * Vote for committee proposal
      */
     annotated_signed_transaction
     vote_for_committee_proposal(const std::string& account_to_vote_with, int64_t proposal_id, bool broadcast);
@@ -1000,21 +1000,132 @@ public:
     /**
      * Create proposal for inviting new member in to the registration commmittee
      */
-    annotated_signed_transaction invite_new_committee_member(const std::string& inviter,
-                                                             const std::string& invitee,
-                                                             uint32_t lifetime_sec,
-                                                             bool broadcast);
+    annotated_signed_transaction registration_committee_add_member(const std::string& inviter,
+                                                                   const std::string& invitee,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast);
 
     /**
-     * Create proposal for droping out registration committee member
+     * Create proposal for excluding member from registration committee
      */
-    annotated_signed_transaction dropout_committee_member(const std::string& initiator,
-                                                          const std::string& dropout,
-                                                          uint32_t lifetime_sec,
-                                                          bool broadcast);
+    annotated_signed_transaction registration_committee_exclude_member(const std::string& initiator,
+                                                                       const std::string& dropout,
+                                                                       uint32_t lifetime_sec,
+                                                                       bool broadcast);
 
-    std::set<account_name_type> list_committee(const std::string& lowerbound, uint32_t limit);
+    /**
+     * List registration committee members
+     */
+    std::set<account_name_type> list_registration_committee(const std::string& lowerbound, uint32_t limit);
+
+    /**
+     * Get registration committee
+     */
+    registration_committee_api_obj get_registration_committee();
+
+    /**
+     * List proposals
+     */
     std::vector<proposal_api_obj> list_proposals();
+
+    /**
+     * Change registration committee quorum for adding new member
+     */
+    annotated_signed_transaction registration_committee_change_add_member_quorum(const std::string& creator,
+                                                                                 uint64_t quorum_percent,
+                                                                                 uint32_t lifetime_sec,
+                                                                                 bool broadcast);
+
+    /**
+     * Change registration committee quorum for excluding member
+     */
+    annotated_signed_transaction registration_committee_change_exclude_member_quorum(const std::string& creator,
+                                                                                     uint64_t quorum_percent,
+                                                                                     uint32_t lifetime_sec,
+                                                                                     bool broadcast);
+
+    /**
+     * Change registration committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction registration_committee_change_base_quorum(const std::string& creator,
+                                                                           uint64_t quorum_percent,
+                                                                           uint32_t lifetime_sec,
+                                                                           bool broadcast);
+
+    /**
+     * Create proposal for inviting new member in to the development commmittee
+     */
+    annotated_signed_transaction development_committee_add_member(const std::string& initiator,
+                                                                  const std::string& invitee,
+                                                                  uint32_t lifetime_sec,
+                                                                  bool broadcast);
+
+    /**
+     * Create proposal for excluding member from development committee
+     */
+    annotated_signed_transaction development_committee_exclude_member(const std::string& initiator,
+                                                                      const std::string& dropout,
+                                                                      uint32_t lifetime_sec,
+                                                                      bool broadcast);
+
+    /**
+     * List development committee members
+     */
+    std::set<account_name_type> list_development_committee(const std::string& lowerbound, uint32_t limit);
+
+    /**
+     * Change development committee quorum for adding new member
+     */
+    annotated_signed_transaction development_committee_change_add_member_quorum(const std::string& creator,
+                                                                                uint64_t quorum_percent,
+                                                                                uint32_t lifetime_sec,
+                                                                                bool broadcast);
+
+    /**
+     * Change development committee quorum for excluding member
+     */
+    annotated_signed_transaction development_committee_change_exclude_member_quorum(const std::string& creator,
+                                                                                    uint64_t quorum_percent,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
+
+    /**
+     * Change development committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction development_committee_change_base_quorum(const std::string& creator,
+                                                                          uint64_t quorum_percent,
+                                                                          uint32_t lifetime_sec,
+                                                                          bool broadcast);
+
+    /**
+     * Change development committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction development_committee_change_transfer_quorum(const std::string& creator,
+                                                                              uint64_t quorum_percent,
+                                                                              uint32_t lifetime_sec,
+                                                                              bool broadcast);
+
+    /**
+     * Create proposal for transfering SCR from development pool to account
+     */
+    annotated_signed_transaction development_pool_transfer(const std::string& initiator,
+                                                           const std::string& to_account,
+                                                           asset amount,
+                                                           uint32_t lifetime_sec,
+                                                           bool broadcast);
+
+    /**
+     * Create proposal for set up a vesting withdraw request.
+     */
+    annotated_signed_transaction development_pool_withdraw_vesting(const std::string& initiator,
+                                                                   asset amount,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast);
+
+    /**
+     * Get development committee
+     */
+    development_committee_api_obj get_development_committee();
 
     /** Initiating Atomic Swap transfer from initiator to participant.
      *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout.
@@ -1105,25 +1216,10 @@ public:
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
-    /** Close wallet application
-     *
+    /**
+     * Close wallet application
      */
     void exit();
-
-    annotated_signed_transaction propose_new_invite_quorum(const std::string& creator,
-                                                           uint64_t quorum_percent,
-                                                           uint32_t lifetime_sec,
-                                                           bool broadcast);
-
-    annotated_signed_transaction propose_new_dropout_quorum(const std::string& creator,
-                                                            uint64_t quorum_percent,
-                                                            uint32_t lifetime_sec,
-                                                            bool broadcast);
-
-    annotated_signed_transaction propose_new_quorum_for_quorum_change(const std::string& creator,
-                                                                      uint64_t quorum_percent,
-                                                                      uint32_t lifetime_sec,
-                                                                      bool broadcast);
 
 public:
     fc::signal<void(bool)> lock_changed;
@@ -1175,8 +1271,6 @@ FC_API( scorum::wallet::wallet_api,
         (list_my_accounts)
         (list_accounts)
         (list_witnesses)
-        (list_committee)
-        (list_proposals)
         (get_witness)
         (get_account)
         (get_account_balance)
@@ -1229,12 +1323,29 @@ FC_API( scorum::wallet::wallet_api,
         (decline_voting_rights)
         (create_budget)
         (close_budget)
+
+        // Registration committee api
         (vote_for_committee_proposal)
-        (invite_new_committee_member)
-        (dropout_committee_member)
-        (propose_new_invite_quorum)
-        (propose_new_dropout_quorum)
-        (propose_new_quorum_for_quorum_change)
+        (registration_committee_add_member)
+        (registration_committee_exclude_member)
+        (list_registration_committee)
+        (registration_committee_change_add_member_quorum)
+        (registration_committee_change_exclude_member_quorum)
+        (registration_committee_change_base_quorum)
+        (get_registration_committee)
+
+        (list_proposals)
+
+        // Development committee api
+        (development_committee_add_member)
+        (development_committee_exclude_member)
+        (list_development_committee)
+        (development_committee_change_add_member_quorum)
+        (development_committee_change_exclude_member_quorum)
+        (development_committee_change_base_quorum)
+        (get_development_committee)
+        (development_pool_transfer)
+        (development_pool_withdraw_vesting)
 
         //Atomic Swap API
         (atomicswap_initiate)

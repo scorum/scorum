@@ -60,6 +60,7 @@
   "registration_supply": "10000.000000000 SCR",
   "registration_bonus": "0.000000100 SCR",
   "registration_committee": ["alice", "bob"],
+  "development_committee": ["alice", "bob"],
 
   "registration_schedule": [{
     "stage": 1,
