@@ -25,7 +25,7 @@ public:
         account_committee_op.json_metadata = "";
 
         // Only "initdelegate" has money. He gift some to creator
-        transfer_to_vest("initdelegate", creator_name, 100);
+        transfer_to_scorumpower("initdelegate", creator_name, 100);
     }
 
     static committee_private_keys_type committee_private_keys;
@@ -105,7 +105,7 @@ SCORUM_TEST_CASE(create_account_by_committee_check)
 
     const account_object& account = account_service.get_account(new_account_name);
 
-    BOOST_CHECK_GT(account.vesting_shares, asset(0, VESTS_SYMBOL));
+    BOOST_CHECK_GT(account.scorumpower, asset(0, SP_SYMBOL));
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 }

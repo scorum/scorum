@@ -13,6 +13,8 @@ void dev_committee_initializator_impl::on_apply(initializator_context& ctx)
     auto& committee_service = ctx.services().development_committee_service();
     auto& acount_service = ctx.services().account_service();
 
+    FC_ASSERT(ctx.genesis_state().development_committee.size(), "Development committee could not be empty.");
+
     for (const auto& member : ctx.genesis_state().development_committee)
     {
         acount_service.check_account_existence(member);

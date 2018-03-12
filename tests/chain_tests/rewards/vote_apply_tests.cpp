@@ -160,12 +160,12 @@ SCORUM_TEST_CASE(voting_with_zerro_weight_check)
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(voting_with_dust_vesting_check)
+SCORUM_TEST_CASE(voting_with_dust_sp_check)
 {
     comment("alice");
 
     vote_operation op;
-    op.voter = "alice"; // Alice has not enough vests to vote
+    op.voter = "alice"; // Alice has not enough scorum power to vote
     op.author = "alice";
     op.permlink = "foo";
     op.weight = (int16_t)100;
@@ -187,7 +187,7 @@ SCORUM_TEST_CASE(success_vote_for_100_weight_check)
     auto old_voting_power = bob_vested.voting_power;
 
     vote_operation op;
-    op.voter = "bob"; // bob has enough vests to vote
+    op.voter = "bob"; // bob has enough scorum power to vote
     op.author = "alice";
     op.permlink = "foo";
     op.weight = (int16_t)100;
@@ -207,15 +207,15 @@ SCORUM_TEST_CASE(success_vote_for_100_weight_check)
     //=================================================================================================
     // clang-format off
     //
-    //           vesting_shares
+    //           scorumpower
     // rshares = -------------- * used_power =
     //               S100
     //
-    //    vesting_shares                            S100 * elapsed_seconds             weight            1
+    //    scorumpower                            S100 * elapsed_seconds             weight            1
     // = -------------- * (( old_voting_power + -------------------------------- ) * ------- + M - 1) * --- =@
     //        S100                               SCORUM_VOTE_REGENERATION_SECONDS      S100              M
     //
-    //    vesting_shares                                 1
+    //    scorumpower                                 1
     // =@ -------------- * (old_voting_power + M - 1) * ---
     //         S100                                      M
     //
@@ -252,8 +252,8 @@ SCORUM_TEST_CASE(success_vote_for_100_weight_check)
 
     //------------------------------------------------------------Bob comment vote changes
 
-    share_type rshares = (uint128_t(bob_vested.vesting_shares.amount.value)
-                          * (old_voting_power - bob_vested.voting_power) / SCORUM_100_PERCENT)
+    share_type rshares = (uint128_t(bob_vested.scorumpower.amount.value) * (old_voting_power - bob_vested.voting_power)
+                          / SCORUM_100_PERCENT)
                              .to_uint64();
 
     BOOST_REQUIRE_EQUAL(comment_vote.rshares, rshares);
@@ -360,7 +360,7 @@ SCORUM_TEST_CASE(reduced_power_for_50_weight_check)
     BOOST_REQUIRE_EQUAL(alice_vested.voting_power,
                         old_voting_power - ((old_voting_power + max_vote - 1) / (2 * max_vote)));
 
-    share_type rshares = (uint128_t(alice_vested.vesting_shares.amount.value)
+    share_type rshares = (uint128_t(alice_vested.scorumpower.amount.value)
                           * (old_voting_power - alice_vested.voting_power) / SCORUM_100_PERCENT)
                              .to_uint64();
 
@@ -409,7 +409,7 @@ SCORUM_TEST_CASE(restore_power_check)
     BOOST_REQUIRE_EQUAL(alice_vested.voting_power, SCORUM_100_PERCENT - used_power);
 
     share_type rshares
-        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+        = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
     BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + rshares);
 
@@ -433,7 +433,7 @@ SCORUM_TEST_CASE(negative_vote_check)
 
     vote("sam", "bob", -50);
 
-    share_type rshares = (uint128_t(sam_vested.vesting_shares.amount.value)
+    share_type rshares = (uint128_t(sam_vested.scorumpower.amount.value)
                           * (SCORUM_100_PERCENT - sam_vested.voting_power) / SCORUM_100_PERCENT)
                              .to_uint64();
 
@@ -471,7 +471,7 @@ SCORUM_TEST_CASE(nested_comment_vote_check)
 
     vote("dave", "sam", 100);
 
-    share_type rshares = (uint128_t(dave_vested.vesting_shares.amount.value)
+    share_type rshares = (uint128_t(dave_vested.scorumpower.amount.value)
                           * (SCORUM_100_PERCENT - dave_vested.voting_power) / SCORUM_100_PERCENT)
                              .to_uint64();
 
@@ -498,17 +498,17 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_different_voters_check)
     //=================================================================================================
     // clang-format off
     //
-    //           vesting_shares
+    //           scorumpower
     // rshares = -------------- * used_power =
     //               S100
     //
-    //    vesting_shares                            S100 * elapsed_seconds             weight            1
+    //    scorumpower                            S100 * elapsed_seconds             weight            1
     // = -------------- * (( old_voting_power + -------------------------------- ) * ------- + M - 1) * --- =@
     //        S100                               SCORUM_VOTE_REGENERATION_SECONDS      S100              M
     //
     // For weight = S25
     //
-    //    vesting_shares                       S25              1
+    //    scorumpower                       S25              1
     // =@ -------------- * (old_voting_power * ---  + M - 1) * ---
     //         S100                           S100              M
     //
@@ -519,8 +519,7 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_different_voters_check)
         = ((SCORUM_1_PERCENT * alice_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT) + max_vote - 1)
         / max_vote;
     auto alice_voting_power = alice_vested.voting_power - used_power;
-    auto new_rshares
-        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+    auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
     vote("alice", "bob", alice_vote_weight);
 
@@ -560,8 +559,7 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_same_voters_check)
                        + max_vote - 1)
         / max_vote;
     auto alice_voting_power = alice_vested.voting_power - used_power;
-    auto new_rshares
-        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+    auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
     vote("alice", "bob", alice_second_vote_weight);
 
@@ -601,8 +599,7 @@ SCORUM_TEST_CASE(decreasing_rshares_for_2_same_voters_check)
                        + max_vote - 1)
         / max_vote;
     auto alice_voting_power = alice_vested.voting_power - used_power;
-    auto new_rshares
-        = (uint128_t(alice_vested.vesting_shares.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+    auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
     vote("alice", "bob", alice_second_vote_weight);
 

@@ -160,7 +160,7 @@ void genesis_mapper::update(const std::string& name,
     if (!recover_account.empty())
         scorum::protocol::validate_account_name(recover_account);
     FC_ASSERT(scr_amount.symbol() == SCORUM_SYMBOL, "Invalid token symbol.");
-    FC_ASSERT(sp_amount.symbol() == VESTS_SYMBOL, "Invalid token symbol.");
+    FC_ASSERT(sp_amount.symbol() == SP_SYMBOL, "Invalid token symbol.");
 
     update(account_type{ name, recover_account, pubk, scr_amount });
 

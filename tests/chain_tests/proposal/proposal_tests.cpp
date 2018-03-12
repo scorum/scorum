@@ -13,6 +13,8 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/schema/proposal_object.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
 
 #include "actor.hpp"
 #include "genesis.hpp"
@@ -46,7 +48,7 @@ public:
     using committee_member_object = CommitteeMemberObject;
     using dbs_committee = DbsCommittee;
 
-    using committee_members = typename dbs_committee::member_object_cref_type;
+    using committee_members = typename dbs_committee::committee_members_cref_type;
 
     class actor_actions
     {
@@ -57,14 +59,14 @@ public:
         {
         }
 
-        void transfer_to_vest(const Actor& a, asset amount)
+        void transfer_to_scorumpower(const Actor& a, asset amount)
         {
-            f.chain().transfer_to_vest(actor.name, a.name, amount);
+            f.chain().transfer_to_scorumpower(actor.name, a.name, amount);
         }
 
         void give_power(const Actor& a)
         {
-            transfer_to_vest(a, ASSET_SCR(100));
+            transfer_to_scorumpower(a, ASSET_SCR(100));
         }
 
         proposal_id_type create_proposal(const protocol::proposal_operation& operation)
@@ -254,6 +256,8 @@ public:
     void run_test()
     {
         Actor initdelegate(TEST_INIT_DELEGATE_NAME);
+        initdelegate.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+
         Actor alice("alice");
         Actor bob("bob");
         Actor jim("jim");
@@ -263,14 +267,17 @@ public:
 
         static const asset registration_bonus = ASSET_SCR(100);
         registration_stage single_stage{ 1u, 1u, 100u };
-        genesis = database_integration_fixture::default_genesis_state()
-                  .accounts(bob, jim, joe, hue, liz)
-                .registration_supply(registration_bonus * 100)
-                .registration_bonus(registration_bonus)
-                  .registration_schedule(single_stage)
-                  .committee(alice)
-                  .dev_committee(alice)
-                  .generate();
+        genesis = Genesis::create()
+                      .accounts_supply(TEST_ACCOUNTS_INITIAL_SUPPLY)
+                      .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+                      .witnesses(initdelegate)
+                      .accounts(bob, jim, joe, hue, liz)
+                      .registration_supply(registration_bonus * 100)
+                      .registration_bonus(registration_bonus)
+                      .registration_schedule(single_stage)
+                      .committee(alice)
+                      .dev_committee(alice)
+                      .generate();
 
         chain().generate_block();
 
@@ -286,6 +293,8 @@ public:
         auto hue_invitation = actor(alice).invite_in_to_committee(hue);
         auto liz_invitation = actor(alice).invite_in_to_committee(liz);
         auto bob_invitation = actor(alice).invite_in_to_committee(bob);
+
+        BOOST_CHECK_EQUAL(1u, get_committee_members().size());
 
         {
             fc::time_point_sec expected_expiration

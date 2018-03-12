@@ -11,7 +11,7 @@
 namespace scorum {
 namespace chain {
 
-class data_service_factory_i;
+struct data_service_factory_i;
 
 template <typename EvaluatorType>
 using proposal_operation_evaluator
@@ -84,6 +84,10 @@ struct proposal_change_quorum_evaluator
         else if (o.committee_quorum == base_quorum)
         {
             committee_service.change_base_quorum(o.quorum);
+        }
+        else if (o.committee_quorum == transfer_quorum)
+        {
+            committee_service.change_transfer_quorum(o.quorum);
         }
         else
         {

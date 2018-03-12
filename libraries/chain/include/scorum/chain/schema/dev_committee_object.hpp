@@ -16,9 +16,10 @@ public:
 
     id_type id;
 
-    asset sp_balance = asset(0, VESTS_SYMBOL);
+    asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
 
+    protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
@@ -27,8 +28,6 @@ public:
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>
 {
 public:
-    typedef std::reference_wrapper<const dev_committee_member_object> cref_type;
-
     CHAINBASE_DEFAULT_CONSTRUCTOR(dev_committee_member_object)
 
     id_type id;
@@ -63,6 +62,7 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (id)
            (sp_balance)
            (scr_balance)
+           (transfer_quorum)
            (invite_quorum)
            (dropout_quorum)
            (change_quorum))

@@ -14,7 +14,7 @@ public:
     ActorActions(chain_type& chain, const Actor& a);
 
     void create_account(const Actor& a);
-    void transfer_to_vest(const Actor& a, asset amount);
+    void transfer_to_scorumpower(const Actor& a, asset amount);
     void transfer(const Actor& a, asset amount);
 
     void give_scr(const Actor& a, int amount);

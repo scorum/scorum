@@ -73,7 +73,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
             db_plugin->debug_update(
                 [&](database&) {
                     const account_object& account = create_new_by_committee();
-                    allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
+                    allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
                 },
                 default_skip);
 
@@ -113,7 +113,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
             db_plugin->debug_update(
                 [&](database&) {
                     const account_object& account = create_new_by_committee();
-                    allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
+                    allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
                 },
                 default_skip);
 
@@ -132,7 +132,7 @@ SCORUM_TEST_CASE(allocate_limits_check)
 
     auto fn = [&](uint64_t) -> asset {
         const account_object& account = create_new_by_committee();
-        asset allocated_bonus(account.vesting_shares.amount, SCORUM_SYMBOL);
+        asset allocated_bonus(account.scorumpower.amount, SCORUM_SYMBOL);
         return allocated_bonus;
     };
 
@@ -155,7 +155,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
 
     auto fn = [&](uint64_t) -> asset {
         const account_object& account = create_new_by_committee();
-        asset allocated_bonus(account.vesting_shares.amount, SCORUM_SYMBOL);
+        asset allocated_bonus(account.scorumpower.amount, SCORUM_SYMBOL);
         return allocated_bonus;
     };
 
@@ -221,7 +221,7 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
         db_plugin->debug_update(
             [&](database&) {
                 const account_object& account = create_new_by_committee();
-                allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
+                allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
             },
             default_skip);
         return allocated_bonus;
@@ -250,7 +250,7 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
         db_plugin->debug_update(
             [&](database&) {
                 const account_object& account = create_new_by_committee();
-                allocated_bonus = asset(account.vesting_shares.amount, SCORUM_SYMBOL);
+                allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
             },
             default_skip);
         return allocated_bonus;

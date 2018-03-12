@@ -388,14 +388,14 @@ public:
      *
      *  @param creator The account creating the new account
      *  @param scorum_fee The amount of the fee to be paid with SCR
-     *  @param delegated_vests The amount of the fee to be paid with delegation
+     *  @param delegated_scorumpower The amount of the fee to be paid with delegation
      *  @param new_account_name The name of the new account
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_account_delegated(const std::string& creator,
                                                           const asset& scorum_fee,
-                                                          const asset& delegated_vests,
+                                                          const asset& delegated_scorumpower,
                                                           const std::string& new_account_name,
                                                           const std::string& json_meta,
                                                           bool broadcast);
@@ -410,7 +410,7 @@ public:
      *
      * @param creator The account creating the new account
      * @param scorum_fee The amount of the fee to be paid with SCR
-     * @param delegated_vests The amount of the fee to be paid with delegation
+     * @param delegated_scorumpower The amount of the fee to be paid with delegation
      * @param newname The name of the new account
      * @param json_meta JSON Metadata associated with the new account
      * @param owner public owner key of the new account
@@ -421,7 +421,7 @@ public:
      */
     annotated_signed_transaction create_account_with_keys_delegated(const std::string& creator,
                                                                     const asset& scorum_fee,
-                                                                    const asset& delegated_vests,
+                                                                    const asset& delegated_scorumpower,
                                                                     const std::string& newname,
                                                                     const std::string& json_meta,
                                                                     const public_key_type& owner,
@@ -550,13 +550,13 @@ public:
      *
      * @param delegator The name of the account delegating SP
      * @param delegatee The name of the account receiving SP
-     * @param vesting_shares The amount of SP to delegate
+     * @param scorumpower The amount of SP to delegate
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction delegate_vesting_shares(const std::string& delegator,
-                                                         const std::string& delegatee,
-                                                         const asset& vesting_shares,
-                                                         bool broadcast);
+    annotated_signed_transaction delegate_scorumpower(const std::string& delegator,
+                                                      const std::string& delegatee,
+                                                      const asset& scorumpower,
+                                                      bool broadcast);
 
     /**
      *  This method is used to convert a JSON transaction to its transaction ID.
@@ -624,7 +624,7 @@ public:
      * Vote for a witness to become a block producer. By default an account has not voted
      * positively or negatively for a witness. The account can either vote for with positively
      * votes or against with negative votes. The vote will remain until updated with another
-     * vote. Vote strength is determined by the accounts vesting shares.
+     * vote. Vote strength is determined by the accounts scorumpower.
      *
      * @param account_to_vote_with The account voting for a witness
      * @param witness_to_vote_for The witness that is being voted for
@@ -735,31 +735,33 @@ public:
                                                 bool broadcast = false);
 
     /**
-     * Transfer SCR into a vesting fund represented by vesting shares (SP). SP are required to vesting
+     * Transfer SCR into a scorumpower fund represented by scorumpower (SP). SP are required to vesting
      * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
      * SP are protected against dilution up until 90% of SCR is vesting.
      *
      * @param from The account the SCR is coming from
      * @param to The account getting the SP
-     * @param amount The amount of SCR to vest i.e. "100.000000000 SCR"
+     * @param amount The amount of SCR to scorum power i.e. "100.000000000 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction
-    transfer_to_vesting(const std::string& from, const std::string& to, const asset& amount, bool broadcast = false);
+    annotated_signed_transaction transfer_to_scorumpower(const std::string& from,
+                                                         const std::string& to,
+                                                         const asset& amount,
+                                                         bool broadcast = false);
 
     /**
      * Set up a vesting withdraw request. The request is fulfilled once a week over the next 13 weeks.
      *
      * @param from The account the SP are withdrawn from
-     * @param vesting_shares The amount of SP to withdraw over the next 13 weeks. Each week (amount/13) shares are
+     * @param scorumpower The amount of SP to withdraw over the next 13 weeks. Each week (amount/13) shares are
      *    withdrawn and deposited back as SCR. i.e. "10.000000000 SP"
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction
-    withdraw_vesting(const std::string& from, const asset& vesting_shares, bool broadcast = false);
+    withdraw_scorumpower(const std::string& from, const asset& scorumpower, bool broadcast = false);
 
     /**
-     * Set up a vesting withdraw route. When vesting shares are withdrawn, they will be routed to these accounts
+     * Set up a vesting withdraw route. When scorumpower are withdrawn, they will be routed to these accounts
      * based on the specified weights.
      *
      * @param from The account the SP are withdrawn from.
@@ -770,7 +772,7 @@ public:
      *    them as SCR.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction set_withdraw_vesting_route(
+    annotated_signed_transaction set_withdraw_scorumpower_route(
         const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast = false);
 
     /** Signs a transaction.
@@ -924,6 +926,12 @@ public:
      */
     std::map<uint32_t, applied_operation>
     get_account_history(const std::string& account, uint32_t from, uint32_t limit);
+
+    std::map<uint32_t, applied_operation>
+    get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit);
+
+    std::map<uint32_t, applied_operation>
+    get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit);
 
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const;
 
@@ -1089,12 +1097,26 @@ public:
                                                                           uint32_t lifetime_sec,
                                                                           bool broadcast);
 
+    /**
+     * Change development committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction development_committee_change_transfer_quorum(const std::string& creator,
+                                                                              uint64_t quorum_percent,
+                                                                              uint32_t lifetime_sec,
+                                                                              bool broadcast);
+
+    /**
+     * Create proposal for transfering SCR from development pool to account
+     */
     annotated_signed_transaction development_pool_transfer(const std::string& initiator,
                                                            const std::string& to_account,
                                                            asset amount,
                                                            uint32_t lifetime_sec,
                                                            bool broadcast);
 
+    /**
+     * Create proposal for set up a vesting withdraw request.
+     */
     annotated_signed_transaction development_pool_withdraw_vesting(const std::string& initiator,
                                                                    asset amount,
                                                                    uint32_t lifetime_sec,
@@ -1255,6 +1277,8 @@ FC_API( scorum::wallet::wallet_api,
         (get_block)
         (get_ops_in_block)
         (get_account_history)
+        (get_account_scr_to_scr_transfers)
+        (get_account_scr_to_sp_transfers)
         (get_state)
         (get_withdraw_routes)
         (list_my_budgets)
@@ -1273,7 +1297,7 @@ FC_API( scorum::wallet::wallet_api,
         (update_account_auth_threshold)
         (update_account_meta)
         (update_account_memo_key)
-        (delegate_vesting_shares)
+        (delegate_scorumpower)
         (update_witness)
         (set_voting_proxy)
         (vote_for_witness)
@@ -1282,9 +1306,9 @@ FC_API( scorum::wallet::wallet_api,
         (escrow_approve)
         (escrow_dispute)
         (escrow_release)
-        (transfer_to_vesting)
-        (withdraw_vesting)
-        (set_withdraw_vesting_route)
+        (transfer_to_scorumpower)
+        (withdraw_scorumpower)
+        (set_withdraw_scorumpower_route)
         (post_comment)
         (vote)
         (set_transaction_expiration)

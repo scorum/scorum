@@ -13,8 +13,8 @@ dbs_development_committee::dbs_development_committee(database& db)
 void dbs_development_committee::add_member(const account_name_type& account_name)
 {
     FC_ASSERT(!is_exists(account_name), "Member already exists.");
-    FC_ASSERT(get_members_count() <= SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS,
-              "Can't add member. Limit ${1} is reached.", ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
+    FC_ASSERT(get_members_count() <= SCORUM_DEVELOPMENT_COMMITTEE_MAX_MEMBERS_LIMIT,
+              "Can't add member. Limit ${1} is reached.", ("1", SCORUM_DEVELOPMENT_COMMITTEE_MAX_MEMBERS_LIMIT));
 
     db_impl().create<dev_committee_member_object>(
         [&](dev_committee_member_object& member) { member.account = account_name; });
@@ -42,6 +42,11 @@ void dbs_development_committee::change_base_quorum(const percent_type quorum)
     db_impl().modify(get(), [&](dev_committee_object& m) { m.change_quorum = quorum; });
 }
 
+void dbs_development_committee::change_transfer_quorum(const percent_type quorum)
+{
+    db_impl().modify(get(), [&](dev_committee_object& m) { m.transfer_quorum = quorum; });
+}
+
 percent_type dbs_development_committee::get_add_member_quorum()
 {
     return get().invite_quorum;
@@ -57,6 +62,11 @@ percent_type dbs_development_committee::get_base_quorum()
     return get().change_quorum;
 }
 
+percent_type dbs_development_committee::get_transfer_quorum()
+{
+    return get().transfer_quorum;
+}
+
 bool dbs_development_committee::is_exists(const account_name_type& account_name) const
 {
     const auto& idx = db_impl().get_index<dev_committee_member_index>().indices().get<by_account_name>();
@@ -68,9 +78,9 @@ size_t dbs_development_committee::get_members_count() const
     return db_impl().get_index<dev_committee_member_index>().indices().size();
 }
 
-development_committee_service_i::member_object_cref_type dbs_development_committee::get_committee() const
+development_committee_service_i::committee_members_cref_type dbs_development_committee::get_committee() const
 {
-    member_object_cref_type ret;
+    committee_members_cref_type ret;
 
     const auto& idx = db_impl().get_index<dev_committee_member_index>().indices().get<by_id>();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)

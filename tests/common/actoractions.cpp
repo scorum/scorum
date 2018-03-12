@@ -13,9 +13,9 @@ void ActorActions::create_account(const Actor& a)
                           a.post_key.get_public_key(), "");
 }
 
-void ActorActions::transfer_to_vest(const Actor& a, asset amount)
+void ActorActions::transfer_to_scorumpower(const Actor& a, asset amount)
 {
-    _chain.transfer_to_vest(_actor.name, a.name, amount);
+    _chain.transfer_to_scorumpower(_actor.name, a.name, amount);
 }
 
 void ActorActions::transfer(const Actor& a, asset amount)
