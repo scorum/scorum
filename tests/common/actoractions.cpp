@@ -30,5 +30,5 @@ void ActorActions::give_scr(const Actor& a, int amount)
 
 void ActorActions::give_sp(const Actor& a, int amount)
 {
-    transfer_to_vest(a, ASSET_SP(amount));
+    transfer_to_scorumpower(a, ASSET_SP(amount));
 }

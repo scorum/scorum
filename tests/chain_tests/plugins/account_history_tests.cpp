@@ -17,7 +17,7 @@ using operation_map_type = std::map<uint32_t, app::applied_operation>;
 
 namespace account_stat {
 
-struct history_database_fixture : public database_trx_integration_fixture
+struct history_database_fixture : public database_fixture::database_trx_integration_fixture
 {
     std::shared_ptr<scorum::account_history::account_history_plugin> _plugin;
 
@@ -64,7 +64,7 @@ SCORUM_TEST_CASE(check_account_nontransfer_operation_only_in_full_history_test)
 {
     const char* buratino = "buratino";
 
-    account_create(buratino, init_account_pub_key);
+    account_create(buratino, initdelegate.public_key);
 
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<account_history::account_history_object>(buratino);
@@ -84,7 +84,7 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_scr_h
 {
     const char* buratino = "buratino";
 
-    account_create(buratino, init_account_pub_key);
+    account_create(buratino, initdelegate.public_key);
 
     fund(buratino, SCORUM_MIN_PRODUCER_REWARD);
 
@@ -110,7 +110,7 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_sp_hi
 {
     const char* buratino = "buratino";
 
-    account_create(buratino, init_account_pub_key);
+    account_create(buratino, initdelegate.public_key);
 
     vest(buratino, SCORUM_MIN_PRODUCER_REWARD);
 
@@ -137,8 +137,8 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
     const char* buratino = "buratino";
     const char* maugli = "maugli";
 
-    account_create(buratino, init_account_pub_key);
-    account_create(maugli, init_account_pub_key);
+    account_create(buratino, initdelegate.public_key);
+    account_create(maugli, initdelegate.public_key);
 
     fund(buratino, SCORUM_MIN_PRODUCER_REWARD);
 
@@ -182,8 +182,8 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
     const char* buratino = "buratino";
     const char* maugli = "maugli";
 
-    account_create(buratino, init_account_pub_key);
-    account_create(maugli, init_account_pub_key);
+    account_create(buratino, initdelegate.public_key);
+    account_create(maugli, initdelegate.public_key);
 
     fund(buratino, SCORUM_MIN_PRODUCER_REWARD);
 

@@ -172,8 +172,8 @@ void database_trx_integration_fixture::transfer(const std::string& from, const s
 }
 
 void database_trx_integration_fixture::transfer_to_scorumpower(const std::string& from,
-                                                        const std::string& to,
-                                                        const asset& amount)
+                                                               const std::string& to,
+                                                               const asset& amount)
 {
     try
     {
@@ -192,8 +192,8 @@ void database_trx_integration_fixture::transfer_to_scorumpower(const std::string
 }
 
 void database_trx_integration_fixture::transfer_to_scorumpower(const std::string& from,
-                                                        const std::string& to,
-                                                        const share_type& amount)
+                                                               const std::string& to,
+                                                               const share_type& amount)
 {
     transfer_to_scorumpower(from, to, asset(amount, SCORUM_SYMBOL));
 }
@@ -240,9 +240,10 @@ void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::e
 
 std::vector<operation> database_trx_integration_fixture::get_last_operations(uint32_t num_ops)
 {
+    using scorum::account_history::account_operations_full_history_index;
+
     std::vector<operation> ops;
-    const auto& acc_hist_idx
-        = db.get_index<account_history::account_operations_full_history_index>().indices().get<by_id>();
+    const auto& acc_hist_idx = db.get_index<account_operations_full_history_index>().indices().get<by_id>();
     auto itr = acc_hist_idx.end();
 
     while (itr != acc_hist_idx.begin() && ops.size() < num_ops)
