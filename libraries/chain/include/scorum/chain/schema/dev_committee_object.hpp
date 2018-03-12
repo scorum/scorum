@@ -28,8 +28,6 @@ public:
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>
 {
 public:
-    typedef std::reference_wrapper<const dev_committee_member_object> cref_type;
-
     CHAINBASE_DEFAULT_CONSTRUCTOR(dev_committee_member_object)
 
     id_type id;
