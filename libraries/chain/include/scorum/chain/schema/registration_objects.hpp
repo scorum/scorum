@@ -48,8 +48,6 @@ class registration_committee_member_object
     : public object<registration_committee_member_object_type, registration_committee_member_object>
 {
 public:
-    typedef std::reference_wrapper<const registration_committee_member_object> cref_type;
-
     CHAINBASE_DEFAULT_CONSTRUCTOR(registration_committee_member_object)
 
     id_type id;
@@ -101,7 +99,11 @@ FC_REFLECT(scorum::chain::registration_pool_object,
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object, scorum::chain::registration_pool_index)
 
 FC_REFLECT(scorum::chain::registration_committee_member_object,
-           (id)(account)(already_allocated_cash)(last_allocated_block)(per_n_block_remain))
+           (id)
+           (account)
+           (already_allocated_cash)
+           (last_allocated_block)
+           (per_n_block_remain))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)

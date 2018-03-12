@@ -23,7 +23,7 @@ struct withdraw_scorumpower_route_from_dev_pool_to_dev_pool_tests_fixture : publ
     {
         pool_to_withdraw_sp = ASSET_SP(1e+4) * SCORUM_VESTING_WITHDRAW_INTERVALS;
         pool_to_withdraw_scr = asset(pool_to_withdraw_sp.amount, SCORUM_SYMBOL);
-        create_dev_pool(pool_to_withdraw_sp);
+        set_dev_pool_balance(pool_to_withdraw_sp);
     }
 
     asset pool_to_withdraw_sp;

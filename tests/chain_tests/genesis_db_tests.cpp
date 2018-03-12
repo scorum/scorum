@@ -72,8 +72,13 @@ struct genesis_base_test_fixture : public scorum::chain::database_integration_fi
         initdelegate.scorum(as);
 
         asset rw = ASSET_SCR(1000e+9);
-        genesis
-            = Genesis::create().accounts_supply(as).rewards_supply(rw).accounts(initdelegate).witnesses(initdelegate);
+
+        genesis = Genesis::create()
+                      .accounts_supply(as)
+                      .rewards_supply(rw)
+                      .accounts(initdelegate)
+                      .witnesses(initdelegate)
+                      .dev_committee(initdelegate);
     }
 
     scorum::chain::account_service_i& account_service;
@@ -285,8 +290,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_REQUIRE(dev_pool_service.is_exists());
-
     BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
 }
 
@@ -297,8 +300,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
     genesis.development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
-
-    BOOST_REQUIRE(dev_pool_service.is_exists());
 
     BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);
 }
@@ -311,8 +312,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
     genesis.development_sp_supply(dev_sp).development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
-
-    BOOST_REQUIRE(dev_pool_service.is_exists());
 
     BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
     BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);

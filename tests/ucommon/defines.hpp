@@ -71,6 +71,7 @@ template <class T> T make_test_index_object()
     try                                                                                                                \
     {                                                                                                                  \
         test_code;                                                                                                     \
+        BOOST_FAIL("exception wasn't thrown out.");                                                                    \
     }                                                                                                                  \
     catch (exception & e)                                                                                              \
     {                                                                                                                  \
