@@ -64,6 +64,7 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (id)
            (sp_balance)
            (scr_balance)
+           (transfer_quorum)
            (invite_quorum)
            (dropout_quorum)
            (change_quorum))
