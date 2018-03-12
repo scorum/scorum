@@ -8,6 +8,8 @@
 
 #include "withdraw_scorumpower_check_common.hpp"
 
+#include <scorum/chain/services/dynamic_global_property.hpp>
+
 using namespace scorum::protocol;
 using namespace scorum::chain;
 
@@ -48,9 +50,20 @@ struct withdraw_scorumpower_route_from_account_to_account_tests_fixture : public
 };
 
 #ifdef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
-BOOST_FIXTURE_TEST_CASE(if_withdraw_locked_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
+BOOST_FIXTURE_TEST_CASE(withdraw_is_locked_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
 {
     SCORUM_REQUIRE_THROW(start_withdraw(), fc::assert_exception);
+}
+BOOST_FIXTURE_TEST_CASE(withdraw_will_be_unlocked_check,
+                        withdraw_scorumpower_route_from_account_to_account_tests_fixture)
+{
+    fc::time_point_sec time_until
+        = fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(WITHDRAW_SCORUMPOWER_LOCK_UNTIL_DATE));
+    generate_blocks(time_until + SCORUM_BLOCK_INTERVAL, true);
+    dynamic_global_property_service_i& _dprops_service = db.dynamic_global_property_service();
+    BOOST_REQUIRE_LT(time_until.sec_since_epoch(), _dprops_service.head_block_time().sec_since_epoch());
+
+    BOOST_REQUIRE_NO_THROW(start_withdraw());
 }
 #else // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)

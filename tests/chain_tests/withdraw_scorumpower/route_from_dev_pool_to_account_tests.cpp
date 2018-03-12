@@ -31,13 +31,13 @@ struct withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture : publi
         generate_block();
     }
 
-    void start_withdraw(bool reqire_throw = false)
+    void start_withdraw(bool require_throw = false)
     {
         db_plugin->debug_update(
             [&](database&) {
                 withdraw_scorumpower_dev_pool_task create_withdraw;
                 withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
-                if (reqire_throw)
+                if (require_throw)
                 {
                     SCORUM_REQUIRE_THROW(create_withdraw.apply(ctx), fc::assert_exception);
                 }
@@ -54,7 +54,7 @@ struct withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture : publi
 };
 
 #ifdef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
-BOOST_FIXTURE_TEST_CASE(if_withdraw_locked_check, withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture)
+BOOST_FIXTURE_TEST_CASE(withdraw_is_locked_check, withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture)
 {
     start_withdraw(true);
 }
