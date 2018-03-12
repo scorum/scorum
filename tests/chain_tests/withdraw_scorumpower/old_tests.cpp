@@ -12,8 +12,7 @@
 
 #include <scorum/account_history/account_history_plugin.hpp>
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 struct withdraw_scorumpower_tests_fixture : public database_default_integration_fixture
 {

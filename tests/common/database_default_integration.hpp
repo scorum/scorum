@@ -2,8 +2,7 @@
 
 #include "database_trx_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 struct database_default_integration_fixture : public database_trx_integration_fixture
 {
@@ -15,5 +14,4 @@ struct database_default_integration_fixture : public database_trx_integration_fi
     virtual ~database_default_integration_fixture();
 };
 
-} // namespace chain
-} // namespace scorum
+} // database_fixture

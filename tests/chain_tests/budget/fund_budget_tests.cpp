@@ -8,8 +8,7 @@
 
 #include "database_default_integration.hpp"
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class fund_budget_fixture : public database_integration_fixture
 {

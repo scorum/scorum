@@ -6,8 +6,7 @@
 
 #include "database_default_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 database_default_integration_fixture::~database_default_integration_fixture()
 {
@@ -23,5 +22,4 @@ database_default_integration_fixture::~database_default_integration_fixture()
     FC_CAPTURE_AND_RETHROW()
 }
 
-} // namespace chain
-} // namespace scorum
+} // database_fixture

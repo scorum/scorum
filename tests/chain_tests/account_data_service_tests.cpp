@@ -6,21 +6,20 @@
 
 #include "database_default_integration.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 class create_account_with_data_service_fixture : public database_default_integration_fixture
 {
 public:
     create_account_with_data_service_fixture()
-        : public_key(database_integration_fixture::generate_private_key("user private key").get_public_key())
-        , data_service(db.obtain_service<dbs_account>())
+        : data_service(db.obtain_service<dbs_account>())
+        , user("user")
     {
     }
 
     void create_account()
     {
-        data_service.create_account("user", TEST_INIT_DELEGATE_NAME, public_key, "", authority(), authority(),
+        data_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
                                     authority(), asset(0, SCORUM_SYMBOL));
     }
 
@@ -31,8 +30,9 @@ public:
                         share_type(100));
     }
 
-    const public_key_type public_key;
     dbs_account& data_service;
+
+    const Actor user;
 };
 
 BOOST_FIXTURE_TEST_SUITE(create_account_with_data_service, create_account_with_data_service_fixture)
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(check_account_name)
 
         const account_object& acount = db.obtain_service<dbs_account>().get_account("user");
 
-        BOOST_CHECK(acount.name == "user");
+        BOOST_CHECK(acount.name == user.name);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(check_recovery_account_name)
 
         const account_object& acount = db.obtain_service<dbs_account>().get_account("user");
 
-        BOOST_CHECK(acount.recovery_account == TEST_INIT_DELEGATE_NAME);
+        BOOST_CHECK(acount.recovery_account == initdelegate.name);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(fail_on_second_creation)
     {
         create_account();
 
-        BOOST_CHECK_THROW(data_service.create_account("user", TEST_INIT_DELEGATE_NAME, public_key, "", authority(),
+        BOOST_CHECK_THROW(data_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(),
                                                       authority(), authority(), asset(0, SCORUM_SYMBOL)),
                           std::logic_error);
     }
@@ -80,13 +80,11 @@ BOOST_AUTO_TEST_CASE(create_without_fee)
 {
     try
     {
-        const asset balance_before_creation
-            = db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME).balance;
+        const asset balance_before_creation = db.obtain_service<dbs_account>().get_account(initdelegate.name).balance;
 
         create_account();
 
-        BOOST_CHECK(db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME).balance
-                    == balance_before_creation);
+        BOOST_CHECK(db.obtain_service<dbs_account>().get_account(initdelegate.name).balance == balance_before_creation);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -95,15 +93,14 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
 {
     try
     {
-        const asset balance_before_creation
-            = db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME).balance;
+        const asset balance_before_creation = db.obtain_service<dbs_account>().get_account(initdelegate.name).balance;
 
         const share_type fee = calc_fee();
 
-        data_service.create_account("user", TEST_INIT_DELEGATE_NAME, public_key, "", authority(), authority(),
+        data_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
                                     authority(), asset(fee, SCORUM_SYMBOL));
 
-        BOOST_CHECK(db.obtain_service<dbs_account>().get_account(TEST_INIT_DELEGATE_NAME).balance
+        BOOST_CHECK(db.obtain_service<dbs_account>().get_account(initdelegate.name).balance
                     == asset(balance_before_creation.amount - fee, SCORUM_SYMBOL));
     }
     FC_LOG_AND_RETHROW()
@@ -111,7 +108,6 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace chain
-} // namespace scorum
+} // database_fixture
 
 #endif
