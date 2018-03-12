@@ -1067,9 +1067,13 @@ BOOST_AUTO_TEST_CASE(withdraw_scorumpower_authorities)
         BOOST_TEST_MESSAGE("--- Test failure when no signature.");
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, database::skip_transaction_dupe_check), tx_missing_active_auth);
 
+#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
         BOOST_TEST_MESSAGE("--- Test success with account signature");
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, database::skip_transaction_dupe_check);
+#else
+        tx.sign(alice_private_key, db.get_chain_id());
+#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
         BOOST_TEST_MESSAGE("--- Test failure with duplicate signature");
         tx.sign(alice_private_key, db.get_chain_id());
@@ -3482,10 +3486,6 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         generate_block();
 
-        BOOST_TEST_MESSAGE("--- Test failure when SP are powering down.");
-        withdraw_scorumpower_operation withdraw;
-        withdraw.account = "alice";
-        withdraw.scorumpower = alice_vested.scorumpower;
         account_create_with_delegation_operation op;
         op.fee = new_account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
         op.delegation = to_delegate;
@@ -3495,11 +3495,19 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         op.active = authority(2, priv_key.get_public_key(), 2);
         op.memo_key = priv_key.get_public_key();
         op.json_metadata = "{\"foo\":\"bar\"}";
+
+        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+
+#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
+        BOOST_TEST_MESSAGE("--- Test failure when SP are powering down.");
+        withdraw_scorumpower_operation withdraw;
+        withdraw.account = "alice";
+        withdraw.scorumpower = alice_vested.scorumpower;
         tx.operations.push_back(withdraw);
         tx.operations.push_back(op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::assert_exception);
+#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
         BOOST_TEST_MESSAGE("--- Test success under normal conditions. ");
         tx.clear();
@@ -3787,6 +3795,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         BOOST_TEST_MESSAGE("--- Test failure delegating scorumpower that are part of a power down");
         tx.clear();
         sam_vest = asset(sam_vest.amount / 2, SP_SYMBOL);
+#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
         withdraw_scorumpower_operation withdraw;
         withdraw.account = "sam";
         withdraw.scorumpower = sam_vest;
@@ -3805,6 +3814,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         tx.operations.push_back(withdraw);
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
+#endif // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
         BOOST_TEST_MESSAGE("--- Test failure powering down scorumpower that are delegated");
         sam_vest.amount += 1000;
@@ -3814,11 +3824,13 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
+#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
         tx.clear();
         withdraw.scorumpower = asset(sam_vest.amount, SP_SYMBOL);
         tx.operations.push_back(withdraw);
         tx.sign(sam_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx), fc::assert_exception);
+#endif // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
         BOOST_TEST_MESSAGE("--- Remove a delegation and ensure it is returned after 1 week");
         tx.clear();

@@ -223,6 +223,7 @@ SCORUM_TEST_CASE(transfers_to_scorumpower_stat_test)
     BOOST_REQUIRE_EQUAL(bucket.scorum_transferred_to_scorumpower, orig_val_scr + 1);
 }
 
+#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
@@ -317,5 +318,6 @@ SCORUM_TEST_CASE(scorumpower_transfered_stat_test)
 
     BOOST_REQUIRE_EQUAL(bucket.scorumpower_transferred, orig_val + 1);
 }
+#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
 BOOST_AUTO_TEST_SUITE_END()

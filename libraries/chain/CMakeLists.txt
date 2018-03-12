@@ -1,10 +1,3 @@
-OPTION( LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS "Block withdraw scoumpower operations until 2018-08-01T00:00:00 (ON OR OFF)" ON )
-MESSAGE( STATUS "LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS: ${LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS}" )
-if( LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS  )
-  SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOCK_WITHDRAW_SCORUMPOWER_OPERATIONS" )
-  SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOCK_WITHDRAW_SCORUMPOWER_OPERATIONS" )
-endif()
-
 file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/evaluators/*.hpp"
                   "include/scorum/chain/schema/*.hpp"

@@ -27,26 +27,39 @@ struct withdraw_scorumpower_route_from_account_to_account_tests_fixture : public
         generate_block();
     }
 
+    void start_withdraw()
+    {
+        const auto& alice = account_service.get_account("alice");
+
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = alice_to_withdraw_sp;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+        tx.sign(alice_key, db.get_chain_id());
+        db.push_transaction(tx, 0);
+    }
+
     private_key_type alice_key;
     asset alice_to_withdraw_sp;
     asset alice_to_withdraw_scr;
 };
 
+#ifdef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
+BOOST_FIXTURE_TEST_CASE(if_withdraw_locked_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
+{
+    SCORUM_REQUIRE_THROW(start_withdraw(), fc::assert_exception);
+}
+#else // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
 {
     const auto& alice = account_service.get_account("alice");
 
     asset old_balance = alice.balance;
 
-    withdraw_scorumpower_operation op;
-    op.account = alice.name;
-    op.scorumpower = alice_to_withdraw_sp;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-    tx.sign(alice_key, db.get_chain_id());
-    db.push_transaction(tx, 0);
+    start_withdraw();
 
     BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
@@ -93,15 +106,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_with_rest_check, withdraw_scorumpower_route
 
     asset old_balance = alice.balance;
 
-    withdraw_scorumpower_operation op;
-    op.account = alice.name;
-    op.scorumpower = alice_to_withdraw_sp;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-    tx.sign(alice_key, db.get_chain_id());
-    db.push_transaction(tx, 0);
+    start_withdraw();
 
     BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
 
@@ -210,4 +215,5 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_a
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
 }
 
+#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 BOOST_AUTO_TEST_SUITE_END()

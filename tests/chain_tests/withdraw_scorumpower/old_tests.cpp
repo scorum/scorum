@@ -1,3 +1,4 @@
+#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 #include <boost/test/unit_test.hpp>
 
 #include "database_default_integration.hpp"
@@ -445,3 +446,4 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
