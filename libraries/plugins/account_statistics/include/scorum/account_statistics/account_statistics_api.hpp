@@ -45,6 +45,14 @@ public:
      */
     statistics get_lifetime_stats() const;
 
+    statistics get_stats_for_time_by_account_name(const account_name_type& account_name,
+                                                  const fc::time_point_sec& open,
+                                                  uint32_t interval) const;
+    statistics get_stats_for_interval_by_account_name(const account_name_type& account_name,
+                                                      const fc::time_point_sec& start,
+                                                      const fc::time_point_sec& end) const;
+    statistics get_lifetime_stats_by_account_name(const account_name_type& account_name) const;
+
 private:
     std::shared_ptr<detail::account_statistics_api_impl> my;
 };
@@ -52,4 +60,5 @@ private:
 } // namespace scorum
 
 FC_API(scorum::account_statistics::account_statistics_api,
-       (get_stats_for_time)(get_stats_for_interval)(get_lifetime_stats))
+       (get_stats_for_time)(get_stats_for_interval)(get_lifetime_stats)(get_stats_for_time_by_account_name)(
+           get_stats_for_interval_by_account_name)(get_lifetime_stats_by_account_name))
