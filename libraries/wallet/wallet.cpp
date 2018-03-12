@@ -2660,7 +2660,7 @@ annotated_signed_transaction wallet_api::development_committee_change_transfer_q
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
         o.quorum = quorum_percent;
-        o.committee_quorum = base_quorum;
+        o.committee_quorum = transfer_quorum;
     });
 
     return my->sign_transaction(tx, broadcast);

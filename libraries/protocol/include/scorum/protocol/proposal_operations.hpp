@@ -14,7 +14,8 @@ enum quorum_type
     none_quorum,
     add_member_quorum,
     exclude_member_quorum,
-    base_quorum
+    base_quorum,
+    transfer_quorum
 };
 
 inline void validate_quorum(quorum_type t, protocol::percent_type quorum)
@@ -188,7 +189,14 @@ protocol::percent_type operation_get_required_quorum(committee_i& committee_serv
 } // namespace protocol
 } // namespace scorum
 
-FC_REFLECT_ENUM(scorum::protocol::quorum_type, (none_quorum)(add_member_quorum)(exclude_member_quorum)(base_quorum))
+// clang-format off
+FC_REFLECT_ENUM(scorum::protocol::quorum_type,
+                (none_quorum)
+                (add_member_quorum)
+                (exclude_member_quorum)
+                (base_quorum)
+                (transfer_quorum))
+// clang-format on
 
 FC_REFLECT(scorum::protocol::registration_committee_add_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::registration_committee_exclude_member_operation, (account_name))
