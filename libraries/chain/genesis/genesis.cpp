@@ -78,7 +78,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
         create<hardfork_property_object>(
             [&](hardfork_property_object& hpo) { hpo.processed_hardforks.push_back(get_genesis_time()); });
     }
-    FC_CAPTURE_AND_RETHROW()
+    catch (fc::exception& er)
+    {
+        throw std::logic_error(std::string("Invalid genesis: ") + er.what());
+    }
 }
 
 db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& genesis_state)
