@@ -20,10 +20,7 @@
 #include <iostream>
 #include <stdexcept>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using fc::string;
+using namespace database_fixture;
 
 struct escrow_transfer_apply_fixture : public database_default_integration_fixture
 {

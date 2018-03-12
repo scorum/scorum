@@ -28,3 +28,4 @@ rm -rf $WORKSPACE/*
 # sudo docker rm -v $(docker ps -a -q -f status=exited) || true
 sudo docker rm -v $(docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null
 sudo docker rmi $(docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null
+sudo docker system prune -a -f

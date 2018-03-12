@@ -13,14 +13,7 @@
 
 #include "database_default_integration.hpp"
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using fc::string;
-
-//
-// usage for all budget tests 'chain_test  -t atomicswap_*'
-//
+using namespace database_fixture;
 
 class atomicswap_service_check_fixture : public database_default_integration_fixture
 {
