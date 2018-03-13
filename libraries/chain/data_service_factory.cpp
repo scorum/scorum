@@ -24,6 +24,7 @@
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/development_committee.hpp>
+#include <scorum/chain/services/genesis_state.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -49,5 +50,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (witness)
         (witness_vote)
         (dev_pool)
+        (genesis_state)
         )
 // clang-format on

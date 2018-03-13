@@ -78,6 +78,8 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
+    genesis_state_type _genesis_state;
+
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
@@ -151,6 +153,19 @@ void database::open(const fc::path& data_dir,
                 _fork_db.start_block(*head_block);
             }
         }
+
+        try
+        {
+            const auto& chain_id = get<chain_property_object>().chain_id;
+            FC_ASSERT(genesis_state.initial_chain_id == chain_id,
+                      "Current chain id is not equal initial chain id = ${id}", ("id", chain_id));
+        }
+        catch (fc::exception& er)
+        {
+            throw std::logic_error(std::string("Invalid chain id: ") + er.to_detail_string());
+        }
+
+        _my->_genesis_state = genesis_state;
 
         with_read_lock([&]() {
             init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
@@ -1834,6 +1849,11 @@ void database::clear_expired_delegations()
         remove(*itr);
         itr = delegations_by_exp.begin();
     }
+}
+
+const genesis_state_type& database::genesis_state() const
+{
+    return _my->_genesis_state;
 }
 
 void database::adjust_balance(const account_object& a, const asset& delta)

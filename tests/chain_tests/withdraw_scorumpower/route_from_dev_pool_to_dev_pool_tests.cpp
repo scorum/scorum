@@ -1,5 +1,3 @@
-#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
-
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
@@ -69,5 +67,3 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_check, withdraw_scorumpower_route_from_dev_
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS

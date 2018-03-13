@@ -26,5 +26,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (witness)
         (witness_vote)
         (dev_pool)
+        (genesis_state)
         )
 // clang-format on

@@ -55,6 +55,7 @@ add_library( scorum_chain
              services/withdraw_scorumpower_route_statistic.cpp
              services/withdraw_scorumpower.cpp
              services/development_committee.cpp
+             services/genesis_state.cpp
 
              data_service_factory.cpp
 

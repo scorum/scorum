@@ -1,5 +1,3 @@
-#ifndef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
-
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -162,6 +160,5 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_sp_check, withdraw_scorumpower_route_fr
     BOOST_CHECK_EQUAL((end_time - start_time).to_seconds(),
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
 }
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
+BOOST_AUTO_TEST_SUITE_END()

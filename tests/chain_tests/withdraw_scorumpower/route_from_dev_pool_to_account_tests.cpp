@@ -31,34 +31,9 @@ struct withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture : publi
         generate_block();
     }
 
-    void start_withdraw(bool require_throw = false)
-    {
-        db_plugin->debug_update(
-            [&](database&) {
-                withdraw_scorumpower_dev_pool_task create_withdraw;
-                withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
-                if (require_throw)
-                {
-                    SCORUM_REQUIRE_THROW(create_withdraw.apply(ctx), fc::assert_exception);
-                }
-                else
-                {
-                    create_withdraw.apply(ctx);
-                }
-            },
-            default_skip);
-    }
-
     asset pool_to_withdraw_sp;
     asset pool_to_withdraw_scr;
 };
-
-#ifdef LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
-BOOST_FIXTURE_TEST_CASE(withdraw_is_locked_check, withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture)
-{
-    start_withdraw(true);
-}
-#else // LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
 
 BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture)
 {
@@ -74,7 +49,13 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
     asset old_bob_balance_scr = bob.balance;
     asset old_sam_balance_sp = sam.scorumpower;
 
-    start_withdraw();
+    db_plugin->debug_update(
+        [&](database&) {
+            withdraw_scorumpower_dev_pool_task create_withdraw;
+            withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
+            create_withdraw.apply(ctx);
+        },
+        default_skip);
 
     db_plugin->debug_update(
         [&](database&) {
@@ -125,5 +106,5 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
     BOOST_CHECK_EQUAL((end_time - start_time).to_seconds(),
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
 }
-#endif //! LOCK_WITHDRAW_SCORUMPOWER_OPERATIONS
+
 BOOST_AUTO_TEST_SUITE_END()
