@@ -29,18 +29,17 @@ struct withdraw_scorumpower_lock_fixture : public database_fixture::database_trx
         genesis_state_type genesis = database_integration_fixture::default_genesis_state()
                                          .lock_withdraw_sp_until_timestamp(lock_withdraw_sp_until_timestamp)
                                          .development_sp_supply(to_withdraw_sp)
-                                         .dev_committee(actor)
+                                         .dev_committee(alice)
                                          .generate();
         open_database(genesis);
         generate_block();
 
-        ActorActions action(*this, initdelegate);
-        action.give_sp(actor, to_withdraw_sp.amount.value);
+        actor(initdelegate).give_sp(alice, to_withdraw_sp.amount.value);
     }
 
     void account_withdraw()
     {
-        const auto& account = account_service.get_account(actor.name);
+        const auto& account = account_service.get_account(alice.name);
 
         withdraw_scorumpower_operation op;
         op.account = account.name;
@@ -49,31 +48,13 @@ struct withdraw_scorumpower_lock_fixture : public database_fixture::database_trx
         signed_transaction tx;
         tx.operations.push_back(op);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(actor.private_key, db.get_chain_id());
+        tx.sign(alice.private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
-    }
-
-    void dev_pool_withdraw(bool require_throw)
-    {
-        db_plugin->debug_update(
-            [&](database&) {
-                withdraw_scorumpower_dev_pool_task create_withdraw;
-                withdraw_scorumpower_context ctx(db, to_withdraw_sp);
-                if (require_throw)
-                {
-                    SCORUM_REQUIRE_THROW(create_withdraw.apply(ctx), fc::assert_exception);
-                }
-                else
-                {
-                    create_withdraw.apply(ctx);
-                }
-            },
-            default_skip);
     }
 
     fc::time_point_sec lock_withdraw_sp_until_timestamp;
     asset to_withdraw_sp = ASSET_SP(1e+3);
-    Actor actor = Actor("alice");
+    Actor alice = Actor("alice");
 
     dynamic_global_property_service_i& dynamic_global_property_service;
     account_service_i& account_service;
@@ -104,7 +85,13 @@ SCORUM_TEST_CASE(withdraw_sp_from_account_will_be_unlocked_check)
 
 SCORUM_TEST_CASE(withdraw_sp_from_dev_pool_is_locked_check)
 {
-    dev_pool_withdraw(true);
+    db_plugin->debug_update(
+        [&](database&) {
+            withdraw_scorumpower_dev_pool_task create_withdraw;
+            withdraw_scorumpower_context ctx(db, to_withdraw_sp);
+            SCORUM_REQUIRE_THROW(create_withdraw.apply(ctx), fc::assert_exception);
+        },
+        default_skip);
 }
 
 SCORUM_TEST_CASE(withdraw_sp_from_dev_pool_will_be_unlocked_check)
@@ -113,7 +100,13 @@ SCORUM_TEST_CASE(withdraw_sp_from_dev_pool_will_be_unlocked_check)
     BOOST_REQUIRE_LT(lock_withdraw_sp_until_timestamp.sec_since_epoch(),
                      dynamic_global_property_service.head_block_time().sec_since_epoch());
 
-    dev_pool_withdraw(false);
+    db_plugin->debug_update(
+        [&](database&) {
+            withdraw_scorumpower_dev_pool_task create_withdraw;
+            withdraw_scorumpower_context ctx(db, to_withdraw_sp);
+            BOOST_REQUIRE_NO_THROW(create_withdraw.apply(ctx));
+        },
+        default_skip);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
