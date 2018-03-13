@@ -8,6 +8,7 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
 
 #include "database_default_integration.hpp"
 
@@ -139,7 +140,8 @@ BOOST_AUTO_TEST_CASE(old_tests)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        generate_blocks(db.get_comment("alice", std::string("test")).cashout_time - SCORUM_BLOCK_INTERVAL);
+        generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
+                        - SCORUM_BLOCK_INTERVAL);
 
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, ASSET_SCR(0));
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, ASSET_SCR(0));
@@ -166,7 +168,7 @@ BOOST_AUTO_TEST_CASE(old_tests)
                             (db.obtain_service<dbs_account>().get_account("sam").scorumpower - sam_sp_before));
 
         // clang-format off
-        BOOST_REQUIRE_EQUAL(asset(db.get_comment("alice", std::string("test")).beneficiary_payout_value.amount, SP_SYMBOL),
+        BOOST_REQUIRE_EQUAL(asset(db.obtain_service<dbs_comment>().get("alice", std::string("test")).beneficiary_payout_value.amount, SP_SYMBOL),
                             (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
         // clang-format on
     }

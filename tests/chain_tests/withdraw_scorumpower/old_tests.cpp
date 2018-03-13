@@ -3,6 +3,7 @@
 #include "database_default_integration.hpp"
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route_statistic.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
@@ -206,7 +207,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     generate_block();
 
     auto fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
-    auto gpo = db.get_dynamic_global_properties();
+    auto gpo = db.obtain_service<dbs_dynamic_global_property>().get();
 
     BOOST_REQUIRE(account_service.get_account("alice").scorumpower.amount.value
                   == (scorumpower - withdraw_rate).amount.value);
@@ -230,7 +231,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
 
         const auto& alice = account_service.get_account("alice");
 
-        gpo = db.get_dynamic_global_properties();
+        gpo = db.obtain_service<dbs_dynamic_global_property>().get();
         fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
 
         BOOST_REQUIRE(alice.scorumpower.amount.value == (scorumpower - withdraw_rate).amount.value);
@@ -259,7 +260,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
         BOOST_TEST_MESSAGE("Generating one more block to take care of remainder");
         generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
         fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
-        gpo = db.get_dynamic_global_properties();
+        gpo = db.obtain_service<dbs_dynamic_global_property>().get();
 
         const auto& alice_wvo = withdraw_scorumpower_service.get(alice_id);
 
@@ -270,7 +271,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
         BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);
 
         generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
-        gpo = db.get_dynamic_global_properties();
+        gpo = db.obtain_service<dbs_dynamic_global_property>().get();
         fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
 
         BOOST_REQUIRE(alice_wvo.next_vesting_withdrawal.sec_since_epoch()

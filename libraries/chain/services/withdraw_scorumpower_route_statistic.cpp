@@ -70,7 +70,7 @@ dbs_withdraw_scorumpower_route_statistic::create(const modifier_type& modifier)
 }
 
 void dbs_withdraw_scorumpower_route_statistic::update(const withdraw_scorumpower_route_statistic_object& obj,
-                                                  const modifier_type& modifier)
+                                                      const modifier_type& modifier)
 {
     db_impl().modify(obj, [&](withdraw_scorumpower_route_statistic_object& o) { modifier(o); });
 }

@@ -9,6 +9,8 @@
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/account_history/schema/account_history_object.hpp>
 
 #include <fc/crypto/digest.hpp>
@@ -39,7 +41,7 @@ ActorActions database_trx_integration_fixture::actor(const Actor& a)
 share_type database_trx_integration_fixture::get_account_creation_fee() const
 {
     const share_type current_account_creation_fee
-        = db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
+        = db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.account_creation_fee.amount
         * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
 
     return std::max(current_account_creation_fee, (SUFFICIENT_FEE).amount);
@@ -128,7 +130,7 @@ const witness_object& database_trx_integration_fixture::witness_create(const std
         trx.operations.clear();
         trx.signatures.clear();
 
-        return db.get_witness(owner);
+        return db.obtain_service<dbs_witness>().get(owner);
     }
     FC_CAPTURE_AND_RETHROW((owner)(url))
 }

@@ -1,8 +1,7 @@
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/database/database.hpp>
-
 #include <scorum/chain/schema/scorum_objects.hpp>
-
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <tuple>
 
 using namespace scorum::protocol;
@@ -33,7 +32,7 @@ bool dbs_decline_voting_rights_request::is_exists(const account_id_type& account
 const decline_voting_rights_request_object&
 dbs_decline_voting_rights_request::create(const account_id_type& account, const fc::microseconds& time_to_life)
 {
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+    const dynamic_global_property_object& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_object
         = db_impl().create<decline_voting_rights_request_object>([&](decline_voting_rights_request_object& req) {

@@ -18,6 +18,10 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -164,7 +168,7 @@ BOOST_AUTO_TEST_CASE(account_create_apply)
         BOOST_TEST_MESSAGE("--- Test failure covering witness fee");
         generate_block();
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+            db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& dgpo) {
                 dgpo.median_chain_props.account_creation_fee = SUFFICIENT_FEE * 10;
             });
         });
@@ -451,7 +455,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const comment_object& alice_comment = db.get_comment("alice", std::string("lorem"));
+        const comment_object& alice_comment = db.obtain_service<dbs_comment>().get("alice", std::string("lorem"));
 
         BOOST_REQUIRE(alice_comment.author == op.author);
         BOOST_REQUIRE(fc::to_string(alice_comment.permlink) == op.permlink);
@@ -496,7 +500,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const comment_object& bob_comment = db.get_comment("bob", std::string("ipsum"));
+        const comment_object& bob_comment = db.obtain_service<dbs_comment>().get("bob", std::string("ipsum"));
 
         BOOST_REQUIRE(bob_comment.author == op.author);
         BOOST_REQUIRE(fc::to_string(bob_comment.permlink) == op.permlink);
@@ -523,7 +527,7 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const comment_object& sam_comment = db.get_comment("sam", std::string("dolor"));
+        const comment_object& sam_comment = db.obtain_service<dbs_comment>().get("sam", std::string("dolor"));
 
         BOOST_REQUIRE(sam_comment.author == op.author);
         BOOST_REQUIRE(fc::to_string(sam_comment.permlink) == op.permlink);
@@ -540,9 +544,9 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         generate_blocks(60 * 5 / SCORUM_BLOCK_INTERVAL + 1);
 
         BOOST_TEST_MESSAGE("--- Test modifying a comment");
-        const auto& mod_sam_comment = db.get_comment("sam", std::string("dolor"));
-        //        const auto& mod_bob_comment = db.get_comment("bob", std::string("ipsum"));
-        //        const auto& mod_alice_comment = db.get_comment("alice", std::string("lorem"));
+        const auto& mod_sam_comment = db.obtain_service<dbs_comment>().get("sam", std::string("dolor"));
+        //        const auto& mod_bob_comment = db.obtain_service<dbs_comment>().get("bob", std::string("ipsum"));
+        //        const auto& mod_alice_comment = db.obtain_service<dbs_comment>().get("alice", std::string("lorem"));
         fc::time_point_sec created = mod_sam_comment.created;
 
         db.modify(mod_sam_comment, [&](comment_object& com) {
@@ -664,7 +668,8 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         db.push_transaction(tx, 0);
 
         generate_blocks(SCORUM_CASHOUT_WINDOW_SECONDS / SCORUM_BLOCK_INTERVAL);
-        BOOST_REQUIRE(db.get_comment("alice", std::string("test1")).cashout_time == fc::time_point_sec::maximum());
+        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test1")).cashout_time
+                      == fc::time_point_sec::maximum());
 
         tx.clear();
         tx.operations.push_back(op);
@@ -972,7 +977,7 @@ BOOST_AUTO_TEST_CASE(transfer_to_scorumpower_apply)
         ACTORS((alice)(bob))
         fund("alice", 10000);
 
-        const auto& gpo = db.get_dynamic_global_properties();
+        const auto& gpo = db.obtain_service<dbs_dynamic_global_property>().get();
 
         BOOST_REQUIRE(alice.balance == ASSET_SCR(10e+3));
 
@@ -1179,7 +1184,7 @@ BOOST_AUTO_TEST_CASE(witness_update_apply)
 
         db.push_transaction(tx, 0);
 
-        const witness_object& alice_witness = db.get_witness("alice");
+        const witness_object& alice_witness = db.obtain_service<dbs_witness>().get("alice");
 
         BOOST_REQUIRE(alice_witness.owner == "alice");
         BOOST_REQUIRE(alice_witness.created == db.head_block_time());
@@ -1317,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(account_witness_vote_apply)
 
         private_key_type sam_witness_key = generate_private_key("sam_key");
         witness_create("sam", sam_private_key, "foo.bar", sam_witness_key.get_public_key(), 1000);
-        const witness_object& sam_witness = db.get_witness("sam");
+        const witness_object& sam_witness = db.obtain_service<dbs_witness>().get("sam");
 
         const auto& witness_vote_idx = db.get_index<witness_vote_index>().indices().get<by_witness_account>();
 
@@ -1630,7 +1635,8 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(initdelegate.name).votes == (alice.scorumpower + bob.scorumpower).amount);
+        BOOST_REQUIRE(db.obtain_service<dbs_witness>().get(initdelegate.name).votes
+                      == (alice.scorumpower + bob.scorumpower).amount);
         validate_database();
 
         BOOST_TEST_MESSAGE("--- Test votes are removed when a proxy is removed");
@@ -1642,7 +1648,7 @@ BOOST_AUTO_TEST_CASE(account_witness_proxy_apply)
 
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.get_witness(initdelegate.name).votes == bob.scorumpower.amount);
+        BOOST_REQUIRE(db.obtain_service<dbs_witness>().get(initdelegate.name).votes == bob.scorumpower.amount);
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -2148,6 +2154,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
     try
     {
         BOOST_TEST_MESSAGE("Testing: escrow_approve_apply");
+
         ACTORS((alice)(bob)(sam)(dave))
         fund("alice", 10000);
 
@@ -2203,7 +2210,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto& escrow = db.get_escrow(op.from, op.escrow_id);
+        auto& escrow = db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id);
         BOOST_REQUIRE(escrow.to == "bob");
         BOOST_REQUIRE(escrow.agent == "sam");
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2261,7 +2268,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         tx.sign(sam_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
+        SCORUM_REQUIRE_THROW(db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id), fc::exception);
         BOOST_REQUIRE(alice.balance == ASSET_SCR(10e+3));
         validate_database();
 
@@ -2274,7 +2281,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
 
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
-        SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
+        SCORUM_REQUIRE_THROW(db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id), fc::exception);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
@@ -2298,7 +2305,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
 
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
-        SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
+        SCORUM_REQUIRE_THROW(db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id), fc::exception);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
@@ -2321,7 +2328,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
 
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
 
-        SCORUM_REQUIRE_THROW(db.get_escrow(op.from, op.escrow_id), fc::exception);
+        SCORUM_REQUIRE_THROW(db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id), fc::exception);
         BOOST_REQUIRE(db.obtain_service<dbs_account>().get_account("alice").balance == ASSET_SCR(10e+3));
         validate_database();
 
@@ -2350,7 +2357,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
         db.push_transaction(tx, 0);
 
         {
-            const auto& escrow = db.get_escrow(op.from, op.escrow_id);
+            const auto& escrow = db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id);
             BOOST_REQUIRE(escrow.to == "bob");
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2369,7 +2376,7 @@ BOOST_AUTO_TEST_CASE(escrow_approve_apply)
 
         generate_blocks(et_op.ratification_deadline + SCORUM_BLOCK_INTERVAL, true);
         {
-            const auto& escrow = db.get_escrow(op.from, op.escrow_id);
+            const auto& escrow = db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id);
             BOOST_REQUIRE(escrow.to == "bob");
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2491,7 +2498,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         tx.sign(bob_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        const auto& escrow = db.get_escrow(et_op.from, et_op.escrow_id);
+        const auto& escrow = db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id);
         BOOST_REQUIRE(escrow.to == "bob");
         BOOST_REQUIRE(escrow.agent == "sam");
         BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2566,7 +2573,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         {
-            const auto& escrow = db.get_escrow(et_op.from, et_op.escrow_id);
+            const auto& escrow = db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id);
             BOOST_REQUIRE(escrow.to == "bob");
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2603,7 +2610,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         db.push_transaction(tx, 0);
 
         {
-            const auto& escrow = db.get_escrow(et_op.from, et_op.escrow_id);
+            const auto& escrow = db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id);
             BOOST_REQUIRE(escrow.to == "bob");
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2624,7 +2631,7 @@ BOOST_AUTO_TEST_CASE(escrow_dispute_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         {
-            const auto& escrow = db.get_escrow(et_op.from, et_op.escrow_id);
+            const auto& escrow = db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id);
             BOOST_REQUIRE(escrow.to == "bob");
             BOOST_REQUIRE(escrow.agent == "sam");
             BOOST_REQUIRE(escrow.ratification_deadline == et_op.ratification_deadline);
@@ -2768,7 +2775,7 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
 
             generate_block();
 
-            const escrow_object& escrow_vested = db.get_escrow(et_op.from, et_op.escrow_id);
+            const escrow_object& escrow_vested = db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id);
 
             BOOST_TEST_MESSAGE("--- failure releasing funds prior to approval");
 
@@ -2865,7 +2872,7 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
             tx.sign(bob_private_key, db.get_chain_id());
             BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-            BOOST_REQUIRE_EQUAL(db.get_escrow(op.from, op.escrow_id).scorum_balance,
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id).scorum_balance,
                                 escrow_transfer_amount - escrow_release_amount);
             BOOST_REQUIRE_EQUAL(alice_vested.balance,
                                 initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
@@ -2904,7 +2911,7 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
             tx.sign(alice_private_key, db.get_chain_id());
             BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
 
-            BOOST_REQUIRE_EQUAL(db.get_escrow(op.from, op.escrow_id).scorum_balance,
+            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_escrow>().get(op.from, op.escrow_id).scorum_balance,
                                 escrow_transfer_amount - escrow_release_amount * 2);
             BOOST_REQUIRE_EQUAL(bob_vested.balance, escrow_release_amount);
 
@@ -3020,7 +3027,7 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
             BOOST_REQUIRE_EQUAL(alice_vested.balance,
                                 initial_alice_balance - SUFFICIENT_FEE - escrow_transfer_amount
                                     + escrow_release_amount * 3 + rest);
-            SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+            SCORUM_REQUIRE_THROW(db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id), fc::exception);
         }
 
         {
@@ -3040,7 +3047,7 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
 
             generate_block();
 
-            const escrow_object& escrow_vested = db.get_escrow(et_op.from, et_op.escrow_id);
+            const escrow_object& escrow_vested = db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id);
 
             BOOST_TEST_MESSAGE("--- failure when 'agent' attempts to release non-disputed expired escrow to 'to'");
             tx.clear();
@@ -3149,7 +3156,7 @@ BOOST_AUTO_TEST_CASE(escrow_release_apply)
 
             BOOST_REQUIRE_EQUAL(alice_vested.balance,
                                 initial_alice_balance - (SUFFICIENT_FEE)*2 - escrow_transfer_amount + rest);
-            SCORUM_REQUIRE_THROW(db.get_escrow(et_op.from, et_op.escrow_id), fc::exception);
+            SCORUM_REQUIRE_THROW(db.obtain_service<dbs_escrow>().get(et_op.from, et_op.escrow_id), fc::exception);
         }
     }
     FC_LOG_AND_RETHROW()
@@ -3290,8 +3297,8 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         BOOST_REQUIRE(itr == request_idx.end());
 
         const auto& witness_idx = db.get_index<witness_vote_index>().indices().get<by_account_witness>();
-        auto witness_itr = witness_idx.find(
-            boost::make_tuple(db.obtain_service<dbs_account>().get_account("alice").id, db.get_witness("alice").id));
+        auto witness_itr = witness_idx.find(boost::make_tuple(db.obtain_service<dbs_account>().get_account("alice").id,
+                                                              db.obtain_service<dbs_witness>().get("alice").id));
         BOOST_REQUIRE(witness_itr == witness_idx.end());
 
         tx.clear();
@@ -3300,8 +3307,9 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        db.get<comment_vote_object, by_comment_voter>(boost::make_tuple(
-            db.get_comment("alice", std::string("test")).id, db.obtain_service<dbs_account>().get_account("alice").id));
+        db.get<comment_vote_object, by_comment_voter>(
+            boost::make_tuple(db.obtain_service<dbs_comment>().get("alice", std::string("test")).id,
+                              db.obtain_service<dbs_account>().get_account("alice").id));
 
         vote.weight = (int16_t)0;
         tx.clear();
@@ -3472,7 +3480,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& dgpo) {
                     dgpo.median_chain_props.account_creation_fee = new_account_creation_fee;
                 });
             },
@@ -3529,9 +3537,10 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_TEST_MESSAGE("--- Test success using only SCR to reach target delegation.");
 
         tx.clear();
-        op.fee = asset(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
-                           * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                       SCORUM_SYMBOL);
+        op.fee = asset(
+            db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.account_creation_fee.amount
+                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+            SCORUM_SYMBOL);
         op.delegation = asset(0, SP_SYMBOL);
         op.new_account_name = "sam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -3551,9 +3560,10 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         BOOST_TEST_MESSAGE("--- Test failure when insufficient fee fo reach target delegation.");
-        fund("alice", asset(db.get_dynamic_global_properties().median_chain_props.account_creation_fee.amount
-                                * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                            SCORUM_SYMBOL));
+        fund("alice",
+             asset(db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.account_creation_fee.amount
+                       * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
+                   SCORUM_SYMBOL));
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         validate_database();
@@ -3670,7 +3680,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& dgpo) {
                     dgpo.median_chain_props.account_creation_fee = ASSET_SCR(1e+3);
                 });
             },
@@ -3748,7 +3758,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
 
         const auto& vote_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
 
-        auto& alice_comment = db.get_comment("alice", std::string("foo"));
+        auto& alice_comment = db.obtain_service<dbs_comment>().get("alice", std::string("foo"));
         auto itr = vote_idx.find(std::make_tuple(alice_comment.id, bob_acc.id));
         BOOST_REQUIRE_EQUAL(alice_comment.net_rshares.value,
                             bob_acc.effective_scorumpower().amount.value * (old_voting_power - bob_acc.voting_power)
@@ -3866,7 +3876,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
 
         db_plugin->debug_update(
             [=](database& db) {
-                db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+                db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& dgpo) {
                     dgpo.median_chain_props.account_creation_fee = ASSET_SCR(1e+3);
                 });
             },
@@ -3894,7 +3904,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
         generate_block();
 
         db_plugin->debug_update([=](database& db) {
-            db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo) {
+            db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& dgpo) {
                 dgpo.median_chain_props.account_creation_fee = ASSET_SCR(100e+6);
             });
         });

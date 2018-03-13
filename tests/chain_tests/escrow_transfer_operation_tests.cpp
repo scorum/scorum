@@ -7,6 +7,7 @@
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/services/escrow.hpp>
 
 #include <scorum/chain/util/reward.hpp>
 
@@ -105,6 +106,8 @@ BOOST_AUTO_TEST_CASE(success_escrow_transfer_apply)
 {
     try
     {
+        auto& escrow_service = db.obtain_service<dbs_escrow>();
+
         ACTORS((alice)(bob)(sam))
 
         fund("alice", 10000);
@@ -123,7 +126,7 @@ BOOST_AUTO_TEST_CASE(success_escrow_transfer_apply)
 
         db.push_transaction(tx, 0);
 
-        const auto& escrow = db.get_escrow(op.from, op.escrow_id);
+        const auto& escrow = escrow_service.get(op.from, op.escrow_id);
 
         BOOST_REQUIRE(escrow.escrow_id == op.escrow_id);
         BOOST_REQUIRE(escrow.from == op.from);

@@ -77,9 +77,8 @@ class update_global_scr_properties_visitor : public void_return_visitor
 
         void operator()(const account_id_type& to) const
         {
-            _dprops_service.update([&](dynamic_global_property_object& o) {
-                o.total_scorumpower -= asset(_amount.amount, SP_SYMBOL);
-            });
+            _dprops_service.update(
+                [&](dynamic_global_property_object& o) { o.total_scorumpower -= asset(_amount.amount, SP_SYMBOL); });
         }
 
         void operator()(const dev_committee_id_type& to) const
