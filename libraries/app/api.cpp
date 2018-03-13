@@ -33,6 +33,7 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <fc/time.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
@@ -147,7 +148,7 @@ bool network_broadcast_api::check_max_block_age(int32_t max_block_age)
 
         fc::time_point_sec now = fc::time_point::now();
         std::shared_ptr<database> db = _app.chain_database();
-        const dynamic_global_property_object& dgpo = db->get_dynamic_global_properties();
+        const dynamic_global_property_object& dgpo = db->obtain_service<dbs_dynamic_global_property>().get();
 
         return (dgpo.time < now - fc::seconds(max_block_age));
     });

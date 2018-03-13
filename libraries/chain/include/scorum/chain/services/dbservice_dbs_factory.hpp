@@ -1,12 +1,12 @@
 #pragma once
 
 #include <memory>
-#include <map>
 #include <string>
 #include <typeinfo>
 
 #include <boost/config.hpp>
 #include <boost/type_index.hpp>
+#include <boost/container/flat_map.hpp>
 
 namespace scorum {
 namespace chain {
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    mutable std::map<boost::typeindex::type_index, BaseServicePtr> _dbs;
+    mutable boost::container::flat_map<boost::typeindex::type_index, BaseServicePtr> _dbs;
     database& _db_core;
 };
 } // namespace chain

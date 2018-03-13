@@ -21,7 +21,8 @@
 
 namespace committee_proposal_tests {
 
-using namespace scorum::chain;
+using namespace database_fixture;
+
 namespace protocol = scorum::protocol;
 
 using chain_type = database_trx_integration_fixture;

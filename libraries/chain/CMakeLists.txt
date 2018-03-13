@@ -31,30 +31,32 @@ add_library( scorum_chain
              database/fork_database.cpp
              database/database_witness_schedule.cpp
 
-             services/dbs_base.cpp
-             services/dbservice_dbs_factory.cpp
              services/account.cpp
-             services/reward.cpp
-             services/witness.cpp
-             services/budget.cpp
-             services/registration_pool.cpp
-             services/registration_committee.cpp
-             services/proposal.cpp
              services/atomicswap.cpp
-             services/dynamic_global_property.cpp
+             services/budget.cpp
              services/comment.cpp
              services/comment_vote.cpp
-             services/escrow.cpp
-             services/witness_vote.cpp
+             services/dbs_base.cpp
+             services/dbservice_dbs_factory.cpp
              services/decline_voting_rights_request.cpp
-             services/scorumpower_delegation.cpp
-             services/reward_fund.cpp
-             services/proposal_executor.cpp
              services/dev_pool.cpp
+			 services/development_committee.cpp
+             services/dynamic_global_property.cpp
+             services/escrow.cpp
+             services/hardfork_property.cpp
+             services/proposal.cpp
+			 services/proposal_executor.cpp
+             services/registration_committee.cpp
+             services/registration_pool.cpp
+             services/reward.cpp
+             services/reward_fund.cpp
+             services/scorumpower_delegation.cpp
+             services/withdraw_scorumpower.cpp
              services/withdraw_scorumpower_route.cpp
              services/withdraw_scorumpower_route_statistic.cpp
-             services/withdraw_scorumpower.cpp
-             services/development_committee.cpp
+             services/witness.cpp
+             services/witness_schedule.cpp
+             services/witness_vote.cpp
              services/genesis_state.cpp
 
              data_service_factory.cpp

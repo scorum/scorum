@@ -23,18 +23,20 @@ struct withdraw_scorumpower_route_service_i
 
     virtual bool is_exists(const dev_committee_id_type& from, const account_id_type& to) const = 0;
 
-    virtual const withdraw_scorumpower_route_object& get(const account_id_type& from, const account_id_type& to) const = 0;
+    virtual const withdraw_scorumpower_route_object& get(const account_id_type& from,
+                                                         const account_id_type& to) const = 0;
 
     virtual const withdraw_scorumpower_route_object& get(const account_id_type& from,
-                                                     const dev_committee_id_type& to) const = 0;
+                                                         const dev_committee_id_type& to) const = 0;
 
     virtual const withdraw_scorumpower_route_object& get(const dev_committee_id_type& from,
-                                                     const dev_committee_id_type& to) const = 0;
+                                                         const dev_committee_id_type& to) const = 0;
 
     virtual const withdraw_scorumpower_route_object& get(const dev_committee_id_type& from,
-                                                     const account_id_type& to) const = 0;
+                                                         const account_id_type& to) const = 0;
 
-    using withdraw_scorumpower_route_refs_type = std::vector<std::reference_wrapper<const withdraw_scorumpower_route_object>>;
+    using withdraw_scorumpower_route_refs_type
+        = std::vector<std::reference_wrapper<const withdraw_scorumpower_route_object>>;
 
     virtual withdraw_scorumpower_route_refs_type get_all(const withdrawable_id_type& from) const = 0;
 
@@ -72,16 +74,16 @@ public:
     virtual bool is_exists(const dev_committee_id_type& from, const account_id_type& to) const override;
 
     virtual const withdraw_scorumpower_route_object& get(const account_id_type& from,
-                                                     const account_id_type& to) const override;
+                                                         const account_id_type& to) const override;
 
     virtual const withdraw_scorumpower_route_object& get(const account_id_type& from,
-                                                     const dev_committee_id_type& to) const override;
+                                                         const dev_committee_id_type& to) const override;
 
     virtual const withdraw_scorumpower_route_object& get(const dev_committee_id_type& from,
-                                                     const dev_committee_id_type& to) const override;
+                                                         const dev_committee_id_type& to) const override;
 
     virtual const withdraw_scorumpower_route_object& get(const dev_committee_id_type& from,
-                                                     const account_id_type& to) const override;
+                                                         const account_id_type& to) const override;
 
     virtual withdraw_scorumpower_route_refs_type get_all(const withdrawable_id_type& from) const override;
 

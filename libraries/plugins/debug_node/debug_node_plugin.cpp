@@ -3,6 +3,7 @@
 #include <scorum/app/plugin.hpp>
 #include <scorum/plugins/debug_node/debug_node_api.hpp>
 #include <scorum/plugins/debug_node/debug_node_plugin.hpp>
+#include <scorum/chain/services/witness.hpp>
 
 #include <fc/io/buffered_iostream.hpp>
 #include <fc/io/fstream.hpp>
@@ -64,6 +65,10 @@ uint32_t debug_node_plugin::debug_generate_blocks(
     if (count == 0)
         return 0;
 
+    scorum::chain::database& db = database();
+
+    auto& witness_service = db.obtain_service<chain::dbs_witness>();
+
     fc::optional<fc::ecc::private_key> debug_private_key;
     scorum::chain::public_key_type debug_public_key;
     if (debug_key != "")
@@ -73,14 +78,13 @@ uint32_t debug_node_plugin::debug_generate_blocks(
         debug_public_key = debug_private_key->get_public_key();
     }
 
-    scorum::chain::database& db = database();
     uint32_t slot = miss_blocks + 1, produced = 0;
     while (produced < count)
     {
         uint32_t new_slot = miss_blocks + 1;
         std::string scheduled_witness_name = db.get_scheduled_witness(slot);
         fc::time_point_sec scheduled_time = db.get_slot_time(slot);
-        const chain::witness_object& scheduled_witness = db.get_witness(scheduled_witness_name);
+        const chain::witness_object& scheduled_witness = witness_service.get(scheduled_witness_name);
         scorum::chain::public_key_type scheduled_key = scheduled_witness.signing_key;
         if (debug_key != "")
         {
@@ -92,7 +96,7 @@ uint32_t debug_node_plugin::debug_generate_blocks(
                     wlog("Modified key for witness ${w}", ("w", scheduled_witness_name));
                 debug_update(
                     [=](chain::database& db) {
-                        db.modify(db.get_witness(scheduled_witness_name),
+                        db.modify(scheduled_witness,
                                   [&](chain::witness_object& w) { w.signing_key = debug_public_key; });
                     },
                     skip);

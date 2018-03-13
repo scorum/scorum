@@ -8,9 +8,7 @@
 
 #include "genesis.hpp"
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using namespace registration_fixtures;
+using namespace database_fixture;
 
 class registration_service_check_fixture : public registration_check_fixture
 {

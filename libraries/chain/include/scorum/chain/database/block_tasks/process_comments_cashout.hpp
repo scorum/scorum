@@ -15,9 +15,9 @@ struct process_comments_cashout : public block_task
 private:
     uint128_t get_recent_claims(block_task_context& ctx, const comment_service_i::comment_refs_type&);
 
-    share_type pay_for_comment(block_task_context& ctx, const comment_object& comment, const share_type& reward_tokens);
+    asset pay_for_comment(block_task_context& ctx, const comment_object& comment, const asset& reward);
 
-    share_type pay_curators(block_task_context& ctx, const comment_object& comment, share_type& max_rewards);
+    asset pay_curators(block_task_context& ctx, const comment_object& comment, asset& max_rewards);
 };
 }
 }
