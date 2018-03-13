@@ -38,27 +38,42 @@ public:
     fc::shared_string json_metadata;
     time_point_sec last_update;
     time_point_sec created;
-    time_point_sec active; ///< the last time this post was "touched" by voting or reply
+
+    /// the last time this post was "touched" by voting or reply
+    time_point_sec active;
+
     time_point_sec last_payout;
 
-    uint16_t depth = 0; ///< used to track max nested depth
-    uint32_t children = 0; ///< used to track the total number of children, grandchildren, etc...
+    /// used to track max nested depth
+    uint16_t depth = 0;
 
-    share_type net_rshares; /// This is the sum of all votes (positive and negative).
-    /// Used for calculation reward witch is proportional to rshares^2
-    share_type abs_rshares; /// This is used to track the total abs(weight) of votes.
-    share_type vote_rshares; /// Total positive rshares from all votes.
-    /// Used to calculate delta weights. Needed to handle vote changing and removal.
+    /// used to track the total number of children, grandchildren, etc...
+    uint32_t children = 0;
 
-    share_type children_abs_rshares; /// this is used to calculate cashout time of a discussion.
-    time_point_sec cashout_time; /// 24 hours from the weighted average of vote time
+    /// This is the sum of all votes (positive and negative). Used for calculation reward witch is proportional to
+    /// rshares^2
+    share_type net_rshares;
+
+    /// This is used to track the total abs(weight) of votes.
+    share_type abs_rshares;
+
+    /// Total positive rshares from all votes. Used to calculate delta weights. Needed to handle vote changing and
+    /// removal.
+    share_type vote_rshares;
+
+    /// this is used to calculate cashout time of a discussion.
+    share_type children_abs_rshares;
+
+    /// 24 hours from the weighted average of vote time
+    time_point_sec cashout_time;
     time_point_sec max_cashout_time;
-    uint64_t total_vote_weight
-        = 0; /// the total weight of voting rewards, used to calculate pro-rata share of curation payouts
+
+    /// the total weight of voting rewards, used to calculate pro-rata share of curation payouts
+    uint64_t total_vote_weight = 0;
 
     uint16_t reward_weight = 0;
 
-    /** tracks the total payout this comment has received over time, measured in SCR */
+    /// tracks the total payout this comment has received over time, measured in SCR
     asset total_payout_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
     asset beneficiary_payout_value = asset(0, SCORUM_SYMBOL);
@@ -69,11 +84,18 @@ public:
 
     id_type root_comment;
 
-    asset max_accepted_payout
-        = asset::maximum(SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
-    uint16_t percent_scrs = SCORUM_100_PERCENT; /// the percent of SCR to pay, unkept amounts will be received as SP
-    bool allow_replies = true; /// allows a post to disable replies.
-    bool allow_votes = true; /// allows a post to receive votes;
+    /// SCR value of the maximum payout this post will receive
+    asset max_accepted_payout = asset::maximum(SCORUM_SYMBOL);
+
+    /// the percent of SCR to pay, unkept amounts will be received as SP
+    uint16_t percent_scrs = SCORUM_100_PERCENT;
+
+    /// allows a post to disable replies.
+    bool allow_replies = true;
+
+    /// allows a post to receive votes;
+    bool allow_votes = true;
+
     bool allow_curation_rewards = true;
 
     fc::shared_vector<beneficiary_route_type> beneficiaries;
@@ -92,11 +114,18 @@ public:
 
     account_id_type voter;
     comment_id_type comment;
-    uint64_t weight
-        = 0; ///< defines the score this vote receives, used by vote payout calc. 0 if a negative vote or changed votes.
-    int64_t rshares = 0; ///< The number of rshares this vote is responsible for
-    int16_t vote_percent = 0; ///< The percent weight of the vote
-    time_point_sec last_update; ///< The time of the last update of the vote
+
+    /// defines the score this vote receives, used by vote payout calc. 0 if a negative vote or changed votes.
+    uint64_t weight = 0;
+
+    /// The number of rshares this vote is responsible for
+    int64_t rshares = 0;
+
+    /// The percent weight of the vote
+    int16_t vote_percent = 0;
+
+    /// The time of the last update of the vote
+    time_point_sec last_update;
     int8_t num_changes = 0;
 };
 

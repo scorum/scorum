@@ -46,9 +46,10 @@ inline bool is_comment_payout_dust(uint64_t scorum_payout)
     // SCORUM: no payout limits
     // return scorum_payout <= 0;
 }
-}
-}
-} // scorum::chain::util
+
+} // namespace util
+} // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::util::comment_reward_context,
            (rshares)(reward_weight)(max_scr)(total_reward_shares2)(total_reward_fund_scorum)(reward_curve))
