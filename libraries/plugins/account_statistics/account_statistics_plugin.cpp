@@ -113,13 +113,8 @@ void account_statistics_plugin::plugin_set_program_options(boost::program_option
 
 void account_statistics_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    try
-    {
-        ilog("account_stats plugin: plugin_initialize() begin");
-
-        ilog("account_stats plugin: plugin_initialize() end");
-    }
-    FC_CAPTURE_AND_RETHROW()
+    check_read_only_mode(options);
+    print_greeting();
 }
 
 void account_statistics_plugin::plugin_startup()

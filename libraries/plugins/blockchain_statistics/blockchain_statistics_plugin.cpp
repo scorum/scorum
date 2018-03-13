@@ -305,7 +305,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
 {
     try
     {
-        dlog("chain_stats_plugin: plugin_initialize() begin");
+        check_read_only_mode(options);
 
         if (options.count("chain-stats-bucket-size"))
         {
@@ -321,6 +321,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
         dlog("chain_stats_plugin: plugin_initialize() end");
     }
     FC_CAPTURE_AND_RETHROW()
+    print_greeting();
 }
 
 void blockchain_statistics_plugin::plugin_startup()

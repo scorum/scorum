@@ -45,6 +45,8 @@ void debug_node_plugin::plugin_set_program_options(boost::program_options::optio
 
 void debug_node_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
+    check_read_only_mode(options);
+    print_greeting();
 }
 
 void debug_node_plugin::plugin_startup()

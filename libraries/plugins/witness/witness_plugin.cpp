@@ -422,6 +422,8 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
 {
     try
     {
+        check_read_only_mode(options);
+
         _options = &options;
         LOAD_VALUE_SET(options, "witness", _witnesses, std::string)
 
@@ -446,6 +448,8 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
         db.add_plugin_index<reserve_ratio_index>();
     }
     FC_LOG_AND_RETHROW()
+
+    print_greeting();
 }
 
 void witness_plugin::plugin_startup()

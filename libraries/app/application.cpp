@@ -87,6 +87,8 @@ api_context::api_context(application& _app, const std::string& _api_name, std::w
 
 namespace detail {
 
+using plugins_type = std::map<std::string, std::shared_ptr<abstract_plugin>>;
+
 class application_impl : public graphene::net::node_delegate
 {
 public:
@@ -316,7 +318,6 @@ public:
 
             _shared_file_size = fc::parse_size(_options->at("shared-file-size").as<std::string>());
             ilog("shared_file_size is ${n} bytes", ("n", _shared_file_size));
-            bool read_only = _options->count("read-only");
             register_builtin_apis();
 
             if (_options->count("check-locks"))
@@ -338,6 +339,7 @@ public:
                 _self->_disable_get_block = true;
             }
 
+            bool read_only = _options->count("read-only");
             if (!read_only)
             {
                 _self->_read_only = false;
@@ -1059,8 +1061,8 @@ public:
     std::shared_ptr<fc::http::websocket_server> _websocket_server;
     std::shared_ptr<fc::http::websocket_tls_server> _websocket_tls_server;
 
-    std::map<std::string, std::shared_ptr<abstract_plugin>> _plugins_available;
-    std::map<std::string, std::shared_ptr<abstract_plugin>> _plugins_enabled;
+    plugins_type _plugins_available;
+    plugins_type _plugins_enabled;
     flat_map<std::string, std::function<fc::api_ptr(const api_context&)>> _api_factories_by_name;
     std::vector<std::string> _public_apis;
     int32_t _max_block_age = -1;
@@ -1130,16 +1132,16 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("enable-plugin", bpo::value< std::vector<std::string> >()->composing()->default_value(default_plugins, str_default_plugins), "Plugin(s) to enable, may be specified multiple times")
     ("max-block-age", bpo::value< int32_t >()->default_value(200), "Maximum age of head block when broadcasting tx via API")
     ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
-    ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from");
-    command_line_options.add(configuration_file_options);
-    command_line_options.add_options()
-    ("version,v", "Print version number and exit.")
+    ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")
     ("replay-blockchain", "Rebuild object graph by replaying all blocks")
     ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
     ("force-validate", "Force validation of all transactions")
     ("read-only", "Node will not connect to p2p network and can only read from the chain state")
     ("check-locks", "Check correctness of chainbase locking")
     ("disable-get-block", "Disable get_block API call");
+    command_line_options.add(configuration_file_options);
+    command_line_options.add_options()
+    ("version,v", "Print version number and exit.");
     // clang-format on
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
@@ -1402,12 +1404,21 @@ void application::initialize_plugins(const boost::program_options::variables_map
             }
         }
     }
+    detail::plugins_type plugins_enabled;
     for (auto& entry : my->_plugins_enabled)
     {
-        ilog("Initializing plugin ${name}", ("name", entry.first));
-        entry.second->plugin_initialize(options);
+        try
+        {
+            ilog("Initializing plugin ${name}", ("name", entry.first));
+            entry.second->plugin_initialize(options);
+            plugins_enabled[entry.first] = entry.second;
+        }
+        catch (fc::assert_exception& er)
+        {
+            wlog("${details}", ("details", er.to_detail_string()));
+        }
     }
-    return;
+    my->_plugins_enabled = plugins_enabled;
 }
 
 void application::startup_plugins()
