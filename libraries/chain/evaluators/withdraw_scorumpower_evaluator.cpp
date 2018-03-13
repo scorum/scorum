@@ -136,8 +136,6 @@ void withdraw_scorumpower_dev_pool_task::on_apply(withdraw_scorumpower_context& 
 
     dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
 
-    FC_ASSERT(dev_pool_service.is_exists());
-
     const auto& pool = dev_pool_service.get();
 
     impl.do_apply(pool, ctx.scorumpower());

@@ -11,6 +11,13 @@ class withdraw_scorumpower_service_i;
 class withdraw_scorumpower_route_service_i;
 class dynamic_global_property_service_i;
 
+} // namespace chain
+} // namespace scorum
+
+namespace database_fixture {
+
+using namespace scorum::chain;
+
 class withdraw_scorumpower_check_fixture : public database_trx_integration_fixture
 {
 public:
@@ -23,7 +30,7 @@ public:
     dynamic_global_property_service_i& dynamic_global_property_service;
 
 protected:
-    void create_dev_pool(const asset& sp_balance = ASSET_NULL_SP, const asset& scr_balance = ASSET_NULL_SCR);
+    void set_dev_pool_balance(const asset& sp_balance = ASSET_NULL_SP, const asset& scr_balance = ASSET_NULL_SCR);
 };
-}
-}
+
+} // namespace database_fixture

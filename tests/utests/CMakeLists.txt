@@ -22,6 +22,7 @@ set(SOURCES
     proposal/proposal_evaluator_register_tests.cpp
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
+    proposal/development_committee_transfer_evaluator_tests.cpp
     tasks_base_tests.cpp
     block_tasks_tests.cpp
 )

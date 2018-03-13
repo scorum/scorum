@@ -70,6 +70,7 @@ struct genesis_state_type : public genesis_chain_id_type
     std::vector<witness_type> witness_candidates;
     std::vector<registration_schedule_item> registration_schedule;
     std::vector<std::string> registration_committee;
+    std::vector<std::string> development_committee;
 };
 
 } // namespace chain
@@ -114,5 +115,6 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (steemit_bounty_accounts)
            (witness_candidates)
            (registration_schedule)
-           (registration_committee))
+           (registration_committee)
+           (development_committee))
 // clang-format on

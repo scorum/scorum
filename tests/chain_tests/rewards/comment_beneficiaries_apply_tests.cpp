@@ -15,9 +15,7 @@
 #include <string>
 #include <map>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 BOOST_FIXTURE_TEST_SUITE(comment_beneficiaries_tests, database_default_integration_fixture)
 
@@ -91,7 +89,7 @@ BOOST_AUTO_TEST_CASE(old_tests)
         tx.clear();
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx), chain::plugin_exception);
+        SCORUM_REQUIRE_THROW(db.push_transaction(tx), plugin_exception);
 
         BOOST_TEST_MESSAGE("--- Test specifying a non-existent benefactor");
         b.beneficiaries.clear();

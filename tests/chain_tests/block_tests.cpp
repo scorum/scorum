@@ -68,9 +68,7 @@ void test_push_transaction(database& db, const signed_transaction& tx, uint32_t 
 
 #define PUSH_BLOCK test_push_block
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 BOOST_AUTO_TEST_SUITE(block_tests)
 
@@ -155,7 +153,7 @@ BOOST_AUTO_TEST_CASE(undo_block)
             database db;
             db_setup_and_open(db, data_dir.path());
             fc::time_point_sec now(TEST_GENESIS_TIMESTAMP);
-            std::vector<time_point_sec> time_stack;
+            std::vector<fc::time_point_sec> time_stack;
 
             auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
             for (uint32_t i = 0; i < 5; ++i)
@@ -644,43 +642,43 @@ BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, database_default_integration_fixture)
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), uint32_t(SCORUM_100_PERCENT));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 1");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 1);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 1);
         BOOST_CHECK_EQUAL(rsf(), "0111111111111111111111111111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(127));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 1");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 1);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 1);
         BOOST_CHECK_EQUAL(rsf(), "0101111111111111111111111111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(126));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 2");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 2);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 2);
         BOOST_CHECK_EQUAL(rsf(), "0010101111111111111111111111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(124));
 
         BOOST_TEST_MESSAGE("Generating a block for skipping 3");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 3);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 3);
         BOOST_CHECK_EQUAL(rsf(), "0001001010111111111111111111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(121));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 5");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 5);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 5);
         BOOST_CHECK_EQUAL(rsf(), "0000010001001010111111111111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(116));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 8");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 8);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 8);
         BOOST_CHECK_EQUAL(rsf(), "0000000010000010001001010111111111111111111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(108));
 
         BOOST_TEST_MESSAGE("Generating a block skipping 13");
-        generate_block(~database::skip_fork_db, init_account_priv_key, 13);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 13);
         BOOST_CHECK_EQUAL(rsf(), "0000000000000100000000100000100010010101111111111111111111111111"
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
@@ -707,12 +705,12 @@ BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, database_default_integration_fixture)
                                  "1111111111111111111111111111111111111111111111111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(95));
 
-        generate_block(~database::skip_fork_db, init_account_priv_key, 64);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 64);
         BOOST_CHECK_EQUAL(rsf(), "0000000000000000000000000000000000000000000000000000000000000000"
                                  "1111100000000000001000000001000001000100101011111111111111111111");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(31));
 
-        generate_block(~database::skip_fork_db, init_account_priv_key, 32);
+        generate_block(~database::skip_fork_db, initdelegate.private_key, 32);
         BOOST_CHECK_EQUAL(rsf(), "0000000000000000000000000000000010000000000000000000000000000000"
                                  "0000000000000000000000000000000001111100000000000001000000001000");
         BOOST_CHECK_EQUAL(db.witness_participation_rate(), pct(8));
@@ -730,7 +728,7 @@ BOOST_FIXTURE_TEST_CASE(skip_block, database_default_integration_fixture)
         int miss_blocks = fc::minutes(1).to_seconds() / SCORUM_BLOCK_INTERVAL;
         auto witness = db.get_scheduled_witness(miss_blocks);
         auto block_time = db.get_slot_time(miss_blocks);
-        db.generate_block(block_time, witness, init_account_priv_key, 0);
+        db.generate_block(block_time, witness, initdelegate.private_key, 0);
 
         BOOST_CHECK_EQUAL(db.head_block_num(), uint32_t(init_block_num + 1));
         BOOST_CHECK(db.head_block_time() == block_time);

@@ -41,5 +41,38 @@ statistics account_statistics_api::get_lifetime_stats() const
 {
     return my->_app.chain_database()->with_read_lock([&]() { return my->get_lifetime_stats(); });
 }
+
+statistics account_statistics_api::get_stats_for_time_by_account_name(const account_name_type& account_name,
+                                                                      const fc::time_point_sec& open,
+                                                                      uint32_t interval) const
+{
+    return my->_app.chain_database()->with_read_lock([&]() {
+        statistics account_stat;
+        account_stat.statistic_map[account_name] = my->get_stats_for_time(open, interval).statistic_map[account_name];
+        return account_stat;
+    });
+}
+
+statistics account_statistics_api::get_stats_for_interval_by_account_name(const account_name_type& account_name,
+                                                                          const fc::time_point_sec& start,
+                                                                          const fc::time_point_sec& end) const
+{
+    return my->_app.chain_database()->with_read_lock([&]() {
+        statistics account_stat;
+        account_stat.statistic_map[account_name]
+            = my->get_stats_for_interval<account_statistics_plugin>(start, end).statistic_map[account_name];
+        return account_stat;
+    });
+}
+
+statistics account_statistics_api::get_lifetime_stats_by_account_name(const account_name_type& account_name) const
+{
+    return my->_app.chain_database()->with_read_lock([&]() {
+        statistics account_stat;
+        account_stat.statistic_map[account_name] = my->get_lifetime_stats().statistic_map[account_name];
+        return account_stat;
+    });
+}
+
 } // namespace account_statistics
 } // namespace scorum

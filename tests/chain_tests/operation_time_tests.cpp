@@ -22,9 +22,7 @@
 
 #include <cmath>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 BOOST_FIXTURE_TEST_SUITE(operation_time_tests, database_default_integration_fixture)
 

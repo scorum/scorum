@@ -9,8 +9,7 @@
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 withdraw_scorumpower_check_fixture::withdraw_scorumpower_check_fixture()
     : account_service(db.account_service())
@@ -22,15 +21,13 @@ withdraw_scorumpower_check_fixture::withdraw_scorumpower_check_fixture()
     open_database();
 }
 
-void withdraw_scorumpower_check_fixture::create_dev_pool(const asset& sp_balance, const asset& scr_balance)
+void withdraw_scorumpower_check_fixture::set_dev_pool_balance(const asset& sp_balance, const asset& scr_balance)
 {
-    FC_ASSERT(!pool_service.is_exists());
-
     generate_blocks(2);
 
     db_plugin->debug_update(
         [&](database&) {
-            pool_service.create([&](dev_committee_object& pool) {
+            pool_service.update([&](dev_committee_object& pool) {
                 pool.sp_balance = sp_balance;
                 pool.scr_balance = scr_balance;
             });
@@ -44,6 +41,5 @@ void withdraw_scorumpower_check_fixture::create_dev_pool(const asset& sp_balance
 
     validate_database();
     generate_blocks(2);
-}
 }
 }
