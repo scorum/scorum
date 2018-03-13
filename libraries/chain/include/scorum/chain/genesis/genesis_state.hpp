@@ -20,7 +20,12 @@ struct genesis_chain_id_type
     chain_id_type initial_chain_id;
 };
 
-struct genesis_state_type : public genesis_chain_id_type
+struct genesis_persistent_state_type
+{
+    time_point_sec lock_withdraw_sp_until_timestamp = time_point_sec::min();
+};
+
+struct genesis_state_type : public genesis_persistent_state_type, public genesis_chain_id_type
 {
     struct account_type
     {
@@ -64,7 +69,6 @@ struct genesis_state_type : public genesis_chain_id_type
     asset development_sp_supply = asset(0, SP_SYMBOL);
     asset development_scr_supply = asset(0, SCORUM_SYMBOL);
     time_point_sec initial_timestamp = time_point_sec::min();
-    time_point_sec lock_withdraw_sp_until_timestamp = time_point_sec::min();
     std::vector<account_type> accounts;
     std::vector<founder_type> founders;
     std::vector<steemit_bounty_account_type> steemit_bounty_accounts;
@@ -101,7 +105,10 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
            (users)
            (bonus_percent))
 
-FC_REFLECT(scorum::chain::genesis_state_type,
+FC_REFLECT(scorum::chain::genesis_persistent_state_type,
+           (lock_withdraw_sp_until_timestamp))
+
+FC_REFLECT_DERIVED(scorum::chain::genesis_state_type, (scorum::chain::genesis_persistent_state_type),
            (registration_supply)
            (registration_bonus)
            (accounts_supply)
@@ -111,7 +118,6 @@ FC_REFLECT(scorum::chain::genesis_state_type,
            (development_sp_supply)
            (development_scr_supply)
            (initial_timestamp)
-           (lock_withdraw_sp_until_timestamp)
            (accounts)
            (founders)
            (steemit_bounty_accounts)

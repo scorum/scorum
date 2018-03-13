@@ -13,7 +13,7 @@ dbs_genesis_state::dbs_genesis_state(database& db)
 
 const fc::time_point_sec& dbs_genesis_state::get_lock_withdraw_sp_until_timestamp() const
 {
-    return db_impl().genesis_state().lock_withdraw_sp_until_timestamp;
+    return db_impl().genesis_persistent_state().lock_withdraw_sp_until_timestamp;
 }
 }
 }

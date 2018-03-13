@@ -80,7 +80,7 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
-    genesis_state_type _genesis_state;
+    genesis_persistent_state_type _genesis_persistent_state;
 
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
@@ -117,7 +117,7 @@ void database::open(const fc::path& data_dir,
         chainbase::database::open(shared_mem_dir, chainbase_flags, shared_file_size);
 
         // must be initialized before evaluators creation
-        _my->_genesis_state = genesis_state;
+        _my->_genesis_persistent_state = static_cast<const genesis_persistent_state_type&>(genesis_state);
 
         initialize_indexes();
         initialize_evaluators();
@@ -1746,9 +1746,9 @@ void database::clear_expired_delegations()
     }
 }
 
-const genesis_state_type& database::genesis_state() const
+const genesis_persistent_state_type& database::genesis_persistent_state() const
 {
-    return _my->_genesis_state;
+    return _my->_genesis_persistent_state;
 }
 
 void database::adjust_balance(const account_object& a, const asset& delta)
