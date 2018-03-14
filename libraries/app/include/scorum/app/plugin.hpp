@@ -123,7 +123,7 @@ public:
     }
 
 protected:
-    void print_greeting(const std::string& = "");
+    void print_greeting();
 
     graphene::net::node& p2p_node()
     {

@@ -66,16 +66,9 @@ void plugin::plugin_set_program_options(boost::program_options::options_descript
     return;
 }
 
-void plugin::print_greeting(const std::string& title /*= ""*/)
+void plugin::print_greeting()
 {
-    if (!title.empty())
-    {
-        ilog("${t} ${n}", ("t", title)("n", plugin_name()));
-    }
-    else
-    {
-        ilog("Welcom ${n}", ("n", plugin_name()));
-    }
+    ilog("Welcom ${n}", ("n", plugin_name()));
 }
 }
 } // scorum::app
