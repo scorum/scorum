@@ -55,6 +55,7 @@
 #include <boost/range/algorithm/reverse.hpp>
 
 #include <iostream>
+#include <set>
 
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
@@ -88,6 +89,7 @@ api_context::api_context(application& _app, const std::string& _api_name, std::w
 namespace detail {
 
 using plugins_type = std::map<std::string, std::shared_ptr<abstract_plugin>>;
+using plugin_names_type = std::set<std::string>;
 
 class application_impl : public graphene::net::node_delegate
 {
@@ -1061,6 +1063,10 @@ public:
     std::shared_ptr<fc::http::websocket_server> _websocket_server;
     std::shared_ptr<fc::http::websocket_tls_server> _websocket_tls_server;
 
+    // These plugins have API that push block to DB.
+    // It is not expected for read-only mode
+    const plugin_names_type _plugins_locked_in_readonly_mode = { "witness", "raw_block", "debug_node" };
+
     plugins_type _plugins_available;
     plugins_type _plugins_enabled;
     flat_map<std::string, std::function<fc::api_ptr(const api_context&)>> _api_factories_by_name;
@@ -1105,7 +1111,6 @@ void application::set_program_options(boost::program_options::options_descriptio
     std::string str_default_apis = boost::algorithm::join(default_apis, " ");
 
     std::vector<std::string> default_plugins;
-    default_plugins.push_back("witness");
     default_plugins.push_back("account_history");
     default_plugins.push_back("account_by_key");
     default_plugins.push_back("account_stats");
@@ -1404,9 +1409,18 @@ void application::initialize_plugins(const boost::program_options::variables_map
             }
         }
     }
+
+    bool read_only = options.count("read-only");
     for (auto& entry : my->_plugins_enabled)
     {
-        ilog("Initializing plugin ${name}", ("name", entry.first));
+        const auto& plugin_name = entry.first;
+        ilog("Initializing plugin ${name}", ("name", plugin_name));
+        if (read_only)
+        {
+            FC_ASSERT(my->_plugins_locked_in_readonly_mode.find(plugin_name)
+                          == my->_plugins_locked_in_readonly_mode.end(),
+                      "Plugin '${p}' can't be loaded in read-only mode.", ("p", plugin_name));
+        }
         entry.second->plugin_initialize(options);
     }
 }

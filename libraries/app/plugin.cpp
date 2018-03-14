@@ -66,21 +66,16 @@ void plugin::plugin_set_program_options(boost::program_options::options_descript
     return;
 }
 
-void plugin::print_greeting(const char* ptitle /*= nullptr*/)
+void plugin::print_greeting(const std::string& title /*= ""*/)
 {
-    if (ptitle)
+    if (!title.empty())
     {
-        ilog("${t} ${n}", ("t", ptitle)("n", plugin_name()));
+        ilog("${t} ${n}", ("t", title)("n", plugin_name()));
     }
     else
     {
         ilog("Welcom ${n}", ("n", plugin_name()));
     }
-}
-
-void plugin::ban_for_read_only_mode(const boost::program_options::variables_map& options)
-{
-    FC_ASSERT(!options.count("read-only"), "Plugin ${p} can't load in read-only mode.", ("p", plugin_name()));
 }
 }
 } // scorum::app

@@ -123,8 +123,7 @@ public:
     }
 
 protected:
-    void print_greeting(const char* ptitle = nullptr);
-    void ban_for_read_only_mode(const boost::program_options::variables_map& options);
+    void print_greeting(const std::string& = "");
 
     graphene::net::node& p2p_node()
     {

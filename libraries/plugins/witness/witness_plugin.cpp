@@ -422,10 +422,6 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
 {
     try
     {
-        // This plugin has API that push block to DB.
-        // It is not expected for read-only mode
-        ban_for_read_only_mode(options);
-
         _options = &options;
         LOAD_VALUE_SET(options, "witness", _witnesses, std::string)
 
