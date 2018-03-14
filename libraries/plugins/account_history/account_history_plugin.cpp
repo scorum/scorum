@@ -241,8 +241,6 @@ void account_history_plugin::plugin_set_program_options(boost::program_options::
 
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    ilog("Intializing account history plugin");
-
     typedef std::pair<account_name_type, account_name_type> pairstring;
     LOAD_VALUE_SET(options, "track-account-range", my->_tracked_accounts, pairstring);
 
@@ -283,6 +281,7 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
 
         ilog("Account History: blacklisting ops ${o}", ("o", my->_op_list));
     }
+    print_greeting();
 }
 
 void account_history_plugin::plugin_startup()

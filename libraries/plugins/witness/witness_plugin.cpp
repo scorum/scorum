@@ -446,6 +446,8 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
         db.add_plugin_index<reserve_ratio_index>();
     }
     FC_LOG_AND_RETHROW()
+
+    print_greeting();
 }
 
 void witness_plugin::plugin_startup()

@@ -527,10 +527,11 @@ void tags_plugin::plugin_set_program_options(boost::program_options::options_des
 
 void tags_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    ilog("Intializing tags plugin");
     database().post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
 
     app().register_api_factory<tag_api>("tag_api");
+
+    print_greeting();
 }
 
 void tags_plugin::plugin_startup()
