@@ -151,7 +151,9 @@ registration_check_fixture::create_registration_genesis_impl(schedule_inputs_typ
     schedule_input.clear();
     schedule_input.reserve(4);
 
-    schedule_input.emplace_back(schedule_input_type{ 1, 10, 100 });
+    // Amount of users = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK to force
+    // to select the entire limit in the first step (tests logic)
+    schedule_input.emplace_back(schedule_input_type{ 1, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK, 100 });
     schedule_input.emplace_back(schedule_input_type{ 2, 5, 75 });
     schedule_input.emplace_back(schedule_input_type{ 3, 5, 50 });
     schedule_input.emplace_back(schedule_input_type{ 4, 8, 25 });
