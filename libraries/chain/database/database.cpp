@@ -80,6 +80,8 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
+    genesis_persistent_state_type _genesis_persistent_state;
+
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
@@ -113,6 +115,9 @@ void database::open(const fc::path& data_dir,
     try
     {
         chainbase::database::open(shared_mem_dir, chainbase_flags, shared_file_size);
+
+        // must be initialized before evaluators creation
+        _my->_genesis_persistent_state = static_cast<const genesis_persistent_state_type&>(genesis_state);
 
         initialize_indexes();
         initialize_evaluators();
@@ -152,6 +157,17 @@ void database::open(const fc::path& data_dir,
 
                 _fork_db.start_block(*head_block);
             }
+        }
+
+        try
+        {
+            const auto& chain_id = get<chain_property_object>().chain_id;
+            FC_ASSERT(genesis_state.initial_chain_id == chain_id,
+                      "Current chain id is not equal initial chain id = ${id}", ("id", chain_id));
+        }
+        catch (fc::exception& er)
+        {
+            throw std::logic_error(std::string("Invalid chain id: ") + er.to_detail_string());
         }
 
         with_read_lock([&]() {
@@ -1728,6 +1744,11 @@ void database::clear_expired_delegations()
         remove(*itr);
         itr = delegations_by_exp.begin();
     }
+}
+
+const genesis_persistent_state_type& database::genesis_persistent_state() const
+{
+    return _my->_genesis_persistent_state;
 }
 
 void database::adjust_balance(const account_object& a, const asset& delta)

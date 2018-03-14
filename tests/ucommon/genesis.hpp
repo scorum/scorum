@@ -176,6 +176,12 @@ public:
         return *this;
     }
 
+    Genesis& lock_withdraw_sp_until_timestamp(fc::time_point_sec timestamp)
+    {
+        genesis_state.lock_withdraw_sp_until_timestamp = timestamp;
+        return *this;
+    }
+
     template <typename... Args> Genesis& registration_schedule(Args... args)
     {
         std::array<registration_stage, sizeof...(args)> list = { args... };
