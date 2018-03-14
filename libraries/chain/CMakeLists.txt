@@ -57,6 +57,7 @@ add_library( scorum_chain
              services/witness.cpp
              services/witness_schedule.cpp
              services/witness_vote.cpp
+             services/genesis_state.cpp
 
              data_service_factory.cpp
 
