@@ -305,8 +305,6 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
 {
     try
     {
-        check_read_only_mode(options);
-
         if (options.count("chain-stats-bucket-size"))
         {
             const std::string& buckets = options["chain-stats-bucket-size"].as<std::string>();

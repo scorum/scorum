@@ -78,7 +78,7 @@ void plugin::print_greeting(const char* ptitle /*= nullptr*/)
     }
 }
 
-void plugin::check_read_only_mode(const boost::program_options::variables_map& options)
+void plugin::ban_for_read_only_mode(const boost::program_options::variables_map& options)
 {
     FC_ASSERT(!options.count("read-only"), "Plugin ${p} can't load in read-only mode.", ("p", plugin_name()));
 }

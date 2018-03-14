@@ -24,7 +24,9 @@ std::string raw_block_plugin::plugin_name() const
 
 void raw_block_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    check_read_only_mode(options);
+    // This plugin has API that push block to DB.
+    // It is not expected for read-only mode
+    ban_for_read_only_mode(options);
     print_greeting();
 }
 

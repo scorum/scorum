@@ -113,7 +113,6 @@ void account_statistics_plugin::plugin_set_program_options(boost::program_option
 
 void account_statistics_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    check_read_only_mode(options);
     print_greeting();
 }
 

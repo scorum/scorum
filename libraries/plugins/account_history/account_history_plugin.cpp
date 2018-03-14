@@ -241,8 +241,6 @@ void account_history_plugin::plugin_set_program_options(boost::program_options::
 
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    check_read_only_mode(options);
-
     typedef std::pair<account_name_type, account_name_type> pairstring;
     LOAD_VALUE_SET(options, "track-account-range", my->_tracked_accounts, pairstring);
 
