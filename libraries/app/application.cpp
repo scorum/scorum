@@ -1404,21 +1404,11 @@ void application::initialize_plugins(const boost::program_options::variables_map
             }
         }
     }
-    detail::plugins_type plugins_enabled;
     for (auto& entry : my->_plugins_enabled)
     {
-        try
-        {
-            ilog("Initializing plugin ${name}", ("name", entry.first));
-            entry.second->plugin_initialize(options);
-            plugins_enabled[entry.first] = entry.second;
-        }
-        catch (fc::assert_exception& er)
-        {
-            wlog("${details}", ("details", er.to_detail_string()));
-        }
+        ilog("Initializing plugin ${name}", ("name", entry.first));
+        entry.second->plugin_initialize(options);
     }
-    my->_plugins_enabled = plugins_enabled;
 }
 
 void application::startup_plugins()
