@@ -1,6 +1,8 @@
 {
   "initial_timestamp": "2017-11-29T10:03:00",
 
+  "lock_withdraw_sp_until_timestamp": "2018-08-01T00:00:00",
+
   "accounts_supply": "1002.000000000 SCR",
   "accounts": [
     {
@@ -60,6 +62,7 @@
   "registration_supply": "10000.000000000 SCR",
   "registration_bonus": "0.000000100 SCR",
   "registration_committee": ["alice", "bob"],
+  "development_committee": ["alice", "bob"],
 
   "registration_schedule": [{
     "stage": 1,

@@ -15,12 +15,14 @@ namespace database_ns {
 void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 {
     withdraw_scorumpower_service_i& withdraw_scorumpower_service = ctx.services().withdraw_scorumpower_service();
-    withdraw_scorumpower_route_service_i& withdraw_scorumpower_route_service = ctx.services().withdraw_scorumpower_route_service();
+    withdraw_scorumpower_route_service_i& withdraw_scorumpower_route_service
+        = ctx.services().withdraw_scorumpower_route_service();
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
     withdrawable_actors_impl actors_impl(ctx);
 
-    for (const withdraw_scorumpower_object& wvo : withdraw_scorumpower_service.get_until(dprops_service.head_block_time()))
+    for (const withdraw_scorumpower_object& wvo :
+         withdraw_scorumpower_service.get_until(dprops_service.head_block_time()))
     {
         asset scorumpower = actors_impl.get_available_scorumpower(wvo.from_id);
         asset to_withdraw = asset(0, SP_SYMBOL);

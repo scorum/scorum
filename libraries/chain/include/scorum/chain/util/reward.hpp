@@ -30,7 +30,7 @@ struct comment_reward_context
     curve_id reward_curve = quadratic;
 };
 
-uint64_t get_rshare_reward(const comment_reward_context& ctx);
+asset get_rshare_reward(const comment_reward_context& ctx);
 
 uint128_t evaluate_reward_curve(const uint128_t& rshares, const curve_id& curve = quadratic);
 
@@ -46,9 +46,10 @@ inline bool is_comment_payout_dust(uint64_t scorum_payout)
     // SCORUM: no payout limits
     // return scorum_payout <= 0;
 }
-}
-}
-} // scorum::chain::util
+
+} // namespace util
+} // namespace chain
+} // namespace scorum
 
 FC_REFLECT(scorum::chain::util::comment_reward_context,
            (rshares)(reward_weight)(max_scr)(total_reward_shares2)(total_reward_fund_scorum)(reward_curve))

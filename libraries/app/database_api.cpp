@@ -6,14 +6,20 @@
 
 #include <scorum/chain/util/reward.hpp>
 
-#include <scorum/chain/services/budget.hpp>
-#include <scorum/chain/services/registration_committee.hpp>
-#include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/development_committee.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/escrow.hpp>
+#include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/registration_committee.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 
-#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/committee.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
@@ -30,10 +36,13 @@
 #include <cfenv>
 #include <iostream>
 
-#define GET_REQUIRED_FEES_MAX_RECURSION 4
+#define GET_REQUIRED_FEES_MAX_RECURSION (4)
 
 namespace scorum {
 namespace app {
+
+constexpr uint32_t LOOKUP_LIMIT = 1000;
+constexpr uint32_t GET_ACCOUNT_HISTORY_LIMIT = 10000;
 
 class database_api_impl;
 
@@ -82,7 +91,12 @@ public:
     uint64_t get_witness_count() const;
 
     // Committee
-    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<account_name_type> lookup_registration_committee_members(const std::string& lower_bound_name,
+                                                                      uint32_t limit) const;
+
+    std::set<account_name_type> lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                     uint32_t limit) const;
+
     std::vector<proposal_api_obj> lookup_proposals() const;
 
     // Authority / validation
@@ -103,6 +117,9 @@ public:
     boost::signals2::scoped_connection _block_applied_connection;
 
     bool _disable_get_block = false;
+
+    registration_committee_api_obj get_registration_committee() const;
+    development_committee_api_obj get_development_committee() const;
 };
 
 applied_operation::applied_operation()
@@ -264,13 +281,14 @@ dynamic_global_property_api_obj database_api::get_dynamic_global_properties() co
 
 chain_properties database_api::get_chain_properties() const
 {
-    return my->_db.with_read_lock([&]() { return my->_db.get_dynamic_global_properties().median_chain_props; });
+    return my->_db.with_read_lock(
+        [&]() { return my->_db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props; });
 }
 
 dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties() const
 {
     dynamic_global_property_api_obj gpao;
-    gpao = _db.get(dynamic_global_property_id_type());
+    gpao = _db.obtain_service<dbs_dynamic_global_property>().get();
 
     if (_db.has_index<witness::reserve_ratio_index>())
     {
@@ -436,7 +454,7 @@ std::set<std::string> database_api::lookup_accounts(const std::string& lower_bou
 
 std::set<std::string> database_api_impl::lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
     const auto& accounts_by_name = _db.get_index<account_index>().indices().get<by_name>();
     std::set<std::string> result;
 
@@ -498,7 +516,7 @@ optional<escrow_api_obj> database_api::get_escrow(const std::string& from, uint3
 
         try
         {
-            result = my->_db.get_escrow(from, escrow_id);
+            result = my->_db.obtain_service<dbs_escrow>().get(from, escrow_id);
         }
         catch (...)
         {
@@ -653,7 +671,7 @@ std::set<account_name_type> database_api::lookup_witness_accounts(const std::str
 std::set<account_name_type> database_api_impl::lookup_witness_accounts(const std::string& lower_bound_name,
                                                                        uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
     const auto& witnesses_by_id = _db.get_index<witness_index>().indices().get<by_id>();
 
     // get all the names and look them all up, sort them, then figure out what
@@ -681,32 +699,33 @@ uint64_t database_api_impl::get_witness_count() const
     return _db.get_index<witness_index>().indices().size();
 }
 
-std::set<account_name_type> database_api::lookup_committee_accounts(const std::string& lower_bound_name,
-                                                                    uint32_t limit) const
+std::set<account_name_type> database_api::lookup_registration_committee_members(const std::string& lower_bound_name,
+                                                                                uint32_t limit) const
 {
-    return my->_db.with_read_lock([&]() { return my->lookup_committee_accounts(lower_bound_name, limit); });
+
+    return my->_db.with_read_lock([&]() { return my->lookup_registration_committee_members(lower_bound_name, limit); });
 }
 
-std::set<account_name_type> database_api_impl::lookup_committee_accounts(const std::string& lower_bound_name,
-                                                                         uint32_t limit) const
+std::set<account_name_type> database_api::lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                               uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    return my->_db.with_read_lock([&]() { return my->lookup_development_committee_members(lower_bound_name, limit); });
+}
 
-    auto& committee_service = _db.obtain_service<dbs_registration_committee>();
-    auto committee = committee_service.get_committee();
+std::set<account_name_type>
+database_api_impl::lookup_registration_committee_members(const std::string& lower_bound_name, uint32_t limit) const
+{
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
-    std::set<account_name_type> members_by_account_name;
-    for (const registration_committee_member_object& member : committee)
-    {
-        if (member.account >= lower_bound_name)
-        {
-            members_by_account_name.insert(member.account);
-        }
-    }
+    return committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
+}
 
-    fc::limit_left_cut_right(members_by_account_name, limit);
+std::set<account_name_type> database_api_impl::lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                                    uint32_t limit) const
+{
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
-    return members_by_account_name;
+    return committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
 }
 
 std::vector<proposal_api_obj> database_api::lookup_proposals() const
@@ -725,6 +744,31 @@ std::vector<proposal_api_obj> database_api_impl::lookup_proposals() const
     }
 
     return proposals;
+}
+
+registration_committee_api_obj database_api::get_registration_committee() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_registration_committee(); });
+}
+
+registration_committee_api_obj database_api_impl::get_registration_committee() const
+{
+    registration_committee_api_obj committee(_db.get(registration_pool_id_type()));
+
+    return committee;
+}
+
+development_committee_api_obj database_api::get_development_committee() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_development_committee(); });
+}
+
+development_committee_api_obj database_api_impl::get_development_committee() const
+{
+    development_committee_api_obj committee;
+    committee = _db.get(dev_committee_id_type());
+
+    return committee;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -867,7 +911,7 @@ std::vector<vote_state> database_api::get_active_votes(const std::string& author
 {
     return my->_db.with_read_lock([&]() {
         std::vector<vote_state> result;
-        const auto& comment = my->_db.get_comment(author, permlink);
+        const auto& comment = my->_db.obtain_service<dbs_comment>().get(author, permlink);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
         comment_id_type cid(comment.id);
         auto itr = idx.lower_bound(cid);
@@ -931,14 +975,16 @@ void database_api::set_pending_payout(discussion& d) const
     {
         d.promoted = asset(itr->promoted_balance, SCORUM_SYMBOL);
     }
-    asset pot = my->_db.get_reward_fund().reward_balance;
-    u256 total_r2 = to256(my->_db.get_reward_fund().recent_claims);
+
+    const auto& reward_fund_obj = my->_db.obtain_service<dbs_reward_fund>().get();
+
+    asset pot = reward_fund_obj.reward_balance;
+    u256 total_r2 = to256(reward_fund_obj.recent_claims);
     if (total_r2 > 0)
     {
         uint128_t vshares;
-        const auto& rf = my->_db.get_reward_fund();
         vshares = d.net_rshares.value > 0
-            ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, rf.author_reward_curve)
+            ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, reward_fund_obj.author_reward_curve)
             : 0;
 
         u256 r2 = to256(vshares); // to256(abs_net_rshares);
@@ -1110,7 +1156,7 @@ std::vector<discussion> database_api::get_replies_by_last_update(account_name_ty
 
         if (start_permlink.size())
         {
-            const auto& comment = my->_db.get_comment(start_parent_author, start_permlink);
+            const auto& comment = my->_db.obtain_service<dbs_comment>().get(start_parent_author, start_permlink);
             itr = last_update_idx.iterator_to(comment);
             parent_author = &comment.parent_author;
         }
@@ -1145,7 +1191,7 @@ std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_aut
                 = my->_db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
             auto itr = tidx.lower_bound(boost::make_tuple(acnt.id, 0));
             std::vector<std::pair<std::string, uint32_t>> result;
-            while (itr != tidx.end() && itr->author == acnt.id && result.size() < 1000)
+            while (itr != tidx.end() && itr->author == acnt.id && result.size() < LOOKUP_LIMIT)
             {
                 result.push_back(std::make_pair(itr->tag, itr->total_posts));
                 ++itr;
@@ -1159,7 +1205,7 @@ std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_aut
 std::vector<tag_api_obj> database_api::get_trending_tags(const std::string& after, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
-        limit = std::min(limit, uint32_t(1000));
+        limit = std::min(limit, uint32_t(LOOKUP_LIMIT));
         std::vector<tag_api_obj> result;
         result.reserve(limit);
 
@@ -1222,7 +1268,7 @@ std::vector<discussion> database_api::get_discussions(const discussion_query& qu
 
     if (query.start_author && query.start_permlink)
     {
-        start = my->_db.get_comment(*query.start_author, *query.start_permlink).id;
+        start = my->_db.obtain_service<dbs_comment>().get(*query.start_author, *query.start_permlink).id;
         auto itr = cidx.find(start);
         while (itr != cidx.end() && itr->comment == start)
         {
@@ -1286,7 +1332,7 @@ comment_id_type database_api::get_parent(const discussion_query& query) const
         comment_id_type parent;
         if (query.parent_author && query.parent_permlink)
         {
-            parent = my->_db.get_comment(*query.parent_author, *query.parent_permlink).id;
+            parent = my->_db.obtain_service<dbs_comment>().get(*query.parent_author, *query.parent_permlink).id;
         }
         return parent;
     });
@@ -1547,7 +1593,7 @@ void database_api::recursively_fetch_content(state& _state,
 std::vector<account_name_type> database_api::get_active_witnesses() const
 {
     return my->_db.with_read_lock([&]() {
-        const auto& wso = my->_db.get_witness_schedule_object();
+        const auto& wso = my->_db.obtain_service<chain::dbs_witness_schedule>().get();
         size_t n = wso.current_shuffled_witnesses.size();
         std::vector<account_name_type> result;
         result.reserve(n);
@@ -1578,7 +1624,7 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
             auto itr = didx.lower_bound(boost::make_tuple(author, time_point_sec::maximum()));
             if (start_permlink.size())
             {
-                const auto& comment = my->_db.get_comment(author, start_permlink);
+                const auto& comment = my->_db.obtain_service<dbs_comment>().get(author, start_permlink);
                 if (comment.created < before_date)
                     itr = didx.iterator_to(comment);
             }
@@ -1605,7 +1651,7 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
 std::vector<scorumpower_delegation_api_obj>
 database_api::get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
     return my->_db.with_read_lock([&]() {
         std::vector<scorumpower_delegation_api_obj> result;
@@ -1626,7 +1672,7 @@ database_api::get_scorumpower_delegations(const std::string& account, const std:
 std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expiring_scorumpower_delegations(
     const std::string& account, time_point_sec from, uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
     return my->_db.with_read_lock([&]() {
         std::vector<scorumpower_delegation_expiration_api_obj> result;
@@ -2020,7 +2066,7 @@ state database_api::get_state(std::string path) const
                 d.second.active_votes = get_active_votes(d.second.author, d.second.permlink);
             }
 
-            _state.witness_schedule = my->_db.get_witness_schedule_object();
+            _state.witness_schedule = my->_db.obtain_service<dbs_witness_schedule>().get();
         }
         catch (const fc::exception& e)
         {

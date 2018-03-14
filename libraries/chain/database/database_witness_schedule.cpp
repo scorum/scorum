@@ -1,5 +1,9 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/protocol/config.hpp>
 
@@ -16,7 +20,9 @@ void database::update_witness_schedule()
 
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
-        const witness_schedule_object& wso = _db.get_witness_schedule_object();
+        auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
+
+        const witness_schedule_object& wso = schedule_service.get();
 
         using active_witnesses_container = boost::container::flat_map<witness_id_type, account_name_type>;
 
@@ -81,7 +87,7 @@ void database::update_witness_schedule()
             });
         }
 
-        _db.modify(wso, [&](witness_schedule_object& _wso) {
+        schedule_service.update([&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)
             {
                 _wso.current_shuffled_witnesses[i] = active_witnesses.nth(i)->second;
@@ -124,10 +130,13 @@ void database::_reset_witness_virtual_schedule_time()
 {
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
-    _db.modify(wso, [&](witness_schedule_object& o) {
+    auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
+
+    schedule_service.update([&](witness_schedule_object& o) {
         o.current_virtual_time = fc::uint128(); // reset it 0
     });
+
+    const witness_schedule_object& wso = schedule_service.get();
 
     const auto& idx = _db.get_index<witness_index>().indices();
     for (const auto& witness : idx)
@@ -146,14 +155,15 @@ void database::_update_witness_median_props()
 
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
+    auto& witness_service = _db.obtain_service<dbs_witness>();
 
     /// fetch all witness objects
     std::vector<const witness_object*> active;
     active.reserve(wso.num_scheduled_witnesses);
     for (int i = 0; i < wso.num_scheduled_witnesses; i++)
     {
-        active.push_back(&_db.get_witness(wso.current_shuffled_witnesses[i]));
+        active.push_back(&witness_service.get(wso.current_shuffled_witnesses[i]));
     }
 
     /// sort them by account_creation_fee
@@ -168,7 +178,7 @@ void database::_update_witness_median_props()
     });
     uint32_t median_maximum_block_size = active[active.size() / 2]->proposed_chain_props.maximum_block_size;
 
-    _db.modify(_db.get_dynamic_global_properties(), [&](dynamic_global_property_object& _dgpo) {
+    _db.obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& _dgpo) {
         _dgpo.median_chain_props.account_creation_fee = median_account_creation_fee;
         _dgpo.median_chain_props.maximum_block_size = median_maximum_block_size;
     });
@@ -180,12 +190,13 @@ void database::_update_witness_majority_version()
 {
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
+    auto& witness_service = _db.obtain_service<dbs_witness>();
 
     flat_map<version, uint32_t, std::greater<version>> witness_versions;
     for (uint32_t i = 0; i < wso.num_scheduled_witnesses; i++)
     {
-        auto witness = _db.get_witness(wso.current_shuffled_witnesses[i]);
+        auto witness = witness_service.get(wso.current_shuffled_witnesses[i]);
         if (witness_versions.find(witness.running_version) == witness_versions.end())
         {
             witness_versions[witness.running_version] = 1;
@@ -196,8 +207,7 @@ void database::_update_witness_majority_version()
         }
     }
 
-    const auto& dgpo = _db.get_dynamic_global_properties();
-    auto majority_version = dgpo.majority_version;
+    auto majority_version = _db.obtain_service<dbs_dynamic_global_property>().get().majority_version;
 
     // The map should be sorted highest version to smallest, so we iterate until we hit the majority of witnesses on
     // at least this version
@@ -211,20 +221,22 @@ void database::_update_witness_majority_version()
         }
     }
 
-    _db.modify(dgpo, [&](dynamic_global_property_object& _dgpo) { _dgpo.majority_version = majority_version; });
+    _db.obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& _dgpo) { _dgpo.majority_version = majority_version; });
 }
 
 void database::_update_witness_hardfork_version_votes()
 {
     database& _db = (*this);
 
-    const witness_schedule_object& wso = _db.get_witness_schedule_object();
+    const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
+    auto& witness_service = _db.obtain_service<dbs_witness>();
 
     flat_map<std::tuple<hardfork_version, time_point_sec>, uint32_t> hardfork_version_votes;
 
     for (uint32_t i = 0; i < wso.num_scheduled_witnesses; i++)
     {
-        auto witness = _db.get_witness(wso.current_shuffled_witnesses[i]);
+        auto witness = witness_service.get(wso.current_shuffled_witnesses[i]);
 
         auto version_vote = std::make_tuple(witness.hardfork_version_vote, witness.hardfork_time_vote);
         if (hardfork_version_votes.find(version_vote) == hardfork_version_votes.end())
@@ -243,7 +255,7 @@ void database::_update_witness_hardfork_version_votes()
     {
         if (hf_itr->second >= SCORUM_HARDFORK_REQUIRED_WITNESSES)
         {
-            const auto& hfp = _db.get_hardfork_property_object();
+            const auto& hfp = _db.obtain_service<dbs_hardfork_property>().get();
             if (hfp.next_hardfork != std::get<0>(hf_itr->first) || hfp.next_hardfork_time != std::get<1>(hf_itr->first))
             {
 
@@ -261,8 +273,8 @@ void database::_update_witness_hardfork_version_votes()
     // We no longer have a majority
     if (hf_itr == hardfork_version_votes.end())
     {
-        _db.modify(_db.get_hardfork_property_object(),
-                   [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
+        _db.obtain_service<dbs_hardfork_property>().update(
+            [&](hardfork_property_object& hpo) { hpo.next_hardfork = hpo.current_hardfork_version; });
     }
 }
 

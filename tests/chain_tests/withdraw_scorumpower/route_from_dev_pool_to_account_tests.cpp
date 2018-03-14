@@ -13,8 +13,7 @@
 
 #include "withdraw_scorumpower_check_common.hpp"
 
-using namespace scorum::protocol;
-using namespace scorum::chain;
+using namespace database_fixture;
 
 BOOST_AUTO_TEST_SUITE(withdraw_scorumpower_route_from_dev_pool_to_account_tests)
 
@@ -24,7 +23,7 @@ struct withdraw_scorumpower_route_from_dev_pool_to_account_tests_fixture : publi
     {
         pool_to_withdraw_sp = ASSET_SP(1e+4) * SCORUM_VESTING_WITHDRAW_INTERVALS;
         pool_to_withdraw_scr = asset(pool_to_withdraw_sp.amount, SCORUM_SYMBOL);
-        create_dev_pool(pool_to_withdraw_sp);
+        set_dev_pool_balance(pool_to_withdraw_sp);
 
         ACTORS((bob)(sam));
 

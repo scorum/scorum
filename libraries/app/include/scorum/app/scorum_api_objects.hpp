@@ -11,6 +11,9 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+
 #include <scorum/protocol/transaction.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
 
@@ -46,6 +49,7 @@ public:
     }
 };
 
+typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
 typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
 typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
@@ -150,7 +154,7 @@ struct comment_api_obj
     asset total_payout_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
 
-    share_type author_rewards;
+    asset author_rewards = asset(0, SCORUM_SYMBOL);
 
     int32_t net_votes = 0;
 
@@ -291,8 +295,8 @@ struct account_api_obj
 
     asset balance = asset(0, SCORUM_SYMBOL);
 
-    share_type curation_rewards;
-    share_type posting_rewards;
+    asset curation_rewards;
+    asset posting_rewards;
 
     asset scorumpower = asset(0, SP_SYMBOL);
     asset delegated_scorumpower = asset(0, SP_SYMBOL);
@@ -589,11 +593,30 @@ struct atomicswap_contract_result_api_obj
     }
 };
 
+struct registration_committee_api_obj
+{
+    registration_committee_api_obj()
+    {
+    }
+
+    registration_committee_api_obj(const registration_pool_object& reg_committee)
+        : invite_quorum(reg_committee.invite_quorum)
+        , dropout_quorum(reg_committee.dropout_quorum)
+        , change_quorum(reg_committee.change_quorum)
+    {
+    }
+
+    protocol::percent_type invite_quorum = 0u;
+    protocol::percent_type dropout_quorum = 0u;
+    protocol::percent_type change_quorum = 0u;
+};
+
 } // namespace app
 } // namespace scorum
 
 // clang-format off
 
+FC_REFLECT_EMPTY(scorum::app::development_committee_api_obj)
 FC_REFLECT_EMPTY(scorum::app::account_bandwidth_api_obj)
 FC_REFLECT_EMPTY(scorum::app::block_summary_api_obj)
 FC_REFLECT_EMPTY(scorum::app::change_recovery_account_request_api_obj)
@@ -609,6 +632,7 @@ FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
 
 FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
 
+FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 
 
 FC_REFLECT( scorum::app::comment_api_obj,

@@ -1,51 +1,11 @@
-#include <scorum/protocol/scorum_operations.hpp>
-#include <scorum/protocol/proposal_operations.hpp>
+#include <cstdint>
+#include <deque>
+#include <fstream>
+#include <functional>
+#include <openssl/md5.h>
 
-#include <scorum/chain/database/database.hpp>
-#include <scorum/chain/database_exceptions.hpp>
-#include <scorum/chain/db_with.hpp>
-#include <scorum/chain/shared_db_merkle.hpp>
-#include <scorum/chain/operation_notification.hpp>
-
-#include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/schema/dynamic_global_property_object.hpp>
-#include <scorum/chain/schema/chain_property_object.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
-#include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/transaction_object.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
-#include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/atomicswap_objects.hpp>
-#include <scorum/chain/schema/dev_committee_object.hpp>
-#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
-#include <scorum/chain/schema/reward_pool_object.hpp>
-
-#include <scorum/chain/genesis/genesis_state.hpp>
-
-#include <scorum/chain/util/asset.hpp>
-#include <scorum/chain/util/reward.hpp>
-#include <scorum/chain/util/uint256.hpp>
-
-#include <scorum/chain/evaluators/scorum_evaluators.hpp>
-#include <scorum/chain/evaluators/evaluator_registry.hpp>
-#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
-#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
-#include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
-#include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
-
-#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
-
-#include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/witness.hpp>
-#include <scorum/chain/services/budget.hpp>
-#include <scorum/chain/services/reward.hpp>
-#include <scorum/chain/services/proposal.hpp>
-#include <scorum/chain/services/registration_pool.hpp>
-#include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
-#include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/dev_pool.hpp>
-#include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -53,18 +13,60 @@
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
 
-#include <cstdint>
-#include <deque>
-#include <fstream>
-#include <functional>
+#include <scorum/protocol/scorum_operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
-#include <openssl/md5.h>
-#include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/core/ignore_unused.hpp>
+#include <scorum/chain/util/asset.hpp>
+#include <scorum/chain/util/reward.hpp>
+#include <scorum/chain/util/uint256.hpp>
 
-#include <scorum/chain/database/block_tasks/process_funds.hpp>
+#include <scorum/chain/shared_db_merkle.hpp>
+#include <scorum/chain/operation_notification.hpp>
+
+#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/database_exceptions.hpp>
+#include <scorum/chain/db_with.hpp>
+
+#include <scorum/chain/genesis/genesis_state.hpp>
+
+#include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
+
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
+#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
+#include <scorum/chain/services/proposal.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
+
 #include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
+
+#include <scorum/chain/evaluators/evaluator_registry.hpp>
+#include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
+#include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
+#include <scorum/chain/evaluators/scorum_evaluators.hpp>
+#include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
+#include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
 namespace scorum {
 namespace chain {
@@ -78,6 +80,8 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
+    genesis_persistent_state_type _genesis_persistent_state;
+
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
@@ -111,6 +115,9 @@ void database::open(const fc::path& data_dir,
     try
     {
         chainbase::database::open(shared_mem_dir, chainbase_flags, shared_file_size);
+
+        // must be initialized before evaluators creation
+        _my->_genesis_persistent_state = static_cast<const genesis_persistent_state_type&>(genesis_state);
 
         initialize_indexes();
         initialize_evaluators();
@@ -150,6 +157,17 @@ void database::open(const fc::path& data_dir,
 
                 _fork_db.start_block(*head_block);
             }
+        }
+
+        try
+        {
+            const auto& chain_id = get<chain_property_object>().chain_id;
+            FC_ASSERT(genesis_state.initial_chain_id == chain_id,
+                      "Current chain id is not equal initial chain id = ${id}", ("id", chain_id));
+        }
+        catch (fc::exception& er)
+        {
+            throw std::logic_error(std::string("Invalid chain id: ") + er.to_detail_string());
         }
 
         with_read_lock([&]() {
@@ -406,97 +424,9 @@ chain_id_type database::get_chain_id() const
     return get<chain_property_object>().chain_id;
 }
 
-const witness_object& database::get_witness(const account_name_type& name) const
-{
-    try
-    {
-        return get<witness_object, by_name>(name);
-    }
-    FC_CAPTURE_AND_RETHROW((name))
-}
-
-const witness_object* database::find_witness(const account_name_type& name) const
-{
-    return find<witness_object, by_name>(name);
-}
-
-const comment_object& database::get_comment(const account_name_type& author, const fc::shared_string& permlink) const
-{
-    try
-    {
-        return get<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-    }
-    FC_CAPTURE_AND_RETHROW((author)(permlink))
-}
-
-const comment_object* database::find_comment(const account_name_type& author, const fc::shared_string& permlink) const
-{
-    return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-}
-
-const comment_object& database::get_comment(const account_name_type& author, const std::string& permlink) const
-{
-    try
-    {
-        return get<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-    }
-    FC_CAPTURE_AND_RETHROW((author)(permlink))
-}
-
-const comment_object* database::find_comment(const account_name_type& author, const std::string& permlink) const
-{
-    return find<comment_object, by_permlink>(boost::make_tuple(author, permlink));
-}
-
-const escrow_object& database::get_escrow(const account_name_type& name, uint32_t escrow_id) const
-{
-    try
-    {
-        return get<escrow_object, by_from_id>(boost::make_tuple(name, escrow_id));
-    }
-    FC_CAPTURE_AND_RETHROW((name)(escrow_id))
-}
-
-const escrow_object* database::find_escrow(const account_name_type& name, uint32_t escrow_id) const
-{
-    return find<escrow_object, by_from_id>(boost::make_tuple(name, escrow_id));
-}
-
-const dynamic_global_property_object& database::get_dynamic_global_properties() const
-{
-    try
-    {
-        return get<dynamic_global_property_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
 const node_property_object& database::get_node_properties() const
 {
     return _node_property_object;
-}
-
-const witness_schedule_object& database::get_witness_schedule_object() const
-{
-    try
-    {
-        return get<witness_schedule_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
-const hardfork_property_object& database::get_hardfork_property_object() const
-{
-    try
-    {
-        return get<hardfork_property_object>();
-    }
-    FC_CAPTURE_AND_RETHROW()
-}
-
-const reward_fund_object& database::get_reward_fund() const
-{
-    return get<reward_fund_object>();
 }
 
 const time_point_sec database::calculate_discussion_payout_time(const comment_object& comment) const
@@ -506,7 +436,7 @@ const time_point_sec database::calculate_discussion_payout_time(const comment_ob
 
 uint32_t database::witness_participation_rate() const
 {
-    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
     return uint64_t(SCORUM_100_PERCENT) * dpo.recent_slots_filled.popcount() / 128;
 }
 
@@ -684,7 +614,9 @@ void database::push_transaction(const signed_transaction& trx, uint32_t skip)
         try
         {
             size_t trx_size = fc::raw::pack_size(trx);
-            FC_ASSERT(trx_size <= (get_dynamic_global_properties().median_chain_props.maximum_block_size - 256));
+            FC_ASSERT(
+                trx_size
+                <= (obtain_service<dbs_dynamic_global_property>().get().median_chain_props.maximum_block_size - 256));
             set_producing(true);
             detail::with_skip_flags(*this, skip, [&]() { with_write_lock([&]() { _push_transaction(trx); }); });
             set_producing(false);
@@ -716,7 +648,6 @@ void database::_push_transaction(const signed_transaction& trx)
     _apply_transaction(trx);
     _pending_tx.push_back(trx);
 
-    notify_changed_objects();
     // The transaction applied successfully. Merge its changes into the pending block session.
     for_each_index([&](chainbase::abstract_generic_index_i& item) { item.squash(); });
     temp_session->push();
@@ -746,13 +677,15 @@ signed_block database::_generate_block(fc::time_point_sec when,
                                        const account_name_type& witness_owner,
                                        const fc::ecc::private_key& block_signing_private_key)
 {
+    auto& witness_service = obtain_service<dbs_witness>();
+
     uint32_t skip = get_node_properties().skip_flags;
     uint32_t slot_num = get_slot_at_time(when);
     FC_ASSERT(slot_num > 0);
     std::string scheduled_witness = get_scheduled_witness(slot_num);
     FC_ASSERT(scheduled_witness == witness_owner);
 
-    const auto& witness_obj = get_witness(witness_owner);
+    const auto& witness_obj = witness_service.get(witness_owner);
 
     if (!(skip & skip_witness_signature))
     {
@@ -760,8 +693,9 @@ signed_block database::_generate_block(fc::time_point_sec when,
     }
 
     static const size_t max_block_header_size = fc::raw::pack_size(signed_block_header()) + 4;
-    auto maximum_block_size
-        = get_dynamic_global_properties().median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
+    auto maximum_block_size = obtain_service<dbs_dynamic_global_property>()
+                                  .get()
+                                  .median_chain_props.maximum_block_size; // SCORUM_MAX_BLOCK_SIZE;
     size_t total_block_size = max_block_header_size;
 
     signed_block pending_block;
@@ -838,14 +772,14 @@ signed_block database::_generate_block(fc::time_point_sec when,
     pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();
     pending_block.witness = witness_owner;
 
-    const auto& witness = get_witness(witness_owner);
+    const auto& witness = witness_service.get(witness_owner);
 
     if (witness.running_version != SCORUM_BLOCKCHAIN_VERSION)
     {
         pending_block.extensions.insert(block_header_extensions(SCORUM_BLOCKCHAIN_VERSION));
     }
 
-    const auto& hfp = get_hardfork_property_object();
+    const auto& hfp = obtain_service<dbs_hardfork_property>().get();
 
     if (hfp.current_hardfork_version
             < SCORUM_BLOCKCHAIN_HARDFORK_VERSION // Binary is newer hardfork than has been applied
@@ -975,8 +909,9 @@ void database::notify_on_applied_transaction(const signed_transaction& tx)
 
 account_name_type database::get_scheduled_witness(uint32_t slot_num) const
 {
-    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-    const witness_schedule_object& wso = get_witness_schedule_object();
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
+    const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
+
     uint64_t current_aslot = dpo.current_aslot + slot_num;
     return wso.current_shuffled_witnesses[current_aslot % wso.num_scheduled_witnesses];
 }
@@ -989,7 +924,7 @@ fc::time_point_sec database::get_slot_time(uint32_t slot_num) const
     }
 
     auto interval = SCORUM_BLOCK_INTERVAL;
-    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
 
     if (head_block_num() == 0)
     {
@@ -1109,17 +1044,17 @@ void database::process_decline_voting_rights()
 
 time_point_sec database::head_block_time() const
 {
-    return get_dynamic_global_properties().time;
+    return obtain_service<dbs_dynamic_global_property>().get().time;
 }
 
 uint32_t database::head_block_num() const
 {
-    return get_dynamic_global_properties().head_block_number;
+    return obtain_service<dbs_dynamic_global_property>().get().head_block_number;
 }
 
 block_id_type database::head_block_id() const
 {
-    return get_dynamic_global_properties().head_block_id;
+    return obtain_service<dbs_dynamic_global_property>().get().head_block_id;
 }
 
 node_property_object& database::node_properties()
@@ -1129,7 +1064,7 @@ node_property_object& database::node_properties()
 
 uint32_t database::last_non_undoable_block_num() const
 {
-    return get_dynamic_global_properties().last_irreversible_block_num;
+    return obtain_service<dbs_dynamic_global_property>().get().last_irreversible_block_num;
 }
 
 void database::initialize_evaluators()
@@ -1204,6 +1139,7 @@ void database::initialize_indexes()
     add_index<atomicswap_contract_index>();
 
     add_index<dev_committee_index>();
+    add_index<dev_committee_member_index>();
 
     _plugin_index_signal();
 }
@@ -1214,34 +1150,6 @@ void database::validate_transaction(const signed_transaction& trx)
         auto session = start_undo_session();
         _apply_transaction(trx);
     });
-}
-
-void database::notify_changed_objects()
-{
-    try
-    {
-        /*vector< graphene::chainbase::generic_id > ids;
-        get_changed_ids( ids );
-        SCORUM_TRY_NOTIFY( changed_objects, ids )*/
-        /*
-        if( _undo_db.enabled() )
-        {
-           const auto& head_undo = _undo_db.head();
-           vector<object_id_type> changed_ids;  changed_ids.reserve(head_undo.old_values.size());
-           for( const auto& item : head_undo.old_values ) changed_ids.push_back(item.first);
-           for( const auto& item : head_undo.new_ids ) changed_ids.push_back(item);
-           vector<const object*> removed;
-           removed.reserve( head_undo.removed.size() );
-           for( const auto& item : head_undo.removed )
-           {
-              changed_ids.push_back( item.first );
-              removed.emplace_back( item.second.get() );
-           }
-           SCORUM_TRY_NOTIFY( changed_objects, changed_ids )
-        }
-        */
-    }
-    FC_CAPTURE_AND_RETHROW()
 }
 
 void database::set_flush_interval(uint32_t flush_blocks)
@@ -1384,7 +1292,7 @@ void database::_apply_block(const signed_block& next_block)
         _current_block_num = next_block_num;
         _current_trx_in_block = 0;
 
-        const auto& gprops = get_dynamic_global_properties();
+        const auto& gprops = obtain_service<dbs_dynamic_global_property>().get();
         auto block_size = fc::raw::pack_size(next_block);
         FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
                   ("next_block_num", next_block_num)("block_size",
@@ -1397,8 +1305,8 @@ void database::_apply_block(const signed_block& next_block)
         /// parse witness version reporting
         process_header_extensions(next_block);
 
-        const auto& witness = get_witness(next_block.witness);
-        const auto& hardfork_state = get_hardfork_property_object();
+        const auto& witness = obtain_service<dbs_witness>().get(next_block.witness);
+        const auto& hardfork_state = obtain_service<dbs_hardfork_property>().get();
         FC_ASSERT(witness.running_version >= hardfork_state.current_hardfork_version,
                   "Block produced by witness that is not running current hardfork",
                   ("witness", witness)("next_block.witness", next_block.witness)("hardfork_state", hardfork_state));
@@ -1439,20 +1347,20 @@ void database::_apply_block(const signed_block& next_block)
         expire_escrow_ratification();
         process_decline_voting_rights();
 
-        this->obtain_service<dbs_proposal>().clear_expired_proposals();
+        obtain_service<dbs_proposal>().clear_expired_proposals();
 
         process_hardforks();
 
         // notify observers that the block has been applied
         notify_applied_block(next_block);
-
-        notify_changed_objects();
-    } // FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
+    }
     FC_CAPTURE_LOG_AND_RETHROW((next_block.block_num()))
 }
 
 void database::process_header_extensions(const signed_block& next_block)
 {
+    auto& witness_service = obtain_service<dbs_witness>();
+
     auto itr = next_block.extensions.begin();
 
     while (itr != next_block.extensions.end())
@@ -1464,7 +1372,7 @@ void database::process_header_extensions(const signed_block& next_block)
         case 1: // version
         {
             auto reported_version = itr->get<version>();
-            const auto& signing_witness = get_witness(next_block.witness);
+            const auto& signing_witness = witness_service.get(next_block.witness);
             // idump( (next_block.witness)(signing_witness.running_version)(reported_version) );
 
             if (reported_version != signing_witness.running_version)
@@ -1476,7 +1384,7 @@ void database::process_header_extensions(const signed_block& next_block)
         case 2: // hardfork_version vote
         {
             auto hfv = itr->get<hardfork_version_vote>();
-            const auto& signing_witness = get_witness(next_block.witness);
+            const auto& signing_witness = witness_service.get(next_block.witness);
             // idump( (next_block.witness)(signing_witness.running_version)(hfv) );
 
             if (hfv.hf_version != signing_witness.hardfork_version_vote
@@ -1616,7 +1524,8 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
         FC_ASSERT(
             head_block_time() < next_block.timestamp, "",
             ("head_block_time", head_block_time())("next", next_block.timestamp)("blocknum", next_block.block_num()));
-        const witness_object& witness = get_witness(next_block.witness);
+
+        const witness_object& witness = obtain_service<dbs_witness>().get(next_block.witness);
 
         if (!(skip & skip_witness_signature))
         {
@@ -1653,7 +1562,8 @@ void database::update_global_dynamic_data(const signed_block& b)
 {
     try
     {
-        const dynamic_global_property_object& _dgp = get_dynamic_global_properties();
+        const dynamic_global_property_object& _dgp = obtain_service<dbs_dynamic_global_property>().get();
+        auto& witness_service = obtain_service<dbs_witness>();
 
         uint32_t missed_blocks = 0;
         if (head_block_time() != fc::time_point_sec())
@@ -1663,7 +1573,7 @@ void database::update_global_dynamic_data(const signed_block& b)
             missed_blocks--;
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
-                const auto& witness_missed = get_witness(get_scheduled_witness(i + 1));
+                const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
                 if (witness_missed.owner != b.witness)
                 {
                     modify(witness_missed, [&](witness_object& w) {
@@ -1722,7 +1632,7 @@ void database::update_last_irreversible_block()
 {
     try
     {
-        const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+        const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
 
         /**
          * Prior to voting taking over, we must be more conservative...
@@ -1739,13 +1649,14 @@ void database::update_last_irreversible_block()
         }
         else
         {
-            const witness_schedule_object& wso = get_witness_schedule_object();
+            auto& witness_service = obtain_service<dbs_witness>();
+            const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
 
             std::vector<const witness_object*> wit_objs;
             wit_objs.reserve(wso.num_scheduled_witnesses);
             for (int i = 0; i < wso.num_scheduled_witnesses; i++)
             {
-                wit_objs.push_back(&get_witness(wso.current_shuffled_witnesses[i]));
+                wit_objs.push_back(&witness_service.get(wso.current_shuffled_witnesses[i]));
             }
 
             static_assert(SCORUM_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero");
@@ -1835,6 +1746,11 @@ void database::clear_expired_delegations()
     }
 }
 
+const genesis_persistent_state_type& database::genesis_persistent_state() const
+{
+    return _my->_genesis_persistent_state;
+}
+
 void database::adjust_balance(const account_object& a, const asset& delta)
 {
     modify(a, [&](account_object& acnt) {
@@ -1860,7 +1776,7 @@ void database::init_hardforks(time_point_sec genesis_time)
     //_hardfork_times[ SCORUM_HARDFORK_0_1 ] = fc::time_point_sec( SCORUM_HARDFORK_0_1_TIME );
     //_hardfork_versions[ SCORUM_HARDFORK_0_1 ] = SCORUM_HARDFORK_0_1_VERSION;
 
-    const auto& hardforks = get_hardfork_property_object();
+    const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
               ("hardforks.last_hardfork", hardforks.last_hardfork)("SCORUM_NUM_HARDFORKS", SCORUM_NUM_HARDFORKS));
     FC_ASSERT(_hardfork_versions[hardforks.last_hardfork] <= SCORUM_BLOCKCHAIN_VERSION,
@@ -1873,7 +1789,7 @@ void database::process_hardforks()
     try
     {
         // If there are upcoming hardforks and the next one is later, do nothing
-        const auto& hardforks = get_hardfork_property_object();
+        const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
 
         while (_hardfork_versions[hardforks.last_hardfork] < hardforks.next_hardfork
                && hardforks.next_hardfork_time <= head_block_time())
@@ -1893,12 +1809,12 @@ void database::process_hardforks()
 
 bool database::has_hardfork(uint32_t hardfork) const
 {
-    return get_hardfork_property_object().processed_hardforks.size() > hardfork;
+    return obtain_service<dbs_hardfork_property>().get().processed_hardforks.size() > hardfork;
 }
 
 void database::set_hardfork(uint32_t hardfork, bool apply_now)
 {
-    auto const& hardforks = get_hardfork_property_object();
+    auto const& hardforks = obtain_service<dbs_hardfork_property>().get();
 
     for (uint32_t i = hardforks.last_hardfork + 1; i <= hardfork && i <= SCORUM_NUM_HARDFORKS; i++)
     {
@@ -1927,7 +1843,7 @@ void database::apply_hardfork(uint32_t hardfork)
         break;
     }
 
-    modify(get_hardfork_property_object(), [&](hardfork_property_object& hfp) {
+    obtain_service<dbs_hardfork_property>().update([&](hardfork_property_object& hfp) {
         FC_ASSERT(hardfork == hfp.last_hardfork + 1, "Hardfork being applied out of order",
                   ("hardfork", hardfork)("hfp.last_hardfork", hfp.last_hardfork));
         FC_ASSERT(hfp.processed_hardforks.size() == hardfork, "Hardfork being applied out of order");
@@ -1952,7 +1868,7 @@ void database::validate_invariants() const
         asset total_scorumpower = asset(0, SP_SYMBOL);
         share_type total_vsf_votes = share_type(0);
 
-        const auto& gpo = get_dynamic_global_properties();
+        const auto& gpo = obtain_service<dbs_dynamic_global_property>().get();
 
         /// verify no witness has too many votes
         const auto& witness_idx = get_index<witness_index>().indices();
@@ -1993,7 +1909,7 @@ void database::validate_invariants() const
             }
         }
 
-        total_supply += get_reward_fund().reward_balance;
+        total_supply += obtain_service<dbs_reward_fund>().get().reward_balance;
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
 
@@ -2007,11 +1923,8 @@ void database::validate_invariants() const
             total_supply += obtain_service<dbs_registration_pool>().get().balance;
         }
 
-        if (obtain_service<dbs_dev_pool>().is_exists())
-        {
-            total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
-            total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
-        }
+        total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
+        total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)

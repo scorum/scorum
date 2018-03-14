@@ -124,7 +124,12 @@ public:
         CHAINBASE_REQUIRE_READ_LOCK(ObjectType);
         auto obj = find<ObjectType, IndexedByType>(std::forward<CompatibleKey>(key));
         if (!obj)
-            BOOST_THROW_EXCEPTION(std::out_of_range("unknown key"));
+        {
+            std::string type_name = boost::core::demangle(typeid(ObjectType).name());
+            std::string key_type_name = boost::core::demangle(typeid(CompatibleKey).name());
+            BOOST_THROW_EXCEPTION(std::out_of_range("Can't get object of type " + type_name + " by key of type "
+                                                    + key_type_name + ". It's not in index."));
+        }
         return *obj;
     }
 
@@ -133,7 +138,10 @@ public:
         CHAINBASE_REQUIRE_READ_LOCK(ObjectType);
         auto obj = find<ObjectType>(key);
         if (!obj)
-            BOOST_THROW_EXCEPTION(std::out_of_range("unknown key"));
+        {
+            std::string type_name = boost::core::demangle(typeid(ObjectType).name());
+            BOOST_THROW_EXCEPTION(std::out_of_range("Can't get object of type " + type_name + ". It's not in index."));
+        }
         return *obj;
     }
 

@@ -37,7 +37,7 @@ uint64_t approx_sqrt(const uint128_t& x)
     return result;
 }
 
-uint64_t get_rshare_reward(const comment_reward_context& ctx)
+asset get_rshare_reward(const comment_reward_context& ctx)
 {
     try
     {
@@ -59,11 +59,7 @@ uint64_t get_rshare_reward(const comment_reward_context& ctx)
         if (is_comment_payout_dust(payout))
             payout = 0;
 
-        asset max_scorum = ctx.max_scr;
-
-        payout = std::min(payout, uint64_t(max_scorum.amount.value));
-
-        return payout;
+        return std::min(asset(payout, ctx.max_scr.symbol()), ctx.max_scr);
     }
     FC_CAPTURE_AND_RETHROW((ctx))
 }

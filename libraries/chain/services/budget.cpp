@@ -1,7 +1,7 @@
-#include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/database/database.hpp>
+#include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/account.hpp>
-
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 
@@ -103,9 +103,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
 
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
-    time_point_sec start_date = props.time;
+    time_point_sec start_date = db_impl().obtain_service<dbs_dynamic_global_property>().get().time;
     FC_ASSERT(start_date < deadline, "Invalid deadline.");
 
     auto head_block_num = db_impl().head_block_num();
@@ -139,7 +137,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER,
               "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER));
 
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+    const dynamic_global_property_object& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     time_point_sec start_date = props.time;
     FC_ASSERT(start_date < deadline, "Invalid deadline.");
@@ -307,12 +305,11 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
-        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
 
-        db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
+        db_impl().obtain_service<dbs_dynamic_global_property>().update(
+            [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
     }
 
     // delete budget

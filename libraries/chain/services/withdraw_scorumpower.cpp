@@ -60,7 +60,8 @@ const withdraw_scorumpower_object& dbs_withdraw_scorumpower::get(const dev_commi
     return _impl->get(from);
 }
 
-dbs_withdraw_scorumpower::withdraw_scorumpower_refs_type dbs_withdraw_scorumpower::get_until(const time_point_sec& until) const
+dbs_withdraw_scorumpower::withdraw_scorumpower_refs_type
+dbs_withdraw_scorumpower::get_until(const time_point_sec& until) const
 {
     withdraw_scorumpower_refs_type ret;
 
