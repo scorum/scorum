@@ -22,6 +22,8 @@
 
 #include "database_trx_integration.hpp"
 
+#define SCORUM_NUM_INIT_DELEGATES 1
+
 namespace database_fixture {
 
 database_trx_integration_fixture::database_trx_integration_fixture()

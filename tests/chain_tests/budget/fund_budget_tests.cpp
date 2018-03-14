@@ -37,7 +37,7 @@ SCORUM_TEST_CASE(fund_budget_creation)
 {
     // fund budget is created within database(in database::init_genesis_rewards())
     // TODO: make MOC for database and test budget_service separately
-    BOOST_REQUIRE_NO_THROW(budget_service.get_fund_budget());
+    BOOST_REQUIRE_EQUAL(budget_service.get_fund_budgets().size(), 1u);
 }
 
 SCORUM_TEST_CASE(second_fund_budget_creation)
@@ -50,21 +50,21 @@ SCORUM_TEST_CASE(second_fund_budget_creation)
 
 SCORUM_TEST_CASE(fund_budget_initial_supply)
 {
-    auto budget = budget_service.get_fund_budget();
+    auto budget = budget_service.get_fund_budgets()[0].get();
 
     BOOST_REQUIRE_EQUAL(budget.balance, FUND_BUDGET_INITIAL_SUPPLY);
 }
 
 SCORUM_TEST_CASE(fund_budget_initial_deadline)
 {
-    auto budget = budget_service.get_fund_budget();
+    auto budget = budget_service.get_fund_budgets()[0].get();
 
     BOOST_REQUIRE(budget.deadline == db.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS));
 }
 
 SCORUM_TEST_CASE(try_close_fund_budget)
 {
-    auto budget = budget_service.get_fund_budget();
+    auto budget = budget_service.get_fund_budgets()[0].get();
 
     BOOST_REQUIRE_THROW(budget_service.close_budget(budget), fc::assert_exception);
 }

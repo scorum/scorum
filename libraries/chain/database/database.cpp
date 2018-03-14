@@ -1897,6 +1897,11 @@ void database::validate_invariants() const
             total_supply += budget.balance;
         }
 
+        for (const budget_object& budget : obtain_service<dbs_budget>().get_fund_budgets())
+        {
+            total_supply += budget.balance;
+        }
+
         if (obtain_service<dbs_registration_pool>().is_exists())
         {
             total_supply += obtain_service<dbs_registration_pool>().get().balance;

@@ -15,13 +15,11 @@ struct budget_service_i
 {
     using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
 
-    virtual bool is_fund_exists() const = 0;
-
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budget_refs_type get_budgets() const = 0;
     virtual budget_refs_type get_budgets(const account_name_type& owner) const = 0;
-    virtual const budget_object& get_fund_budget() const = 0;
+    virtual budget_refs_type get_fund_budgets() const = 0;
     virtual const budget_object& get_budget(budget_id_type id) const = 0;
     virtual const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline) = 0;
     virtual const budget_object& create_budget(const account_object& owner,
@@ -45,8 +43,6 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
-    bool is_fund_exists() const override;
-
     /** Lists all budget owners.
      *
      *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.
@@ -55,7 +51,7 @@ public:
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const override;
 
-    /** Lists all budgets.
+    /** Lists all owned budgets.
      *
      * @returns a list of budget objects
      */
@@ -68,9 +64,9 @@ public:
      */
     virtual budget_refs_type get_budgets(const account_name_type& owner) const override;
 
-    /** Gets the fund budget
+    /** Lists all fund budgets
      */
-    virtual const budget_object& get_fund_budget() const override;
+    virtual budget_refs_type get_fund_budgets() const override;
 
     /** Get budget by id
      */
@@ -127,6 +123,11 @@ private:
     void _close_owned_budget(const budget_object&);
     void _close_fund_budget(const budget_object&);
     uint64_t _get_budget_count(const account_name_type& owner) const;
+    const budget_object& _create_budget(const account_name_type& owner,
+                                        const asset& balance,
+                                        const time_point_sec& start_date,
+                                        const time_point_sec& end_date,
+                                        const optional<std::string>& content_permlink = optional<std::string>());
 };
 } // namespace chain
 } // namespace scorum

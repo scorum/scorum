@@ -170,29 +170,17 @@ SCORUM_TEST_CASE(budget_creation_limit)
     BOOST_REQUIRE_THROW(budget_service.create_budget(bob, balance, deadline), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(get_all_budgets)
-{
-    asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    fc::time_point_sec deadline(default_deadline);
-
-    BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
-    BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
-    BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
-
-    auto budgets = budget_service.get_budgets();
-    BOOST_REQUIRE(budgets.size() == 3);
-}
-
 SCORUM_TEST_CASE(get_all_budget_count)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
+    BOOST_CHECK_NO_THROW(budget_service.get_fund_budgets());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
 
-    BOOST_REQUIRE(budget_service.get_budgets().size() == 3);
+    BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), 2u);
+    BOOST_REQUIRE_EQUAL(budget_service.get_fund_budgets().size(), 1u);
 }
 
 SCORUM_TEST_CASE(lookup_budget_owners)
@@ -202,12 +190,11 @@ SCORUM_TEST_CASE(lookup_budget_owners)
 
     BOOST_REQUIRE_GT(SCORUM_BUDGET_LIMIT_DB_LIST_SIZE, 1);
 
-    BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
 
-    BOOST_REQUIRE(budget_service.get_budgets().size() == 4);
+    BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), 3u);
 
     BOOST_CHECK_THROW(budget_service.lookup_budget_owners("alice", std::numeric_limits<uint32_t>::max()),
                       fc::assert_exception);
