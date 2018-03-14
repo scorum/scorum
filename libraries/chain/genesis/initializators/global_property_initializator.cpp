@@ -13,11 +13,14 @@ void global_property_initializator_impl::on_apply(initializator_context& ctx)
 {
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
+    FC_ASSERT(ctx.genesis_state().total_supply.symbol() == SCORUM_SYMBOL);
     FC_ASSERT(ctx.genesis_state().founders_supply.symbol() == SP_SYMBOL);
     FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == SP_SYMBOL);
     FC_ASSERT(ctx.genesis_state().accounts_supply.symbol() == SCORUM_SYMBOL);
     FC_ASSERT(ctx.genesis_state().rewards_supply.symbol() == SCORUM_SYMBOL);
     FC_ASSERT(ctx.genesis_state().registration_supply.symbol() == SCORUM_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().development_sp_supply.symbol() == SP_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().development_scr_supply.symbol() == SCORUM_SYMBOL);
 
     FC_ASSERT(!dgp_service.is_exists());
 
@@ -33,6 +36,8 @@ void global_property_initializator_impl::on_apply(initializator_context& ctx)
     total_supply += circulating_capital;
     total_supply += ctx.genesis_state().rewards_supply;
     total_supply += ctx.genesis_state().registration_supply;
+    total_supply += asset(ctx.genesis_state().development_sp_supply.amount, SCORUM_SYMBOL);
+    total_supply += asset(ctx.genesis_state().development_scr_supply.amount, SCORUM_SYMBOL);
 
     FC_ASSERT(ctx.genesis_state().total_supply == total_supply, "Invalid total supply: ${gt} != ${rt}",
               ("gt", ctx.genesis_state().total_supply)("rt", total_supply));
