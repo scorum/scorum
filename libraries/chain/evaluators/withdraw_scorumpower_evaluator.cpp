@@ -6,6 +6,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/genesis_state.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -21,11 +22,15 @@ public:
     withdraw_scorumpower_impl(data_service_factory_i& services)
         : _dprops_service(services.dynamic_global_property_service())
         , _withdraw_scorumpower_service(services.withdraw_scorumpower_service())
+        , _lock_withdraw_sp_until_timestamp(services.genesis_state_service().get_lock_withdraw_sp_until_timestamp())
     {
     }
 
     template <typename FromObjectType> void do_apply(const FromObjectType& from_object, const asset& scorumpower)
     {
+        FC_ASSERT(_dprops_service.head_block_time() > _lock_withdraw_sp_until_timestamp,
+                  "Withdraw scorumpower operation is locked until ${t}.", ("t", _lock_withdraw_sp_until_timestamp));
+
         asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
         if (_withdraw_scorumpower_service.is_exists(from_object.id))
         {
@@ -83,6 +88,7 @@ public:
 private:
     dynamic_global_property_service_i& _dprops_service;
     withdraw_scorumpower_service_i& _withdraw_scorumpower_service;
+    const fc::time_point_sec _lock_withdraw_sp_until_timestamp;
 };
 
 //

@@ -10,7 +10,9 @@
 
 #include "actoractions.hpp"
 
-namespace registration_fixtures {
+namespace database_fixture {
+
+using namespace database_fixture;
 
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
 {
@@ -41,8 +43,7 @@ registration_check_fixture::registration_check_fixture()
 
     for (const auto& item : _committee)
     {
-        ActorActions actor(*this, item.second);
-        actor.create();
+        actor(initdelegate).create_account(Actor(item.second));
     }
 }
 
@@ -144,7 +145,7 @@ registration_check_fixture::create_registration_genesis_impl(schedule_inputs_typ
     {
         fc::ecc::private_key private_key = database_integration_fixture::generate_private_key(member);
         committee_private_keys.insert(committee_private_keys_type::value_type(member, private_key));
-        genesis_state.accounts.push_back({ member, "", private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
+        genesis_state.accounts.push_back({ member, private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
     }
 
     schedule_input.clear();

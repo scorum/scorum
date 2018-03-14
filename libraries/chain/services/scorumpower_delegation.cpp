@@ -1,8 +1,7 @@
-#include <scorum/chain/services/scorumpower_delegation.hpp>
-#include <scorum/chain/database/database.hpp>
-
 #include <tuple>
-
+#include <scorum/chain/services/scorumpower_delegation.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
 using namespace scorum::protocol;
@@ -35,7 +34,7 @@ const scorumpower_delegation_object& dbs_scorumpower_delegation::create(const ac
                                                                         const account_name_type& delegatee,
                                                                         const asset& scorumpower)
 {
-    const auto& props = db_impl().get_dynamic_global_properties();
+    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_vd = db_impl().create<scorumpower_delegation_object>([&](scorumpower_delegation_object& vd) {
         vd.delegator = delegator;

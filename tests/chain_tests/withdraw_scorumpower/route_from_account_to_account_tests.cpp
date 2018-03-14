@@ -8,8 +8,7 @@
 
 #include "withdraw_scorumpower_check_common.hpp"
 
-using namespace scorum::protocol;
-using namespace scorum::chain;
+using namespace database_fixture;
 
 BOOST_AUTO_TEST_SUITE(withdraw_scorumpower_route_from_account_to_account_tests)
 

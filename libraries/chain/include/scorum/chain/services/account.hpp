@@ -82,9 +82,9 @@ struct account_service_i
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) = 0;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_posting_rewards(const account_object& account, const share_type& amount) = 0;
+    virtual void increase_posting_rewards(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_curation_rewards(const account_object& account, const share_type& amount) = 0;
+    virtual void increase_curation_rewards(const account_object& account, const asset& amount) = 0;
 
     virtual void drop_challenged(const account_object& account) = 0;
 
@@ -208,9 +208,9 @@ public:
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) override;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual void increase_posting_rewards(const account_object& account, const share_type& amount) override;
+    virtual void increase_posting_rewards(const account_object& account, const asset& amount) override;
 
-    virtual void increase_curation_rewards(const account_object& account, const share_type& amount) override;
+    virtual void increase_curation_rewards(const account_object& account, const asset& amount) override;
 
     virtual void drop_challenged(const account_object& account) override;
 

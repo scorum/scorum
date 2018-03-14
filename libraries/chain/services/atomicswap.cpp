@@ -1,7 +1,7 @@
-#include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/database/database.hpp>
+#include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/account.hpp>
-
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 
@@ -69,9 +69,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_con
               "Can't create more then ${1} contract per recipient.",
               ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT));
 
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
-    time_point_sec start = props.time;
+    time_point_sec start = db_impl().obtain_service<dbs_dynamic_global_property>().get().time;
     time_point_sec deadline = start;
     switch (tp)
     {
@@ -150,7 +148,7 @@ void dbs_atomicswap::check_contracts_expiration()
         contracts.push_back(std::cref(*it));
     }
 
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+    const dynamic_global_property_object& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     for (const atomicswap_contract_object& contract : contracts)
     {

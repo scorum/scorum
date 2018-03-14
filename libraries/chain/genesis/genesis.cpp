@@ -81,7 +81,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
     }
     catch (fc::exception& er)
     {
-        throw std::logic_error(std::string("Invalid genesis: ") + er.what());
+        throw std::logic_error(std::string("Invalid genesis: ") + er.to_detail_string());
     }
 }
 

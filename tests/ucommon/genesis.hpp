@@ -23,7 +23,7 @@ public:
         if (_accounts.find(a.name) == _accounts.end())
         {
             _accounts.insert(std::make_pair(a.name, a));
-            genesis_state.accounts.push_back({ a.name, "", a.public_key, a.scr_amount });
+            genesis_state.accounts.push_back({ a.name, a.public_key, a.scr_amount });
         }
     }
 
@@ -173,6 +173,12 @@ public:
     Genesis& development_scr_supply(asset amount)
     {
         genesis_state.development_scr_supply = amount;
+        return *this;
+    }
+
+    Genesis& lock_withdraw_sp_until_timestamp(fc::time_point_sec timestamp)
+    {
+        genesis_state.lock_withdraw_sp_until_timestamp = timestamp;
         return *this;
     }
 

@@ -57,11 +57,6 @@ public:
         else if (update_item.public_key != item.public_key)
             wlog("Multiple public_key '${pubk}' for same '${n}'. First '${oldpubk}' used.",
                  ("n", item.name)("pubk", item.public_key)("oldpubk", update_item.public_key));
-        if (update_item.recovery_account.empty())
-            update_item.recovery_account = item.recovery_account;
-        else if (update_item.recovery_account != item.recovery_account)
-            wlog("Multiple recovery_account '${ra}' for '${n}'. First '${oldra}' used.",
-                 ("n", item.name)("ra", item.recovery_account)("oldra", update_item.recovery_account));
         if (update_item.scr_amount.amount == 0)
         {
             update_item.scr_amount = item.scr_amount;
@@ -162,7 +157,7 @@ void genesis_mapper::update(const std::string& name,
     FC_ASSERT(scr_amount.symbol() == SCORUM_SYMBOL, "Invalid token symbol.");
     FC_ASSERT(sp_amount.symbol() == SP_SYMBOL, "Invalid token symbol.");
 
-    update(account_type{ name, recover_account, pubk, scr_amount });
+    update(account_type{ name, pubk, scr_amount });
 
     if (sp_amount.amount > 0)
     {

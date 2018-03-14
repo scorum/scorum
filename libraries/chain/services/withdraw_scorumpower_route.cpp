@@ -96,25 +96,25 @@ bool dbs_withdraw_scorumpower_route::is_exists(const dev_committee_id_type& from
 }
 
 const withdraw_scorumpower_route_object& dbs_withdraw_scorumpower_route::get(const account_id_type& from,
-                                                                     const account_id_type& to) const
+                                                                             const account_id_type& to) const
 {
     return _impl->get(from, to);
 }
 
 const withdraw_scorumpower_route_object& dbs_withdraw_scorumpower_route::get(const account_id_type& from,
-                                                                     const dev_committee_id_type& to) const
+                                                                             const dev_committee_id_type& to) const
 {
     return _impl->get(from, to);
 }
 
 const withdraw_scorumpower_route_object& dbs_withdraw_scorumpower_route::get(const dev_committee_id_type& from,
-                                                                     const dev_committee_id_type& to) const
+                                                                             const dev_committee_id_type& to) const
 {
     return _impl->get(from, to);
 }
 
 const withdraw_scorumpower_route_object& dbs_withdraw_scorumpower_route::get(const dev_committee_id_type& from,
-                                                                     const account_id_type& to) const
+                                                                             const account_id_type& to) const
 {
     return _impl->get(from, to);
 }
@@ -132,7 +132,8 @@ void dbs_withdraw_scorumpower_route::remove(const withdraw_scorumpower_route_obj
 
 const withdraw_scorumpower_route_object& dbs_withdraw_scorumpower_route::create(const modifier_type& modifier)
 {
-    return db_impl().create<withdraw_scorumpower_route_object>([&](withdraw_scorumpower_route_object& o) { modifier(o); });
+    return db_impl().create<withdraw_scorumpower_route_object>(
+        [&](withdraw_scorumpower_route_object& o) { modifier(o); });
 }
 
 void dbs_withdraw_scorumpower_route::update(const withdraw_scorumpower_route_object& obj, const modifier_type& modifier)

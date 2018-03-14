@@ -9,6 +9,7 @@
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 
 #include <scorum/chain/database/database.hpp>
@@ -94,7 +95,7 @@ public:
     void operator()(const comment_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
-            auto& comment = _db.get_comment(op.author, op.permlink);
+            auto& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
             if (comment.created == _db.head_block_time())
             {
@@ -117,7 +118,7 @@ public:
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             const auto& cv_idx = _db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-            const auto& comment = _db.get_comment(op.author, op.permlink);
+            const auto& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
             const auto& voter = _db.obtain_service<chain::dbs_account>().get_account(op.voter);
             const auto itr = cv_idx.find(boost::make_tuple(comment.id, voter.id));
 
@@ -224,7 +225,7 @@ void blockchain_statistics_plugin_impl::process_pre_operation(const bucket_objec
     if (o.op.which() == operation::tag<delete_comment_operation>::value)
     {
         delete_comment_operation op = o.op.get<delete_comment_operation>();
-        auto comment = db.get_comment(op.author, op.permlink);
+        auto comment = db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
         db.modify(bucket, [&](bucket_object& b) {
             if (comment.parent_author.length())
@@ -304,8 +305,6 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
 {
     try
     {
-        dlog("chain_stats_plugin: plugin_initialize() begin");
-
         if (options.count("chain-stats-bucket-size"))
         {
             const std::string& buckets = options["chain-stats-bucket-size"].as<std::string>();
@@ -320,6 +319,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
         dlog("chain_stats_plugin: plugin_initialize() end");
     }
     FC_CAPTURE_AND_RETHROW()
+    print_greeting();
 }
 
 void blockchain_statistics_plugin::plugin_startup()

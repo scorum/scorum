@@ -38,7 +38,3 @@ target_link_libraries(utests
 
 target_include_directories(utests PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}")
-
-if(UNIX)
-    set_source_files_properties( genesis/initializator.cpp PROPERTIES COMPILE_FLAGS "-Wno-uninitialized" )
-endif(UNIX)

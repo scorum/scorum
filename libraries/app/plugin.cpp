@@ -65,5 +65,10 @@ void plugin::plugin_set_program_options(boost::program_options::options_descript
 {
     return;
 }
+
+void plugin::print_greeting()
+{
+    ilog("Welcom ${n}", ("n", plugin_name()));
+}
 }
 } // scorum::app
