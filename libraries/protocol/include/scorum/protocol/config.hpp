@@ -68,6 +68,8 @@
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER            5
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        2
 
+#define SCORUM_VESTING_WITHDRAW_INTERVALS                                (13)
+
 #else // IS LIVE SCORUM NETWORK
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
@@ -92,6 +94,8 @@
 
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER            1000
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        10
+
+#define SCORUM_VESTING_WITHDRAW_INTERVALS                                (52)
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +124,6 @@
 #define SCORUM_MAX_MEMO_SIZE                   2048
 #define SCORUM_MAX_PROXY_RECURSION_DEPTH       4
 
-#define SCORUM_VESTING_WITHDRAW_INTERVALS           52
 #define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS    (DAYS_TO_SECONDS(7)) /// 1 week per interval
 
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
