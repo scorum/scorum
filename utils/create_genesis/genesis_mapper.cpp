@@ -55,7 +55,7 @@ public:
         if (update_item.public_key == public_key_type())
             update_item.public_key = item.public_key;
         else if (update_item.public_key != item.public_key)
-            FC_ASSERT(false, "Multiple public_key '${pubk}' for same '${n}'. First '${oldpubk}' used.",
+            FC_ASSERT(false, "Multiple public_key for same '${n}': '${pubk}', '${oldpubk}'.",
                       ("n", item.name)("pubk", item.public_key)("oldpubk", update_item.public_key));
         if (update_item.scr_amount.amount == 0)
         {
@@ -63,7 +63,7 @@ public:
             _accounts_supply += update_item.scr_amount;
         }
         else if (update_item.scr_amount != item.scr_amount)
-            FC_ASSERT(false, "Multiple scr_amount '${src}' for '${n}'. First '${oldsrc}' used.",
+            FC_ASSERT(false, "Multiple scr_amount for '${n}': '${src}', '${oldsrc}'.",
                       ("n", item.name)("src", item.scr_amount)("oldsrc", update_item.scr_amount));
     }
 
@@ -78,7 +78,7 @@ public:
             _steemit_bounty_accounts_supply += update_item.sp_amount;
         }
         else if (update_item.sp_amount != item.sp_amount)
-            FC_ASSERT(false, "Multiple sp_amount '${src}' for '${n}'. First '${oldsp}' used.",
+            FC_ASSERT(false, "Multiple sp_amount for '${n}': '${src}', '${oldsp}'.",
                       ("n", item.name)("src", item.sp_amount)("oldsp", update_item.sp_amount));
     }
 
