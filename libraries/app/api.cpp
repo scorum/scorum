@@ -271,6 +271,37 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
     }
 }
 
+class check_banned_operations_visitor
+{
+public:
+    using result_type = bool;
+
+    // available by default
+    template <typename Op> bool operator()(const Op&) const
+    {
+        return true;
+    }
+
+#ifdef LOCK_BLOGGING_API
+    bool operator()(const scorum::protocol::comment_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::comment_options_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::delete_comment_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::vote_operation&) const
+    {
+        return false;
+    }
+#endif // LOCK_BLOGGING_API
+};
+
 void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)
 {
     if (_app._read_only)
@@ -287,6 +318,10 @@ void network_broadcast_api::broadcast_transaction_with_callback(confirmation_cal
     else
     {
         FC_ASSERT(!check_max_block_age(_max_block_age));
+        for (const auto& op : trx.operations)
+        {
+            FC_ASSERT(op.visit(check_banned_operations_visitor()), "Operation ${op} is locked.", ("op", op));
+        }
         trx.validate();
         _callbacks[trx.id()] = cb;
         _callbacks_expirations[trx.expiration].push_back(trx.id());
