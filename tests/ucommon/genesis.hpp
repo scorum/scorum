@@ -131,6 +131,7 @@ public:
     Genesis& registration_supply(asset amount)
     {
         genesis_state.registration_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 
@@ -143,36 +144,42 @@ public:
     Genesis& accounts_supply(asset amount)
     {
         genesis_state.accounts_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 
     Genesis& rewards_supply(asset amount)
     {
         genesis_state.rewards_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 
     Genesis& founders_supply(asset amount)
     {
         genesis_state.founders_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 
     Genesis& steemit_bounty_accounts_supply(asset amount)
     {
         genesis_state.steemit_bounty_accounts_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 
     Genesis& development_sp_supply(asset amount)
     {
         genesis_state.development_sp_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 
     Genesis& development_scr_supply(asset amount)
     {
         genesis_state.development_scr_supply = amount;
+        genesis_state.total_supply.amount += amount.amount;
         return *this;
     }
 

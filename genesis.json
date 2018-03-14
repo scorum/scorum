@@ -3,23 +3,22 @@
 
   "lock_withdraw_sp_until_timestamp": "2018-08-01T00:00:00",
 
+  "total_supply": "33332.800000000 SCR",
+
   "accounts_supply": "1002.000000000 SCR",
   "accounts": [
     {
       "name": "initdelegate",
-      "recovery_account": "",
       "public_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
       "scr_amount": "1000.000000000 SCR"
     },
     {
       "name": "alice",
-      "recovery_account": "",
       "public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
       "scr_amount": "0.000000000 SCR"
     },
     {
       "name": "bob",
-      "recovery_account": "",
       "public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
       "scr_amount": "2.000000000 SCR"
     }
