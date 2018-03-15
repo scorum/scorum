@@ -30,19 +30,14 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
     return ret;
 }
 
-dbs_budget::budget_refs_type dbs_budget::get_fund_budgets() const
+const budget_object& dbs_budget::get_fund_budget() const
 {
-    budget_refs_type ret;
+    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
 
-    const auto& idx = db_impl().get_index<budget_index>().indices();
+    auto itr = budgets_by_owner_name.lower_bound(SCORUM_ROOT_POST_PARENT_ACCOUNT);
+    FC_ASSERT(itr != budgets_by_owner_name.end(), "Fund budget does not exist.");
 
-    for (auto it = idx.cbegin(), it_end = idx.cend(); it != it_end; ++it)
-    {
-        if (_is_fund_budget(*it))
-            ret.push_back(std::cref(*it));
-    }
-
-    return ret;
+    return *itr;
 }
 
 std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
@@ -121,7 +116,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
-    FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER, "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER));
+    FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGETS_LIMIT_PER_OWNER, "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
     time_point_sec start_date = dprops.time;
     FC_ASSERT(dprops.circulating_capital > balance, "Invalid balance. Must ${1} > ${2}.", ("1", dprops.circulating_capital)("2", balance));

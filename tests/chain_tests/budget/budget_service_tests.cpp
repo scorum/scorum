@@ -154,20 +154,33 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
 SCORUM_TEST_CASE(budget_creation_limit)
 {
-    share_type bp = SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER + 1;
+    share_type bp = SCORUM_BUDGETS_LIMIT_PER_OWNER + 1;
     BOOST_REQUIRE(BOB_ACCOUNT_BUDGET >= bp);
 
     asset balance(BOB_ACCOUNT_BUDGET / bp, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    for (int ci = 0; ci < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER; ++ci)
+    for (int ci = 0; ci < SCORUM_BUDGETS_LIMIT_PER_OWNER; ++ci)
     {
         BOOST_REQUIRE_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     }
 
-    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER * balance.amount));
+    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_BUDGETS_LIMIT_PER_OWNER * balance.amount));
 
     BOOST_REQUIRE_THROW(budget_service.create_budget(bob, balance, deadline), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(get_all_budgets)
+{
+    asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
+    fc::time_point_sec deadline(default_deadline);
+
+    BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
+    BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
+    BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
+
+    auto budgets = budget_service.get_budgets();
+    BOOST_REQUIRE(budgets.size() == 2);
 }
 
 SCORUM_TEST_CASE(get_all_budget_count)
@@ -175,12 +188,11 @@ SCORUM_TEST_CASE(get_all_budget_count)
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    BOOST_CHECK_NO_THROW(budget_service.get_fund_budgets());
+    BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
 
     BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), 2u);
-    BOOST_REQUIRE_EQUAL(budget_service.get_fund_budgets().size(), 1u);
 }
 
 SCORUM_TEST_CASE(lookup_budget_owners)
@@ -190,6 +202,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
 
     BOOST_REQUIRE_GT(SCORUM_BUDGET_LIMIT_DB_LIST_SIZE, 1);
 
+    BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
