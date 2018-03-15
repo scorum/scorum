@@ -20,11 +20,6 @@ target_link_libraries(create_genesis
                       fc
                       )
 
-                  set(create_genesis_args
-                      -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"
-                      -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
-                  )
-
 target_include_directories(create_genesis PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}")
 
