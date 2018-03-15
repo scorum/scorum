@@ -19,16 +19,18 @@ struct budget_service_i
                                                        uint32_t limit) const = 0;
     virtual budget_refs_type get_budgets() const = 0;
     virtual budget_refs_type get_budgets(const account_name_type& owner) const = 0;
-    virtual const budget_object& get_fund_budget() const = 0;
     virtual const budget_object& get_budget(budget_id_type id) const = 0;
-    virtual const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline) = 0;
     virtual const budget_object& create_budget(const account_object& owner,
                                                const asset& balance,
                                                const time_point_sec& deadline,
                                                const optional<std::string>& content_permlink = optional<std::string>())
         = 0;
-
     virtual void close_budget(const budget_object& budget) = 0;
+
+    virtual const budget_object& create_fund_budget(const asset& balance, const time_point_sec& deadline) = 0;
+    virtual const budget_object& get_fund_budget() const = 0;
+    virtual bool is_fund_budget_exists() const = 0;
+
     virtual asset allocate_cash(const budget_object& budget) = 0;
 };
 
@@ -43,6 +45,8 @@ protected:
     explicit dbs_budget(database& db);
 
 public:
+    bool is_fund_budget_exists() const override;
+
     /** Lists all budget owners.
      *
      *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.

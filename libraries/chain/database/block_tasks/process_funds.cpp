@@ -42,13 +42,10 @@ void process_funds::on_apply(block_task_context& ctx)
         advertising_budgets_reward += budget_service.allocate_cash(budget);
     }
 
-    try
+    if (budget_service.is_fund_budget_exists())
     {
         const budget_object& budget = budget_service.get_fund_budget();
         original_fund_reward += budget_service.allocate_cash(budget);
-    }
-    catch (...)
-    {
     }
 
     // 50% of the revenue goes to support and develop the product, namely,
