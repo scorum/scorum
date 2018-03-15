@@ -148,6 +148,7 @@ const budget_object& dbs_budget::_create_budget(const account_name_type& owner,
     auto head_block_time = db_impl().head_block_time();
 
     auto advance = (start_date.sec_since_epoch() - head_block_time.sec_since_epoch()) / SCORUM_BLOCK_INTERVAL;
+    auto last_cashout_block = head_block_num + advance;
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
         budget.owner = owner;
@@ -160,7 +161,7 @@ const budget_object& dbs_budget::_create_budget(const account_name_type& owner,
         budget.balance = balance;
         budget.per_block = per_block;
         // allocate cash only after next block generation
-        budget.last_cashout_block = head_block_num + advance;
+        budget.last_cashout_block = last_cashout_block;
     });
 
     return new_budget;

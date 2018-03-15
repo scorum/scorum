@@ -49,16 +49,16 @@ void process_funds::on_apply(block_task_context& ctx)
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company’s R&D center.
-    auto dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
 
     // 50% of revenue is distributed in SCR among users.
     // pass it through reward balancer
     reward_service.increase_pool_ballance(advertising_budgets_reward - dev_team_reward + original_fund_reward);
-    auto users_reward = reward_service.take_block_reward();
+    asset users_reward = reward_service.take_block_reward();
 
     /// 5% of total per block reward to witness pay
-    auto witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto content_reward = users_reward - witness_reward;
+    asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset content_reward = users_reward - witness_reward;
 
     dev_service.update([&](dev_committee_object& dco) { dco.scr_balance += dev_team_reward; });
     reward_fund_service.update([&](reward_fund_object& rfo) { rfo.reward_balance += content_reward; });

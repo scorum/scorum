@@ -499,7 +499,7 @@ struct budget_api_obj
     asset balance = asset(0, SCORUM_SYMBOL);
     share_type per_block;
 
-    uint32_t last_cashout_block;
+    uint32_t last_cashout_block = 0;
 };
 
 struct atomicswap_contract_api_obj

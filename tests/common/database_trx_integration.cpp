@@ -22,8 +22,6 @@
 
 #include "database_trx_integration.hpp"
 
-#define SCORUM_NUM_INIT_DELEGATES 1
-
 namespace database_fixture {
 
 database_trx_integration_fixture::database_trx_integration_fixture()
@@ -274,7 +272,7 @@ void database_trx_integration_fixture::open_database_impl(const genesis_state_ty
         vest(initdelegate.name, 10000);
 
         // Fill up the rest of the required miners
-        for (int i = SCORUM_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
+        for (int i = TEST_NUM_INIT_DELEGATES; i < SCORUM_MAX_WITNESSES; i++)
         {
             account_create(initdelegate.name + fc::to_string(i), initdelegate.public_key);
             fund(initdelegate.name + fc::to_string(i), SCORUM_MIN_PRODUCER_REWARD);
