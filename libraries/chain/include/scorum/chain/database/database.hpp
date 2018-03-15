@@ -150,17 +150,13 @@ public:
 
     bool push_block(const signed_block& b, uint32_t skip = skip_nothing);
     void push_transaction(const signed_transaction& trx, uint32_t skip = skip_nothing);
-    void _maybe_warn_multiple_production(uint32_t height) const;
-    bool _push_block(const signed_block& b);
+
     void _push_transaction(const signed_transaction& trx);
 
     signed_block generate_block(const fc::time_point_sec when,
                                 const account_name_type& witness_owner,
                                 const fc::ecc::private_key& block_signing_private_key,
                                 uint32_t skip);
-    signed_block _generate_block(const fc::time_point_sec when,
-                                 const account_name_type& witness_owner,
-                                 const fc::ecc::private_key& block_signing_private_key);
 
     void pop_block();
     void clear_pending();
@@ -292,9 +288,6 @@ public:
     void set_hardfork(uint32_t hardfork, bool process_now = true);
 
     void validate_invariants() const;
-    /**
-     * @}
-     */
 
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
@@ -317,6 +310,13 @@ private:
     void _update_witness_median_props();
     void _update_witness_majority_version();
     void _update_witness_hardfork_version_votes();
+
+    void _maybe_warn_multiple_production(uint32_t height) const;
+    bool _push_block(const signed_block& b);
+
+    signed_block _generate_block(const fc::time_point_sec when,
+                                 const account_name_type& witness_owner,
+                                 const fc::ecc::private_key& block_signing_private_key);
 
 protected:
     void set_producing(bool p)
