@@ -162,10 +162,15 @@ int main(int argc, char** argv)
         }
 
         std::cerr << "------------------------------------------------------\n\n";
-        std::cerr << "            STARTING SCORUM NETWORK\n\n";
+        if (!options.count("read-only"))
+        {
+            std::cerr << "            STARTING SCORUM NETWORK\n\n";
+        }
+        else
+        {
+            std::cerr << "            READONLY NODE\n\n";
+        }
         std::cerr << "------------------------------------------------------\n";
-        //        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        //        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
         std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
         std::cerr << "------------------------------------------------------\n";
 
@@ -203,7 +208,7 @@ int main(int argc, char** argv)
             SIGTERM);
 
         node->chain_database()->with_read_lock([&]() {
-            ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
+            ilog("Started node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
         });
 
         std::cout << "Scorum network started.\n\n";

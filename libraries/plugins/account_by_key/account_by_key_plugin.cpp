@@ -242,7 +242,6 @@ void account_by_key_plugin::plugin_initialize(const boost::program_options::vari
 {
     try
     {
-        ilog("Initializing account_by_key plugin");
         chain::database& db = database();
 
         db.pre_apply_operation.connect([&](const operation_notification& o) { my->pre_operation(o); });
@@ -251,6 +250,7 @@ void account_by_key_plugin::plugin_initialize(const boost::program_options::vari
         db.add_plugin_index<key_lookup_index>();
     }
     FC_CAPTURE_AND_RETHROW()
+    print_greeting();
 }
 
 void account_by_key_plugin::plugin_startup()

@@ -48,8 +48,6 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
 
     reward_service.create_pool(initial_reward_pool_supply);
 
-    FC_ASSERT(!budget_service.is_fund_exists());
-
     budget_service.create_fund_budget(ctx.genesis_state().rewards_supply - initial_reward_pool_supply, deadline);
 }
 }
