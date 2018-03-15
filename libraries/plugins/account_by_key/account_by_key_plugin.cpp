@@ -1,5 +1,6 @@
 #include <scorum/account_by_key/account_by_key_plugin.hpp>
 #include <scorum/account_by_key/account_by_key_objects.hpp>
+#include <scorum/account_by_key/account_by_key_api.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/database/database.hpp>
@@ -61,6 +62,11 @@ struct pre_operation_visitor
         _plugin.my->clear_cache();
     }
 
+    void operator()(const account_create_by_committee_operation& op) const
+    {
+        _plugin.my->clear_cache();
+    }
+
     void operator()(const account_update_operation& op) const
     {
         _plugin.my->clear_cache();
@@ -111,6 +117,13 @@ struct post_operation_visitor
     }
 
     void operator()(const account_create_with_delegation_operation& op) const
+    {
+        auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
+        if (acct_itr)
+            _plugin.my->update_key_lookup(*acct_itr);
+    }
+
+    void operator()(const account_create_by_committee_operation& op) const
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
         if (acct_itr)

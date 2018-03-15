@@ -9,7 +9,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
@@ -23,7 +23,7 @@
 BOOST_AUTO_TEST_SUITE(genesis_db_tests)
 
 #ifdef SRC_DIR
-BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::database_integration_fixture)
+BOOST_FIXTURE_TEST_CASE(validate_src_json_test, database_fixture::database_integration_fixture)
 {
     boost::filesystem::path path_to_src_json(BOOST_PP_STRINGIZE(SRC_DIR));
     if (boost::filesystem::exists(path_to_src_json))
@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE(validate_src_json_test, scorum::chain::database_integrat
 }
 #endif
 
-struct genesis_base_test_fixture : public scorum::chain::database_integration_fixture
+struct genesis_base_test_fixture : public database_fixture::database_integration_fixture
 {
     genesis_base_test_fixture()
         : account_service(db.account_service())
@@ -73,8 +73,13 @@ struct genesis_base_test_fixture : public scorum::chain::database_integration_fi
         initdelegate.scorum(as);
 
         asset rw = ASSET_SCR(1000e+9);
-        genesis
-            = Genesis::create().accounts_supply(as).rewards_supply(rw).accounts(initdelegate).witnesses(initdelegate);
+
+        genesis = Genesis::create()
+                      .accounts_supply(as)
+                      .rewards_supply(rw)
+                      .accounts(initdelegate)
+                      .witnesses(initdelegate)
+                      .dev_committee(initdelegate);
     }
 
     scorum::chain::account_service_i& account_service;
@@ -114,9 +119,9 @@ BOOST_FIXTURE_TEST_CASE(founders_sp_distribution_test, genesis_founders_test_fix
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(bob.name).vesting_shares, total_sp / 2);
+    BOOST_CHECK_EQUAL(account_service.get_account(bob.name).scorumpower, total_sp / 2);
 
-    BOOST_CHECK_EQUAL(account_service.get_account(mike.name).vesting_shares, total_sp / 2);
+    BOOST_CHECK_EQUAL(account_service.get_account(mike.name).scorumpower, total_sp / 2);
 }
 
 BOOST_FIXTURE_TEST_CASE(founders_sp_distribution_with_pitiful_test, genesis_founders_test_fixture)
@@ -136,13 +141,13 @@ BOOST_FIXTURE_TEST_CASE(founders_sp_distribution_with_pitiful_test, genesis_foun
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(bob.name).vesting_shares, total_sp / 2);
+    BOOST_CHECK_EQUAL(account_service.get_account(bob.name).scorumpower, total_sp / 2);
 
-    BOOST_CHECK_GT(account_service.get_account(mike.name).vesting_shares, ASSET_NULL_SP);
+    BOOST_CHECK_GT(account_service.get_account(mike.name).scorumpower, ASSET_NULL_SP);
 
-    BOOST_CHECK_EQUAL(account_service.get_account(luke.name).vesting_shares, ASSET_NULL_SP);
+    BOOST_CHECK_EQUAL(account_service.get_account(luke.name).scorumpower, ASSET_NULL_SP);
 
-    BOOST_CHECK_GT(account_service.get_account(stiven.name).vesting_shares, ASSET_NULL_SP);
+    BOOST_CHECK_GT(account_service.get_account(stiven.name).scorumpower, ASSET_NULL_SP);
 }
 
 struct genesis_registration_bonus_test_fixture : public genesis_base_test_fixture
@@ -153,7 +158,7 @@ struct genesis_registration_bonus_test_fixture : public genesis_base_test_fixtur
         for (size_t ci = 0; ci < sz_investors; ++ci)
         {
             std::stringstream name;
-            name << "Mr. " << ci;
+            name << "user" << ci;
             investors[ci] = name.str();
         }
         make_minimal_valid_genesis();
@@ -184,9 +189,9 @@ BOOST_FIXTURE_TEST_CASE(registration_bonus_distribution_test, genesis_registrati
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).vesting_shares, ASSET_SP(bonus.amount.value));
+    BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).scorumpower, ASSET_SP(bonus.amount.value));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(investors[sz_investors - 1].name).vesting_shares,
+    BOOST_CHECK_EQUAL(account_service.get_account(investors[sz_investors - 1].name).scorumpower,
                       ASSET_SP(bonus.amount.value));
 
     BOOST_CHECK_EQUAL(registration_pool_service.get().balance, rs - bonus * luckies);
@@ -206,9 +211,9 @@ BOOST_FIXTURE_TEST_CASE(registration_bonus_downgrade_distribution_test, genesis_
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).vesting_shares, ASSET_SP(bonus.amount.value));
+    BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).scorumpower, ASSET_SP(bonus.amount.value));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(investors[sz_investors - 1].name).vesting_shares,
+    BOOST_CHECK_EQUAL(account_service.get_account(investors[sz_investors - 1].name).scorumpower,
                       ASSET_SP(bonus.amount.value / 2));
 }
 
@@ -227,9 +232,9 @@ BOOST_FIXTURE_TEST_CASE(registration_bonus_downgrade_exhaust_distribution_test, 
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).vesting_shares, ASSET_SP(bonus.amount.value));
+    BOOST_CHECK_EQUAL(account_service.get_account(investors[0].name).scorumpower, ASSET_SP(bonus.amount.value));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(investors[sz_investors - 1].name).vesting_shares, ASSET_NULL_SP);
+    BOOST_CHECK_EQUAL(account_service.get_account(investors[sz_investors - 1].name).scorumpower, ASSET_NULL_SP);
 }
 
 struct steemit_bounty_test_fixture : public genesis_base_test_fixture
@@ -252,32 +257,32 @@ BOOST_FIXTURE_TEST_CASE(steemit_bounty_distribution_test, steemit_bounty_test_fi
     asset total_sp = ASSET_SP(1e+6);
     asset pie = total_sp / 4;
 
-    bob.vests(pie);
-    luke.vests(pie);
-    stiven.vests(total_sp - pie * 2);
+    bob.scorumpower(pie);
+    luke.scorumpower(pie);
+    stiven.scorumpower(total_sp - pie * 2);
 
     genesis.steemit_bounty_accounts(bob, luke, stiven).steemit_bounty_accounts_supply(total_sp);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_CHECK_EQUAL(account_service.get_account(bob.name).vesting_shares, pie);
+    BOOST_CHECK_EQUAL(account_service.get_account(bob.name).scorumpower, pie);
 
-    BOOST_CHECK_EQUAL(account_service.get_account(luke.name).vesting_shares, pie);
+    BOOST_CHECK_EQUAL(account_service.get_account(luke.name).scorumpower, pie);
 
-    BOOST_CHECK_EQUAL(account_service.get_account(stiven.name).vesting_shares, total_sp - pie * 2);
+    BOOST_CHECK_EQUAL(account_service.get_account(stiven.name).scorumpower, total_sp - pie * 2);
 }
 
 struct dev_poll_test_fixture : public genesis_base_test_fixture
 {
     dev_poll_test_fixture()
         : dev_pool_service(db.dev_pool_service())
-        , withdraw_vesting_route_service(db.withdraw_vesting_route_service())
+        , withdraw_scorumpower_route_service(db.withdraw_scorumpower_route_service())
     {
         make_minimal_valid_genesis();
     }
 
     scorum::chain::dev_pool_service_i& dev_pool_service;
-    scorum::chain::withdraw_vesting_route_service_i& withdraw_vesting_route_service;
+    scorum::chain::withdraw_scorumpower_route_service_i& withdraw_scorumpower_route_service;
 };
 
 BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
@@ -287,8 +292,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_sp_test, dev_poll_test_fixture)
     genesis.development_sp_supply(dev_sp);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
-
-    BOOST_REQUIRE(dev_pool_service.is_exists());
 
     BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
 }
@@ -301,8 +304,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_scr_test, dev_poll_test_fixture)
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
 
-    BOOST_REQUIRE(dev_pool_service.is_exists());
-
     BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);
 }
 
@@ -314,8 +315,6 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
     genesis.development_sp_supply(dev_sp).development_scr_supply(dev_scr);
 
     BOOST_REQUIRE_NO_THROW(open_database(genesis.generate()));
-
-    BOOST_REQUIRE(dev_pool_service.is_exists());
 
     BOOST_CHECK_EQUAL(dev_pool_service.get().sp_balance, dev_sp);
     BOOST_CHECK_EQUAL(dev_pool_service.get().scr_balance, dev_scr);

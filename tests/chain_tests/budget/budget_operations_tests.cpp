@@ -12,14 +12,7 @@
 
 #include <limits>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using fc::string;
-
-//
-// usage for all budget tests 'chain_test  -t budget_*'
-//
+using namespace database_fixture;
 
 class budget_operation_check_fixture : public budget_check_fixture
 {
@@ -61,7 +54,7 @@ SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_amount)
 
 SCORUM_TEST_CASE(create_budget_operation_check_invalid_balance_currency)
 {
-    create_budget_op.balance = asset(BUDGET_BALANCE_DEFAULT, VESTS_SYMBOL);
+    create_budget_op.balance = asset(BUDGET_BALANCE_DEFAULT, SP_SYMBOL);
 
     BOOST_REQUIRE_THROW(create_budget_op.validate(), fc::assert_exception);
 }
@@ -198,7 +191,7 @@ SCORUM_TEST_CASE(close_budget_check)
 SCORUM_TEST_CASE(auto_close_budget_by_balance)
 {
     BOOST_REQUIRE_NO_THROW(
-        alice_create_budget(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL), time_point_sec::maximum()));
+        alice_create_budget(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL), fc::time_point_sec::maximum()));
 
     BOOST_REQUIRE(!budget_service.get_budgets("alice").empty());
 

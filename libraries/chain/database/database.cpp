@@ -14,6 +14,7 @@
 #include <fc/io/json.hpp>
 
 #include <scorum/protocol/scorum_operations.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 #include <scorum/chain/util/reward.hpp>
@@ -35,12 +36,12 @@
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/reward_pool_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -48,6 +49,7 @@
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
+#include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
@@ -61,9 +63,10 @@
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
 #include <scorum/chain/evaluators/proposal_vote_evaluator.hpp>
+#include <scorum/chain/evaluators/registration_pool_evaluator.hpp>
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
-#include <scorum/chain/evaluators/set_withdraw_vesting_route_evaluators.hpp>
-#include <scorum/chain/evaluators/withdraw_vesting_evaluator.hpp>
+#include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
+#include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
 namespace scorum {
 namespace chain {
@@ -77,6 +80,8 @@ public:
 
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
+    genesis_persistent_state_type _genesis_persistent_state;
+
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
@@ -110,6 +115,9 @@ void database::open(const fc::path& data_dir,
     try
     {
         chainbase::database::open(shared_mem_dir, chainbase_flags, shared_file_size);
+
+        // must be initialized before evaluators creation
+        _my->_genesis_persistent_state = static_cast<const genesis_persistent_state_type&>(genesis_state);
 
         initialize_indexes();
         initialize_evaluators();
@@ -149,6 +157,17 @@ void database::open(const fc::path& data_dir,
 
                 _fork_db.start_block(*head_block);
             }
+        }
+
+        try
+        {
+            const auto& chain_id = get<chain_property_object>().chain_id;
+            FC_ASSERT(genesis_state.initial_chain_id == chain_id,
+                      "Current chain id is not equal initial chain id = ${id}", ("id", chain_id));
+        }
+        catch (fc::exception& er)
+        {
+            throw std::logic_error(std::string("Invalid chain id: ") + er.to_detail_string());
         }
 
         with_read_lock([&]() {
@@ -1004,7 +1023,7 @@ void database::process_decline_voting_rights()
 
         /// remove all current votes
         std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
-        delta[0] = -account.vesting_shares.amount;
+        delta[0] = -account.scorumpower.amount;
         for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
         {
             delta[i + 1] = -account.proxied_vsf_votes[i];
@@ -1050,10 +1069,7 @@ uint32_t database::last_non_undoable_block_num() const
 
 void database::initialize_evaluators()
 {
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_by_committee_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_evaluator>();
-    _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_create_with_delegation_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_update_evaluator>();
     _my->_evaluator_registry.register_evaluator<account_witness_proxy_evaluator>();
@@ -1063,15 +1079,11 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
-    _my->_evaluator_registry.register_evaluator<delegate_vesting_shares_evaluator>();
+    _my->_evaluator_registry.register_evaluator<delegate_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_approve_evaluator>();
     _my->_evaluator_registry.register_evaluator<escrow_dispute_evaluator>();
@@ -1081,30 +1093,21 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<recover_account_evaluator>();
     _my->_evaluator_registry.register_evaluator<request_account_recovery_evaluator>();
     _my->_evaluator_registry.register_evaluator<transfer_evaluator>();
-    _my->_evaluator_registry.register_evaluator<transfer_to_vesting_evaluator>();
+    _my->_evaluator_registry.register_evaluator<transfer_to_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<vote_evaluator>();
     _my->_evaluator_registry.register_evaluator<witness_update_evaluator>();
-
-    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>(new proposal_create_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_dev_pool_evaluator>(
-        new set_withdraw_vesting_route_to_dev_pool_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<set_withdraw_vesting_route_to_account_evaluator>(
-        new set_withdraw_vesting_route_to_account_evaluator(*this));
-    _my->_evaluator_registry.register_evaluator<withdraw_vesting_evaluator>(new withdraw_vesting_evaluator(*this));
-
-    // clang-format off
-    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>(
-        new proposal_vote_evaluator(this->obtain_service<dbs_account>(),
-                                    this->obtain_service<dbs_proposal>(),
-                                    this->obtain_service<dbs_registration_committee>(),
-                                    this->obtain_service<dbs_dynamic_global_property>()));
-    //clang-format on
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<proposal_vote_evaluator>();
+    _my->_evaluator_registry.register_evaluator<proposal_create_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_scorumpower_route_to_dev_pool_evaluator>();
+    _my->_evaluator_registry.register_evaluator<set_withdraw_scorumpower_route_to_account_evaluator>();
+    _my->_evaluator_registry.register_evaluator<withdraw_scorumpower_evaluator>();
+    _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
 }
 
 void database::initialize_indexes()
 {
     add_index<account_authority_index>();
-    add_index<account_history_index>();
     add_index<account_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
@@ -1125,16 +1128,18 @@ void database::initialize_indexes()
     add_index<reward_fund_index>();
     add_index<reward_pool_index>();
     add_index<transaction_index>();
-    add_index<vesting_delegation_expiration_index>();
-    add_index<vesting_delegation_index>();
-    add_index<withdraw_vesting_route_index>();
-    add_index<withdraw_vesting_route_statistic_index>();
-    add_index<withdraw_vesting_index>();
+    add_index<scorumpower_delegation_expiration_index>();
+    add_index<scorumpower_delegation_index>();
+    add_index<withdraw_scorumpower_route_index>();
+    add_index<withdraw_scorumpower_route_statistic_index>();
+    add_index<withdraw_scorumpower_index>();
     add_index<witness_index>();
     add_index<witness_schedule_index>();
     add_index<witness_vote_index>();
     add_index<atomicswap_contract_index>();
+
     add_index<dev_committee_index>();
+    add_index<dev_committee_member_index>();
 
     _plugin_index_signal();
 }
@@ -1180,15 +1185,16 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
         /// check invariants
-        if( is_producing() || !( skip & skip_validate_invariants ) )
+        if (is_producing() || !(skip & skip_validate_invariants))
         {
-            try{
+            try
+            {
                 validate_invariants();
             }
 #ifdef DEBUG
-        FC_CAPTURE_AND_RETHROW( (next_block) );
+            FC_CAPTURE_AND_RETHROW((next_block));
 #else
-        FC_CAPTURE_AND_LOG( (next_block) );
+            FC_CAPTURE_AND_LOG((next_block));
 #endif
         }
 
@@ -1289,7 +1295,8 @@ void database::_apply_block(const signed_block& next_block)
         const auto& gprops = obtain_service<dbs_dynamic_global_property>().get();
         auto block_size = fc::raw::pack_size(next_block);
         FC_ASSERT(block_size <= gprops.median_chain_props.maximum_block_size, "Block Size is too Big",
-                  ("next_block_num", next_block_num)("block_size", block_size)("max", gprops.median_chain_props.maximum_block_size));
+                  ("next_block_num", next_block_num)("block_size",
+                                                     block_size)("max", gprops.median_chain_props.maximum_block_size));
 
         /// modify current witness so transaction evaluators can know who included the transaction,
         /// this is mostly for POW operations which must pay the current_witness
@@ -1329,13 +1336,10 @@ void database::_apply_block(const signed_block& next_block)
         update_witness_schedule();
 
         database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
-                                      static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                            static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds
-                .before(_my->_process_comments_cashout)
-                .before(_my->_process_vesting_withdrawals)
-                .apply(ctx);
+        _my->_process_funds.before(_my->_process_comments_cashout).before(_my->_process_vesting_withdrawals).apply(ctx);
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
@@ -1349,7 +1353,6 @@ void database::_apply_block(const signed_block& next_block)
 
         // notify observers that the block has been applied
         notify_applied_block(next_block);
-
     }
     FC_CAPTURE_LOG_AND_RETHROW((next_block.block_num()))
 }
@@ -1595,7 +1598,7 @@ void database::update_global_dynamic_data(const signed_block& b)
                 dgp.recent_slots_filled = (dgp.recent_slots_filled << 1) + (i == 0 ? 1 : 0);
                 dgp.participation_count += (i == 0 ? 1 : 0);
             }
-            
+
             dgp.head_block_number = b.block_num();
             dgp.head_block_id = b.id();
             dgp.time = b.timestamp;
@@ -1620,9 +1623,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
 {
     try
     {
-        modify(signing_witness, [&](witness_object& _wit) {
-            _wit.last_confirmed_block_num = new_block.block_num();
-        });
+        modify(signing_witness, [&](witness_object& _wit) { _wit.last_confirmed_block_num = new_block.block_num(); });
     }
     FC_CAPTURE_AND_RETHROW()
 }
@@ -1682,7 +1683,8 @@ void database::update_last_irreversible_block()
             }
         }
 
-        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
+        for_each_index(
+            [&](chainbase::abstract_generic_index_i& item) { item.commit(dpo.last_irreversible_block_num); });
 
         if (!(get_node_properties().skip_flags & skip_block_log))
         {
@@ -1729,19 +1731,24 @@ void database::clear_expired_transactions()
 void database::clear_expired_delegations()
 {
     auto now = head_block_time();
-    const auto& delegations_by_exp = get_index<vesting_delegation_expiration_index, by_expiration>();
+    const auto& delegations_by_exp = get_index<scorumpower_delegation_expiration_index, by_expiration>();
     const auto& account_service = obtain_service<dbs_account>();
     auto itr = delegations_by_exp.begin();
     while (itr != delegations_by_exp.end() && itr->expiration < now)
     {
         modify(account_service.get_account(itr->delegator),
-               [&](account_object& a) { a.delegated_vesting_shares -= itr->vesting_shares; });
+               [&](account_object& a) { a.delegated_scorumpower -= itr->scorumpower; });
 
-        push_virtual_operation(return_vesting_delegation_operation(itr->delegator, itr->vesting_shares));
+        push_virtual_operation(return_scorumpower_delegation_operation(itr->delegator, itr->scorumpower));
 
         remove(*itr);
         itr = delegations_by_exp.begin();
     }
+}
+
+const genesis_persistent_state_type& database::genesis_persistent_state() const
+{
+    return _my->_genesis_persistent_state;
 }
 
 void database::adjust_balance(const account_object& a, const asset& delta)
@@ -1858,7 +1865,7 @@ void database::validate_invariants() const
     try
     {
         asset total_supply = asset(0, SCORUM_SYMBOL);
-        asset total_vesting = asset(0, VESTS_SYMBOL);
+        asset total_scorumpower = asset(0, SP_SYMBOL);
         share_type total_vsf_votes = share_type(0);
 
         const auto& gpo = obtain_service<dbs_dynamic_global_property>().get();
@@ -1867,19 +1874,20 @@ void database::validate_invariants() const
         const auto& witness_idx = get_index<witness_index>().indices();
         for (auto itr = witness_idx.begin(); itr != witness_idx.end(); ++itr)
         {
-            FC_ASSERT(itr->votes <= gpo.total_vesting_shares.amount, "${vs} > ${tvs}", ("vs", itr->votes)("tvs", gpo.total_vesting_shares.amount));
+            FC_ASSERT(itr->votes <= gpo.total_scorumpower.amount, "${vs} > ${tvs}",
+                      ("vs", itr->votes)("tvs", gpo.total_scorumpower.amount));
         }
 
         const auto& account_idx = get_index<account_index>().indices().get<by_name>();
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
-            total_vesting += itr->vesting_shares;
+            total_scorumpower += itr->scorumpower;
             total_vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
                                     ? itr->witness_vote_weight()
                                     : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0
                                            ? itr->proxied_vsf_votes[SCORUM_MAX_PROXY_RECURSION_DEPTH - 1]
-                                           : itr->vesting_shares.amount));
+                                           : itr->scorumpower.amount));
         }
 
         const auto& escrow_idx = get_index<escrow_index>().indices().get<by_id>();
@@ -1902,7 +1910,7 @@ void database::validate_invariants() const
         }
 
         total_supply += obtain_service<dbs_reward_fund>().get().reward_balance;
-        total_supply += asset(gpo.total_vesting_shares.amount, SCORUM_SYMBOL);
+        total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get().balance;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
@@ -1915,11 +1923,8 @@ void database::validate_invariants() const
             total_supply += obtain_service<dbs_registration_pool>().get().balance;
         }
 
-        if (obtain_service<dbs_dev_pool>().is_exists())
-        {
-            total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
-            total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
-        }
+        total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
+        total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
@@ -1928,19 +1933,18 @@ void database::validate_invariants() const
         }
 
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
-        FC_ASSERT(total_vesting <= asset::maximum(VESTS_SYMBOL), "Assets SP overflow");
+        FC_ASSERT(total_scorumpower <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
                   ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
-        FC_ASSERT(gpo.total_vesting_shares == total_vesting, "",
-                  ("gpo.total_vesting_shares", gpo.total_vesting_shares)("total_vesting", total_vesting));
-        FC_ASSERT(gpo.total_vesting_shares.amount == total_vsf_votes, "",
-                  ("total_vesting_shares", gpo.total_vesting_shares)("total_vsf_votes", total_vsf_votes));
+        FC_ASSERT(gpo.total_scorumpower == total_scorumpower, "",
+                  ("gpo.total_scorumpower", gpo.total_scorumpower)("total_scorumpower", total_scorumpower));
+        FC_ASSERT(gpo.total_scorumpower.amount == total_vsf_votes, "",
+                  ("total_scorumpower", gpo.total_scorumpower)("total_vsf_votes", total_vsf_votes));
     }
     FC_CAPTURE_LOG_AND_RETHROW((head_block_num()));
 }
 
 } // namespace chain
 } // namespace scorum
-
 

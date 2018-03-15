@@ -69,7 +69,7 @@ struct discussion : public comment_api_obj
 };
 
 /**
- *  Convert's vesting shares
+ *  Convert's scorumpower shares
  */
 struct extended_account : public account_api_obj
 {
@@ -81,7 +81,7 @@ struct extended_account : public account_api_obj
     {
     }
 
-    std::map<uint64_t, applied_operation> transfer_history; /// transfer to/from vesting
+    std::map<uint64_t, applied_operation> transfer_history; /// transfer to/from scorumpower
     std::map<uint64_t, applied_operation> post_history;
     std::map<uint64_t, applied_operation> vote_history;
     std::map<uint64_t, applied_operation> other_history;

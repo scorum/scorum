@@ -4,6 +4,7 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/services/*.hpp"
                   "include/scorum/chain/util/*.hpp"
                   "include/scorum/chain/genesis/*.hpp"
+                  "include/scorum/chain/genesis/initializators/*.hpp"
                   "include/scorum/chain/database/*.hpp"
                   "include/scorum/chain/database/block_tasks/*.hpp"
                   "database/block_tasks/*.hpp")
@@ -39,26 +40,33 @@ add_library( scorum_chain
              services/dbservice_dbs_factory.cpp
              services/decline_voting_rights_request.cpp
              services/dev_pool.cpp
+			 services/development_committee.cpp
              services/dynamic_global_property.cpp
              services/escrow.cpp
              services/hardfork_property.cpp
              services/proposal.cpp
+			 services/proposal_executor.cpp
              services/registration_committee.cpp
              services/registration_pool.cpp
              services/reward.cpp
-             services/vesting_delegation.cpp
-             services/withdraw_vesting.cpp
-             services/withdraw_vesting_route.cpp
-             services/withdraw_vesting_route_statistic.cpp
+             services/scorumpower_delegation.cpp
+             services/withdraw_scorumpower.cpp
+             services/withdraw_scorumpower_route.cpp
+             services/withdraw_scorumpower_route_statistic.cpp
              services/witness.cpp
              services/witness_vote.cpp
+             services/genesis_state.cpp
 
              data_service_factory.cpp
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
-             evaluators/set_withdraw_vesting_route_evaluators.cpp
-             evaluators/withdraw_vesting_evaluator.cpp
+             evaluators/proposal_vote_evaluator.cpp
+             evaluators/set_withdraw_scorumpower_route_evaluators.cpp
+             evaluators/withdraw_scorumpower_evaluator.cpp
+             evaluators/committee_accessor.cpp
+             evaluators/proposal_evaluators.cpp
+             evaluators/registration_pool_evaluator.cpp
 
              schema/shared_authority.cpp
 
@@ -76,6 +84,7 @@ add_library( scorum_chain
              genesis/initializators/registration_bonus_initializator.cpp
              genesis/initializators/steemit_bounty_account_initializator.cpp
              genesis/initializators/dev_pool_initializator.cpp
+             genesis/initializators/dev_committee_initialiazator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_funds.cpp

@@ -3,14 +3,12 @@
 
 #include "registration_check_common.hpp"
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class registration_committee_service_check_fixture : public registration_check_fixture
 {
 public:
     registration_committee_service_check_fixture()
-        : registration_committee_service(db.obtain_service<dbs_registration_committee>())
     {
         genesis_state = create_registration_genesis();
         create_registration_objects(genesis_state);
@@ -27,8 +25,6 @@ public:
         }
         return ret;
     }
-
-    dbs_registration_committee& registration_committee_service;
 };
 
 BOOST_FIXTURE_TEST_SUITE(registration_committee_service_check, registration_committee_service_check_fixture)
@@ -42,7 +38,7 @@ SCORUM_TEST_CASE(create_invalid_genesis_state_check)
 
 SCORUM_TEST_CASE(create_check)
 {
-    using committee_members = dbs_registration_committee::registration_committee_member_refs_type;
+    using committee_members = dbs_registration_committee::committee_members_cref_type;
     const committee_members& members = registration_committee_service.get_committee();
 
     BOOST_REQUIRE_EQUAL(members.size(), size_t(2));

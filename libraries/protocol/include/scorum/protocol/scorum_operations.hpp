@@ -6,22 +6,13 @@
 #include <scorum/protocol/comment.hpp>
 #include <scorum/protocol/types.hpp>
 
+#include <scorum/protocol/proposal_operations.hpp>
+
 #include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
 namespace protocol {
-
-inline void validate_account_name(const std::string& name)
-{
-    FC_ASSERT(is_valid_account_name(name), "Account name ${n} is invalid", ("n", name));
-}
-
-inline void validate_permlink(const std::string& permlink)
-{
-    FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
-    FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
-}
 
 struct account_create_operation : public base_operation
 {
@@ -44,7 +35,7 @@ struct account_create_operation : public base_operation
 struct account_create_with_delegation_operation : public base_operation
 {
     asset fee = asset(0, SCORUM_SYMBOL);
-    asset delegation = asset(0, VESTS_SYMBOL);
+    asset delegation = asset(0, SP_SYMBOL);
     account_name_type creator;
     account_name_type new_account_name;
     authority owner;
@@ -334,10 +325,10 @@ struct escrow_release_operation : public base_operation
 /**
  *  This operation converts SCR into SP at
  *  the current exchange rate. With this operation it is possible to
- *  give another account vesting shares so that faucets can
- *  pre-fund new accounts with vesting shares.
+ *  give another account scorumpower so that faucets can
+ *  pre-fund new accounts with scorumpower.
  */
-struct transfer_to_vesting_operation : public base_operation
+struct transfer_to_scorumpower_operation : public base_operation
 {
     account_name_type from;
     account_name_type to; ///< if null, then same as from
@@ -352,20 +343,20 @@ struct transfer_to_vesting_operation : public base_operation
 
 /**
  * At any given point in time an account can be withdrawing from their
- * vesting shares. A user may change the number of shares they wish to
- * cash out at any time between 0 and their total vesting stake.
+ * scorumpower. A user may change the number of shares they wish to
+ * cash out at any time between 0 and their total scorumpower stake.
  *
- * After applying this operation, vesting_shares will be withdrawn
- * at a rate of vesting_shares/SCORUM_VESTING_WITHDRAW_INTERVALS
+ * After applying this operation, scorumpower will be withdrawn
+ * at a rate of scorumpower/SCORUM_VESTING_WITHDRAW_INTERVALS
  * per week for two years starting
  * one week after this operation is included in the blockchain.
  *
- * This operation is not valid if the user has no vesting shares.
+ * This operation is not valid if the user has no scorumpower.
  */
-struct withdraw_vesting_operation : public base_operation
+struct withdraw_scorumpower_operation : public base_operation
 {
     account_name_type account;
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -379,9 +370,9 @@ struct withdraw_vesting_operation : public base_operation
  * request for the funds to be transferred directly to another account's
  * balance rather than the withdrawing account. In addition, those funds
  * can be immediately vested again, circumventing the conversion from
- * vests to scorum and back, guaranteeing they maintain their value.
+ * scorum power to scorum and back, guaranteeing they maintain their value.
  */
-struct set_withdraw_vesting_route_to_account_operation : public base_operation
+struct set_withdraw_scorumpower_route_to_account_operation : public base_operation
 {
     account_name_type from_account;
     account_name_type to_account;
@@ -395,7 +386,7 @@ struct set_withdraw_vesting_route_to_account_operation : public base_operation
     }
 };
 
-struct set_withdraw_vesting_route_to_dev_pool_operation : public base_operation
+struct set_withdraw_scorumpower_route_to_dev_pool_operation : public base_operation
 {
     account_name_type from_account;
     uint16_t percent = 0;
@@ -615,19 +606,19 @@ struct decline_voting_rights_operation : public base_operation
 };
 
 /**
- * Delegate vesting shares from one account to the other. The vesting shares are still owned
+ * Delegate scorumpower from one account to the other. The scorumpower are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
- * to the receiving account. This sets the delegation to `vesting_shares`, increasing it or
+ * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
  * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
  *
  * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
  * of SP from voting on the same content twice.
  */
-struct delegate_vesting_shares_operation : public base_operation
+struct delegate_scorumpower_operation : public base_operation
 {
-    account_name_type delegator; ///< The account delegating vesting shares
-    account_name_type delegatee; ///< The account receiving vesting shares
-    asset vesting_shares = asset(0, VESTS_SYMBOL); ///< The amount of vesting shares delegated
+    account_name_type delegator; ///< The account delegating scorumpower
+    account_name_type delegatee; ///< The account receiving scorumpower
+    asset scorumpower = asset(0, SP_SYMBOL); ///< The amount of scorumpower delegated
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -665,13 +656,10 @@ struct close_budget_operation : public base_operation
 
 struct proposal_create_operation : public base_operation
 {
-    typedef scorum::protocol::proposal_action action_t;
-
     account_name_type creator;
-    fc::variant data;
-
-    fc::optional<fc::enum_type<uint8_t, action_t>> action;
     uint32_t lifetime_sec = 0;
+
+    proposal_operation operation;
 
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
@@ -792,10 +780,10 @@ FC_REFLECT( scorum::protocol::account_update_operation,
             (json_metadata) )
 
 FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
-FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
-FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(vesting_shares) )
-FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_to_account_operation, (from_account)(to_account)(percent)(auto_vest) )
-FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_to_dev_pool_operation, (from_account)(percent)(auto_vest) )
+FC_REFLECT( scorum::protocol::transfer_to_scorumpower_operation, (from)(to)(amount) )
+FC_REFLECT( scorum::protocol::withdraw_scorumpower_operation, (account)(scorumpower) )
+FC_REFLECT( scorum::protocol::set_withdraw_scorumpower_route_to_account_operation, (from_account)(to_account)(percent)(auto_vest) )
+FC_REFLECT( scorum::protocol::set_withdraw_scorumpower_route_to_dev_pool_operation, (from_account)(percent)(auto_vest) )
 FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(proposed_chain_props) )
 FC_REFLECT( scorum::protocol::account_witness_vote_operation, (account)(witness)(approve) )
 FC_REFLECT( scorum::protocol::account_witness_proxy_operation, (account)(proxy) )
@@ -814,7 +802,7 @@ FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_acco
 FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) )
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
-FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) )
+FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
@@ -830,8 +818,6 @@ FC_REFLECT( scorum::protocol::proposal_vote_operation,
 
 FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
-            (data)
-            (action)
-            (lifetime_sec))
-
+            (lifetime_sec)
+            (operation))
 // clang-format on

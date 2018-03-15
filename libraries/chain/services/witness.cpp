@@ -114,8 +114,8 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
 
         w.virtual_last_update = wso.current_virtual_time;
         w.votes += delta;
-        FC_ASSERT(w.votes <= props.total_vesting_shares.amount, "",
-                  ("w.votes", w.votes)("props", props.total_vesting_shares));
+        FC_ASSERT(w.votes <= props.total_scorumpower.amount, "",
+                  ("w.votes", w.votes)("props", props.total_scorumpower));
 
         w.virtual_scheduled_time
             = w.virtual_last_update + (VIRTUAL_SCHEDULE_LAP_LENGTH - w.virtual_position) / (w.votes.value + 1);

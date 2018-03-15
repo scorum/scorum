@@ -17,10 +17,10 @@
 
 #define SCORUM_CURRENCY_PRECISION  9
 
-// SCORUM = SCR with 3 digits of precision
+// Scorum Coin = SCR with 9 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
-// VESTS = SP with 6 digits of precision
-#define VESTS_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
+// Scorum Power = SP with 9 digits of precision
+#define SP_SYMBOL   (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('P') << 16))
 
 #define SCORUM_MAX_SHARE_SUPPLY                share_value_type(100000000e+9) //100 million
 
@@ -62,8 +62,6 @@
 #define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
 #define SCORUM_BUDGET_LIMIT_API_LIST_SIZE         SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER
 
-#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 10, SCORUM_SYMBOL )
-
 #define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           60*20
 #define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         60*10
 
@@ -89,8 +87,6 @@
 #define SCORUM_BUDGET_LIMIT_DB_LIST_SIZE          1000
 #define SCORUM_BUDGET_LIMIT_API_LIST_SIZE         1000
 
-#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    asset( 1000, VESTS_SYMBOL )
-
 #define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           48*3600
 #define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         24*3600
 
@@ -99,7 +95,12 @@
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS        30
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    10 /// * registration_bonus
+
+#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK        2
+
+#define SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT        30
+#define SCORUM_DEVELOPMENT_COMMITTEE_MAX_MEMBERS_LIMIT         30
 
 #define SCORUM_BLOCK_INTERVAL                  3
 #define SCORUM_BLOCKS_PER_YEAR                 (365*24*60*60/SCORUM_BLOCK_INTERVAL)
@@ -187,8 +188,6 @@
 
 #define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS    (DAYS_TO_SECONDS(1u))
 #define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS    (DAYS_TO_SECONDS(10u))
-
-#define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK        2
 
 /**
  *  Reserved Account IDs with special meaning

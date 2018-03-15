@@ -15,12 +15,7 @@
 // functions related to your operation type
 //
 #define DECLARE_OPERATION_TYPE(OperationType)                                                                          \
-    namespace fc {                                                                                                     \
-                                                                                                                       \
-    void to_variant(const OperationType&, fc::variant&);                                                               \
-    void from_variant(const fc::variant&, OperationType&);                                                             \
-                                                                                                                       \
-    } /* fc */                                                                                                         \
+    DECLARE_OPERATION_SERIALIZATOR(OperationType)                                                                      \
                                                                                                                        \
     namespace scorum {                                                                                                 \
     namespace protocol {                                                                                               \
@@ -33,3 +28,11 @@
                                             std::vector<authority>& other);                                            \
     }                                                                                                                  \
     } /* scorum::protocol */
+
+#define DECLARE_OPERATION_SERIALIZATOR(OperationType)                                                                  \
+    namespace fc {                                                                                                     \
+                                                                                                                       \
+    void to_variant(const OperationType&, fc::variant&);                                                               \
+    void from_variant(const fc::variant&, OperationType&);                                                             \
+                                                                                                                       \
+    } /* fc */

@@ -14,9 +14,9 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
-#include <scorum/chain/services/vesting_delegation.hpp>
+#include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
-#include <scorum/chain/services/withdraw_vesting.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -132,7 +132,7 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 {
     account_service_i& account_service = db().account_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-    withdraw_vesting_service_i& withdraw_vesting_service = db().withdraw_vesting_service();
+    withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 
     const auto& creator = account_service.get_account(o.creator);
 
@@ -143,20 +143,20 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     // check delegation fee
 
-    asset withdraw_rest = withdraw_vesting_service.get_withdraw_rest(creator.id);
+    asset withdraw_rest = withdraw_scorumpower_service.get_withdraw_rest(creator.id);
 
-    FC_ASSERT(creator.vesting_shares - creator.delegated_vesting_shares - withdraw_rest >= o.delegation,
-              "Insufficient vesting shares to delegate to new account.",
-              ("creator.vesting_shares", creator.vesting_shares)(
-                  "creator.delegated_vesting_shares", creator.delegated_vesting_shares)("required", o.delegation));
+    FC_ASSERT(creator.scorumpower - creator.delegated_scorumpower - withdraw_rest >= o.delegation,
+              "Insufficient scorumpower to delegate to new account.",
+              ("creator.scorumpower", creator.scorumpower)("creator.delegated_scorumpower",
+                                                           creator.delegated_scorumpower)("required", o.delegation));
 
     const auto median_creation_fee = dprops_service.get().median_chain_props.account_creation_fee;
 
     auto target_delegation = asset(median_creation_fee.amount * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
                                        * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
-                                   VESTS_SYMBOL);
+                                   SP_SYMBOL);
 
-    auto current_delegation = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, VESTS_SYMBOL) + o.delegation;
+    auto current_delegation = asset(o.fee.amount * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO, SP_SYMBOL) + o.delegation;
 
     FC_ASSERT(current_delegation >= target_delegation, "Inssufficient Delegation ${f} required, ${p} provided.",
               ("f", target_delegation)("p", current_delegation)("account_creation_fee", median_creation_fee)(
@@ -175,31 +175,6 @@ void account_create_with_delegation_evaluator::do_apply(const account_create_wit
 
     account_service.create_account_with_delegation(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                                    o.active, o.posting, o.fee, o.delegation);
-}
-
-void account_create_by_committee_evaluator::do_apply(const account_create_by_committee_operation& o)
-{
-    account_service_i& account_service = db().account_service();
-    registration_pool_service_i& registration_pool_service = db().registration_pool_service();
-    registration_committee_service_i& registration_committee_service = db().registration_committee_service();
-
-    account_service.check_account_existence(o.creator);
-
-    FC_ASSERT(registration_pool_service.is_exists(), "Registration pool is exhausted.");
-
-    FC_ASSERT(registration_committee_service.is_exists(o.creator), "Account '${1}' is not committee member.",
-              ("1", o.creator));
-
-    asset bonus = registration_pool_service.allocate_cash(o.creator);
-
-    account_service.check_account_existence(o.owner.account_auths);
-
-    account_service.check_account_existence(o.active.account_auths);
-
-    account_service.check_account_existence(o.posting.account_auths);
-
-    account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                              o.active, o.posting, bonus);
 }
 
 void account_update_evaluator::do_apply(const account_update_operation& o)
@@ -745,7 +720,7 @@ void transfer_evaluator::do_apply(const transfer_operation& o)
     account_service.increase_balance(to_account, o.amount);
 }
 
-void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation& o)
+void transfer_to_scorumpower_evaluator::do_apply(const transfer_to_scorumpower_operation& o)
 {
     account_service_i& account_service = db().account_service();
 
@@ -754,7 +729,7 @@ void transfer_to_vesting_evaluator::do_apply(const transfer_to_vesting_operation
 
     FC_ASSERT(from_account.balance >= o.amount, "Account does not have sufficient SCR for transfer.");
     account_service.decrease_balance(from_account, o.amount);
-    account_service.create_vesting(to_account, o.amount);
+    account_service.create_scorumpower(to_account, o.amount);
 }
 
 void account_witness_proxy_evaluator::do_apply(const account_witness_proxy_operation& o)
@@ -887,8 +862,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
         FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
 
         int64_t abs_rshares
-            = ((uint128_t(voter.effective_vesting_shares().amount.value) * used_power) / (SCORUM_100_PERCENT))
-                  .to_uint64();
+            = ((uint128_t(voter.effective_scorumpower().amount.value) * used_power) / (SCORUM_100_PERCENT)).to_uint64();
 
         FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || weight == 0,
                   "Voting weight is too small, please accumulate more voting power or scorum power.");
@@ -1119,96 +1093,94 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
     }
 }
 
-void delegate_vesting_shares_evaluator::do_apply(const delegate_vesting_shares_operation& op)
+void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operation& op)
 {
     account_service_i& account_service = db().account_service();
-    vesting_delegation_service_i& vd_service = db().vesting_delegation_service();
+    scorumpower_delegation_service_i& sp_delegation_service = db().scorumpower_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-    withdraw_vesting_service_i& withdraw_vesting_service = db().withdraw_vesting_service();
+    withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 
     const auto& delegator = account_service.get_account(op.delegator);
     const auto& delegatee = account_service.get_account(op.delegatee);
 
-    auto available_shares = delegator.vesting_shares - delegator.delegated_vesting_shares
-        - withdraw_vesting_service.get_withdraw_rest(delegator.id);
+    auto available_shares = delegator.scorumpower - delegator.delegated_scorumpower
+        - withdraw_scorumpower_service.get_withdraw_rest(delegator.id);
 
     const auto& dprops = dprops_service.get();
-    auto min_delegation
-        = asset(dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER,
-                VESTS_SYMBOL);
-    auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, VESTS_SYMBOL);
+    auto min_delegation = asset(
+        dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER, SP_SYMBOL);
+    auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, SP_SYMBOL);
 
     // If delegation doesn't exist, create it
-    if (!vd_service.is_exists(op.delegator, op.delegatee))
+    if (!sp_delegation_service.is_exists(op.delegator, op.delegatee))
     {
-        FC_ASSERT(available_shares >= op.vesting_shares, "Account does not have enough vesting shares to delegate.");
-        FC_ASSERT(op.vesting_shares >= min_delegation, "Account must delegate a minimum of ${v}",
-                  ("v", min_delegation));
+        FC_ASSERT(available_shares >= op.scorumpower, "Account does not have enough scorumpower to delegate.");
+        FC_ASSERT(op.scorumpower >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation));
 
-        vd_service.create([&](vesting_delegation_object& vd) {
-            vd.delegator = op.delegator;
-            vd.delegatee = op.delegatee;
-            vd.vesting_shares = op.vesting_shares;
-            vd.min_delegation_time = dprops.time;
+        sp_delegation_service.create([&](scorumpower_delegation_object& spdo) {
+            spdo.delegator = op.delegator;
+            spdo.delegatee = op.delegatee;
+            spdo.scorumpower = op.scorumpower;
+            spdo.min_delegation_time = dprops.time;
         });
 
-        account_service.increase_delegated_vesting_shares(delegator, op.vesting_shares);
-        account_service.increase_received_vesting_shares(delegatee, op.vesting_shares);
+        account_service.increase_delegated_scorumpower(delegator, op.scorumpower);
+        account_service.increase_received_scorumpower(delegatee, op.scorumpower);
     }
     else
     {
-        const auto& delegation = vd_service.get(op.delegator, op.delegatee);
+        const auto& delegation = sp_delegation_service.get(op.delegator, op.delegatee);
 
         // Else if the delegation is increasing
-        if (op.vesting_shares >= delegation.vesting_shares)
+        if (op.scorumpower >= delegation.scorumpower)
         {
-            auto delta = op.vesting_shares - delegation.vesting_shares;
+            auto delta = op.scorumpower - delegation.scorumpower;
 
             FC_ASSERT(delta >= min_update, "Scorum Power increase is not enough of a difference. min_update: ${min}",
                       ("min", min_update));
-            FC_ASSERT(available_shares >= op.vesting_shares - delegation.vesting_shares,
-                      "Account does not have enough vesting shares to delegate.");
+            FC_ASSERT(available_shares >= op.scorumpower - delegation.scorumpower,
+                      "Account does not have enough scorumpower to delegate.");
 
-            account_service.increase_delegated_vesting_shares(delegator, delta);
-            account_service.increase_received_vesting_shares(delegatee, delta);
+            account_service.increase_delegated_scorumpower(delegator, delta);
+            account_service.increase_received_scorumpower(delegatee, delta);
 
-            vd_service.update(delegation,
-                              [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
+            sp_delegation_service.update(delegation,
+                                         [&](scorumpower_delegation_object& obj) { obj.scorumpower = op.scorumpower; });
         }
         // Else the delegation is decreasing
-        else /* delegation.vesting_shares > op.vesting_shares */
+        else /* delegation.scorumpower > op.scorumpower */
         {
-            auto delta = delegation.vesting_shares - op.vesting_shares;
+            auto delta = delegation.scorumpower - op.scorumpower;
 
-            if (op.vesting_shares.amount > 0)
+            if (op.scorumpower.amount > 0)
             {
                 FC_ASSERT(delta >= min_update,
                           "Scorum Power decrease is not enough of a difference. min_update: ${min}",
                           ("min", min_update));
-                FC_ASSERT(op.vesting_shares >= min_delegation,
+                FC_ASSERT(op.scorumpower >= min_delegation,
                           "Delegation must be removed or leave minimum delegation amount of ${v}",
                           ("v", min_delegation));
             }
             else
             {
-                FC_ASSERT(delegation.vesting_shares.amount > 0,
-                          "Delegation would set vesting_shares to zero, but it is already zero");
+                FC_ASSERT(delegation.scorumpower.amount > 0,
+                          "Delegation would set scorumpower to zero, but it is already zero");
             }
 
-            vd_service.create_expiration(op.delegator, delta,
-                                         std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
-                                                  delegation.min_delegation_time));
+            sp_delegation_service.create_expiration(
+                op.delegator, delta, std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
+                                              delegation.min_delegation_time));
 
-            account_service.decrease_received_vesting_shares(delegatee, delta);
+            account_service.decrease_received_scorumpower(delegatee, delta);
 
-            if (op.vesting_shares.amount > 0)
+            if (op.scorumpower.amount > 0)
             {
-                vd_service.update(delegation,
-                                  [&](vesting_delegation_object& obj) { obj.vesting_shares = op.vesting_shares; });
+                sp_delegation_service.update(
+                    delegation, [&](scorumpower_delegation_object& obj) { obj.scorumpower = op.scorumpower; });
             }
             else
             {
-                vd_service.remove(delegation);
+                sp_delegation_service.remove(delegation);
             }
         }
     }

@@ -34,7 +34,9 @@ using scorum::protocol::operation;
 using scorum::protocol::signed_transaction;
 
 class database_impl;
+
 struct genesis_state_type;
+struct genesis_persistent_state_type;
 
 /**
  *   @class database
@@ -303,6 +305,8 @@ public:
     {
         _plugin_index_signal.connect([this]() { this->add_index<MultiIndexType>(); });
     }
+
+    const genesis_persistent_state_type& genesis_persistent_state() const;
 
 private:
     void adjust_balance(const account_object& a, const asset& delta);

@@ -12,10 +12,7 @@
 
 #include <limits>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using fc::string;
+using namespace database_fixture;
 
 class dbs_reward_fixture : public database_integration_fixture
 {

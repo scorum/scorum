@@ -8,9 +8,7 @@
 
 #include "database_default_integration.hpp"
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class fund_budget_fixture : public database_integration_fixture
 {
@@ -45,7 +43,7 @@ SCORUM_TEST_CASE(fund_budget_creation)
 SCORUM_TEST_CASE(second_fund_budget_creation)
 {
     asset balance(1, SCORUM_SYMBOL);
-    time_point_sec deadline = db.get_slot_time(1);
+    fc::time_point_sec deadline = db.get_slot_time(1);
 
     BOOST_REQUIRE_THROW(budget_service.create_fund_budget(balance, deadline), fc::assert_exception);
 }

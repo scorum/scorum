@@ -15,9 +15,7 @@
 #include <string>
 #include <map>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 BOOST_FIXTURE_TEST_SUITE(comment_beneficiaries_tests, database_default_integration_fixture)
 
@@ -91,7 +89,7 @@ BOOST_AUTO_TEST_CASE(old_tests)
         tx.clear();
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
-        SCORUM_REQUIRE_THROW(db.push_transaction(tx), chain::plugin_exception);
+        SCORUM_REQUIRE_THROW(db.push_transaction(tx), plugin_exception);
 
         BOOST_TEST_MESSAGE("--- Test specifying a non-existent benefactor");
         b.beneficiaries.clear();
@@ -148,8 +146,8 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, ASSET_SCR(0));
         BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, ASSET_SCR(0));
 
-        asset bob_vesting_before = db.obtain_service<dbs_account>().get_account("bob").vesting_shares;
-        asset sam_vesting_before = db.obtain_service<dbs_account>().get_account("sam").vesting_shares;
+        asset bob_sp_before = db.obtain_service<dbs_account>().get_account("bob").scorumpower;
+        asset sam_sp_before = db.obtain_service<dbs_account>().get_account("sam").scorumpower;
 
         comment_benefactor_reward_visitor visitor(db);
 
@@ -165,12 +163,12 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
 
         BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"],
-                            (db.obtain_service<dbs_account>().get_account("bob").vesting_shares - bob_vesting_before));
+                            (db.obtain_service<dbs_account>().get_account("bob").scorumpower - bob_sp_before));
         BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"],
-                            (db.obtain_service<dbs_account>().get_account("sam").vesting_shares - sam_vesting_before));
+                            (db.obtain_service<dbs_account>().get_account("sam").scorumpower - sam_sp_before));
 
         // clang-format off
-        BOOST_REQUIRE_EQUAL(asset(db.obtain_service<dbs_comment>().get("alice", std::string("test")).beneficiary_payout_value.amount, VESTS_SYMBOL),
+        BOOST_REQUIRE_EQUAL(asset(db.obtain_service<dbs_comment>().get("alice", std::string("test")).beneficiary_payout_value.amount, SP_SYMBOL),
                             (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
         // clang-format on
     }

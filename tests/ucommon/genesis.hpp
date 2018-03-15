@@ -47,6 +47,11 @@ public:
         genesis_state.registration_committee.push_back(a.name);
     }
 
+    void dev_committee_member_create(Actor& a)
+    {
+        genesis_state.development_committee.push_back(a.name);
+    }
+
 public:
     static Genesis create()
     {
@@ -97,6 +102,17 @@ public:
         {
             account_create(a);
             committee_member_create(a);
+        }
+        return *this;
+    }
+
+    template <typename... Args> Genesis& dev_committee(Args... args)
+    {
+        std::array<Actor, sizeof...(args)> list = { args... };
+        for (Actor& a : list)
+        {
+            account_create(a);
+            dev_committee_member_create(a);
         }
         return *this;
     }
@@ -157,6 +173,12 @@ public:
     Genesis& development_scr_supply(asset amount)
     {
         genesis_state.development_scr_supply = amount;
+        return *this;
+    }
+
+    Genesis& lock_withdraw_sp_until_timestamp(fc::time_point_sec timestamp)
+    {
+        genesis_state.lock_withdraw_sp_until_timestamp = timestamp;
         return *this;
     }
 

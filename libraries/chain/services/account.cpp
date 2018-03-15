@@ -113,7 +113,7 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
     if (fee.amount > 0)
-        create_vesting(new_account, fee);
+        create_scorumpower(new_account, fee);
 
     return new_account;
 }
@@ -129,34 +129,34 @@ const account_object& dbs_account::create_account_with_delegation(const account_
                                                                   const asset& delegation)
 {
     FC_ASSERT(fee.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    FC_ASSERT(delegation.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
+    FC_ASSERT(delegation.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
 
     const auto& creator = get_account(creator_name);
 
     db_impl().modify(creator, [&](account_object& c) {
         c.balance -= fee;
-        c.delegated_vesting_shares += delegation;
+        c.delegated_scorumpower += delegation;
     });
 
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
 
-    db_impl().modify(new_account, [&](account_object& acc) { acc.received_vesting_shares = delegation; });
+    db_impl().modify(new_account, [&](account_object& acc) { acc.received_scorumpower = delegation; });
 
     if (delegation.amount > 0)
     {
         time_point_sec t = db_impl().head_block_time();
 
-        db_impl().create<vesting_delegation_object>([&](vesting_delegation_object& vdo) {
+        db_impl().create<scorumpower_delegation_object>([&](scorumpower_delegation_object& vdo) {
             vdo.delegator = creator_name;
             vdo.delegatee = new_account_name;
-            vdo.vesting_shares = delegation;
+            vdo.scorumpower = delegation;
             vdo.min_delegation_time = t + SCORUM_CREATE_ACCOUNT_DELEGATION_TIME;
         });
     }
 
     if (fee.amount > 0)
-        create_vesting(new_account, fee);
+        create_scorumpower(new_account, fee);
 
     return new_account;
 }
@@ -177,7 +177,7 @@ const account_object& dbs_account::create_account_with_bonus(const account_name_
 
     if (bonus.amount > 0)
     {
-        create_vesting(new_account, bonus);
+        create_scorumpower(new_account, bonus);
     }
 
     return new_account;
@@ -253,27 +253,27 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
     increase_balance(account, -scorums);
 }
 
-void dbs_account::increase_vesting_shares(const account_object& account, const asset& vesting)
+void dbs_account::increase_scorumpower(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(vesting.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.vesting_shares += vesting; });
+    FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.scorumpower += amount; });
 }
 
-void dbs_account::increase_delegated_vesting_shares(const account_object& account, const asset& amount)
+void dbs_account::increase_delegated_scorumpower(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(amount.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.delegated_vesting_shares += amount; });
+    FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.delegated_scorumpower += amount; });
 }
 
-void dbs_account::increase_received_vesting_shares(const account_object& account, const asset& amount)
+void dbs_account::increase_received_scorumpower(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(amount.symbol() == VESTS_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.received_vesting_shares += amount; });
+    FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
+    db_impl().modify(account, [&](account_object& a) { a.received_scorumpower += amount; });
 }
 
-void dbs_account::decrease_received_vesting_shares(const account_object& account, const asset& amount)
+void dbs_account::decrease_received_scorumpower(const account_object& account, const asset& amount)
 {
-    increase_received_vesting_shares(account, -amount);
+    increase_received_scorumpower(account, -amount);
 }
 
 void dbs_account::increase_posting_rewards(const account_object& account, const asset& amount)
@@ -454,7 +454,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
 {
     /// remove all current votes
     std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1> delta;
-    delta[0] = -account.vesting_shares.amount;
+    delta[0] = -account.scorumpower.amount;
     for (int i = 0; i < SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
         delta[i + 1] = -account.proxied_vsf_votes[i];
 
@@ -492,20 +492,20 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-const asset dbs_account::create_vesting(const account_object& to_account, const asset& scorum)
+const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
 {
     try
     {
-        asset new_vesting = asset(scorum.amount, VESTS_SYMBOL);
+        asset new_scorumpower = asset(scorum.amount, SP_SYMBOL);
 
-        db_impl().modify(to_account, [&](account_object& to) { to.vesting_shares += new_vesting; });
+        db_impl().modify(to_account, [&](account_object& to) { to.scorumpower += new_scorumpower; });
 
         db_impl().obtain_service<dbs_dynamic_global_property>().update(
-            [&](dynamic_global_property_object& props) { props.total_vesting_shares += new_vesting; });
+            [&](dynamic_global_property_object& props) { props.total_scorumpower += new_scorumpower; });
 
-        adjust_proxied_witness_votes(to_account, new_vesting.amount);
+        adjust_proxied_witness_votes(to_account, new_scorumpower.amount);
 
-        return new_vesting;
+        return new_scorumpower;
     }
     FC_CAPTURE_AND_RETHROW((to_account.name)(scorum))
 }

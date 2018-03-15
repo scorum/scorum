@@ -10,17 +10,18 @@
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
-#include <scorum/chain/services/withdraw_vesting_route.hpp>
+#include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 
-#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/committee.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
-#include <scorum/chain/schema/withdraw_vesting_objects.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -35,10 +36,13 @@
 #include <cfenv>
 #include <iostream>
 
-#define GET_REQUIRED_FEES_MAX_RECURSION 4
+#define GET_REQUIRED_FEES_MAX_RECURSION (4)
 
 namespace scorum {
 namespace app {
+
+constexpr uint32_t LOOKUP_LIMIT = 1000;
+constexpr uint32_t GET_ACCOUNT_HISTORY_LIMIT = 10000;
 
 class database_api_impl;
 
@@ -87,7 +91,12 @@ public:
     uint64_t get_witness_count() const;
 
     // Committee
-    std::set<account_name_type> lookup_committee_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<account_name_type> lookup_registration_committee_members(const std::string& lower_bound_name,
+                                                                      uint32_t limit) const;
+
+    std::set<account_name_type> lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                     uint32_t limit) const;
+
     std::vector<proposal_api_obj> lookup_proposals() const;
 
     // Authority / validation
@@ -108,6 +117,9 @@ public:
     boost::signals2::scoped_connection _block_applied_connection;
 
     bool _disable_get_block = false;
+
+    registration_committee_api_obj get_registration_committee() const;
+    development_committee_api_obj get_development_committee() const;
 };
 
 applied_operation::applied_operation()
@@ -442,7 +454,7 @@ std::set<std::string> database_api::lookup_accounts(const std::string& lower_bou
 
 std::set<std::string> database_api_impl::lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
     const auto& accounts_by_name = _db.get_index<account_index>().indices().get<by_name>();
     std::set<std::string> result;
 
@@ -524,7 +536,8 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == outgoing || type == all)
         {
-            const auto& by_route = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_withdraw_route>();
+            const auto& by_route
+                = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_withdraw_route>();
             auto route = by_route.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_route.end() && is_equal_withdrawable_id(route->from_id, acc.id))
@@ -543,7 +556,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
 
         if (type == incoming || type == all)
         {
-            const auto& by_dest = my->_db.get_index<withdraw_vesting_route_index>().indices().get<by_destination>();
+            const auto& by_dest = my->_db.get_index<withdraw_scorumpower_route_index>().indices().get<by_destination>();
             auto route = by_dest.lower_bound(acc.id); // TODO: test get_withdraw_routes
 
             while (route != by_dest.end() && is_equal_withdrawable_id(route->to_id, acc.id))
@@ -658,7 +671,7 @@ std::set<account_name_type> database_api::lookup_witness_accounts(const std::str
 std::set<account_name_type> database_api_impl::lookup_witness_accounts(const std::string& lower_bound_name,
                                                                        uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
     const auto& witnesses_by_id = _db.get_index<witness_index>().indices().get<by_id>();
 
     // get all the names and look them all up, sort them, then figure out what
@@ -686,32 +699,33 @@ uint64_t database_api_impl::get_witness_count() const
     return _db.get_index<witness_index>().indices().size();
 }
 
-std::set<account_name_type> database_api::lookup_committee_accounts(const std::string& lower_bound_name,
-                                                                    uint32_t limit) const
+std::set<account_name_type> database_api::lookup_registration_committee_members(const std::string& lower_bound_name,
+                                                                                uint32_t limit) const
 {
-    return my->_db.with_read_lock([&]() { return my->lookup_committee_accounts(lower_bound_name, limit); });
+
+    return my->_db.with_read_lock([&]() { return my->lookup_registration_committee_members(lower_bound_name, limit); });
 }
 
-std::set<account_name_type> database_api_impl::lookup_committee_accounts(const std::string& lower_bound_name,
-                                                                         uint32_t limit) const
+std::set<account_name_type> database_api::lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                               uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    return my->_db.with_read_lock([&]() { return my->lookup_development_committee_members(lower_bound_name, limit); });
+}
 
-    auto& committee_service = _db.obtain_service<dbs_registration_committee>();
-    auto committee = committee_service.get_committee();
+std::set<account_name_type>
+database_api_impl::lookup_registration_committee_members(const std::string& lower_bound_name, uint32_t limit) const
+{
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
-    std::set<account_name_type> members_by_account_name;
-    for (const registration_committee_member_object& member : committee)
-    {
-        if (member.account >= lower_bound_name)
-        {
-            members_by_account_name.insert(member.account);
-        }
-    }
+    return committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
+}
 
-    fc::limit_left_cut_right(members_by_account_name, limit);
+std::set<account_name_type> database_api_impl::lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                                    uint32_t limit) const
+{
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
-    return members_by_account_name;
+    return committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
 }
 
 std::vector<proposal_api_obj> database_api::lookup_proposals() const
@@ -730,6 +744,31 @@ std::vector<proposal_api_obj> database_api_impl::lookup_proposals() const
     }
 
     return proposals;
+}
+
+registration_committee_api_obj database_api::get_registration_committee() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_registration_committee(); });
+}
+
+registration_committee_api_obj database_api_impl::get_registration_committee() const
+{
+    registration_committee_api_obj committee(_db.get(registration_pool_id_type()));
+
+    return committee;
+}
+
+development_committee_api_obj database_api::get_development_committee() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_development_committee(); });
+}
+
+development_committee_api_obj database_api_impl::get_development_committee() const
+{
+    development_committee_api_obj committee;
+    committee = _db.get(dev_committee_id_type());
+
+    return committee;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1141,29 +1180,6 @@ std::vector<discussion> database_api::get_replies_by_last_update(account_name_ty
     });
 }
 
-std::map<uint32_t, applied_operation>
-database_api::get_account_history(const std::string& account, uint64_t from, uint32_t limit) const
-{
-    return my->_db.with_read_lock([&]() {
-        FC_ASSERT(limit <= 10000, "Limit of ${l} is greater than maxmimum allowed", ("l", limit));
-        FC_ASSERT(from >= limit, "From must be greater than limit");
-        //   idump((account)(from)(limit));
-        const auto& idx = my->_db.get_index<account_history_index>().indices().get<by_account>();
-        auto itr = idx.lower_bound(boost::make_tuple(account, from));
-        //   if( itr != idx.end() ) idump((*itr));
-        auto end = idx.upper_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
-        //   if( end != idx.end() ) idump((*end));
-
-        std::map<uint32_t, applied_operation> result;
-        while (itr != end)
-        {
-            result[itr->sequence] = my->_db.get(itr->op);
-            ++itr;
-        }
-        return result;
-    });
-}
-
 std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_author(const std::string& author) const
 {
     return my->_db.with_read_lock([&]() {
@@ -1175,7 +1191,7 @@ std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_aut
                 = my->_db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
             auto itr = tidx.lower_bound(boost::make_tuple(acnt.id, 0));
             std::vector<std::pair<std::string, uint32_t>> result;
-            while (itr != tidx.end() && itr->author == acnt.id && result.size() < 1000)
+            while (itr != tidx.end() && itr->author == acnt.id && result.size() < LOOKUP_LIMIT)
             {
                 result.push_back(std::make_pair(itr->tag, itr->total_posts));
                 ++itr;
@@ -1189,7 +1205,7 @@ std::vector<std::pair<std::string, uint32_t>> database_api::get_tags_used_by_aut
 std::vector<tag_api_obj> database_api::get_trending_tags(const std::string& after, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
-        limit = std::min(limit, uint32_t(1000));
+        limit = std::min(limit, uint32_t(LOOKUP_LIMIT));
         std::vector<tag_api_obj> result;
         result.reserve(limit);
 
@@ -1632,16 +1648,16 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
     });
 }
 
-std::vector<vesting_delegation_api_obj>
-database_api::get_vesting_delegations(const std::string& account, const std::string& from, uint32_t limit) const
+std::vector<scorumpower_delegation_api_obj>
+database_api::get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
     return my->_db.with_read_lock([&]() {
-        std::vector<vesting_delegation_api_obj> result;
+        std::vector<scorumpower_delegation_api_obj> result;
         result.reserve(limit);
 
-        const auto& delegation_idx = my->_db.get_index<vesting_delegation_index, by_delegation>();
+        const auto& delegation_idx = my->_db.get_index<scorumpower_delegation_index, by_delegation>();
         auto itr = delegation_idx.lower_bound(boost::make_tuple(account, from));
         while (result.size() < limit && itr != delegation_idx.end() && itr->delegator == account)
         {
@@ -1653,16 +1669,16 @@ database_api::get_vesting_delegations(const std::string& account, const std::str
     });
 }
 
-std::vector<vesting_delegation_expiration_api_obj>
-database_api::get_expiring_vesting_delegations(const std::string& account, time_point_sec from, uint32_t limit) const
+std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expiring_scorumpower_delegations(
+    const std::string& account, time_point_sec from, uint32_t limit) const
 {
-    FC_ASSERT(limit <= 1000);
+    FC_ASSERT(limit <= LOOKUP_LIMIT);
 
     return my->_db.with_read_lock([&]() {
-        std::vector<vesting_delegation_expiration_api_obj> result;
+        std::vector<scorumpower_delegation_expiration_api_obj> result;
         result.reserve(limit);
 
-        const auto& exp_idx = my->_db.get_index<vesting_delegation_expiration_index, by_account_expiration>();
+        const auto& exp_idx = my->_db.get_index<scorumpower_delegation_expiration_index, by_account_expiration>();
         auto itr = exp_idx.lower_bound(boost::make_tuple(account, from));
         while (result.size() < limit && itr != exp_idx.end() && itr->delegator == account)
         {
@@ -1716,39 +1732,40 @@ state database_api::get_state(std::string path) const
                 auto& eacnt = _state.accounts[acnt];
                 if (part[1] == "transfers")
                 {
-                    auto history = get_account_history(acnt, uint64_t(-1), 10000);
-                    for (auto& item : history)
-                    {
-                        switch (item.second.op.which())
-                        {
-                        case operation::tag<transfer_to_vesting_operation>::value:
-                        case operation::tag<withdraw_vesting_operation>::value:
-                        case operation::tag<transfer_operation>::value:
-                        case operation::tag<author_reward_operation>::value:
-                        case operation::tag<curation_reward_operation>::value:
-                        case operation::tag<comment_benefactor_reward_operation>::value:
-                        case operation::tag<escrow_transfer_operation>::value:
-                        case operation::tag<escrow_approve_operation>::value:
-                        case operation::tag<escrow_dispute_operation>::value:
-                        case operation::tag<escrow_release_operation>::value:
-                            eacnt.transfer_history[item.first] = item.second;
-                            break;
-                        case operation::tag<comment_operation>::value:
-                            //   eacnt.post_history[item.first] =  item.second;
-                            break;
-                        case operation::tag<vote_operation>::value:
-                        case operation::tag<account_witness_vote_operation>::value:
-                        case operation::tag<account_witness_proxy_operation>::value:
-                            //   eacnt.vote_history[item.first] =  item.second;
-                            break;
-                        case operation::tag<account_create_operation>::value:
-                        case operation::tag<account_update_operation>::value:
-                        case operation::tag<witness_update_operation>::value:
-                        case operation::tag<producer_reward_operation>::value:
-                        default:
-                            eacnt.other_history[item.first] = item.second;
-                        }
-                    }
+                    // TODO: rework this garbage method - split it into sensible parts
+                    // auto history = get_account_history(acnt, uint64_t(-1), 10000);
+                    // for (auto& item : history)
+                    //{
+                    //    switch (item.second.op.which())
+                    //    {
+                    //    case operation::tag<transfer_to_scorumpower_operation>::value:
+                    //    case operation::tag<withdraw_scorumpower_operation>::value:
+                    //    case operation::tag<transfer_operation>::value:
+                    //    case operation::tag<author_reward_operation>::value:
+                    //    case operation::tag<curation_reward_operation>::value:
+                    //    case operation::tag<comment_benefactor_reward_operation>::value:
+                    //    case operation::tag<escrow_transfer_operation>::value:
+                    //    case operation::tag<escrow_approve_operation>::value:
+                    //    case operation::tag<escrow_dispute_operation>::value:
+                    //    case operation::tag<escrow_release_operation>::value:
+                    //        eacnt.transfer_history[item.first] = item.second;
+                    //        break;
+                    //    case operation::tag<comment_operation>::value:
+                    //        //   eacnt.post_history[item.first] =  item.second;
+                    //        break;
+                    //    case operation::tag<vote_operation>::value:
+                    //    case operation::tag<account_witness_vote_operation>::value:
+                    //    case operation::tag<account_witness_proxy_operation>::value:
+                    //        //   eacnt.vote_history[item.first] =  item.second;
+                    //        break;
+                    //    case operation::tag<account_create_operation>::value:
+                    //    case operation::tag<account_update_operation>::value:
+                    //    case operation::tag<witness_update_operation>::value:
+                    //    case operation::tag<producer_reward_operation>::value:
+                    //    default:
+                    //        eacnt.other_history[item.first] = item.second;
+                    //    }
+                    //}
                 }
                 else if (part[1] == "recent-replies")
                 {

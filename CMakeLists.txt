@@ -198,7 +198,7 @@ endif()
 add_subdirectory( external_plugins )
 add_subdirectory( libraries )
 add_subdirectory( programs )
-
+add_subdirectory( utils )
 add_subdirectory( tests )
 
 if (ENABLE_INSTALLER)
@@ -261,5 +261,3 @@ if( LOW_MEMORY_NODE )
 else()
   MESSAGE( STATUS "\n\n             CONFIGURED FOR FULL NODE                \n\n" )
 endif()
-
-

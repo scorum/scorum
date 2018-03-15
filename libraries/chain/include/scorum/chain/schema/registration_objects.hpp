@@ -38,14 +38,16 @@ public:
     };
 
     fc::shared_vector<schedule_item> schedule_items;
+
+    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 class registration_committee_member_object
     : public object<registration_committee_member_object_type, registration_committee_member_object>
 {
 public:
-    typedef std::reference_wrapper<const registration_committee_member_object> cref_type;
-
     CHAINBASE_DEFAULT_CONSTRUCTOR(registration_committee_member_object)
 
     id_type id;
@@ -83,13 +85,26 @@ typedef shared_multi_index_container<registration_committee_member_object,
 } // namespace chain
 } // namespace scorum
 
+// clang-format off
 FC_REFLECT(scorum::chain::registration_pool_object,
-           (id)(balance)(maximum_bonus)(already_allocated_count)(schedule_items))
+           (id)
+           (balance)
+           (maximum_bonus)
+           (already_allocated_count)
+           (schedule_items)
+           (invite_quorum)
+           (dropout_quorum)
+           (change_quorum))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_pool_object, scorum::chain::registration_pool_index)
 
 FC_REFLECT(scorum::chain::registration_committee_member_object,
-           (id)(account)(already_allocated_cash)(last_allocated_block)(per_n_block_remain))
+           (id)
+           (account)
+           (already_allocated_cash)
+           (last_allocated_block)
+           (per_n_block_remain))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)
+// clang-format on

@@ -117,7 +117,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.agent);
     }
 
-    void operator()(const transfer_to_vesting_operation& op)
+    void operator()(const transfer_to_scorumpower_operation& op)
     {
         _impacted.insert(op.from);
 
@@ -127,13 +127,13 @@ struct get_impacted_account_visitor
         }
     }
 
-    void operator()(const set_withdraw_vesting_route_to_account_operation& op)
+    void operator()(const set_withdraw_scorumpower_route_to_account_operation& op)
     {
         _impacted.insert(op.from_account);
         _impacted.insert(op.to_account);
     }
 
-    void operator()(const set_withdraw_vesting_route_to_dev_pool_operation& op)
+    void operator()(const set_withdraw_scorumpower_route_to_dev_pool_operation& op)
     {
         _impacted.insert(op.from_account);
     }
@@ -166,7 +166,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.account_to_recover);
     }
 
-    void operator()(const delegate_vesting_shares_operation& op)
+    void operator()(const delegate_scorumpower_operation& op)
     {
         _impacted.insert(op.delegator);
         _impacted.insert(op.delegatee);
@@ -230,7 +230,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
-    void operator()(const return_vesting_delegation_operation& op)
+    void operator()(const return_scorumpower_delegation_operation& op)
     {
         _impacted.insert(op.account);
     }

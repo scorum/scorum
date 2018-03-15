@@ -6,18 +6,9 @@
 #include <fc/io/json.hpp>
 
 #include "defines.hpp"
+#include "utils.hpp"
 
-namespace utils {
-
-template <typename T> std::string to_hex(const T& obj)
-{
-    std::stringstream ss;
-    fc::raw::pack(ss, obj);
-    std::string buf = ss.str();
-
-    return fc::to_hex(buf.c_str(), buf.size());
-}
-}
+namespace signed_transaction_serialization_tests {
 
 using scorum::protocol::asset;
 using scorum::protocol::signed_transaction;
@@ -118,3 +109,5 @@ SCORUM_TEST_CASE(testing_transaction_json_pack_and_unpack)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+} // namespace signed_transaction_serialization_tests

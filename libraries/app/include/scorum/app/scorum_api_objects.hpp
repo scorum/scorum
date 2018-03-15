@@ -3,7 +3,7 @@
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
@@ -11,6 +11,9 @@
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+
 #include <scorum/protocol/transaction.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
 
@@ -46,15 +49,16 @@ public:
     }
 };
 
+typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
 typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
 typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
 typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
 typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
 typedef api_obj<scorum::chain::reward_fund_object> reward_fund_api_obj;
-typedef api_obj<scorum::chain::vesting_delegation_expiration_object> vesting_delegation_expiration_api_obj;
-typedef api_obj<scorum::chain::vesting_delegation_object> vesting_delegation_api_obj;
-typedef api_obj<scorum::chain::withdraw_vesting_route_object> withdraw_vesting_route_api_obj;
+typedef api_obj<scorum::chain::scorumpower_delegation_expiration_object> scorumpower_delegation_expiration_api_obj;
+typedef api_obj<scorum::chain::scorumpower_delegation_object> scorumpower_delegation_api_obj;
+typedef api_obj<scorum::chain::withdraw_scorumpower_route_object> withdraw_scorumpower_route_api_obj;
 typedef api_obj<scorum::chain::witness_schedule_object> witness_schedule_api_obj;
 typedef api_obj<scorum::chain::witness_vote_object> witness_vote_api_obj;
 typedef api_obj<scorum::witness::account_bandwidth_object> account_bandwidth_api_obj;
@@ -214,9 +218,9 @@ struct account_api_obj
         , balance(a.balance)
         , curation_rewards(a.curation_rewards)
         , posting_rewards(a.posting_rewards)
-        , vesting_shares(a.vesting_shares)
-        , delegated_vesting_shares(a.delegated_vesting_shares)
-        , received_vesting_shares(a.received_vesting_shares)
+        , scorumpower(a.scorumpower)
+        , delegated_scorumpower(a.delegated_scorumpower)
+        , received_scorumpower(a.received_scorumpower)
         , witnesses_voted_for(a.witnesses_voted_for)
         , last_post(a.last_post)
         , last_root_post(a.last_root_post)
@@ -294,9 +298,9 @@ struct account_api_obj
     asset curation_rewards;
     asset posting_rewards;
 
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
-    asset delegated_vesting_shares = asset(0, VESTS_SYMBOL);
-    asset received_vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
+    asset delegated_scorumpower = asset(0, SP_SYMBOL);
+    asset received_scorumpower = asset(0, SP_SYMBOL);
 
     std::vector<share_type> proxied_vsf_votes;
 
@@ -318,7 +322,7 @@ struct account_balance_info_api_obj
 {
     account_balance_info_api_obj(const account_api_obj& a)
         : balance(a.balance)
-        , vesting_shares(a.vesting_shares)
+        , scorumpower(a.scorumpower)
     {
     }
 
@@ -327,7 +331,7 @@ struct account_balance_info_api_obj
     }
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    asset vesting_shares = asset(0, VESTS_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
 };
 
 struct owner_authority_history_api_obj
@@ -375,13 +379,15 @@ struct proposal_api_obj
 {
     proposal_api_obj(const proposal_object& p)
         : id(p.id)
+        , operation(p.operation)
         , creator(p.creator)
-        , data(p.data)
         , expiration(p.expiration)
         , quorum_percent(p.quorum_percent)
-        , action(p.action)
-        , voted_accounts(p.voted_accounts)
     {
+        for (auto& a : p.voted_accounts)
+        {
+            voted_accounts.insert(a);
+        }
     }
 
     proposal_api_obj()
@@ -390,14 +396,14 @@ struct proposal_api_obj
 
     proposal_object::id_type id;
 
+    protocol::proposal_operation operation;
+
     account_name_type creator;
-    fc::variant data;
 
     fc::time_point_sec expiration;
 
     uint64_t quorum_percent = 0;
 
-    scorum::protocol::proposal_action action = scorum::protocol::proposal_action::invite;
     flat_set<account_name_type> voted_accounts;
 };
 
@@ -587,11 +593,30 @@ struct atomicswap_contract_result_api_obj
     }
 };
 
+struct registration_committee_api_obj
+{
+    registration_committee_api_obj()
+    {
+    }
+
+    registration_committee_api_obj(const registration_pool_object& reg_committee)
+        : invite_quorum(reg_committee.invite_quorum)
+        , dropout_quorum(reg_committee.dropout_quorum)
+        , change_quorum(reg_committee.change_quorum)
+    {
+    }
+
+    protocol::percent_type invite_quorum = 0u;
+    protocol::percent_type dropout_quorum = 0u;
+    protocol::percent_type change_quorum = 0u;
+};
+
 } // namespace app
 } // namespace scorum
 
 // clang-format off
 
+FC_REFLECT_EMPTY(scorum::app::development_committee_api_obj)
 FC_REFLECT_EMPTY(scorum::app::account_bandwidth_api_obj)
 FC_REFLECT_EMPTY(scorum::app::block_summary_api_obj)
 FC_REFLECT_EMPTY(scorum::app::change_recovery_account_request_api_obj)
@@ -599,14 +624,15 @@ FC_REFLECT_EMPTY(scorum::app::comment_vote_api_obj)
 FC_REFLECT_EMPTY(scorum::app::decline_voting_rights_request_api_obj)
 FC_REFLECT_EMPTY(scorum::app::escrow_api_obj)
 FC_REFLECT_EMPTY(scorum::app::reward_fund_api_obj)
-FC_REFLECT_EMPTY(scorum::app::vesting_delegation_api_obj)
-FC_REFLECT_EMPTY(scorum::app::vesting_delegation_expiration_api_obj)
-FC_REFLECT_EMPTY(scorum::app::withdraw_vesting_route_api_obj)
+FC_REFLECT_EMPTY(scorum::app::scorumpower_delegation_api_obj)
+FC_REFLECT_EMPTY(scorum::app::scorumpower_delegation_expiration_api_obj)
+FC_REFLECT_EMPTY(scorum::app::withdraw_scorumpower_route_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
 
 FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
 
+FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 
 
 FC_REFLECT( scorum::app::comment_api_obj,
@@ -627,7 +653,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)
+             (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (curation_rewards)
              (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)
@@ -637,7 +663,7 @@ FC_REFLECT( scorum::app::account_api_obj,
           )
 
 FC_REFLECT (scorum::app::account_balance_info_api_obj,
-            (balance)(vesting_shares))
+            (balance)(scorumpower))
 
 FC_REFLECT( scorum::app::owner_authority_history_api_obj,
              (id)
@@ -677,10 +703,9 @@ FC_REFLECT( scorum::app::proposal_api_obj,
             (id)
             (creator)
             (expiration)
+            (operation)
             (voted_accounts)
             (quorum_percent)
-            (action)
-            (data)
           )
 
 FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),

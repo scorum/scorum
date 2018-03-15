@@ -4,8 +4,7 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/history_objects.hpp>
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
@@ -19,15 +18,14 @@
 
 #include "database_integration.hpp"
 
-namespace scorum {
-namespace chain {
+Actor database_fixture::database_integration_fixture::initdelegate = Actor(TEST_INIT_DELEGATE_NAME);
+
+namespace database_fixture {
 
 database_integration_fixture::database_integration_fixture()
     : app()
     , db(*app.chain_database())
-    , init_account_priv_key(database_integration_fixture::generate_private_key(TEST_INIT_KEY))
-    , init_account_pub_key(init_account_priv_key.get_public_key())
-    , debug_key(graphene::utilities::key_to_wif(init_account_priv_key))
+    , debug_key(graphene::utilities::key_to_wif(initdelegate.private_key))
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
 {
     genesis_state = create_default_genesis_state();
@@ -43,16 +41,12 @@ Genesis database_integration_fixture::default_genesis_state()
 
     if (default_genesis._accounts.empty())
     {
-        private_key_type init_account_priv_key(database_integration_fixture::generate_private_key(TEST_INIT_KEY));
-        public_key_type init_account_pub_key(init_account_priv_key.get_public_key());
-
-        Actor initdelegate(TEST_INIT_DELEGATE_NAME);
-        initdelegate.public_key = init_account_pub_key;
         initdelegate.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
 
         default_genesis = Genesis::create()
                               .accounts_supply(TEST_ACCOUNTS_INITIAL_SUPPLY)
                               .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+                              .dev_committee(initdelegate)
                               .accounts(initdelegate)
                               .witnesses(initdelegate);
     }
@@ -83,14 +77,13 @@ void database_integration_fixture::open_database(const genesis_state_type& genes
             if (arg == "--show-test-names")
                 std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
         }
-        auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
+
         db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
         auto wit_plugin = app.register_plugin<scorum::witness::witness_plugin>();
 
         boost::program_options::variables_map options;
 
         db_plugin->logging = false;
-        ahplugin->plugin_initialize(options);
         db_plugin->plugin_initialize(options);
         wit_plugin->plugin_initialize(options);
 
@@ -105,6 +98,11 @@ void database_integration_fixture::open_database(const genesis_state_type& genes
         edump((e.to_detail_string()));
         throw;
     }
+}
+
+void database_integration_fixture::open_database()
+{
+    open_database(genesis_state);
 }
 
 void database_integration_fixture::validate_database()
@@ -142,7 +140,6 @@ private_key_type database_integration_fixture::generate_private_key(const std::s
         return committee;
     return fc::ecc::private_key::regenerate(fc::sha256::hash(seed));
 }
-
 void database_integration_fixture::open_database_impl(const genesis_state_type& genesis)
 {
     if (!data_dir)
@@ -154,5 +151,4 @@ void database_integration_fixture::open_database_impl(const genesis_state_type& 
     }
 }
 
-} // namespace chain
-} // namespace scorum
+} // database_fixture

@@ -1,5 +1,8 @@
 #include <scorum/chain/services/registration_committee.hpp>
+
 #include <scorum/chain/database/database.hpp>
+
+#include <scorum/chain/services/registration_pool.hpp>
 
 #include <scorum/chain/services/account.hpp>
 
@@ -14,9 +17,9 @@ dbs_registration_committee::dbs_registration_committee(database& db)
 {
 }
 
-dbs_registration_committee::registration_committee_member_refs_type dbs_registration_committee::get_committee() const
+dbs_registration_committee::committee_members_cref_type dbs_registration_committee::get_committee() const
 {
-    registration_committee_member_refs_type ret;
+    committee_members_cref_type ret;
 
     const auto& idx = db_impl().get_index<registration_committee_member_index>().indices().get<by_id>();
     for (auto it = idx.cbegin(); it != idx.cend(); ++it)
@@ -37,12 +40,12 @@ dbs_registration_committee::get_member(const account_name_type& account) const
     FC_CAPTURE_AND_RETHROW((account))
 }
 
-dbs_registration_committee::registration_committee_member_refs_type
+dbs_registration_committee::committee_members_cref_type
 dbs_registration_committee::create_committee(const std::vector<account_name_type>& accounts)
 {
     FC_ASSERT(!accounts.empty(), "Registration committee must have at least one member.");
-    FC_ASSERT(SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS > 0, "Invalid ${1} value.",
-              ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
+    FC_ASSERT(SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT > 0, "Invalid ${1} value.",
+              ("1", SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT));
 
     // check existence here to allow unit tests check input data even if object exists in DB
     FC_ASSERT(get_committee().empty(), "Can't create more than one committee.");
@@ -62,10 +65,10 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
     // add members
     for (const auto& item : items)
     {
-        if (get_members_count() > SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS)
+        if (get_members_count() > SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT)
         {
             wlog("Too many committee members in genesis state. More than ${1} are ignored.",
-                 ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
+                 ("1", SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT));
             break;
         }
         const account_object& accout = item.second;
@@ -80,8 +83,7 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
     return get_committee();
 }
 
-const registration_committee_member_object&
-dbs_registration_committee::add_member(const account_name_type& account_name)
+void dbs_registration_committee::add_member(const account_name_type& account_name)
 {
     // to fill empty committee it is used create_committee
     FC_ASSERT(!get_committee().empty(), "No committee to add member.");
@@ -90,7 +92,7 @@ dbs_registration_committee::add_member(const account_name_type& account_name)
 
     const account_object& accout = account_service.get_account(account_name);
 
-    return _add_member(accout);
+    _add_member(accout);
 }
 
 void dbs_registration_committee::exclude_member(const account_name_type& account_name)
@@ -122,11 +124,62 @@ bool dbs_registration_committee::is_exists(const account_name_type& account_name
     return idx.find(account_name) != idx.cend();
 }
 
+void dbs_registration_committee::change_add_member_quorum(const protocol::percent_type quorum)
+{
+    auto& service = db_impl().obtain_service<dbs_registration_pool>();
+
+    db_impl().modify(service.get(), [&](registration_pool_object& m) { m.invite_quorum = quorum; });
+}
+
+void dbs_registration_committee::change_exclude_member_quorum(const percent_type quorum)
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.dropout_quorum = quorum; });
+}
+
+void dbs_registration_committee::change_base_quorum(const percent_type quorum)
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+
+    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.change_quorum = quorum; });
+}
+
+void dbs_registration_committee::change_transfer_quorum(const percent_type)
+{
+    FC_ASSERT("registration committee doesn't support change_transfer_quorum.");
+}
+
+percent_type dbs_registration_committee::get_add_member_quorum()
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.invite_quorum;
+}
+
+percent_type dbs_registration_committee::get_exclude_member_quorum()
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.dropout_quorum;
+}
+
+percent_type dbs_registration_committee::get_base_quorum()
+{
+    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
+    return reg_committee.change_quorum;
+}
+
+percent_type dbs_registration_committee::get_transfer_quorum()
+{
+    FC_ASSERT("registration committee doesn't support get_transfer_quorum.");
+
+    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+}
+
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)
 {
     FC_ASSERT(!is_exists(account.name), "Member already exists.");
-    FC_ASSERT(get_members_count() <= SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS,
-              "Can't add member. Limit ${1} is reached.", ("1", SCORUM_REGISTRATION_LIMIT_COUNT_COMMITTEE_MEMBERS));
+    FC_ASSERT(get_members_count() <= SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT,
+              "Can't add member. Limit ${1} is reached.", ("1", SCORUM_REGISTRATION_COMMITTEE_MAX_MEMBERS_LIMIT));
 
     const registration_committee_member_object& new_member = db_impl().create<registration_committee_member_object>(
         [&](registration_committee_member_object& member) { member.account = account.name; });

@@ -11,13 +11,7 @@
 
 #include <limits>
 
-using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
-
-//
-// usage for all budget tests 'chain_test  -t budget_*'
-//
+using namespace database_fixture;
 
 class budget_service_check_fixture : public budget_check_fixture
 {
@@ -75,7 +69,7 @@ BOOST_FIXTURE_TEST_SUITE(budget_service_check, budget_service_check_fixture)
 SCORUM_TEST_CASE(is_const_ref_to_same_memory)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     const auto& budget = budget_service.create_budget(alice, balance, deadline);
 
@@ -87,7 +81,7 @@ SCORUM_TEST_CASE(is_const_ref_to_same_memory)
 SCORUM_TEST_CASE(owned_budget_creation)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     auto reqired_alice_balance = alice.balance.amount;
 
@@ -106,7 +100,7 @@ SCORUM_TEST_CASE(owned_budget_creation)
 SCORUM_TEST_CASE(second_owned_budget_creation)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     auto reqired_alice_balance = alice.balance.amount;
 
@@ -129,11 +123,11 @@ SCORUM_TEST_CASE(second_owned_budget_creation)
 SCORUM_TEST_CASE(owned_budget_creation_asserts)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     BOOST_CHECK_THROW(budget_service.create_budget(fake, balance, deadline), fc::assert_exception);
 
-    asset wrong_currency_balance(BUDGET_BALANCE_DEFAULT, VESTS_SYMBOL);
+    asset wrong_currency_balance(BUDGET_BALANCE_DEFAULT, SP_SYMBOL);
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, wrong_currency_balance, deadline), fc::assert_exception);
 
@@ -145,7 +139,7 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, wrong_amount_balance, deadline), fc::assert_exception);
 
-    time_point_sec invalid_deadline = db.head_block_time();
+    fc::time_point_sec invalid_deadline = db.head_block_time();
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, balance, invalid_deadline), fc::assert_exception);
 
@@ -153,7 +147,7 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, balance, invalid_deadline), fc::assert_exception);
 
-    asset too_large_balance(ALICE_ACCOUNT_BUDGET * 2, VESTS_SYMBOL);
+    asset too_large_balance(ALICE_ACCOUNT_BUDGET * 2, SP_SYMBOL);
 
     BOOST_CHECK_THROW(budget_service.create_budget(alice, too_large_balance, deadline), fc::assert_exception);
 }
@@ -164,7 +158,7 @@ SCORUM_TEST_CASE(budget_creation_limit)
     BOOST_REQUIRE(BOB_ACCOUNT_BUDGET >= bp);
 
     asset balance(BOB_ACCOUNT_BUDGET / bp, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     for (int ci = 0; ci < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER; ++ci)
     {
@@ -179,7 +173,7 @@ SCORUM_TEST_CASE(budget_creation_limit)
 SCORUM_TEST_CASE(get_all_budgets)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
@@ -192,7 +186,7 @@ SCORUM_TEST_CASE(get_all_budgets)
 SCORUM_TEST_CASE(get_all_budget_count)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
@@ -204,7 +198,7 @@ SCORUM_TEST_CASE(get_all_budget_count)
 SCORUM_TEST_CASE(lookup_budget_owners)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     BOOST_REQUIRE_GT(SCORUM_BUDGET_LIMIT_DB_LIST_SIZE, 1);
 
@@ -243,7 +237,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
 SCORUM_TEST_CASE(check_get_budgets)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     BOOST_REQUIRE_EQUAL(budget_service.get_budgets("alice").size(), 0u);
 
@@ -264,7 +258,7 @@ SCORUM_TEST_CASE(check_get_budgets)
 SCORUM_TEST_CASE(check_get_budget_count)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     BOOST_REQUIRE_EQUAL(budget_service.get_budgets("alice").size(), 0u);
 
@@ -279,7 +273,7 @@ SCORUM_TEST_CASE(check_get_budget_count)
 SCORUM_TEST_CASE(check_close_budget)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     auto reqired_alice_balance = alice.balance.amount;
 
@@ -304,7 +298,7 @@ SCORUM_TEST_CASE(check_close_budget)
 SCORUM_TEST_CASE(allocate_cash_per_block)
 {
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
-    time_point_sec deadline(default_deadline);
+    fc::time_point_sec deadline(default_deadline);
 
     const auto& budget = budget_service.create_budget(alice, balance, deadline);
 

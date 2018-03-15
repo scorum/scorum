@@ -26,7 +26,7 @@ void steemit_bounty_account_initializator_impl::on_apply(initializator_context& 
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
     account_service_i& account_service = ctx.services().account_service();
 
-    FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == VESTS_SYMBOL);
+    FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == SP_SYMBOL);
 
     check_accounts(ctx);
 
@@ -34,9 +34,9 @@ void steemit_bounty_account_initializator_impl::on_apply(initializator_context& 
     {
         const auto& account_obj = account_service.get_account(account.name);
 
-        account_service.increase_vesting_shares(account_obj, account.sp_amount);
+        account_service.increase_scorumpower(account_obj, account.sp_amount);
         dgp_service.update(
-            [&](dynamic_global_property_object& props) { props.total_vesting_shares += account.sp_amount; });
+            [&](dynamic_global_property_object& props) { props.total_scorumpower += account.sp_amount; });
     }
 }
 
@@ -58,7 +58,7 @@ void steemit_bounty_account_initializator_impl::check_accounts(initializator_con
 
         account_service.check_account_existence(account.name);
 
-        FC_ASSERT(account.sp_amount.symbol() == VESTS_SYMBOL, "Invalid asset symbol for '${1}'.", ("1", account.name));
+        FC_ASSERT(account.sp_amount.symbol() == SP_SYMBOL, "Invalid asset symbol for '${1}'.", ("1", account.name));
 
         FC_ASSERT(account.sp_amount.amount > (share_value_type)0, "Invalid asset amount for '${1}'.",
                   ("1", account.name));

@@ -51,7 +51,7 @@ struct account_service_i
                                                                  const authority& active,
                                                                  const authority& posting,
                                                                  const asset& fee_in_scorums,
-                                                                 const asset& delegation_in_vests)
+                                                                 const asset& delegation_in_scorumpower)
         = 0;
 
     virtual const account_object& create_account_with_bonus(const account_name_type& new_account_name,
@@ -76,12 +76,12 @@ struct account_service_i
     virtual void increase_balance(const account_object& account, const asset& amount) = 0;
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_vesting_shares(const account_object& account, const asset& vesting) = 0;
+    virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_delegated_vesting_shares(const account_object& account, const asset& amount) = 0;
+    virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_received_vesting_shares(const account_object& account, const asset& amount) = 0;
-    virtual void decrease_received_vesting_shares(const account_object& account, const asset& amount) = 0;
+    virtual void increase_received_scorumpower(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_posting_rewards(const account_object& account, const asset& amount) = 0;
 
@@ -115,7 +115,7 @@ struct account_service_i
 
     virtual void update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account) = 0;
 
-    virtual const asset create_vesting(const account_object& to_account, const asset& scorum) = 0;
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void clear_witness_votes(const account_object& account) = 0;
 
@@ -181,7 +181,7 @@ public:
                                                                  const authority& active,
                                                                  const authority& posting,
                                                                  const asset& fee_in_scorums,
-                                                                 const asset& delegation_in_vests) override;
+                                                                 const asset& delegation_in_scorumpower) override;
 
     virtual const account_object& create_account_with_bonus(const account_name_type& new_account_name,
                                                             const account_name_type& creator_name,
@@ -203,12 +203,12 @@ public:
     virtual void increase_balance(const account_object& account, const asset& amount) override;
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
-    virtual void increase_vesting_shares(const account_object& account, const asset& vesting) override;
+    virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual void increase_delegated_vesting_shares(const account_object& account, const asset& amount) override;
+    virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual void increase_received_vesting_shares(const account_object& account, const asset& amount) override;
-    virtual void decrease_received_vesting_shares(const account_object& account, const asset& amount) override;
+    virtual void increase_received_scorumpower(const account_object& account, const asset& amount) override;
+    virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) override;
 
     virtual void increase_posting_rewards(const account_object& account, const asset& amount) override;
 
@@ -241,12 +241,12 @@ public:
                                      const optional<account_object>& proxy_account) override;
 
     /**
-     * @param to_account - the account to receive the new vesting shares
-     * @param scorum - SCR to be converted to vesting shares
+     * @param to_account - the account to receive the new scorumpower
+     * @param scorum - SCR to be converted to SP
      * @param to_reward_balance
      * @return the SP created and deposited to account
      */
-    virtual const asset create_vesting(const account_object& to_account, const asset& scorum) override;
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to

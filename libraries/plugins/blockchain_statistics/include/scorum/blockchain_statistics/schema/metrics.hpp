@@ -20,16 +20,16 @@ struct base_metric
     uint32_t free_accounts_created = 0; ///< Accounts created with fee
 
     uint32_t transfers = 0; ///< Account to account transfers
-    uint32_t transfers_to_vesting = 0; ///< Transfers of SCR into SP
+    uint32_t transfers_to_scorumpower = 0; ///< Transfers of SCR into SP
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
     uint32_t modified_vesting_withdrawal_requests = 0; ///< Changes to vesting withdrawal requests
     uint32_t vesting_withdrawals_processed = 0; ///< Number of vesting withdrawals
     uint32_t finished_vesting_withdrawals = 0; ///< Processed vesting withdrawals that are now finished
 
     share_type scorum_transferred = 0; ///< SCR transferred from account to account
-    share_type scorum_transferred_to_vesting = 0; ///< Amount of SCR vested
-    share_type vests_withdrawn = 0; ///< Amount of SP withdrawn to SCR
-    share_type vests_transferred = 0; ///< Amount of SP transferred to another account
+    share_type scorum_transferred_to_scorumpower = 0; ///< Amount of SCR vested
+    share_type scorumpower_withdrawn = 0; ///< Amount of SP withdrawn to SCR
+    share_type scorumpower_transferred = 0; ///< Amount of SP transferred to another account
     share_type vesting_withdraw_rate_delta = 0;
 
     // comments
@@ -45,8 +45,8 @@ struct base_metric
     uint32_t changed_reply_votes = 0; ///< Changed votes on replies
     uint32_t payouts = 0; ///< Number of comment payouts
     share_type scr_paid_to_authors = 0; ///< Amount of SCR paid to authors
-    share_type vests_paid_to_authors = 0; ///< Amount of SP paid to authors
-    share_type vests_paid_to_curators = 0; ///< Amount of SP paid to curators
+    share_type scorumpower_paid_to_authors = 0; ///< Amount of SP paid to authors
+    share_type scorumpower_paid_to_curators = 0; ///< Amount of SP paid to curators
 };
 
 struct total_metric
@@ -74,10 +74,10 @@ FC_REFLECT(scorum::blockchain_statistics::base_metric,
            (blocks)(bandwidth)(operations)(transactions)(transfers)(scorum_transferred)(paid_accounts_created)(
                free_accounts_created)(root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(
                replies_deleted)(new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(payouts)(
-               scr_paid_to_authors)(vests_paid_to_authors)(vests_paid_to_curators)(transfers_to_vesting)(
-               scorum_transferred_to_vesting)(new_vesting_withdrawal_requests)(modified_vesting_withdrawal_requests)(
-               vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(finished_vesting_withdrawals)(
-               vests_withdrawn)(vests_transferred))
+               scr_paid_to_authors)(scorumpower_paid_to_authors)(scorumpower_paid_to_curators)(
+               transfers_to_scorumpower)(scorum_transferred_to_scorumpower)(new_vesting_withdrawal_requests)(
+               modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(
+               finished_vesting_withdrawals)(scorumpower_withdrawn)(scorumpower_transferred))
 
 FC_REFLECT(scorum::blockchain_statistics::total_metric,
            (total_accounts_created)(total_comments)(total_comment_edits)(total_comments_deleted)(total_votes)(

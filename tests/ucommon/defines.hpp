@@ -71,11 +71,14 @@ template <class T> T make_test_index_object()
     try                                                                                                                \
     {                                                                                                                  \
         test_code;                                                                                                     \
+        BOOST_FAIL("exception wasn't thrown out.");                                                                    \
     }                                                                                                                  \
     catch (exception & e)                                                                                              \
     {                                                                                                                  \
         BOOST_REQUIRE(e.get_log().size() == 1);                                                                        \
         bool check_exception_message = e.get_log().front().get_message().find(message) != std::string::npos;           \
+        if (!check_exception_message)                                                                                  \
+            std::cout << "EXCEPTION:" << e.get_log().front().get_message() << std::endl;                               \
         BOOST_CHECK(check_exception_message);                                                                          \
     }
 
@@ -145,10 +148,10 @@ template <class T> T make_test_index_object()
 
 #define ASSET(s) asset::from_string(s)
 #define ASSET_NULL_SCR asset(0, SCORUM_SYMBOL)
-#define ASSET_NULL_SP asset(0, VESTS_SYMBOL)
+#define ASSET_NULL_SP asset(0, SP_SYMBOL)
 
 #define ASSET_SCR(s) asset((scorum::protocol::share_value_type)s, SCORUM_SYMBOL)
-#define ASSET_SP(s) asset((scorum::protocol::share_value_type)s, VESTS_SYMBOL)
+#define ASSET_SP(s) asset((scorum::protocol::share_value_type)s, SP_SYMBOL)
 
 #define SUFFICIENT_FEE SCORUM_MIN_ACCOUNT_CREATION_FEE* SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
 
