@@ -21,6 +21,8 @@ struct parser_i
     virtual void update(genesis_state_type&) = 0;
 };
 
+void check_users(const genesis_state_type& genesis, const std::vector<std::string>& users);
+
 void save_to_string(genesis_state_type&, std::string&, bool pretty_print = true);
 
 void save_to_file(genesis_state_type&, const std::string& path, bool pretty_print = true);

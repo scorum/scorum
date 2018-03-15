@@ -23,6 +23,7 @@ target_link_libraries(create_genesis
 target_include_directories(create_genesis PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}")
 
+SET(REQUIRED_USERS_IN_GENESIS_JSON "" CACHE STRING "Users list that are checked in result genesis (empty by default)")
 OPTION( TEST_GENESIS_JSON "Apply test for generated genesis.json (ON OR OFF)" OFF )
 
 set(scorum_input_genesis_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../genesis)
@@ -43,6 +44,9 @@ list(APPEND create_genesis_args --import-json "${scorum_users_json}")
 list(APPEND create_genesis_args --output-genesis-json "${scorum_genesis_json}")
 if (TEST_GENESIS_JSON)
     list(APPEND create_genesis_args --test-resut-genesis)
+endif()
+if (NOT REQUIRED_USERS_IN_GENESIS_JSON STREQUAL "")
+    list(APPEND create_genesis_args --check-users "${REQUIRED_USERS_IN_GENESIS_JSON}")
 endif()
 
 MESSAGE(STATUS "create_genesis_args: " ${create_genesis_args})

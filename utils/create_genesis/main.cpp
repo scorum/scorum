@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <scorum/app/api.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
@@ -28,6 +29,7 @@ int main(int argc, char** argv)
                 ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
                 ("shared-memory-reserved-size,m",  bpo::value<unsigned int>()->default_value(100), "Reserved disk size (Mb) for database test.")
                 ("suppress-output-json,s", "Do not print result Json genesis.")
+                ("check-users,u", bpo::value< std::vector<std::string> >()-> multitoken()->composing(), "Users list that are checked in result genesis.")
                 ("output-genesis-json,o", bpo::value<std::string>(), "Path for result Json genesis file.");
         // clang-format on
 
@@ -79,6 +81,24 @@ int main(int argc, char** argv)
         else
         {
             FC_ASSERT(!options.count("suppress-output-json"));
+        }
+
+        if (options.count("check-users") > 0)
+        {
+            std::vector<std::string> users;
+
+            for (const auto& user : options.at("check-users").as<std::vector<std::string>>())
+            {
+                std::vector<std::string> next_users;
+                boost::split(next_users, user, boost::is_any_of(" \t,"));
+                for (const auto& next_user : next_users)
+                {
+                    if (!next_user.empty())
+                        users.push_back(next_user);
+                }
+            }
+
+            scorum::util::check_users(genesis, users);
         }
 
         if (options.count("output-genesis-json"))
