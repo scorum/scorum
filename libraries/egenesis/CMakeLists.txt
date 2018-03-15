@@ -26,6 +26,8 @@ set(embed_genesis_args
     -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
 )
 
+add_dependencies( embed_genesis create_genesis )
+
 MESSAGE(STATUS "egenesis: " ${SCORUM_EGENESIS_JSON})
 
 if(SCORUM_EGENESIS_JSON)

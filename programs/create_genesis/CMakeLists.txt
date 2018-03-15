@@ -13,9 +13,9 @@ add_executable(create_genesis
               ${HEADERS})
 target_link_libraries(create_genesis
                       scorum_app
+                      scorum_egenesis_none
                       scorum_chain
                       scorum_protocol
-                      scorum_egenesis_brief
                       cli
                       fc
                       )

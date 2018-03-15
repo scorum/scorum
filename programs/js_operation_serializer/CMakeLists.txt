@@ -6,6 +6,7 @@ endif()
 
 target_link_libraries( js_operation_serializer
                        PRIVATE
+                       scorum_egenesis_brief
                        scorum_app
                        graphene_net
                        scorum_chain
