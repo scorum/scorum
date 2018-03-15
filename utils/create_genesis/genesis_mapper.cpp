@@ -179,7 +179,9 @@ void genesis_mapper::save(genesis_state_type& genesis)
     }
 
     genesis.accounts_supply = _accounts_supply;
-    genesis.steemit_bounty_accounts_supply = _steemit_bounty_accounts_supply;
+    FC_ASSERT(genesis.steemit_bounty_accounts_supply == _steemit_bounty_accounts_supply,
+              "Invalid actual steemit_bounty_accounts_supply. Received '${as}', but required '${rs}'",
+              ("as", _steemit_bounty_accounts_supply)("rs", genesis.steemit_bounty_accounts_supply));
 
     calculate_and_set_supply_rest(genesis);
 }

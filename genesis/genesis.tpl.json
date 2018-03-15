@@ -1,0 +1,81 @@
+{
+    "accounts": [
+        {
+            "name": "initdelegate",
+            "public_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
+            "scr_amount": "0.000000000 SCR"
+        },
+        {
+            "name": "alice",
+            "public_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
+            "scr_amount": "0.000000000 SCR"
+        },
+        {
+            "name": "bob",
+            "public_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
+            "scr_amount": "0.000000000 SCR"
+        }
+    ],
+    "accounts_supply": "0.000000000 SCR",
+    "development_committee": [
+        "alice",
+        "cpptest"
+    ],
+    "development_scr_supply": "470000.000000000 SCR",
+    "development_sp_supply": "0.000000000 SP",
+    "founders": [
+        {
+            "name": "cpptest",
+            "sp_percent": 100.0
+        }
+	],
+    "founders_supply": "3000000.000000000 SP",
+    "initial_timestamp": "2017-11-29T10:03:00",
+    "lock_withdraw_sp_until_timestamp": "2018-08-01T00:00:00",
+    "registration_bonus": "5.000000000 SCR",
+    "registration_committee": [
+        "alice",
+        "cpptest"
+    ],
+    "registration_schedule": [
+        {
+            "bonus_percent": 100,
+            "stage": 1,
+            "users": 100000
+        },
+        {
+            "bonus_percent": 60,
+            "stage": 2,
+            "users": 200000
+        },
+        {
+            "bonus_percent": 50,
+            "stage": 3,
+            "users": 300000
+        },
+        {
+            "bonus_percent": 20,
+            "stage": 4,
+            "users": 400000
+        }
+    ],
+    "registration_supply": "2100000.000000000 SCR",
+    "rewards_supply": "4800000.000000000 SCR",
+    "steemit_bounty_accounts": [],
+    "steemit_bounty_accounts_supply": "100000.000000000 SP",
+    "total_supply": "30000000.000000000 SCR",
+    "witness_candidates": [
+        {
+            "block_signing_key": "SCR5bgzuweaHx231escVuPVxgudSyUWdKAH7fKgxZfp3nKSirzFRa",
+            "name": "initdelegate"
+        },
+        {
+            "block_signing_key": "SCR76dCCDk6HVdjCZG144sHzVHReoDcjtNh7CkxSXF6TeKPW2YK2c",
+            "name": "alice"
+        },
+        {
+            "block_signing_key": "SCR5gSUmAuNo1ry9cv88o3JmM7K6iJJtTh3f2NyMzWrKa6ZBz365B",
+            "name": "bob"
+        }
+    ]
+}
