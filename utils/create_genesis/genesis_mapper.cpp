@@ -180,6 +180,28 @@ void genesis_mapper::save(genesis_state_type& genesis)
 
     genesis.accounts_supply = _accounts_supply;
     genesis.steemit_bounty_accounts_supply = _steemit_bounty_accounts_supply;
+
+    calculate_and_set_supply_rest(genesis);
+}
+
+void genesis_mapper::calculate_and_set_supply_rest(genesis_state_type& genesis)
+{
+    using scorum::protocol::share_type;
+
+    share_type actually_supply_amount = genesis.accounts_supply.amount;
+    actually_supply_amount += genesis.steemit_bounty_accounts_supply.amount;
+    actually_supply_amount += genesis.founders_supply.amount;
+    actually_supply_amount += genesis.rewards_supply.amount;
+    actually_supply_amount += genesis.registration_supply.amount;
+    actually_supply_amount += genesis.development_sp_supply.amount;
+    actually_supply_amount += genesis.development_scr_supply.amount;
+
+    asset actually_supply(actually_supply_amount, SCORUM_SYMBOL);
+    FC_ASSERT(actually_supply_amount <= genesis.total_supply.amount,
+              "Insufficient total_supply in input genesis: '${as}' > '${ts}'",
+              ("as", actually_supply)("ts", genesis.total_supply));
+
+    genesis.development_sp_supply += asset(genesis.total_supply.amount - actually_supply.amount, SP_SYMBOL);
 }
 }
 }

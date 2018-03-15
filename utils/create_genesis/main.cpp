@@ -7,9 +7,6 @@
 #include <fc/exception/exception.hpp>
 
 #include "file_parser.hpp"
-#ifdef BUILD_MONGODB_CLI
-#include "mongo_parser.hpp"
-#endif
 
 #include "genesis_tester.hpp"
 
@@ -26,9 +23,6 @@ int main(int argc, char** argv)
         opts.add_options()
                 ("help,h", "Print this help message and exit.")
                 ("version,v", "Print version number and exit.")
-#ifdef BUILD_MONGODB_CLI
-                ("mongodb-endpoint,m", bpo::value<std::string>()->default_value("mongodb://localhost:27017"), "Server MongoDB connection string")
-#endif
                 ("import-json,i",     bpo::value<std::string>(), "Path for Json data file to parse.")
                 ("input-genesis-json,g",     bpo::value<std::string>(), "Path for Json genesis file to concatenate with result.")
                 ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
@@ -74,13 +68,7 @@ int main(int argc, char** argv)
                 connection_uri = options.at("mongodb-endpoint").as<std::string>();
             }
 
-#ifdef BUILD_MONGODB_CLI
-            scorum::util::mongo_parser mongo(connection_uri);
-
-            mongo.update(genesis);
-#else
             FC_ASSERT(options.count("input-genesis-json"));
-#endif
         }
 
         if (options.count("test-resut-genesis"))

@@ -36,6 +36,8 @@ public:
     void save(genesis_state_type&);
 
 private:
+    void calculate_and_set_supply_rest(genesis_state_type& genesis);
+
     using genesis_account_info_item_map_by_type = std::map<int, genesis_account_info_item_type>;
     using genesis_account_info_items_type = std::map<std::string, genesis_account_info_item_map_by_type>;
     genesis_account_info_items_type _uniq_items;
