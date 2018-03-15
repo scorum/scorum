@@ -40,13 +40,10 @@ SET(REQUIRED_USERS_IN_GENESIS_JSON "" CACHE STRING "Users list that are checked 
 OPTION( TEST_GENESIS_JSON "Apply test for generated genesis.json (ON OR OFF)" OFF )
 
 set(scorum_input_genesis_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../genesis)
-set(scorum_output_genesis_dir ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 
 set(scorum_genesis_template_json ${scorum_input_genesis_dir}/genesis.tpl.json)
 #users.json: use 'python -m json.tool new_raw_users.json users.json' to update this file
 set(scorum_users_json ${scorum_input_genesis_dir}/users.json)
-set(scorum_genesis_json ${scorum_output_genesis_dir}/genesis.json)
-
 add_custom_target( genesis SOURCES
                    ${scorum_genesis_template_json}
                    ${scorum_users_json})
@@ -54,7 +51,7 @@ add_custom_target( genesis SOURCES
 set(create_genesis_args)
 list(APPEND create_genesis_args --input-genesis-json "${scorum_genesis_template_json}")
 list(APPEND create_genesis_args --import-json "${scorum_users_json}")
-list(APPEND create_genesis_args --output-genesis-json "${scorum_genesis_json}")
+list(APPEND create_genesis_args --output-genesis-json "${SCORUM_EGENESIS_JSON}")
 if (TEST_GENESIS_JSON)
     list(APPEND create_genesis_args --test-resut-genesis)
 endif()
