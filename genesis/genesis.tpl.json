@@ -18,7 +18,6 @@
     ],
     "accounts_supply": "0.000000000 SCR",
     "development_committee": [
-        "alice",
         "cpptest"
     ],
     "development_scr_supply": "470000.000000000 SCR",
@@ -34,7 +33,6 @@
     "lock_withdraw_sp_until_timestamp": "2018-08-01T00:00:00",
     "registration_bonus": "5.000000000 SCR",
     "registration_committee": [
-        "alice",
         "cpptest"
     ],
     "registration_schedule": [

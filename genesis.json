@@ -89,11 +89,9 @@
     }
   ],
   "registration_committee": [
-    "alice",
     "cpptest"
   ],
   "development_committee": [
-    "alice",
     "cpptest"
   ]
 }
