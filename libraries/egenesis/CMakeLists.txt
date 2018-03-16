@@ -43,8 +43,7 @@ set(scorum_genesis_template_json ${scorum_input_genesis_dir}/genesis.tpl.json)
 #users.json: use 'python -m json.tool new_raw_users.json users.json' to update this file
 set(scorum_users_json ${scorum_input_genesis_dir}/users.json)
 add_custom_target( genesis SOURCES
-                   ${scorum_genesis_template_json}
-                   ${scorum_users_json})
+                   ${scorum_genesis_template_json})
 
 set(create_genesis_args)
 list(APPEND create_genesis_args --input-genesis-json "${scorum_genesis_template_json}")
@@ -64,6 +63,9 @@ add_custom_command(
     "${SCORUM_EGENESIS_JSON}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND create_genesis ${create_genesis_args}
+    DEPENDS
+    ${scorum_genesis_template_json}
+    ${scorum_users_json}
 )
 
 add_custom_command(
