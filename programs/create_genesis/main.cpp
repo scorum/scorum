@@ -1,15 +1,13 @@
 #include <iostream>
 
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <scorum/app/api.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <fc/exception/exception.hpp>
 
 #include "file_parser.hpp"
-#ifdef BUILD_MONGODB_CLI
-#include "mongo_parser.hpp"
-#endif
 
 #include "genesis_tester.hpp"
 
@@ -26,14 +24,13 @@ int main(int argc, char** argv)
         opts.add_options()
                 ("help,h", "Print this help message and exit.")
                 ("version,v", "Print version number and exit.")
-#ifdef BUILD_MONGODB_CLI
-                ("mongodb-endpoint,m", bpo::value<std::string>()->default_value("mongodb://localhost:27017"), "Server MongoDB connection string")
-#endif
                 ("import-json,i",     bpo::value<std::string>(), "Path for Json data file to parse.")
                 ("input-genesis-json,g",     bpo::value<std::string>(), "Path for Json genesis file to concatenate with result.")
                 ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
                 ("shared-memory-reserved-size,m",  bpo::value<unsigned int>()->default_value(100), "Reserved disk size (Mb) for database test.")
                 ("suppress-output-json,s", "Do not print result Json genesis.")
+                ("pretty-print,p", "Human readable format for output Json.")
+                ("check-users,u", bpo::value< std::vector<std::string> >()-> multitoken()->composing(), "Users list that are checked in result genesis.")
                 ("output-genesis-json,o", bpo::value<std::string>(), "Path for result Json genesis file.");
         // clang-format on
 
@@ -74,13 +71,7 @@ int main(int argc, char** argv)
                 connection_uri = options.at("mongodb-endpoint").as<std::string>();
             }
 
-#ifdef BUILD_MONGODB_CLI
-            scorum::util::mongo_parser mongo(connection_uri);
-
-            mongo.update(genesis);
-#else
             FC_ASSERT(options.count("input-genesis-json"));
-#endif
         }
 
         if (options.count("test-resut-genesis"))
@@ -93,13 +84,32 @@ int main(int argc, char** argv)
             FC_ASSERT(!options.count("suppress-output-json"));
         }
 
+        if (options.count("check-users") > 0)
+        {
+            std::vector<std::string> users;
+
+            for (const auto& user : options.at("check-users").as<std::vector<std::string>>())
+            {
+                std::vector<std::string> next_users;
+                boost::split(next_users, user, boost::is_any_of(" \t,"));
+                for (const auto& next_user : next_users)
+                {
+                    if (!next_user.empty())
+                        users.push_back(next_user);
+                }
+            }
+
+            scorum::util::check_users(genesis, users);
+        }
+
         if (options.count("output-genesis-json"))
         {
-            scorum::util::save_to_file(genesis, options.at("output-genesis-json").as<std::string>());
+            scorum::util::save_to_file(genesis, options.at("output-genesis-json").as<std::string>(),
+                                       options.count("pretty-print"));
         }
         else if (!options.count("suppress-output-json"))
         {
-            scorum::util::print(genesis);
+            scorum::util::print(genesis, options.count("pretty-print"));
         }
 
         return 0;

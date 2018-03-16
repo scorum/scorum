@@ -27,15 +27,13 @@ public:
 
     void update(const genesis_account_info_item_type&);
 
-    void update(const std::string& name,
-                const std::string& recover_account,
-                const public_key_type&,
-                const asset& scr_amount,
-                const asset& sp_amount);
+    void update(const std::string& name, const public_key_type&, const asset& scr_amount, const asset& sp_amount);
 
     void save(genesis_state_type&);
 
 private:
+    void calculate_and_set_supply_rest(genesis_state_type& genesis);
+
     using genesis_account_info_item_map_by_type = std::map<int, genesis_account_info_item_type>;
     using genesis_account_info_items_type = std::map<std::string, genesis_account_info_item_map_by_type>;
     genesis_account_info_items_type _uniq_items;

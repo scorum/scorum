@@ -71,7 +71,7 @@ void file_parser::update(genesis_state_type& result)
 
     for (const auto& user : input.users)
     {
-        _mapper.update(user.name, "", user.key, user.scr, user.sp);
+        _mapper.update(user.name, user.key, user.scr, user.sp);
     }
 
     _mapper.save(result);

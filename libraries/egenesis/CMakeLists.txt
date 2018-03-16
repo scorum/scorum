@@ -34,6 +34,51 @@ endif(SCORUM_EGENESIS_JSON)
 
 MESSAGE(STATUS "embed_genesis_args: " ${embed_genesis_args})
 
+SET(REQUIRED_USERS_IN_GENESIS_JSON "" CACHE STRING "Users list that are checked in result genesis (empty by default)")
+OPTION( TEST_GENESIS_JSON "Apply test for generated genesis.json (ON OR OFF)" OFF )
+
+set(scorum_input_genesis_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../genesis)
+set(scorum_input_genesis_testnet_dir ${scorum_input_genesis_root_dir}/testnet)
+set(scorum_input_genesis_mainnet_dir ${scorum_input_genesis_root_dir}/mainnet)
+
+if (GENESIS_TESTNET)
+    set(scorum_input_genesis_dir ${scorum_input_genesis_testnet_dir})
+else()
+    set(scorum_input_genesis_dir ${scorum_input_genesis_mainnet_dir})
+endif()
+
+set(scorum_genesis_testnet_template_json ${scorum_input_genesis_testnet_dir}/genesis.tpl.json)
+set(scorum_genesis_mainnet_template_json ${scorum_input_genesis_mainnet_dir}/genesis.tpl.json)
+set(scorum_genesis_template_json ${scorum_input_genesis_dir}/genesis.tpl.json)
+#users.json: use 'python -m json.tool new_raw_users.json users.json' to update this file
+set(scorum_users_json ${scorum_input_genesis_dir}/users.json)
+add_custom_target( genesis SOURCES
+                   ${scorum_genesis_testnet_template_json}
+                   ${scorum_genesis_mainnet_template_json})
+
+set(create_genesis_args)
+list(APPEND create_genesis_args --input-genesis-json "${scorum_genesis_template_json}")
+list(APPEND create_genesis_args --import-json "${scorum_users_json}")
+list(APPEND create_genesis_args --output-genesis-json "${SCORUM_EGENESIS_JSON}")
+if (TEST_GENESIS_JSON)
+    list(APPEND create_genesis_args --test-resut-genesis)
+endif()
+if (NOT REQUIRED_USERS_IN_GENESIS_JSON STREQUAL "")
+    list(APPEND create_genesis_args --check-users "${REQUIRED_USERS_IN_GENESIS_JSON}")
+endif()
+
+MESSAGE(STATUS "create_genesis_args: " ${create_genesis_args})
+
+add_custom_command(
+    OUTPUT
+    "${SCORUM_EGENESIS_JSON}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND create_genesis ${create_genesis_args}
+    DEPENDS
+    ${scorum_genesis_template_json}
+    ${scorum_users_json}
+)
+
 add_custom_command(
     OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"

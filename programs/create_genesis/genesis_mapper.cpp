@@ -55,21 +55,16 @@ public:
         if (update_item.public_key == public_key_type())
             update_item.public_key = item.public_key;
         else if (update_item.public_key != item.public_key)
-            wlog("Multiple public_key '${pubk}' for same '${n}'. First '${oldpubk}' used.",
-                 ("n", item.name)("pubk", item.public_key)("oldpubk", update_item.public_key));
-        if (update_item.recovery_account.empty())
-            update_item.recovery_account = item.recovery_account;
-        else if (update_item.recovery_account != item.recovery_account)
-            wlog("Multiple recovery_account '${ra}' for '${n}'. First '${oldra}' used.",
-                 ("n", item.name)("ra", item.recovery_account)("oldra", update_item.recovery_account));
+            FC_ASSERT(false, "Multiple public_key for same '${n}': '${pubk}', '${oldpubk}'.",
+                      ("n", item.name)("pubk", item.public_key)("oldpubk", update_item.public_key));
         if (update_item.scr_amount.amount == 0)
         {
             update_item.scr_amount = item.scr_amount;
             _accounts_supply += update_item.scr_amount;
         }
         else if (update_item.scr_amount != item.scr_amount)
-            wlog("Multiple scr_amount '${src}' for '${n}'. First '${oldsrc}' used.",
-                 ("n", item.name)("src", item.scr_amount)("oldsrc", update_item.scr_amount));
+            FC_ASSERT(false, "Multiple scr_amount for '${n}': '${src}', '${oldsrc}'.",
+                      ("n", item.name)("src", item.scr_amount)("oldsrc", update_item.scr_amount));
     }
 
     void operator()(const steemit_bounty_account_type& item) const
@@ -83,8 +78,8 @@ public:
             _steemit_bounty_accounts_supply += update_item.sp_amount;
         }
         else if (update_item.sp_amount != item.sp_amount)
-            wlog("Multiple sp_amount '${src}' for '${n}'. First '${oldsp}' used.",
-                 ("n", item.name)("src", item.sp_amount)("oldsp", update_item.sp_amount));
+            FC_ASSERT(false, "Multiple sp_amount for '${n}': '${src}', '${oldsp}'.",
+                      ("n", item.name)("src", item.sp_amount)("oldsp", update_item.sp_amount));
     }
 
 private:
@@ -150,19 +145,16 @@ void genesis_mapper::update(const genesis_account_info_item_type& item)
 }
 
 void genesis_mapper::update(const std::string& name,
-                            const std::string& recover_account,
                             const public_key_type& pubk,
                             const asset& scr_amount,
                             const asset& sp_amount)
 {
     // sanitizing
     scorum::protocol::validate_account_name(name);
-    if (!recover_account.empty())
-        scorum::protocol::validate_account_name(recover_account);
     FC_ASSERT(scr_amount.symbol() == SCORUM_SYMBOL, "Invalid token symbol.");
     FC_ASSERT(sp_amount.symbol() == SP_SYMBOL, "Invalid token symbol.");
 
-    update(account_type{ name, recover_account, pubk, scr_amount });
+    update(account_type{ name, pubk, scr_amount });
 
     if (sp_amount.amount > 0)
     {
@@ -184,7 +176,31 @@ void genesis_mapper::save(genesis_state_type& genesis)
     }
 
     genesis.accounts_supply = _accounts_supply;
-    genesis.steemit_bounty_accounts_supply = _steemit_bounty_accounts_supply;
+    FC_ASSERT(genesis.steemit_bounty_accounts_supply == _steemit_bounty_accounts_supply,
+              "Invalid actual steemit_bounty_accounts_supply. Received '${as}', but required '${rs}'",
+              ("as", _steemit_bounty_accounts_supply)("rs", genesis.steemit_bounty_accounts_supply));
+
+    calculate_and_set_supply_rest(genesis);
+}
+
+void genesis_mapper::calculate_and_set_supply_rest(genesis_state_type& genesis)
+{
+    using scorum::protocol::share_type;
+
+    share_type actually_supply_amount = genesis.accounts_supply.amount;
+    actually_supply_amount += genesis.steemit_bounty_accounts_supply.amount;
+    actually_supply_amount += genesis.founders_supply.amount;
+    actually_supply_amount += genesis.rewards_supply.amount;
+    actually_supply_amount += genesis.registration_supply.amount;
+    actually_supply_amount += genesis.development_sp_supply.amount;
+    actually_supply_amount += genesis.development_scr_supply.amount;
+
+    asset actually_supply(actually_supply_amount, SCORUM_SYMBOL);
+    FC_ASSERT(actually_supply_amount <= genesis.total_supply.amount,
+              "Insufficient total_supply in input genesis: '${as}' > '${ts}'",
+              ("as", actually_supply)("ts", genesis.total_supply));
+
+    genesis.development_sp_supply += asset(genesis.total_supply.amount - actually_supply.amount, SP_SYMBOL);
 }
 }
 }

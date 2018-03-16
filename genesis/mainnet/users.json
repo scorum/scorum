@@ -1,0 +1,28 @@
+{
+    "users": [
+        {
+            "scr": "1380.769987600 SCR",
+            "sp": "800.356000000 SP",
+            "key": "SCR7Kd3vLq75QDERf8QhnAhiUPUs7FFQRUfAHBBmgqBYTajs61CFQ",
+            "name": "scorumuser1"
+        },
+        {
+            "scr": "12876.119287469 SCR",
+            "sp": "1000.000000000 SP",
+            "key": "SCR8as351SSX9ZoSaR2ZEhvVAgQjiXhY6tjTixk1TKSLP58HuSHKY",
+            "name": "scorumuser2"
+        },
+        {
+            "scr": "53280.818432100 SCR",
+            "sp": "2000.000000000 SP",
+            "key": "SCR8AD7yPRF8MbvtDHuVfF4dECBrvZfrNfrVr6AmwWJA83XUEiGmy",
+            "name": "scorumuser3"
+        },
+        {
+            "scr": "1000.000000000 SCR",
+            "sp": "96199.644000000 SP",
+            "key": "SCR5iyhw2J9qCqN7qzJYzLPJj6dMui4EiJ7oJbV7r2BtwmnEzYHM9",
+            "name": "cpptest"
+        }
+    ]
+}

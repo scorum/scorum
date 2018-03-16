@@ -72,7 +72,6 @@ void dbs_account::check_account_existence(const account_authority_map& names,
 const account_object& dbs_account::create_initial_account(const account_name_type& new_account_name,
                                                           const public_key_type& memo_key,
                                                           const asset& balance,
-                                                          const account_name_type& recovery_account,
                                                           const std::string& json_metadata)
 {
     FC_ASSERT(new_account_name.size() > 0, "Account 'name' should not be empty.");
@@ -85,7 +84,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
         owner.weight_threshold = 1;
     }
     const auto& new_account
-        = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
+        = _create_account_objects(new_account_name, account_name_type(), memo_key, json_metadata, owner, owner, owner);
 
     db_impl().modify(new_account, [&](account_object& acc) {
         acc.created_by_genesis = true;
