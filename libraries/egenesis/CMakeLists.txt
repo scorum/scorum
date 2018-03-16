@@ -26,8 +26,6 @@ set(embed_genesis_args
     -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
 )
 
-add_dependencies( embed_genesis create_genesis )
-
 MESSAGE(STATUS "egenesis: " ${SCORUM_EGENESIS_JSON})
 
 if(SCORUM_EGENESIS_JSON)
@@ -71,11 +69,11 @@ add_custom_command(
 add_custom_command(
     OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"
-    "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
+# If you uncomment cmake will call embed_genesis and create_genesis twice
+#    "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND embed_genesis ${embed_genesis_args}
     DEPENDS
-    create_genesis
     "${SCORUM_EGENESIS_JSON}"
     "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl"
     "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl"
