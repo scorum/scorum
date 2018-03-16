@@ -28,13 +28,13 @@
     ],
     "accounts_supply": "0.000000000 SCR",
     "development_committee": [
-        "cpptest"
+        "dionne"
     ],
     "development_scr_supply": "470000.000000000 SCR",
     "development_sp_supply": "0.000000000 SP",
     "founders": [
         {
-            "name": "cpptest",
+            "name": "dionne",
             "sp_percent": 100.0
         }
     ],
@@ -43,7 +43,7 @@
     "lock_withdraw_sp_until_timestamp": "2018-07-01T00:00:00",
     "registration_bonus": "5.000000000 SCR",
     "registration_committee": [
-        "cpptest"
+        "dionne"
     ],
     "registration_schedule": [
         {
