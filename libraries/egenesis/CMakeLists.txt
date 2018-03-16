@@ -82,8 +82,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"
-# If you uncomment cmake will call embed_genesis and create_genesis twice
-#    "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND embed_genesis ${embed_genesis_args}
     DEPENDS
