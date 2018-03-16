@@ -121,10 +121,10 @@ void save_to_file(genesis_state_type& genesis, const std::string& path, bool pre
     fl.close();
 }
 
-void print(genesis_state_type& genesis)
+void print(genesis_state_type& genesis, bool pretty_print)
 {
     std::string output_json;
-    save_to_string(genesis, output_json, true);
+    save_to_string(genesis, output_json, pretty_print);
     std::cout << output_json << std::endl;
 }
 }

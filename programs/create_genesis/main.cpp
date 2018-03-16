@@ -29,6 +29,7 @@ int main(int argc, char** argv)
                 ("test-resut-genesis,t", "Test opening sandbox database by resulted genesis.")
                 ("shared-memory-reserved-size,m",  bpo::value<unsigned int>()->default_value(100), "Reserved disk size (Mb) for database test.")
                 ("suppress-output-json,s", "Do not print result Json genesis.")
+                ("pretty-print,p", "Human readable format for output Json.")
                 ("check-users,u", bpo::value< std::vector<std::string> >()-> multitoken()->composing(), "Users list that are checked in result genesis.")
                 ("output-genesis-json,o", bpo::value<std::string>(), "Path for result Json genesis file.");
         // clang-format on
@@ -103,11 +104,12 @@ int main(int argc, char** argv)
 
         if (options.count("output-genesis-json"))
         {
-            scorum::util::save_to_file(genesis, options.at("output-genesis-json").as<std::string>());
+            scorum::util::save_to_file(genesis, options.at("output-genesis-json").as<std::string>(),
+                                       options.count("pretty-print"));
         }
         else if (!options.count("suppress-output-json"))
         {
-            scorum::util::print(genesis);
+            scorum::util::print(genesis, options.count("pretty-print"));
         }
 
         return 0;
