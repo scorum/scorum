@@ -27,11 +27,7 @@ public:
 
     void update(const genesis_account_info_item_type&);
 
-    void update(const std::string& name,
-                const std::string& recover_account,
-                const public_key_type&,
-                const asset& scr_amount,
-                const asset& sp_amount);
+    void update(const std::string& name, const public_key_type&, const asset& scr_amount, const asset& sp_amount);
 
     void save(genesis_state_type&);
 
