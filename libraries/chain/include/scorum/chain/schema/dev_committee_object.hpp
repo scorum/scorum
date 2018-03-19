@@ -19,9 +19,9 @@ public:
     asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
 
-    protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
+    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
+    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 

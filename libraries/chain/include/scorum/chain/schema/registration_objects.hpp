@@ -39,8 +39,8 @@ public:
 
     fc::shared_vector<schedule_item> schedule_items;
 
-    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
+    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 

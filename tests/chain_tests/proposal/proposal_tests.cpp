@@ -398,8 +398,8 @@ public:
 
         // check default value
         {
-            BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_QUORUM_PERCENT, get_invite_quorum());
-            BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_QUORUM_PERCENT, get_dropout_quorum());
+            BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT, get_invite_quorum());
+            BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT, get_dropout_quorum());
             BOOST_CHECK_EQUAL(SCORUM_COMMITTEE_QUORUM_PERCENT, get_change_quorum());
         }
 
