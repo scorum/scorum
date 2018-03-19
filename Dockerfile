@@ -51,71 +51,71 @@ RUN \
 
 ADD . /usr/local/src/scorum
 
-RUN \
-    cd /usr/local/src/scorum && \
-    mkdir build && \
-    cd build && \
-    cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_SCORUM_TESTNET=ON \
-        -DLOW_MEMORY_NODE=OFF \
-        -DCLEAR_VOTES=ON \
-        -DSKIP_BY_TX_ID=ON \
-        .. && \
-    make -j$(nproc) && \
-    ./libraries/chainbase/test/chainbase_test && \
-    ./tests/utests/utests && \
-    ./tests/chain_tests/chain_tests && \
-    ./tests/wallet_tests/wallet_tests && \
-    ./programs/util/test_fixed_string && \
-    cd /usr/local/src/scorum && \
-    doxygen && \
-    programs/build_helpers/check_reflect.py && \
-    programs/build_helpers/get_config_check.sh && \
-    rm -rf /usr/local/src/scorum/build
+# RUN \
+#     cd /usr/local/src/scorum && \
+#     mkdir build && \
+#     cd build && \
+#     cmake \
+#         -DCMAKE_BUILD_TYPE=Release \
+#         -DBUILD_SCORUM_TESTNET=ON \
+#         -DLOW_MEMORY_NODE=OFF \
+#         -DCLEAR_VOTES=ON \
+#         -DSKIP_BY_TX_ID=ON \
+#         .. && \
+#     make -j$(nproc) && \
+#     ./libraries/chainbase/test/chainbase_test && \
+#     ./tests/utests/utests && \
+#     ./tests/chain_tests/chain_tests && \
+#     ./tests/wallet_tests/wallet_tests && \
+#     ./programs/util/test_fixed_string && \
+#     cd /usr/local/src/scorum && \
+#     doxygen && \
+#     programs/build_helpers/check_reflect.py && \
+#     programs/build_helpers/get_config_check.sh && \
+#     rm -rf /usr/local/src/scorum/build
 
-RUN \
-    cd /usr/local/src/scorum && \
-    mkdir build && \
-    cd build && \
-    cmake \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DENABLE_COVERAGE_TESTING=ON \
-        -DBUILD_SCORUM_TESTNET=ON \
-        -DLOW_MEMORY_NODE=OFF \
-        -DCLEAR_VOTES=ON \
-        -DSKIP_BY_TX_ID=ON \
-        .. && \
-    make -j$(nproc) && \
-    ./libraries/chainbase/test/chainbase_test && \
-    ./tests/utests/utests && \
-    ./tests/chain_tests/chain_tests && \
-    ./tests/wallet_tests/wallet_tests && \
-    mkdir -p /var/cobertura && \
-    gcovr --object-directory="../" --root=../ --xml-pretty --gcov-exclude=".*tests.*" --gcov-exclude=".*fc.*" --gcov-exclude=".*app*" --gcov-exclude=".*net*" --gcov-exclude=".*plugins*" --gcov-exclude=".*schema*" --gcov-exclude=".*time*" --gcov-exclude=".*utilities*" --gcov-exclude=".*wallet*" --gcov-exclude=".*programs*" --output="/var/cobertura/coverage.xml" && \
-    cd /usr/local/src/scorum && \
-    rm -rf /usr/local/src/scorum/build
+# RUN \
+#     cd /usr/local/src/scorum && \
+#     mkdir build && \
+#     cd build && \
+#     cmake \
+#         -DCMAKE_BUILD_TYPE=Debug \
+#         -DENABLE_COVERAGE_TESTING=ON \
+#         -DBUILD_SCORUM_TESTNET=ON \
+#         -DLOW_MEMORY_NODE=OFF \
+#         -DCLEAR_VOTES=ON \
+#         -DSKIP_BY_TX_ID=ON \
+#         .. && \
+#     make -j$(nproc) && \
+#     ./libraries/chainbase/test/chainbase_test && \
+#     ./tests/utests/utests && \
+#     ./tests/chain_tests/chain_tests && \
+#     ./tests/wallet_tests/wallet_tests && \
+#     mkdir -p /var/cobertura && \
+#     gcovr --object-directory="../" --root=../ --xml-pretty --gcov-exclude=".*tests.*" --gcov-exclude=".*fc.*" --gcov-exclude=".*app*" --gcov-exclude=".*net*" --gcov-exclude=".*plugins*" --gcov-exclude=".*schema*" --gcov-exclude=".*time*" --gcov-exclude=".*utilities*" --gcov-exclude=".*wallet*" --gcov-exclude=".*programs*" --output="/var/cobertura/coverage.xml" && \
+#     cd /usr/local/src/scorum && \
+#     rm -rf /usr/local/src/scorum/build
 
-RUN \
-    cd /usr/local/src/scorum && \
-    mkdir build && \
-    cd build && \
-    cmake \
-        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DLOW_MEMORY_NODE=ON \
-        -DCLEAR_VOTES=ON \
-        -DSKIP_BY_TX_ID=ON \
-        -DBUILD_SCORUM_TESTNET=OFF \
-        .. && \
-    make -j$(nproc) && \
-    ./libraries/chainbase/test/chainbase_test && \
-    ./tests/utests/utests && \
-    ./tests/chain_tests/chain_tests && \
-    ./tests/wallet_tests/wallet_tests && \
-    ./programs/util/test_fixed_string && \
-    make install && \
-	rm -rf /usr/local/src/scorum/build
+# RUN \
+#     cd /usr/local/src/scorum && \
+#     mkdir build && \
+#     cd build && \
+#     cmake \
+#         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
+#         -DCMAKE_BUILD_TYPE=Release \
+#         -DLOW_MEMORY_NODE=ON \
+#         -DCLEAR_VOTES=ON \
+#         -DSKIP_BY_TX_ID=ON \
+#         -DBUILD_SCORUM_TESTNET=OFF \
+#         .. && \
+#     make -j$(nproc) && \
+#     ./libraries/chainbase/test/chainbase_test && \
+#     ./tests/utests/utests && \
+#     ./tests/chain_tests/chain_tests && \
+#     ./tests/wallet_tests/wallet_tests && \
+#     ./programs/util/test_fixed_string && \
+#     make install && \
+# 	rm -rf /usr/local/src/scorum/build
 
 RUN \
 	cd /usr/local/src/scorum && \
