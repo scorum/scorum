@@ -45,7 +45,6 @@ namespace scorum {
 namespace app {
 using namespace scorum::chain;
 using namespace fc::ecc;
-using namespace std;
 
 class application;
 struct api_context;
@@ -120,8 +119,8 @@ public:
 private:
     boost::signals2::scoped_connection _applied_block_connection;
 
-    map<transaction_id_type, confirmation_callback> _callbacks;
-    map<time_point_sec, vector<transaction_id_type>> _callbacks_expirations;
+    std::map<transaction_id_type, confirmation_callback> _callbacks;
+    std::map<time_point_sec, std::vector<transaction_id_type>> _callbacks_expirations;
 
     int32_t _max_block_age = -1;
 
@@ -179,7 +178,9 @@ private:
 
 struct scorum_version_info
 {
-    scorum_version_info() {}
+    scorum_version_info()
+    {
+    }
     scorum_version_info(fc::string bc_v, fc::string s_v, fc::string fc_v)
         : blockchain_version(bc_v)
         , scorum_revision(s_v)
@@ -212,9 +213,9 @@ public:
      * @note This must be called prior to requesting other APIs. Other APIs may not be accessible until the client
      * has sucessfully authenticated.
      */
-    bool login(const string& user, const string& password);
+    bool login(const std::string& user, const std::string& password);
 
-    fc::api_ptr get_api_by_name(const string& api_name) const;
+    fc::api_ptr get_api_by_name(const std::string& api_name) const;
 
     scorum_version_info get_version();
 
@@ -232,8 +233,10 @@ FC_REFLECT(scorum::app::scorum_version_info, (blockchain_version)(scorum_revisio
 // FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 // FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 
-FC_API(scorum::app::network_broadcast_api, (broadcast_transaction)(broadcast_transaction_with_callback)(
-                                               broadcast_transaction_synchronous)(broadcast_block)(set_max_block_age))
-FC_API(scorum::app::network_node_api, (get_info)(add_node)(get_connected_peers)(get_potential_peers)(
-                                          get_advanced_node_parameters)(set_advanced_node_parameters))
+FC_API(scorum::app::network_broadcast_api,
+       (broadcast_transaction)(broadcast_transaction_with_callback)(broadcast_transaction_synchronous)(broadcast_block)(
+           set_max_block_age))
+FC_API(scorum::app::network_node_api,
+       (get_info)(add_node)(get_connected_peers)(get_potential_peers)(get_advanced_node_parameters)(
+           set_advanced_node_parameters))
 FC_API(scorum::app::login_api, (login)(get_api_by_name)(get_version))

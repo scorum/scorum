@@ -1,12 +1,21 @@
 #pragma once
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/block_summary_object.hpp>
-#include <scorum/chain/comment_object.hpp>
-#include <scorum/chain/global_property_object.hpp>
-#include <scorum/chain/history_object.hpp>
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/transaction_object.hpp>
-#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/block_summary_object.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/transaction_object.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+
+#include <scorum/protocol/transaction.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -17,31 +26,67 @@ namespace app {
 
 using namespace scorum::chain;
 
-typedef chain::change_recovery_account_request_object change_recovery_account_request_api_obj;
-typedef chain::block_summary_object block_summary_api_obj;
-typedef chain::comment_vote_object comment_vote_api_obj;
-typedef chain::escrow_object escrow_api_obj;
-typedef chain::withdraw_vesting_route_object withdraw_vesting_route_api_obj;
-typedef chain::decline_voting_rights_request_object decline_voting_rights_request_api_obj;
-typedef chain::witness_vote_object witness_vote_api_obj;
-typedef chain::witness_schedule_object witness_schedule_api_obj;
-typedef chain::vesting_delegation_object vesting_delegation_api_obj;
-typedef chain::vesting_delegation_expiration_object vesting_delegation_expiration_api_obj;
-typedef chain::reward_fund_object reward_fund_api_obj;
-typedef witness::account_bandwidth_object account_bandwidth_api_obj;
+template <class T> class api_obj : public T
+{
+    struct constructor
+    {
+        void operator()(const T&)
+        {
+        }
+    };
+
+public:
+    api_obj()
+        : T(constructor(), std::allocator<T>())
+    {
+    }
+
+    api_obj(const T& other)
+        : T(constructor(), std::allocator<T>())
+    {
+        T& base = static_cast<T&>(*this);
+        base = other;
+    }
+};
+
+typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
+typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
+typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
+typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
+typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
+typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
+typedef api_obj<scorum::chain::reward_fund_object> reward_fund_api_obj;
+typedef api_obj<scorum::chain::scorumpower_delegation_expiration_object> scorumpower_delegation_expiration_api_obj;
+typedef api_obj<scorum::chain::scorumpower_delegation_object> scorumpower_delegation_api_obj;
+typedef api_obj<scorum::chain::withdraw_scorumpower_route_object> withdraw_scorumpower_route_api_obj;
+typedef api_obj<scorum::chain::witness_schedule_object> witness_schedule_api_obj;
+typedef api_obj<scorum::chain::witness_vote_object> witness_vote_api_obj;
+typedef api_obj<scorum::witness::account_bandwidth_object> account_bandwidth_api_obj;
+typedef api_obj<scorum::witness::reserve_ratio_object> reserve_ratio_api_obj;
+
+struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_global_property_object>,
+                                         public api_obj<scorum::witness::reserve_ratio_object>
+{
+    template <class T> dynamic_global_property_api_obj& operator=(const T& other)
+    {
+        T& base = static_cast<T&>(*this);
+        base = other;
+        return *this;
+    }
+};
 
 struct comment_api_obj
 {
     comment_api_obj(const chain::comment_object& o)
         : id(o.id)
-        , category(to_string(o.category))
+        , category(fc::to_string(o.category))
         , parent_author(o.parent_author)
-        , parent_permlink(to_string(o.parent_permlink))
+        , parent_permlink(fc::to_string(o.parent_permlink))
         , author(o.author)
-        , permlink(to_string(o.permlink))
-        , title(to_string(o.title))
-        , body(to_string(o.body))
-        , json_metadata(to_string(o.json_metadata))
+        , permlink(fc::to_string(o.permlink))
+        , title(fc::to_string(o.title))
+        , body(fc::to_string(o.body))
+        , json_metadata(fc::to_string(o.json_metadata))
         , last_update(o.last_update)
         , created(o.created)
         , active(o.active)
@@ -73,18 +118,20 @@ struct comment_api_obj
         }
     }
 
-    comment_api_obj() {}
+    comment_api_obj()
+    {
+    }
 
     comment_id_type id;
-    string category;
+    std::string category;
     account_name_type parent_author;
-    string parent_permlink;
+    std::string parent_permlink;
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
-    string title;
-    string body;
-    string json_metadata;
+    std::string title;
+    std::string body;
+    std::string json_metadata;
     time_point_sec last_update;
     time_point_sec created;
     time_point_sec active;
@@ -104,21 +151,21 @@ struct comment_api_obj
 
     uint16_t reward_weight = 0;
 
-    asset total_payout_value;
-    asset curator_payout_value;
+    asset total_payout_value = asset(0, SCORUM_SYMBOL);
+    asset curator_payout_value = asset(0, SCORUM_SYMBOL);
 
-    share_type author_rewards;
+    asset author_rewards = asset(0, SCORUM_SYMBOL);
 
     int32_t net_votes = 0;
 
     comment_id_type root_comment;
 
-    asset max_accepted_payout;
+    asset max_accepted_payout = asset(0, SCORUM_SYMBOL);
     uint16_t percent_scrs = 0;
     bool allow_replies = false;
     bool allow_votes = false;
     bool allow_curation_rewards = false;
-    vector<beneficiary_route_type> beneficiaries;
+    std::vector<beneficiary_route_type> beneficiaries;
 };
 
 struct tag_api_obj
@@ -133,10 +180,12 @@ struct tag_api_obj
     {
     }
 
-    tag_api_obj() {}
+    tag_api_obj()
+    {
+    }
 
-    string name;
-    asset total_payouts;
+    std::string name;
+    asset total_payouts = asset(0, SCORUM_SYMBOL);
     int32_t net_votes = 0;
     uint32_t top_posts = 0;
     uint32_t comments = 0;
@@ -149,11 +198,11 @@ struct account_api_obj
         : id(a.id)
         , name(a.name)
         , memo_key(a.memo_key)
-        , json_metadata(to_string(a.json_metadata))
+        , json_metadata(fc::to_string(a.json_metadata))
         , proxy(a.proxy)
         , last_account_update(a.last_account_update)
         , created(a.created)
-        , mined(a.mined)
+        , created_by_genesis(a.created_by_genesis)
         , owner_challenged(a.owner_challenged)
         , active_challenged(a.active_challenged)
         , last_owner_proved(a.last_owner_proved)
@@ -167,19 +216,11 @@ struct account_api_obj
         , voting_power(a.voting_power)
         , last_vote_time(a.last_vote_time)
         , balance(a.balance)
-        , reward_scorum_balance(a.reward_scorum_balance)
-        , reward_vesting_balance(a.reward_vesting_balance)
-        , reward_vesting_scorum(a.reward_vesting_scorum)
         , curation_rewards(a.curation_rewards)
         , posting_rewards(a.posting_rewards)
-        , vesting_shares(a.vesting_shares)
-        , delegated_vesting_shares(a.delegated_vesting_shares)
-        , received_vesting_shares(a.received_vesting_shares)
-        , vesting_withdraw_rate(a.vesting_withdraw_rate)
-        , next_vesting_withdrawal(a.next_vesting_withdrawal)
-        , withdrawn(a.withdrawn)
-        , to_withdraw(a.to_withdraw)
-        , withdraw_routes(a.withdraw_routes)
+        , scorumpower(a.scorumpower)
+        , delegated_scorumpower(a.delegated_scorumpower)
+        , received_scorumpower(a.received_scorumpower)
         , witnesses_voted_for(a.witnesses_voted_for)
         , last_post(a.last_post)
         , last_root_post(a.last_root_post)
@@ -219,7 +260,9 @@ struct account_api_obj
         }
     }
 
-    account_api_obj() {}
+    account_api_obj()
+    {
+    }
 
     account_id_type id;
 
@@ -228,14 +271,14 @@ struct account_api_obj
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
     account_name_type proxy;
 
     time_point_sec last_owner_update;
     time_point_sec last_account_update;
 
     time_point_sec created;
-    bool mined = false;
+    bool created_by_genesis = false;
     bool owner_challenged = false;
     bool active_challenged = false;
     time_point_sec last_owner_proved;
@@ -250,25 +293,16 @@ struct account_api_obj
     uint16_t voting_power = 0;
     time_point_sec last_vote_time;
 
-    asset balance;
+    asset balance = asset(0, SCORUM_SYMBOL);
 
-    asset reward_scorum_balance;
-    asset reward_vesting_balance;
-    asset reward_vesting_scorum;
+    asset curation_rewards;
+    asset posting_rewards;
 
-    share_type curation_rewards;
-    share_type posting_rewards;
+    asset scorumpower = asset(0, SP_SYMBOL);
+    asset delegated_scorumpower = asset(0, SP_SYMBOL);
+    asset received_scorumpower = asset(0, SP_SYMBOL);
 
-    asset vesting_shares;
-    asset delegated_vesting_shares;
-    asset received_vesting_shares;
-    asset vesting_withdraw_rate;
-    time_point_sec next_vesting_withdrawal;
-    share_type withdrawn;
-    share_type to_withdraw;
-    uint16_t withdraw_routes = 0;
-
-    vector<share_type> proxied_vsf_votes;
+    std::vector<share_type> proxied_vsf_votes;
 
     uint16_t witnesses_voted_for;
 
@@ -284,6 +318,22 @@ struct account_api_obj
     time_point_sec last_root_post;
 };
 
+struct account_balance_info_api_obj
+{
+    account_balance_info_api_obj(const account_api_obj& a)
+        : balance(a.balance)
+        , scorumpower(a.scorumpower)
+    {
+    }
+
+    account_balance_info_api_obj()
+    {
+    }
+
+    asset balance = asset(0, SCORUM_SYMBOL);
+    asset scorumpower = asset(0, SP_SYMBOL);
+};
+
 struct owner_authority_history_api_obj
 {
     owner_authority_history_api_obj(const chain::owner_authority_history_object& o)
@@ -294,7 +344,9 @@ struct owner_authority_history_api_obj
     {
     }
 
-    owner_authority_history_api_obj() {}
+    owner_authority_history_api_obj()
+    {
+    }
 
     owner_authority_history_id_type id;
 
@@ -313,7 +365,9 @@ struct account_recovery_request_api_obj
     {
     }
 
-    account_recovery_request_api_obj() {}
+    account_recovery_request_api_obj()
+    {
+    }
 
     account_recovery_request_id_type id;
     account_name_type account_to_recover;
@@ -321,8 +375,36 @@ struct account_recovery_request_api_obj
     time_point_sec expires;
 };
 
-struct account_history_api_obj
+struct proposal_api_obj
 {
+    proposal_api_obj(const proposal_object& p)
+        : id(p.id)
+        , operation(p.operation)
+        , creator(p.creator)
+        , expiration(p.expiration)
+        , quorum_percent(p.quorum_percent)
+    {
+        for (auto& a : p.voted_accounts)
+        {
+            voted_accounts.insert(a);
+        }
+    }
+
+    proposal_api_obj()
+    {
+    }
+
+    proposal_object::id_type id;
+
+    protocol::proposal_operation operation;
+
+    account_name_type creator;
+
+    fc::time_point_sec expiration;
+
+    uint64_t quorum_percent = 0;
+
+    flat_set<account_name_type> voted_accounts;
 };
 
 struct witness_api_obj
@@ -331,43 +413,37 @@ struct witness_api_obj
         : id(w.id)
         , owner(w.owner)
         , created(w.created)
-        , url(to_string(w.url))
+        , url(fc::to_string(w.url))
         , total_missed(w.total_missed)
-        , last_aslot(w.last_aslot)
         , last_confirmed_block_num(w.last_confirmed_block_num)
         , signing_key(w.signing_key)
-        , props(w.props)
-        , sbd_exchange_rate(w.sbd_exchange_rate)
-        , last_sbd_exchange_update(w.last_sbd_exchange_update)
+        , proposed_chain_props(w.proposed_chain_props)
         , votes(w.votes)
         , virtual_last_update(w.virtual_last_update)
         , virtual_position(w.virtual_position)
         , virtual_scheduled_time(w.virtual_scheduled_time)
-        , last_work(w.last_work)
         , running_version(w.running_version)
         , hardfork_version_vote(w.hardfork_version_vote)
         , hardfork_time_vote(w.hardfork_time_vote)
     {
     }
 
-    witness_api_obj() {}
+    witness_api_obj()
+    {
+    }
 
     witness_id_type id;
     account_name_type owner;
     time_point_sec created;
-    string url;
+    std::string url;
     uint32_t total_missed = 0;
-    uint64_t last_aslot = 0;
     uint64_t last_confirmed_block_num = 0;
     public_key_type signing_key;
-    chain_properties props;
-    price sbd_exchange_rate;
-    time_point_sec last_sbd_exchange_update;
+    chain_properties proposed_chain_props;
     share_type votes;
     fc::uint128 virtual_last_update;
     fc::uint128 virtual_position;
     fc::uint128 virtual_scheduled_time;
-    digest_type last_work;
     version running_version;
     hardfork_version hardfork_version_vote;
     time_point_sec hardfork_time_vote;
@@ -384,46 +460,180 @@ struct signed_block_api_obj : public signed_block
         for (const signed_transaction& tx : transactions)
             transaction_ids.push_back(tx.id());
     }
-    signed_block_api_obj() {}
+    signed_block_api_obj()
+    {
+    }
 
     block_id_type block_id;
     public_key_type signing_key;
-    vector<transaction_id_type> transaction_ids;
+    std::vector<transaction_id_type> transaction_ids;
 };
 
-struct dynamic_global_property_api_obj : public dynamic_global_property_object
+struct budget_api_obj
 {
-    dynamic_global_property_api_obj(const dynamic_global_property_object& gpo, const chain::database& db)
-        : dynamic_global_property_object(gpo)
-    {
-        if (db.has_index<witness::reserve_ratio_index>())
-        {
-            const auto& r = db.find(witness::reserve_ratio_id_type());
-
-            if (BOOST_LIKELY(r != nullptr))
-            {
-                current_reserve_ratio = r->current_reserve_ratio;
-                average_block_size = r->average_block_size;
-                max_virtual_bandwidth = r->max_virtual_bandwidth;
-            }
-        }
-    }
-
-    dynamic_global_property_api_obj(const dynamic_global_property_object& gpo)
-        : dynamic_global_property_object(gpo)
+    budget_api_obj(const chain::budget_object& b)
+        : id(b.id._id)
+        , owner(b.owner)
+        , content_permlink(fc::to_string(b.content_permlink))
+        , created(b.created)
+        , deadline(b.deadline)
+        , balance(b.balance)
+        , per_block(b.per_block)
+        , last_cashout_block(b.last_cashout_block)
     {
     }
 
-    dynamic_global_property_api_obj() {}
+    // because fc::variant require for temporary object
+    budget_api_obj()
+    {
+    }
 
-    uint32_t current_reserve_ratio = 0;
-    uint64_t average_block_size = 0;
-    uint128_t max_virtual_bandwidth = 0;
+    int64_t id;
+
+    account_name_type owner;
+    std::string content_permlink;
+
+    time_point_sec created;
+    time_point_sec deadline;
+
+    asset balance = asset(0, SCORUM_SYMBOL);
+    share_type per_block;
+
+    uint32_t last_cashout_block = 0;
 };
-}
-} // scorum::app
+
+struct atomicswap_contract_api_obj
+{
+    atomicswap_contract_api_obj(const chain::atomicswap_contract_object& c)
+        : id(c.id._id)
+        , contract_initiator(c.type == chain::atomicswap_contract_initiator)
+        , owner(c.owner)
+        , to(c.to)
+        , amount(c.amount)
+        , created(c.created)
+        , deadline(c.deadline)
+        , metadata(fc::to_string(c.metadata))
+    {
+    }
+
+    // because fc::variant require for temporary object
+    atomicswap_contract_api_obj()
+    {
+    }
+
+    int64_t id;
+
+    bool contract_initiator;
+
+    account_name_type owner;
+
+    account_name_type to;
+    asset amount = asset(0, SCORUM_SYMBOL);
+
+    time_point_sec created;
+    time_point_sec deadline;
+
+    std::string metadata;
+};
+
+struct atomicswap_contract_info_api_obj : public atomicswap_contract_api_obj
+{
+    atomicswap_contract_info_api_obj(const chain::atomicswap_contract_object& c)
+        : atomicswap_contract_api_obj(c)
+        , secret(fc::to_string(c.secret))
+        , secret_hash(fc::to_string(c.secret_hash))
+    {
+    }
+
+    // because fc::variant require for temporary object
+    atomicswap_contract_info_api_obj()
+    {
+    }
+
+    std::string secret;
+    std::string secret_hash;
+
+    bool empty() const
+    {
+        return secret_hash.empty() || !owner.size() || !to.size() || amount.amount == 0;
+    }
+};
+
+struct atomicswap_contract_result_api_obj
+{
+    atomicswap_contract_result_api_obj(const protocol::annotated_signed_transaction& _tr)
+        : tr(_tr)
+    {
+    }
+
+    atomicswap_contract_result_api_obj(const protocol::annotated_signed_transaction& _tr,
+                                       const protocol::atomicswap_initiate_operation& op,
+                                       const std::string& secret = "")
+        : tr(_tr)
+    {
+        obj.contract_initiator = (op.type == protocol::atomicswap_initiate_operation::by_initiator);
+        obj.owner = op.owner;
+        obj.to = op.recipient;
+        obj.amount = op.amount;
+        obj.metadata = op.metadata;
+        obj.secret_hash = op.secret_hash;
+        obj.secret = secret;
+    }
+
+    atomicswap_contract_result_api_obj()
+    {
+    }
+
+    protocol::annotated_signed_transaction tr;
+    atomicswap_contract_info_api_obj obj;
+
+    bool empty() const
+    {
+        return obj.empty();
+    }
+};
+
+struct registration_committee_api_obj
+{
+    registration_committee_api_obj()
+    {
+    }
+
+    registration_committee_api_obj(const registration_pool_object& reg_committee)
+        : invite_quorum(reg_committee.invite_quorum)
+        , dropout_quorum(reg_committee.dropout_quorum)
+        , change_quorum(reg_committee.change_quorum)
+    {
+    }
+
+    protocol::percent_type invite_quorum = 0u;
+    protocol::percent_type dropout_quorum = 0u;
+    protocol::percent_type change_quorum = 0u;
+};
+
+} // namespace app
+} // namespace scorum
 
 // clang-format off
+
+FC_REFLECT_EMPTY(scorum::app::development_committee_api_obj)
+FC_REFLECT_EMPTY(scorum::app::account_bandwidth_api_obj)
+FC_REFLECT_EMPTY(scorum::app::block_summary_api_obj)
+FC_REFLECT_EMPTY(scorum::app::change_recovery_account_request_api_obj)
+FC_REFLECT_EMPTY(scorum::app::comment_vote_api_obj)
+FC_REFLECT_EMPTY(scorum::app::decline_voting_rights_request_api_obj)
+FC_REFLECT_EMPTY(scorum::app::escrow_api_obj)
+FC_REFLECT_EMPTY(scorum::app::reward_fund_api_obj)
+FC_REFLECT_EMPTY(scorum::app::scorumpower_delegation_api_obj)
+FC_REFLECT_EMPTY(scorum::app::scorumpower_delegation_expiration_api_obj)
+FC_REFLECT_EMPTY(scorum::app::withdraw_scorumpower_route_api_obj)
+FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
+FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
+
+FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
+
+FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
+
 
 FC_REFLECT( scorum::app::comment_api_obj,
              (id)(author)(permlink)
@@ -439,12 +649,11 @@ FC_REFLECT( scorum::app::comment_api_obj,
 
 FC_REFLECT( scorum::app::account_api_obj,
              (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)
-             (created)(mined)
+             (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
              (balance)
-             (reward_scorum_balance)(reward_vesting_balance)(reward_vesting_scorum)
-             (vesting_shares)(delegated_vesting_shares)(received_vesting_shares)(vesting_withdraw_rate)(next_vesting_withdrawal)(withdrawn)(to_withdraw)(withdraw_routes)
+             (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (curation_rewards)
              (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)
@@ -452,6 +661,9 @@ FC_REFLECT( scorum::app::account_api_obj,
              (average_market_bandwidth)(lifetime_market_bandwidth)(last_market_bandwidth_update)
              (last_post)(last_root_post)
           )
+
+FC_REFLECT (scorum::app::account_balance_info_api_obj,
+            (balance)(scorumpower))
 
 FC_REFLECT( scorum::app::owner_authority_history_api_obj,
              (id)
@@ -481,12 +693,19 @@ FC_REFLECT( scorum::app::witness_api_obj,
              (owner)
              (created)
              (url)(votes)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)
-             (last_aslot)(last_confirmed_block_num)(signing_key)
-             (props)
-             (sbd_exchange_rate)(last_sbd_exchange_update)
-             (last_work)
+             (last_confirmed_block_num)(signing_key)
+             (proposed_chain_props)
              (running_version)
              (hardfork_version_vote)(hardfork_time_vote)
+          )
+
+FC_REFLECT( scorum::app::proposal_api_obj,
+            (id)
+            (creator)
+            (expiration)
+            (operation)
+            (voted_accounts)
+            (quorum_percent)
           )
 
 FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),
@@ -495,10 +714,36 @@ FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed
                      (transaction_ids)
                   )
 
-FC_REFLECT_DERIVED( scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object),
-                     (current_reserve_ratio)
-                     (average_block_size)
-                     (max_virtual_bandwidth)
+FC_REFLECT( scorum::app::budget_api_obj,
+            (id)
+            (owner)
+            (content_permlink)
+            (created)
+            (deadline)
+            (balance)
+            (per_block)
+            (last_cashout_block)
+          )
+
+FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
+            (id)
+            (contract_initiator)
+            (owner)
+            (to)
+            (amount)
+            (created)
+            (deadline)
+            (metadata)
+          )
+
+FC_REFLECT_DERIVED( scorum::app::atomicswap_contract_info_api_obj, (scorum::app::atomicswap_contract_api_obj),
+                     (secret)
+                     (secret_hash)
                   )
+
+FC_REFLECT( scorum::app::atomicswap_contract_result_api_obj,
+            (tr)
+            (obj)
+          )
 
 // clang-format on

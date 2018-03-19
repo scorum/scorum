@@ -6,6 +6,10 @@ add_library( scorum_block_info
              block_info_api.cpp
            )
 
-target_link_libraries( scorum_block_info scorum_app scorum_chain scorum_protocol fc )
+target_link_libraries( scorum_block_info
+                       scorum_app
+                       scorum_chain
+                       scorum_protocol
+                       fc )
 target_include_directories( scorum_block_info
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

@@ -11,26 +11,21 @@
 
 using namespace boost::multi_index;
 
-// BOOST_TEST_SUITE( serialization_tests, clean_database_fixture )
+// BOOST_TEST_SUITE( serialization_tests, database_default_integration_fixture )
 
 struct book : public chainbase::object<0, book>
 {
-
-    template <typename Constructor, typename Allocator> book(Constructor&& c, Allocator&& a)
-    {
-        c(*this);
-    }
+    CHAINBASE_DEFAULT_CONSTRUCTOR(book)
 
     id_type id;
     int a = 0;
     int b = 1;
 };
 
-typedef multi_index_container<book,
-                              indexed_by<ordered_unique<member<book, book::id_type, &book::id>>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, a)>,
-                                         ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, b)>>,
-                              chainbase::allocator<book>>
+typedef fc::shared_multi_index_container<book,
+                                         indexed_by<ordered_unique<member<book, book::id_type, &book::id>>,
+                                                    ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, a)>,
+                                                    ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(book, int, b)>>>
     book_index;
 
 CHAINBASE_SET_INDEX_TYPE(book, book_index)
@@ -46,7 +41,7 @@ public:
 
     void undo()
     {
-        _Base::undo();
+        for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo(); });
     }
 
     // TODO (if chainbase::database became private)
@@ -96,7 +91,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         BOOST_REQUIRE_EQUAL(new_book.b, copy_new_book.b);
 
         {
-            auto session = db.start_undo_session(true);
+            auto session = db.start_undo_session();
             db.modify(new_book, [&](book& b) {
                 b.a = 7;
                 b.b = 8;
@@ -109,7 +104,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         BOOST_REQUIRE_EQUAL(new_book.b, 6);
 
         {
-            auto session = db.start_undo_session(true);
+            auto session = db.start_undo_session();
             const auto& book2 = db.create<book>([&](book& b) {
                 b.a = 9;
                 b.b = 10;
@@ -125,7 +120,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         BOOST_REQUIRE_EQUAL(new_book.b, 6);
 
         {
-            auto session = db.start_undo_session(true);
+            auto session = db.start_undo_session();
             db.modify(new_book, [&](book& b) {
                 b.a = 7;
                 b.b = 8;
@@ -133,7 +128,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
 
             BOOST_REQUIRE_EQUAL(new_book.a, 7);
             BOOST_REQUIRE_EQUAL(new_book.b, 8);
-            session.push();
+            session->push();
         }
         BOOST_REQUIRE_EQUAL(new_book.a, 7);
         BOOST_REQUIRE_EQUAL(new_book.b, 8);
@@ -146,7 +141,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
     }
     catch (...)
     {
-        chainbase::bfs::remove_all(temp);
+        boost::filesystem::remove_all(temp);
         throw;
     }
 }

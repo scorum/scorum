@@ -16,24 +16,31 @@ namespace scorum {
 namespace protocol {
 typedef boost::multiprecision::int128_t int128_t;
 
+void asset::_check_symbol()
+{
+    FC_ASSERT(SCORUM_SYMBOL == _symbol || SP_SYMBOL == _symbol,
+              "Invalid asset symbol received. ${1} not either ${2} or ${3}.",
+              ("1", _symbol)("2", SCORUM_SYMBOL)("3", SP_SYMBOL));
+}
+
+void asset::_set_decimals(uint8_t d)
+{
+    FC_ASSERT(d < 15);
+    auto a = (char*)&_symbol;
+    a[0] = d;
+}
+
 uint8_t asset::decimals() const
 {
-    auto a = (const char*)&symbol;
+    auto a = (const char*)&_symbol;
     uint8_t result = uint8_t(a[0]);
     FC_ASSERT(result < 15);
     return result;
 }
 
-void asset::set_decimals(uint8_t d)
-{
-    FC_ASSERT(d < 15);
-    auto a = (char*)&symbol;
-    a[0] = d;
-}
-
 std::string asset::symbol_name() const
 {
-    auto a = (const char*)&symbol;
+    auto a = (const char*)&_symbol;
     FC_ASSERT(a[7] == 0);
     return &a[1];
 }
@@ -59,10 +66,10 @@ int64_t asset::precision() const
     return table[d];
 }
 
-string asset::to_string() const
+std::string asset::to_string() const
 {
     int64_t prec = precision();
-    string result = fc::to_string(amount.value / prec);
+    std::string result = fc::to_string(amount.value / prec);
     if (prec > 1)
     {
         auto fract = amount.value % prec;
@@ -75,19 +82,19 @@ string asset::to_string() const
     return result + " " + symbol_name();
 }
 
-asset asset::from_string(const string& from)
+asset asset::from_string(const std::string& from)
 {
     try
     {
-        string s = fc::trim(from);
+        std::string s = fc::trim(from);
         auto space_pos = s.find(" ");
         auto dot_pos = s.find(".");
 
         FC_ASSERT(space_pos != std::string::npos);
 
         asset result;
-        result.symbol = uint64_t(0);
-        auto sy = (char*)&result.symbol;
+        result._symbol = uint64_t(0);
+        auto sy = (char*)&result._symbol;
 
         if (dot_pos != std::string::npos)
         {
@@ -95,7 +102,7 @@ asset asset::from_string(const string& from)
 
             auto intpart = s.substr(0, dot_pos);
             auto fractpart = "1" + s.substr(dot_pos + 1, space_pos - dot_pos - 1);
-            result.set_decimals(fractpart.size() - 1);
+            result._set_decimals(fractpart.size() - 1);
 
             result.amount = fc::to_int64(intpart);
             result.amount.value *= result.precision();
@@ -106,7 +113,7 @@ asset asset::from_string(const string& from)
         {
             auto intpart = s.substr(0, space_pos);
             result.amount = fc::to_int64(intpart);
-            result.set_decimals(0);
+            result._set_decimals(0);
         }
         auto symbol = s.substr(space_pos + 1);
         size_t symbol_size = symbol.size();
@@ -117,111 +124,10 @@ asset asset::from_string(const string& from)
             memcpy(sy + 1, symbol.c_str(), symbol_size);
         }
 
+        result._check_symbol();
         return result;
     }
     FC_CAPTURE_AND_RETHROW((from))
-}
-
-bool operator==(const price& a, const price& b)
-{
-    if (std::tie(a.base.symbol, a.quote.symbol) != std::tie(b.base.symbol, b.quote.symbol))
-        return false;
-
-    const auto amult = uint128_t(b.quote.amount.value) * a.base.amount.value;
-    const auto bmult = uint128_t(a.quote.amount.value) * b.base.amount.value;
-
-    return amult == bmult;
-}
-
-bool operator<(const price& a, const price& b)
-{
-    if (a.base.symbol < b.base.symbol)
-        return true;
-    if (a.base.symbol > b.base.symbol)
-        return false;
-    if (a.quote.symbol < b.quote.symbol)
-        return true;
-    if (a.quote.symbol > b.quote.symbol)
-        return false;
-
-    const auto amult = uint128_t(b.quote.amount.value) * a.base.amount.value;
-    const auto bmult = uint128_t(a.quote.amount.value) * b.base.amount.value;
-
-    return amult < bmult;
-}
-
-bool operator<=(const price& a, const price& b)
-{
-    return (a == b) || (a < b);
-}
-
-bool operator!=(const price& a, const price& b)
-{
-    return !(a == b);
-}
-
-bool operator>(const price& a, const price& b)
-{
-    return !(a <= b);
-}
-
-bool operator>=(const price& a, const price& b)
-{
-    return !(a < b);
-}
-
-asset operator*(const asset& a, const price& b)
-{
-    if (a.symbol_name() == b.base.symbol_name())
-    {
-        FC_ASSERT(b.base.amount.value > 0);
-        uint128_t result = (uint128_t(a.amount.value) * b.quote.amount.value) / b.base.amount.value;
-        FC_ASSERT(result.hi == 0);
-        return asset(result.to_uint64(), b.quote.symbol);
-    }
-    else if (a.symbol_name() == b.quote.symbol_name())
-    {
-        FC_ASSERT(b.quote.amount.value > 0);
-        uint128_t result = (uint128_t(a.amount.value) * b.base.amount.value) / b.quote.amount.value;
-        FC_ASSERT(result.hi == 0);
-        return asset(result.to_uint64(), b.base.symbol);
-    }
-    FC_THROW_EXCEPTION(fc::assert_exception, "invalid asset * price", ("asset", a)("price", b));
-}
-
-price operator/(const asset& base, const asset& quote)
-{
-    try
-    {
-        FC_ASSERT(base.symbol_name() != quote.symbol_name());
-        return price{ base, quote };
-    }
-    FC_CAPTURE_AND_RETHROW((base)(quote))
-}
-
-price price::max(asset_symbol_type base, asset_symbol_type quote)
-{
-    return asset(share_type(SCORUM_MAX_SHARE_SUPPLY), base) / asset(share_type(1), quote);
-}
-price price::min(asset_symbol_type base, asset_symbol_type quote)
-{
-    return asset(1, base) / asset(SCORUM_MAX_SHARE_SUPPLY, quote);
-}
-
-bool price::is_null() const
-{
-    return *this == price();
-}
-
-void price::validate() const
-{
-    try
-    {
-        FC_ASSERT(base.amount > share_type(0));
-        FC_ASSERT(quote.amount > share_type(0));
-        FC_ASSERT(base.symbol_name() != quote.symbol_name());
-    }
-    FC_CAPTURE_AND_RETHROW((base)(quote))
 }
 }
 } // scorum::protocol

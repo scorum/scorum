@@ -9,9 +9,9 @@
 #include <scorum/protocol/block.hpp>
 
 #include <scorum/chain/block_log.hpp>
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/database.hpp>
-#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
 
@@ -262,11 +262,6 @@ bool debug_node_api_impl::debug_has_hardfork(uint32_t hardfork_id)
     return app.chain_database()->get(scorum::chain::hardfork_property_id_type()).last_hardfork >= hardfork_id;
 }
 
-void debug_node_api_impl::debug_get_json_schema(std::string& schema)
-{
-    schema = app.chain_database()->get_json_schema();
-}
-
 } // detail
 
 debug_node_api::debug_node_api(const scorum::app::api_context& ctx)
@@ -368,13 +363,6 @@ void debug_node_api::debug_set_hardfork(uint32_t hardfork_id)
 bool debug_node_api::debug_has_hardfork(uint32_t hardfork_id)
 {
     return my->debug_has_hardfork(hardfork_id);
-}
-
-std::string debug_node_api::debug_get_json_schema()
-{
-    std::string result;
-    my->debug_get_json_schema(result);
-    return result;
 }
 }
 }

@@ -2,14 +2,13 @@
 #include <scorum/app/applied_operation.hpp>
 #include <scorum/app/state.hpp>
 
-#include <scorum/chain/database.hpp>
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/scorum_object_types.hpp>
-#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
-#include <scorum/follow/follow_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 
 #include <fc/api.hpp>
@@ -30,7 +29,6 @@ namespace app {
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
-using namespace std;
 
 struct api_context;
 
@@ -42,8 +40,8 @@ struct scheduled_hardfork
 
 struct withdraw_route
 {
-    string from_account;
-    string to_account;
+    std::string from_account;
+    std::string to_account;
     uint16_t percent;
     bool auto_vest;
 };
@@ -68,16 +66,16 @@ struct discussion_query
         FC_ASSERT(limit <= 100);
     }
 
-    string tag;
+    std::string tag;
     uint32_t limit = 0;
-    set<string> filter_tags;
-    set<string> select_authors; ///< list of authors to include, posts not by this author are filtered
-    set<string> select_tags; ///< list of tags to include, posts without these tags are filtered
+    std::set<std::string> filter_tags;
+    std::set<std::string> select_authors; ///< list of authors to include, posts not by this author are filtered
+    std::set<std::string> select_tags; ///< list of tags to include, posts without these tags are filtered
     uint32_t truncate_body = 0; ///< the number of bytes of the post body to return, 0 for all
-    optional<string> start_author;
-    optional<string> start_permlink;
-    optional<string> parent_author;
-    optional<string> parent_permlink;
+    optional<std::string> start_author;
+    optional<std::string> start_permlink;
+    optional<std::string> parent_author;
+    optional<std::string> parent_permlink;
 };
 
 /**
@@ -99,15 +97,15 @@ public:
 
     void set_block_applied_callback(std::function<void(const variant& block_header)> cb);
 
-    vector<tag_api_obj> get_trending_tags(string after_tag, uint32_t limit) const;
+    std::vector<tag_api_obj> get_trending_tags(const std::string& after_tag, uint32_t limit) const;
 
     /**
      *  This API is a short-cut for returning all of the state required for a particular URL
      *  with a single query.
      */
-    state get_state(string path) const;
+    state get_state(std::string path) const;
 
-    vector<account_name_type> get_active_witnesses() const;
+    std::vector<account_name_type> get_active_witnesses() const;
 
     /////////////////////////////
     // Blocks and transactions //
@@ -133,7 +131,7 @@ public:
      *  @param only_virtual Whether to only include virtual operations in returned results (default: true)
      *  @return sequence of operations included/generated within the block
      */
-    vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true) const;
+    std::vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true) const;
 
     /////////////
     // Globals //
@@ -145,11 +143,6 @@ public:
     fc::variant_object get_config() const;
 
     /**
-     * @brief Return a JSON description of object representations
-     */
-    std::string get_schema() const;
-
-    /**
      * @brief Retrieve the current @ref dynamic_global_property_object
      */
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
@@ -157,24 +150,24 @@ public:
     witness_schedule_api_obj get_witness_schedule() const;
     hardfork_version get_hardfork_version() const;
     scheduled_hardfork get_next_scheduled_hardfork() const;
-    reward_fund_api_obj get_reward_fund(string name) const;
+    reward_fund_api_obj get_reward_fund() const;
 
     //////////
     // Keys //
     //////////
 
-    vector<set<string>> get_key_references(vector<public_key_type> key) const;
+    std::vector<std::set<std::string>> get_key_references(std::vector<public_key_type> key) const;
 
     //////////////
     // Accounts //
     //////////////
 
-    vector<extended_account> get_accounts(vector<string> names) const;
+    std::vector<extended_account> get_accounts(const std::vector<std::string>& names) const;
 
     /**
-     *  @return all accounts that referr to the key or account id in their owner or active authorities.
+     *  @return all accounts that refer to the key or account id in their owner or active authorities.
      */
-    vector<account_id_type> get_account_references(account_id_type account_id) const;
+    std::vector<account_id_type> get_account_references(account_id_type account_id) const;
 
     /**
      * @brief Get a list of accounts by name
@@ -183,7 +176,7 @@ public:
      *
      * This function has semantics identical to @ref get_objects
      */
-    vector<optional<account_api_obj>> lookup_account_names(const vector<string>& account_names) const;
+    std::vector<optional<account_api_obj>> lookup_account_names(const std::vector<std::string>& account_names) const;
 
     /**
      * @brief Get names and IDs for registered accounts
@@ -191,26 +184,38 @@ public:
      * @param limit Maximum number of results to return -- must not exceed 1000
      * @return Map of account names to corresponding IDs
      */
-    set<string> lookup_accounts(const string& lower_bound_name, uint32_t limit) const;
+    std::set<std::string> lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const;
 
     /**
      * @brief Get the total number of accounts registered with the blockchain
      */
     uint64_t get_account_count() const;
 
-    vector<owner_authority_history_api_obj> get_owner_history(string account) const;
+    std::vector<budget_api_obj> get_budgets(const std::set<std::string>& account_names) const;
 
-    optional<account_recovery_request_api_obj> get_recovery_request(string account) const;
+    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
 
-    optional<escrow_api_obj> get_escrow(string from, uint32_t escrow_id) const;
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 
-    vector<withdraw_route> get_withdraw_routes(string account, withdraw_route_type type = outgoing) const;
+    atomicswap_contract_info_api_obj
+    get_atomicswap_contract(const std::string& from, const std::string& to, const std::string& secret_hash) const;
 
-    optional<account_bandwidth_api_obj> get_account_bandwidth(string account, witness::bandwidth_type type) const;
+    std::vector<owner_authority_history_api_obj> get_owner_history(const std::string& account) const;
 
-    vector<vesting_delegation_api_obj> get_vesting_delegations(string account, string from, uint32_t limit = 100) const;
-    vector<vesting_delegation_expiration_api_obj> get_expiring_vesting_delegations(
-        string account, time_point_sec from, uint32_t limit = 100) const;
+    optional<account_recovery_request_api_obj> get_recovery_request(const std::string& account) const;
+
+    optional<escrow_api_obj> get_escrow(const std::string& from, uint32_t escrow_id) const;
+
+    std::vector<withdraw_route> get_withdraw_routes(const std::string& account,
+                                                    withdraw_route_type type = outgoing) const;
+
+    optional<account_bandwidth_api_obj> get_account_bandwidth(const std::string& account,
+                                                              witness::bandwidth_type type) const;
+
+    std::vector<scorumpower_delegation_api_obj>
+    get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit = 100) const;
+    std::vector<scorumpower_delegation_expiration_api_obj>
+    get_expiring_scorumpower_delegations(const std::string& account, time_point_sec from, uint32_t limit = 100) const;
 
     ///////////////
     // Witnesses //
@@ -223,21 +228,21 @@ public:
      *
      * This function has semantics identical to @ref get_objects
      */
-    vector<optional<witness_api_obj>> get_witnesses(const vector<witness_id_type>& witness_ids) const;
+    std::vector<optional<witness_api_obj>> get_witnesses(const std::vector<witness_id_type>& witness_ids) const;
 
     /**
      * @brief Get the witness owned by a given account
      * @param account The name of the account whose witness should be retrieved
      * @return The witness object, or null if the account does not have a witness
      */
-    fc::optional<witness_api_obj> get_witness_by_account(string account_name) const;
+    fc::optional<witness_api_obj> get_witness_by_account(const std::string& account_name) const;
 
     /**
      *  This method is used to fetch witnesses with pagination.
      *
      *  @return an array of `count` witnesses sorted by total votes after witness `from` with at most `limit' results.
      */
-    vector<witness_api_obj> get_witnesses_by_vote(string from, uint32_t limit) const;
+    std::vector<witness_api_obj> get_witnesses_by_vote(const std::string& from, uint32_t limit) const;
 
     /**
      * @brief Get names and IDs for registered witnesses
@@ -245,7 +250,34 @@ public:
      * @param limit Maximum number of results to return -- must not exceed 1000
      * @return Map of witness names to corresponding IDs
      */
-    set<account_name_type> lookup_witness_accounts(const string& lower_bound_name, uint32_t limit) const;
+    std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+
+    /**
+     * @brief Get account names in registration committee
+     */
+    std::set<account_name_type> lookup_registration_committee_members(const std::string& lower_bound_name,
+                                                                      uint32_t limit) const;
+
+    /**
+     * @brief Get account names in development committee
+     */
+    std::set<account_name_type> lookup_development_committee_members(const std::string& lower_bound_name,
+                                                                     uint32_t limit) const;
+
+    /**
+     * @brief Get proposals
+     */
+    std::vector<proposal_api_obj> lookup_proposals() const;
+
+    /**
+     * @brief Get development committee
+     */
+    development_committee_api_obj get_development_committee() const;
+
+    /**
+     * @brief Get registration committee
+     */
+    registration_committee_api_obj get_registration_committee() const;
 
     /**
      * @brief Get the total number of witnesses registered with the blockchain
@@ -269,8 +301,8 @@ public:
      * sign for
      *  and return the minimal subset of public keys that should add signatures to the transaction.
      */
-    set<public_key_type> get_required_signatures(
-        const signed_transaction& trx, const flat_set<public_key_type>& available_keys) const;
+    std::set<public_key_type> get_required_signatures(const signed_transaction& trx,
+                                                      const flat_set<public_key_type>& available_keys) const;
 
     /**
      *  This method will return the set of all public keys that could possibly sign for a given transaction.  This call
@@ -279,7 +311,7 @@ public:
      * get_required_signatures
      *  to get the minimum subset.
      */
-    set<public_key_type> get_potential_signatures(const signed_transaction& trx) const;
+    std::set<public_key_type> get_potential_signatures(const signed_transaction& trx) const;
 
     /**
      * @return true of the @ref trx has all of the required signatures, otherwise throws an exception
@@ -289,34 +321,32 @@ public:
     /*
      * @return true if the signers have enough authority to authorize an account
      */
-    bool verify_account_authority(const string& name_or_id, const flat_set<public_key_type>& signers) const;
+    bool verify_account_authority(const std::string& name_or_id, const flat_set<public_key_type>& signers) const;
 
     /**
      *  if permlink is "" then it will return all votes for author
      */
-    vector<vote_state> get_active_votes(string author, string permlink) const;
-    vector<account_vote> get_account_votes(string voter) const;
+    std::vector<vote_state> get_active_votes(const std::string& author, const std::string& permlink) const;
+    std::vector<account_vote> get_account_votes(const std::string& voter) const;
 
-    discussion get_content(string author, string permlink) const;
-    vector<discussion> get_content_replies(string parent, string parent_permlink) const;
+    discussion get_content(const std::string& author, const std::string& permlink) const;
+    std::vector<discussion> get_content_replies(const std::string& parent, const std::string& parent_permlink) const;
 
     ///@{ tags API
     /** This API will return the top 1000 tags used by an author sorted by most frequently used */
-    vector<pair<string, uint32_t>> get_tags_used_by_author(const string& author) const;
-    vector<discussion> get_discussions_by_payout(const discussion_query& query) const;
-    vector<discussion> get_post_discussions_by_payout(const discussion_query& query) const;
-    vector<discussion> get_comment_discussions_by_payout(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_trending(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_created(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_active(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_cashout(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_votes(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_children(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_hot(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_feed(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_blog(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_comments(const discussion_query& query) const;
-    vector<discussion> get_discussions_by_promoted(const discussion_query& query) const;
+    std::vector<std::pair<std::string, uint32_t>> get_tags_used_by_author(const std::string& author) const;
+    std::vector<discussion> get_discussions_by_payout(const discussion_query& query) const;
+    std::vector<discussion> get_post_discussions_by_payout(const discussion_query& query) const;
+    std::vector<discussion> get_comment_discussions_by_payout(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_trending(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_created(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_active(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_cashout(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_votes(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_children(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_hot(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_comments(const discussion_query& query) const;
+    std::vector<discussion> get_discussions_by_promoted(const discussion_query& query) const;
 
     ///@}
 
@@ -344,28 +374,21 @@ public:
      *  Return the active discussions with the highest cumulative pending payouts without respect to category, total
      *  pending payout means the pending payout of all children as well.
      */
-    vector<discussion> get_replies_by_last_update(
-        account_name_type start_author, string start_permlink, uint32_t limit) const;
+    std::vector<discussion>
+    get_replies_by_last_update(account_name_type start_author, const std::string& start_permlink, uint32_t limit) const;
 
     /**
      *  This method is used to fetch all posts/comments by start_author that occur after before_date and start_permlink
      * with up to limit being returned.
      *
-     *  If start_permlink is empty then only before_date will be considered. If both are specified the eariler to the
+     *  If start_permlink is empty then only before_date will be considered. If both are specified the earlier to the
      * two metrics will be used. This
      *  should allow easy pagination.
      */
-    vector<discussion> get_discussions_by_author_before_date(
-        string author, string start_permlink, time_point_sec before_date, uint32_t limit) const;
-
-    /**
-     *  Account operations have sequence numbers from 0 to N where N is the most recent operation. This method
-     *  returns operations in the range [from-limit, from]
-     *
-     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
-     *  @param limit - the maximum number of items that can be queried (0 to 1000], must be less than from
-     */
-    map<uint32_t, applied_operation> get_account_history(string account, uint64_t from, uint32_t limit) const;
+    std::vector<discussion> get_discussions_by_author_before_date(const std::string& author,
+                                                                  const std::string& start_permlink,
+                                                                  time_point_sec before_date,
+                                                                  uint32_t limit) const;
 
     ////////////////////////////
     // Handlers - not exposed //
@@ -377,34 +400,48 @@ private:
     void set_url(discussion& d) const;
     discussion get_discussion(comment_id_type, uint32_t truncate_body = 0) const;
 
-    static bool filter_default(const comment_api_obj& c) { return false; }
-    static bool exit_default(const comment_api_obj& c) { return false; }
-    static bool tag_exit_default(const tags::tag_object& c) { return false; }
+    static bool filter_default(const comment_api_obj&)
+    {
+        return false;
+    }
+    static bool exit_default(const comment_api_obj&)
+    {
+        return false;
+    }
+    static bool tag_exit_default(const tags::tag_object&)
+    {
+        return false;
+    }
 
     template <typename Index, typename StartItr>
-    vector<discussion> get_discussions(const discussion_query& q, const string& tag, comment_id_type parent,
-        const Index& idx, StartItr itr, uint32_t truncate_body = 0,
-        const std::function<bool(const comment_api_obj&)>& filter = &database_api::filter_default,
-        const std::function<bool(const comment_api_obj&)>& exit = &database_api::exit_default,
-        const std::function<bool(const tags::tag_object&)>& tag_exit = &database_api::tag_exit_default,
-        bool ignore_parent = false) const;
+    std::vector<discussion>
+    get_discussions(const discussion_query& q,
+                    const std::string& tag,
+                    comment_id_type parent,
+                    const Index& idx,
+                    StartItr itr,
+                    uint32_t truncate_body = 0,
+                    const std::function<bool(const comment_api_obj&)>& filter = &database_api::filter_default,
+                    const std::function<bool(const comment_api_obj&)>& exit = &database_api::exit_default,
+                    const std::function<bool(const tags::tag_object&)>& tag_exit = &database_api::tag_exit_default,
+                    bool ignore_parent = false) const;
     comment_id_type get_parent(const discussion_query& q) const;
 
-    void recursively_fetch_content(state& _state, discussion& root, set<string>& referenced_accounts) const;
+    void recursively_fetch_content(state& _state, discussion& root, std::set<std::string>& referenced_accounts) const;
 
     std::shared_ptr<database_api_impl> my;
 };
-}
-}
+} // namespace app
+} // namespace scorum
 
 // clang-format off
 
-FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) );
-FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) );
+FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) )
+FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 
-FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) );
+FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) )
 
-FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) );
+FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) )
 
 FC_API(scorum::app::database_api,
    // Subscriptions
@@ -423,8 +460,6 @@ FC_API(scorum::app::database_api,
    (get_discussions_by_votes)
    (get_discussions_by_children)
    (get_discussions_by_hot)
-   (get_discussions_by_feed)
-   (get_discussions_by_blog)
    (get_discussions_by_comments)
    (get_discussions_by_promoted)
 
@@ -452,14 +487,13 @@ FC_API(scorum::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
-   (get_account_history)
    (get_owner_history)
    (get_recovery_request)
    (get_escrow)
    (get_withdraw_routes)
    (get_account_bandwidth)
-   (get_vesting_delegations)
-   (get_expiring_vesting_delegations)
+   (get_scorumpower_delegations)
+   (get_expiring_scorumpower_delegations)
 
    // Authority / validation
    (get_transaction_hex)
@@ -479,7 +513,6 @@ FC_API(scorum::app::database_api,
    (get_discussions_by_author_before_date)
    (get_replies_by_last_update)
 
-
    // Witnesses
    (get_witnesses)
    (get_witness_by_account)
@@ -487,6 +520,21 @@ FC_API(scorum::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
    (get_active_witnesses)
+
+    // Budget
+   (get_budgets)
+   (lookup_budget_owners)
+
+   // Committee
+   (lookup_registration_committee_members)
+   (lookup_development_committee_members)
+   (lookup_proposals)
+   (get_registration_committee)
+   (get_development_committee)
+
+    // Atomic Swap
+   (get_atomicswap_contracts)
+   (get_atomicswap_contract)
 )
 
 // clang-format on

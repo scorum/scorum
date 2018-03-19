@@ -9,6 +9,8 @@ compile_commands.json
 moc_*
 *.moc
 hardfork.hpp
+cmake-build-debug
+build
 
 lcov
 

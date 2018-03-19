@@ -1,6 +1,5 @@
 #pragma once
 #include <scorum/protocol/config.hpp>
-#include <scorum/protocol/fixed_string.hpp>
 
 #include <fc/container/flat_fwd.hpp>
 #include <fc/io/varint.hpp>
@@ -14,6 +13,7 @@
 #include <fc/safe.hpp>
 #include <fc/container/flat.hpp>
 #include <fc/string.hpp>
+#include <fc/fixed_string.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
@@ -32,36 +32,22 @@ using fc::uint128_t;
 typedef boost::multiprecision::uint256_t u256;
 typedef boost::multiprecision::uint512_t u512;
 
-using std::map;
-using std::vector;
-using std::unordered_map;
-using std::string;
-using std::deque;
-using std::shared_ptr;
-using std::weak_ptr;
-using std::unique_ptr;
-using std::set;
-using std::pair;
-using std::enable_shared_from_this;
-using std::tie;
-using std::make_pair;
-
-using fc::smart_ref;
-using fc::variant_object;
-using fc::variant;
 using fc::enum_type;
-using fc::optional;
-using fc::unsigned_int;
-using fc::signed_int;
-using fc::time_point_sec;
-using fc::time_point;
-using fc::safe;
 using fc::flat_map;
 using fc::flat_set;
+using fc::optional;
+using fc::safe;
+using fc::signed_int;
+using fc::smart_ref;
 using fc::static_variant;
-using fc::ecc::range_proof_type;
-using fc::ecc::range_proof_info;
+using fc::time_point;
+using fc::time_point_sec;
+using fc::unsigned_int;
+using fc::variant;
+using fc::variant_object;
 using fc::ecc::commitment_type;
+using fc::ecc::range_proof_info;
+using fc::ecc::range_proof_type;
 struct void_t
 {
 };
@@ -70,20 +56,22 @@ namespace protocol {
 
 typedef fc::ecc::private_key private_key_type;
 typedef fc::sha256 chain_id_type;
-typedef fixed_string_16 account_name_type;
+typedef fc::fixed_string_16 account_name_type;
 typedef fc::ripemd160 block_id_type;
 typedef fc::ripemd160 checksum_type;
 typedef fc::ripemd160 transaction_id_type;
 typedef fc::sha256 digest_type;
 typedef fc::ecc::compact_signature signature_type;
-typedef safe<int64_t> share_type;
 typedef uint16_t weight_type;
+typedef uint16_t percent_type;
 
 struct public_key_type
 {
     struct binary_key
     {
-        binary_key() {}
+        binary_key()
+        {
+        }
         uint32_t check = 0;
         fc::ecc::public_key_data data;
     };
@@ -97,17 +85,20 @@ struct public_key_type
     explicit operator std::string() const;
     friend bool operator==(const public_key_type& p1, const fc::ecc::public_key& p2);
     friend bool operator==(const public_key_type& p1, const public_key_type& p2);
-    friend bool operator<(const public_key_type& p1, const public_key_type& p2) { return p1.key_data < p2.key_data; }
+    friend bool operator<(const public_key_type& p1, const public_key_type& p2)
+    {
+        return p1.key_data < p2.key_data;
+    }
     friend bool operator!=(const public_key_type& p1, const public_key_type& p2);
 };
-
-#define SCORUM_INIT_PUBLIC_KEY (scorum::protocol::public_key_type(SCORUM_INIT_PUBLIC_KEY_STR))
 
 struct extended_public_key_type
 {
     struct binary_key
     {
-        binary_key() {}
+        binary_key()
+        {
+        }
         uint32_t check = 0;
         fc::ecc::extended_key_data data;
     };
@@ -129,7 +120,9 @@ struct extended_private_key_type
 {
     struct binary_key
     {
-        binary_key() {}
+        binary_key()
+        {
+        }
         uint32_t check = 0;
         fc::ecc::extended_key_data data;
     };
@@ -146,8 +139,9 @@ struct extended_private_key_type
     friend bool operator==(const extended_private_key_type& p1, const extended_private_key_type& p2);
     friend bool operator!=(const extended_private_key_type& p1, const extended_private_key_type& p2);
 };
-}
-} // scorum::protocol
+
+} // namespace protocol
+} // namespace scorum
 
 namespace fc {
 void to_variant(const scorum::protocol::public_key_type& var, fc::variant& vo);
@@ -156,7 +150,7 @@ void to_variant(const scorum::protocol::extended_public_key_type& var, fc::varia
 void from_variant(const fc::variant& var, scorum::protocol::extended_public_key_type& vo);
 void to_variant(const scorum::protocol::extended_private_key_type& var, fc::variant& vo);
 void from_variant(const fc::variant& var, scorum::protocol::extended_private_key_type& vo);
-}
+} // namespace fc
 
 FC_REFLECT(scorum::protocol::public_key_type, (key_data))
 FC_REFLECT(scorum::protocol::public_key_type::binary_key, (data)(check))
@@ -164,7 +158,5 @@ FC_REFLECT(scorum::protocol::extended_public_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_public_key_type::binary_key, (check)(data))
 FC_REFLECT(scorum::protocol::extended_private_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_private_key_type::binary_key, (check)(data))
-
-FC_REFLECT_TYPENAME(scorum::protocol::share_type)
 
 FC_REFLECT(scorum::void_t, )

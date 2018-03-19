@@ -1,6 +1,7 @@
 
-#include <scorum/chain/database.hpp>
-#include <scorum/chain/global_property_object.hpp>
+#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/plugins/block_info/block_info.hpp>
 #include <scorum/plugins/block_info/block_info_api.hpp>
@@ -50,7 +51,7 @@ void block_info_plugin::on_applied_block(const chain::signed_block& b)
         _block_info.emplace_back();
 
     block_info& info = _block_info[block_num];
-    const chain::dynamic_global_property_object& dgpo = db.get_dynamic_global_properties();
+    const chain::dynamic_global_property_object& dgpo = db.obtain_service<chain::dbs_dynamic_global_property>().get();
 
     info.block_id = b.id();
     info.block_size = fc::raw::pack_size(b);

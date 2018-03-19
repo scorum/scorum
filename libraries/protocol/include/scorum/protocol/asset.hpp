@@ -5,116 +5,200 @@
 namespace scorum {
 namespace protocol {
 
-typedef uint64_t asset_symbol_type;
+using asset_symbol_type = uint64_t;
+using share_value_type = int64_t;
+using share_type = safe<share_value_type>;
 
 struct asset
 {
-    asset(share_type a = 0, asset_symbol_type id = SCORUM_SYMBOL)
-        : amount(a)
-        , symbol(id)
+    asset()
+        : amount(0)
+        , _symbol(SCORUM_SYMBOL)
     {
+        // used for fc::variant
+    }
+
+    asset(share_type a, asset_symbol_type id)
+        : amount(a)
+        , _symbol(id)
+    {
+        _check_symbol();
     }
 
     share_type amount;
-    asset_symbol_type symbol;
+    asset_symbol_type symbol() const
+    {
+        return _symbol;
+    }
 
-    double to_real() const { return double(amount.value) / precision(); }
+    static asset maximum(asset_symbol_type id)
+    {
+        return asset(SCORUM_MAX_SHARE_SUPPLY, id);
+    }
+    static asset min(asset_symbol_type id)
+    {
+        return asset(0, id);
+    }
+
+    double to_real() const
+    {
+        return double(amount.value) / precision();
+    }
 
     uint8_t decimals() const;
     std::string symbol_name() const;
     int64_t precision() const;
-    void set_decimals(uint8_t d);
 
-    static asset from_string(const string& from);
-    string to_string() const;
+    static asset from_string(const std::string& from);
+    std::string to_string() const;
 
+    template <typename T> asset& operator+=(const T& o_amount)
+    {
+        amount += o_amount;
+        return *this;
+    }
     asset& operator+=(const asset& o)
     {
-        FC_ASSERT(symbol == o.symbol);
-        amount += o.amount;
+        FC_ASSERT(_symbol == o._symbol);
+        return *this += o.amount;
+    }
+    template <typename T> asset& operator-=(const T& o_amount)
+    {
+        amount -= o_amount;
         return *this;
     }
-
     asset& operator-=(const asset& o)
     {
-        FC_ASSERT(symbol == o.symbol);
-        amount -= o.amount;
+        FC_ASSERT(_symbol == o._symbol);
+        return *this -= o.amount;
+    }
+    asset operator-() const
+    {
+        return asset(-amount, _symbol);
+    }
+    template <typename T> asset& operator*=(const T& o_amount)
+    {
+        amount *= o_amount;
         return *this;
     }
-    asset operator-() const { return asset(-amount, symbol); }
+    template <typename T> asset& operator/=(const T& o_amount)
+    {
+        amount /= o_amount;
+        return *this;
+    }
 
     friend bool operator==(const asset& a, const asset& b)
     {
-        return std::tie(a.symbol, a.amount) == std::tie(b.symbol, b.amount);
+        return std::tie(a._symbol, a.amount) == std::tie(b._symbol, b.amount);
     }
     friend bool operator<(const asset& a, const asset& b)
     {
-        FC_ASSERT(a.symbol == b.symbol);
-        return std::tie(a.amount, a.symbol) < std::tie(b.amount, b.symbol);
+        FC_ASSERT(a._symbol == b._symbol);
+        return std::tie(a.amount, a._symbol) < std::tie(b.amount, b._symbol);
     }
-    friend bool operator<=(const asset& a, const asset& b) { return (a == b) || (a < b); }
-
-    friend bool operator!=(const asset& a, const asset& b) { return !(a == b); }
-    friend bool operator>(const asset& a, const asset& b) { return !(a <= b); }
-    friend bool operator>=(const asset& a, const asset& b) { return !(a < b); }
-
-    friend asset operator-(const asset& a, const asset& b)
+    friend bool operator<=(const asset& a, const asset& b)
     {
-        FC_ASSERT(a.symbol == b.symbol);
-        return asset(a.amount - b.amount, a.symbol);
+        return (a == b) || (a < b);
+    }
+    friend bool operator!=(const asset& a, const asset& b)
+    {
+        return !(a == b);
+    }
+    friend bool operator>(const asset& a, const asset& b)
+    {
+        return !(a <= b);
+    }
+    friend bool operator>=(const asset& a, const asset& b)
+    {
+        return !(a < b);
+    }
+    template <typename T> friend asset operator+(const asset& a, const T& b_amount)
+    {
+        asset ret(a);
+        ret += b_amount;
+        return ret;
     }
     friend asset operator+(const asset& a, const asset& b)
     {
-        FC_ASSERT(a.symbol == b.symbol);
-        return asset(a.amount + b.amount, a.symbol);
+        asset ret(a);
+        ret += b;
+        return ret;
     }
-};
-
-struct price
-{
-    price(const asset& base = asset(), const asset& quote = asset())
-        : base(base)
-        , quote(quote)
+    template <typename T> friend asset operator-(const asset& a, const T& b_amount)
     {
+        asset ret(a);
+        ret -= b_amount;
+        return ret;
+    }
+    friend asset operator-(const asset& a, const asset& b)
+    {
+        asset ret(a);
+        ret -= b;
+        return ret;
+    }
+    template <typename T> friend asset operator*(const asset& a, const T& b_amount)
+    {
+        asset ret(a);
+        ret *= b_amount;
+        return ret;
+    }
+    template <typename T> friend asset operator/(const asset& a, const T& b_amount)
+    {
+        asset ret(a);
+        ret /= b_amount;
+        return ret;
     }
 
-    asset base;
-    asset quote;
+    friend asset operator%(const asset& a, const asset& b)
+    {
+        FC_ASSERT(a._symbol == b._symbol);
+        asset ret(a);
+        ret.amount %= b.amount;
+        return ret;
+    }
 
-    static price max(asset_symbol_type base, asset_symbol_type quote);
-    static price min(asset_symbol_type base, asset_symbol_type quote);
+private:
+    friend struct fc::reflector<asset>;
 
-    price max() const { return price::max(base.symbol, quote.symbol); }
-    price min() const { return price::min(base.symbol, quote.symbol); }
+    asset_symbol_type _symbol;
 
-    double to_real() const { return base.to_real() / quote.to_real(); }
+    // throw fc::assert_exception is symbol unknown
+    void _check_symbol();
 
-    bool is_null() const;
-    void validate() const;
+    void _set_decimals(uint8_t d);
 };
 
-price operator/(const asset& base, const asset& quote);
-inline price operator~(const price& p) { return price{ p.quote, p.base }; }
-
-bool operator<(const asset& a, const asset& b);
-bool operator<=(const asset& a, const asset& b);
-bool operator<(const price& a, const price& b);
-bool operator<=(const price& a, const price& b);
-bool operator>(const price& a, const price& b);
-bool operator>=(const price& a, const price& b);
-bool operator==(const price& a, const price& b);
-bool operator!=(const price& a, const price& b);
-asset operator*(const asset& a, const price& b);
+template <typename Stream> Stream& operator<<(Stream& stream, const scorum::protocol::asset& a)
+{
+    stream << a.to_string();
+    return stream;
 }
-} // scorum::protocol
+
+template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::asset& a)
+{
+    std::string str;
+    stream >> str;
+    a = scorum::protocol::asset::from_string(str);
+    return stream;
+}
+
+} // namespace protocol
+} // namespace scorum
 
 namespace fc {
-inline void to_variant(const scorum::protocol::asset& var, fc::variant& vo) { vo = var.to_string(); }
+
+inline void to_variant(const scorum::protocol::asset& var, fc::variant& vo)
+{
+    vo = var.to_string();
+}
+
 inline void from_variant(const fc::variant& var, scorum::protocol::asset& vo)
 {
     vo = scorum::protocol::asset::from_string(var.as_string());
 }
-}
 
-FC_REFLECT(scorum::protocol::asset, (amount)(symbol))
-FC_REFLECT(scorum::protocol::price, (base)(quote))
+} // namespace fc
+
+FC_REFLECT_TYPENAME(scorum::protocol::share_type)
+
+FC_REFLECT(scorum::protocol::asset, (amount)(_symbol))

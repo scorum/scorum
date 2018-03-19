@@ -22,6 +22,7 @@ endif()
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+set(SCORUM_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
 
 #set (ENABLE_INSTALLER 1)
 #set (USE_PCH 1)
@@ -50,14 +51,22 @@ LIST(APPEND BOOST_COMPONENTS thread
                              coroutine)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-OPTION( BUILD_SCORUM_TESTNET "Build source for test network (ON OR OFF)" OFF )
+OPTION( BUILD_SCORUM_TESTNET "Build sources for special integration tests (ON OR OFF)" OFF )
 MESSAGE( STATUS "BUILD_SCORUM_TESTNET: ${BUILD_SCORUM_TESTNET}" )
 if( BUILD_SCORUM_TESTNET  )
-  MESSAGE( STATUS "     " )
-  MESSAGE( STATUS "             CONFIGURING FOR TEST NET             " )
-  MESSAGE( STATUS "     " )
-  SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIS_TEST_NET" )
+    MESSAGE( STATUS "     " )
+    MESSAGE( STATUS "             BUILDING FOR TEST NET             " )
+    MESSAGE( STATUS "     " )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIS_TEST_NET" )
   SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIS_TEST_NET" )
+endif()
+
+OPTION( GENESIS_TESTNET "Build embedded genesis for TEST NET (ON OR OFF)" ON )
+MESSAGE( STATUS "GENESIS_TESTNET: ${GENESIS_TESTNET}" )
+if( GENESIS_TESTNET  )
+  MESSAGE( STATUS "     " )
+  MESSAGE( STATUS "             EMBED GENESIS FOR TEST NET             " )
+  MESSAGE( STATUS "     " )
 endif()
 
 OPTION( LOW_MEMORY_NODE "Build source for low memory node (ON OR OFF)" OFF )
@@ -82,6 +91,19 @@ MESSAGE( STATUS "SKIP_BY_TX_ID: ${SKIP_BY_TX_ID}" )
 if( SKIP_BY_TX_ID )
    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSKIP_BY_TX_ID" )
    SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSKIP_BY_TX_ID" )
+endif()
+
+SET( LOCK_BLOGGING_API_OPTION_DESCRIPTION "Lock all blogging (comments and votes) API (ON or OFF)" )
+if( NOT "${CMAKE_BUILD_TYPE}" MATCHES "Debug")
+    OPTION(LOCK_BLOGGING_API "${LOCK_BLOGGING_API_OPTION_DESCRIPTION}" ON)
+else()
+    OPTION(LOCK_BLOGGING_API "${LOCK_BLOGGING_API_OPTION_DESCRIPTION}" OFF)
+endif()
+
+MESSAGE( STATUS "LOCK_BLOGGING_API: ${LOCK_BLOGGING_API}" )
+if( LOCK_BLOGGING_API )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOCK_BLOGGING_API" )
+    SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOCK_BLOGGING_API" )
 endif()
 
 IF( WIN32 )
@@ -149,21 +171,24 @@ else( WIN32 ) # Apple AND Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Scorum on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall -Wno-conversion -Wno-deprecated-declarations" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall -Wno-conversion -Wno-deprecated-declarations -Wno-invalid-partial-specialization" )
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring Scorum on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall -Werror" )
         set( rt_library rt )
         set( pthread_library pthread)
+
         if ( NOT DEFINED crypto_library )
           # I'm not sure why this is here, I guess someone has openssl and can't detect it with find_package()?
           # if you have a normal install, you can define crypto_library to the empty string to avoid a build error
           set( crypto_library crypto)
         endif ()
+
         if ( FULL_STATIC_BUILD )
           set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
         endif ( FULL_STATIC_BUILD )
+
     endif( APPLE )
 
     if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
@@ -175,12 +200,6 @@ else( WIN32 ) # Apple AND Linux
             set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics" )
         endif()
     endif()
-
-    if( LINUX )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-    endif()
-
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-partial-specialization")
 
     set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
@@ -200,7 +219,6 @@ endif()
 add_subdirectory( external_plugins )
 add_subdirectory( libraries )
 add_subdirectory( programs )
-
 add_subdirectory( tests )
 
 if (ENABLE_INSTALLER)
@@ -253,9 +271,15 @@ endif(LINUX)
 endif(ENABLE_INSTALLER)
 
 if( BUILD_SCORUM_TESTNET )
-  MESSAGE( STATUS "\n\n             CONFIGURED FOR TEST NETWORK             \n\n" )
+  MESSAGE( STATUS "\n\n             BUILT FOR TEST NETWORK             \n\n" )
 else()
-  MESSAGE( STATUS "\n\n             CONFIGURED FOR SCORUM NETWORK             \n\n" )
+  MESSAGE( STATUS "\n\n             BUILT FOR MAIN NETWORK             \n\n" )
+endif()
+
+if( GENESIS_TESTNET )
+  MESSAGE( STATUS "\n\n             EMBEDDED GENESIS FOR TEST NETWORK             \n\n" )
+else()
+  MESSAGE( STATUS "\n\n             EMBEDDED GENESIS FOR MAIN NETWORK             \n\n" )
 endif()
 
 if( LOW_MEMORY_NODE )
@@ -263,5 +287,3 @@ if( LOW_MEMORY_NODE )
 else()
   MESSAGE( STATUS "\n\n             CONFIGURED FOR FULL NODE                \n\n" )
 endif()
-
-

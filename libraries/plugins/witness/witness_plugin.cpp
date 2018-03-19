@@ -22,14 +22,15 @@
  * THE SOFTWARE.
  */
 #include <scorum/witness/witness_objects.hpp>
-#include <scorum/witness/witness_operations.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/database_exceptions.hpp>
-#include <scorum/chain/generic_custom_operation_interpreter.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <fc/time.hpp>
 
@@ -48,25 +49,8 @@ namespace witness {
 
 namespace bpo = boost::program_options;
 
-using std::string;
-using std::vector;
-
 using protocol::signed_transaction;
 using chain::account_object;
-
-void new_chain_banner(const scorum::chain::database& db)
-{
-    std::cerr << "\n"
-                 "********************************\n"
-                 "*                              *\n"
-                 "*   ------- NEW CHAIN ------   *\n"
-                 "*   -   Welcome to Scorum!  -   *\n"
-                 "*   ------------------------   *\n"
-                 "*                              *\n"
-                 "********************************\n"
-                 "\n";
-    return;
-}
 
 namespace detail {
 using namespace scorum::chain;
@@ -88,42 +72,15 @@ public:
     void update_account_bandwidth(const account_object& a, uint32_t trx_size, const bandwidth_type type);
 
     witness_plugin& _self;
-    std::shared_ptr<generic_custom_operation_interpreter<witness_plugin_operation>> _custom_operation_interpreter;
 };
 
 void witness_plugin_impl::plugin_initialize()
 {
-    _custom_operation_interpreter
-        = std::make_shared<generic_custom_operation_interpreter<witness_plugin_operation>>(_self.database());
-
-    _custom_operation_interpreter->register_evaluator<enable_content_editing_evaluator>(&_self);
-
-    _self.database().set_custom_operation_interpreter(_self.plugin_name(), _custom_operation_interpreter);
 }
 
-struct comment_options_extension_visitor
+void check_memo(const std::string& memo, const account_object& account, const account_authority_object& auth)
 {
-    comment_options_extension_visitor(const comment_object& c, const database& db)
-        : _c(c)
-        , _db(db)
-    {
-    }
-
-    typedef void result_type;
-
-    const comment_object& _c;
-    const database& _db;
-
-    void operator()(const comment_payout_beneficiaries& cpb) const
-    {
-        SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
-                      "Cannot specify more than 8 beneficiaries.");
-    }
-};
-
-void check_memo(const string& memo, const account_object& account, const account_authority_object& auth)
-{
-    vector<public_key_type> keys;
+    std::vector<public_key_type> keys;
 
     try
     {
@@ -138,15 +95,15 @@ void check_memo(const string& memo, const account_object& account, const account
     }
 
     // Get possible keys if memo was an account password
-    string owner_seed = account.name + "owner" + memo;
+    std::string owner_seed = account.name + "owner" + memo;
     auto owner_secret = fc::sha256::hash(owner_seed.c_str(), owner_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(owner_secret).get_public_key());
 
-    string active_seed = account.name + "active" + memo;
+    std::string active_seed = account.name + "active" + memo;
     auto active_secret = fc::sha256::hash(active_seed.c_str(), active_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(active_secret).get_public_key());
 
-    string posting_seed = account.name + "posting" + memo;
+    std::string posting_seed = account.name + "posting" + memo;
     auto posting_secret = fc::sha256::hash(posting_seed.c_str(), posting_seed.size());
     keys.push_back(fc::ecc::private_key::regenerate(posting_secret).get_public_key());
 
@@ -195,36 +152,38 @@ struct operation_visitor
 
     void operator()(const comment_options_operation& o) const
     {
-        const auto& comment = _db.get_comment(o.author, o.permlink);
-
-        comment_options_extension_visitor v(comment, _db);
-
         for (auto& e : o.extensions)
         {
-            e.visit(v);
+            const comment_payout_beneficiaries& cpb = e.get<comment_payout_beneficiaries>();
+            SCORUM_ASSERT(cpb.beneficiaries.size() <= 8, chain::plugin_exception,
+                          "Cannot specify more than 8 beneficiaries.");
         }
     }
 
     void operator()(const comment_operation& o) const
     {
-        if (o.parent_author != SCORUM_ROOT_POST_PARENT)
-        {
-            const auto& parent = _db.find_comment(o.parent_author, o.parent_permlink);
+        auto& comment_service = _db.obtain_service<dbs_comment>();
 
-            if (parent != nullptr)
-                SCORUM_ASSERT(parent->depth < SCORUM_SOFT_MAX_COMMENT_DEPTH, chain::plugin_exception,
+        if (o.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+        {
+            if (comment_service.is_exists(o.parent_author, o.parent_permlink))
+            {
+                const auto& parent = comment_service.get(o.parent_author, o.parent_permlink);
+
+                SCORUM_ASSERT(parent.depth < SCORUM_SOFT_MAX_COMMENT_DEPTH, chain::plugin_exception,
                               "Comment is nested ${x} posts deep, maximum depth is ${y}.",
-                              ("x", parent->depth)("y", SCORUM_SOFT_MAX_COMMENT_DEPTH));
+                              ("x", parent.depth)("y", SCORUM_SOFT_MAX_COMMENT_DEPTH));
+            }
         }
 
-        auto itr = _db.find<comment_object, by_permlink>(boost::make_tuple(o.author, o.permlink));
-
-        if (itr != nullptr && itr->cashout_time == fc::time_point_sec::maximum())
+        if (comment_service.is_exists(o.author, o.permlink))
         {
-            auto edit_lock = _db.find<content_edit_lock_object, by_account>(o.author);
+            const auto& comment = comment_service.get(o.author, o.permlink);
 
-            SCORUM_ASSERT(edit_lock != nullptr && _db.head_block_time() < edit_lock->lock_time, chain::plugin_exception,
-                          "The comment is archived");
+            if (comment.cashout_time == fc::time_point_sec::maximum())
+            {
+                FC_THROW_EXCEPTION(chain::plugin_exception, "The comment is archived");
+            }
         }
     }
 
@@ -240,14 +199,14 @@ void witness_plugin_impl::pre_transaction(const signed_transaction& trx)
 {
     const auto& _db = _self.database();
     flat_set<account_name_type> required;
-    vector<authority> other;
+    std::vector<authority> other;
     trx.get_required_authorities(required, required, required, other);
 
     auto trx_size = fc::raw::pack_size(trx);
 
     for (const auto& auth : required)
     {
-        const auto& acnt = _db.get_account(auth);
+        const auto& acnt = _db.obtain_service<dbs_account>().get_account(auth);
 
         update_account_bandwidth(acnt, trx_size, bandwidth_type::forum);
 
@@ -274,7 +233,8 @@ void witness_plugin_impl::pre_operation(const operation_notification& note)
 void witness_plugin_impl::on_block(const signed_block& b)
 {
     auto& db = _self.database();
-    int64_t max_block_size = db.get_dynamic_global_properties().maximum_block_size;
+    int64_t max_block_size
+        = db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.maximum_block_size;
 
     auto reserve_ratio_ptr = db.find(reserve_ratio_id_type());
 
@@ -300,7 +260,7 @@ void witness_plugin_impl::on_block(const signed_block& b)
             * the reserve ratio will half. Likewise, if it is at 12% it will increase by 50%.
             *
             * If the reserve ratio is consistently low, then it is probably time to increase
-            * the capcacity of the network.
+            * the capacity of the network.
             *
             * This algorithm is designed to react quickly to observations significantly
             * different from past observed behavior and make small adjustments when
@@ -319,7 +279,9 @@ void witness_plugin_impl::on_block(const signed_block& b)
 
                     // We do not want the reserve ratio to drop below 1
                     if (r.current_reserve_ratio < RESERVE_RATIO_PRECISION)
+                    {
                         r.current_reserve_ratio = RESERVE_RATIO_PRECISION;
+                    }
                 }
                 else
                 {
@@ -329,7 +291,9 @@ void witness_plugin_impl::on_block(const signed_block& b)
                                     (r.current_reserve_ratio * distance) / (distance - DISTANCE_CALC_PRECISION));
 
                     if (r.current_reserve_ratio > SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION)
+                    {
                         r.current_reserve_ratio = SCORUM_MAX_RESERVE_RATIO * RESERVE_RATIO_PRECISION;
+                    }
                 }
 
                 if (old_reserve_ratio != r.current_reserve_ratio)
@@ -352,10 +316,10 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
                                                    const bandwidth_type type)
 {
     database& _db = _self.database();
-    const auto& props = _db.get_dynamic_global_properties();
+    const auto& props = _db.obtain_service<dbs_dynamic_global_property>().get();
     bool has_bandwidth = true;
 
-    if (props.total_vesting_shares.amount > 0)
+    if (props.total_scorumpower.amount > 0)
     {
         auto band = _db.find<account_bandwidth_object, by_account_bandwidth_type>(boost::make_tuple(a.name, type));
 
@@ -372,7 +336,9 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
         auto delta_time = (_db.head_block_time() - band->last_bandwidth_update).to_seconds();
 
         if (delta_time > SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+        {
             new_bandwidth = 0;
+        }
         else
             new_bandwidth
                 = (((SCORUM_BANDWIDTH_AVERAGE_WINDOW_SECONDS - delta_time) * fc::uint128(band->average_bandwidth.value))
@@ -387,8 +353,8 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
             b.last_bandwidth_update = _db.head_block_time();
         });
 
-        fc::uint128 account_vshares(a.effective_vesting_shares().amount.value);
-        fc::uint128 total_vshares(props.total_vesting_shares.amount.value);
+        fc::uint128 account_vshares(a.effective_scorumpower().amount.value);
+        fc::uint128 total_vshares(props.total_scorumpower.amount.value);
         fc::uint128 account_average_bandwidth(band->average_bandwidth.value);
         fc::uint128 max_virtual_bandwidth(_db.get(reserve_ratio_id_type()).max_virtual_bandwidth);
 
@@ -396,10 +362,10 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
 
         if (_db.is_producing())
             SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
-                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCORUM.",
+                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCR.",
                           ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
                                                                                   account_average_bandwidth)(
-                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_vesting_shares", total_vshares));
+                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_scorumpower", total_vshares));
     }
 }
 }
@@ -415,7 +381,9 @@ witness_plugin::~witness_plugin()
     try
     {
         if (_block_production_task.valid())
+        {
             _block_production_task.cancel_and_wait(__FUNCTION__);
+        }
     }
     catch (fc::canceled_exception&)
     {
@@ -430,7 +398,7 @@ witness_plugin::~witness_plugin()
 void witness_plugin::plugin_set_program_options(boost::program_options::options_description& command_line_options,
                                                 boost::program_options::options_description& config_file_options)
 {
-    string witness_id_example = "initwitness";
+    std::string witness_id_example = "initwitness";
     command_line_options.add_options()("enable-stale-production",
                                        bpo::bool_switch()->notifier([this](bool e) { _production_enabled = e; }),
                                        "Enable block production, even if the chain is stale.")(
@@ -438,9 +406,9 @@ void witness_plugin::plugin_set_program_options(boost::program_options::options_
             _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT);
         }),
         "Percent of witnesses (0-99) that must be participating in order to produce blocks")(
-        "witness,w", bpo::value<vector<string>>()->composing()->multitoken(),
+        "witness,w", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
         ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())(
-        "private-key", bpo::value<vector<string>>()->composing()->multitoken(),
+        "private-key", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
         "WIF PRIVATE KEY to be used by one or more witnesses or miners");
     config_file_options.add(command_line_options);
 }
@@ -450,16 +418,12 @@ std::string witness_plugin::plugin_name() const
     return "witness";
 }
 
-using std::vector;
-using std::pair;
-using std::string;
-
 void witness_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try
     {
         _options = &options;
-        LOAD_VALUE_SET(options, "witness", _witnesses, string)
+        LOAD_VALUE_SET(options, "witness", _witnesses, std::string)
 
         if (options.count("private-key"))
         {
@@ -479,10 +443,11 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
         db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
 
         db.add_plugin_index<account_bandwidth_index>();
-        db.add_plugin_index<content_edit_lock_index>();
         db.add_plugin_index<reserve_ratio_index>();
     }
     FC_LOG_AND_RETHROW()
+
+    print_greeting();
 }
 
 void witness_plugin::plugin_startup()
@@ -490,7 +455,6 @@ void witness_plugin::plugin_startup()
     try
     {
         ilog("witness plugin:  plugin_startup() begin");
-        chain::database& d = database();
 
         if (!_witnesses.empty())
         {
@@ -499,8 +463,6 @@ void witness_plugin::plugin_startup()
             app().set_block_production(true);
             if (_production_enabled)
             {
-                if (d.head_block_num() == 0)
-                    new_chain_banner(d);
                 _production_skip_flags |= scorum::chain::database::skip_undo_history_check;
             }
             schedule_production_loop();
@@ -521,12 +483,15 @@ void witness_plugin::plugin_shutdown()
 
 void witness_plugin::schedule_production_loop()
 {
+    static const int64_t ONE_SECOND_MS = 1000000;
     // Schedule for the next second's tick regardless of chain state
     // If we would wait less than 50ms, wait for the whole second.
     fc::time_point fc_now = fc::time_point::now();
-    int64_t time_to_next_second = 1000000 - (fc_now.time_since_epoch().count() % 1000000);
+    int64_t time_to_next_second = ONE_SECOND_MS - (fc_now.time_since_epoch().count() % ONE_SECOND_MS);
     if (time_to_next_second < 50000) // we must sleep for at least 50ms
-        time_to_next_second += 1000000;
+    {
+        time_to_next_second += ONE_SECOND_MS;
+    }
 
     fc::time_point next_wakeup(fc_now + fc::microseconds(time_to_next_second));
 
@@ -534,13 +499,15 @@ void witness_plugin::schedule_production_loop()
     _block_production_task = fc::schedule([this] { block_production_loop(); }, next_wakeup, "Witness Block Production");
 }
 
-block_production_condition::block_production_condition_enum witness_plugin::block_production_loop()
+void witness_plugin::block_production_loop()
 {
-    if (fc::time_point::now() < fc::time_point(SCORUM_GENESIS_TIME))
+    const fc::time_point genesis_time = database().get_genesis_time();
+
+    if (fc::time_point::now() < genesis_time)
     {
-        wlog("waiting until genesis time to produce block: ${t}", ("t", SCORUM_GENESIS_TIME));
+        wlog("waiting until genesis time to produce block: ${t}", ("t", genesis_time));
         schedule_production_loop();
-        return block_production_condition::wait_for_genesis;
+        return;
     }
 
     block_production_condition::block_production_condition_enum result;
@@ -605,8 +572,8 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
         break;
     }
 
+    dlog("result = ${r}", ("r", result));
     schedule_production_loop();
-    return result;
 }
 
 block_production_condition::block_production_condition_enum
@@ -620,9 +587,13 @@ witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
     if (!_production_enabled)
     {
         if (db.get_slot_time(1) >= now)
+        {
             _production_enabled = true;
+        }
         else
+        {
             return block_production_condition::not_synced;
+        }
     }
 
     // is anyone scheduled to produce now or one second in the future?
@@ -643,7 +614,7 @@ witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
     //
     assert(now > db.head_block_time());
 
-    string scheduled_witness = db.get_scheduled_witness(slot);
+    std::string scheduled_witness = db.get_scheduled_witness(slot);
     // we must control the witness scheduled to produce the next block.
     if (_witnesses.find(scheduled_witness) == _witnesses.end())
     {
@@ -672,7 +643,11 @@ witness_plugin::maybe_produce_block(fc::mutable_variant_object& capture)
         return block_production_condition::low_participation;
     }
 
-    if (llabs((scheduled_time - now).count()) > fc::milliseconds(500).count())
+    fc::microseconds dlt = scheduled_time - now;
+    dlog("scheduled_time (${s} s) - now (${n} s) = ${d} ms",
+         ("s", scheduled_time.sec_since_epoch())("n", now.sec_since_epoch())("d", dlt.count()));
+
+    if (llabs(dlt.count()) > fc::milliseconds(500).count())
     {
         capture("scheduled_time", scheduled_time)("now", now);
         return block_production_condition::lag;

@@ -24,7 +24,7 @@
 #pragma once
 
 #include <scorum/app/plugin.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 namespace scorum {
 namespace delayed_node {

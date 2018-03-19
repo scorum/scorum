@@ -4,11 +4,13 @@
 
 #include <scorum/protocol/config.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/comment_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -52,7 +54,10 @@ tags_plugin_impl::~tags_plugin_impl()
 struct operation_visitor
 {
     operation_visitor(database& db)
-        : _db(db){};
+        : _db(db)
+    {
+    }
+
     typedef void result_type;
 
     database& _db;
@@ -102,7 +107,7 @@ struct operation_visitor
         }
     }
 
-    const tag_stats_object& get_stats(const string& tag) const
+    const tag_stats_object& get_stats(const std::string& tag) const
     {
         const auto& stats_idx = _db.get_index<tag_stats_index>().indices().get<by_tag>();
         auto itr = stats_idx.find(tag);
@@ -120,9 +125,9 @@ struct operation_visitor
         {
             try
             {
-                meta = fc::json::from_string(to_string(c.json_metadata)).as<comment_metadata>();
+                meta = fc::json::from_string(fc::to_string(c.json_metadata)).as<comment_metadata>();
             }
-            catch (const fc::exception& e)
+            catch (const fc::exception&)
             {
                 // Do nothing on malformed json_metadata
             }
@@ -131,11 +136,11 @@ struct operation_visitor
         // We need to write the transformed tags into a temporary
         // local container because we can't modify meta.tags concurrently
         // as we iterate over it.
-        set<string> lower_tags;
+        std::set<std::string> lower_tags;
 
         uint8_t tag_limit = 5;
         uint8_t count = 0;
-        for (const string& tag : meta.tags)
+        for (const std::string& tag : meta.tags)
         {
             ++count;
             if (count > tag_limit || lower_tags.size() > tag_limit)
@@ -148,7 +153,7 @@ struct operation_visitor
         /// the universal tag applies to everything safe for work or nsfw with a non-negative payout
         if (c.net_rshares >= 0)
         {
-            lower_tags.insert(string()); /// add it to the universal tag
+            lower_tags.insert(std::string()); /// add it to the universal tag
         }
 
         meta.tags = lower_tags; /// TODO: std::move???
@@ -182,13 +187,15 @@ struct operation_visitor
         }
     }
 
-    void create_tag(const string& tag, const comment_object& comment, double hot, double trending) const
+    void create_tag(const std::string& tag, const comment_object& comment, double hot, double trending) const
     {
         comment_id_type parent;
-        account_id_type author = _db.get_account(comment.author).id;
+        account_id_type author = _db.obtain_service<dbs_account>().get_account(comment.author).id;
 
         if (comment.parent_author.size())
-            parent = _db.get_comment(comment.parent_author, comment.parent_permlink).id;
+            parent = _db.obtain_service<dbs_comment>()
+                         .get(comment.parent_author, fc::to_string(comment.parent_permlink))
+                         .id;
 
         const auto& tag_obj = _db.create<tag_object>([&](tag_object& obj) {
             obj.tag = tag;
@@ -267,8 +274,8 @@ struct operation_visitor
                 auto meta = filter_tags(c);
                 auto citr = comment_idx.lower_bound(c.id);
 
-                map<string, const tag_object*> existing_tags;
-                vector<const tag_object*> remove_queue;
+                std::map<std::string, const tag_object*> existing_tags;
+                std::vector<const tag_object*> remove_queue;
 
                 while (citr != comment_idx.end() && citr->comment == c.id)
                 {
@@ -315,7 +322,7 @@ struct operation_visitor
 
             if (c.parent_author.size())
             {
-                update_tags(_db.get_comment(c.parent_author, c.parent_permlink));
+                update_tags(_db.obtain_service<dbs_comment>().get(c.parent_author, fc::to_string(c.parent_permlink)));
             }
         }
         FC_CAPTURE_LOG_AND_RETHROW((c))
@@ -381,16 +388,16 @@ struct operation_visitor
 
     void operator()(const comment_operation& op) const
     {
-        update_tags(_db.get_comment(op.author, op.permlink), true);
+        update_tags(_db.obtain_service<dbs_comment>().get(op.author, op.permlink), true);
     }
 
     void operator()(const transfer_operation& op) const
     {
         // SCORUM: changed from null account
-        // if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol == SCORUM_SYMBOL )
-        if (op.to == "" && op.amount.symbol == SCORUM_SYMBOL)
+        // if( op.to == SCORUM_NULL_ACCOUNT && op.amount.symbol() == SCORUM_SYMBOL )
+        if (op.to == "" && op.amount.symbol() == SCORUM_SYMBOL)
         {
-            vector<string> part;
+            std::vector<std::string> part;
             part.reserve(4);
             auto path = op.memo;
             boost::split(part, path, boost::is_any_of("/"));
@@ -399,35 +406,39 @@ struct operation_visitor
                 auto acnt = part[0].substr(1);
                 auto perm = part[1];
 
-                auto c = _db.find_comment(acnt, perm);
-                if (c && c->parent_author.size() == 0)
+                auto& comment_service = _db.obtain_service<dbs_comment>();
+                if (comment_service.is_exists(acnt, perm))
                 {
-                    const auto& comment_idx = _db.get_index<tag_index>().indices().get<by_comment>();
-                    auto citr = comment_idx.lower_bound(c->id);
-                    while (citr != comment_idx.end() && citr->comment == c->id)
+                    const auto& c = comment_service.get(acnt, perm);
+                    if (c.parent_author.size() == 0)
                     {
-                        _db.modify(*citr, [&](tag_object& t) {
-                            if (t.cashout != fc::time_point_sec::maximum())
-                                t.promoted_balance += op.amount.amount;
-                        });
-                        ++citr;
+                        const auto& comment_idx = _db.get_index<tag_index>().indices().get<by_comment>();
+                        auto citr = comment_idx.lower_bound(c.id);
+                        while (citr != comment_idx.end() && citr->comment == c.id)
+                        {
+                            _db.modify(*citr, [&](tag_object& t) {
+                                if (t.cashout != fc::time_point_sec::maximum())
+                                    t.promoted_balance += op.amount.amount;
+                            });
+                            ++citr;
+                        }
+
+                        return;
                     }
                 }
-                else
-                {
-                    ilog("unable to find body");
-                }
+
+                ilog("unable to find body");
             }
         }
     }
 
     void operator()(const vote_operation& op) const
     {
-        update_tags(_db.get_comment(op.author, op.permlink));
+        update_tags(_db.obtain_service<dbs_comment>().get(op.author, op.permlink));
         /*
-        update_peer_stats( _db.get_account(op.voter),
-                           _db.get_account(op.author),
-                           _db.get_comment(op.author, op.permlink),
+        update_peer_stats( _db.obtain_service<dbs_account>().get_account(op.voter),
+                           _db.obtain_service<dbs_account>().get_account(op.author),
+                           _db.obtain_service<dbs_comment>().get(op.author, op.permlink),
                            op.weight );
                            */
     }
@@ -436,7 +447,7 @@ struct operation_visitor
     {
         const auto& idx = _db.get_index<tag_index>().indices().get<by_author_comment>();
 
-        const auto& auth = _db.get_account(op.author);
+        const auto& auth = _db.obtain_service<dbs_account>().get_account(op.author);
         auto itr = idx.lower_bound(boost::make_tuple(auth.id));
         while (itr != idx.end() && itr->author == auth.id)
         {
@@ -452,12 +463,12 @@ struct operation_visitor
 
     void operator()(const comment_reward_operation& op) const
     {
-        const auto& c = _db.get_comment(op.author, op.permlink);
+        const auto& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
         update_tags(c);
 
         comment_metadata meta = filter_tags(c);
 
-        for (const string& tag : meta.tags)
+        for (const std::string& tag : meta.tags)
         {
             _db.modify(get_stats(tag), [&](tag_stats_object& ts) { ts.total_payout += op.payout; });
         }
@@ -465,7 +476,7 @@ struct operation_visitor
 
     void operator()(const comment_payout_update_operation& op) const
     {
-        const auto& c = _db.get_comment(op.author, op.permlink);
+        const auto& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
         update_tags(c);
     }
 
@@ -491,7 +502,7 @@ void tags_plugin_impl::on_operation(const operation_notification& note)
     }
 }
 
-} /// end detail namespace
+} // namespace detail
 
 tags_plugin::tags_plugin(application* app)
     : plugin(app)
@@ -516,16 +527,17 @@ void tags_plugin::plugin_set_program_options(boost::program_options::options_des
 
 void tags_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    ilog("Intializing tags plugin");
     database().post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
 
     app().register_api_factory<tag_api>("tag_api");
+
+    print_greeting();
 }
 
 void tags_plugin::plugin_startup()
 {
 }
-}
-} /// scorum::tags
+} // namespace tags
+} // namespace scorum
 
 SCORUM_DEFINE_PLUGIN(tags, scorum::tags::tags_plugin)

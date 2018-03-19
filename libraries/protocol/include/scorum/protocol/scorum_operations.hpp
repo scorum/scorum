@@ -2,55 +2,72 @@
 #include <scorum/protocol/base.hpp>
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/chain_properties.hpp>
+#include <scorum/protocol/comment.hpp>
+#include <scorum/protocol/types.hpp>
+
+#include <scorum/protocol/proposal_operations.hpp>
 
 #include <fc/utf8.hpp>
-#include <fc/crypto/equihash.hpp>
+#include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
 namespace protocol {
 
-inline void validate_account_name(const string& name)
-{
-    FC_ASSERT(is_valid_account_name(name), "Account name ${n} is invalid", ("n", name));
-}
-
-inline void validate_permlink(const string& permlink)
-{
-    FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
-    FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
-}
-
 struct account_create_operation : public base_operation
 {
-    asset fee;
+    asset fee = asset(0, SCORUM_SYMBOL);
     account_name_type creator;
     account_name_type new_account_name;
     authority owner;
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(creator); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
 };
 
 struct account_create_with_delegation_operation : public base_operation
 {
-    asset fee;
-    asset delegation;
+    asset fee = asset(0, SCORUM_SYMBOL);
+    asset delegation = asset(0, SP_SYMBOL);
     account_name_type creator;
     account_name_type new_account_name;
     authority owner;
     authority active;
     authority posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
 
     extensions_type extensions;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(creator); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+};
+
+struct account_create_by_committee_operation : public base_operation
+{
+    account_name_type creator;
+    account_name_type new_account_name;
+    authority owner;
+    authority active;
+    authority posting;
+    public_key_type memo_key;
+    std::string json_metadata;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
 };
 
 struct account_update_operation : public base_operation
@@ -60,7 +77,7 @@ struct account_update_operation : public base_operation
     optional<authority> active;
     optional<authority> posting;
     public_key_type memo_key;
-    string json_metadata;
+    std::string json_metadata;
 
     void validate() const;
 
@@ -80,45 +97,21 @@ struct account_update_operation : public base_operation
 struct comment_operation : public base_operation
 {
     account_name_type parent_author;
-    string parent_permlink;
+    std::string parent_permlink;
 
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
-    string title;
-    string body;
-    string json_metadata;
+    std::string title;
+    std::string body;
+    std::string json_metadata;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(author); }
-};
-
-struct beneficiary_route_type
-{
-    beneficiary_route_type() {}
-    beneficiary_route_type(const account_name_type& a, const uint16_t& w)
-        : account(a)
-        , weight(w)
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
     {
+        a.insert(author);
     }
-
-    account_name_type account;
-    uint16_t weight;
-
-    // For use by std::sort such that the route is sorted first by name (ascending)
-    bool operator<(const beneficiary_route_type& o) const { return account < o.account; }
 };
-
-struct comment_payout_beneficiaries
-{
-    vector<beneficiary_route_type> beneficiaries;
-
-    void validate() const;
-};
-
-typedef static_variant<comment_payout_beneficiaries> comment_options_extension;
-
-typedef flat_set<comment_options_extension> comment_options_extensions_type;
 
 /**
  *  Authors of posts may not want all of the benefits that come from creating a post. This
@@ -131,18 +124,21 @@ typedef flat_set<comment_options_extension> comment_options_extensions_type;
 struct comment_options_operation : public base_operation
 {
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
     asset max_accepted_payout
-        = asset(1000000000, SCORUM_SYMBOL); /// SBD value of the maximum payout this post will receive
+        = asset::maximum(SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
     uint16_t percent_scrs
         = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
     bool allow_votes = true; /// allows a post to receive votes;
-    bool allow_curation_rewards = true; /// allows voters to recieve curation rewards. Rewards return to reward fund.
+    bool allow_curation_rewards = true; /// allows voters to receive curation rewards. Rewards return to reward fund.
     comment_options_extensions_type extensions;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(author); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(author);
+    }
 };
 
 struct prove_authority_operation : public base_operation
@@ -167,27 +163,33 @@ struct prove_authority_operation : public base_operation
 struct delete_comment_operation : public base_operation
 {
     account_name_type author;
-    string permlink;
+    std::string permlink;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(author); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(author);
+    }
 };
 
 struct vote_operation : public base_operation
 {
     account_name_type voter;
     account_name_type author;
-    string permlink;
+    std::string permlink;
     int16_t weight = 0;
 
     void validate() const;
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(voter); }
+    void get_required_posting_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(voter);
+    }
 };
 
 /**
  * @ingroup operations
  *
- * @brief Transfers SCORUM from one account to another.
+ * @brief Transfers SCR from one account to another.
  */
 struct transfer_operation : public base_operation
 {
@@ -195,22 +197,17 @@ struct transfer_operation : public base_operation
     /// Account to transfer asset to
     account_name_type to;
     /// The amount of asset to transfer from @ref from to @ref to
-    asset amount;
+    asset amount = asset(0, SCORUM_SYMBOL);
 
     /// The memo is plain-text, any encryption on the memo is up to
     /// a higher level protocol.
-    string memo;
+    std::string memo;
 
     void validate() const;
+
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
-        if (amount.symbol != VESTS_SYMBOL)
-            a.insert(from);
-    }
-    void get_required_owner_authorities(flat_set<account_name_type>& a) const
-    {
-        if (amount.symbol == VESTS_SYMBOL)
-            a.insert(from);
+        a.insert(from);
     }
 };
 
@@ -240,15 +237,18 @@ struct escrow_transfer_operation : public base_operation
     uint32_t escrow_id = 30;
 
     asset scorum_amount = asset(0, SCORUM_SYMBOL);
-    asset fee;
+    asset fee = asset(0, SCORUM_SYMBOL);
 
     time_point_sec ratification_deadline;
     time_point_sec escrow_expiration;
 
-    string json_meta;
+    std::string json_meta;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(from); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(from);
+    }
 };
 
 /**
@@ -267,7 +267,10 @@ struct escrow_approve_operation : public base_operation
     bool approve = true;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(who); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(who);
+    }
 };
 
 /**
@@ -285,7 +288,10 @@ struct escrow_dispute_operation : public base_operation
     uint32_t escrow_id = 30;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(who); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(who);
+    }
 };
 
 /**
@@ -310,43 +316,53 @@ struct escrow_release_operation : public base_operation
     asset scorum_amount = asset(0, SCORUM_SYMBOL); ///< the amount of scorum to release
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(who); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(who);
+    }
 };
 
 /**
- *  This operation converts SCORUM into VFS (Vesting Fund Shares) at
+ *  This operation converts SCR into SP at
  *  the current exchange rate. With this operation it is possible to
- *  give another account vesting shares so that faucets can
- *  pre-fund new accounts with vesting shares.
+ *  give another account scorumpower so that faucets can
+ *  pre-fund new accounts with scorumpower.
  */
-struct transfer_to_vesting_operation : public base_operation
+struct transfer_to_scorumpower_operation : public base_operation
 {
     account_name_type from;
     account_name_type to; ///< if null, then same as from
-    asset amount; ///< must be SCORUM
+    asset amount = asset(0, SCORUM_SYMBOL);
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(from); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(from);
+    }
 };
 
 /**
  * At any given point in time an account can be withdrawing from their
- * vesting shares. A user may change the number of shares they wish to
- * cash out at any time between 0 and their total vesting stake.
+ * scorumpower. A user may change the number of shares they wish to
+ * cash out at any time between 0 and their total scorumpower stake.
  *
- * After applying this operation, vesting_shares will be withdrawn
- * at a rate of vesting_shares/104 per week for two years starting
+ * After applying this operation, scorumpower will be withdrawn
+ * at a rate of scorumpower/SCORUM_VESTING_WITHDRAW_INTERVALS
+ * per week for two years starting
  * one week after this operation is included in the blockchain.
  *
- * This operation is not valid if the user has no vesting shares.
+ * This operation is not valid if the user has no scorumpower.
  */
-struct withdraw_vesting_operation : public base_operation
+struct withdraw_scorumpower_operation : public base_operation
 {
     account_name_type account;
-    asset vesting_shares;
+    asset scorumpower = asset(0, SP_SYMBOL);
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 /**
@@ -354,9 +370,9 @@ struct withdraw_vesting_operation : public base_operation
  * request for the funds to be transferred directly to another account's
  * balance rather than the withdrawing account. In addition, those funds
  * can be immediately vested again, circumventing the conversion from
- * vests to scorum and back, guaranteeing they maintain their value.
+ * scorum power to scorum and back, guaranteeing they maintain their value.
  */
-struct set_withdraw_vesting_route_operation : public base_operation
+struct set_withdraw_scorumpower_route_to_account_operation : public base_operation
 {
     account_name_type from_account;
     account_name_type to_account;
@@ -364,34 +380,22 @@ struct set_withdraw_vesting_route_operation : public base_operation
     bool auto_vest = false;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(from_account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(from_account);
+    }
 };
 
-/**
- * Witnesses must vote on how to set certain chain properties to ensure a smooth
- * and well functioning network.  Any time @owner is in the active set of witnesses these
- * properties will be used to control the blockchain configuration.
- */
-struct chain_properties
+struct set_withdraw_scorumpower_route_to_dev_pool_operation : public base_operation
 {
-    /**
-     *  This fee, paid in SCORUM, is converted into VESTING SHARES for the new account. Accounts
-     *  without vesting shares cannot earn usage rations and therefore are powerless. This minimum
-     *  fee requires all accounts to have some kind of commitment to the network that includes the
-     *  ability to vote and make transactions.
-     */
-    asset account_creation_fee = asset(SCORUM_MIN_ACCOUNT_CREATION_FEE, SCORUM_SYMBOL);
+    account_name_type from_account;
+    uint16_t percent = 0;
+    bool auto_vest = false;
 
-    /**
-     *  This witnesses vote for the maximum_block_size which is used by the network
-     *  to tune rate limiting and capacity
-     */
-    uint32_t maximum_block_size = SCORUM_MIN_BLOCK_SIZE_LIMIT * 2;
-
-    void validate() const
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
-        FC_ASSERT(account_creation_fee.amount >= SCORUM_MIN_ACCOUNT_CREATION_FEE);
-        FC_ASSERT(maximum_block_size >= SCORUM_MIN_BLOCK_SIZE_LIMIT);
+        a.insert(from_account);
     }
 };
 
@@ -400,7 +404,7 @@ struct chain_properties
  *  the current witnesses to apply for the position and allow voting
  *  to begin.
  *
- *  If the owner isn't a witness they will become a witness.  Witnesses
+ *  If the owner isn't a witness he will become a witness.  Witnesses
  *  are charged a fee equal to 1 weeks worth of witness pay which in
  *  turn is derived from the current share supply.  The fee is
  *  only applied if the owner is not already a witness.
@@ -412,13 +416,15 @@ struct chain_properties
 struct witness_update_operation : public base_operation
 {
     account_name_type owner;
-    string url;
+    std::string url;
     public_key_type block_signing_key;
-    chain_properties props;
-    asset fee; ///< the fee paid to register a new witness, should be 10x current block production pay
+    chain_properties proposed_chain_props;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(owner); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
 };
 
 /**
@@ -433,7 +439,10 @@ struct account_witness_vote_operation : public base_operation
     bool approve = true;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
 };
 
 struct account_witness_proxy_operation : public base_operation
@@ -442,82 +451,9 @@ struct account_witness_proxy_operation : public base_operation
     account_name_type proxy;
 
     void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
-};
-
-/**
- * @brief provides a generic way to add higher level protocols on top of witness consensus
- * @ingroup operations
- *
- * There is no validation for this operation other than that required auths are valid
- */
-struct custom_operation : public base_operation
-{
-    flat_set<account_name_type> required_auths;
-    uint16_t id = 0;
-    vector<char> data;
-
-    void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
-        for (const auto& i : required_auths)
-            a.insert(i);
-    }
-};
-
-/** serves the same purpose as custom_operation but also supports required posting authorities. Unlike custom_operation,
- * this operation is designed to be human readable/developer friendly.
- **/
-struct custom_json_operation : public base_operation
-{
-    flat_set<account_name_type> required_auths;
-    flat_set<account_name_type> required_posting_auths;
-    string id; ///< must be less than 32 characters long
-    string json; ///< must be proper utf8 / JSON string.
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        for (const auto& i : required_auths)
-            a.insert(i);
-    }
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const
-    {
-        for (const auto& i : required_posting_auths)
-            a.insert(i);
-    }
-};
-
-struct custom_binary_operation : public base_operation
-{
-    flat_set<account_name_type> required_owner_auths;
-    flat_set<account_name_type> required_active_auths;
-    flat_set<account_name_type> required_posting_auths;
-    vector<authority> required_auths;
-
-    string id; ///< must be less than 32 characters long
-    vector<char> data;
-
-    void validate() const;
-    void get_required_owner_authorities(flat_set<account_name_type>& a) const
-    {
-        for (const auto& i : required_owner_auths)
-            a.insert(i);
-    }
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        for (const auto& i : required_active_auths)
-            a.insert(i);
-    }
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const
-    {
-        for (const auto& i : required_posting_auths)
-            a.insert(i);
-    }
-    void get_required_authorities(vector<authority>& a) const
-    {
-        for (const auto& i : required_auths)
-            a.push_back(i);
+        a.insert(account);
     }
 };
 
@@ -561,7 +497,10 @@ struct request_account_recovery_operation : public base_operation
 
     extensions_type extensions; ///< Extensions. Not currently used.
 
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(recovery_account); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(recovery_account);
+    }
 
     void validate() const;
 };
@@ -614,7 +553,7 @@ struct recover_account_operation : public base_operation
 
     extensions_type extensions; ///< Extensions. Not currently used.
 
-    void get_required_authorities(vector<authority>& a) const
+    void get_required_authorities(std::vector<authority>& a) const
     {
         a.push_back(new_owner_authority);
         a.push_back(recent_owner_authority);
@@ -647,7 +586,10 @@ struct change_recovery_account_operation : public base_operation
     account_name_type new_recovery_account; ///< The account that creates the recover request
     extensions_type extensions; ///< Extensions. Not currently used.
 
-    void get_required_owner_authorities(flat_set<account_name_type>& a) const { a.insert(account_to_recover); }
+    void get_required_owner_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account_to_recover);
+    }
     void validate() const;
 };
 
@@ -656,44 +598,147 @@ struct decline_voting_rights_operation : public base_operation
     account_name_type account;
     bool decline = true;
 
-    void get_required_owner_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
-    void validate() const;
-};
-
-struct claim_reward_balance_operation : public base_operation
-{
-    account_name_type account;
-    asset reward_scorum;
-    asset reward_vests;
-
-    void get_required_posting_authorities(flat_set<account_name_type>& a) const { a.insert(account); }
+    void get_required_owner_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(account);
+    }
     void validate() const;
 };
 
 /**
- * Delegate vesting shares from one account to the other. The vesting shares are still owned
+ * Delegate scorumpower from one account to the other. The scorumpower are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
- * to the receiving account. This sets the delegation to `vesting_shares`, increasing it or
+ * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
  * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
  *
  * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
- * of VESTS from voting on the same content twice.
+ * of SP from voting on the same content twice.
  */
-struct delegate_vesting_shares_operation : public base_operation
+struct delegate_scorumpower_operation : public base_operation
 {
-    account_name_type delegator; ///< The account delegating vesting shares
-    account_name_type delegatee; ///< The account receiving vesting shares
-    asset vesting_shares; ///< The amount of vesting shares delegated
+    account_name_type delegator; ///< The account delegating scorumpower
+    account_name_type delegatee; ///< The account receiving scorumpower
+    asset scorumpower = asset(0, SP_SYMBOL); ///< The amount of scorumpower delegated
 
-    void get_required_active_authorities(flat_set<account_name_type>& a) const { a.insert(delegator); }
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(delegator);
+    }
     void validate() const;
 };
-}
-} // scorum::protocol
+
+struct create_budget_operation : public base_operation
+{
+    account_name_type owner;
+    std::string content_permlink;
+
+    asset balance = asset(0, SCORUM_SYMBOL);
+    time_point_sec deadline;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct close_budget_operation : public base_operation
+{
+    int64_t budget_id;
+    account_name_type owner;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct proposal_create_operation : public base_operation
+{
+    account_name_type creator;
+    uint32_t lifetime_sec = 0;
+
+    proposal_operation operation;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+
+    void validate() const;
+};
+
+struct proposal_vote_operation : public base_operation
+{
+    account_name_type voting_account;
+    int64_t proposal_id;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(voting_account);
+    }
+
+    void validate() const;
+};
+
+struct atomicswap_initiate_operation : public base_operation
+{
+    enum operation_type : bool
+    {
+        by_initiator = 0,
+        by_participant,
+    };
+
+    operation_type type = by_initiator;
+
+    account_name_type owner;
+    account_name_type recipient;
+
+    asset amount = asset(0, SCORUM_SYMBOL);
+
+    std::string secret_hash;
+
+    std::string metadata;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct atomicswap_redeem_operation : public base_operation
+{
+    account_name_type from;
+    account_name_type to; // participant or initiator
+
+    std::string secret;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(to);
+    }
+};
+
+struct atomicswap_refund_operation : public base_operation
+{
+    account_name_type participant;
+    account_name_type initiator;
+    std::string secret_hash;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(participant);
+    }
+};
+
+} // namespace protocol
+} // namespace scorum
 
 // clang-format off
-
-FC_REFLECT( scorum::protocol::chain_properties, (account_creation_fee)(maximum_block_size) );
 
 FC_REFLECT( scorum::protocol::account_create_operation,
             (fee)
@@ -717,6 +762,15 @@ FC_REFLECT( scorum::protocol::account_create_with_delegation_operation,
             (json_metadata)
             (extensions) )
 
+FC_REFLECT( scorum::protocol::account_create_by_committee_operation,
+            (creator)
+            (new_account_name)
+            (owner)
+            (active)
+            (posting)
+            (memo_key)
+            (json_metadata) )
+
 FC_REFLECT( scorum::protocol::account_update_operation,
             (account)
             (owner)
@@ -726,35 +780,44 @@ FC_REFLECT( scorum::protocol::account_update_operation,
             (json_metadata) )
 
 FC_REFLECT( scorum::protocol::transfer_operation, (from)(to)(amount)(memo) )
-FC_REFLECT( scorum::protocol::transfer_to_vesting_operation, (from)(to)(amount) )
-FC_REFLECT( scorum::protocol::withdraw_vesting_operation, (account)(vesting_shares) )
-FC_REFLECT( scorum::protocol::set_withdraw_vesting_route_operation, (from_account)(to_account)(percent)(auto_vest) )
-FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(props)(fee) )
+FC_REFLECT( scorum::protocol::transfer_to_scorumpower_operation, (from)(to)(amount) )
+FC_REFLECT( scorum::protocol::withdraw_scorumpower_operation, (account)(scorumpower) )
+FC_REFLECT( scorum::protocol::set_withdraw_scorumpower_route_to_account_operation, (from_account)(to_account)(percent)(auto_vest) )
+FC_REFLECT( scorum::protocol::set_withdraw_scorumpower_route_to_dev_pool_operation, (from_account)(percent)(auto_vest) )
+FC_REFLECT( scorum::protocol::witness_update_operation, (owner)(url)(block_signing_key)(proposed_chain_props) )
 FC_REFLECT( scorum::protocol::account_witness_vote_operation, (account)(witness)(approve) )
 FC_REFLECT( scorum::protocol::account_witness_proxy_operation, (account)(proxy) )
 FC_REFLECT( scorum::protocol::comment_operation, (parent_author)(parent_permlink)(author)(permlink)(title)(body)(json_metadata) )
 FC_REFLECT( scorum::protocol::vote_operation, (voter)(author)(permlink)(weight) )
-FC_REFLECT( scorum::protocol::custom_operation, (required_auths)(id)(data) )
-FC_REFLECT( scorum::protocol::custom_json_operation, (required_auths)(required_posting_auths)(id)(json) )
-FC_REFLECT( scorum::protocol::custom_binary_operation, (required_owner_auths)(required_active_auths)(required_posting_auths)(required_auths)(id)(data) )
 
-FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) );
-
-FC_REFLECT( scorum::protocol::beneficiary_route_type, (account)(weight) )
-FC_REFLECT( scorum::protocol::comment_payout_beneficiaries, (beneficiaries) )
-FC_REFLECT_TYPENAME( scorum::protocol::comment_options_extension )
+FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) )
 FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_scrs)(allow_votes)(allow_curation_rewards)(extensions) )
 
-FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) );
-FC_REFLECT( scorum::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) );
-FC_REFLECT( scorum::protocol::escrow_dispute_operation, (from)(to)(agent)(who)(escrow_id) );
-FC_REFLECT( scorum::protocol::escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(scorum_amount) );
-FC_REFLECT( scorum::protocol::prove_authority_operation, (challenged)(require_owner) );
-FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_account)(account_to_recover)(new_owner_authority)(extensions) );
-FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) );
-FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
-FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) );
-FC_REFLECT( scorum::protocol::claim_reward_balance_operation, (account)(reward_scorum)(reward_vests) )
-FC_REFLECT( scorum::protocol::delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
+FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) )
+FC_REFLECT( scorum::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) )
+FC_REFLECT( scorum::protocol::escrow_dispute_operation, (from)(to)(agent)(who)(escrow_id) )
+FC_REFLECT( scorum::protocol::escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(scorum_amount) )
+FC_REFLECT( scorum::protocol::prove_authority_operation, (challenged)(require_owner) )
+FC_REFLECT( scorum::protocol::request_account_recovery_operation, (recovery_account)(account_to_recover)(new_owner_authority)(extensions) )
+FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) )
+FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
+FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
+FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
+FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
+
+FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
+FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
+FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
+FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
+
+FC_REFLECT( scorum::protocol::proposal_vote_operation,
+            (voting_account)
+            (proposal_id))
+
+FC_REFLECT( scorum::protocol::proposal_create_operation,
+            (creator)
+            (lifetime_sec)
+            (operation))
 // clang-format on

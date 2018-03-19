@@ -1,8 +1,9 @@
 #include <scorum/account_by_key/account_by_key_plugin.hpp>
 #include <scorum/account_by_key/account_by_key_objects.hpp>
+#include <scorum/account_by_key/account_by_key_api.hpp>
 
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
 #include <graphene/schema/schema.hpp>
@@ -61,6 +62,11 @@ struct pre_operation_visitor
         _plugin.my->clear_cache();
     }
 
+    void operator()(const account_create_by_committee_operation& op) const
+    {
+        _plugin.my->clear_cache();
+    }
+
     void operator()(const account_update_operation& op) const
     {
         _plugin.my->clear_cache();
@@ -111,6 +117,13 @@ struct post_operation_visitor
     }
 
     void operator()(const account_create_with_delegation_operation& op) const
+    {
+        auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
+        if (acct_itr)
+            _plugin.my->update_key_lookup(*acct_itr);
+    }
+
+    void operator()(const account_create_by_committee_operation& op) const
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
         if (acct_itr)
@@ -229,7 +242,6 @@ void account_by_key_plugin::plugin_initialize(const boost::program_options::vari
 {
     try
     {
-        ilog("Initializing account_by_key plugin");
         chain::database& db = database();
 
         db.pre_apply_operation.connect([&](const operation_notification& o) { my->pre_operation(o); });
@@ -238,11 +250,30 @@ void account_by_key_plugin::plugin_initialize(const boost::program_options::vari
         db.add_plugin_index<key_lookup_index>();
     }
     FC_CAPTURE_AND_RETHROW()
+    print_greeting();
 }
 
 void account_by_key_plugin::plugin_startup()
 {
     app().register_api_factory<account_by_key_api>("account_by_key_api");
+
+    chain::database& db = database();
+
+    auto it_pair = db.get_index<account_index>().indices().get<by_created_by_genesis>().equal_range(true);
+    auto it = it_pair.first;
+    const auto it_end = it_pair.second;
+    while (it != it_end)
+    {
+        auto it_2_pair = db.get_index<account_authority_index>().indices().get<by_account>().equal_range(it->name);
+        auto it_2 = it_2_pair.first;
+        const auto it_2_end = it_2_pair.second;
+        while (it_2 != it_2_end)
+        {
+            my->update_key_lookup(*it_2);
+            ++it_2;
+        }
+        ++it;
+    }
 }
 }
 } // scorum::account_by_key

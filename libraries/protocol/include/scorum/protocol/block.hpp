@@ -8,7 +8,7 @@ namespace protocol {
 struct signed_block : public signed_block_header
 {
     checksum_type calculate_merkle_root() const;
-    vector<signed_transaction> transactions;
+    std::vector<signed_transaction> transactions;
 };
 }
 } // scorum::protocol

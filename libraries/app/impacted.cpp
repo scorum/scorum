@@ -64,6 +64,12 @@ struct get_impacted_account_visitor
         _impacted.insert(op.creator);
     }
 
+    void operator()(const account_create_by_committee_operation& op)
+    {
+        _impacted.insert(op.new_account_name);
+        _impacted.insert(op.creator);
+    }
+
     void operator()(const comment_operation& op)
     {
         _impacted.insert(op.author);
@@ -111,7 +117,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.agent);
     }
 
-    void operator()(const transfer_to_vesting_operation& op)
+    void operator()(const transfer_to_scorumpower_operation& op)
     {
         _impacted.insert(op.from);
 
@@ -121,10 +127,15 @@ struct get_impacted_account_visitor
         }
     }
 
-    void operator()(const set_withdraw_vesting_route_operation& op)
+    void operator()(const set_withdraw_scorumpower_route_to_account_operation& op)
     {
         _impacted.insert(op.from_account);
         _impacted.insert(op.to_account);
+    }
+
+    void operator()(const set_withdraw_scorumpower_route_to_dev_pool_operation& op)
+    {
+        _impacted.insert(op.from_account);
     }
 
     void operator()(const account_witness_vote_operation& op)
@@ -155,10 +166,45 @@ struct get_impacted_account_visitor
         _impacted.insert(op.account_to_recover);
     }
 
-    void operator()(const delegate_vesting_shares_operation& op)
+    void operator()(const delegate_scorumpower_operation& op)
     {
         _impacted.insert(op.delegator);
         _impacted.insert(op.delegatee);
+    }
+
+    void operator()(const create_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+    void operator()(const close_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+    void operator()(const proposal_create_operation& op)
+    {
+        _impacted.insert(op.creator);
+    }
+
+    void operator()(const proposal_vote_operation& op)
+    {
+        _impacted.insert(op.voting_account);
+    }
+
+    void operator()(const atomicswap_initiate_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+    void operator()(const atomicswap_redeem_operation& op)
+    {
+        _impacted.insert(op.to);
+    }
+
+    void operator()(const atomicswap_refund_operation& op)
+    {
+        _impacted.insert(op.participant);
     }
 
     // virtual operations
@@ -184,7 +230,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
-    void operator()(const return_vesting_delegation_operation& op)
+    void operator()(const return_scorumpower_delegation_operation& op)
     {
         _impacted.insert(op.account);
     }
@@ -199,8 +245,6 @@ struct get_impacted_account_visitor
     {
         _impacted.insert(op.producer);
     }
-
-    // void operator()( const operation& op ){}
 };
 
 void operation_get_impacted_accounts(const operation& op, flat_set<account_name_type>& result)

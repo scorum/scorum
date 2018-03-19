@@ -1,4 +1,13 @@
-file(GLOB HEADERS "include/scorum/chain/*.hpp" "include/scorum/chain/util/*.hpp")
+file(GLOB HEADERS "include/scorum/chain/*.hpp"
+                  "include/scorum/chain/evaluators/*.hpp"
+                  "include/scorum/chain/schema/*.hpp"
+                  "include/scorum/chain/services/*.hpp"
+                  "include/scorum/chain/util/*.hpp"
+                  "include/scorum/chain/genesis/*.hpp"
+                  "include/scorum/chain/genesis/initializators/*.hpp"
+                  "include/scorum/chain/database/*.hpp"
+                  "include/scorum/chain/database/block_tasks/*.hpp"
+                  "database/block_tasks/*.hpp")
 
 if( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_SOURCE_DIR}/include/scorum/chain/hardfork.hpp" )
@@ -18,20 +27,72 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/h
 add_library( scorum_chain
 
              # As database takes the longest to compile, start it first
-             database.cpp
-             fork_database.cpp
-             database_witness_schedule.cpp
+             database/database.cpp
+             database/fork_database.cpp
+             database/database_witness_schedule.cpp
 
-             dbs_base_impl.cpp
-             dbservice.cpp
-             dbs_account.cpp
-             dbs_witness.cpp
+             services/account.cpp
+             services/atomicswap.cpp
+             services/budget.cpp
+             services/comment.cpp
+             services/comment_vote.cpp
+             services/dbs_base.cpp
+             services/dbservice_dbs_factory.cpp
+             services/decline_voting_rights_request.cpp
+             services/dev_pool.cpp
+			 services/development_committee.cpp
+             services/dynamic_global_property.cpp
+             services/escrow.cpp
+             services/hardfork_property.cpp
+             services/proposal.cpp
+			 services/proposal_executor.cpp
+             services/registration_committee.cpp
+             services/registration_pool.cpp
+             services/reward.cpp
+             services/reward_fund.cpp
+             services/scorumpower_delegation.cpp
+             services/withdraw_scorumpower.cpp
+             services/withdraw_scorumpower_route.cpp
+             services/withdraw_scorumpower_route_statistic.cpp
+             services/witness.cpp
+             services/witness_schedule.cpp
+             services/witness_vote.cpp
+             services/genesis_state.cpp
 
-             scorum_evaluator.cpp
+             data_service_factory.cpp
 
-             scorum_objects.cpp
-             shared_authority.cpp
+             evaluators/scorum_evaluators.cpp
+             evaluators/proposal_create_evaluator.cpp
+             evaluators/proposal_vote_evaluator.cpp
+             evaluators/set_withdraw_scorumpower_route_evaluators.cpp
+             evaluators/withdraw_scorumpower_evaluator.cpp
+             evaluators/committee_accessor.cpp
+             evaluators/proposal_evaluators.cpp
+             evaluators/registration_pool_evaluator.cpp
+
+             schema/shared_authority.cpp
+
              block_log.cpp
+
+             genesis/genesis.cpp
+             genesis/initializators/initializators.cpp
+             genesis/initializators/accounts_initializator.cpp
+             genesis/initializators/founders_initializator.cpp
+             genesis/initializators/witnesses_initializator.cpp
+             genesis/initializators/global_property_initializator.cpp
+             genesis/initializators/rewards_initializator.cpp
+             genesis/initializators/registration_initializator.cpp
+             genesis/initializators/witness_schedule_initializator.cpp
+             genesis/initializators/registration_bonus_initializator.cpp
+             genesis/initializators/steemit_bounty_account_initializator.cpp
+             genesis/initializators/dev_pool_initializator.cpp
+             genesis/initializators/dev_committee_initialiazator.cpp
+
+             database/block_tasks/block_tasks.cpp
+             database/block_tasks/process_funds.cpp
+             database/block_tasks/process_comments_cashout.cpp
+             database/block_tasks/process_vesting_withdrawals.cpp
+             database/block_tasks/withdrawable_actors_impl.cpp
 
              util/reward.cpp
 
@@ -41,7 +102,13 @@ add_library( scorum_chain
            )
 
 add_dependencies( scorum_chain scorum_protocol build_hardfork_hpp )
-target_link_libraries( scorum_chain scorum_protocol fc chainbase graphene_schema ${PATCH_MERGE_LIB} )
+target_link_libraries( scorum_chain
+                       scorum_protocol
+                       fc
+                       chainbase
+                       graphene_schema
+                       ${PATCH_MERGE_LIB}
+                       ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
@@ -50,7 +117,7 @@ if(MSVC)
 endif(MSVC)
 
 if(UNIX)
-  set_source_files_properties( scorum_evaluator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
+  set_source_files_properties( evaluators/scorum_evaluators.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
 endif(UNIX)
 
 INSTALL( TARGETS

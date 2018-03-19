@@ -1,3 +1,9 @@
 [submodule "libraries/fc"]
 	path = libraries/fc
 	url = https://github.com/scorum/fc
+[submodule "hippomocks"]
+	path = tests/hippomocks
+	url = https://github.com/scorum/hippomocks
+[submodule "autoscorum"]
+	path = autoscorum
+	url = https://github.com/scorum/autoscorum.git

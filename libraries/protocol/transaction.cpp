@@ -79,13 +79,13 @@ void transaction::set_reference_block(const block_id_type& reference_block)
 void transaction::get_required_authorities(flat_set<account_name_type>& active,
                                            flat_set<account_name_type>& owner,
                                            flat_set<account_name_type>& posting,
-                                           vector<authority>& other) const
+                                           std::vector<authority>& other) const
 {
     for (const auto& op : operations)
         operation_get_required_authorities(op, active, owner, posting, other);
 }
 
-void verify_authority(const vector<operation>& ops,
+void verify_authority(const std::vector<operation>& ops,
                       const flat_set<public_key_type>& sigs,
                       const authority_getter& get_active,
                       const authority_getter& get_owner,
@@ -101,7 +101,7 @@ void verify_authority(const vector<operation>& ops,
         flat_set<account_name_type> required_active;
         flat_set<account_name_type> required_owner;
         flat_set<account_name_type> required_posting;
-        vector<authority> other;
+        std::vector<authority> other;
 
         for (const auto& op : ops)
             operation_get_required_authorities(op, required_active, required_owner, required_posting, other);
@@ -182,17 +182,17 @@ flat_set<public_key_type> signed_transaction::get_signature_keys(const chain_id_
     FC_CAPTURE_AND_RETHROW()
 }
 
-set<public_key_type> signed_transaction::get_required_signatures(const chain_id_type& chain_id,
-                                                                 const flat_set<public_key_type>& available_keys,
-                                                                 const authority_getter& get_active,
-                                                                 const authority_getter& get_owner,
-                                                                 const authority_getter& get_posting,
-                                                                 uint32_t max_recursion_depth) const
+std::set<public_key_type> signed_transaction::get_required_signatures(const chain_id_type& chain_id,
+                                                                      const flat_set<public_key_type>& available_keys,
+                                                                      const authority_getter& get_active,
+                                                                      const authority_getter& get_owner,
+                                                                      const authority_getter& get_posting,
+                                                                      uint32_t max_recursion_depth) const
 {
     flat_set<account_name_type> required_active;
     flat_set<account_name_type> required_owner;
     flat_set<account_name_type> required_posting;
-    vector<authority> other;
+    std::vector<authority> other;
     get_required_authorities(required_active, required_owner, required_posting, other);
 
     /** posting authority cannot be mixed with active authority in same transaction */
@@ -208,7 +208,7 @@ set<public_key_type> signed_transaction::get_required_signatures(const chain_id_
 
         s.remove_unused_signatures();
 
-        set<public_key_type> result;
+        std::set<public_key_type> result;
 
         for (auto& provided_sig : s.provided_signatures)
             if (available_keys.find(provided_sig.first) != available_keys.end())
@@ -229,7 +229,7 @@ set<public_key_type> signed_transaction::get_required_signatures(const chain_id_
 
     s.remove_unused_signatures();
 
-    set<public_key_type> result;
+    std::set<public_key_type> result;
 
     for (auto& provided_sig : s.provided_signatures)
         if (available_keys.find(provided_sig.first) != available_keys.end())
@@ -238,14 +238,15 @@ set<public_key_type> signed_transaction::get_required_signatures(const chain_id_
     return result;
 }
 
-set<public_key_type> signed_transaction::minimize_required_signatures(const chain_id_type& chain_id,
-                                                                      const flat_set<public_key_type>& available_keys,
-                                                                      const authority_getter& get_active,
-                                                                      const authority_getter& get_owner,
-                                                                      const authority_getter& get_posting,
-                                                                      uint32_t max_recursion) const
+std::set<public_key_type>
+signed_transaction::minimize_required_signatures(const chain_id_type& chain_id,
+                                                 const flat_set<public_key_type>& available_keys,
+                                                 const authority_getter& get_active,
+                                                 const authority_getter& get_owner,
+                                                 const authority_getter& get_posting,
+                                                 uint32_t max_recursion) const
 {
-    set<public_key_type> s
+    std::set<public_key_type> s
         = get_required_signatures(chain_id, available_keys, get_active, get_owner, get_posting, max_recursion);
     flat_set<public_key_type> result(s.begin(), s.end());
 
@@ -271,7 +272,7 @@ set<public_key_type> signed_transaction::minimize_required_signatures(const chai
         }
         result.insert(k);
     }
-    return set<public_key_type>(result.begin(), result.end());
+    return std::set<public_key_type>(result.begin(), result.end());
 }
 
 void signed_transaction::verify_authority(const chain_id_type& chain_id,

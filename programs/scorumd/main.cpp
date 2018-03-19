@@ -12,8 +12,6 @@
 #include <fc/log/logger_config.hpp>
 
 #include <scorum/protocol/version.hpp>
-#include <graphene/utilities/git_revision.hpp>
-#include <fc/git_revision.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -49,32 +47,14 @@ int main(int argc, char** argv)
     fc::oexception unhandled_exception;
     try
     {
-
-#ifdef IS_TEST_NET
-        std::cerr << "------------------------------------------------------\n\n";
-        std::cerr << "            STARTING TEST NETWORK\n\n";
-        std::cerr << "------------------------------------------------------\n";
-        auto initdelegate_private_key = graphene::utilities::key_to_wif(SCORUM_INIT_PRIVATE_KEY);
-        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        std::cerr << "initdelegate private key: " << initdelegate_private_key << "\n";
-        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
-        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-        std::cerr << "------------------------------------------------------\n";
-#else
-        std::cerr << "------------------------------------------------------\n\n";
-        std::cerr << "            STARTING SCORUM NETWORK\n\n";
-        std::cerr << "------------------------------------------------------\n";
-        std::cerr << "initdelegate public key: " << SCORUM_INIT_PUBLIC_KEY_STR << "\n";
-        std::cerr << "chain id: " << std::string(SCORUM_CHAIN_ID) << "\n";
-        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-        std::cerr << "------------------------------------------------------\n";
-#endif
-
+        // clang-format off
         bpo::options_description app_options("Scorum Daemon");
         bpo::options_description cfg_options("Scorum Daemon");
-        app_options.add_options()("help,h", "Print this help message and exit.")(
-            "config-file", bpo::value<boost::filesystem::path>(),
-            "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
+        app_options.add_options()
+                ("help,h", "Print this help message and exit.")
+                ("config-file", bpo::value<boost::filesystem::path>(),
+                 "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
+        // clang-format on
 
         bpo::variables_map options;
 
@@ -97,9 +77,7 @@ int main(int argc, char** argv)
 
         if (options.count("version"))
         {
-            std::cout << "scorum_blockchain_version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
-            std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
-            std::cout << "fc_git_revision:          " << fc::string(fc::git_revision_sha) << "\n";
+            app::print_application_version();
             return 0;
         }
 
@@ -183,8 +161,26 @@ int main(int argc, char** argv)
                 fc::configure_logging(*logging_config);
         }
 
+        std::cerr << "------------------------------------------------------\n\n";
+        if (!options.count("read-only"))
+        {
+            std::cerr << "            STARTING SCORUM NETWORK\n\n";
+        }
+        else
+        {
+            std::cerr << "            READONLY NODE\n\n";
+        }
+        std::cerr << "------------------------------------------------------\n";
+        std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
+        std::cerr << "------------------------------------------------------\n";
+
         ilog("parsing options");
         bpo::notify(options);
+
+        app::print_application_version();
+
+        std::cout << "Starting Scorum network...\n\n";
+
         ilog("initializing node");
         node->initialize(options);
         ilog("initializing plugins");
@@ -212,8 +208,10 @@ int main(int argc, char** argv)
             SIGTERM);
 
         node->chain_database()->with_read_lock([&]() {
-            ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
+            ilog("Started node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
         });
+
+        std::cout << "Scorum network started.\n\n";
 
         exit_promise->wait();
         node->shutdown_plugins();

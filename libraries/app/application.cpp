@@ -26,10 +26,11 @@
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
 
-#include <scorum/chain/scorum_objects.hpp>
-#include <scorum/chain/scorum_object_types.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/chain/database_exceptions.hpp>
-#include <scorum/chain/genesis_state.hpp>
+#include <scorum/chain/genesis/genesis_state.hpp>
+#include <scorum/egenesis/egenesis.hpp>
 
 #include <fc/time.hpp>
 
@@ -37,6 +38,8 @@
 #include <graphene/net/exceptions.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/git_revision.hpp>
+#include <fc/git_revision.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -52,6 +55,7 @@
 #include <boost/range/algorithm/reverse.hpp>
 
 #include <iostream>
+#include <set>
 
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
@@ -73,8 +77,6 @@ using protocol::signed_block_header;
 using protocol::signed_block;
 using protocol::block_id_type;
 
-using std::vector;
-
 namespace bpo = boost::program_options;
 
 api_context::api_context(application& _app, const std::string& _api_name, std::weak_ptr<api_session_data> _session)
@@ -85,6 +87,9 @@ api_context::api_context(application& _app, const std::string& _api_name, std::w
 }
 
 namespace detail {
+
+using plugins_type = std::map<std::string, std::shared_ptr<abstract_plugin>>;
+using plugin_names_type = std::set<std::string>;
 
 class application_impl : public graphene::net::node_delegate
 {
@@ -104,8 +109,8 @@ public:
 
             if (_options->count("seed-node"))
             {
-                auto seeds = _options->at("seed-node").as<vector<string>>();
-                for (const string& endpoint_string : seeds)
+                auto seeds = _options->at("seed-node").as<std::vector<std::string>>();
+                for (const std::string& endpoint_string : seeds)
                 {
                     try
                     {
@@ -127,13 +132,15 @@ public:
 
             if (_options->count("p2p-endpoint"))
             {
-                auto p2p_endpoint = _options->at("p2p-endpoint").as<string>();
+                auto p2p_endpoint = _options->at("p2p-endpoint").as<std::string>();
                 auto endpoints = resolve_string_to_ip_endpoints(p2p_endpoint);
                 FC_ASSERT(endpoints.size(), "p2p-endpoint ${hostname} did not resolve", ("hostname", p2p_endpoint));
                 _p2p_network->listen_on_endpoint(endpoints[0], true);
             }
             else
+            {
                 _p2p_network->listen_on_port(0, false);
+            }
 
             if (_options->count("p2p-max-connections"))
             {
@@ -161,7 +168,7 @@ public:
     {
         try
         {
-            string::size_type colon_pos = endpoint_string.find(':');
+            std::string::size_type colon_pos = endpoint_string.find(':');
             if (colon_pos == std::string::npos)
                 FC_THROW("Missing required port number in endpoint string \"${endpoint_string}\"",
                          ("endpoint_string", endpoint_string));
@@ -190,12 +197,14 @@ public:
         try
         {
             if (!_options->count("rpc-endpoint"))
+            {
                 return;
+            }
 
             _websocket_server = std::make_shared<fc::http::websocket_server>();
 
             _websocket_server->on_connection([&](const fc::http::websocket_connection_ptr& c) { on_connection(c); });
-            auto rpc_endpoint = _options->at("rpc-endpoint").as<string>();
+            auto rpc_endpoint = _options->at("rpc-endpoint").as<std::string>();
             ilog("Configured websocket rpc to listen on ${ip}", ("ip", rpc_endpoint));
             auto endpoints = resolve_string_to_ip_endpoints(rpc_endpoint);
             FC_ASSERT(endpoints.size(), "rpc-endpoint ${hostname} did not resolve", ("hostname", rpc_endpoint));
@@ -210,21 +219,23 @@ public:
         try
         {
             if (!_options->count("rpc-tls-endpoint"))
+            {
                 return;
+            }
             if (!_options->count("server-pem"))
             {
                 wlog("Please specify a server-pem to use rpc-tls-endpoint");
                 return;
             }
 
-            string password
-                = _options->count("server-pem-password") ? _options->at("server-pem-password").as<string>() : "";
-            _websocket_tls_server
-                = std::make_shared<fc::http::websocket_tls_server>(_options->at("server-pem").as<string>(), password);
+            std::string password
+                = _options->count("server-pem-password") ? _options->at("server-pem-password").as<std::string>() : "";
+            _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>(
+                _options->at("server-pem").as<std::string>(), password);
 
             _websocket_tls_server->on_connection(
                 [this](const fc::http::websocket_connection_ptr& c) { on_connection(c); });
-            auto rpc_tls_endpoint = _options->at("rpc-tls-endpoint").as<string>();
+            auto rpc_tls_endpoint = _options->at("rpc-tls-endpoint").as<std::string>();
             ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip", rpc_tls_endpoint));
             auto endpoints = resolve_string_to_ip_endpoints(rpc_tls_endpoint);
             FC_ASSERT(endpoints.size(), "rpc-tls-endpoint ${hostname} did not resolve", ("hostname", rpc_tls_endpoint));
@@ -272,41 +283,65 @@ public:
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }
 
+    void compute_genesis_state(scorum::chain::genesis_state_type& genesis_state)
+    {
+        std::string genesis_str;
+
+        if (_options->count("genesis-json"))
+        {
+            fc::path genesis_json_filename = _options->at("genesis-json").as<boost::filesystem::path>();
+
+            fc::read_file_contents(genesis_json_filename, genesis_str);
+        }
+        else
+        {
+            scorum::egenesis::compute_egenesis_json(genesis_str);
+        }
+
+        FC_ASSERT(!genesis_str.empty());
+
+        genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
+        genesis_state.initial_chain_id = fc::sha256::hash(genesis_str);
+    }
+
     void startup()
     {
         try
         {
+            genesis_state_type genesis_state;
+            compute_genesis_state(genesis_state);
+
+            ilog("node chain ID: ${chain_id}", ("chain_id", genesis_state.initial_chain_id));
+
             if (_options->count("data-dir"))
+            {
                 _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
+            }
 
             _shared_file_size = fc::parse_size(_options->at("shared-file-size").as<std::string>());
             ilog("shared_file_size is ${n} bytes", ("n", _shared_file_size));
-            bool read_only = _options->count("read-only");
             register_builtin_apis();
 
             if (_options->count("check-locks"))
-                _chain_db->set_require_locking(true);
-
-            if (_options->count("shared-file-dir"))
-                _shared_dir = fc::path(_options->at("shared-file-dir").as<std::string>());
-            else
-                _shared_dir = _data_dir / "blockchain";
-
-            if (_options->count("disable_get_block"))
-                _self->_disable_get_block = true;
-
-            genesis_state_type genesis_state;
-
-            if (_options->count("genesis-json"))
             {
-                fc::path genesis_json_filename = _options->at("genesis-json").as<boost::filesystem::path>();
-
-                std::string genesis_str;
-                fc::read_file_contents(genesis_json_filename, genesis_str);
-
-                genesis_state = fc::json::from_string(genesis_str).as<genesis_state_type>();
+                _chain_db->set_require_locking(true);
             }
 
+            if (_options->count("shared-file-dir"))
+            {
+                _shared_dir = fc::path(_options->at("shared-file-dir").as<std::string>());
+            }
+            else
+            {
+                _shared_dir = _data_dir / "blockchain";
+            }
+
+            if (_options->count("disable_get_block"))
+            {
+                _self->_disable_get_block = true;
+            }
+
+            bool read_only = _options->count("read-only");
             if (!read_only)
             {
                 _self->_read_only = false;
@@ -314,14 +349,16 @@ public:
                 _max_block_age = _options->at("max-block-age").as<int32_t>();
 
                 if (_options->count("resync-blockchain"))
+                {
                     _chain_db->wipe(_data_dir / "blockchain", _shared_dir, true);
+                }
 
                 _chain_db->set_flush_interval(_options->at("flush").as<uint32_t>());
 
                 flat_map<uint32_t, block_id_type> loaded_checkpoints;
                 if (_options->count("checkpoint"))
                 {
-                    auto cps = _options->at("checkpoint").as<vector<std::string>>();
+                    auto cps = _options->at("checkpoint").as<std::vector<std::string>>();
                     loaded_checkpoints.reserve(cps.size());
                     for (auto cp : cps)
                     {
@@ -334,15 +371,14 @@ public:
                 if (_options->count("replay-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size);
+                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
                 }
                 else
                 {
                     try
                     {
-                        _chain_db->set_init_genesis_state(genesis_state);
                         _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                        chainbase::database::read_write);
+                                        chainbase::database::read_write, genesis_state);
                     }
                     catch (fc::assert_exception&)
                     {
@@ -350,13 +386,13 @@ public:
 
                         try
                         {
-                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size);
+                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
                         }
                         catch (chain::block_log_exception&)
                         {
                             wlog("Error opening block log. Having to resync from network...");
                             _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                            chainbase::database::read_write);
+                                            chainbase::database::read_write, genesis_state);
                         }
                     }
                 }
@@ -371,7 +407,7 @@ public:
             {
                 ilog("Starting Scorum node in read mode.");
                 _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                chainbase::database::read_only);
+                                chainbase::database::read_only, genesis_state);
 
                 if (_options->count("read-forward-rpc"))
                 {
@@ -409,12 +445,15 @@ public:
                 wild_access.allowed_apis.push_back("database_api");
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
+                wild_access.allowed_apis.push_back("account_history_api");
+                wild_access.allowed_apis.push_back("account_stats_api");
+                wild_access.allowed_apis.push_back("chain_stats_api");
                 _apiaccess.permission_map["*"] = wild_access;
             }
 
             for (const std::string& arg : _options->at("public-api").as<std::vector<std::string>>())
             {
-                vector<std::string> names;
+                std::vector<std::string> names;
                 boost::split(names, arg, boost::is_any_of(" \t,"));
                 for (const std::string& name : names)
                 {
@@ -443,7 +482,9 @@ public:
         {
             it = _apiaccess.permission_map.find("*");
             if (it == _apiaccess.permission_map.end())
+            {
                 return result;
+            }
         }
         return it->second;
     }
@@ -476,15 +517,21 @@ public:
     {
         // If the node is shutting down we don't care about fetching items
         if (!_running)
+        {
             return true;
+        }
 
         try
         {
             return _chain_db->with_read_lock([&]() {
                 if (id.item_type == graphene::net::block_message_type)
+                {
                     return _chain_db->is_known_block(id.item_hash);
+                }
                 else
+                {
                     return _chain_db->is_known_transaction(id.item_hash);
+                }
             });
         }
         FC_CAPTURE_AND_RETHROW((id))
@@ -519,6 +566,7 @@ public:
                     fc_ilog(fc::logger::get("sync"), "chain pushing block #${block_num} ${block_hash}, head is ${head}",
                             ("block_num", blk_msg.block.block_num())("block_hash", blk_msg.block_id)("head",
                                                                                                      head_block_num));
+
                 if (sync_mode && blk_msg.block.block_num() % 10000 == 0)
                 {
                     ilog("Syncing Blockchain --- Got block: #${n} time: ${t}",
@@ -579,7 +627,9 @@ public:
         try
         {
             if (_running)
+            {
                 _chain_db->push_transaction(transaction_message.trx);
+            }
         }
         FC_CAPTURE_AND_RETHROW((transaction_message))
     }
@@ -615,10 +665,12 @@ public:
         try
         {
             return _chain_db->with_read_lock([&]() {
-                vector<block_id_type> result;
+                std::vector<block_id_type> result;
                 remaining_item_count = 0;
                 if (_chain_db->head_block_num() == 0)
+                {
                     return result;
+                }
 
                 result.reserve(limit);
                 block_id_type last_known_block_id;
@@ -656,11 +708,15 @@ public:
                      num <= _chain_db->head_block_num() && result.size() < limit; ++num)
                 {
                     if (num > 0)
+                    {
                         result.push_back(_chain_db->get_block_id_for_num(num));
+                    }
                 }
 
                 if (!result.empty() && block_header::num_from_id(result.back()) < _chain_db->head_block_num())
+                {
                     remaining_item_count = _chain_db->head_block_num() - block_header::num_from_id(result.back());
+                }
 
                 return result;
             });
@@ -693,6 +749,11 @@ public:
                 [&]() { return trx_message(_chain_db->get_recent_transaction(id.item_hash)); });
         }
         FC_CAPTURE_AND_RETHROW((id))
+    }
+
+    virtual chain_id_type get_chain_id() const override
+    {
+        return _chain_db->get_chain_id();
     }
 
     /**
@@ -814,10 +875,14 @@ public:
                             boost::reverse(fork_history);
 
                             if (last_non_fork_block == block_id_type()) // if the fork goes all the way back to genesis
-                                // (does graphene's fork db allow this?)
+                            // (does graphene's fork db allow this?)
+                            {
                                 non_fork_high_block_num = 0;
+                            }
                             else
+                            {
                                 non_fork_high_block_num = block_header::num_from_id(last_non_fork_block);
+                            }
 
                             high_block_num = non_fork_high_block_num + fork_history.size();
                             assert(high_block_num == block_header::num_from_id(fork_history.back()));
@@ -848,11 +913,15 @@ public:
                     high_block_num = _chain_db->head_block_num();
                     non_fork_high_block_num = high_block_num;
                     if (high_block_num == 0)
+                    {
                         return; // we have no blocks
+                    }
                 }
 
                 if (low_block_num == 0)
+                {
                     low_block_num = 1;
+                }
 
                 // at this point:
                 // low_block_num is the block before the first block we can undo,
@@ -870,9 +939,13 @@ public:
                     // if it's <= non_fork_high_block_num, we grab it from the main blockchain;
                     // if it's not, we pull it from the fork history
                     if (low_block_num <= non_fork_high_block_num)
+                    {
                         synopsis.push_back(_chain_db->get_block_id_for_num(low_block_num));
+                    }
                     else
+                    {
                         synopsis.push_back(fork_history[low_block_num - non_fork_high_block_num - 1]);
+                    }
                     low_block_num += (true_high_block_num - low_block_num + 2) / 2;
                 } while (low_block_num <= high_block_num);
 
@@ -926,7 +999,9 @@ public:
             return _chain_db->with_read_lock([&]() {
                 auto opt_block = _chain_db->fetch_block_by_id(block_id);
                 if (opt_block.valid())
+                {
                     return opt_block->timestamp;
+                }
                 return fc::time_point_sec::min();
             });
         }
@@ -971,7 +1046,9 @@ public:
             // invalidating the chain db pointer
         }
         if (_chain_db)
+        {
             _chain_db->close();
+        }
     }
 
     application* _self;
@@ -986,8 +1063,12 @@ public:
     std::shared_ptr<fc::http::websocket_server> _websocket_server;
     std::shared_ptr<fc::http::websocket_tls_server> _websocket_tls_server;
 
-    std::map<string, std::shared_ptr<abstract_plugin>> _plugins_available;
-    std::map<string, std::shared_ptr<abstract_plugin>> _plugins_enabled;
+    // These plugins have API that push block to DB.
+    // It is not expected for read-only mode
+    const plugin_names_type _plugins_locked_in_readonly_mode = { "witness", "raw_block", "debug_node" };
+
+    plugins_type _plugins_available;
+    plugins_type _plugins_enabled;
     flat_map<std::string, std::function<fc::api_ptr(const api_context&)>> _api_factories_by_name;
     std::vector<std::string> _public_apis;
     int32_t _max_block_age = -1;
@@ -1024,42 +1105,48 @@ void application::set_program_options(boost::program_options::options_descriptio
     default_apis.push_back("database_api");
     default_apis.push_back("login_api");
     default_apis.push_back("account_by_key_api");
+    default_apis.push_back("account_history_api");
+    default_apis.push_back("account_stats_api");
+    default_apis.push_back("chain_stats_api");
     std::string str_default_apis = boost::algorithm::join(default_apis, " ");
 
     std::vector<std::string> default_plugins;
-    default_plugins.push_back("witness");
     default_plugins.push_back("account_history");
     default_plugins.push_back("account_by_key");
+    default_plugins.push_back("account_stats");
+    default_plugins.push_back("chain_stats");
+
     std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
 
     // clang-format off
     configuration_file_options.add_options()
-         ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
-         ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
-         ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
-         ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
-         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
-         ("shared-file-dir", bpo::value<string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
-         ("shared-file-size", bpo::value<string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
-         ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
-         ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
-         ("read-forward-rpc", bpo::value<string>(), "Endpoint to forward write API calls to for a read node" )
-         ("server-pem,p", bpo::value<string>()->implicit_value("server.pem"), "The TLS certificate file for this server")
-         ("server-pem-password,P", bpo::value<string>()->implicit_value(""), "Password for this certificate")
-         ("api-user", bpo::value< vector<string> >()->composing(), "API user specification, may be specified multiple times")
-         ("public-api", bpo::value< vector<string> >()->composing()->default_value(default_apis, str_default_apis), "Set an API to be publicly available, may be specified multiple times")
-         ("enable-plugin", bpo::value< vector<string> >()->composing()->default_value(default_plugins, str_default_plugins), "Plugin(s) to enable, may be specified multiple times")
-         ("max-block-age", bpo::value< int32_t >()->default_value(200), "Maximum age of head block when broadcasting tx via API")
-         ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
-         ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from");
+    ("p2p-endpoint", bpo::value<std::string>(), "Endpoint for P2P node to listen on")
+    ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
+    ("seed-node,s", bpo::value<std::vector<std::string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
+    ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
+    ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
+    ("shared-file-dir", bpo::value<std::string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
+    ("shared-file-size", bpo::value<std::string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
+    ("rpc-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
+    ("rpc-tls-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
+    ("read-forward-rpc", bpo::value<std::string>(), "Endpoint to forward write API calls to for a read node")
+    ("server-pem,p", bpo::value<std::string>()->implicit_value("server.pem"), "The TLS certificate file for this server")
+    ("server-pem-password,P", bpo::value<std::string>()->implicit_value(""), "Password for this certificate")
+    ("api-user", bpo::value< std::vector<std::string> >()->composing(), "API user specification, may be specified multiple times")
+    ("public-api", bpo::value< std::vector<std::string> >()->composing()->default_value(default_apis, str_default_apis), "Set an API to be publicly available, may be specified multiple times")
+    ("enable-plugin", bpo::value< std::vector<std::string> >()->composing()->default_value(default_plugins, str_default_plugins), "Plugin(s) to enable, may be specified multiple times")
+    ("max-block-age", bpo::value< int32_t >()->default_value(200), "Maximum age of head block when broadcasting tx via API")
+    ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
+    ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")
+    ("replay-blockchain", "Rebuild object graph by replaying all blocks")
+    ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
+    ("force-validate", "Force validation of all transactions")
+    ("read-only", "Node will not connect to p2p network and can only read from the chain state")
+    ("check-locks", "Check correctness of chainbase locking")
+    ("disable-get-block", "Disable get_block API call");
     command_line_options.add(configuration_file_options);
     command_line_options.add_options()
-         ("replay-blockchain", "Rebuild object graph by replaying all blocks")
-         ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
-         ("force-validate", "Force validation of all transactions")
-         ("read-only", "Node will not connect to p2p network and can only read from the chain state" )
-         ("check-locks", "Check correctness of chainbase locking")
-         ("disable-get-block", "Disable get_block API call" );
+    ("version,v", "Print version number and exit.");
     // clang-format on
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
@@ -1157,7 +1244,7 @@ const std::string application::print_config(const boost::program_options::variab
         try
         {
             auto vect = vm[it->first].as<std::vector<std::string>>();
-            uint i = 0;
+            auto i = 0;
             for (auto oit = vect.begin(); oit != vect.end(); ++oit, ++i)
             {
                 stream << "\r> " << it->first << "[" << i << "]=" << (*oit) << std::endl;
@@ -1197,7 +1284,7 @@ void application::startup()
     }
 }
 
-std::shared_ptr<abstract_plugin> application::get_plugin(const string& name) const
+std::shared_ptr<abstract_plugin> application::get_plugin(const std::string& name) const
 {
     try
     {
@@ -1225,17 +1312,17 @@ void application::set_block_production(bool producing_blocks)
     my->_is_block_producer = producing_blocks;
 }
 
-optional<api_access_info> application::get_api_access_info(const string& username) const
+optional<api_access_info> application::get_api_access_info(const std::string& username) const
 {
     return my->get_api_access_info(username);
 }
 
-void application::set_api_access_info(const string& username, api_access_info&& permissions)
+void application::set_api_access_info(const std::string& username, api_access_info&& permissions)
 {
     my->set_api_access_info(username, std::move(permissions));
 }
 
-void application::register_api_factory(const string& name, std::function<fc::api_ptr(const api_context&)> factory)
+void application::register_api_factory(const std::string& name, std::function<fc::api_ptr(const api_context&)> factory)
 {
     return my->register_api_factory(name, factory);
 }
@@ -1266,7 +1353,9 @@ void application::connect_to_write_node()
 void application::shutdown_plugins()
 {
     for (auto& entry : my->_plugins_enabled)
+    {
         entry.second->plugin_shutdown();
+    }
     return;
 }
 void application::shutdown()
@@ -1280,9 +1369,13 @@ void application::register_abstract_plugin(std::shared_ptr<abstract_plugin> plug
         plugin_cfg_options;
     plug->plugin_set_program_options(plugin_cli_options, plugin_cfg_options);
     if (!plugin_cli_options.options().empty())
+    {
         _cli_options.add(plugin_cli_options);
+    }
     if (!plugin_cfg_options.options().empty())
+    {
         _cfg_options.add(plugin_cfg_options);
+    }
 
     my->_plugins_available[plug->plugin_name()] = plug;
 }
@@ -1304,31 +1397,50 @@ void application::initialize_plugins(const boost::program_options::variables_map
     {
         for (auto& arg : options.at("enable-plugin").as<std::vector<std::string>>())
         {
-            vector<string> names;
+            std::vector<std::string> names;
             boost::split(names, arg, boost::is_any_of(" \t,"));
             for (const std::string& name : names)
             {
                 // When no plugins are specified, the empty string is returned. Only enable non-empty plugin names
                 if (name.size())
+                {
                     enable_plugin(name);
+                }
             }
         }
     }
+
+    bool read_only = options.count("read-only");
     for (auto& entry : my->_plugins_enabled)
     {
-        ilog("Initializing plugin ${name}", ("name", entry.first));
+        const auto& plugin_name = entry.first;
+        ilog("Initializing plugin ${name}", ("name", plugin_name));
+        if (read_only)
+        {
+            FC_ASSERT(my->_plugins_locked_in_readonly_mode.find(plugin_name)
+                          == my->_plugins_locked_in_readonly_mode.end(),
+                      "Plugin '${p}' can't be loaded in read-only mode.", ("p", plugin_name));
+        }
         entry.second->plugin_initialize(options);
     }
-    return;
 }
 
 void application::startup_plugins()
 {
     for (auto& entry : my->_plugins_enabled)
+    {
         entry.second->plugin_startup();
+    }
     return;
 }
 
-// namespace detail
+void print_application_version()
+{
+    std::cout << "scorum_blockchain_version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
+    std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
+    std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
+    std::cout << "embeded_chain_id           " << egenesis::get_egenesis_chain_id().str() << "\n";
 }
-}
+
+} // namespace app
+} // namespace scorum

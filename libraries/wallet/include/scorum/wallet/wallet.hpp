@@ -1,32 +1,26 @@
 #pragma once
 
 #include <scorum/app/api.hpp>
-#include <scorum/private_message/private_message_plugin.hpp>
-#include <scorum/follow/follow_plugin.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
-#include <graphene/utilities/key_conversion.hpp>
+#include <scorum/wallet/utils.hpp>
 
 #include <fc/real128.hpp>
 #include <fc/crypto/base58.hpp>
 
+#include <functional>
+
 using namespace scorum::app;
 using namespace scorum::chain;
-using namespace graphene::utilities;
-using namespace std;
 
 namespace scorum {
 namespace wallet {
-
-using scorum::app::discussion;
-using namespace scorum::private_message;
 
 typedef uint16_t transaction_handle_type;
 
 struct memo_data
 {
-
-    static optional<memo_data> from_string(string str)
+    static optional<memo_data> from_string(const std::string& str)
     {
         try
         {
@@ -34,7 +28,7 @@ struct memo_data
             {
                 auto data = fc::from_base58(str.substr(1));
                 auto m = fc::raw::unpack<memo_data>(data);
-                FC_ASSERT(string(m) == str);
+                FC_ASSERT(std::string(m) == str);
                 return m;
             }
         }
@@ -48,9 +42,9 @@ struct memo_data
     public_key_type to;
     uint64_t nonce = 0;
     uint32_t check = 0;
-    vector<char> encrypted;
+    std::vector<char> encrypted;
 
-    operator string() const
+    operator std::string() const
     {
         auto data = fc::raw::pack(*this);
         auto base58 = fc::to_base58(data);
@@ -58,20 +52,15 @@ struct memo_data
     }
 };
 
-struct brain_key_info
-{
-    string brain_priv_key;
-    public_key_type pub_key;
-    string wif_priv_key;
-};
-
 struct wallet_data
 {
-    vector<char> cipher_keys; /** encrypted keys */
+    std::vector<char> cipher_keys; /** encrypted keys */
 
-    string ws_server = "ws://localhost:8090";
-    string ws_user;
-    string ws_password;
+    std::string ws_server = "ws://localhost:8090";
+    std::string ws_user;
+    std::string ws_password;
+
+    chain_id_type chain_id;
 };
 
 enum authority_type
@@ -95,7 +84,11 @@ public:
     wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi);
     virtual ~wallet_api();
 
-    bool copy_wallet_file(string destination_filename);
+    using exit_func_type = std::function<void()>;
+
+    void set_exit_func(exit_func_type);
+
+    bool copy_wallet_file(const std::string& destination_filename);
 
     /** Returns a list of all commands supported by the wallet API.
      *
@@ -104,7 +97,7 @@ public:
      *
      * @returns a multi-line string suitable for displaying on a terminal
      */
-    string help() const;
+    std::string help() const;
 
     /**
      * Returns info about the current state of the blockchain
@@ -129,17 +122,17 @@ public:
      * @param block_num Block height of specified block
      * @param only_virtual Whether to only return virtual operations
      */
-    vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true);
+    std::vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true);
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)
      */
-    vector<account_name_type> get_active_witnesses() const;
+    std::vector<account_name_type> get_active_witnesses() const;
 
     /**
      * Returns the state info associated with the URL
      */
-    app::state get_state(string url);
+    app::state get_state(const std::string& url);
 
     /**
      * Returns vesting withdraw routes for an account.
@@ -147,12 +140,12 @@ public:
      * @param account Account to query routes
      * @param type Withdraw type type [incoming, outgoing, all]
      */
-    vector<withdraw_route> get_withdraw_routes(string account, withdraw_route_type type = all) const;
+    std::vector<withdraw_route> get_withdraw_routes(const std::string& account, withdraw_route_type type = all) const;
 
     /**
      *  Gets the account information for all accounts for which this wallet has a private key
      */
-    vector<account_api_obj> list_my_accounts();
+    std::vector<account_api_obj> list_my_accounts();
 
     /** Lists all accounts registered in the blockchain.
      * This returns a list of all account names and their account ids, sorted by account name.
@@ -166,7 +159,7 @@ public:
      * @param limit the maximum number of accounts to return (max: 1000)
      * @returns a list of accounts mapping account names to account ids
      */
-    set<string> list_accounts(const string& lowerbound, uint32_t limit);
+    std::set<std::string> list_accounts(const std::string& lowerbound, uint32_t limit);
 
     /** Returns the block chain's rapidly-changing properties.
      * The returned object contains information that changes every block interval
@@ -181,7 +174,14 @@ public:
      * @param account_name the name of the account to provide information about
      * @returns the public account data stored in the blockchain
      */
-    account_api_obj get_account(string account_name) const;
+    account_api_obj get_account(const std::string& account_name) const;
+
+    /** Returns balance information about the given account.
+     *
+     * @param account_name the name of the account to provide information about
+     * @returns the public account data stored in the blockchain
+     */
+    account_balance_info_api_obj get_account_balance(const std::string& account_name) const;
 
     /** Returns the current wallet filename.
      *
@@ -190,18 +190,22 @@ public:
      * @see set_wallet_filename()
      * @return the wallet filename
      */
-    string get_wallet_filename() const;
+    std::string get_wallet_filename() const;
 
     /**
      * Get the WIF private key corresponding to a public key.  The
      * private key must already be in the wallet.
      */
-    string get_private_key(public_key_type pubkey) const;
+    std::string get_private_key(const public_key_type& pubkey) const;
 
     /**
+     *  @param account
      *  @param role - active | owner | posting | memo
+     *  @param password
      */
-    pair<public_key_type, string> get_private_key_from_password(string account, string role, string password) const;
+    std::pair<public_key_type, std::string> get_private_key_from_password(const std::string& account,
+                                                                          const std::string& role,
+                                                                          const std::string& password) const;
 
     /**
      * Returns transaction by ID.
@@ -236,7 +240,7 @@ public:
      * @param password the password previously set with \c set_password()
      * @ingroup Wallet Management
      */
-    void unlock(string password);
+    void unlock(const std::string& password);
 
     /** Sets a new password on the wallet.
      *
@@ -244,7 +248,7 @@ public:
      * execute this command.
      * @ingroup Wallet Management
      */
-    void set_password(string password);
+    void set_password(const std::string& password);
 
     /** Dumps all private keys owned by the wallet.
      *
@@ -252,13 +256,13 @@ public:
      * using \c import_key()
      * @returns a map containing the private keys, indexed by their public key
      */
-    map<public_key_type, string> list_keys();
+    std::map<public_key_type, std::string> list_keys();
 
     /** Returns detailed help on a single API command.
      * @param method the name of the API command you want help with
      * @returns a multi-line string suitable for displaying on a terminal
      */
-    string gethelp(const string& method) const;
+    std::string gethelp(const std::string& method) const;
 
     /** Loads a specified Graphene wallet.
      *
@@ -273,7 +277,7 @@ public:
      *                        existing wallet file
      * @returns true if the specified wallet is loaded
      */
-    bool load_wallet_file(string wallet_filename = "");
+    bool load_wallet_file(const std::string& wallet_filename = "");
 
     /** Saves the current wallet to the given filename.
      *
@@ -285,7 +289,7 @@ public:
      *                        or overwrite.  If \c wallet_filename is empty,
      *                        save to the current filename.
      */
-    void save_wallet_file(string wallet_filename = "");
+    void save_wallet_file(const std::string& wallet_filename = "");
 
     /** Sets the wallet filename used for future writes.
      *
@@ -294,7 +298,7 @@ public:
      *
      * @param wallet_filename the new filename to use for future saves
      */
-    void set_wallet_filename(string wallet_filename);
+    void set_wallet_filename(const std::string& wallet_filename);
 
     /** Suggests a safe brain key to use for creating your account.
      * \c create_account_with_brain_key() requires you to specify a 'brain key',
@@ -314,7 +318,7 @@ public:
      *          this returns a raw string that may have null characters embedded
      *          in it
      */
-    string serialize_transaction(signed_transaction tx) const;
+    std::string serialize_transaction(const signed_transaction& tx) const;
 
     /** Imports a WIF Private Key into the wallet to be used to sign transactions by an account.
      *
@@ -322,7 +326,7 @@ public:
      *
      * @param wif_key the WIF Private Key to import
      */
-    bool import_key(string wif_key);
+    bool import_key(const std::string& wif_key);
 
     /** Transforms a brain key to reduce the chance of errors when re-entering the key from memory.
      *
@@ -332,7 +336,7 @@ public:
      * @param s the brain key as supplied by the user
      * @returns the brain key in its normalized form
      */
-    string normalize_brain_key(string s) const;
+    std::string normalize_brain_key(const std::string& s) const;
 
     /**
      *  This method will genrate new owner, active, and memo keys for the new account which
@@ -341,12 +345,14 @@ public:
      *  'info' wallet command.
      *
      *  @param creator The account creating the new account
-     *  @param new_account_name The name of the new account
+     *  @param newname The name of the new account
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account(
-        string creator, string new_account_name, string json_meta, bool broadcast);
+    annotated_signed_transaction create_account(const std::string& creator,
+                                                const std::string& newname,
+                                                const std::string& json_meta,
+                                                bool broadcast);
 
     /**
      * This method is used by faucets to create new accounts for other users which must
@@ -363,9 +369,14 @@ public:
      * @param memo public memo key of the new account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_with_keys(string creator, string newname, string json_meta,
-        public_key_type owner, public_key_type active, public_key_type posting, public_key_type memo,
-        bool broadcast) const;
+    annotated_signed_transaction create_account_with_keys(const std::string& creator,
+                                                          const std::string& newname,
+                                                          const std::string& json_meta,
+                                                          const public_key_type& owner,
+                                                          const public_key_type& active,
+                                                          const public_key_type& posting,
+                                                          const public_key_type& memo,
+                                                          bool broadcast) const;
 
     /**
      *  This method will genrate new owner, active, and memo keys for the new account which
@@ -373,17 +384,21 @@ public:
      *  that is paid by the creator. The current account creation fee can be found with the
      *  'info' wallet command.
      *
-     *  These accounts are created with combination of SCORUM and delegated SP
+     *  These accounts are created with combination of SCR and delegated SP
      *
      *  @param creator The account creating the new account
-     *  @param scorum_fee The amount of the fee to be paid with SCORUM
-     *  @param delegated_vests The amount of the fee to be paid with delegation
+     *  @param scorum_fee The amount of the fee to be paid with SCR
+     *  @param delegated_scorumpower The amount of the fee to be paid with delegation
      *  @param new_account_name The name of the new account
      *  @param json_meta JSON Metadata associated with the new account
      *  @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_delegated(string creator, asset scorum_fee, asset delegated_vests,
-        string new_account_name, string json_meta, bool broadcast);
+    annotated_signed_transaction create_account_delegated(const std::string& creator,
+                                                          const asset& scorum_fee,
+                                                          const asset& delegated_scorumpower,
+                                                          const std::string& new_account_name,
+                                                          const std::string& json_meta,
+                                                          bool broadcast);
 
     /**
      * This method is used by faucets to create new accounts for other users which must
@@ -391,11 +406,11 @@ public:
      * wallet. There is a fee associated with account creation that is paid by the creator.
      * The current account creation fee can be found with the 'info' wallet command.
      *
-     * These accounts are created with combination of SCORUM and delegated SP
+     * These accounts are created with combination of SCR and delegated SP
      *
      * @param creator The account creating the new account
-     * @param scorum_fee The amount of the fee to be paid with SCORUM
-     * @param delegated_vests The amount of the fee to be paid with delegation
+     * @param scorum_fee The amount of the fee to be paid with SCR
+     * @param delegated_scorumpower The amount of the fee to be paid with delegation
      * @param newname The name of the new account
      * @param json_meta JSON Metadata associated with the new account
      * @param owner public owner key of the new account
@@ -404,10 +419,39 @@ public:
      * @param memo public memo key of the new account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_with_keys_delegated(string creator, asset scorum_fee,
-        asset delegated_vests, string newname, string json_meta, public_key_type owner, public_key_type active,
-        public_key_type posting, public_key_type memo, bool broadcast) const;
+    annotated_signed_transaction create_account_with_keys_delegated(const std::string& creator,
+                                                                    const asset& scorum_fee,
+                                                                    const asset& delegated_scorumpower,
+                                                                    const std::string& newname,
+                                                                    const std::string& json_meta,
+                                                                    const public_key_type& owner,
+                                                                    const public_key_type& active,
+                                                                    const public_key_type& posting,
+                                                                    const public_key_type& memo,
+                                                                    bool broadcast) const;
 
+    /**
+     * This method is used by faucets to create new accounts for other users which must
+     * provide their desired keys. The resulting account accepts bonus from registration pool.
+     * Creator must belong registration committee.
+     *
+     * @param creator The committee memeber creating the new account
+     * @param newname The name of the new account
+     * @param json_meta JSON Metadata associated with the new account
+     * @param owner public owner key of the new account
+     * @param active public active key of the new account
+     * @param posting public posting key of the new account
+     * @param memo public memo key of the new account
+     * @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction create_account_by_committee(const std::string& creator,
+                                                             const std::string& newname,
+                                                             const std::string& json_meta,
+                                                             const public_key_type& owner,
+                                                             const public_key_type& active,
+                                                             const public_key_type& posting,
+                                                             const public_key_type& memo,
+                                                             bool broadcast) const;
     /**
      * This method updates the keys of an existing account.
      *
@@ -419,8 +463,13 @@ public:
      * @param memo New public memo key for the account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction update_account(string accountname, string json_meta, public_key_type owner,
-        public_key_type active, public_key_type posting, public_key_type memo, bool broadcast) const;
+    annotated_signed_transaction update_account(const std::string& accountname,
+                                                const std::string& json_meta,
+                                                const public_key_type& owner,
+                                                const public_key_type& active,
+                                                const public_key_type& posting,
+                                                const public_key_type& memo,
+                                                bool broadcast) const;
 
     /**
      * This method updates the key of an authority for an exisiting account.
@@ -434,8 +483,11 @@ public:
      * @param weight The weight the key should have in the authority. A weight of 0 indicates the removal of the key.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction update_account_auth_key(
-        string account_name, authority_type type, public_key_type key, weight_type weight, bool broadcast);
+    annotated_signed_transaction update_account_auth_key(const std::string& account_name,
+                                                         const authority_type& type,
+                                                         const public_key_type& key,
+                                                         weight_type weight,
+                                                         bool broadcast);
 
     /**
      * This method updates the account of an authority for an exisiting account.
@@ -450,8 +502,11 @@ public:
      * account.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction update_account_auth_account(
-        string account_name, authority_type type, string auth_account, weight_type weight, bool broadcast);
+    annotated_signed_transaction update_account_auth_account(const std::string& account_name,
+                                                             authority_type type,
+                                                             const std::string& auth_account,
+                                                             weight_type weight,
+                                                             bool broadcast);
 
     /**
      * This method updates the weight threshold of an authority for an account.
@@ -465,8 +520,10 @@ public:
      * @param threshold The weight threshold required for the authority to be met
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction update_account_auth_threshold(
-        string account_name, authority_type type, uint32_t threshold, bool broadcast);
+    annotated_signed_transaction update_account_auth_threshold(const std::string& account_name,
+                                                               authority_type type,
+                                                               uint32_t threshold,
+                                                               bool broadcast);
 
     /**
      * This method updates the account JSON metadata
@@ -475,7 +532,8 @@ public:
      * @param json_meta The new JSON metadata for the account. This overrides existing metadata
      * @param broadcast ture if you wish to broadcast the transaction
      */
-    annotated_signed_transaction update_account_meta(string account_name, string json_meta, bool broadcast);
+    annotated_signed_transaction
+    update_account_meta(const std::string& account_name, const std::string& json_meta, bool broadcast);
 
     /**
      * This method updates the memo key of an account
@@ -484,23 +542,29 @@ public:
      * @param key The new memo public key
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction update_account_memo_key(string account_name, public_key_type key, bool broadcast);
+    annotated_signed_transaction
+    update_account_memo_key(const std::string& account_name, const public_key_type& key, bool broadcast);
 
     /**
-     * This method delegates VESTS from one account to another.
+     * This method delegates SP from one account to another.
      *
-     * @param delegator The name of the account delegating VESTS
-     * @param delegatee The name of the account receiving VESTS
-     * @param vesting_shares The amount of VESTS to delegate
+     * @param delegator The name of the account delegating SP
+     * @param delegatee The name of the account receiving SP
+     * @param scorumpower The amount of SP to delegate
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction delegate_vesting_shares(
-        string delegator, string delegatee, asset vesting_shares, bool broadcast);
+    annotated_signed_transaction delegate_scorumpower(const std::string& delegator,
+                                                      const std::string& delegatee,
+                                                      const asset& scorumpower,
+                                                      bool broadcast);
 
     /**
      *  This method is used to convert a JSON transaction to its transaction ID.
      */
-    transaction_id_type get_transaction_id(const signed_transaction& trx) const { return trx.id(); }
+    transaction_id_type get_transaction_id(const signed_transaction& trx) const
+    {
+        return trx.id();
+    }
 
     /** Lists all witnesses registered in the blockchain.
      * This returns a list of all account names that own witnesses, and the associated witness id,
@@ -515,13 +579,13 @@ public:
      * @param limit the maximum number of witnesss to return (max: 1000)
      * @returns a list of witnesss mapping witness names to witness ids
      */
-    set<account_name_type> list_witnesses(const string& lowerbound, uint32_t limit);
+    std::set<account_name_type> list_witnesses(const std::string& lowerbound, uint32_t limit);
 
     /** Returns information about the given witness.
      * @param owner_account the name or id of the witness account owner, or the id of the witness
      * @returns the information about the witness stored in the block chain
      */
-    optional<witness_api_obj> get_witness(string owner_account);
+    optional<witness_api_obj> get_witness(const std::string& owner_account);
 
     /**
      * Update a witness object owned by the given account.
@@ -532,8 +596,11 @@ public:
      * @param props The chain properties the witness is voting on.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction update_witness(string witness_name, string url, public_key_type block_signing_key,
-        const chain_properties& props, bool broadcast = false);
+    annotated_signed_transaction update_witness(const std::string& witness_name,
+                                                const std::string& url,
+                                                const public_key_type& block_signing_key,
+                                                const chain_properties& props,
+                                                bool broadcast = false);
 
     /** Set the voting proxy for an account.
      *
@@ -550,50 +617,64 @@ public:
      * @param proxy the name of account that should proxy to, or empty string to have no proxy
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction set_voting_proxy(string account_to_modify, string proxy, bool broadcast = false);
+    annotated_signed_transaction
+    set_voting_proxy(const std::string& account_to_modify, const std::string& proxy, bool broadcast = false);
 
     /**
      * Vote for a witness to become a block producer. By default an account has not voted
      * positively or negatively for a witness. The account can either vote for with positively
      * votes or against with negative votes. The vote will remain until updated with another
-     * vote. Vote strength is determined by the accounts vesting shares.
+     * vote. Vote strength is determined by the accounts scorumpower.
      *
      * @param account_to_vote_with The account voting for a witness
      * @param witness_to_vote_for The witness that is being voted for
      * @param approve true if the account is voting for the account to be able to be a block produce
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction vote_for_witness(
-        string account_to_vote_with, string witness_to_vote_for, bool approve = true, bool broadcast = false);
+    annotated_signed_transaction vote_for_witness(const std::string& account_to_vote_with,
+                                                  const std::string& witness_to_vote_for,
+                                                  bool approve = true,
+                                                  bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another. SCORUM and SBD can be transferred.
+     * Transfer funds from one account to another.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
-     * @param amount The funds being transferred. i.e. "100.000 SCORUM"
+     * @param amount The funds being transferred. i.e. "100.000000000 SCR"
      * @param memo A memo for the transactionm, encrypted with the to account's public memo key
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction transfer(string from, string to, asset amount, string memo, bool broadcast = false);
+    annotated_signed_transaction transfer(const std::string& from,
+                                          const std::string& to,
+                                          const asset& amount,
+                                          const std::string& memo,
+                                          bool broadcast = false);
 
     /**
-     * Transfer funds from one account to another using escrow. SCORUM and SBD can be transferred.
+     * Transfer funds from one account to another using escrow.
      *
      * @param from The account the funds are coming from
      * @param to The account the funds are going to
      * @param agent The account acting as the agent in case of dispute
      * @param escrow_id A unique id for the escrow transfer. (from, escrow_id) must be a unique pair
-     * @param scorum_amount The amount of SCORUM to transfer
+     * @param scorum_amount The amount of SCR to transfer
      * @param fee The fee paid to the agent
      * @param ratification_deadline The deadline for 'to' and 'agent' to approve the escrow transfer
      * @param escrow_expiration The expiration of the escrow transfer, after which either party can claim the funds
      * @param json_meta JSON encoded meta data
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_transfer(string from, string to, string agent, uint32_t escrow_id,
-        asset scorum_amount, asset fee, time_point_sec ratification_deadline, time_point_sec escrow_expiration,
-        string json_meta, bool broadcast = false);
+    annotated_signed_transaction escrow_transfer(const std::string& from,
+                                                 const std::string& to,
+                                                 const std::string& agent,
+                                                 uint32_t escrow_id,
+                                                 const asset& scorum_amount,
+                                                 const asset& fee,
+                                                 time_point_sec ratification_deadline,
+                                                 time_point_sec escrow_expiration,
+                                                 const std::string& json_meta,
+                                                 bool broadcast = false);
 
     /**
      * Approve a proposed escrow transfer. Funds cannot be released until after approval. This is in lieu of requiring
@@ -607,8 +688,13 @@ public:
      * @param approve true to approve the escrow transfer, otherwise cancels it and refunds 'from'
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_approve(
-        string from, string to, string agent, string who, uint32_t escrow_id, bool approve, bool broadcast = false);
+    annotated_signed_transaction escrow_approve(const std::string& from,
+                                                const std::string& to,
+                                                const std::string& agent,
+                                                const std::string& who,
+                                                uint32_t escrow_id,
+                                                bool approve,
+                                                bool broadcast = false);
 
     /**
      * Raise a dispute on the escrow transfer before it expires
@@ -620,8 +706,12 @@ public:
      * @param escrow_id A unique id for the escrow transfer
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_dispute(
-        string from, string to, string agent, string who, uint32_t escrow_id, bool broadcast = false);
+    annotated_signed_transaction escrow_dispute(const std::string& from,
+                                                const std::string& to,
+                                                const std::string& agent,
+                                                const std::string& who,
+                                                uint32_t escrow_id,
+                                                bool broadcast = false);
 
     /**
      * Release funds help in escrow
@@ -632,48 +722,58 @@ public:
      * @param who The account authorizing the release
      * @param receiver The account that will receive funds being released
      * @param escrow_id A unique id for the escrow transfer
-     * @param scorum_amount The amount of SCORUM that will be released
+     * @param scorum_amount The amount of SCR that will be released
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction escrow_release(string from, string to, string agent, string who, string receiver,
-        uint32_t escrow_id, asset scorum_amount, bool broadcast = false);
+    annotated_signed_transaction escrow_release(const std::string& from,
+                                                const std::string& to,
+                                                const std::string& agent,
+                                                const std::string& who,
+                                                const std::string& receiver,
+                                                uint32_t escrow_id,
+                                                const asset& scorum_amount,
+                                                bool broadcast = false);
 
     /**
-     * Transfer SCORUM into a vesting fund represented by vesting shares (VESTS). VESTS are required to vesting
+     * Transfer SCR into a scorumpower fund represented by scorumpower (SP). SP are required to vesting
      * for a minimum of one coin year and can be withdrawn once a week over a two year withdraw period.
-     * VESTS are protected against dilution up until 90% of SCORUM is vesting.
+     * SP are protected against dilution up until 90% of SCR is vesting.
      *
-     * @param from The account the SCORUM is coming from
-     * @param to The account getting the VESTS
-     * @param amount The amount of SCORUM to vest i.e. "100.00 SCORUM"
+     * @param from The account the SCR is coming from
+     * @param to The account getting the SP
+     * @param amount The amount of SCR to scorum power i.e. "100.000000000 SCR"
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction transfer_to_vesting(string from, string to, asset amount, bool broadcast = false);
+    annotated_signed_transaction transfer_to_scorumpower(const std::string& from,
+                                                         const std::string& to,
+                                                         const asset& amount,
+                                                         bool broadcast = false);
 
     /**
-     * Set up a vesting withdraw request. The request is fulfilled once a week over the next two year (104 weeks).
+     * Set up a vesting withdraw request. The request is fulfilled once a week over the next 13 weeks.
      *
-     * @param from The account the VESTS are withdrawn from
-     * @param vesting_shares The amount of VESTS to withdraw over the next two years. Each week (amount/104) shares are
-     *    withdrawn and deposited back as SCORUM. i.e. "10.000000 VESTS"
+     * @param from The account the SP are withdrawn from
+     * @param scorumpower The amount of SP to withdraw over the next 13 weeks. Each week (amount/13) shares are
+     *    withdrawn and deposited back as SCR. i.e. "10.000000000 SP"
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction withdraw_vesting(string from, asset vesting_shares, bool broadcast = false);
+    annotated_signed_transaction
+    withdraw_scorumpower(const std::string& from, const asset& scorumpower, bool broadcast = false);
 
     /**
-     * Set up a vesting withdraw route. When vesting shares are withdrawn, they will be routed to these accounts
+     * Set up a vesting withdraw route. When scorumpower are withdrawn, they will be routed to these accounts
      * based on the specified weights.
      *
-     * @param from The account the VESTS are withdrawn from.
-     * @param to   The account receiving either VESTS or SCORUM.
+     * @param from The account the SP are withdrawn from.
+     * @param to   The account receiving either SP or SCR.
      * @param percent The percent of the withdraw to go to the 'to' account. This is denoted in hundreths of a percent.
      *    i.e. 100 is 1% and 10000 is 100%. This value must be between 1 and 100000
-     * @param auto_vest Set to true if the from account should receive the VESTS as VESTS, or false if it should receive
-     *    them as SCORUM.
+     * @param auto_vest Set to true if the 'to' account should receive the SP as SP, or false if it should receive
+     *    them as SCR.
      * @param broadcast true if you wish to broadcast the transaction.
      */
-    annotated_signed_transaction set_withdraw_vesting_route(
-        string from, string to, uint16_t percent, bool auto_vest, bool broadcast = false);
+    annotated_signed_transaction set_withdraw_scorumpower_route(
+        const std::string& from, const std::string& to, uint16_t percent, bool auto_vest, bool broadcast = false);
 
     /** Signs a transaction.
      *
@@ -683,7 +783,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      * @return the signed version of the transaction
      */
-    annotated_signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false);
+    annotated_signed_transaction sign_transaction(const signed_transaction& tx, bool broadcast = false);
 
     /** Returns an uninitialized object representing a given blockchain operation.
      *
@@ -701,10 +801,10 @@ public:
      *                       (e.g., "global_parameters_update_operation")
      * @return a default-constructed operation of the given type
      */
-    operation get_prototype_operation(string operation_type);
+    operation get_prototype_operation(const std::string& operation_type);
 
-    void network_add_nodes(const vector<string>& nodes);
-    vector<variant> network_get_connected_peers();
+    void network_add_nodes(const std::vector<std::string>& nodes);
+    std::vector<variant> network_get_connected_peers();
 
     /**
      *  Post or update a comment.
@@ -718,17 +818,17 @@ public:
      *  @param json the json metadata of the comment
      *  @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction post_comment(string author, string permlink, string parent_author,
-        string parent_permlink, string title, string body, string json, bool broadcast);
-
-    annotated_signed_transaction send_private_message(
-        string from, string to, string subject, string body, bool broadcast);
-    vector<extended_message_object> get_inbox(string account, fc::time_point newest, uint32_t limit);
-    vector<extended_message_object> get_outbox(string account, fc::time_point newest, uint32_t limit);
-    message_body try_decrypt_message(const message_api_obj& mo);
+    annotated_signed_transaction post_comment(const std::string& author,
+                                              const std::string& permlink,
+                                              const std::string& parent_author,
+                                              const std::string& parent_permlink,
+                                              const std::string& title,
+                                              const std::string& body,
+                                              const std::string& json,
+                                              bool broadcast);
 
     /**
-     * Vote on a comment to be paid SCORUM
+     * Vote on a comment to be paid SCR
      *
      * @param voter The account voting
      * @param author The author of the comment to be voted on
@@ -736,7 +836,11 @@ public:
      * @param weight The weight [-100,100] of the vote
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction vote(string voter, string author, string permlink, int16_t weight, bool broadcast);
+    annotated_signed_transaction vote(const std::string& voter,
+                                      const std::string& author,
+                                      const std::string& permlink,
+                                      int16_t weight,
+                                      bool broadcast);
 
     /**
      * Sets the amount of time in the future until a transaction expires.
@@ -751,7 +855,8 @@ public:
      * @param challenged The account being challenged
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction challenge(string challenger, string challenged, bool broadcast);
+    annotated_signed_transaction
+    challenge(const std::string& challenger, const std::string& challenged, bool broadcast);
 
     /**
      * Create an account recovery request as a recover account. The syntax for this command contains a serialized
@@ -767,8 +872,10 @@ public:
      * of the compromised or lost account.
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction request_account_recovery(
-        string recovery_account, string account_to_recover, authority new_authority, bool broadcast);
+    annotated_signed_transaction request_account_recovery(const std::string& recovery_account,
+                                                          const std::string& account_to_recover,
+                                                          const authority& new_authority,
+                                                          bool broadcast);
 
     /**
      * Recover your account using a recovery request created by your recovery account. The syntax for this commain
@@ -783,8 +890,10 @@ public:
      * @param new_authority The new authority that your recovery account used in the account recover request.
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction recover_account(
-        string account_to_recover, authority recent_authority, authority new_authority, bool broadcast);
+    annotated_signed_transaction recover_account(const std::string& account_to_recover,
+                                                 const authority& recent_authority,
+                                                 const authority& new_authority,
+                                                 bool broadcast);
 
     /**
      * Change your recovery account after a 30 day delay.
@@ -793,9 +902,10 @@ public:
      * @param new_recovery_account The name of the recovery account you wish to have
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction change_recovery_account(string owner, string new_recovery_account, bool broadcast);
+    annotated_signed_transaction
+    change_recovery_account(const std::string& owner, const std::string& new_recovery_account, bool broadcast);
 
-    vector<owner_authority_history_api_obj> get_owner_history(string account) const;
+    std::vector<owner_authority_history_api_obj> get_owner_history(const std::string& account) const;
 
     /**
      * Prove an account's active authority, fulfilling a challenge, restoring posting rights, and making
@@ -804,7 +914,7 @@ public:
      * @param challenged The account that was challenged and is proving its authority.
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction prove(string challenged, bool broadcast);
+    annotated_signed_transaction prove(const std::string& challenged, bool broadcast);
 
     /**
      *  Account operations have sequence numbers from 0 to N where N is the most recent operation. This method
@@ -814,58 +924,327 @@ public:
      *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
      *  @param limit - the maximum number of items that can be queried (0 to 1000], must be less than from
      */
-    map<uint32_t, applied_operation> get_account_history(string account, uint32_t from, uint32_t limit);
+    std::map<uint32_t, applied_operation>
+    get_account_history(const std::string& account, uint32_t from, uint32_t limit);
 
-    /**
-     *  Marks one account as following another account.  Requires the posting authority of the follower.
-     *
-     *  @param what - a set of things to follow: posts, comments, votes, ignore
-     */
-    annotated_signed_transaction follow(string follower, string following, set<string> what, bool broadcast);
+    std::map<uint32_t, applied_operation>
+    get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit);
 
-    std::map<string, std::function<string(fc::variant, const fc::variants&)>> get_result_formatters() const;
+    std::map<uint32_t, applied_operation>
+    get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit);
 
-    fc::signal<void(bool)> lock_changed;
-    std::shared_ptr<detail::wallet_api_impl> my;
+    std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const;
+
     void encrypt_keys();
 
     /**
      * Checks memos against private keys on account and imported in wallet
      */
-    void check_memo(const string& memo, const account_api_obj& account) const;
+    void check_memo(const std::string& memo, const account_api_obj& account) const;
 
     /**
      *  Returns the encrypted memo if memo starts with '#' otherwise returns memo
      */
-    string get_encrypted_memo(string from, string to, string memo);
+    std::string get_encrypted_memo(const std::string& from, const std::string& to, const std::string& memo);
 
     /**
      * Returns the decrypted memo if possible given wallet's known private keys
      */
-    string decrypt_memo(string memo);
+    std::string decrypt_memo(const std::string& memo);
 
-    annotated_signed_transaction decline_voting_rights(string account, bool decline, bool broadcast);
+    annotated_signed_transaction decline_voting_rights(const std::string& account, bool decline, bool broadcast);
 
-    annotated_signed_transaction claim_reward_balance(
-        string account, asset reward_scorum, asset reward_vests, bool broadcast);
+    /**
+     *  Gets the budget information for all my budgets (list_my_accounts)
+     */
+    std::vector<budget_api_obj> list_my_budgets();
+
+    /**
+     *  Gets the list of all budget owners (look list_accounts to understand input parameters)
+     */
+    std::set<std::string> list_budget_owners(const std::string& lowerbound, uint32_t limit);
+
+    /**
+     *  Gets the budget information for certain account
+     */
+    std::vector<budget_api_obj> get_budgets(const std::string& account_name);
+
+    /**
+     *  This method will create new budget linked to owner account.
+     *
+     *  @warning The owner account must have sufficient balance for budget
+     *
+     *  @param budget_owner the future owner of creating budget
+     *  @param content_permlink the budget target identity (post or other)
+     *  @param balance
+     *  @param deadline the deadline time to close budget (even if there is rest of balance)
+     *  @param broadcast
+     */
+    annotated_signed_transaction create_budget(const std::string& budget_owner,
+                                               const std::string& content_permlink,
+                                               const asset& balance,
+                                               const time_point_sec deadline,
+                                               const bool broadcast);
+
+    /**
+     *  Closing the budget. The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
+
+    /**
+     * Vote for committee proposal
+     */
+    annotated_signed_transaction
+    vote_for_committee_proposal(const std::string& account_to_vote_with, int64_t proposal_id, bool broadcast);
+
+    /**
+     * Create proposal for inviting new member in to the registration commmittee
+     */
+    annotated_signed_transaction registration_committee_add_member(const std::string& inviter,
+                                                                   const std::string& invitee,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast);
+
+    /**
+     * Create proposal for excluding member from registration committee
+     */
+    annotated_signed_transaction registration_committee_exclude_member(const std::string& initiator,
+                                                                       const std::string& dropout,
+                                                                       uint32_t lifetime_sec,
+                                                                       bool broadcast);
+
+    /**
+     * List registration committee members
+     */
+    std::set<account_name_type> list_registration_committee(const std::string& lowerbound, uint32_t limit);
+
+    /**
+     * Get registration committee
+     */
+    registration_committee_api_obj get_registration_committee();
+
+    /**
+     * List proposals
+     */
+    std::vector<proposal_api_obj> list_proposals();
+
+    /**
+     * Change registration committee quorum for adding new member
+     */
+    annotated_signed_transaction registration_committee_change_add_member_quorum(const std::string& creator,
+                                                                                 uint64_t quorum_percent,
+                                                                                 uint32_t lifetime_sec,
+                                                                                 bool broadcast);
+
+    /**
+     * Change registration committee quorum for excluding member
+     */
+    annotated_signed_transaction registration_committee_change_exclude_member_quorum(const std::string& creator,
+                                                                                     uint64_t quorum_percent,
+                                                                                     uint32_t lifetime_sec,
+                                                                                     bool broadcast);
+
+    /**
+     * Change registration committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction registration_committee_change_base_quorum(const std::string& creator,
+                                                                           uint64_t quorum_percent,
+                                                                           uint32_t lifetime_sec,
+                                                                           bool broadcast);
+
+    /**
+     * Create proposal for inviting new member in to the development commmittee
+     */
+    annotated_signed_transaction development_committee_add_member(const std::string& initiator,
+                                                                  const std::string& invitee,
+                                                                  uint32_t lifetime_sec,
+                                                                  bool broadcast);
+
+    /**
+     * Create proposal for excluding member from development committee
+     */
+    annotated_signed_transaction development_committee_exclude_member(const std::string& initiator,
+                                                                      const std::string& dropout,
+                                                                      uint32_t lifetime_sec,
+                                                                      bool broadcast);
+
+    /**
+     * List development committee members
+     */
+    std::set<account_name_type> list_development_committee(const std::string& lowerbound, uint32_t limit);
+
+    /**
+     * Change development committee quorum for adding new member
+     */
+    annotated_signed_transaction development_committee_change_add_member_quorum(const std::string& creator,
+                                                                                uint64_t quorum_percent,
+                                                                                uint32_t lifetime_sec,
+                                                                                bool broadcast);
+
+    /**
+     * Change development committee quorum for excluding member
+     */
+    annotated_signed_transaction development_committee_change_exclude_member_quorum(const std::string& creator,
+                                                                                    uint64_t quorum_percent,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
+
+    /**
+     * Change development committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction development_committee_change_base_quorum(const std::string& creator,
+                                                                          uint64_t quorum_percent,
+                                                                          uint32_t lifetime_sec,
+                                                                          bool broadcast);
+
+    /**
+     * Change development committee for changing add/exclude quorum
+     */
+    annotated_signed_transaction development_committee_change_transfer_quorum(const std::string& creator,
+                                                                              uint64_t quorum_percent,
+                                                                              uint32_t lifetime_sec,
+                                                                              bool broadcast);
+
+    /**
+     * Create proposal for transfering SCR from development pool to account
+     */
+    annotated_signed_transaction development_pool_transfer(const std::string& initiator,
+                                                           const std::string& to_account,
+                                                           asset amount,
+                                                           uint32_t lifetime_sec,
+                                                           bool broadcast);
+
+    /**
+     * Create proposal for set up a vesting withdraw request.
+     */
+    annotated_signed_transaction development_pool_withdraw_vesting(const std::string& initiator,
+                                                                   asset amount,
+                                                                   uint32_t lifetime_sec,
+                                                                   bool broadcast);
+
+    /**
+     * Get development committee
+     */
+    development_committee_api_obj get_development_committee();
+
+    /** Initiating Atomic Swap transfer from initiator to participant.
+     *  Asset (amount) will be locked for 48 hours while is not redeemed or refund automatically by timeout.
+     *
+     *  @warning API prints secret string to memorize.
+     *           API prints secret hash as well.
+     *
+     *  @param initiator the new contract owner
+     *  @param participant
+     *  @param amount SCR to transfer
+     *  @param metadata the additional contract info (obligations, courses)
+     *  @param secret_length the length of secret in bytes or 0 to choose length randomly
+     *  @param broadcast
+     */
+    atomicswap_contract_result_api_obj atomicswap_initiate(const std::string& initiator,
+                                                           const std::string& participant,
+                                                           const asset& amount,
+                                                           const std::string& metadata,
+                                                           const uint8_t secret_length,
+                                                           const bool broadcast);
+
+    /** Initiating Atomic Swap transfer from participant to initiator.
+     *  Asset (amount) will be locked for 24 hours while is not redeemed or refund before redeem.
+     *
+     *  @warning The secret hash is obtained from atomicswap_initiate operation.
+     *
+     *  @param secret_hash the secret hash (received from initiator)
+     *  @param participant the new contract owner
+     *  @param initiator
+     *  @param amount SCR to transfer
+     *  @param metadata the additional contract info (obligations, courses)
+     *  @param broadcast
+     */
+    atomicswap_contract_result_api_obj atomicswap_participate(const std::string& secret_hash,
+                                                              const std::string& participant,
+                                                              const std::string& initiator,
+                                                              const asset& amount,
+                                                              const std::string& metadata,
+                                                              const bool broadcast);
+
+    /** The Atomic Swap helper to get contract info.
+     *
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
+     *  @param secret_hash the secret hash
+     */
+    atomicswap_contract_info_api_obj
+    atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash);
+
+    /** Redeeming Atomic Swap contract.
+     *  This API transfers asset to participant balance and declassifies the secret.
+     *
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
+     *  @param secret the secret ("my secret") that was set in atomicswap_initiate
+     * API
+     *  @param broadcast
+     */
+    annotated_signed_transaction
+    atomicswap_redeem(const std::string& from, const std::string& to, const std::string& secret, const bool broadcast);
+
+    /** Extracting secret from participant contract if it is redeemed by initiator.
+     *
+     *  @param from the transfer 'from' address
+     *  @param to the transfer 'to' address
+     *  @param secret_hash the secret hash
+     */
+    std::string
+    atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash);
+
+    /** Refunding contact by participant.
+     *
+     *  @warning Can't refund initiator contract. It is refunded automatically in 48 hours.
+     *
+     *  @param participant the refunded contract owner
+     *  @param initiator the initiator of Atomic Swap
+     *  @param secret_hash the secret hash (that was set in atomicswap_participate)
+     *  @param broadcast
+     */
+    annotated_signed_transaction atomicswap_refund(const std::string& participant,
+                                                   const std::string& initiator,
+                                                   const std::string& secret_hash,
+                                                   const bool broadcast);
+
+    /** Atomic Swap helper to get list of contract info.
+     *
+     *  @param owner
+     */
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
+
+    /**
+     * Close wallet application
+     */
+    void exit();
+
+public:
+    fc::signal<void(bool)> lock_changed;
+
+private:
+    std::shared_ptr<detail::wallet_api_impl> my;
+    exit_func_type exit_func;
 };
 
 struct plain_keys
 {
     fc::sha512 checksum;
-    map<public_key_type, string> keys;
+    std::map<public_key_type, std::string> keys;
 };
-}
-}
+} // namespace wallet
+} // namespace scorum
 
 // clang-format off
 
-FC_REFLECT( scorum::wallet::wallet_data,
-            (cipher_keys)
-            (ws_server)
-            (ws_user)
-            (ws_password)
-          )
+FC_REFLECT(scorum::wallet::wallet_data,
+           (cipher_keys)
+           (ws_server)
+           (ws_user)
+           (ws_password)
+           (chain_id))
 
 FC_REFLECT( scorum::wallet::brain_key_info, (brain_priv_key)(wif_priv_key) (pub_key))
 
@@ -894,36 +1273,42 @@ FC_API( scorum::wallet::wallet_api,
         (list_witnesses)
         (get_witness)
         (get_account)
+        (get_account_balance)
         (get_block)
         (get_ops_in_block)
         (get_account_history)
+        (get_account_scr_to_scr_transfers)
+        (get_account_scr_to_sp_transfers)
         (get_state)
         (get_withdraw_routes)
+        (list_my_budgets)
+        (list_budget_owners)
+        (get_budgets)
 
         /// transaction api
         (create_account)
         (create_account_with_keys)
         (create_account_delegated)
         (create_account_with_keys_delegated)
+        (create_account_by_committee)
         (update_account)
         (update_account_auth_key)
         (update_account_auth_account)
         (update_account_auth_threshold)
         (update_account_meta)
         (update_account_memo_key)
-        (delegate_vesting_shares)
+        (delegate_scorumpower)
         (update_witness)
         (set_voting_proxy)
         (vote_for_witness)
-        (follow)
         (transfer)
         (escrow_transfer)
         (escrow_approve)
         (escrow_dispute)
         (escrow_release)
-        (transfer_to_vesting)
-        (withdraw_vesting)
-        (set_withdraw_vesting_route)
+        (transfer_to_scorumpower)
+        (withdraw_scorumpower)
+        (set_withdraw_scorumpower_route)
         (post_comment)
         (vote)
         (set_transaction_expiration)
@@ -936,12 +1321,40 @@ FC_API( scorum::wallet::wallet_api,
         (get_encrypted_memo)
         (decrypt_memo)
         (decline_voting_rights)
-        (claim_reward_balance)
+        (create_budget)
+        (close_budget)
 
-        // private message api
-        (send_private_message)
-        (get_inbox)
-        (get_outbox)
+        // Registration committee api
+        (vote_for_committee_proposal)
+        (registration_committee_add_member)
+        (registration_committee_exclude_member)
+        (list_registration_committee)
+        (registration_committee_change_add_member_quorum)
+        (registration_committee_change_exclude_member_quorum)
+        (registration_committee_change_base_quorum)
+        (get_registration_committee)
+
+        (list_proposals)
+
+        // Development committee api
+        (development_committee_add_member)
+        (development_committee_exclude_member)
+        (list_development_committee)
+        (development_committee_change_add_member_quorum)
+        (development_committee_change_exclude_member_quorum)
+        (development_committee_change_base_quorum)
+        (get_development_committee)
+        (development_pool_transfer)
+        (development_pool_withdraw_vesting)
+
+        //Atomic Swap API
+        (atomicswap_initiate)
+        (atomicswap_participate)
+        (atomicswap_redeem)
+        (atomicswap_auditcontract)
+        (atomicswap_extractsecret)
+        (atomicswap_refund)
+        (get_atomicswap_contracts)
 
         /// helper api
         (get_prototype_operation)
@@ -953,6 +1366,8 @@ FC_API( scorum::wallet::wallet_api,
 
         (get_active_witnesses)
         (get_transaction)
+
+        (exit)
       )
 
 FC_REFLECT( scorum::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )

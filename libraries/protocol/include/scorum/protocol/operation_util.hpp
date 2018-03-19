@@ -15,18 +15,24 @@
 // functions related to your operation type
 //
 #define DECLARE_OPERATION_TYPE(OperationType)                                                                          \
-    namespace fc {                                                                                                     \
-                                                                                                                       \
-    void to_variant(const OperationType&, fc::variant&);                                                               \
-    void from_variant(const fc::variant&, OperationType&);                                                             \
-                                                                                                                       \
-    } /* fc */                                                                                                         \
+    DECLARE_OPERATION_SERIALIZATOR(OperationType)                                                                      \
                                                                                                                        \
     namespace scorum {                                                                                                 \
     namespace protocol {                                                                                               \
                                                                                                                        \
     void operation_validate(const OperationType& o);                                                                   \
-    void operation_get_required_authorities(const OperationType& op, flat_set<account_name_type>& active,              \
-        flat_set<account_name_type>& owner, flat_set<account_name_type>& posting, vector<authority>& other);           \
+    void operation_get_required_authorities(const OperationType& op,                                                   \
+                                            flat_set<account_name_type>& active,                                       \
+                                            flat_set<account_name_type>& owner,                                        \
+                                            flat_set<account_name_type>& posting,                                      \
+                                            std::vector<authority>& other);                                            \
     }                                                                                                                  \
     } /* scorum::protocol */
+
+#define DECLARE_OPERATION_SERIALIZATOR(OperationType)                                                                  \
+    namespace fc {                                                                                                     \
+                                                                                                                       \
+    void to_variant(const OperationType&, fc::variant&);                                                               \
+    void from_variant(const fc::variant&, OperationType&);                                                             \
+                                                                                                                       \
+    } /* fc */

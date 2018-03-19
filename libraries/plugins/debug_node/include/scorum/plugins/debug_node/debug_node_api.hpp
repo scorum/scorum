@@ -10,7 +10,7 @@
 
 #include <scorum/protocol/block.hpp>
 
-#include <scorum/chain/witness_objects.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 namespace scorum {
 namespace app {
@@ -57,8 +57,9 @@ public:
     /*
      * Generate blocks locally until a specified head block time. Can generate them sparsely.
      */
-    uint32_t debug_generate_blocks_until(
-        std::string debug_key, fc::time_point_sec head_block_time, bool generate_sparsely = true);
+    uint32_t debug_generate_blocks_until(std::string debug_key,
+                                         fc::time_point_sec head_block_time,
+                                         bool generate_sparsely = true);
 
     /*
      * Pop a block from the blockchain, returning it
@@ -123,25 +124,27 @@ public:
 
     bool debug_has_hardfork(uint32_t hardfork_id);
 
-    std::string debug_get_json_schema();
-
     std::shared_ptr<detail::debug_node_api_impl> my;
 };
-}
-}
-}
+} // namespace debug_node
+} // namespace plugin
+} // namespace scorum
 
+// clang-format off
 FC_REFLECT(scorum::plugin::debug_node::get_dev_key_args, (name))
 
 FC_REFLECT(scorum::plugin::debug_node::get_dev_key_result, (private_key)(public_key))
 
 FC_API(scorum::plugin::debug_node::debug_node_api,
-    (debug_push_blocks)(debug_generate_blocks)(debug_generate_blocks_until)(debug_pop_block)
-    //(debug_push_block)
-    //(debug_update_object)
-    //(debug_get_edits)
-    //(debug_set_edits)
-    //(debug_stream_json_objects)
-    //(debug_stream_json_objects_flush)
-    (debug_set_hardfork)(debug_has_hardfork)(debug_get_witness_schedule)(debug_get_hardfork_property_object)(
-           debug_get_json_schema)(debug_set_dev_key_prefix)(debug_get_dev_key))
+       (debug_push_blocks)
+       (debug_generate_blocks)
+       (debug_generate_blocks_until)
+       (debug_pop_block)
+       (debug_set_hardfork)
+       (debug_has_hardfork)
+       (debug_get_witness_schedule)
+       (debug_get_hardfork_property_object)
+       (debug_set_dev_key_prefix)
+       (debug_get_dev_key))
+
+// clang-format on

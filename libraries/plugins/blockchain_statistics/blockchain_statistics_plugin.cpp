@@ -1,11 +1,18 @@
+#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
+#include <scorum/common_statistics/base_plugin_impl.hpp>
 
 #include <scorum/app/impacted.hpp>
-#include <scorum/chain/account_object.hpp>
-#include <scorum/chain/comment_object.hpp>
-#include <scorum/chain/history_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/operation_object.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
-#include <scorum/chain/database.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/withdraw_scorumpower.hpp>
+
+#include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
 namespace scorum {
@@ -16,36 +23,41 @@ namespace detail {
 using namespace scorum::protocol;
 
 class blockchain_statistics_plugin_impl
+    : public common_statistics::common_statistics_plugin_impl<bucket_object, blockchain_statistics_plugin>
 {
 public:
     blockchain_statistics_plugin_impl(blockchain_statistics_plugin& plugin)
-        : _self(plugin)
+        : base_plugin_impl(plugin)
     {
     }
     virtual ~blockchain_statistics_plugin_impl()
     {
     }
 
-    void on_block(const signed_block& b);
-    void pre_operation(const operation_notification& o);
-    void post_operation(const operation_notification& o);
+    virtual void process_bucket_creation(const bucket_object& bucket)
+    {
+        auto& db = _self.database();
 
-    blockchain_statistics_plugin& _self;
-    flat_set<uint32_t> _tracked_buckets = { 60, 3600, 21600, 86400, 604800, 2592000 };
-    flat_set<bucket_id_type> _current_buckets;
-    uint32_t _maximum_history_per_bucket_size = 100;
+        db.modify<bucket_object>(bucket, [&](bucket_object& bo) { bo.blocks = 1; });
+    }
+
+    virtual void process_block(const bucket_object& bucket, const signed_block& b) override;
+
+    virtual void process_pre_operation(const bucket_object& bucket, const operation_notification& o) override;
+
+    virtual void process_post_operation(const bucket_object& bucket, const operation_notification& o) override;
 };
 
-struct operation_process
+class operation_process
 {
-    const blockchain_statistics_plugin& _plugin;
-    const bucket_object& _bucket;
+private:
     chain::database& _db;
+    const bucket_object& _bucket;
 
-    operation_process(blockchain_statistics_plugin& bsp, const bucket_object& b)
-        : _plugin(bsp)
+public:
+    operation_process(chain::database& db, const bucket_object& b)
+        : _db(db)
         , _bucket(b)
-        , _db(bsp.database())
     {
     }
 
@@ -60,10 +72,8 @@ struct operation_process
         _db.modify(_bucket, [&](bucket_object& b) {
             b.transfers++;
 
-            if (op.amount.symbol == SCORUM_SYMBOL)
+            if (op.amount.symbol() == SCORUM_SYMBOL)
                 b.scorum_transferred += op.amount.amount;
-            else
-                b.sbd_transferred += op.amount.amount;
         });
     }
 
@@ -72,10 +82,20 @@ struct operation_process
         _db.modify(_bucket, [&](bucket_object& b) { b.paid_accounts_created++; });
     }
 
+    void operator()(const account_create_with_delegation_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.paid_accounts_created++; });
+    }
+
+    void operator()(const account_create_by_committee_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.free_accounts_created++; });
+    }
+
     void operator()(const comment_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
-            auto& comment = _db.get_comment(op.author, op.permlink);
+            auto& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
             if (comment.created == _db.head_block_time())
             {
@@ -98,9 +118,9 @@ struct operation_process
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             const auto& cv_idx = _db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-            auto& comment = _db.get_comment(op.author, op.permlink);
-            auto& voter = _db.get_account(op.voter);
-            auto itr = cv_idx.find(boost::make_tuple(comment.id, voter.id));
+            const auto& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+            const auto& voter = _db.obtain_service<chain::dbs_account>().get_account(op.voter);
+            const auto itr = cv_idx.find(boost::make_tuple(comment.id, voter.id));
 
             if (itr->num_changes)
             {
@@ -124,184 +144,136 @@ struct operation_process
         _db.modify(_bucket, [&](bucket_object& b) {
             b.payouts++;
             b.scr_paid_to_authors += op.scorum_payout.amount;
-            b.vests_paid_to_authors += op.vesting_payout.amount;
+            b.scorumpower_paid_to_authors += op.vesting_payout.amount;
         });
     }
 
     void operator()(const curation_reward_operation& op) const
     {
-        _db.modify(_bucket, [&](bucket_object& b) { b.vests_paid_to_curators += op.reward.amount; });
+        _db.modify(_bucket, [&](bucket_object& b) { b.scorumpower_paid_to_curators += op.reward.amount; });
     }
 
-    void operator()(const transfer_to_vesting_operation& op) const
+    void operator()(const transfer_to_scorumpower_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
-            b.transfers_to_vesting++;
-            b.scorum_vested += op.amount.amount;
+            b.transfers_to_scorumpower++;
+            b.scorum_transferred_to_scorumpower += op.amount.amount;
         });
     }
 
     void operator()(const fill_vesting_withdraw_operation& op) const
     {
-        auto& account = _db.get_account(op.from_account);
+        const auto& account = _db.obtain_service<chain::dbs_account>().get_account(op.from_account);
+        const auto& withdraw_scorumpower_service = _db.obtain_service<chain::dbs_withdraw_scorumpower>();
+
+        asset withdrawn = asset(0, SP_SYMBOL);
+        asset to_withdraw = asset(0, SP_SYMBOL);
+        asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
+
+        if (withdraw_scorumpower_service.is_exists(account.id))
+        {
+            const auto& wvo = withdraw_scorumpower_service.get(account.id);
+            withdrawn = wvo.withdrawn;
+            to_withdraw = wvo.to_withdraw;
+            vesting_withdraw_rate = wvo.vesting_withdraw_rate;
+        }
 
         _db.modify(_bucket, [&](bucket_object& b) {
-            b.vesting_withdrawals_processed++;
-            if (op.deposited.symbol == SCORUM_SYMBOL)
-                b.vests_withdrawn += op.withdrawn.amount;
-            else
-                b.vests_transferred += op.withdrawn.amount;
 
-            if (account.vesting_withdraw_rate.amount == 0)
+            b.vesting_withdrawals_processed++;
+
+            if (op.withdrawn.symbol() == SCORUM_SYMBOL)
+                b.scorumpower_withdrawn += op.withdrawn.amount;
+            else
+                b.scorumpower_transferred += op.withdrawn.amount;
+
+            if (withdrawn.amount + op.withdrawn.amount >= to_withdraw.amount
+                || account.scorumpower.amount - op.withdrawn.amount == 0)
+            {
                 b.finished_vesting_withdrawals++;
+
+                b.vesting_withdraw_rate_delta -= vesting_withdraw_rate.amount;
+            }
         });
     }
 };
 
-void blockchain_statistics_plugin_impl::on_block(const signed_block& b)
+void blockchain_statistics_plugin_impl::process_block(const bucket_object& bucket, const signed_block& b)
 {
     auto& db = _self.database();
-
-    if (b.block_num() == 1)
-    {
-        db.create<bucket_object>([&](bucket_object& bo) {
-            bo.open = b.timestamp;
-            bo.seconds = 0;
-            bo.blocks = 1;
-        });
-    }
-    else
-    {
-        db.modify(db.get(bucket_id_type()), [&](bucket_object& bo) { bo.blocks++; });
-    }
-
-    _current_buckets.clear();
-    _current_buckets.insert(bucket_id_type());
-
-    const auto& bucket_idx = db.get_index<bucket_index>().indices().get<by_bucket>();
 
     uint32_t trx_size = 0;
     uint32_t num_trx = b.transactions.size();
 
-    for (auto trx : b.transactions)
+    for (const auto& trx : b.transactions)
     {
         trx_size += fc::raw::pack_size(trx);
     }
 
-    for (auto bucket : _tracked_buckets)
+    db.modify(bucket, [&](bucket_object& bo) {
+        bo.blocks++;
+        bo.transactions += num_trx;
+        bo.bandwidth += trx_size;
+    });
+}
+
+void blockchain_statistics_plugin_impl::process_pre_operation(const bucket_object& bucket,
+                                                              const operation_notification& o)
+{
+    auto& db = _self.database();
+
+    if (o.op.which() == operation::tag<delete_comment_operation>::value)
     {
-        auto open = fc::time_point_sec((db.head_block_time().sec_since_epoch() / bucket) * bucket);
-        auto itr = bucket_idx.find(boost::make_tuple(bucket, open));
+        delete_comment_operation op = o.op.get<delete_comment_operation>();
+        auto comment = db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        if (itr == bucket_idx.end())
+        db.modify(bucket, [&](bucket_object& b) {
+            if (comment.parent_author.length())
+                b.replies_deleted++;
+            else
+                b.root_comments_deleted++;
+        });
+    }
+    else if (o.op.which() == operation::tag<withdraw_scorumpower_operation>::value)
+    {
+        withdraw_scorumpower_operation op = o.op.get<withdraw_scorumpower_operation>();
+        const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
+
+        auto new_vesting_withdrawal_rate = op.scorumpower.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
+        if (op.scorumpower.amount > 0 && new_vesting_withdrawal_rate == 0)
+            new_vesting_withdrawal_rate = 1;
+
+        const auto& withdraw_scorumpower_service = db.obtain_service<chain::dbs_withdraw_scorumpower>();
+
+        asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
+
+        if (withdraw_scorumpower_service.is_exists(account.id))
         {
-            _current_buckets.insert(db.create<bucket_object>([&](bucket_object& bo) {
-                                          bo.open = open;
-                                          bo.seconds = bucket;
-                                          bo.blocks = 1;
-                                      }).id);
-
-            if (_maximum_history_per_bucket_size > 0)
-            {
-                try
-                {
-                    auto cutoff = fc::time_point_sec(
-                        (safe<uint32_t>(db.head_block_time().sec_since_epoch())
-                         - safe<uint32_t>(bucket) * safe<uint32_t>(_maximum_history_per_bucket_size))
-                            .value);
-
-                    itr = bucket_idx.lower_bound(boost::make_tuple(bucket, fc::time_point_sec()));
-
-                    while (itr->seconds == bucket && itr->open < cutoff)
-                    {
-                        auto old_itr = itr;
-                        ++itr;
-                        db.remove(*old_itr);
-                    }
-                }
-                catch (fc::overflow_exception& e)
-                {
-                }
-                catch (fc::underflow_exception& e)
-                {
-                }
-            }
-        }
-        else
-        {
-            db.modify(*itr, [&](bucket_object& bo) { bo.blocks++; });
-
-            _current_buckets.insert(itr->id);
+            const auto& wvo = withdraw_scorumpower_service.get(account.id);
+            vesting_withdraw_rate = wvo.vesting_withdraw_rate;
         }
 
-        db.modify(*itr, [&](bucket_object& bo) {
-            bo.transactions += num_trx;
-            bo.bandwidth += trx_size;
+        db.modify(bucket, [&](bucket_object& b) {
+            if (vesting_withdraw_rate.amount > 0)
+                b.modified_vesting_withdrawal_requests++;
+            else
+                b.new_vesting_withdrawal_requests++;
+
+            b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - vesting_withdraw_rate.amount;
         });
     }
 }
 
-void blockchain_statistics_plugin_impl::pre_operation(const operation_notification& o)
+void blockchain_statistics_plugin_impl::process_post_operation(const bucket_object& bucket,
+                                                               const operation_notification& o)
 {
     auto& db = _self.database();
 
-    for (auto bucket_id : _current_buckets)
+    if (!is_virtual_operation(o.op))
     {
-        if (o.op.which() == operation::tag<delete_comment_operation>::value)
-        {
-            delete_comment_operation op = o.op.get<delete_comment_operation>();
-            auto comment = db.get_comment(op.author, op.permlink);
-            const auto& bucket = db.get(bucket_id);
-
-            db.modify(bucket, [&](bucket_object& b) {
-                if (comment.parent_author.length())
-                    b.replies_deleted++;
-                else
-                    b.root_comments_deleted++;
-            });
-        }
-        else if (o.op.which() == operation::tag<withdraw_vesting_operation>::value)
-        {
-            withdraw_vesting_operation op = o.op.get<withdraw_vesting_operation>();
-            auto& account = db.get_account(op.account);
-            const auto& bucket = db.get(bucket_id);
-
-            auto new_vesting_withdrawal_rate = op.vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
-            if (op.vesting_shares.amount > 0 && new_vesting_withdrawal_rate == 0)
-                new_vesting_withdrawal_rate = 1;
-
-            db.modify(bucket, [&](bucket_object& b) {
-                if (account.vesting_withdraw_rate.amount > 0)
-                    b.modified_vesting_withdrawal_requests++;
-                else
-                    b.new_vesting_withdrawal_requests++;
-
-                // TODO: Figure out how to change delta when a vesting withdraw finishes. Have until March 24th 2018 to
-                // figure that out...
-                b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - account.vesting_withdraw_rate.amount;
-            });
-        }
+        db.modify(bucket, [&](bucket_object& b) { b.operations++; });
     }
-}
-
-void blockchain_statistics_plugin_impl::post_operation(const operation_notification& o)
-{
-    try
-    {
-        auto& db = _self.database();
-
-        for (auto bucket_id : _current_buckets)
-        {
-            const auto& bucket = db.get(bucket_id);
-
-            if (!is_virtual_operation(o.op))
-            {
-                db.modify(bucket, [&](bucket_object& b) { b.operations++; });
-            }
-            o.op.visit(operation_process(_self, bucket));
-        }
-    }
-    FC_CAPTURE_AND_RETHROW()
+    o.op.visit(operation_process(db, bucket));
 }
 
 } // detail
@@ -321,7 +293,7 @@ void blockchain_statistics_plugin::plugin_set_program_options(boost::program_opt
 {
     cli.add_options()(
         "chain-stats-bucket-size",
-        boost::program_options::value<string>()->default_value("[60,3600,21600,86400,604800,2592000]"),
+        boost::program_options::value<std::string>()->default_value("[60,3600,21600,86400,604800,2592000]"),
         "Track blockchain statistics by grouping orders into buckets of equal size measured in seconds specified as a "
         "JSON array of numbers")(
         "chain-stats-history-per-bucket", boost::program_options::value<uint32_t>()->default_value(100),
@@ -333,29 +305,21 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
 {
     try
     {
-        ilog("chain_stats_plugin: plugin_initialize() begin");
-        chain::database& db = database();
-
-        db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
-        db.pre_apply_operation.connect([&](const operation_notification& o) { _my->pre_operation(o); });
-        db.post_apply_operation.connect([&](const operation_notification& o) { _my->post_operation(o); });
-
-        db.add_plugin_index<bucket_index>();
-
         if (options.count("chain-stats-bucket-size"))
         {
-            const std::string& buckets = options["chain-stats-bucket-size"].as<string>();
+            const std::string& buckets = options["chain-stats-bucket-size"].as<std::string>();
             _my->_tracked_buckets = fc::json::from_string(buckets).as<flat_set<uint32_t>>();
         }
         if (options.count("chain-stats-history-per-bucket"))
             _my->_maximum_history_per_bucket_size = options["chain-stats-history-per-bucket"].as<uint32_t>();
 
-        wlog("chain-stats-bucket-size: ${b}", ("b", _my->_tracked_buckets));
-        wlog("chain-stats-history-per-bucket: ${h}", ("h", _my->_maximum_history_per_bucket_size));
+        ilog("chain-stats-bucket-size: ${b}", ("b", _my->_tracked_buckets));
+        ilog("chain-stats-history-per-bucket: ${h}", ("h", _my->_maximum_history_per_bucket_size));
 
-        ilog("chain_stats_plugin: plugin_initialize() end");
+        dlog("chain_stats_plugin: plugin_initialize() end");
     }
     FC_CAPTURE_AND_RETHROW()
+    print_greeting();
 }
 
 void blockchain_statistics_plugin::plugin_startup()

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 #include <scorum/protocol/protocol.hpp>
-#include <scorum/chain/scorum_objects.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <iostream>
 
@@ -70,7 +70,7 @@ template <typename T> void generate_serializer();
 template <typename T> void register_serializer();
 
 map<string, size_t> st;
-scorum::vector<std::function<void()>> serializers;
+std::vector<std::function<void()>> serializers;
 
 bool register_serializer(const string& name, std::function<void()> sr)
 {
@@ -308,6 +308,10 @@ public:
     {
         std::cout << "    " << name << ": " << js_name<Member>::name() << "\n";
     }
+
+    void operator()(const char*, const int64_t) const
+    {
+    }
 };
 
 template <typename T> struct serializer<T, false>
@@ -475,6 +479,10 @@ public:
     {
         serializer<Member>::init();
     }
+
+    void operator()(const char*, const int64_t) const
+    {
+    }
 };
 
 template <typename T, bool reflected> struct serializer
@@ -485,7 +493,8 @@ template <typename T, bool reflected> struct serializer
         auto name = js_name<T>::name();
         if (st.find(name) == st.end())
         {
-            fc::reflector<T>::visit(register_member_visitor());
+            register_member_visitor v;
+            fc::reflector<T>::visit(v);
             register_serializer(name, [=]() { generate(); });
         }
     }
