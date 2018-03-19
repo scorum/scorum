@@ -17,7 +17,7 @@ class database : public undo_db_state
 
 private:
     void check_dir_existance(const boost::filesystem::path& dir, bool read_only);
-    void create_meta_file(const boost::filesystem::path& file);
+    void create_meta_file(const boost::filesystem::path& file, bool read_only);
 
 public:
     virtual ~database();

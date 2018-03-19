@@ -19,12 +19,22 @@ void database::check_dir_existance(const boost::filesystem::path& dir, bool read
     boost::filesystem::create_directories(dir);
 }
 
-void database::create_meta_file(const boost::filesystem::path& file)
+void database::create_meta_file(const boost::filesystem::path& file, bool read_only)
 {
+    ilog("Try to open meta file");
+
     if (boost::filesystem::exists(file))
     {
-        _meta.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::open_only,
-                                                                 file.generic_string().c_str()));
+        if (read_only)
+        {
+            _meta.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::open_only,
+                                                                     file.generic_string().c_str()));
+        }
+        else
+        {
+            _meta.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::open_read_only,
+                                                                     file.generic_string().c_str()));
+        }
 
         set_read_write_mutex_manager(_meta->find<read_write_mutex_manager>("rw_manager").first);
     }
@@ -50,7 +60,7 @@ void database::open(const boost::filesystem::path& dir, uint32_t flags, uint64_t
 
     create_segment_file(boost::filesystem::absolute(dir / SHARED_MEMORY_FILE), read_only, shared_file_size);
 
-    create_meta_file(boost::filesystem::absolute(dir / SHARED_MEMORY_META_FILE));
+    create_meta_file(boost::filesystem::absolute(dir / SHARED_MEMORY_META_FILE), read_only);
 
     // create lock on meta file
     if (!read_only)
