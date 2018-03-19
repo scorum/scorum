@@ -30,7 +30,7 @@
     "development_committee": [
         "dionne"
     ],
-    "development_scr_supply": "470000.000000000 SCR",
+    "development_scr_supply": "4041614.563394980 SCR",
     "development_sp_supply": "0.000000000 SP",
     "founders": [
         {
@@ -39,7 +39,7 @@
         }
     ],
     "founders_supply": "3000000.000000000 SP",
-    "initial_timestamp": "2017-11-29T10:03:00",
+    "initial_timestamp": "2018-03-19T14:30:00",
     "lock_withdraw_sp_until_timestamp": "2018-07-01T00:00:00",
     "registration_bonus": "5.000000000 SCR",
     "registration_committee": [
@@ -71,7 +71,7 @@
     "rewards_supply": "4800000.000000000 SCR",
     "steemit_bounty_accounts": [],
     "steemit_bounty_accounts_supply": "100000.000000000 SP",
-    "total_supply": "30000000.000000000 SCR",
+    "total_supply": "29265074.800000000 SCR",
     "witness_candidates": [
         { "name" : "scorumwitness1", "block_signing_key" : "SCR6es1uPkkkH8sp6tkqHvRgC6u2TpBTLbGxfTVLznZ49zojrn8ni"},
         { "name" : "scorumwitness2", "block_signing_key" : "SCR7FrE35cuRBMbdtQMPgvNcFtHtwv7dPGvg6yAXxa8NbmUvjpnSj"},
