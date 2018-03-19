@@ -2,6 +2,7 @@
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 
 #include <scorum/chain/schema/witness_objects.hpp>
 
@@ -14,12 +15,13 @@ namespace genesis {
 void witness_schedule_initializator_impl::on_apply(initializator_context& ctx)
 {
     witness_service_i& witness_service = ctx.services().witness_service();
+    witness_schedule_service_i& schedule_service = ctx.services().witness_schedule_service();
 
-    FC_ASSERT(!witness_service.is_exists());
+    FC_ASSERT(!schedule_service.is_exists());
 
     const std::vector<genesis_state_type::witness_type>& witness_candidates = ctx.genesis_state().witness_candidates;
 
-    witness_service.create_witness_schedule([&](witness_schedule_object& wso) {
+    schedule_service.create([&](witness_schedule_object& wso) {
         for (size_t i = 0; i < wso.current_shuffled_witnesses.size() && i < witness_candidates.size(); ++i)
         {
             FC_ASSERT(witness_service.is_exists(witness_candidates[i].name));

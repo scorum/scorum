@@ -1,9 +1,9 @@
 #pragma once
 
 #include "database_integration.hpp"
+#include "actoractions.hpp"
 
-namespace scorum {
-namespace chain {
+namespace database_fixture {
 
 class database_trx_integration_fixture : public database_integration_fixture
 {
@@ -11,10 +11,14 @@ public:
     database_trx_integration_fixture();
     virtual ~database_trx_integration_fixture();
 
+    ActorActions actor(const Actor& a);
+
+    share_type get_account_creation_fee() const;
+
     const account_object& account_create(const std::string& name,
                                          const std::string& creator,
                                          const private_key_type& creator_key,
-                                         const share_type& fee,
+                                         share_type fee,
                                          const public_key_type& key,
                                          const public_key_type& post_key,
                                          const std::string& json_metadata);
@@ -62,5 +66,5 @@ protected:
 
     signed_transaction trx;
 };
-}
-}
+
+} // database_fixture

@@ -24,6 +24,7 @@ std::string raw_block_plugin::plugin_name() const
 
 void raw_block_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
+    print_greeting();
 }
 
 void raw_block_plugin::plugin_startup()

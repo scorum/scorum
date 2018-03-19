@@ -1,7 +1,7 @@
-#include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/database/database.hpp>
+#include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/account.hpp>
-
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 
@@ -15,7 +15,7 @@ dbs_budget::dbs_budget(database& db)
 {
 }
 
-bool dbs_budget::is_fund_exists() const
+bool dbs_budget::is_fund_budget_exists() const
 {
     return nullptr != db_impl().find<budget_object, by_owner_name>(SCORUM_ROOT_POST_PARENT_ACCOUNT);
 }
@@ -25,15 +25,24 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets() const
     budget_refs_type ret;
 
     const auto& idx = db_impl().get_index<budget_index>().indices();
-    auto it = idx.cbegin();
-    const auto it_end = idx.cend();
-    while (it != it_end)
+
+    for (auto it = idx.cbegin(), it_end = idx.cend(); it != it_end; ++it)
     {
-        ret.push_back(std::cref(*it));
-        ++it;
+        if (!_is_fund_budget(*it))
+            ret.push_back(std::cref(*it));
     }
 
     return ret;
+}
+
+const budget_object& dbs_budget::get_fund_budget() const
+{
+    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
+
+    auto itr = budgets_by_owner_name.lower_bound(SCORUM_ROOT_POST_PARENT_ACCOUNT);
+    FC_ASSERT(itr != budgets_by_owner_name.end(), "Fund budget does not exist.");
+
+    return *itr;
 }
 
 std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
@@ -49,7 +58,7 @@ std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_
     for (auto itr = budgets_by_owner_name.lower_bound(lower_bound_owner_name);
          limit && itr != budgets_by_owner_name.end(); ++itr)
     {
-        if (itr->owner == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+        if (_is_fund_budget(*itr))
             continue;
 
         --limit;
@@ -65,25 +74,13 @@ dbs_budget::budget_refs_type dbs_budget::get_budgets(const account_name_type& ow
     budget_refs_type ret;
 
     auto it_pair = db_impl().get_index<budget_index>().indices().get<by_owner_name>().equal_range(owner);
-    auto it = it_pair.first;
-    const auto it_end = it_pair.second;
-    while (it != it_end)
+
+    for (auto it = it_pair.first, it_end = it_pair.second; it != it_end; ++it)
     {
         ret.push_back(std::cref(*it));
-        ++it;
     }
 
     return ret;
-}
-
-const budget_object& dbs_budget::get_fund_budget() const
-{
-    const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
-
-    auto itr = budgets_by_owner_name.lower_bound(SCORUM_ROOT_POST_PARENT_ACCOUNT);
-    FC_ASSERT(itr != budgets_by_owner_name.end(), "Fund budget does not exist.");
-
-    return *itr;
 }
 
 const budget_object& dbs_budget::get_budget(budget_id_type id) const
@@ -103,27 +100,10 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
 
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
-    time_point_sec start_date = props.time;
+    time_point_sec start_date = db_impl().obtain_service<dbs_dynamic_global_property>().get().time;
     FC_ASSERT(start_date < deadline, "Invalid deadline.");
 
-    auto head_block_num = db_impl().head_block_num();
-
-    share_type per_block = _calculate_per_block(start_date, deadline, balance.amount);
-
-    const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
-        budget.owner = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        budget.created = start_date;
-        budget.deadline = deadline;
-        budget.balance = balance;
-        budget.per_block = per_block;
-        // allocate cash only after next block generation
-        budget.last_allocated_block = head_block_num;
-    });
-
-    // there are not schedules for genesis budget
-    return new_budget;
+    return _create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, balance, start_date, deadline);
 }
 
 const budget_object& dbs_budget::create_budget(const account_object& owner,
@@ -131,52 +111,65 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
                                                const time_point_sec& deadline,
                                                const optional<std::string>& content_permlink)
 {
-    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT_ACCOUNT, "'${1}' name is not allowed for ordinary budget.",
-              ("1", SCORUM_ROOT_POST_PARENT_ACCOUNT));
+    dbs_account& account_service = db().obtain_service<dbs_account>();
+    dbs_dynamic_global_property& dgp_service = db().obtain_service<dbs_dynamic_global_property>();
+
+    const dynamic_global_property_object& dprops = dgp_service.get();
+
+    // clang-format off
+    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT_ACCOUNT, "'${1}' name is not allowed for ordinary budget.",("1", SCORUM_ROOT_POST_PARENT_ACCOUNT));
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
-    FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER,
-              "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER));
+    FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGETS_LIMIT_PER_OWNER, "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
-    const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
+    time_point_sec start_date = dprops.time;
+    FC_ASSERT(dprops.circulating_capital > balance, "Invalid balance. Must ${1} > ${2}.", ("1", dprops.circulating_capital)("2", balance));
+    // clang-format on
 
-    time_point_sec start_date = props.time;
-    FC_ASSERT(start_date < deadline, "Invalid deadline.");
-
-    FC_ASSERT(props.circulating_capital > balance, "Invalid balance. Must ${1} > ${2}.",
-              ("1", props.circulating_capital)("2", balance));
-
-    dbs_account& account_service = db().obtain_service<dbs_account>();
+    const budget_object& new_budget = _create_budget(owner.name, balance, start_date, deadline, content_permlink);
 
     account_service.decrease_balance(owner, balance);
 
-    auto head_block_num = db_impl().head_block_num();
+    dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
 
-    share_type per_block = _calculate_per_block(start_date, deadline, balance.amount);
+    return new_budget;
+}
+
+const budget_object& dbs_budget::_create_budget(const account_name_type& owner,
+                                                const asset& balance,
+                                                const time_point_sec& start_date,
+                                                const time_point_sec& end_date,
+                                                const optional<std::string>& content_permlink)
+{
+    auto per_block = _calculate_per_block(start_date, end_date, balance.amount);
+
+    auto head_block_num = db_impl().head_block_num();
+    auto head_block_time = db_impl().head_block_time();
+
+    auto advance = (start_date.sec_since_epoch() - head_block_time.sec_since_epoch()) / SCORUM_BLOCK_INTERVAL;
+    auto last_cashout_block = head_block_num + advance;
 
     const budget_object& new_budget = db_impl().create<budget_object>([&](budget_object& budget) {
-        budget.owner = owner.name;
+        budget.owner = owner;
         if (content_permlink.valid())
         {
             fc::from_string(budget.content_permlink, *content_permlink);
         }
         budget.created = start_date;
-        budget.deadline = deadline;
+        budget.deadline = end_date;
         budget.balance = balance;
         budget.per_block = per_block;
         // allocate cash only after next block generation
-        budget.last_allocated_block = head_block_num;
+        budget.last_cashout_block = last_cashout_block;
     });
-
-    db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
 
     return new_budget;
 }
 
 void dbs_budget::close_budget(const budget_object& budget)
 {
-    FC_ASSERT(budget.owner != SCORUM_ROOT_POST_PARENT_ACCOUNT, "Can't close fund budget.");
+    FC_ASSERT(!_is_fund_budget(budget), "Can't close fund budget.");
 
     _close_owned_budget(budget);
 }
@@ -188,7 +181,7 @@ asset dbs_budget::allocate_cash(const budget_object& budget)
     time_point_sec t = db_impl().head_block_time();
     auto head_block_num = db_impl().head_block_num();
 
-    if (budget.last_allocated_block >= head_block_num)
+    if (budget.last_cashout_block >= head_block_num)
     {
         return ret; // empty (allocation waits new block)
     }
@@ -210,7 +203,7 @@ asset dbs_budget::allocate_cash(const budget_object& budget)
     {
         if (!_check_autoclose(budget))
         {
-            db_impl().modify(budget, [&](budget_object& b) { b.last_allocated_block = head_block_num; });
+            db_impl().modify(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
         }
     }
     return ret;
@@ -220,7 +213,8 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
                                             const time_point_sec& end_date,
                                             share_type balance_amount)
 {
-    FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(), "Invalid date interval.");
+    FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(),
+              "Invalid date interval. Start time ${1} must be less end time ${2}", ("1", start_date)("2", end_date));
 
     share_type ret(balance_amount);
 
@@ -307,12 +301,11 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     asset repayable = budget.balance;
     if (repayable.amount > 0)
     {
-        const dynamic_global_property_object& props = db_impl().get_dynamic_global_properties();
-
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
 
-        db_impl().modify(props, [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
+        db_impl().obtain_service<dbs_dynamic_global_property>().update(
+            [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
     }
 
     // delete budget

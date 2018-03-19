@@ -15,7 +15,6 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
                                         "accounts":[
                                         {
                                             "name":"user",
-                                            "recovery_account":"admin",
                                             "public_key":"SCR1111111111111111111111111111111114T1Anm",
                                             "scr_amount":"0.000001000 SCR"
                                         }]
@@ -31,7 +30,6 @@ BOOST_AUTO_TEST_CASE(check_accounts_fields)
     BOOST_CHECK(account.name == "user");
     BOOST_CHECK(account.public_key == sp::public_key_type("SCR1111111111111111111111111111111114T1Anm"));
     BOOST_CHECK(account.scr_amount == sp::asset(1000, SCORUM_SYMBOL));
-    BOOST_CHECK(account.recovery_account == "admin");
 }
 
 BOOST_AUTO_TEST_CASE(check_witness_fields)

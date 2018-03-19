@@ -20,12 +20,16 @@ struct genesis_chain_id_type
     chain_id_type initial_chain_id;
 };
 
-struct genesis_state_type : public genesis_chain_id_type
+struct genesis_persistent_state_type
+{
+    time_point_sec lock_withdraw_sp_until_timestamp = time_point_sec::min();
+};
+
+struct genesis_state_type : public genesis_persistent_state_type, public genesis_chain_id_type
 {
     struct account_type
     {
         std::string name;
-        std::string recovery_account;
         public_key_type public_key;
         asset scr_amount;
     };
@@ -55,6 +59,7 @@ struct genesis_state_type : public genesis_chain_id_type
         uint16_t bonus_percent;
     };
 
+    asset total_supply = asset(0, SCORUM_SYMBOL);
     asset registration_supply = asset(0, SCORUM_SYMBOL);
     asset registration_bonus = asset(0, SCORUM_SYMBOL);
     asset accounts_supply = asset(0, SCORUM_SYMBOL);
@@ -79,7 +84,6 @@ struct genesis_state_type : public genesis_chain_id_type
 // clang-format off
 FC_REFLECT(scorum::chain::genesis_state_type::account_type,
            (name)
-           (recovery_account)
            (public_key)
            (scr_amount))
 
@@ -100,7 +104,11 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
            (users)
            (bonus_percent))
 
-FC_REFLECT(scorum::chain::genesis_state_type,
+FC_REFLECT(scorum::chain::genesis_persistent_state_type,
+           (lock_withdraw_sp_until_timestamp))
+
+FC_REFLECT_DERIVED(scorum::chain::genesis_state_type, (scorum::chain::genesis_persistent_state_type),
+           (total_supply)
            (registration_supply)
            (registration_bonus)
            (accounts_supply)

@@ -10,6 +10,7 @@ set( SOURCES
     reward_service_tests.cpp
     rewards/vote_apply_tests.cpp
     rewards/comment_beneficiaries_apply_tests.cpp
+    rewards/per_block_reward_distribution.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
@@ -33,6 +34,7 @@ set( SOURCES
     withdraw_scorumpower/route_from_account_to_dev_pool_tests.cpp
     withdraw_scorumpower/route_from_dev_pool_to_account_tests.cpp
     withdraw_scorumpower/route_from_dev_pool_to_dev_pool_tests.cpp
+    withdraw_scorumpower/lock_tests.cpp
 )
 
 add_executable(chain_tests

@@ -33,7 +33,7 @@ public:
     asset balance = asset(0, SCORUM_SYMBOL);
     share_type per_block = 0;
 
-    uint32_t last_allocated_block = 0;
+    uint32_t last_cashout_block = 0;
 };
 
 struct by_owner_name;
@@ -52,6 +52,6 @@ typedef shared_multi_index_container<budget_object,
 } // namespace scorum
 
 FC_REFLECT(scorum::chain::budget_object,
-           (id)(owner)(content_permlink)(created)(deadline)(balance)(per_block)(last_allocated_block))
+           (id)(owner)(content_permlink)(created)(deadline)(balance)(per_block)(last_cashout_block))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::budget_object, scorum::chain::budget_index)

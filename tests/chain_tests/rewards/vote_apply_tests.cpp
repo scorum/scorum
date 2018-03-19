@@ -13,8 +13,7 @@
 #include "database_default_integration.hpp"
 
 using namespace scorum;
-using namespace scorum::chain;
-using namespace scorum::protocol;
+using namespace database_fixture;
 
 class vote_apply_base_fixture : public database_default_integration_fixture
 {

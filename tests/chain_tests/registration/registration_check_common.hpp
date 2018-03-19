@@ -21,9 +21,7 @@
 #include "database_trx_integration.hpp"
 #include "actor.hpp"
 
-namespace registration_fixtures {
-
-using namespace scorum::chain;
+namespace database_fixture {
 
 using schedule_input_type = genesis_state_type::registration_schedule_item;
 using schedule_inputs_type = std::vector<schedule_input_type>;

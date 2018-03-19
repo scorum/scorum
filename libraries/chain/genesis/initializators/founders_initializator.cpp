@@ -2,6 +2,7 @@
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <fc/exception/exception.hpp>
+#include <fc/uint128.hpp>
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
@@ -72,8 +73,12 @@ asset founders_initializator_impl::distribure_sp_by_percent(initializator_contex
         uint16_t percent = SCORUM_PERCENT(founder.sp_percent);
 
         asset sp_bonus = ctx.genesis_state().founders_supply;
-        sp_bonus.amount *= percent;
-        sp_bonus.amount /= SCORUM_100_PERCENT;
+
+        fc::uint128_t sp_bonus_amount = sp_bonus.amount.value;
+        sp_bonus_amount *= percent;
+        sp_bonus_amount /= SCORUM_100_PERCENT;
+        sp_bonus.amount = sp_bonus_amount.to_uint64();
+
         if (sp_bonus.amount > (share_value_type)0)
         {
             feed_account(ctx, founder.name, sp_bonus);

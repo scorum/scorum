@@ -27,7 +27,7 @@ void accounts_initializator_impl::on_apply(initializator_context& ctx)
         scorum::protocol::validate_account_name(account.name);
 
         account_service.create_initial_account(account.name, account.public_key, account.scr_amount,
-                                               account.recovery_account, R"({"created_at": "GENESIS"})");
+                                               R"({"created_at": "GENESIS"})");
     }
 }
 

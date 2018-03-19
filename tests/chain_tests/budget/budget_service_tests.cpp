@@ -11,13 +11,7 @@
 
 #include <limits>
 
-using namespace scorum::chain;
-using namespace scorum::protocol;
-using namespace budget_fixtures;
-
-//
-// usage for all budget tests 'chain_test  -t budget_*'
-//
+using namespace database_fixture;
 
 class budget_service_check_fixture : public budget_check_fixture
 {
@@ -160,18 +154,18 @@ SCORUM_TEST_CASE(owned_budget_creation_asserts)
 
 SCORUM_TEST_CASE(budget_creation_limit)
 {
-    share_type bp = SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER + 1;
+    share_type bp = SCORUM_BUDGETS_LIMIT_PER_OWNER + 1;
     BOOST_REQUIRE(BOB_ACCOUNT_BUDGET >= bp);
 
     asset balance(BOB_ACCOUNT_BUDGET / bp, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    for (int ci = 0; ci < SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER; ++ci)
+    for (int ci = 0; ci < SCORUM_BUDGETS_LIMIT_PER_OWNER; ++ci)
     {
         BOOST_REQUIRE_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     }
 
-    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_BUDGET_LIMIT_COUNT_PER_OWNER * balance.amount));
+    BOOST_CHECK(bob.balance.amount == (BOB_ACCOUNT_BUDGET - SCORUM_BUDGETS_LIMIT_PER_OWNER * balance.amount));
 
     BOOST_REQUIRE_THROW(budget_service.create_budget(bob, balance, deadline), fc::assert_exception);
 }
@@ -186,7 +180,7 @@ SCORUM_TEST_CASE(get_all_budgets)
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
 
     auto budgets = budget_service.get_budgets();
-    BOOST_REQUIRE(budgets.size() == 3);
+    BOOST_REQUIRE(budgets.size() == 2);
 }
 
 SCORUM_TEST_CASE(get_all_budget_count)
@@ -198,7 +192,7 @@ SCORUM_TEST_CASE(get_all_budget_count)
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
 
-    BOOST_REQUIRE(budget_service.get_budgets().size() == 3);
+    BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), 2u);
 }
 
 SCORUM_TEST_CASE(lookup_budget_owners)
@@ -213,7 +207,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     BOOST_CHECK_NO_THROW(budget_service.create_budget(bob, balance, deadline));
 
-    BOOST_REQUIRE(budget_service.get_budgets().size() == 4);
+    BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), 3u);
 
     BOOST_CHECK_THROW(budget_service.lookup_budget_owners("alice", std::numeric_limits<uint32_t>::max()),
                       fc::assert_exception);

@@ -1,7 +1,8 @@
-#include <scorum/chain/services/account.hpp>
 #include <scorum/chain/database/database.hpp>
 
+#include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 
@@ -71,7 +72,6 @@ void dbs_account::check_account_existence(const account_authority_map& names,
 const account_object& dbs_account::create_initial_account(const account_name_type& new_account_name,
                                                           const public_key_type& memo_key,
                                                           const asset& balance,
-                                                          const account_name_type& recovery_account,
                                                           const std::string& json_metadata)
 {
     FC_ASSERT(new_account_name.size() > 0, "Account 'name' should not be empty.");
@@ -84,7 +84,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
         owner.weight_threshold = 1;
     }
     const auto& new_account
-        = _create_account_objects(new_account_name, recovery_account, memo_key, json_metadata, owner, owner, owner);
+        = _create_account_objects(new_account_name, account_name_type(), memo_key, json_metadata, owner, owner, owner);
 
     db_impl().modify(new_account, [&](account_object& acc) {
         acc.created_by_genesis = true;
@@ -275,12 +275,12 @@ void dbs_account::decrease_received_scorumpower(const account_object& account, c
     increase_received_scorumpower(account, -amount);
 }
 
-void dbs_account::increase_posting_rewards(const account_object& account, const share_type& amount)
+void dbs_account::increase_posting_rewards(const account_object& account, const asset& amount)
 {
     db_impl().modify(account, [&](account_object& a) { a.posting_rewards += amount; });
 }
 
-void dbs_account::increase_curation_rewards(const account_object& account, const share_type& amount)
+void dbs_account::increase_curation_rewards(const account_object& account, const asset& amount)
 {
     db_impl().modify(account, [&](account_object& a) { a.curation_rewards += amount; });
 }
@@ -495,14 +495,12 @@ const asset dbs_account::create_scorumpower(const account_object& to_account, co
 {
     try
     {
-        const auto& cprops = db_impl().get_dynamic_global_properties();
-
         asset new_scorumpower = asset(scorum.amount, SP_SYMBOL);
 
         db_impl().modify(to_account, [&](account_object& to) { to.scorumpower += new_scorumpower; });
 
-        db_impl().modify(cprops,
-                         [&](dynamic_global_property_object& props) { props.total_scorumpower += new_scorumpower; });
+        db_impl().obtain_service<dbs_dynamic_global_property>().update(
+            [&](dynamic_global_property_object& props) { props.total_scorumpower += new_scorumpower; });
 
         adjust_proxied_witness_votes(to_account, new_scorumpower.amount);
 
@@ -591,7 +589,7 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
                                                            const authority& active,
                                                            const authority& posting)
 {
-    const auto& props = db_impl().get_dynamic_global_properties();
+    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
         acc.name = new_account_name;

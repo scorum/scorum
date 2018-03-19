@@ -10,7 +10,9 @@
 
 #include "actoractions.hpp"
 
-namespace registration_fixtures {
+namespace database_fixture {
+
+using namespace database_fixture;
 
 asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, const asset& maximum_bonus)
 {
@@ -41,8 +43,7 @@ registration_check_fixture::registration_check_fixture()
 
     for (const auto& item : _committee)
     {
-        ActorActions actor(*this, item.second);
-        actor.create();
+        actor(initdelegate).create_account(Actor(item.second));
     }
 }
 
@@ -144,13 +145,15 @@ registration_check_fixture::create_registration_genesis_impl(schedule_inputs_typ
     {
         fc::ecc::private_key private_key = database_integration_fixture::generate_private_key(member);
         committee_private_keys.insert(committee_private_keys_type::value_type(member, private_key));
-        genesis_state.accounts.push_back({ member, "", private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
+        genesis_state.accounts.push_back({ member, private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
     }
 
     schedule_input.clear();
     schedule_input.reserve(4);
 
-    schedule_input.emplace_back(schedule_input_type{ 1, 10, 100 });
+    // Amount of users = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK to force
+    // selection the entire limit in the first step (due tests logic)
+    schedule_input.emplace_back(schedule_input_type{ 1, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK, 100 });
     schedule_input.emplace_back(schedule_input_type{ 2, 5, 75 });
     schedule_input.emplace_back(schedule_input_type{ 3, 5, 50 });
     schedule_input.emplace_back(schedule_input_type{ 4, 8, 25 });

@@ -34,7 +34,9 @@ using scorum::protocol::operation;
 using scorum::protocol::signed_transaction;
 
 class database_impl;
+
 struct genesis_state_type;
+struct genesis_persistent_state_type;
 
 /**
  *   @class database
@@ -129,24 +131,7 @@ public:
 
     chain_id_type get_chain_id() const;
 
-    const witness_object& get_witness(const account_name_type& name) const;
-    const witness_object* find_witness(const account_name_type& name) const;
-
-    const comment_object& get_comment(const account_name_type& author, const fc::shared_string& permlink) const;
-    const comment_object* find_comment(const account_name_type& author, const fc::shared_string& permlink) const;
-
-    const comment_object& get_comment(const account_name_type& author, const std::string& permlink) const;
-    const comment_object* find_comment(const account_name_type& author, const std::string& permlink) const;
-
-    const escrow_object& get_escrow(const account_name_type& name, uint32_t escrow_id) const;
-    const escrow_object* find_escrow(const account_name_type& name, uint32_t escrow_id) const;
-
-    const dynamic_global_property_object& get_dynamic_global_properties() const;
     const node_property_object& get_node_properties() const;
-    const witness_schedule_object& get_witness_schedule_object() const;
-    const hardfork_property_object& get_hardfork_property_object() const;
-
-    const reward_fund_object& get_reward_fund() const;
 
     const time_point_sec calculate_discussion_payout_time(const comment_object& comment) const;
 
@@ -165,17 +150,13 @@ public:
 
     bool push_block(const signed_block& b, uint32_t skip = skip_nothing);
     void push_transaction(const signed_transaction& trx, uint32_t skip = skip_nothing);
-    void _maybe_warn_multiple_production(uint32_t height) const;
-    bool _push_block(const signed_block& b);
+
     void _push_transaction(const signed_transaction& trx);
 
     signed_block generate_block(const fc::time_point_sec when,
                                 const account_name_type& witness_owner,
                                 const fc::ecc::private_key& block_signing_private_key,
                                 uint32_t skip);
-    signed_block _generate_block(const fc::time_point_sec when,
-                                 const account_name_type& witness_owner,
-                                 const fc::ecc::private_key& block_signing_private_key);
 
     void pop_block();
     void clear_pending();
@@ -232,17 +213,6 @@ public:
      */
     fc::signal<void(const signed_transaction&)> on_applied_transaction;
 
-    /**
-     *  Emitted After a block has been applied and committed.  The callback
-     *  should not yield and should execute quickly.
-     */
-    // fc::signal<void(const vector< graphene::db2::generic_id >&)> changed_objects;
-
-    /** this signal is emitted any time an object is removed and contains a
-     * pointer to the last value of every object that was removed.
-     */
-    // fc::signal<void(const vector<const object*>&)>  removed_objects;
-
     //////////////////// db_witness_schedule.cpp ////////////////////
 
     /**
@@ -281,11 +251,6 @@ public:
      */
     uint32_t get_slot_at_time(fc::time_point_sec when) const;
 
-    /** clears all vote records for a particular account but does not update the
-     * witness vote totals.  Vote totals should be updated first via a call to
-     * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
-     */
-
     void account_recovery_processing();
     void expire_escrow_ratification();
     void process_decline_voting_rights();
@@ -323,9 +288,6 @@ public:
     void set_hardfork(uint32_t hardfork, bool process_now = true);
 
     void validate_invariants() const;
-    /**
-     * @}
-     */
 
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
@@ -337,6 +299,8 @@ public:
         _plugin_index_signal.connect([this]() { this->add_index<MultiIndexType>(); });
     }
 
+    const genesis_persistent_state_type& genesis_persistent_state() const;
+
 private:
     void adjust_balance(const account_object& a, const asset& delta);
 
@@ -347,9 +311,14 @@ private:
     void _update_witness_majority_version();
     void _update_witness_hardfork_version_votes();
 
-protected:
-    void notify_changed_objects();
+    void _maybe_warn_multiple_production(uint32_t height) const;
+    bool _push_block(const signed_block& b);
 
+    signed_block _generate_block(const fc::time_point_sec when,
+                                 const account_name_type& witness_owner,
+                                 const fc::ecc::private_key& block_signing_private_key);
+
+protected:
     void set_producing(bool p)
     {
         _is_producing = p;
