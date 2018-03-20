@@ -39,9 +39,9 @@ int main(int argc, char** argv)
                 ("help,h", "Print this help message and exit.")
                 ("config-file", bpo::value<boost::filesystem::path>(),
                  "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
+        // clang-format on
 
         logger::set_logging_program_options(cfg_options);
-        // clang-format on
 
         bpo::variables_map options;
 

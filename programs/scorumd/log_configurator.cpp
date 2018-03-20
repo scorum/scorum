@@ -60,28 +60,22 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
 
             for (std::string& s : console_appenders)
             {
-                try
-                {
-                    auto console_appender = fc::json::from_string(s).as<console_appender_args>();
+                auto console_appender = fc::json::from_string(s).as<console_appender_args>();
 
-                    fc::console_appender::config console_appender_config;
-                    console_appender_config.level_colors.emplace_back(
-                        fc::console_appender::level_color(fc::log_level::debug, fc::console_appender::color::white));
-                    console_appender_config.level_colors.emplace_back(
-                        fc::console_appender::level_color(fc::log_level::info, fc::console_appender::color::green));
-                    console_appender_config.level_colors.emplace_back(
-                        fc::console_appender::level_color(fc::log_level::warn, fc::console_appender::color::brown));
-                    console_appender_config.level_colors.emplace_back(
-                        fc::console_appender::level_color(fc::log_level::error, fc::console_appender::color::red));
-                    console_appender_config.stream
-                        = fc::variant(console_appender.stream).as<fc::console_appender::stream::type>();
-                    logging_config.appenders.push_back(fc::appender_config(console_appender.appender, "console",
-                                                                           fc::variant(console_appender_config)));
-                    found_logging_config = true;
-                }
-                catch (...)
-                {
-                }
+                fc::console_appender::config console_appender_config;
+                console_appender_config.level_colors.emplace_back(
+                    fc::console_appender::level_color(fc::log_level::debug, fc::console_appender::color::white));
+                console_appender_config.level_colors.emplace_back(
+                    fc::console_appender::level_color(fc::log_level::info, fc::console_appender::color::green));
+                console_appender_config.level_colors.emplace_back(
+                    fc::console_appender::level_color(fc::log_level::warn, fc::console_appender::color::brown));
+                console_appender_config.level_colors.emplace_back(
+                    fc::console_appender::level_color(fc::log_level::error, fc::console_appender::color::red));
+                console_appender_config.stream
+                    = fc::variant(console_appender.stream).as<fc::console_appender::stream::type>();
+                logging_config.appenders.push_back(
+                    fc::appender_config(console_appender.appender, "console", fc::variant(console_appender_config)));
+                found_logging_config = true;
             }
         }
 
