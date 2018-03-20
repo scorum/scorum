@@ -30,6 +30,8 @@ struct file_appender_args
 {
     std::string appender;
     std::string file;
+    size_t rotation_interval_minutes = 60;
+    size_t rotation_limit_hours = 30 * 24;
 };
 
 struct logger_args
@@ -40,7 +42,7 @@ struct logger_args
 };
 
 FC_REFLECT(console_appender_args, (appender)(stream))
-FC_REFLECT(file_appender_args, (appender)(file))
+FC_REFLECT(file_appender_args, (appender)(file)(rotation_interval_minutes)(rotation_limit_hours))
 FC_REFLECT(logger_args, (name)(level)(appender))
 
 namespace logger {
@@ -101,8 +103,8 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 file_appender_config.filename = file_name;
                 file_appender_config.flush = true;
                 file_appender_config.rotate = true;
-                file_appender_config.rotation_interval = fc::hours(1);
-                file_appender_config.rotation_limit = fc::days(1);
+                file_appender_config.rotation_interval = fc::minutes(file_appender.rotation_interval_minutes);
+                file_appender_config.rotation_limit = fc::hours(file_appender.rotation_limit_hours);
                 logging_config.appenders.push_back(
                     fc::appender_config(file_appender.appender, "file", fc::variant(file_appender_config)));
                 found_logging_config = true;
