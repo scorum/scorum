@@ -86,9 +86,10 @@ int main(int argc, char** argv)
                 ("rpc-tls-certificate,c", bpo::value<std::string>()->implicit_value("server.pem"),     "PEM certificate for wallet websocket TLS RPC")
                 ("rpc-http-endpoint,H",   bpo::value<std::string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
                 ("daemon,d", "Run the wallet in daemon mode")
-                ("rpc-http-allowip",      bpo::value<std::vector<std::string>>()->multitoken(),             "Allows only specified IPs to connect to the HTTP endpoint")
+                ("rpc-http-allowip",      bpo::value<std::vector<std::string>>()->multitoken(),        "Allows only specified IPs to connect to the HTTP endpoint")
                 ("wallet-file,w",         bpo::value<std::string>()->default_value("wallet.json"),     "Wallet configuration to load")
-                ("chain-id",              bpo::value<std::string>(),                                   "Chain ID to connect to");
+                ("chain-id",              bpo::value<std::string>(),                                   "Chain ID to connect to")
+                ("suggest-brain-key",     "Suggest brain key");
         // clang-format on
 
         std::vector<std::string> allowed_ips;
@@ -106,6 +107,12 @@ int main(int argc, char** argv)
         if (options.count("help"))
         {
             std::cout << opts << "\n";
+            return 0;
+        }
+
+        if (options.count("suggest-brain-key"))
+        {
+            std::cout << fc::json::to_string(scorum::wallet::suggest_brain_key()) << "\n";
             return 0;
         }
 

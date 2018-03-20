@@ -49,7 +49,7 @@ void process_funds::on_apply(block_task_context& ctx)
     }
 
     // 50% of the revenue goes to support and develop the product, namely,
-    // towards the company’s R&D center.
+    // towards the companyâ€™s R&D center.
     asset dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
 
     // 50% of revenue is distributed in SCR among users.

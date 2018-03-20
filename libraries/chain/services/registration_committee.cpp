@@ -172,7 +172,7 @@ percent_type dbs_registration_committee::get_transfer_quorum()
 {
     FC_ASSERT("registration committee doesn't support get_transfer_quorum.");
 
-    return SCORUM_COMMITTEE_QUORUM_PERCENT;
+    return SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
 }
 
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)

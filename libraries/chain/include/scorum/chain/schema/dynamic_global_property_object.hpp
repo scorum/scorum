@@ -36,7 +36,7 @@ public:
     time_point_sec time;
     account_name_type current_witness;
 
-    asset total_supply = asset(0, SCORUM_SYMBOL); ///< circulating_capital + reward and registration pools supply
+    asset total_supply = asset(0, SCORUM_SYMBOL); ///< total SCR and SP (circulating_capital + pools supply)
     asset circulating_capital = asset(
         0,
         SCORUM_SYMBOL); ///< total SCR and SP on circulating (on account balances). circulating_capital <= total_supply

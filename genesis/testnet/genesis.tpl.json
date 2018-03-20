@@ -1,0 +1,102 @@
+{
+    "accounts": [
+        {"name": "scorumwitness1", "public_key" : "SCR6nJFdCoPeuTq79cADmJviLEiU99Lxq45cBwci5GBzqGUGAAbdK", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness2", "public_key" : "SCR88VAKxpHMkrmJ6bAMQEkPmHSYz8bnzpXQsE6GeQFdkcLHE3y9P", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness3", "public_key" : "SCR5nH7tfcTX72J6wxdwud1xK18avXewz7tuUySf6BgVMekcQSQrB", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness4", "public_key" : "SCR6r5LKc7zFWcbNVK8Mg4X8AVXxNmus2KWjhZshXKetW2pB8cVMy", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness5", "public_key" : "SCR5KfzB3eLus66fuZj2AxAXbf6d2rpjufMQbDDGkLphfk6JWhFro", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness6", "public_key" : "SCR5jFCbXXDWoqHzpxD85xaS4avrfLnNwxiBFStDiwbhwUxvXXNrq", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness7", "public_key" : "SCR6cM4vn1zrkkjqjXvRgTQRPT9K8g5ofEoThr3ws7rdRa78Ao6oZ", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness8", "public_key" : "SCR63UNWhrTpkge8i1QMzb999AfuMJNdfZR3uNFKw4QNKH8axrSRF", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness9", "public_key" : "SCR7shLVJLbXJ576c1Vmc9txMS58TPZmr2Mfn7mCxr8XfnzGo2SHu", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness10", "public_key" : "SCR5ABrRFZfXcbZhLAbuxRHWbk9DRzyzX8RT8LxvuNVMWMtLP8scj", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness11", "public_key" : "SCR7PQLhywLLFt36LHEbdwp9R6Koj1pA4avZxjsjAWHBb9KE5TDD5", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness12", "public_key" : "SCR7V2Q746kLq959w61tvTack5ttbzhG7Paz7EPcNi2BhKuZEt9VE", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness13", "public_key" : "SCR5utwrJmMT7EdYkKDj9hYBGoosgSUbmgQLBhmwSR269u4Xis276", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness14", "public_key" : "SCR851BteeSRgqb9svXJTtLLMAYRFyJGMcJetLhSvsMJqGFPidP9M", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness15", "public_key" : "SCR6V3JobB2GxErvW36badBMqCH6Ce5P68m95xrbDNTJGWDcfHwPq", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness16", "public_key" : "SCR7YSucEfqdca83P38mdvQTpqGmQKtsnH9xi9TJF2LQvKopxNLYe", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness17", "public_key" : "SCR74vRK8Rfb6GemES7gS26pnGBgW8k2M87dhn3PFWvvZL9xRg1tB", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness18", "public_key" : "SCR7g5gALJ336wHoNJZutSphpNBmBZ2F9skm72cxoRMnwhLVTanfW", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness19", "public_key" : "SCR7H7m2fRARr6vBApRtMYWKcJbm2yuXBUR9hg456h59guwEzyR5G", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness20", "public_key" : "SCR6FX1TXJn8HebNT7xVmGd9pe3xSDaKvTJPrAQ3RJHSrCGsqNyw7", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness21", "public_key" : "SCR7kMQgc9LvdwpdvtS9nFcyW9rjn7sQgdAvaPLcPzLBpTqBNscyW", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness22", "public_key" : "SCR5zkCRHCcWcbDaLDwGitxa1TDetviwj2SbJucJD4CZZLUFAjcTy", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness23", "public_key" : "SCR89F1gkdfWNZ5KRaPPmMDLfJpq7f92LNPTdqyyEwAkffXsme15L", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness24", "public_key" : "SCR5gpTrRm5eWwntTeSioQDMoTBFkhxJ6KHkYdqJX6ynU4wiBtkL8", "scr_amount": "0.000000000 SCR"},
+        {"name": "scorumwitness25", "public_key" : "SCR5AXYXy7XbJBoXSAv8Uiue2QHpZZc5svCPspWnC27cuzDhUu5Gg", "scr_amount": "0.000000000 SCR"}
+    ],
+    "accounts_supply": "0.000000000 SCR",
+    "development_committee": [
+        "dionne"
+    ],
+    "development_scr_supply": "4041614.563394980 SCR",
+    "development_sp_supply": "0.000000000 SP",
+    "founders": [
+        {
+            "name": "dionne",
+            "sp_percent": 100.0
+        }
+    ],
+    "founders_supply": "3000000.000000000 SP",
+    "initial_timestamp": "2018-03-19T14:30:00",
+    "lock_withdraw_sp_until_timestamp": "2018-07-01T00:00:00",
+    "registration_bonus": "5.000000000 SCR",
+    "registration_committee": [
+        "dionne"
+    ],
+    "registration_schedule": [
+        {
+            "bonus_percent": 100,
+            "stage": 1,
+            "users": 100000
+        },
+        {
+            "bonus_percent": 60,
+            "stage": 2,
+            "users": 200000
+        },
+        {
+            "bonus_percent": 40,
+            "stage": 3,
+            "users": 300000
+        },
+        {
+            "bonus_percent": 20,
+            "stage": 4,
+            "users": 400000
+        }
+    ],
+    "registration_supply": "2100000.000000000 SCR",
+    "rewards_supply": "4800000.000000000 SCR",
+    "steemit_bounty_accounts": [],
+    "steemit_bounty_accounts_supply": "100000.000000000 SP",
+    "total_supply": "29265074.800000000 SCR",
+    "witness_candidates": [
+        { "name" : "scorumwitness1", "block_signing_key" : "SCR6es1uPkkkH8sp6tkqHvRgC6u2TpBTLbGxfTVLznZ49zojrn8ni"},
+        { "name" : "scorumwitness2", "block_signing_key" : "SCR7FrE35cuRBMbdtQMPgvNcFtHtwv7dPGvg6yAXxa8NbmUvjpnSj"},
+        { "name" : "scorumwitness3", "block_signing_key" : "SCR7jayPuQPvqnh8KegYX7uwoJJgrpdiQy8Vz5hYY4ziubX64fLP3"},
+        { "name" : "scorumwitness4", "block_signing_key" : "SCR6dKFYMdt8Vnywe8ELneGN9EERnkx1c3Qvn3sGCZbvDqhbHfhg9"},
+        { "name" : "scorumwitness5", "block_signing_key" : "SCR6c21uQ4KFXEKT2B3zRECNJEereLjc8PkJeSii2Q1D9V1NnSCSZ"},
+        { "name" : "scorumwitness6", "block_signing_key" : "SCR5GM6EWAkuue1SpEHiH8YSyUpAuBz5c4br83C1YKupMFBLz75df"},
+        { "name" : "scorumwitness7", "block_signing_key" : "SCR6esDD8uUvSzLUMTn3xf9QmY53LL2LoQymEuiHFUPNCsTFyLhzp"},
+        { "name" : "scorumwitness8", "block_signing_key" : "SCR7knV8MW76FEhao1uaVSkjHg42KzJsaWGmmDWQgqmpk6uf4ddur"},
+        { "name" : "scorumwitness9", "block_signing_key" : "SCR8RJ9okxpEVyn1WUjjjEEDR4e6afarYkfa8niEKX6YzUJz7G63Q"},
+        { "name" : "scorumwitness10", "block_signing_key" : "SCR7gf5EsEPYYhUAm2xzpk83MZ1DwkjhSjbNSSmxLAMaJmzEZetnS"},
+        { "name" : "scorumwitness11", "block_signing_key" : "SCR77trpChyQeRwzkrMQQ1Jdm6bd1S9BytHi84g2FKNDuqGbXjPuw"},
+        { "name" : "scorumwitness12", "block_signing_key" : "SCR5t2hgmTcVTn2sb5gmDEa2cCjmcd3frjPdrJFQczw27YstnGzuR"},
+        { "name" : "scorumwitness13", "block_signing_key" : "SCR8mMJo3FPiNXYx1sZkmyPkox4S4fjypvVWne2gkkFp2GUX9MkkL"},
+        { "name" : "scorumwitness14", "block_signing_key" : "SCR7x8DQy11cpBGrWiThqmk9Jk9Q4JaawPC7jdenPyCkHpQSrBuwV"},
+        { "name" : "scorumwitness15", "block_signing_key" : "SCR5D6BVxSVpwKGvhehmHcPs6euupXkyWiqtmoJSHYGdv1wHyap8x"},
+        { "name" : "scorumwitness16", "block_signing_key" : "SCR6egN2eDDkUjqbiUwhsBnpzASsU5mHjNdNq9L2ecxKSnn5zZNWU"},
+        { "name" : "scorumwitness17", "block_signing_key" : "SCR6zJqbdMw6RZcHPzWT361j5E27xcH8PBectN61TvcJjjQzVr1NK"},
+        { "name" : "scorumwitness18", "block_signing_key" : "SCR5RSbUk5Zwt366BjPnfvMWLPKrg77hrU4DngEv9tDc18dkBbU9g"},
+        { "name" : "scorumwitness19", "block_signing_key" : "SCR8Gcve3t34ej2HDsA7v7vHv6epeF5iTr63fqRRqhY5B3pTLVNUp"},
+        { "name" : "scorumwitness20", "block_signing_key" : "SCR6DT3zAcFiuHeiz5TYjJ3qdoL3cJ98Piv4sLsujE7B4Hd1iAEyN"},
+        { "name" : "scorumwitness21", "block_signing_key" : "SCR7r4f9ti1X1Md5Qx1v9cb35WrMcK8xRdzjMwHyAcAa8whJLGfhi"},
+        { "name" : "scorumwitness22", "block_signing_key" : "SCR7RktLU8QD926nx1zf41Cqh4NhLPSZ14P4H4kaCEHUErg8QhQK6"},
+        { "name" : "scorumwitness23", "block_signing_key" : "SCR6p4dop1VbbitKpLe8qQkPGmYpcqaG1o4mU7PQuSsQGTQ2XCx4u"},
+        { "name" : "scorumwitness24", "block_signing_key" : "SCR7K2MkUe5ym68CJH9ud5ztkpiwLEgyic6Vk7EQCE3LnzjBTMrxs"},
+        { "name" : "scorumwitness25", "block_signing_key" : "SCR8WjttMKycdrEkKNWNbr2UDRyYmZxJTHr73SibMpLmtDWG58LFU"}
+    ]
+}

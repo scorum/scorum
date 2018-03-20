@@ -19,9 +19,7 @@ struct dev_pool_initializator_impl : public initializator
     virtual void on_apply(initializator_context&);
 
 private:
-    bool is_zero_supply(initializator_context&);
     void setup_dev_pool(initializator_context&);
-    void increase_total_supply(initializator_context&);
 };
 
 } // namespace genesis
