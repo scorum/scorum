@@ -9,6 +9,7 @@
 #include <scorum/protocol/version.hpp>
 
 #include <boost/filesystem.hpp>
+#include <fstream>
 
 #ifdef WIN32
 #include <signal.h>
