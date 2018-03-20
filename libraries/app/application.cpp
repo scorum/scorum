@@ -342,10 +342,8 @@ public:
                 _self->_disable_get_block = true;
             }
 
-            bool read_only = _options->count("read-only");
-            if (!read_only)
+            if (!_self->is_read_only())
             {
-                _self->_read_only = false;
                 ilog("Starting Scorum node in write mode.");
                 _max_block_age = _options->at("max-block-age").as<int32_t>();
 
@@ -464,7 +462,7 @@ public:
             }
             _running = true;
 
-            if (!read_only)
+            if (!_self->is_read_only())
             {
                 reset_p2p_node(_data_dir);
             }
@@ -1283,6 +1281,7 @@ void application::startup()
 {
     try
     {
+        _read_only = my->_options->count("read-only");
         my->startup();
     }
     catch (const fc::exception& e)

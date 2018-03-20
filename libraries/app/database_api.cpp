@@ -215,7 +215,7 @@ optional<block_header> database_api::get_block_header(uint32_t block_num) const
 {
     FC_ASSERT(!my->_disable_get_block, "get_block_header is disabled on this node.");
 
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         return _app.get_write_node_database_api()->get_block_header(block_num);
     }
@@ -237,7 +237,7 @@ optional<signed_block_api_obj> database_api::get_block(uint32_t block_num) const
 {
     FC_ASSERT(!my->_disable_get_block, "get_block is disabled on this node.");
 
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         return _app.get_write_node_database_api()->get_block(block_num);
     }
@@ -2096,7 +2096,7 @@ annotated_signed_transaction database_api::get_transaction(transaction_id_type i
 #ifdef SKIP_BY_TX_ID
     FC_ASSERT(false, "This node's operator has disabled operation indexing by transaction_id");
 #else
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         return _app.get_write_node_database_api()->get_transaction(id);
     }

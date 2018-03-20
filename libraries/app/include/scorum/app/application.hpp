@@ -73,6 +73,11 @@ public:
     void startup_plugins();
     void shutdown_plugins();
 
+    bool is_read_only() const
+    {
+        return _read_only;
+    }
+
     template <typename PluginType> std::shared_ptr<PluginType> register_plugin()
     {
         auto plug = std::make_shared<PluginType>(this);
@@ -133,7 +138,6 @@ public:
     fc::api<network_broadcast_api>& get_write_node_net_api();
     fc::api<database_api>& get_write_node_database_api();
 
-    bool _read_only = true;
     bool _disable_get_block = false;
     fc::optional<std::string> _remote_endpoint;
     fc::optional<fc::api<network_broadcast_api>> _remote_net_api;
@@ -152,6 +156,8 @@ private:
     boost::program_options::options_description _cfg_options;
 
     const std::shared_ptr<plugin> null_plugin;
+
+    bool _read_only = true;
 };
 
 template <class C, typename... Args>

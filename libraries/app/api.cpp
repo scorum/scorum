@@ -211,7 +211,7 @@ void network_broadcast_api::broadcast_transaction(const signed_transaction& trx)
 {
     trx.validate();
 
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         _app.get_write_node_net_api()->broadcast_transaction(trx);
     }
@@ -225,7 +225,7 @@ void network_broadcast_api::broadcast_transaction(const signed_transaction& trx)
 
 fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signed_transaction& trx)
 {
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         return _app.get_write_node_net_api()->broadcast_transaction_synchronous(trx);
     }
@@ -239,7 +239,7 @@ fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signe
 
 void network_broadcast_api::broadcast_block(const signed_block& b)
 {
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         _app.get_write_node_net_api()->broadcast_block(b);
     }
@@ -283,7 +283,7 @@ public:
 
 void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)
 {
-    if (_app._read_only)
+    if (_app.is_read_only())
     {
         _app.get_write_node_net_api()->broadcast_transaction_with_callback(cb, trx);
     }
