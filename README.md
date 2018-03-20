@@ -1,16 +1,19 @@
-# Introducing Scorum.
+# Introducing Scorum
 
-Scorum is an sports media blockchain with Delegated Proof of Stake consensus
-algorithm.
-
-  - Currency symbol SCR
-  - No emission
+Scorum platform has three core functions: 
+ - Blogging platform where authors and readers will be rewarded for creating and engaging with content
+ - Statistical centers where fans can browse and authors can use Microsoft’s Power BI tool to integrate data-rich visuals into their content
+- Commission-free betting exchange where fans can place bets against each other using Scorum Coins (SCR)
+Scorum’s blockchain protocol is built on the Graphene Framework and utilizes a delegated proof of stake consensus. 
 
 # Public Announcement & Discussion
 
-Scorum was announced on the
-[ADD_LINK_HERE](the_link) prior to
-the start of any mining.
+The [Scorum team](https://scorumcoins.com/en-us/team) has been hard at work developing the blogging platform and the [statistics center](http://stats.scorum.com/).
+
+Find out more as we take the project public through the following channels:
+ - Get the latest updates and chat with us on [Telegram](https://telegram.me/SCORUM), [Facebook](https://www.facebook.com/SCORUM.COMMUNITY/), and [Twitter](https://twitter.com/SCORUM_en)
+ - Read more about our vision on [Steemit](https://steemit.com/@scorum.community)
+ - Join our [affiliate program](https://scorumcoins.com/en-us/affiliate) to get Scorum Coins for free or [apply for whitelist](https://scorumcoins.com/en-us/whitelist) to get coins with a discount
 
 # No Support & No Warranty
 
