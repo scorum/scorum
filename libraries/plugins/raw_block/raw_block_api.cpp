@@ -40,6 +40,8 @@ raw_block_api::raw_block_api(const scorum::app::api_context& ctx)
 
 get_raw_block_result raw_block_api::get_raw_block(get_raw_block_args args)
 {
+    FC_ASSERT(!my->app.is_read_only(), "get_raw_block is not available in read-only mode.");
+
     get_raw_block_result result;
     std::shared_ptr<scorum::chain::database> db = my->app.chain_database();
 
@@ -59,6 +61,8 @@ get_raw_block_result raw_block_api::get_raw_block(get_raw_block_args args)
 
 void raw_block_api::push_raw_block(std::string block_b64)
 {
+    FC_ASSERT(!my->app.is_read_only(), "push_raw_block is not available in read-only mode.");
+
     std::shared_ptr<scorum::chain::database> db = my->app.chain_database();
 
     std::string block_bin = fc::base64_decode(block_b64);
