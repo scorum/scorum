@@ -213,14 +213,7 @@ void network_broadcast_api::broadcast_transaction(const signed_transaction& trx)
 
     if (_app._read_only)
     {
-        // If we are not connected, attempt to connect once and then fail
-        if (!_app._remote_net_api)
-        {
-            _app.connect_to_write_node();
-            FC_ASSERT(_app._remote_net_api, "Write node RPC not configured properly or not currently connected.");
-        }
-
-        (*_app._remote_net_api)->broadcast_transaction(trx);
+        _app.get_write_node_net_api()->broadcast_transaction(trx);
     }
     else
     {
@@ -234,14 +227,7 @@ fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signe
 {
     if (_app._read_only)
     {
-        // If we are not connected, attempt to connect once and then fail
-        if (!_app._remote_net_api)
-        {
-            _app.connect_to_write_node();
-            FC_ASSERT(_app._remote_net_api, "Write node RPC not configured properly or not currently connected.");
-        }
-
-        return (*_app._remote_net_api)->broadcast_transaction_synchronous(trx);
+        return _app.get_write_node_net_api()->broadcast_transaction_synchronous(trx);
     }
     else
     {
@@ -255,14 +241,7 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
 {
     if (_app._read_only)
     {
-        // If we are not connected, attempt to connect once and then fail
-        if (!_app._remote_net_api)
-        {
-            _app.connect_to_write_node();
-            FC_ASSERT(_app._remote_net_api, "Write node RPC not configured properly or not currently connected.");
-        }
-
-        (*_app._remote_net_api)->broadcast_block(b);
+        _app.get_write_node_net_api()->broadcast_block(b);
     }
     else
     {
@@ -306,14 +285,7 @@ void network_broadcast_api::broadcast_transaction_with_callback(confirmation_cal
 {
     if (_app._read_only)
     {
-        // If we are not connected, attempt to connect once and then fail
-        if (!_app._remote_net_api)
-        {
-            _app.connect_to_write_node();
-            FC_ASSERT(_app._remote_net_api, "Write node RPC not configured properly or not currently connected.");
-        }
-
-        (*_app._remote_net_api)->broadcast_transaction_with_callback(cb, trx);
+        _app.get_write_node_net_api()->broadcast_transaction_with_callback(cb, trx);
     }
     else
     {

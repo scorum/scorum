@@ -180,6 +180,7 @@ void database_api_impl::set_block_applied_callback(std::function<void(const vari
 
 database_api::database_api(const scorum::app::api_context& ctx)
     : my(new database_api_impl(ctx))
+    , _app(ctx.app)
 {
 }
 
@@ -214,7 +215,14 @@ optional<block_header> database_api::get_block_header(uint32_t block_num) const
 {
     FC_ASSERT(!my->_disable_get_block, "get_block_header is disabled on this node.");
 
-    return my->_db.with_read_lock([&]() { return my->get_block_header(block_num); });
+    if (_app._read_only)
+    {
+        return _app.get_write_node_database_api()->get_block_header(block_num);
+    }
+    else
+    {
+        return my->_db.with_read_lock([&]() { return my->get_block_header(block_num); });
+    }
 }
 
 optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
@@ -229,7 +237,14 @@ optional<signed_block_api_obj> database_api::get_block(uint32_t block_num) const
 {
     FC_ASSERT(!my->_disable_get_block, "get_block is disabled on this node.");
 
-    return my->_db.with_read_lock([&]() { return my->get_block(block_num); });
+    if (_app._read_only)
+    {
+        return _app.get_write_node_database_api()->get_block(block_num);
+    }
+    else
+    {
+        return my->_db.with_read_lock([&]() { return my->get_block(block_num); });
+    }
 }
 
 optional<signed_block_api_obj> database_api_impl::get_block(uint32_t block_num) const
@@ -2081,21 +2096,28 @@ annotated_signed_transaction database_api::get_transaction(transaction_id_type i
 #ifdef SKIP_BY_TX_ID
     FC_ASSERT(false, "This node's operator has disabled operation indexing by transaction_id");
 #else
-    return my->_db.with_read_lock([&]() {
-        const auto& idx = my->_db.get_index<operation_index>().indices().get<by_transaction_id>();
-        auto itr = idx.lower_bound(id);
-        if (itr != idx.end() && itr->trx_id == id)
-        {
-            auto blk = my->_db.fetch_block_by_number(itr->block);
-            FC_ASSERT(blk.valid());
-            FC_ASSERT(blk->transactions.size() > itr->trx_in_block);
-            annotated_signed_transaction result = blk->transactions[itr->trx_in_block];
-            result.block_num = itr->block;
-            result.transaction_num = itr->trx_in_block;
-            return result;
-        }
-        FC_ASSERT(false, "Unknown Transaction ${t}", ("t", id));
-    });
+    if (_app._read_only)
+    {
+        return _app.get_write_node_database_api()->get_transaction(id);
+    }
+    else
+    {
+        return my->_db.with_read_lock([&]() {
+            const auto& idx = my->_db.get_index<operation_index>().indices().get<by_transaction_id>();
+            auto itr = idx.lower_bound(id);
+            if (itr != idx.end() && itr->trx_id == id)
+            {
+                auto blk = my->_db.fetch_block_by_number(itr->block);
+                FC_ASSERT(blk.valid());
+                FC_ASSERT(blk->transactions.size() > itr->trx_in_block);
+                annotated_signed_transaction result = blk->transactions[itr->trx_in_block];
+                result.block_num = itr->block;
+                result.transaction_num = itr->trx_in_block;
+                return result;
+            }
+            FC_ASSERT(false, "Unknown Transaction ${t}", ("t", id));
+        });
+    }
 #endif
 }
 } // namespace app
