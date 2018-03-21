@@ -40,12 +40,11 @@ add_library( scorum_chain
              services/dbservice_dbs_factory.cpp
              services/decline_voting_rights_request.cpp
              services/dev_pool.cpp
-			 services/development_committee.cpp
+             services/development_committee.cpp
              services/dynamic_global_property.cpp
              services/escrow.cpp
-             services/hardfork_property.cpp
              services/proposal.cpp
-			 services/proposal_executor.cpp
+             services/proposal_executor.cpp
              services/registration_committee.cpp
              services/registration_pool.cpp
              services/reward.cpp

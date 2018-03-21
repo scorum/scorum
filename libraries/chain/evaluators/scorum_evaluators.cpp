@@ -554,8 +554,8 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 
         account_service.decrease_balance(from_account, scorum_spent);
 
-        escrow_service.create(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
-                              o.scorum_amount, o.fee);
+        escrow_service.create_escrow(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
+                                     o.scorum_amount, o.fee);
     }
     FC_CAPTURE_AND_RETHROW((o))
 }
@@ -1083,7 +1083,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
     {
         FC_ASSERT(!dvrr_service.is_exists(account.id), "Cannot create new request because one already exists.");
 
-        dvrr_service.create(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
+        dvrr_service.create_rights(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
     }
     else
     {

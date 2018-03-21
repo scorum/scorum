@@ -108,7 +108,7 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
     const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const witness_schedule_object& wso = db_impl().obtain_service<dbs_witness_schedule>().get();
-    db_impl().modify(witness, [&](witness_object& w) {
+    update(witness, [&](witness_object& w) {
         auto delta_pos = w.votes.value * (wso.current_virtual_time - w.virtual_last_update);
         w.virtual_position += delta_pos;
 

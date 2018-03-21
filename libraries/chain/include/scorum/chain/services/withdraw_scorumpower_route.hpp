@@ -6,7 +6,6 @@
 namespace scorum {
 namespace chain {
 
-class withdraw_scorumpower_route_object;
 class account_object;
 class dev_committee_object;
 
