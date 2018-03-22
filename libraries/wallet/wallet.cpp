@@ -146,6 +146,13 @@ public:
     {
         init_prototype_ops();
 
+        chain_id_type remote_chain_id = _remote_db->get_chain_id();
+        if (remote_chain_id != _chain_id)
+        {
+            FC_THROW("Remote server gave us an unexpected chain_id",
+                     ("remote_chain_id", remote_chain_id)("chain_id", _chain_id));
+        }
+
         _wallet.ws_server = initial_data.ws_server;
         _wallet.ws_user = initial_data.ws_user;
         _wallet.ws_password = initial_data.ws_password;
@@ -2605,7 +2612,7 @@ annotated_signed_transaction wallet_api::development_committee_exclude_member(co
 
 std::set<account_name_type> wallet_api::list_development_committee(const std::string& lowerbound, uint32_t limit)
 {
-    return my->_remote_db->lookup_registration_committee_members(lowerbound, limit);
+    return my->_remote_db->lookup_development_committee_members(lowerbound, limit);
 }
 
 annotated_signed_transaction wallet_api::development_committee_change_add_member_quorum(const std::string& initiator,
