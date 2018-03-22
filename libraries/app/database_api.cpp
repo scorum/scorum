@@ -302,6 +302,11 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
     return gpao;
 }
 
+chain_id_type database_api::get_chain_id() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_chain_id(); });
+}
+
 chain_id_type database_api_impl::get_chain_id() const
 {
     return _db.get_chain_id();
