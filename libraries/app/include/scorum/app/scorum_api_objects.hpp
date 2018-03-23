@@ -73,6 +73,11 @@ struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_g
         base = other;
         return *this;
     }
+
+    asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
+    asset fund_budget_balance = asset(0, SCORUM_SYMBOL);
+    asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_balance = asset(0, SCORUM_SYMBOL);
 };
 
 struct comment_api_obj
@@ -629,7 +634,12 @@ FC_REFLECT_EMPTY(scorum::app::withdraw_scorumpower_route_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
 FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
 
-FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
+                   (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object),
+                   (registration_pool_balance)
+                   (fund_budget_balance)
+                   (reward_pool_balance)
+                   (content_reward_balance))
 FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
