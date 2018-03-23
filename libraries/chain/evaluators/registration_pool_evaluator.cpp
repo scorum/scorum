@@ -190,6 +190,7 @@ registration_pool_evaluator::registration_pool_evaluator(data_service_factory_i&
     , _account_service(services.account_service())
     , _registration_pool_service(services.registration_pool_service())
     , _registration_committee_service(services.registration_committee_service())
+    , _dprops_service(services.dynamic_global_property_service())
 {
 }
 
@@ -218,6 +219,8 @@ void registration_pool_evaluator::do_apply(const registration_pool_evaluator::op
 
     _account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                                o.active, o.posting, bonus);
+
+    _dprops_service.update([&](dynamic_global_property_object& o) { o.circulating_capital += bonus; });
 }
 
 //
@@ -245,7 +248,11 @@ void give_bonus_from_registration_pool_task::on_apply(give_bonus_from_registrati
 
     asset bonus = impl.allocate_cash();
     account_service_i& account_service = ctx.services().account_service();
+    dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
+
     account_service.create_scorumpower(ctx.beneficiary(), bonus);
+
+    dprops_service.update([&](dynamic_global_property_object& o) { o.circulating_capital += bonus; });
 }
 }
 }
