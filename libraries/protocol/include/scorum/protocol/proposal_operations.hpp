@@ -200,11 +200,11 @@ FC_REFLECT_ENUM(scorum::protocol::quorum_type,
 
 FC_REFLECT(scorum::protocol::registration_committee_add_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::registration_committee_exclude_member_operation, (account_name))
-FC_REFLECT(scorum::protocol::registration_committee_change_quorum_operation, (quorum))
+FC_REFLECT(scorum::protocol::registration_committee_change_quorum_operation, (quorum)(committee_quorum))
 
 FC_REFLECT(scorum::protocol::development_committee_add_member_operation, (account_name))
 FC_REFLECT(scorum::protocol::development_committee_exclude_member_operation, (account_name))
-FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quorum))
+FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quorum)(committee_quorum))
 
 FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
