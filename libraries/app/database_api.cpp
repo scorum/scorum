@@ -18,10 +18,16 @@
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
+#include <scorum/chain/services/registration_pool.hpp>
+#include <scorum/chain/services/reward.hpp>
 
 #include <scorum/chain/schema/committee.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
+#include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -299,6 +305,12 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
             gpao = *r;
         }
     }
+
+    gpao.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
+    gpao.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
+    gpao.reward_pool_balance = _db.obtain_service<dbs_reward>().get_pool().balance;
+    gpao.content_reward_balance = _db.obtain_service<dbs_reward_fund>().get().reward_balance;
+
     return gpao;
 }
 
