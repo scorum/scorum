@@ -228,7 +228,6 @@ public:
 
         result["participation"] = (100 * dynamic_props.recent_slots_filled.popcount()) / 128.0;
 
-        result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund()).get_object();
         return result;
     }
 
