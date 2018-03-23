@@ -41,7 +41,7 @@ dockerized container.  Both common binary types are included.
     # put your config file in /opt/scorumd/config.ini otherwise default config will be used.
 
     docker run \
-        -v /opt/scorumd:/var/lib/scorumd
+        -v /opt/scorumd:/var/lib/scorumd \
         -d -p 2001:2001 -p 8090:8090 --name scorumd \
         scorum/release:0.0.1.680af90
 
