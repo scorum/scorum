@@ -13,6 +13,7 @@
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 #include <scorum/protocol/transaction.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -616,18 +617,18 @@ struct registration_committee_api_obj
 
 // clang-format off
 
-FC_REFLECT_EMPTY(scorum::app::account_bandwidth_api_obj)
-FC_REFLECT_EMPTY(scorum::app::block_summary_api_obj)
-FC_REFLECT_EMPTY(scorum::app::change_recovery_account_request_api_obj)
-FC_REFLECT_EMPTY(scorum::app::comment_vote_api_obj)
-FC_REFLECT_EMPTY(scorum::app::decline_voting_rights_request_api_obj)
-FC_REFLECT_EMPTY(scorum::app::escrow_api_obj)
-FC_REFLECT_EMPTY(scorum::app::reward_fund_api_obj)
-FC_REFLECT_EMPTY(scorum::app::scorumpower_delegation_api_obj)
-FC_REFLECT_EMPTY(scorum::app::scorumpower_delegation_expiration_api_obj)
-FC_REFLECT_EMPTY(scorum::app::withdraw_scorumpower_route_api_obj)
-FC_REFLECT_EMPTY(scorum::app::witness_schedule_api_obj)
-FC_REFLECT_EMPTY(scorum::app::witness_vote_api_obj)
+FC_REFLECT_DERIVED(scorum::app::account_bandwidth_api_obj, (scorum::witness::account_bandwidth_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::block_summary_api_obj, (scorum::chain::block_summary_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::change_recovery_account_request_api_obj, (scorum::chain::change_recovery_account_request_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::comment_vote_api_obj, (scorum::chain::comment_vote_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::decline_voting_rights_request_api_obj, (scorum::chain::decline_voting_rights_request_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::escrow_api_obj, (scorum::chain::escrow_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::reward_fund_api_obj, (scorum::chain::reward_fund_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::scorumpower_delegation_api_obj, (scorum::chain::scorumpower_delegation_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::scorumpower_delegation_expiration_api_obj, (scorum::chain::scorumpower_delegation_expiration_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::withdraw_scorumpower_route_api_obj, (scorum::chain::withdraw_scorumpower_route_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::witness_schedule_api_obj, (scorum::chain::witness_schedule_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::witness_vote_api_obj, (scorum::chain::witness_vote_object), BOOST_PP_SEQ_NIL)
 
 FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj, (scorum::chain::dynamic_global_property_object)(scorum::witness::reserve_ratio_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
