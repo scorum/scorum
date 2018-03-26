@@ -143,6 +143,11 @@ public:
     fc::variant_object get_config() const;
 
     /**
+     * @brief Get the chain ID
+     */
+    chain_id_type get_chain_id() const;
+
+    /**
      * @brief Retrieve the current @ref dynamic_global_property_object
      */
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
@@ -472,6 +477,7 @@ FC_API(scorum::app::database_api,
 
    // Globals
    (get_config)
+   (get_chain_id)
    (get_dynamic_global_properties)
    (get_chain_properties)
    (get_witness_schedule)
