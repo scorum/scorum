@@ -215,6 +215,8 @@ void app::run()
             {
                 break;
             }
+            if (line.empty())
+                continue;
             std::cout << line << "\n";
             line += char(EOF);
             fc::variants args = fc::json::variants_from_string(line);
