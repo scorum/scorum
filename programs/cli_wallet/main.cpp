@@ -210,7 +210,7 @@ int main(int argc, char** argv)
         static const std::map<wallet_state_type, std::string> wallet_states
             = { { wallet_state_type::no_password, "(!)" },
                 { wallet_state_type::locked, "(!)" },
-                { wallet_state_type::unlocked, "ok" } };
+                { wallet_state_type::unlocked, " ok" } };
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
             static const std::string prompt = ">>> ";
