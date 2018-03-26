@@ -146,7 +146,8 @@ void database_integration_fixture::open_database_impl(const genesis_state_type& 
     {
         data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
         db._log_hardforks = false;
-        db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_8MB, chainbase::database::read_write, genesis);
+        db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_10MB, chainbase::database::read_write,
+                genesis);
         genesis_state = genesis;
     }
 }

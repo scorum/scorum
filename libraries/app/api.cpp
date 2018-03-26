@@ -300,6 +300,17 @@ public:
         return false;
     }
 #endif // LOCK_BLOGGING_API
+
+#ifdef LOCK_BUDGETS_API
+    bool operator()(const scorum::protocol::create_budget_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::close_budget_operation&) const
+    {
+        return false;
+    }
+#endif // LOCK_BUDGETS_API
 };
 
 void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)

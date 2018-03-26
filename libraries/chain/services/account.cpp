@@ -225,14 +225,11 @@ void dbs_account::update_owner_authority(const account_object& account, const au
 {
     time_point_sec t = db_impl().head_block_time();
 
-    if (db_impl().head_block_num() >= SCORUM_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM)
-    {
-        db_impl().create<owner_authority_history_object>([&](owner_authority_history_object& hist) {
-            hist.account = account.name;
-            hist.previous_owner_authority = db_impl().get<account_authority_object, by_account>(account.name).owner;
-            hist.last_valid_time = t;
-        });
-    }
+    db_impl().create<owner_authority_history_object>([&](owner_authority_history_object& hist) {
+        hist.account = account.name;
+        hist.previous_owner_authority = db_impl().get<account_authority_object, by_account>(account.name).owner;
+        hist.last_valid_time = t;
+    });
 
     db_impl().modify(db_impl().get<account_authority_object, by_account>(account.name),
                      [&](account_authority_object& auth) {

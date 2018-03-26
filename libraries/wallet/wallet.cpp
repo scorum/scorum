@@ -146,6 +146,13 @@ public:
     {
         init_prototype_ops();
 
+        chain_id_type remote_chain_id = _remote_db->get_chain_id();
+        if (remote_chain_id != _chain_id)
+        {
+            FC_THROW("Remote server gave us an unexpected chain_id",
+                     ("remote_chain_id", remote_chain_id)("chain_id", _chain_id));
+        }
+
         _wallet.ws_server = initial_data.ws_server;
         _wallet.ws_user = initial_data.ws_user;
         _wallet.ws_password = initial_data.ws_password;
@@ -215,14 +222,12 @@ public:
 
         result["chain_properties"] = fc::variant(dynamic_props.median_chain_props).get_object();
 
-        result["head_block_num"] = dynamic_props.head_block_number;
-        result["head_block_id"] = dynamic_props.head_block_id;
+        result["chain_id"] = _chain_id;
         result["head_block_age"]
             = fc::get_approximate_relative_time_string(dynamic_props.time, time_point_sec(time_point::now()), " old");
 
         result["participation"] = (100 * dynamic_props.recent_slots_filled.popcount()) / 128.0;
 
-        result["post_reward_fund"] = fc::variant(_remote_db->get_reward_fund()).get_object();
         return result;
     }
 
@@ -2605,7 +2610,7 @@ annotated_signed_transaction wallet_api::development_committee_exclude_member(co
 
 std::set<account_name_type> wallet_api::list_development_committee(const std::string& lowerbound, uint32_t limit)
 {
-    return my->_remote_db->lookup_registration_committee_members(lowerbound, limit);
+    return my->_remote_db->lookup_development_committee_members(lowerbound, limit);
 }
 
 annotated_signed_transaction wallet_api::development_committee_change_add_member_quorum(const std::string& initiator,
