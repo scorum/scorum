@@ -39,8 +39,8 @@
         }
     ],
     "founders_supply": "3000000.000000000 SP",
-    "initial_timestamp": "2018-03-19T14:30:00",
-    "lock_withdraw_sp_until_timestamp": "2018-07-01T00:00:00",
+    "initial_timestamp": "2018-03-26T16:15:00",
+    "lock_withdraw_sp_until_timestamp": "2018-01-01T00:00:00",
     "registration_bonus": "5.000000000 SCR",
     "registration_committee": [
         "dionne"
