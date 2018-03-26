@@ -26,28 +26,28 @@
 #include <scorum/app/plugin.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#ifndef ACCOUNT_HISTORY_PLUGIN_NAME
-#define ACCOUNT_HISTORY_PLUGIN_NAME "account_history"
+#ifndef blockchain_history_plugin_NAME
+#define blockchain_history_plugin_NAME "account_history"
 #endif
 
 namespace scorum {
-namespace account_history {
+namespace blockchain_history {
 using namespace chain;
 using app::application;
 
 namespace detail {
-class account_history_plugin_impl;
+class blockchain_history_plugin_impl;
 }
 
 /**
  *  This plugin is designed to track a range of operations by account so that one node
  *  doesn't need to hold the full operation history in memory.
  */
-class account_history_plugin : public scorum::app::plugin
+class blockchain_history_plugin : public scorum::app::plugin
 {
 public:
-    account_history_plugin(application* app);
-    virtual ~account_history_plugin();
+    blockchain_history_plugin(application* app);
+    virtual ~blockchain_history_plugin();
 
     std::string plugin_name() const override;
     virtual void plugin_set_program_options(boost::program_options::options_description& cli,
@@ -57,8 +57,8 @@ public:
 
     flat_map<account_name_type, account_name_type> tracked_accounts() const; /// map start_range to end_range
 
-    friend class detail::account_history_plugin_impl;
-    std::unique_ptr<detail::account_history_plugin_impl> my;
+    friend class detail::blockchain_history_plugin_impl;
+    std::unique_ptr<detail::blockchain_history_plugin_impl> my;
 };
 }
 } // scorum::account_history

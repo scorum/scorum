@@ -34,7 +34,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 
 #include <graphene/utilities/tempdir.hpp>
 

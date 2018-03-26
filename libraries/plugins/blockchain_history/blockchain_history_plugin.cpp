@@ -1,6 +1,6 @@
-#include <scorum/account_history/account_history_plugin.hpp>
-#include <scorum/account_history/account_history_api.hpp>
-#include <scorum/account_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
+#include <scorum/blockchain_history/schema/account_history_object.hpp>
 
 #include <scorum/app/impacted.hpp>
 
@@ -18,16 +18,16 @@
 #define SCORUM_NAMESPACE_PREFIX "scorum::protocol::"
 
 namespace scorum {
-namespace account_history {
+namespace blockchain_history {
 
 namespace detail {
 
 using namespace scorum::protocol;
 
-class account_history_plugin_impl
+class blockchain_history_plugin_impl
 {
 public:
-    account_history_plugin_impl(account_history_plugin& _plugin)
+    blockchain_history_plugin_impl(blockchain_history_plugin& _plugin)
         : _self(_plugin)
     {
         chain::database& db = database();
@@ -38,7 +38,7 @@ public:
 
         db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
     }
-    virtual ~account_history_plugin_impl()
+    virtual ~blockchain_history_plugin_impl()
     {
     }
 
@@ -49,7 +49,7 @@ public:
 
     void on_operation(const operation_notification& note);
 
-    account_history_plugin& _self;
+    blockchain_history_plugin& _self;
     flat_map<account_name_type, account_name_type> _tracked_accounts;
     bool _filter_content = false;
     bool _blacklist = false;
@@ -158,7 +158,7 @@ struct operation_visitor_filter : operation_visitor
     }
 };
 
-void account_history_plugin_impl::on_operation(const operation_notification& note)
+void blockchain_history_plugin_impl::on_operation(const operation_notification& note)
 {
     flat_set<account_name_type> impacted;
     scorum::chain::database& db = database();
@@ -210,24 +210,24 @@ void account_history_plugin_impl::on_operation(const operation_notification& not
 
 } // end namespace detail
 
-account_history_plugin::account_history_plugin(application* app)
+blockchain_history_plugin::blockchain_history_plugin(application* app)
     : plugin(app)
-    , my(new detail::account_history_plugin_impl(*this))
+    , my(new detail::blockchain_history_plugin_impl(*this))
 {
     // ilog("Loading account history plugin" );
 }
 
-account_history_plugin::~account_history_plugin()
+blockchain_history_plugin::~blockchain_history_plugin()
 {
 }
 
-std::string account_history_plugin::plugin_name() const
+std::string blockchain_history_plugin::plugin_name() const
 {
-    return ACCOUNT_HISTORY_PLUGIN_NAME;
+    return blockchain_history_plugin_NAME;
 }
 
-void account_history_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
-                                                        boost::program_options::options_description& cfg)
+void blockchain_history_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+                                                           boost::program_options::options_description& cfg)
 {
     cli.add_options()(
         "track-account-range", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(),
@@ -239,7 +239,7 @@ void account_history_plugin::plugin_set_program_options(boost::program_options::
     cfg.add(cli);
 }
 
-void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
+void blockchain_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     typedef std::pair<account_name_type, account_name_type> pairstring;
     LOAD_VALUE_SET(options, "track-account-range", my->_tracked_accounts, pairstring);
@@ -284,7 +284,7 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
     print_greeting();
 }
 
-void account_history_plugin::plugin_startup()
+void blockchain_history_plugin::plugin_startup()
 {
     ilog("account_history plugin: plugin_startup() begin");
 
@@ -293,11 +293,11 @@ void account_history_plugin::plugin_startup()
     ilog("account_history plugin: plugin_startup() end");
 }
 
-flat_map<account_name_type, account_name_type> account_history_plugin::tracked_accounts() const
+flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracked_accounts() const
 {
     return my->_tracked_accounts;
 }
 }
 }
 
-SCORUM_DEFINE_PLUGIN(account_history, scorum::account_history::account_history_plugin)
+SCORUM_DEFINE_PLUGIN(account_history, scorum::account_history::blockchain_history_plugin)

@@ -5,13 +5,13 @@
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/operation_object.hpp>
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/account_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/account_history_object.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>

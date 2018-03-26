@@ -10,7 +10,7 @@ struct api_context;
 } // namespace scorum
 
 namespace scorum {
-namespace account_history {
+namespace blockchain_history {
 
 namespace detail {
 class account_history_api_impl;
@@ -44,7 +44,7 @@ public:
 private:
     std::shared_ptr<detail::account_history_api_impl> my;
 };
-} // namespace account_history
+} // namespace blockchain_history
 } // namespace scorum
 
 FC_API(scorum::account_history::account_history_api,

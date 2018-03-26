@@ -8,7 +8,7 @@
 #include <scorum/wallet/reflect_util.hpp>
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
-#include <scorum/account_history/account_history_api.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 

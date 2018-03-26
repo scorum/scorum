@@ -125,14 +125,6 @@ public:
      */
     optional<signed_block_api_obj> get_block(uint32_t block_num) const;
 
-    /**
-     *  @brief Get sequence of operations included/generated within a particular block
-     *  @param block_num Height of the block whose generated virtual operations should be returned
-     *  @param only_virtual Whether to only include virtual operations in returned results (default: true)
-     *  @return sequence of operations included/generated within the block
-     */
-    std::vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true) const;
-
     /////////////
     // Globals //
     /////////////
@@ -299,7 +291,6 @@ public:
 
     /// @brief Get a hexdump of the serialized binary form of a transaction
     std::string get_transaction_hex(const signed_transaction& trx) const;
-    annotated_signed_transaction get_transaction(transaction_id_type trx_id) const;
 
     /**
      *  This API will take a partially signed transaction and a set of public keys that the owner has the ability to

@@ -20,7 +20,7 @@
 #endif
 
 namespace scorum {
-namespace account_history {
+namespace blockchain_history {
 
 using namespace scorum::chain;
 
@@ -72,7 +72,7 @@ using account_operations_full_history_index = history_index<account_history_obje
 using transfers_to_scr_history_index = history_index<transfers_to_scr_history_object>;
 using transfers_to_sp_history_index = history_index<transfers_to_sp_history_object>;
 //
-} // namespace account_history
+} // namespace blockchain_history
 } // namespace scorum
 
 FC_REFLECT(scorum::account_history::account_history_object, (id)(account)(sequence)(op))

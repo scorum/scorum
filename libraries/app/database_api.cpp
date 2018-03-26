@@ -64,7 +64,6 @@ public:
     // Blocks and transactions
     optional<block_header> get_block_header(uint32_t block_num) const;
     optional<signed_block_api_obj> get_block(uint32_t block_num) const;
-    std::vector<applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual) const;
 
     // Globals
     fc::variant_object get_config() const;
@@ -256,27 +255,6 @@ optional<signed_block_api_obj> database_api::get_block(uint32_t block_num) const
 optional<signed_block_api_obj> database_api_impl::get_block(uint32_t block_num) const
 {
     return _db.fetch_block_by_number(block_num);
-}
-
-std::vector<applied_operation> database_api::get_ops_in_block(uint32_t block_num, bool only_virtual) const
-{
-    return my->_db.with_read_lock([&]() { return my->get_ops_in_block(block_num, only_virtual); });
-}
-
-std::vector<applied_operation> database_api_impl::get_ops_in_block(uint32_t block_num, bool only_virtual) const
-{
-    const auto& idx = _db.get_index<operation_index>().indices().get<by_location>();
-    auto itr = idx.lower_bound(block_num);
-    std::vector<applied_operation> result;
-    applied_operation temp;
-    while (itr != idx.end() && itr->block == block_num)
-    {
-        temp = *itr;
-        if (!only_virtual || is_virtual_operation(temp.op))
-            result.push_back(temp);
-        ++itr;
-    }
-    return result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2107,35 +2085,6 @@ state database_api::get_state(std::string path) const
         return _state;
     });
 }
-
-annotated_signed_transaction database_api::get_transaction(transaction_id_type id) const
-{
-#ifdef SKIP_BY_TX_ID
-    FC_ASSERT(false, "This node's operator has disabled operation indexing by transaction_id");
-#else
-    if (_app.is_read_only())
-    {
-        return _app.get_write_node_database_api()->get_transaction(id);
-    }
-    else
-    {
-        return my->_db.with_read_lock([&]() {
-            const auto& idx = my->_db.get_index<operation_index>().indices().get<by_transaction_id>();
-            auto itr = idx.lower_bound(id);
-            if (itr != idx.end() && itr->trx_id == id)
-            {
-                auto blk = my->_db.fetch_block_by_number(itr->block);
-                FC_ASSERT(blk.valid());
-                FC_ASSERT(blk->transactions.size() > itr->trx_in_block);
-                annotated_signed_transaction result = blk->transactions[itr->trx_in_block];
-                result.block_num = itr->block;
-                result.transaction_num = itr->trx_in_block;
-                return result;
-            }
-            FC_ASSERT(false, "Unknown Transaction ${t}", ("t", id));
-        });
-    }
-#endif
 }
 } // namespace app
 } // namespace scorum

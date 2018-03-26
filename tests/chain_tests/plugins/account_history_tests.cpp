@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/account_history/account_history_plugin.hpp>
-#include <scorum/account_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
+#include <scorum/blockchain_history/schema/account_history_object.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/app/applied_operation.hpp>

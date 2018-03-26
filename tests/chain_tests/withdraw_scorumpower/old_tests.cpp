@@ -11,7 +11,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 
 using namespace database_fixture;
 

@@ -1,6 +1,6 @@
-#include <scorum/account_history/account_history_api.hpp>
-#include <scorum/account_history/account_history_plugin.hpp>
-#include <scorum/account_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
+#include <scorum/blockchain_history/schema/account_history_object.hpp>
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/chain/schema/operation_object.hpp>
@@ -9,7 +9,7 @@
 #define MAX_HISTORY_DEPTH 10000
 
 namespace scorum {
-namespace account_history {
+namespace blockchain_history {
 
 namespace detail {
 class account_history_api_impl
@@ -77,5 +77,5 @@ account_history_api::get_account_history(const std::string& account, uint64_t fr
         [&]() { return my->get_history<account_history_object>(account, from, limit); });
 }
 
-} // namespace account_history
+} // namespace blockchain_history
 } // namespace scorum
