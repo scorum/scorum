@@ -21,6 +21,8 @@ void database::check_dir_existance(const boost::filesystem::path& dir, bool read
 
 void database::create_meta_file(const boost::filesystem::path& file)
 {
+    ilog("Try to open meta file in read/write mode");
+
     if (boost::filesystem::exists(file))
     {
         _meta.reset(new boost::interprocess::managed_mapped_file(boost::interprocess::open_only,
