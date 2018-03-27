@@ -38,7 +38,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/reward_balancer_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
@@ -51,7 +51,7 @@
 #include <scorum/chain/services/hardfork_property.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
-#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
@@ -1909,7 +1909,7 @@ void database::validate_invariants() const
             }
         }
 
-        total_supply += obtain_service<dbs_reward_fund>().get().reward_balance;
+        total_supply += obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get_pool().balance;
 

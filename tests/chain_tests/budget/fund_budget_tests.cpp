@@ -20,12 +20,6 @@ public:
     }
 
     dbs_budget& budget_service;
-
-    const asset FUND_BUDGET_INITIAL_SUPPLY
-        = asset(TEST_REWARD_INITIAL_SUPPLY.amount
-                    * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
-                    / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                SCORUM_SYMBOL);
 };
 
 //
@@ -52,7 +46,7 @@ SCORUM_TEST_CASE(fund_budget_initial_supply)
 {
     auto budget = budget_service.get_fund_budget();
 
-    BOOST_REQUIRE_EQUAL(budget.balance, FUND_BUDGET_INITIAL_SUPPLY);
+    BOOST_REQUIRE_EQUAL(budget.balance, TEST_REWARD_INITIAL_SUPPLY);
 }
 
 SCORUM_TEST_CASE(fund_budget_initial_deadline)

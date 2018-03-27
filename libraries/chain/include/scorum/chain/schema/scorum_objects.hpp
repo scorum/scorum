@@ -68,7 +68,7 @@ public:
 
     id_type id;
 
-    asset reward_balance = asset(0, SCORUM_SYMBOL);
+    asset activity_reward_balance_scr = asset(0, SCORUM_SYMBOL);
     fc::uint128_t recent_claims = 0;
     time_point_sec last_update;
     curve_id author_reward_curve;
@@ -182,7 +182,7 @@ CHAINBASE_SET_INDEX_TYPE( scorum::chain::decline_voting_rights_request_object, s
 
 FC_REFLECT( scorum::chain::reward_fund_object,
             (id)
-            (reward_balance)
+            (activity_reward_balance_scr)
             (recent_claims)
             (last_update)
             (author_reward_curve)
