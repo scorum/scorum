@@ -9,6 +9,8 @@
 #include <unistd.h>
 #endif
 
+#include <termios.h>
+
 #ifdef HAVE_READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -35,6 +37,22 @@ namespace cli {
 
 #ifdef HAVE_READLINE
 namespace {
+
+void set_echoing(bool set_echo)
+{
+    termios info;
+    if (tcgetattr(0, &info) == -1)
+        return;
+    if (set_echo)
+    {
+        info.c_lflag |= ECHO;
+    }
+    else
+    {
+        info.c_lflag &= ~ECHO;
+    }
+    tcsetattr(0, TCSANOW, &info);
+}
 
 char* _generator(const char*, int);
 char** _completioner(const char*, int, int);
@@ -143,6 +161,16 @@ void app::stop()
 void app::wait()
 {
     _run_complete.wait();
+}
+
+std::string app::get_secret(const std::string& prompt)
+{
+    std::string ret;
+    std::cout << prompt;
+    set_echoing(false);
+    fc::getline(fc::cin, ret);
+    set_echoing(true);
+    return ret;
 }
 
 void app::set_prompt(const std::string& prompt)

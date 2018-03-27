@@ -89,7 +89,10 @@ int main(int argc, char** argv)
                 ("rpc-http-allowip",      bpo::value<std::vector<std::string>>()->multitoken(),        "Allows only specified IPs to connect to the HTTP endpoint")
                 ("wallet-file,w",         bpo::value<std::string>()->default_value("wallet.json"),     "Wallet configuration to load")
                 ("chain-id",              bpo::value<std::string>(),                                   "Chain ID to connect to")
-                ("suggest-brain-key",     "Suggest brain key");
+                ("suggest-brain-key",     "Suggest brain key")
+                ("change-password,P",     "Change password")
+                ("import-key, I",         "Import key")
+                ("strict,S",              "Switch on strict mode for API (forbid functions for secret menegment, e.g. set_password, import-key)");
         // clang-format on
 
         std::vector<std::string> allowed_ips;
@@ -188,18 +191,33 @@ int main(int argc, char** argv)
         auto con = client.connect(wdata.ws_server);
         auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
+        // TODO: import_key, change password
+
         auto remote_api = apic->get_remote_api<login_api>(1);
         edump((wdata.ws_user)(wdata.ws_password));
         // TODO:  Error message here
         FC_ASSERT(remote_api->login(wdata.ws_user, wdata.ws_password));
 
+        // wapiptr->connect(remote_api)
+
         auto wapiptr = std::make_shared<wallet::wallet_api>(wdata, remote_api);
         wapiptr->set_wallet_filename(wallet_file.generic_string());
         wapiptr->load_wallet_file();
 
-        fc::api<wallet::wallet_api> wapi(wapiptr);
-
         auto wallet_cli = std::make_shared<wallet_app>();
+
+        if (wapiptr->is_new())
+        {
+            std::string psw = wallet_cli->get_secret("New password:");
+            if (psw == wallet_cli->get_secret("Submit password:"))
+                wapiptr->set_password(psw);
+        }
+        else
+        {
+            wapiptr->unlock(wallet_cli->get_secret("Password:"));
+        }
+
+        fc::api<wallet::wallet_api> wapi(wapiptr);
 
         enum class wallet_state_type
         {
@@ -210,7 +228,7 @@ int main(int argc, char** argv)
         static const std::map<wallet_state_type, std::string> wallet_states
             = { { wallet_state_type::no_password, "(!)" },
                 { wallet_state_type::locked, "(!)" },
-                { wallet_state_type::unlocked, " ok" } };
+                { wallet_state_type::unlocked, "---" } };
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
             static const std::string prompt = ">>> ";
