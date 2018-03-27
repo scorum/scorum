@@ -33,7 +33,7 @@ each individual to inspect the code to understand the consensus rules.
 # Quickstart
 
 Just want to get up and running quickly?  Try deploying a prebuilt
-dockerized container.  Both common binary types are included.
+dockerized container.
 
 ## Dockerized Node
 
@@ -61,3 +61,6 @@ compile-time options, and specific commands for Linux (Ubuntu LTS) or macOS X.
 # System Requirements
 
 For a full node, you need at least 30GB of space available. Scorumd uses a memory mapped file which currently holds 2GB of data and by default is set to use up to 20GB. It's highly recommended to run scorumd on a fast disk such as an SSD or by placing the shared memory files in a ramdisk and using the `--shard-file-dir=/path` command line option to specify where. Any CPU with decent single core performance should be sufficient.
+
+# Main net chain_id(genesis hash)
+chain_id: `db4007d45f04c1403a7e66a5c66b5b1cdfc2dde8b5335d1d2f116d592ca3dbb1`
