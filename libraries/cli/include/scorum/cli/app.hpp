@@ -21,7 +21,7 @@ public:
     virtual void stop();
     void wait();
 
-    std::string get_secret(const std::string& prompt);
+    std::string get_secret(const std::string& prompt, bool show_asterisk = false);
     void set_prompt(const std::string& prompt);
     void format_result(const std::string& command,
                        std::function<std::string(fc::variant, const fc::variants&)> formatter);

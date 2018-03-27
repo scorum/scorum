@@ -67,6 +67,15 @@
 using namespace scorum;
 namespace bpo = boost::program_options;
 
+void set_new_password(std::shared_ptr<wallet_app>& wallet_cli,
+                      std::shared_ptr<wallet::wallet_api>& wapiptr,
+                      bool show_asterisk)
+{
+    std::string psw = wallet_cli->get_secret("New password:", show_asterisk);
+    if (psw == wallet_cli->get_secret("Submit password:", show_asterisk))
+        wapiptr->set_password_internal(psw);
+}
+
 int main(int argc, char** argv)
 {
     try
@@ -91,7 +100,9 @@ int main(int argc, char** argv)
                 ("chain-id",              bpo::value<std::string>(),                                   "Chain ID to connect to")
                 ("suggest-brain-key",     "Suggest brain key")
                 ("change-password,P",     "Change password")
-                ("import-key, I",         "Import key")
+                ("import-key,I",          "Import key")
+                ("list-keys,l",           "List loaded keys")
+                ("show-asterisk",         "Show asterisk while secret input")
                 ("strict,S",              "Switch on strict mode for API (forbid functions for secret menegment, e.g. set_password, import-key)");
         // clang-format on
 
@@ -100,6 +111,14 @@ int main(int argc, char** argv)
         bpo::variables_map options;
 
         bpo::store(bpo::parse_command_line(argc, argv, opts), options);
+
+        if ((options.count("suggest-brain-key") + options.count("change-password") + options.count("import-key")
+             + options.count("list-keys"))
+            > 1)
+        {
+            std::cerr << "Сonflicting options are passed\n";
+            return 1;
+        }
 
         if (options.count("version"))
         {
@@ -191,31 +210,48 @@ int main(int argc, char** argv)
         auto con = client.connect(wdata.ws_server);
         auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
-        // TODO: import_key, change password
+        auto wapiptr = std::make_shared<wallet::wallet_api>(wdata, options.count("strict"));
+        auto wallet_cli = std::make_shared<wallet_app>();
+
+        wapiptr->set_wallet_filename(wallet_file.generic_string());
+        wapiptr->load_wallet_file();
+
+        const std::string psw_prompt = "\nLogin:";
+
+        if (options.count("list-keys"))
+        {
+            wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
+            std::cout << fc::json::to_string(wapiptr->list_keys()) << "\n";
+            return 0;
+        }
+
+        if (options.count("change-password"))
+        {
+            wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
+            set_new_password(wallet_cli, wapiptr, options.count("show-asterisk"));
+            return 0;
+        }
+
+        if (options.count("import-key"))
+        {
+            wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
+            wapiptr->import_key_internal(wallet_cli->get_secret("WIF:", options.count("show-asterisk")));
+            return 0;
+        }
 
         auto remote_api = apic->get_remote_api<login_api>(1);
         edump((wdata.ws_user)(wdata.ws_password));
         // TODO:  Error message here
         FC_ASSERT(remote_api->login(wdata.ws_user, wdata.ws_password));
 
-        // wapiptr->connect(remote_api)
-
-        auto wapiptr = std::make_shared<wallet::wallet_api>(wdata, remote_api);
-        wapiptr->set_wallet_filename(wallet_file.generic_string());
-        wapiptr->load_wallet_file();
-
-        auto wallet_cli = std::make_shared<wallet_app>();
+        wapiptr->connect(remote_api);
 
         if (wapiptr->is_new())
         {
-            std::string psw = wallet_cli->get_secret("New password:");
-            if (psw == wallet_cli->get_secret("Submit password:"))
-                wapiptr->set_password(psw);
+            set_new_password(wallet_cli, wapiptr, options.count("show-asterisk"));
         }
-        else
-        {
-            wapiptr->unlock(wallet_cli->get_secret("Password:"));
-        }
+
+        wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
 
         fc::api<wallet::wallet_api> wapi(wapiptr);
 
@@ -228,7 +264,7 @@ int main(int argc, char** argv)
         static const std::map<wallet_state_type, std::string> wallet_states
             = { { wallet_state_type::no_password, "(!)" },
                 { wallet_state_type::locked, "(!)" },
-                { wallet_state_type::unlocked, "---" } };
+                { wallet_state_type::unlocked, options.count("strict") ? ("") : ("---") } };
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
             static const std::string prompt = ">>> ";
@@ -251,8 +287,8 @@ int main(int argc, char** argv)
             std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
             wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::no_password)));
         }
-        else
-            wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::locked)));
+
+        wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::unlocked)));
 
         boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool locked) {
             if (locked)
@@ -335,6 +371,7 @@ int main(int argc, char** argv)
                 FC_ASSERT(wallet_cli);
                 wallet_cli->stop();
             });
+            std::cout << std::endl;
             wallet_cli->start();
             wallet_cli->wait();
         }

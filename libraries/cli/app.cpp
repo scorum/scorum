@@ -38,20 +38,20 @@ namespace cli {
 #ifdef HAVE_READLINE
 namespace {
 
-void set_echoing(bool set_echo)
+int getch_without_echo()
 {
-    termios info;
-    if (tcgetattr(0, &info) == -1)
-        return;
-    if (set_echo)
-    {
-        info.c_lflag |= ECHO;
-    }
-    else
-    {
-        info.c_lflag &= ~ECHO;
-    }
-    tcsetattr(0, TCSANOW, &info);
+    int ch;
+    struct termios t_old, t_new;
+
+    tcgetattr(STDIN_FILENO, &t_old);
+    t_new = t_old;
+    t_new.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &t_new);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &t_old);
+    return ch;
 }
 
 char* _generator(const char*, int);
@@ -163,13 +163,35 @@ void app::wait()
     _run_complete.wait();
 }
 
-std::string app::get_secret(const std::string& prompt)
+std::string app::get_secret(const std::string& prompt, bool show_asterisk)
 {
+    const char backspace_char = 127;
+    const char return_char = '\n';
+
     std::string ret;
-    std::cout << prompt;
-    set_echoing(false);
-    fc::getline(fc::cin, ret);
-    set_echoing(true);
+    unsigned char ch = 0;
+
+    std::cout << prompt << " ";
+
+    while ((ch = getch_without_echo()) != return_char)
+    {
+        if (ch == backspace_char)
+        {
+            if (ret.length() != 0)
+            {
+                if (show_asterisk)
+                    std::cout << "\b \b";
+                ret.resize(ret.length() - 1);
+            }
+        }
+        else
+        {
+            ret += ch;
+            if (show_asterisk)
+                std::cout << '*';
+        }
+    }
+    std::cout << std::endl;
     return ret;
 }
 
