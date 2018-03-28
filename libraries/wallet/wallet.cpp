@@ -1028,7 +1028,7 @@ optional<signed_block_api_obj> wallet_api::get_block(uint32_t num)
     return my->_remote_db->get_block(num);
 }
 
-std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, bool only_virtual) const
+std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, applied_operation_type opt) const
 {
     try
     {
@@ -1040,7 +1040,7 @@ std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t bloc
         return {};
     }
 
-    return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, only_virtual);
+    return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, opt);
 }
 
 std::map<uint32_t, applied_operation> wallet_api::get_not_virtual_ops_history(uint32_t from_op, uint32_t limit) const

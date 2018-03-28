@@ -34,7 +34,7 @@ public:
      *  @param only_virtual Whether to only include virtual operations in returned results (default: true)
      *  @return sequence of operations included/generated within the block
      */
-    std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true) const;
+    std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num, applied_operation_type opt) const;
 
     annotated_signed_transaction get_transaction(transaction_id_type trx_id) const;
 

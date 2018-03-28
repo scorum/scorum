@@ -2,6 +2,8 @@
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
 
+#include <fc/static_variant.hpp>
+
 namespace scorum {
 namespace blockchain_history {
 
@@ -61,8 +63,28 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_not_virtual_op
     });
 }
 
+namespace {
+
+bool operation_type_filter(const operation& op, const applied_operation_type& opt)
+{
+    switch (opt)
+    {
+    case applied_operation_type::not_virtual_operation:
+        return !is_virtual_operation(op);
+    case applied_operation_type::virtual_operation:
+        return is_virtual_operation(op);
+    case applied_operation_type::market_operation:
+        return is_market_operation(op);
+    case applied_operation_type::all:
+    default:;
+    }
+
+    return true;
+}
+}
+
 std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(uint32_t block_num,
-                                                                               bool only_virtual) const
+                                                                               applied_operation_type opt) const
 {
     using namespace scorum::chain;
 
@@ -78,7 +100,7 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(u
         {
             auto id = itr->id;
             temp = *itr;
-            if (!only_virtual || is_virtual_operation(temp.op))
+            if (operation_type_filter(temp.op, opt))
             {
                 FC_ASSERT(id._id >= 0, "Invalid operation_object id");
                 result[(uint32_t)id._id] = temp;

@@ -19,6 +19,7 @@ namespace scorum {
 namespace wallet {
 
 using scorum::blockchain_history::applied_operation;
+using scorum::blockchain_history::applied_operation_type;
 
 using transaction_handle_type = uint16_t;
 
@@ -124,12 +125,12 @@ public:
     /** Returns sequence of operations included/generated in a specified block
      *
      * @param block_num Block height of specified block
-     * @param only_virtual Whether to only return virtual operations
+     * @param opt Operations type (all = 0, not_virtual_operation = 1, virtual_operation = 2, market_operation = 3)
      */
-    std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num, bool only_virtual = true) const;
+    std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num, applied_operation_type opt) const;
 
     /**
-     *  This method returns all operations (not virtual) in the blocks range [from-limit, from]
+     *  This method returns all not virtual operations in ids range [from-limit, from]
      *
      *  @param from_op - the operation number, -1 means most recent, limit is the number of operations before from.
      *  @param limit - the maximum number of items that can be queried (0 to 10000], must be less than from
