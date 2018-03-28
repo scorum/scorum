@@ -123,6 +123,24 @@ public:
      */
     optional<signed_block_api_obj> get_block(uint32_t block_num) const;
 
+    /**
+     * Retrieve the list of block headers in range [from-limit, from]
+     *
+     * @param block_num Height of the block to be returned
+     * @param limit the maximum number of blocks that can be queried (0 to 500], must be less than from
+     * @return the list of block headers
+     */
+    std::map<uint32_t, block_header> get_block_headers_history(uint32_t block_num, uint32_t limit) const;
+
+    /**
+     * Retrieve the list of signed block from block log (irreversible blocks) in range [from-limit, from]
+     *
+     * @param block_num Height of the block to be returned
+     * @param limit the maximum number of blocks that can be queried (0 to 500], must be less than from
+     * @return the list of signed blocks
+     */
+    std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
+
     /////////////
     // Globals //
     /////////////
@@ -461,6 +479,8 @@ FC_API(scorum::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
+   (get_block_headers_history)
+   (get_blocks_history)
    (get_state)
 
    // Globals

@@ -597,6 +597,13 @@ bool database::_push_block(const signed_block& new_block)
     FC_CAPTURE_AND_RETHROW()
 }
 
+uint32_t database::get_last_irreversible_block_num() const
+{
+    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
+
+    return dpo.last_irreversible_block_num;
+}
+
 /**
  * Attempts to push the transaction into the pending queue
  *

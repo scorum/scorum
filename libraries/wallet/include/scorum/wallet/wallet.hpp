@@ -114,13 +114,37 @@ public:
      */
     variant_object about() const;
 
+    /** Returns the information about a block header
+     *
+     * @param num Block num
+     *
+     * @returns Header block data on the blockchain
+     */
+    optional<block_header> get_block_header(uint32_t num) const;
+
     /** Returns the information about a block
      *
      * @param num Block num
      *
      * @returns Public block data on the blockchain
      */
-    optional<signed_block_api_obj> get_block(uint32_t num);
+    optional<signed_block_api_obj> get_block(uint32_t num) const;
+
+    /** Returns information about the block headers in range [from-limit, from]
+     *
+     * @param num Block num, -1 means most recent, limit is the number of blocks before from.
+     * @param limit the maximum number of items that can be queried (0 to 500], must be less than from
+     *
+     */
+    std::map<uint32_t, block_header> get_block_headers_history(uint32_t num, uint32_t limit) const;
+
+    /** Returns information about the blocks in range [from-limit, from]
+     *
+     * @param num Block num, -1 means most recent, limit is the number of blocks before from.
+     * @param limit the maximum number of items that can be queried (0 to 500], must be less than from
+     *
+     */
+    std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t num, uint32_t limit) const;
 
     /** Returns sequence of operations included/generated in a specified block
      *
@@ -1303,7 +1327,10 @@ FC_API( scorum::wallet::wallet_api,
         (get_witness)
         (get_account)
         (get_account_balance)
+        (get_block_header)
         (get_block)
+        (get_block_headers_history)
+        (get_blocks_history)
         (get_ops_in_block)
         (get_not_virtual_ops_history)
         (get_account_history)
