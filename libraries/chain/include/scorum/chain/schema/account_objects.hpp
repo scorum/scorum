@@ -32,39 +32,51 @@ public:
     account_name_type proxy;
 
     time_point_sec last_account_update;
-
     time_point_sec created;
+
     bool created_by_genesis = false;
     bool owner_challenged   = false;
     bool active_challenged  = false;
-    time_point_sec last_owner_proved    = time_point_sec::min();
-    time_point_sec last_active_proved   = time_point_sec::min();
+
+    time_point_sec last_owner_proved;
+    time_point_sec last_active_proved;
     account_name_type recovery_account;
     time_point_sec last_account_recovery;
-    uint32_t comment_count = 0;
-    uint32_t lifetime_vote_count = 0;
-    uint32_t post_count = 0;
 
     bool can_vote = true;
-    uint16_t voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
-    time_point_sec last_vote_time;              ///< used to increase the voting power of this account the longer it goes without voting.
 
-    asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
+    // current voting power of this account, it falls after every vote
+    uint16_t voting_power = SCORUM_100_PERCENT;
+
+    // used to increase the voting power of this account the longer it goes without voting.
+    time_point_sec last_vote_time;
+
+    // total liquid shares held by this account
+    asset balance = asset(0, SCORUM_SYMBOL);
 
     asset curation_rewards = asset(0, SCORUM_SYMBOL);
     asset posting_rewards = asset(0, SCORUM_SYMBOL);
 
-    asset scorumpower =              asset(0, SP_SYMBOL); ///< total scorumpower (SP) held by this account, controls its voting power
-    asset delegated_scorumpower =    asset(0, SP_SYMBOL);
-    asset received_scorumpower =     asset(0, SP_SYMBOL);
+    // total scorumpower (SP) held by this account, controls its voting power
+    asset scorumpower = asset(0, SP_SYMBOL);
+    asset delegated_scorumpower = asset(0, SP_SYMBOL);
+    asset received_scorumpower = asset(0, SP_SYMBOL);
 
-    fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes; // = std::vector<share_type>(SCORUM_MAX_PROXY_RECURSION_DEPTH, 0 );
-                                                                               ///< the total VFS votes proxied to this account
+    // the total VFS votes proxied to this account
+    fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes;
 
     uint16_t witnesses_voted_for = 0;
 
+    // not used
+    uint32_t comment_count = 0;
+
+    // not used
+    uint32_t lifetime_vote_count = 0;
+
+    uint32_t post_count = 0;
+
     time_point_sec last_post;
-    time_point_sec last_root_post = fc::time_point_sec::min();
+    time_point_sec last_root_post;
     uint32_t post_bandwidth = 0;
 
     /// This function should be used only when the account votes for a witness directly
@@ -72,6 +84,7 @@ public:
     {
         return std::accumulate(proxied_vsf_votes.begin(), proxied_vsf_votes.end(), scorumpower.amount);
     }
+
     share_type proxied_vsf_votes_total() const
     {
         return std::accumulate(proxied_vsf_votes.begin(), proxied_vsf_votes.end(), share_type());
@@ -168,7 +181,7 @@ struct by_name;
 struct by_proxy;
 struct by_last_post;
 struct by_scorum_balance;
-struct by_smp_balance;
+struct by_sp_balance;
 struct by_post_count;
 struct by_vote_count;
 struct by_created_by_genesis;
@@ -196,10 +209,7 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::proxy>,
                                                                              member<account_object,
                                                                                     account_id_type,
-                                                                                    &account_object::id>> /// composite
-                                                               /// key by
-                                                               /// proxy
-                                                               >,
+                                                                                    &account_object::id>>>,
                                                 ordered_unique<tag<by_last_post>,
                                                                composite_key<account_object,
                                                                              member<account_object,
@@ -220,7 +230,7 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::id>>,
                                                                composite_key_compare<std::greater<asset>,
                                                                                      std::less<account_id_type>>>,
-                                                ordered_unique<tag<by_smp_balance>,
+                                                ordered_unique<tag<by_sp_balance>,
                                                                composite_key<account_object,
                                                                              member<account_object,
                                                                                     asset,
