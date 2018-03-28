@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
 
         // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
         const auto& rf = db.obtain_service<dbs_reward_fund>().get();
-        BOOST_REQUIRE_EQUAL(rf.reward_balance, ASSET_SCR(1));
+        BOOST_REQUIRE_EQUAL(rf.activity_reward_balance_scr, ASSET_SCR(1));
 
         validate_database();
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
 
         const auto& fund = db.obtain_service<dbs_reward_fund>().get();
 
-        BOOST_REQUIRE_GT(fund.reward_balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_GT(fund.activity_reward_balance_scr, asset(0, SCORUM_SYMBOL));
         BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), uint64_t(0));
 
         share_type alice_comment_net_rshares
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         {
             generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
-            BOOST_REQUIRE_EQUAL(fund.reward_balance, ASSET_SCR(0));
+            BOOST_REQUIRE_EQUAL(fund.activity_reward_balance_scr, ASSET_SCR(0));
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
 
             // clang-format off
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
                 alice_comment_net_rshares -= alice_comment_net_rshares * SCORUM_BLOCK_INTERVAL / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
             }
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
-            BOOST_REQUIRE_GT(fund.reward_balance, ASSET_SCR(0));
+            BOOST_REQUIRE_GT(fund.activity_reward_balance_scr, ASSET_SCR(0));
 
             BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower, account_initial_vest_supply);
             BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").scorumpower, account_initial_vest_supply);
