@@ -9,6 +9,8 @@
 #include <unistd.h>
 #endif
 
+#include <termios.h>
+
 #ifdef HAVE_READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -35,6 +37,22 @@ namespace cli {
 
 #ifdef HAVE_READLINE
 namespace {
+
+int getch_without_echo()
+{
+    int ch;
+    struct termios t_old, t_new;
+
+    tcgetattr(STDIN_FILENO, &t_old);
+    t_new = t_old;
+    t_new.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &t_new);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &t_old);
+    return ch;
+}
 
 char* _generator(const char*, int);
 char** _completioner(const char*, int, int);
@@ -143,6 +161,38 @@ void app::stop()
 void app::wait()
 {
     _run_complete.wait();
+}
+
+std::string app::get_secret(const std::string& prompt, bool show_asterisk)
+{
+    const char backspace_char = 127;
+    const char return_char = '\n';
+
+    std::string ret;
+    unsigned char ch = 0;
+
+    std::cerr << prompt << " ";
+
+    while ((ch = getch_without_echo()) != return_char)
+    {
+        if (ch == backspace_char)
+        {
+            if (ret.length() != 0)
+            {
+                if (show_asterisk)
+                    std::cerr << "\b \b";
+                ret.resize(ret.length() - 1);
+            }
+        }
+        else
+        {
+            ret += ch;
+            if (show_asterisk)
+                std::cerr << '*';
+        }
+    }
+    std::cerr << std::endl;
+    return ret;
 }
 
 void app::set_prompt(const std::string& prompt)

@@ -81,8 +81,10 @@ class wallet_api_impl;
 class wallet_api
 {
 public:
-    wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi);
+    wallet_api(const wallet_data& initial_data, bool strict);
     virtual ~wallet_api();
+
+    void connect(fc::api<login_api> rapi);
 
     using exit_func_type = std::function<void()>;
 
@@ -1221,12 +1223,48 @@ public:
      */
     void exit();
 
+    bool is_strict() const
+    {
+        return _strict;
+    }
+
 public:
+    void unlock_internal(const std::string& password)
+    {
+        unlock_impl(password);
+    }
+    void set_password_internal(const std::string& password)
+    {
+        set_password_impl(password);
+    }
+    brain_key_info suggest_brain_key_internal() const
+    {
+        return suggest_brain_key_impl();
+    }
+    bool import_key_internal(const std::string& wif_key)
+    {
+        return import_key_impl(wif_key);
+    }
+    std::map<public_key_type, std::string> list_keys_internal()
+    {
+        return list_keys_impl();
+    }
+
     fc::signal<void(bool)> lock_changed;
 
 private:
+    void lock_impl();
+    void unlock_impl(const std::string& password);
+    void set_password_impl(const std::string& password);
+    brain_key_info suggest_brain_key_impl() const;
+    bool import_key_impl(const std::string& wif_key);
+    std::map<public_key_type, std::string> list_keys_impl();
+
+    void check_strict() const;
+
     std::shared_ptr<detail::wallet_api_impl> my;
     exit_func_type exit_func;
+    bool _strict = false;
 };
 
 struct plain_keys

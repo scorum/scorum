@@ -137,21 +137,11 @@ private:
 
 public:
     wallet_api& self;
-    wallet_api_impl(wallet_api& s, const wallet_data& initial_data, fc::api<login_api> rapi)
+    wallet_api_impl(wallet_api& s, const wallet_data& initial_data)
         : self(s)
         , _chain_id(initial_data.chain_id)
-        , _remote_api(rapi)
-        , _remote_db(rapi->get_api_by_name("database_api")->as<database_api>())
-        , _remote_net_broadcast(rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>())
     {
         init_prototype_ops();
-
-        chain_id_type remote_chain_id = _remote_db->get_chain_id();
-        if (remote_chain_id != _chain_id)
-        {
-            FC_THROW("Remote server gave us an unexpected chain_id",
-                     ("remote_chain_id", remote_chain_id)("chain_id", _chain_id));
-        }
 
         _wallet.ws_server = initial_data.ws_server;
         _wallet.ws_user = initial_data.ws_user;
@@ -161,6 +151,20 @@ public:
 
     virtual ~wallet_api_impl()
     {
+    }
+
+    void connect(fc::api<login_api> rapi)
+    {
+        _remote_api = rapi;
+        _remote_db = rapi->get_api_by_name("database_api")->as<database_api>();
+        _remote_net_broadcast = rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>();
+
+        chain_id_type remote_chain_id = _remote_db->get_chain_id();
+        if (remote_chain_id != _chain_id)
+        {
+            FC_THROW("Remote server gave us an unexpected chain_id",
+                     ("remote_chain_id", remote_chain_id)("chain_id", _chain_id));
+        }
     }
 
     void encrypt_keys()
@@ -984,14 +988,20 @@ public:
 
 } // namespace detail
 
-wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
-    : my(new detail::wallet_api_impl(*this, initial_data, rapi))
+wallet_api::wallet_api(const wallet_data& initial_data, bool strict)
+    : my(new detail::wallet_api_impl(*this, initial_data))
     , exit_func([]() { FC_ASSERT(false, "Operation valid only in console mode."); })
+    , _strict(strict)
 {
 }
 
 wallet_api::~wallet_api()
 {
+}
+
+void wallet_api::connect(fc::api<login_api> rapi)
+{
+    my->connect(rapi);
 }
 
 void wallet_api::set_exit_func(exit_func_type fn)
@@ -1080,21 +1090,8 @@ account_balance_info_api_obj wallet_api::get_account_balance(const std::string& 
 
 bool wallet_api::import_key(const std::string& wif_key)
 {
-    FC_ASSERT(!is_locked());
-    // backup wallet
-    fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
-    if (!optional_private_key)
-        FC_THROW("Invalid private key");
-    //   string shorthash = detail::pubkey_to_shorthash( optional_private_key->get_public_key() );
-    //   copy_wallet_file( "before-import-key-" + shorthash );
-
-    if (my->import_key(wif_key))
-    {
-        save_wallet_file();
-        //     copy_wallet_file( "after-import-key-" + shorthash );
-        return true;
-    }
-    return false;
+    check_strict();
+    return import_key_impl(wif_key);
 }
 
 std::string wallet_api::normalize_brain_key(const std::string& s) const
@@ -1136,7 +1133,8 @@ void wallet_api::set_wallet_filename(const std::string& wallet_filename)
 
 brain_key_info wallet_api::suggest_brain_key() const
 {
-    return scorum::wallet::suggest_brain_key();
+    check_strict();
+    return suggest_brain_key_impl();
 }
 
 annotated_signed_transaction wallet_api::sign_transaction(const signed_transaction& tx, bool broadcast /* = false */)
@@ -1228,47 +1226,26 @@ void wallet_api::encrypt_keys()
 
 void wallet_api::lock()
 {
-    try
-    {
-        FC_ASSERT(!is_locked());
-        encrypt_keys();
-        for (auto key : my->_keys)
-            key.second = key_to_wif(fc::ecc::private_key());
-        my->_keys.clear();
-        my->_checksum = fc::sha512();
-        my->self.lock_changed(true);
-    }
-    FC_CAPTURE_AND_RETHROW()
+    check_strict();
+    lock_impl();
 }
 
 void wallet_api::unlock(const std::string& password)
 {
-    try
-    {
-        FC_ASSERT(password.size() > 0);
-        auto pw = fc::sha512::hash(password.c_str(), password.size());
-        std::vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
-        auto pk = fc::raw::unpack<plain_keys>(decrypted);
-        FC_ASSERT(pk.checksum == pw);
-        my->_keys = std::move(pk.keys);
-        my->_checksum = pk.checksum;
-        my->self.lock_changed(false);
-    }
-    FC_CAPTURE_AND_RETHROW()
+    check_strict();
+    unlock_impl(password);
 }
 
 void wallet_api::set_password(const std::string& password)
 {
-    if (!is_new())
-        FC_ASSERT(!is_locked(), "The wallet must be unlocked before the password can be set");
-    my->_checksum = fc::sha512::hash(password.c_str(), password.size());
-    lock();
+    check_strict();
+    set_password_impl(password);
 }
 
 std::map<public_key_type, std::string> wallet_api::list_keys()
 {
-    FC_ASSERT(!is_locked());
-    return my->_keys;
+    check_strict();
+    return list_keys_impl();
 }
 
 std::string wallet_api::get_private_key(const public_key_type& pubkey) const
@@ -1764,14 +1741,14 @@ annotated_signed_transaction wallet_api::create_account(const std::string& creat
     try
     {
         FC_ASSERT(!is_locked());
-        auto owner = suggest_brain_key();
-        auto active = suggest_brain_key();
-        auto posting = suggest_brain_key();
-        auto memo = suggest_brain_key();
-        import_key(owner.wif_priv_key);
-        import_key(active.wif_priv_key);
-        import_key(posting.wif_priv_key);
-        import_key(memo.wif_priv_key);
+        auto owner = suggest_brain_key_impl();
+        auto active = suggest_brain_key_impl();
+        auto posting = suggest_brain_key_impl();
+        auto memo = suggest_brain_key_impl();
+        import_key_impl(owner.wif_priv_key);
+        import_key_impl(active.wif_priv_key);
+        import_key_impl(posting.wif_priv_key);
+        import_key_impl(memo.wif_priv_key);
         return create_account_with_keys(creator, newname, json_meta, owner.pub_key, active.pub_key, posting.pub_key,
                                         memo.pub_key, broadcast);
     }
@@ -1792,14 +1769,14 @@ annotated_signed_transaction wallet_api::create_account_delegated(const std::str
     try
     {
         FC_ASSERT(!is_locked());
-        auto owner = suggest_brain_key();
-        auto active = suggest_brain_key();
-        auto posting = suggest_brain_key();
-        auto memo = suggest_brain_key();
-        import_key(owner.wif_priv_key);
-        import_key(active.wif_priv_key);
-        import_key(posting.wif_priv_key);
-        import_key(memo.wif_priv_key);
+        auto owner = suggest_brain_key_impl();
+        auto active = suggest_brain_key_impl();
+        auto posting = suggest_brain_key_impl();
+        auto memo = suggest_brain_key_impl();
+        import_key_impl(owner.wif_priv_key);
+        import_key_impl(active.wif_priv_key);
+        import_key_impl(posting.wif_priv_key);
+        import_key_impl(memo.wif_priv_key);
         return create_account_with_keys_delegated(creator, scorum_fee, delegated_scorumpower, newname, json_meta,
                                                   owner.pub_key, active.pub_key, posting.pub_key, memo.pub_key,
                                                   broadcast);
@@ -2713,7 +2690,7 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
 
     std::string secret;
 
-    secret = scorum::wallet::suggest_brain_key().brain_priv_key;
+    secret = suggest_brain_key_impl().brain_priv_key;
     secret = atomicswap::get_secret_hex(secret, secret_length);
 
     std::string secret_hash = atomicswap::get_secret_hash(secret);
@@ -2889,6 +2866,81 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
 void wallet_api::exit()
 {
     exit_func();
+}
+
+void wallet_api::lock_impl()
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+        encrypt_keys();
+        for (auto key : my->_keys)
+            key.second = key_to_wif(fc::ecc::private_key());
+        my->_keys.clear();
+        my->_checksum = fc::sha512();
+        my->self.lock_changed(true);
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
+void wallet_api::unlock_impl(const std::string& password)
+{
+    try
+    {
+        FC_ASSERT(password.size() > 0);
+        auto pw = fc::sha512::hash(password.c_str(), password.size());
+        std::vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
+        auto pk = fc::raw::unpack<plain_keys>(decrypted);
+        FC_ASSERT(pk.checksum == pw);
+        my->_keys = std::move(pk.keys);
+        my->_checksum = pk.checksum;
+        my->self.lock_changed(false);
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
+void wallet_api::set_password_impl(const std::string& password)
+{
+    if (!is_new())
+        FC_ASSERT(!is_locked(), "The wallet must be unlocked before the password can be set");
+    my->_checksum = fc::sha512::hash(password.c_str(), password.size());
+    save_wallet_file();
+    lock_impl();
+}
+
+brain_key_info wallet_api::suggest_brain_key_impl() const
+{
+    return scorum::wallet::suggest_brain_key();
+}
+
+bool wallet_api::import_key_impl(const std::string& wif_key)
+{
+    FC_ASSERT(!is_locked());
+    // backup wallet
+    fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
+    if (!optional_private_key)
+        FC_THROW("Invalid private key");
+    //   string shorthash = detail::pubkey_to_shorthash( optional_private_key->get_public_key() );
+    //   copy_wallet_file( "before-import-key-" + shorthash );
+
+    if (my->import_key(wif_key))
+    {
+        save_wallet_file();
+        //     copy_wallet_file( "after-import-key-" + shorthash );
+        return true;
+    }
+    return false;
+}
+
+std::map<public_key_type, std::string> wallet_api::list_keys_impl()
+{
+    FC_ASSERT(!is_locked());
+    return my->_keys;
+}
+
+void wallet_api::check_strict() const
+{
+    FC_ASSERT(!is_strict(), "It is locked due to security reason");
 }
 
 } // namespace wallet
