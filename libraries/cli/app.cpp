@@ -171,7 +171,7 @@ std::string app::get_secret(const std::string& prompt, bool show_asterisk)
     std::string ret;
     unsigned char ch = 0;
 
-    std::cout << prompt << " ";
+    std::cerr << prompt << " ";
 
     while ((ch = getch_without_echo()) != return_char)
     {
@@ -180,7 +180,7 @@ std::string app::get_secret(const std::string& prompt, bool show_asterisk)
             if (ret.length() != 0)
             {
                 if (show_asterisk)
-                    std::cout << "\b \b";
+                    std::cerr << "\b \b";
                 ret.resize(ret.length() - 1);
             }
         }
@@ -188,10 +188,10 @@ std::string app::get_secret(const std::string& prompt, bool show_asterisk)
         {
             ret += ch;
             if (show_asterisk)
-                std::cout << '*';
+                std::cerr << '*';
         }
     }
-    std::cout << std::endl;
+    std::cerr << std::endl;
     return ret;
 }
 

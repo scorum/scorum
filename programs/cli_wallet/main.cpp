@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 
         if (options.count("help"))
         {
-            std::cout << opts << "\n";
+            std::cerr << opts << "\n";
             return 0;
         }
 
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
         ac.rotation_interval = fc::hours(1);
         ac.rotation_limit = fc::days(1);
 
-        std::cout << "Logging RPC to file: " << ac.filename.string() << std::endl;
+        std::cerr << "Logging RPC to file: " << ac.filename.string() << std::endl;
 
         cfg.appenders.push_back(fc::appender_config("default", "console", fc::variant(fc::console_appender::config())));
         cfg.appenders.push_back(fc::appender_config("rpc", "file", fc::variant(ac)));
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
         fc::path wallet_file(options.count("wallet-file") ? options.at("wallet-file").as<std::string>()
                                                           : "wallet.json");
 
-        std::cout << "Wallet file: " << wallet_file.string() << std::endl;
+        std::cerr << "Wallet file: " << wallet_file.string() << std::endl;
 
         if (fc::exists(wallet_file))
         {
@@ -196,12 +196,12 @@ int main(int argc, char** argv)
             if (options.count("chain-id"))
             {
                 wdata.chain_id = protocol::chain_id_type(options.at("chain-id").as<std::string>());
-                std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from CLI)\n";
+                std::cerr << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from CLI)\n";
             }
             else
             {
                 wdata.chain_id = egenesis::get_egenesis_chain_id();
-                std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from egenesis)\n";
+                std::cerr << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from egenesis)\n";
             }
         }
 
@@ -223,20 +223,28 @@ int main(int argc, char** argv)
 
         if (options.count("list-keys"))
         {
-            wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
-            std::cout << fc::json::to_string(wapiptr->list_keys_internal()) << "\n";
+            if (!wapiptr->is_new())
+            {
+                wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
+                std::cout << fc::json::to_string(wapiptr->list_keys_internal()) << "\n";
+            }
             return 0;
         }
 
         if (options.count("change-password"))
         {
-            wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
+            if (!wapiptr->is_new())
+                wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
             set_new_password(wallet_cli, wapiptr, options.count("show-asterisk"));
             return 0;
         }
 
         if (options.count("import-key"))
         {
+            if (wapiptr->is_new())
+            {
+                set_new_password(wallet_cli, wapiptr, options.count("show-asterisk"));
+            }
             wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
             wapiptr->import_key_internal(wallet_cli->get_secret("WIF:", options.count("show-asterisk")));
             return 0;
@@ -293,7 +301,7 @@ int main(int argc, char** argv)
 
         if (wapiptr->is_new())
         {
-            std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
+            std::cerr << "Please use the set_password method to initialize a new wallet before continuing\n";
             wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::no_password)));
         }
 
@@ -314,7 +322,7 @@ int main(int argc, char** argv)
         if (options.count("rpc-endpoint"))
         {
             _websocket_server->on_connection([&](const fc::http::websocket_connection_ptr& c) {
-                std::cout << "here... \n";
+                std::cerr << "here... \n";
                 wlog(".");
                 auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
                 wsc->register_api(wapi);
@@ -381,7 +389,7 @@ int main(int argc, char** argv)
                 wallet_cli->stop();
             });
             if (!wapiptr->is_locked())
-                std::cout << "ok" << std::endl;
+                std::cerr << "ok" << std::endl;
             wallet_cli->start();
             wallet_cli->wait();
         }

@@ -2904,6 +2904,7 @@ void wallet_api::set_password_impl(const std::string& password)
     if (!is_new())
         FC_ASSERT(!is_locked(), "The wallet must be unlocked before the password can be set");
     my->_checksum = fc::sha512::hash(password.c_str(), password.size());
+    save_wallet_file();
     lock_impl();
 }
 
