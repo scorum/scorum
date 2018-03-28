@@ -58,7 +58,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
 };
 } // namespace account_stat
 
-BOOST_FIXTURE_TEST_SUITE(account_history_tests, account_stat::history_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests, account_stat::history_database_fixture)
 
 SCORUM_TEST_CASE(check_account_nontransfer_operation_only_in_full_history_test)
 {
