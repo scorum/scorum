@@ -1,5 +1,6 @@
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/blockchain_history/account_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
 #include <scorum/blockchain_history/schema/account_history_object.hpp>
 
 #include <scorum/app/impacted.hpp>
@@ -8,7 +9,7 @@
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_object.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -32,6 +33,7 @@ public:
     {
         chain::database& db = database();
 
+        db.add_plugin_index<operation_index>();
         db.add_plugin_index<account_operations_full_history_index>();
         db.add_plugin_index<transfers_to_scr_history_index>();
         db.add_plugin_index<transfers_to_sp_history_index>();
@@ -289,6 +291,7 @@ void blockchain_history_plugin::plugin_startup()
     ilog("account_history plugin: plugin_startup() begin");
 
     app().register_api_factory<account_history_api>("account_history_api");
+    app().register_api_factory<blockchain_history_api>("blockchain_history_api");
 
     ilog("account_history plugin: plugin_startup() end");
 }
@@ -300,4 +303,4 @@ flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracke
 }
 }
 
-SCORUM_DEFINE_PLUGIN(account_history, scorum::account_history::blockchain_history_plugin)
+SCORUM_DEFINE_PLUGIN(blockchain_history, scorum::blockchain_history::blockchain_history_plugin)

@@ -127,22 +127,6 @@ public:
     development_committee_api_obj get_development_committee() const;
 };
 
-applied_operation::applied_operation()
-{
-}
-
-applied_operation::applied_operation(const operation_object& op_obj)
-    : trx_id(op_obj.trx_id)
-    , block(op_obj.block)
-    , trx_in_block(op_obj.trx_in_block)
-    , op_in_trx(op_obj.op_in_trx)
-    , virtual_op(op_obj.virtual_op)
-    , timestamp(op_obj.timestamp)
-{
-    // fc::raw::unpack( op_obj.serialized_op, op );     // g++ refuses to compile this as ambiguous
-    op = fc::raw::unpack<operation>(op_obj.serialized_op);
-}
-
 void find_accounts(std::set<std::string>& accounts, const discussion& d)
 {
     accounts.insert(d.author);
@@ -2084,7 +2068,6 @@ state database_api::get_state(std::string path) const
         }
         return _state;
     });
-}
 }
 } // namespace app
 } // namespace scorum

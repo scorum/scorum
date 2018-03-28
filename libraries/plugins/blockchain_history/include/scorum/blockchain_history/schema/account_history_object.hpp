@@ -1,35 +1,11 @@
 #pragma once
 
+#include <scorum/blockchain_history/schema/operation_object.hpp>
+
 #include <boost/multi_index/composite_key.hpp>
-
-#include <scorum/chain/schema/scorum_object_types.hpp>
-
-//
-// Plugins should #define their SPACE_ID's so plugins with
-// conflicting SPACE_ID assignments can be compiled into the
-// same binary (by simply re-assigning some of the conflicting #defined
-// SPACE_ID's in a build script).
-//
-// Assignment of SPACE_ID's cannot be done at run-time because
-// various template automagic depends on them being known at compile
-// time.
-//
-
-#ifndef ACCOUNT_HISTORY_SPACE_ID
-#define ACCOUNT_HISTORY_SPACE_ID 7
-#endif
 
 namespace scorum {
 namespace blockchain_history {
-
-using namespace scorum::chain;
-
-enum account_history_object_type
-{
-    all_operations_history = (ACCOUNT_HISTORY_SPACE_ID << 8),
-    scr_to_scr_transfers_history,
-    scr_to_sp_transfers_history
-};
 
 template <uint16_t HistoryType> struct history_object : public object<HistoryType, history_object<HistoryType>>
 {
@@ -41,7 +17,7 @@ template <uint16_t HistoryType> struct history_object : public object<HistoryTyp
 
     account_name_type account;
     uint32_t sequence = 0;
-    operation_id_type op;
+    operation_object::id_type op;
 };
 
 struct by_account;
@@ -64,9 +40,9 @@ using history_index
                                                              composite_key_compare<std::less<account_name_type>,
                                                                                    std::greater<uint32_t>>>>>;
 
-using account_history_object = history_object<all_operations_history>;
-using transfers_to_scr_history_object = history_object<scr_to_scr_transfers_history>;
-using transfers_to_sp_history_object = history_object<scr_to_sp_transfers_history>;
+using account_history_object = history_object<all_account_operations_history>;
+using transfers_to_scr_history_object = history_object<account_scr_to_scr_transfers_history>;
+using transfers_to_sp_history_object = history_object<account_scr_to_sp_transfers_history>;
 
 using account_operations_full_history_index = history_index<account_history_object>;
 using transfers_to_scr_history_index = history_index<transfers_to_scr_history_object>;
@@ -75,15 +51,15 @@ using transfers_to_sp_history_index = history_index<transfers_to_sp_history_obje
 } // namespace blockchain_history
 } // namespace scorum
 
-FC_REFLECT(scorum::account_history::account_history_object, (id)(account)(sequence)(op))
-FC_REFLECT(scorum::account_history::transfers_to_scr_history_object, (id)(account)(sequence)(op))
-FC_REFLECT(scorum::account_history::transfers_to_sp_history_object, (id)(account)(sequence)(op))
+FC_REFLECT(scorum::blockchain_history::account_history_object, (id)(account)(sequence)(op))
+FC_REFLECT(scorum::blockchain_history::transfers_to_scr_history_object, (id)(account)(sequence)(op))
+FC_REFLECT(scorum::blockchain_history::transfers_to_sp_history_object, (id)(account)(sequence)(op))
 
-CHAINBASE_SET_INDEX_TYPE(scorum::account_history::account_history_object,
-                         scorum::account_history::account_operations_full_history_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::account_history_object,
+                         scorum::blockchain_history::account_operations_full_history_index)
 
-CHAINBASE_SET_INDEX_TYPE(scorum::account_history::transfers_to_scr_history_object,
-                         scorum::account_history::transfers_to_scr_history_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::transfers_to_scr_history_object,
+                         scorum::blockchain_history::transfers_to_scr_history_index)
 
-CHAINBASE_SET_INDEX_TYPE(scorum::account_history::transfers_to_sp_history_object,
-                         scorum::account_history::transfers_to_sp_history_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::transfers_to_sp_history_object,
+                         scorum::blockchain_history::transfers_to_sp_history_index)

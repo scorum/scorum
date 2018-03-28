@@ -1,5 +1,4 @@
 #pragma once
-#include <scorum/app/applied_operation.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -81,10 +80,10 @@ struct extended_account : public account_api_obj
     {
     }
 
-    std::map<uint64_t, applied_operation> transfer_history; /// transfer to/from scorumpower
-    std::map<uint64_t, applied_operation> post_history;
-    std::map<uint64_t, applied_operation> vote_history;
-    std::map<uint64_t, applied_operation> other_history;
+    //    std::map<uint64_t, applied_operation> transfer_history; /// transfer to/from scorumpower
+    //    std::map<uint64_t, applied_operation> post_history;
+    //    std::map<uint64_t, applied_operation> vote_history;
+    //    std::map<uint64_t, applied_operation> other_history;
     std::set<std::string> witness_votes;
     std::vector<std::pair<std::string, uint32_t>> tags_usage;
 
@@ -130,7 +129,7 @@ struct state
 
 FC_REFLECT_DERIVED( scorum::app::extended_account,
                    (scorum::app::account_api_obj),
-                   (transfer_history)(post_history)(vote_history)(other_history)(witness_votes)(tags_usage)(comments)(recent_replies) )
+                   (witness_votes)(tags_usage)(comments)(recent_replies) )
 
 
 FC_REFLECT( scorum::app::vote_state, (voter)(weight)(rshares)(percent)(time) )

@@ -29,7 +29,7 @@
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_object.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -759,7 +759,7 @@ BOOST_FIXTURE_TEST_CASE( hardfork_test, database_integration_fixture )
          if( arg == "--show-test-names" )
             std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
       }
-      auto ahplugin = app.register_plugin< scorum::account_history::account_history_plugin >();
+      auto ahplugin = app.register_plugin< scorum::blockchain_history::account_history_plugin >();
       db_plugin = app.register_plugin< scorum::plugin::debug_node::debug_node_plugin >();
       init_account_pub_key = init_account_priv_key.get_public_key();
 

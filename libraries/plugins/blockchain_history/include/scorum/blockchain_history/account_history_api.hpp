@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fc/api.hpp>
-#include <scorum/app/applied_operation.hpp>
+#include <scorum/blockchain_history/schema/applied_operation.hpp>
 
 namespace scorum {
 namespace app {
@@ -15,8 +15,6 @@ namespace blockchain_history {
 namespace detail {
 class account_history_api_impl;
 }
-
-using scorum::app::applied_operation;
 
 class account_history_api
 {
@@ -47,5 +45,5 @@ private:
 } // namespace blockchain_history
 } // namespace scorum
 
-FC_API(scorum::account_history::account_history_api,
+FC_API(scorum::blockchain_history::account_history_api,
        (get_account_history)(get_account_scr_to_scr_transfers)(get_account_scr_to_sp_transfers))

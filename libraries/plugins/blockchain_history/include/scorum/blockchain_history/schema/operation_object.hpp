@@ -1,5 +1,7 @@
 #pragma once
 
+#include <scorum/blockchain_history/schema/blockchain_objects.hpp>
+
 #include <fc/shared_buffer.hpp>
 
 #include <scorum/protocol/authority.hpp>
@@ -12,12 +14,16 @@
 #include <boost/multi_index/composite_key.hpp>
 
 namespace scorum {
-namespace chain {
+namespace blockchain_history {
 
-class operation_object : public object<operation_object_type, operation_object>
+using scorum::protocol::transaction_id_type;
+
+class operation_object : public object<operation_history, operation_object>
 {
 public:
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(operation_object, (serialized_op))
+
+    typedef typename object<operation_history, operation_object>::id_type id_type;
 
     id_type id;
 
@@ -35,7 +41,7 @@ struct by_transaction_id;
 typedef shared_multi_index_container<operation_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<operation_object,
-                                                                      operation_id_type,
+                                                                      operation_object::id_type,
                                                                       &operation_object::id>>,
                                                 ordered_unique<tag<by_location>,
                                                                composite_key<operation_object,
@@ -52,7 +58,7 @@ typedef shared_multi_index_container<operation_object,
                                                                                     uint64_t,
                                                                                     &operation_object::virtual_op>,
                                                                              member<operation_object,
-                                                                                    operation_id_type,
+                                                                                    operation_object::id_type,
                                                                                     &operation_object::id>>>
 #ifndef SKIP_BY_TX_ID
                                                 ,
@@ -62,7 +68,7 @@ typedef shared_multi_index_container<operation_object,
                                                                                     transaction_id_type,
                                                                                     &operation_object::trx_id>,
                                                                              member<operation_object,
-                                                                                    operation_id_type,
+                                                                                    operation_object::id_type,
                                                                                     &operation_object::id>>>
 #endif
                                                 >>
@@ -70,6 +76,6 @@ typedef shared_multi_index_container<operation_object,
 }
 }
 
-FC_REFLECT(scorum::chain::operation_object,
+FC_REFLECT(scorum::blockchain_history::operation_object,
            (id)(trx_id)(block)(trx_in_block)(op_in_trx)(virtual_op)(timestamp)(serialized_op))
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::operation_object, scorum::chain::operation_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::operation_object, scorum::blockchain_history::operation_index)

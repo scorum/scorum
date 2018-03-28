@@ -1,11 +1,9 @@
 #pragma once
-#include <scorum/app/applied_operation.hpp>
 #include <scorum/app/state.hpp>
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
 
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -463,7 +461,6 @@ FC_API(scorum::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
-   (get_ops_in_block)
    (get_state)
 
    // Globals
@@ -495,7 +492,6 @@ FC_API(scorum::app::database_api,
 
    // Authority / validation
    (get_transaction_hex)
-   (get_transaction)
    (get_required_signatures)
    (get_potential_signatures)
    (verify_authority)

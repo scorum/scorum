@@ -19,6 +19,7 @@ target_link_libraries( cli_wallet
                        scorum_egenesis_brief
                        scorum_protocol
                        graphene_utilities
+                       scorum_blockchain_history
                        scorum_wallet
                        cli
                        scorum_app

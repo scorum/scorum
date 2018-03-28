@@ -16,7 +16,7 @@ target_link_libraries(scorumd PRIVATE
     scorum_mf_plugins
     scorum_app
     scorum_witness
-    scorum_account_history
+    scorum_blockchain_history
     scorum_chain
     scorum_protocol
     scorum_egenesis_full

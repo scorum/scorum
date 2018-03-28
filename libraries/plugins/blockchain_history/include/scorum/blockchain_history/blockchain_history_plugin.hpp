@@ -61,4 +61,4 @@ public:
     std::unique_ptr<detail::blockchain_history_plugin_impl> my;
 };
 }
-} // scorum::account_history
+} // scorum::blockchain_history

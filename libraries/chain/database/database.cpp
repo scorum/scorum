@@ -36,7 +36,6 @@
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/reward_pool_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -1120,7 +1119,6 @@ void database::initialize_indexes()
     add_index<dynamic_global_property_index>();
     add_index<escrow_index>();
     add_index<hardfork_property_index>();
-    add_index<operation_index>();
     add_index<owner_authority_history_index>();
     add_index<proposal_object_index>();
     add_index<registration_committee_member_index>();

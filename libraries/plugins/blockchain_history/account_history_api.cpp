@@ -3,10 +3,8 @@
 #include <scorum/blockchain_history/schema/account_history_object.hpp>
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_object.hpp>
 #include <map>
-
-#define MAX_HISTORY_DEPTH 10000
 
 namespace scorum {
 namespace blockchain_history {
@@ -26,23 +24,29 @@ public:
     template <typename history_object_type>
     std::map<uint32_t, applied_operation> get_history(const std::string& account, uint64_t from, uint32_t limit) const
     {
+        static const uint32_t max_history_depth = 10000;
+
         const auto db = _app.chain_database();
 
-        FC_ASSERT(limit <= MAX_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", MAX_HISTORY_DEPTH));
+        FC_ASSERT(limit <= max_history_depth, "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", max_history_depth));
         FC_ASSERT(from >= limit, "From must be greater than limit");
+
+        std::map<uint32_t, applied_operation> result;
 
         const auto& idx = db->get_index<history_index<history_object_type>>().indices().get<by_account>();
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
-        auto end = idx.upper_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
-
-        std::map<uint32_t, applied_operation> result;
-        while (itr != end)
+        if (itr != idx.end())
         {
-            result[itr->sequence] = db->get(itr->op);
-            ++itr;
+            auto end
+                = idx.upper_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
+            while (itr != end)
+            {
+                result[itr->sequence] = db->get(itr->op);
+                ++itr;
+            }
         }
-        return std::move(result);
+        return result;
     }
 };
 } // namespace detail
