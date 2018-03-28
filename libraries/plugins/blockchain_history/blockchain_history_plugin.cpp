@@ -9,7 +9,7 @@
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
-#include <scorum/blockchain_history/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_objects.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -34,6 +34,7 @@ public:
         chain::database& db = database();
 
         db.add_plugin_index<operation_index>();
+        db.add_plugin_index<not_virtual_operation_index>();
         db.add_plugin_index<account_operations_full_history_index>();
         db.add_plugin_index<transfers_to_scr_history_index>();
         db.add_plugin_index<transfers_to_sp_history_index>();
@@ -50,6 +51,7 @@ public:
     }
 
     const operation_object& create_operation_obj(const operation_notification& note);
+    void create_not_virtual_operation_obj(const operation_object& object);
     void on_operation(const operation_notification& note);
 
     blockchain_history_plugin& _self;
@@ -149,13 +151,19 @@ const operation_object& blockchain_history_plugin_impl::create_operation_obj(con
         obj.block = note.block;
         obj.trx_in_block = note.trx_in_block;
         obj.op_in_trx = note.op_in_trx;
-        obj.virtual_op = note.virtual_op;
         obj.timestamp = db.head_block_time();
         auto size = fc::raw::pack_size(note.op);
         obj.serialized_op.resize(size);
         fc::datastream<char*> ds(obj.serialized_op.data(), size);
         fc::raw::pack(ds, note.op);
     });
+}
+
+void blockchain_history_plugin_impl::create_not_virtual_operation_obj(const operation_object& object)
+{
+    scorum::chain::database& db = database();
+
+    db.create<not_virtual_operation_object>([&](not_virtual_operation_object& obj) { obj.op = object.id; });
 }
 
 void blockchain_history_plugin_impl::on_operation(const operation_notification& note)
@@ -166,6 +174,8 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
     app::operation_get_impacted_accounts(note.op, impacted);
 
     const operation_object& new_obj = create_operation_obj(note);
+    if (!is_virtual_operation(note.op))
+        create_not_virtual_operation_obj(new_obj);
     for (const auto& item : impacted)
     {
         auto itr = _tracked_accounts.lower_bound(item);

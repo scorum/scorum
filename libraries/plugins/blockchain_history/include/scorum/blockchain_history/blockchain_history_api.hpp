@@ -26,8 +26,7 @@ public:
 
     void on_api_startup();
 
-    std::map<uint32_t, applied_operation>
-    get_history_by_blocks(uint32_t from_block, uint32_t limit, bool only_not_virtual = true) const;
+    std::map<uint32_t, applied_operation> get_not_virtual_ops_history(uint32_t from_op, uint32_t limit) const;
 
     /**
      *  @brief Get sequence of operations included/generated within a particular block
@@ -45,4 +44,5 @@ private:
 } // namespace blockchain_history
 } // namespace scorum
 
-FC_API(scorum::blockchain_history::blockchain_history_api, (get_history_by_blocks)(get_ops_in_block)(get_transaction))
+FC_API(scorum::blockchain_history::blockchain_history_api,
+       (get_not_virtual_ops_history)(get_ops_in_block)(get_transaction))

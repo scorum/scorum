@@ -1043,8 +1043,7 @@ std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t bloc
     return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, only_virtual);
 }
 
-std::map<uint32_t, applied_operation> wallet_api::get_transactions_history_by_blocks(uint32_t from_block,
-                                                                                     uint32_t limit) const
+std::map<uint32_t, applied_operation> wallet_api::get_not_virtual_ops_history(uint32_t from_op, uint32_t limit) const
 {
     try
     {
@@ -1056,7 +1055,7 @@ std::map<uint32_t, applied_operation> wallet_api::get_transactions_history_by_bl
         return {};
     }
 
-    return (*my->_remote_blockchain_history_api)->get_history_by_blocks(from_block, limit, true);
+    return (*my->_remote_blockchain_history_api)->get_not_virtual_ops_history(from_op, limit);
 }
 
 std::vector<account_api_obj> wallet_api::list_my_accounts()

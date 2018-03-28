@@ -1,6 +1,6 @@
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
 #include <scorum/app/application.hpp>
-#include <scorum/blockchain_history/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_objects.hpp>
 
 namespace scorum {
 namespace blockchain_history {
@@ -14,8 +14,8 @@ void blockchain_history_api::on_api_startup()
 {
 }
 
-std::map<uint32_t, applied_operation>
-blockchain_history_api::get_history_by_blocks(uint32_t from_block, uint32_t limit, bool only_not_virtual) const
+std::map<uint32_t, applied_operation> blockchain_history_api::get_not_virtual_ops_history(uint32_t from_op,
+                                                                                          uint32_t limit) const
 {
     using namespace scorum::chain;
 
@@ -23,33 +23,37 @@ blockchain_history_api::get_history_by_blocks(uint32_t from_block, uint32_t limi
 
     const auto& db = _app.chain_database();
 
+    FC_ASSERT(limit > 0, "Limit must be greater than zero");
     FC_ASSERT(limit <= max_history_depth, "Limit of ${l} is greater than maxmimum allowed ${2}",
               ("l", limit)("2", max_history_depth));
-    FC_ASSERT(from_block >= limit, "From must be greater than limit");
+    FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
     return db->with_read_lock([&]() {
 
         std::map<uint32_t, applied_operation> result;
 
-        const auto& idx = db->get_index<operation_index>().indices().get<by_location>();
-        auto head_block = db->head_block_num();
-        if (from_block > head_block)
-            from_block = head_block;
-        auto itr = idx.lower_bound(from_block);
+        const auto& idx = db->get_index<not_virtual_operation_index>().indices().get<by_id>();
+        auto itr = idx.end();
+        if (!idx.empty())
+        {
+            // move to last operation object
+            --itr;
+            if (itr->id._id > from_op)
+            {
+                itr = idx.lower_bound(from_op);
+            }
+        }
+
         if (itr != idx.end())
         {
-            auto start = idx.upper_bound(std::max(int64_t(0), int64_t(itr->block) - limit));
+            auto start = idx.lower_bound(std::max(int64_t(0), int64_t(itr->id._id) - limit));
             FC_ASSERT(start != idx.end(), "Invalid range");
             applied_operation temp;
             while (itr != start)
             {
                 auto id = itr->id;
-                temp = *itr;
-                if (!only_not_virtual || !is_virtual_operation(temp.op))
-                {
-                    FC_ASSERT(id._id >= 0, "Invalid operation_object id");
-                    result[(uint32_t)id._id] = temp;
-                }
+                FC_ASSERT(id._id >= 0, "Invalid operation_object id");
+                result[(uint32_t)id._id] = db->get(itr->op);
                 --itr;
             }
         }

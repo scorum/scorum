@@ -29,7 +29,7 @@
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/blockchain_history/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_objects.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>

@@ -4,7 +4,7 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/blockchain_history/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_objects.hpp>
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>

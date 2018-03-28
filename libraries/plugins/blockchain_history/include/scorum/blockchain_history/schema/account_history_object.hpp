@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/blockchain_history/schema/operation_object.hpp>
+#include <scorum/blockchain_history/schema/operation_objects.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
 
@@ -38,6 +38,8 @@ using history_index
                                                                                   uint32_t,
                                                                                   &history_object_t::sequence>>,
                                                              composite_key_compare<std::less<account_name_type>,
+                                                                                   // for derect oder iteration from
+                                                                                   // grater value to less
                                                                                    std::greater<uint32_t>>>>>;
 
 using account_history_object = history_object<all_account_operations_history>;

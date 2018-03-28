@@ -18,12 +18,12 @@ namespace blockchain_history {
 
 using scorum::protocol::transaction_id_type;
 
-class operation_object : public object<operation_history, operation_object>
+class operation_object : public object<operations_history, operation_object>
 {
 public:
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(operation_object, (serialized_op))
 
-    typedef typename object<operation_history, operation_object>::id_type id_type;
+    typedef typename object<operations_history, operation_object>::id_type id_type;
 
     id_type id;
 
@@ -31,7 +31,6 @@ public:
     uint32_t block = 0;
     uint32_t trx_in_block = 0;
     uint16_t op_in_trx = 0;
-    uint64_t virtual_op = 0;
     time_point_sec timestamp;
     fc::shared_buffer serialized_op;
 };
@@ -55,9 +54,6 @@ typedef shared_multi_index_container<operation_object,
                                                                                     uint16_t,
                                                                                     &operation_object::op_in_trx>,
                                                                              member<operation_object,
-                                                                                    uint64_t,
-                                                                                    &operation_object::virtual_op>,
-                                                                             member<operation_object,
                                                                                     operation_object::id_type,
                                                                                     &operation_object::id>>>
 #ifndef SKIP_BY_TX_ID
@@ -73,9 +69,32 @@ typedef shared_multi_index_container<operation_object,
 #endif
                                                 >>
     operation_index;
+
+class not_virtual_operation_object : public object<not_virtual_operations_history, not_virtual_operation_object>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(not_virtual_operation_object)
+
+    typedef typename object<operations_history, not_virtual_operation_object>::id_type id_type;
+
+    id_type id;
+
+    operation_object::id_type op;
+};
+
+typedef shared_multi_index_container<not_virtual_operation_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<not_virtual_operation_object,
+                                                                      not_virtual_operation_object::id_type,
+                                                                      &not_virtual_operation_object::id>>>>
+    not_virtual_operation_index;
 }
 }
 
 FC_REFLECT(scorum::blockchain_history::operation_object,
-           (id)(trx_id)(block)(trx_in_block)(op_in_trx)(virtual_op)(timestamp)(serialized_op))
+           (id)(trx_id)(block)(trx_in_block)(op_in_trx)(timestamp)(serialized_op))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::operation_object, scorum::blockchain_history::operation_index)
+
+FC_REFLECT(scorum::blockchain_history::not_virtual_operation_object, (id)(op))
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::not_virtual_operation_object,
+                         scorum::blockchain_history::not_virtual_operation_index)
