@@ -49,6 +49,7 @@ public:
         return _self.database();
     }
 
+    const operation_object& create_operation_obj(const operation_notification& note);
     void on_operation(const operation_notification& note);
 
     blockchain_history_plugin& _self;
@@ -61,68 +62,47 @@ public:
 class operation_visitor
 {
     database& _db;
-    const operation_notification& _note;
-    account_name_type item;
+    const operation_object& _obj;
+    account_name_type _item;
 
 public:
     typedef void result_type;
 
-    operation_visitor(database& db, const operation_notification& note, const account_name_type& i)
+    operation_visitor(database& db, const operation_object& obj, const account_name_type& i)
         : _db(db)
-        , _note(note)
-        , item(i)
+        , _obj(obj)
+        , _item(i)
     {
     }
 
     template <typename Op> void operator()(const Op&) const
     {
-        push_history<account_history_object>(create_operation_obj());
+        push_history<account_history_object>(_obj);
     }
 
     void operator()(const transfer_operation&) const
     {
-        const auto& new_obj = create_operation_obj();
-
-        push_history<account_history_object>(new_obj);
-        push_history<transfers_to_scr_history_object>(new_obj);
+        push_history<account_history_object>(_obj);
+        push_history<transfers_to_scr_history_object>(_obj);
     }
 
     void operator()(const transfer_to_scorumpower_operation&) const
     {
-        const auto& new_obj = create_operation_obj();
-
-        push_history<account_history_object>(new_obj);
-        push_history<transfers_to_sp_history_object>(new_obj);
+        push_history<account_history_object>(_obj);
+        push_history<transfers_to_sp_history_object>(_obj);
     }
 
 private:
-    const operation_object& create_operation_obj() const
-    {
-        return _db.create<operation_object>([&](operation_object& obj) {
-            obj.trx_id = _note.trx_id;
-            obj.block = _note.block;
-            obj.trx_in_block = _note.trx_in_block;
-            obj.op_in_trx = _note.op_in_trx;
-            obj.virtual_op = _note.virtual_op;
-            obj.timestamp = _db.head_block_time();
-            // fc::raw::pack( obj.serialized_op , _note.op);  //call to 'pack' is ambiguous
-            auto size = fc::raw::pack_size(_note.op);
-            obj.serialized_op.resize(size);
-            fc::datastream<char*> ds(obj.serialized_op.data(), size);
-            fc::raw::pack(ds, _note.op);
-        });
-    }
-
     template <typename history_object_type> void push_history(const operation_object& op) const
     {
         const auto& hist_idx = _db.get_index<history_index<history_object_type>>().indices().get<by_account>();
-        auto hist_itr = hist_idx.lower_bound(boost::make_tuple(item, uint32_t(-1)));
+        auto hist_itr = hist_idx.lower_bound(boost::make_tuple(_item, uint32_t(-1)));
         uint32_t sequence = 0;
-        if (hist_itr != hist_idx.end() && hist_itr->account == item)
+        if (hist_itr != hist_idx.end() && hist_itr->account == _item)
             sequence = hist_itr->sequence + 1;
 
         _db.create<history_object_type>([&](history_object_type& ahist) {
-            ahist.account = item;
+            ahist.account = _item;
             ahist.sequence = sequence;
             ahist.op = op.id;
         });
@@ -132,11 +112,11 @@ private:
 struct operation_visitor_filter : operation_visitor
 {
     operation_visitor_filter(database& db,
-                             const operation_notification& note,
+                             const operation_object& obj,
                              const account_name_type& i,
                              const flat_set<std::string>& filter,
                              bool blacklist)
-        : operation_visitor(db, note, i)
+        : operation_visitor(db, obj, i)
         , _filter(filter)
         , _blacklist(blacklist)
     {
@@ -160,6 +140,24 @@ struct operation_visitor_filter : operation_visitor
     }
 };
 
+const operation_object& blockchain_history_plugin_impl::create_operation_obj(const operation_notification& note)
+{
+    scorum::chain::database& db = database();
+
+    return db.create<operation_object>([&](operation_object& obj) {
+        obj.trx_id = note.trx_id;
+        obj.block = note.block;
+        obj.trx_in_block = note.trx_in_block;
+        obj.op_in_trx = note.op_in_trx;
+        obj.virtual_op = note.virtual_op;
+        obj.timestamp = db.head_block_time();
+        auto size = fc::raw::pack_size(note.op);
+        obj.serialized_op.resize(size);
+        fc::datastream<char*> ds(obj.serialized_op.data(), size);
+        fc::raw::pack(ds, note.op);
+    });
+}
+
 void blockchain_history_plugin_impl::on_operation(const operation_notification& note)
 {
     flat_set<account_name_type> impacted;
@@ -167,6 +165,7 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
 
     app::operation_get_impacted_accounts(note.op, impacted);
 
+    const operation_object& new_obj = create_operation_obj(note);
     for (const auto& item : impacted)
     {
         auto itr = _tracked_accounts.lower_bound(item);
@@ -200,11 +199,11 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
         {
             if (_filter_content)
             {
-                note.op.visit(operation_visitor_filter(db, note, item, _op_list, _blacklist));
+                note.op.visit(operation_visitor_filter(db, new_obj, item, _op_list, _blacklist));
             }
             else
             {
-                note.op.visit(operation_visitor(db, note, item));
+                note.op.visit(operation_visitor(db, new_obj, item));
             }
         }
     }
