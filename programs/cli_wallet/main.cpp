@@ -71,9 +71,17 @@ void set_new_password(std::shared_ptr<wallet_app>& wallet_cli,
                       std::shared_ptr<wallet::wallet_api>& wapiptr,
                       bool show_asterisk)
 {
-    std::string psw = wallet_cli->get_secret("New password:", show_asterisk);
-    if (psw == wallet_cli->get_secret("Submit password:", show_asterisk))
+    while (true)
+    {
+        std::string psw = wallet_cli->get_secret("set password:", show_asterisk);
+        if (psw != wallet_cli->get_secret("check password:", show_asterisk))
+        {
+            elog("Invalid password. Try again.");
+            continue;
+        }
         wapiptr->set_password_internal(psw);
+        break;
+    }
 }
 
 int main(int argc, char** argv)
@@ -103,7 +111,7 @@ int main(int argc, char** argv)
                 ("import-key,I",          "Import key")
                 ("list-keys,l",           "List loaded keys")
                 ("show-asterisk",         "Show asterisk while secret input")
-                ("strict,S",              "Switch on strict mode for API (forbid functions for secret menegment, e.g. set_password, import-key)");
+                ("brave,b",               "Switch on old (not secure) mode for API (allow functions for secret management, e.g. set_password, import-key)");
         // clang-format on
 
         std::vector<std::string> allowed_ips;
@@ -205,23 +213,18 @@ int main(int argc, char** argv)
         if (options.count("server-rpc-password"))
             wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
-        fc::http::websocket_client client(options["cert-authority"].as<std::string>());
-        idump((wdata.ws_server));
-        auto con = client.connect(wdata.ws_server);
-        auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
-
-        auto wapiptr = std::make_shared<wallet::wallet_api>(wdata, options.count("strict"));
+        auto wapiptr = std::make_shared<wallet::wallet_api>(wdata, !options.count("brave"));
         auto wallet_cli = std::make_shared<wallet_app>();
 
         wapiptr->set_wallet_filename(wallet_file.generic_string());
         wapiptr->load_wallet_file();
 
-        const std::string psw_prompt = "\nLogin:";
+        const std::string psw_prompt = "unlock:";
 
         if (options.count("list-keys"))
         {
             wapiptr->unlock_internal(wallet_cli->get_secret(psw_prompt, options.count("show-asterisk")));
-            std::cout << fc::json::to_string(wapiptr->list_keys()) << "\n";
+            std::cout << fc::json::to_string(wapiptr->list_keys_internal()) << "\n";
             return 0;
         }
 
@@ -239,6 +242,10 @@ int main(int argc, char** argv)
             return 0;
         }
 
+        fc::http::websocket_client client(options["cert-authority"].as<std::string>());
+        idump((wdata.ws_server));
+        auto con = client.connect(wdata.ws_server);
+        auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
         auto remote_api = apic->get_remote_api<login_api>(1);
         edump((wdata.ws_user)(wdata.ws_password));
         // TODO:  Error message here
@@ -262,14 +269,16 @@ int main(int argc, char** argv)
             unlocked
         };
         static const std::map<wallet_state_type, std::string> wallet_states
-            = { { wallet_state_type::no_password, "(!)" },
-                { wallet_state_type::locked, "(!)" },
-                { wallet_state_type::unlocked, options.count("strict") ? ("") : ("---") } };
+            = { { wallet_state_type::no_password, options.count("brave") ? ("new") : ("(!)") },
+                { wallet_state_type::locked, options.count("brave") ? ("locked") : ("(!)") },
+                { wallet_state_type::unlocked, options.count("brave") ? ("unlocked") : ("") } };
 
         auto promptFormatter = [](const std::string& state = "") -> std::string {
             static const std::string prompt = ">>> ";
             std::stringstream out;
-            out << state << " " << prompt;
+            if (!state.empty())
+                out << state << " ";
+            out << prompt;
             return out.str();
         };
 
@@ -371,7 +380,8 @@ int main(int argc, char** argv)
                 FC_ASSERT(wallet_cli);
                 wallet_cli->stop();
             });
-            std::cout << std::endl;
+            if (!wapiptr->is_locked())
+                std::cout << "ok" << std::endl;
             wallet_cli->start();
             wallet_cli->wait();
         }
