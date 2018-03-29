@@ -234,7 +234,7 @@ blockchain_history_plugin::~blockchain_history_plugin()
 
 std::string blockchain_history_plugin::plugin_name() const
 {
-    return blockchain_history_plugin_NAME;
+    return BLOCKCHAIN_HISTORY_PLUGIN_NAME;
 }
 
 void blockchain_history_plugin::plugin_set_program_options(boost::program_options::options_description& cli,

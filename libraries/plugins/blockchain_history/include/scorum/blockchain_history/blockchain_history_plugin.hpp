@@ -26,8 +26,8 @@
 #include <scorum/app/plugin.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#ifndef blockchain_history_plugin_NAME
-#define blockchain_history_plugin_NAME "account_history"
+#ifndef BLOCKCHAIN_HISTORY_PLUGIN_NAME
+#define BLOCKCHAIN_HISTORY_PLUGIN_NAME "blockchain_history"
 #endif
 
 namespace scorum {
