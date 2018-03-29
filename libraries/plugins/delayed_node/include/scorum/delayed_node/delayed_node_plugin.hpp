@@ -58,4 +58,4 @@ protected:
     void sync_with_trusted_node();
 };
 }
-} // scorum::blockchain_history
+} // scorum::delayed_node

@@ -1045,30 +1045,14 @@ std::map<uint32_t, signed_block_api_obj> wallet_api::get_blocks_history(uint32_t
 
 std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, applied_operation_type opt) const
 {
-    try
-    {
-        my->use_remote_blockchain_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable blockchain_history_api");
-        return {};
-    }
+    my->use_remote_blockchain_history_api();
 
     return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, opt);
 }
 
 std::map<uint32_t, applied_operation> wallet_api::get_not_virtual_ops_history(uint32_t from_op, uint32_t limit) const
 {
-    try
-    {
-        my->use_remote_blockchain_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable blockchain_history_api");
-        return {};
-    }
+    my->use_remote_blockchain_history_api();
 
     return (*my->_remote_blockchain_history_api)->get_not_virtual_ops_history(from_op, limit);
 }
@@ -1078,15 +1062,7 @@ std::vector<account_api_obj> wallet_api::list_my_accounts()
     FC_ASSERT(!is_locked(), "Wallet must be unlocked to list accounts");
     std::vector<account_api_obj> result;
 
-    try
-    {
-        my->use_remote_account_by_key_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_by_key_api();
 
     std::vector<public_key_type> pub_keys;
     pub_keys.reserve(my->_keys.size());
@@ -2254,15 +2230,7 @@ wallet_api::get_account_history(const std::string& account, uint64_t from, uint3
 
     std::map<uint32_t, applied_operation> result;
 
-    try
-    {
-        my->use_remote_account_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_history_api();
 
     result = (*my->_remote_account_history_api)->get_account_history(account, from, limit);
 
@@ -2285,15 +2253,7 @@ wallet_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_
 
     std::map<uint32_t, applied_operation> result;
 
-    try
-    {
-        my->use_remote_account_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_history_api();
 
     result = (*my->_remote_account_history_api)->get_account_scr_to_scr_transfers(account, from, limit);
 
@@ -2316,15 +2276,7 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
 
     std::map<uint32_t, applied_operation> result;
 
-    try
-    {
-        my->use_remote_account_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_history_api();
 
     result = (*my->_remote_account_history_api)->get_account_scr_to_sp_transfers(account, from, limit);
 
@@ -2438,15 +2390,7 @@ annotated_signed_transaction wallet_api::prove(const std::string& challenged, bo
 
 annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id) const
 {
-    try
-    {
-        my->use_remote_blockchain_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable blockchain_history_api");
-        return {};
-    }
+    my->use_remote_blockchain_history_api();
 
     return (*my->_remote_blockchain_history_api)->get_transaction(id);
 }
@@ -2455,15 +2399,7 @@ std::vector<budget_api_obj> wallet_api::list_my_budgets()
 {
     FC_ASSERT(!is_locked());
 
-    try
-    {
-        my->use_remote_account_by_key_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return {};
-    }
+    my->use_remote_account_by_key_api();
 
     std::vector<public_key_type> pub_keys;
     pub_keys.reserve(my->_keys.size());

@@ -35,15 +35,15 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_not_virtual_op
         std::map<uint32_t, applied_operation> result;
 
         const auto& idx = db->get_index<not_virtual_operation_index>().indices().get<by_id>();
+        if (idx.empty())
+            return result;
+
+        // move to last operation object
         auto itr = idx.end();
-        if (!idx.empty())
+        --itr;
+        if (itr->id._id > from_op)
         {
-            // move to last operation object
-            --itr;
-            if (itr->id._id > from_op)
-            {
-                itr = idx.lower_bound(from_op);
-            }
+            itr = idx.lower_bound(from_op);
         }
 
         if (itr != idx.end())
