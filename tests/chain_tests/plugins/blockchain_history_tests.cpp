@@ -406,14 +406,18 @@ SCORUM_TEST_CASE(check_get_not_virtual_operations_list)
     using saved_operation_vector_type = std::vector<operation_map_type::value_type>;
     saved_operation_vector_type saved_ops;
 
-    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_not_virtual_ops_history(-1, 0), fc::exception);
+    SCORUM_REQUIRE_THROW(
+        blockchain_history_api_call.get_ops_history(-1, 0, blockchain_history::applied_operation_type::market),
+        fc::exception);
 
-    operation_map_type ret1 = blockchain_history_api_call.get_not_virtual_ops_history(-1, 1);
+    operation_map_type ret1
+        = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::market);
     BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
 
     auto next_page_id = ret1.begin()->first;
     next_page_id--;
-    operation_map_type ret2 = blockchain_history_api_call.get_not_virtual_ops_history(next_page_id, 2);
+    operation_map_type ret2 = blockchain_history_api_call.get_ops_history(
+        next_page_id, 2, blockchain_history::applied_operation_type::market);
     BOOST_REQUIRE_EQUAL(ret2.size(), 2u);
 
     for (const auto& val : ret2) // oldest history

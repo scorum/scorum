@@ -149,17 +149,19 @@ public:
     /** Returns sequence of operations included/generated in a specified block
      *
      * @param block_num Block height of specified block
-     * @param opt Operations type (all = 0, not_virtual_operation = 1, virtual_operation = 2, market_operation = 3)
+     * @param opt Operations type (all = 0, not_virt = 1, virt = 2, market = 3)
      */
     std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num, applied_operation_type opt) const;
 
     /**
-     *  This method returns all not virtual operations in ids range [from-limit, from]
+     *  This method returns all operations in ids range [from-limit, from]
      *
      *  @param from_op - the operation number, -1 means most recent, limit is the number of operations before from.
      *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     *  @param opt Operations type (all = 0, not_virt = 1, virt = 2, market = 3)
      */
-    std::map<uint32_t, applied_operation> get_not_virtual_ops_history(uint32_t from_op, uint32_t limit) const;
+    std::map<uint32_t, applied_operation>
+    get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type opt) const;
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)
@@ -1332,7 +1334,7 @@ FC_API( scorum::wallet::wallet_api,
         (get_block_headers_history)
         (get_blocks_history)
         (get_ops_in_block)
-        (get_not_virtual_ops_history)
+        (get_ops_history)
         (get_account_history)
         (get_account_scr_to_scr_transfers)
         (get_account_scr_to_sp_transfers)

@@ -20,6 +20,7 @@ class account_history_api
 {
 public:
     account_history_api(const scorum::app::api_context& ctx);
+    ~account_history_api();
 
     void on_api_startup();
 
@@ -40,7 +41,7 @@ public:
     get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
 
 private:
-    std::shared_ptr<detail::account_history_api_impl> my;
+    std::unique_ptr<detail::account_history_api_impl> my;
 };
 } // namespace blockchain_history
 } // namespace scorum

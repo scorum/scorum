@@ -17,6 +17,7 @@ namespace scorum {
 namespace blockchain_history {
 
 using scorum::protocol::transaction_id_type;
+using scorum::protocol::operation;
 
 class operation_object : public object<operations_history, operation_object>
 {
@@ -70,24 +71,59 @@ typedef shared_multi_index_container<operation_object,
                                                 >>
     operation_index;
 
-class not_virtual_operation_object : public object<not_virtual_operations_history, not_virtual_operation_object>
+enum class applied_operation_type
+{
+    all = 0,
+    not_virt,
+    virt,
+    market
+};
+
+using filtered_operation_creator_type
+    = std::function<void(const applied_operation_type&, const operation_object::id_type&)>;
+void update_filtered_operation_index(const operation_object& object,
+                                     const operation& op,
+                                     const filtered_operation_creator_type& create);
+bool operation_type_filter(const operation& op, const applied_operation_type& opt);
+
+constexpr uint16_t get_object_type(uint16_t base_id, const applied_operation_type& opt)
+{
+    return base_id + (uint16_t)opt;
+}
+
+template <applied_operation_type OperationType>
+class filtered_operation_object : public object<get_object_type(filtered_operations_history, OperationType),
+                                                filtered_operation_object<OperationType>>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(not_virtual_operation_object)
+    CHAINBASE_DEFAULT_CONSTRUCTOR(filtered_operation_object)
 
-    typedef typename object<operations_history, not_virtual_operation_object>::id_type id_type;
+    typedef typename object<get_object_type(filtered_operations_history, OperationType),
+                            filtered_operation_object<OperationType>>::id_type id_type;
 
     id_type id;
 
     operation_object::id_type op;
 };
 
-typedef shared_multi_index_container<not_virtual_operation_object,
-                                     indexed_by<ordered_unique<tag<by_id>,
-                                                               member<not_virtual_operation_object,
-                                                                      not_virtual_operation_object::id_type,
-                                                                      &not_virtual_operation_object::id>>>>
-    not_virtual_operation_index;
+template <applied_operation_type OperationType>
+using filtered_operation_index
+    = shared_multi_index_container<filtered_operation_object<OperationType>,
+                                   indexed_by<ordered_unique<tag<by_id>,
+                                                             member<filtered_operation_object<OperationType>,
+                                                                    typename filtered_operation_object<OperationType>::
+                                                                        id_type,
+                                                                    &filtered_operation_object<OperationType>::id>>>>;
+
+using filtered_all_operation_object = filtered_operation_object<applied_operation_type::all>;
+using filtered_not_virt_operation_object = filtered_operation_object<applied_operation_type::not_virt>;
+using filtered_virt_operation_object = filtered_operation_object<applied_operation_type::virt>;
+using filtered_market_operation_object = filtered_operation_object<applied_operation_type::market>;
+
+using filtered_all_operation_index = filtered_operation_index<applied_operation_type::all>;
+using filtered_not_virt_operation_index = filtered_operation_index<applied_operation_type::not_virt>;
+using filtered_virt_operation_index = filtered_operation_index<applied_operation_type::virt>;
+using filtered_market_operation_index = filtered_operation_index<applied_operation_type::market>;
 }
 }
 
@@ -95,6 +131,17 @@ FC_REFLECT(scorum::blockchain_history::operation_object,
            (id)(trx_id)(block)(trx_in_block)(op_in_trx)(timestamp)(serialized_op))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::operation_object, scorum::blockchain_history::operation_index)
 
-FC_REFLECT(scorum::blockchain_history::not_virtual_operation_object, (id)(op))
-CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::not_virtual_operation_object,
-                         scorum::blockchain_history::not_virtual_operation_index)
+FC_REFLECT_ENUM(scorum::blockchain_history::applied_operation_type, (all)(not_virt)(virt)(market))
+
+FC_REFLECT(scorum::blockchain_history::filtered_all_operation_object, (id)(op))
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_all_operation_object,
+                         scorum::blockchain_history::filtered_all_operation_index)
+FC_REFLECT(scorum::blockchain_history::filtered_not_virt_operation_object, (id)(op))
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_not_virt_operation_object,
+                         scorum::blockchain_history::filtered_not_virt_operation_index)
+FC_REFLECT(scorum::blockchain_history::filtered_virt_operation_object, (id)(op))
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_virt_operation_object,
+                         scorum::blockchain_history::filtered_virt_operation_index)
+FC_REFLECT(scorum::blockchain_history::filtered_market_operation_object, (id)(op))
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_market_operation_object,
+                         scorum::blockchain_history::filtered_market_operation_index)

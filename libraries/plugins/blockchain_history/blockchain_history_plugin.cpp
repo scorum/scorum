@@ -34,10 +34,13 @@ public:
         chain::database& db = database();
 
         db.add_plugin_index<operation_index>();
-        db.add_plugin_index<not_virtual_operation_index>();
         db.add_plugin_index<account_operations_full_history_index>();
         db.add_plugin_index<transfers_to_scr_history_index>();
         db.add_plugin_index<transfers_to_sp_history_index>();
+        db.add_plugin_index<filtered_operation_index<applied_operation_type::all>>();
+        db.add_plugin_index<filtered_operation_index<applied_operation_type::not_virt>>();
+        db.add_plugin_index<filtered_operation_index<applied_operation_type::virt>>();
+        db.add_plugin_index<filtered_operation_index<applied_operation_type::market>>();
 
         db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
     }
@@ -51,7 +54,6 @@ public:
     }
 
     const operation_object& create_operation_obj(const operation_notification& note);
-    void create_not_virtual_operation_obj(const operation_object& object);
     void on_operation(const operation_notification& note);
 
     blockchain_history_plugin& _self;
@@ -159,13 +161,6 @@ const operation_object& blockchain_history_plugin_impl::create_operation_obj(con
     });
 }
 
-void blockchain_history_plugin_impl::create_not_virtual_operation_obj(const operation_object& object)
-{
-    scorum::chain::database& db = database();
-
-    db.create<not_virtual_operation_object>([&](not_virtual_operation_object& obj) { obj.op = object.id; });
-}
-
 void blockchain_history_plugin_impl::on_operation(const operation_notification& note)
 {
     flat_set<account_name_type> impacted;
@@ -174,8 +169,30 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
     app::operation_get_impacted_accounts(note.op, impacted);
 
     const operation_object& new_obj = create_operation_obj(note);
-    if (!is_virtual_operation(note.op))
-        create_not_virtual_operation_obj(new_obj);
+    auto create = [&](const applied_operation_type& opt, const operation_object::id_type id) {
+        scorum::chain::database& db = database();
+        switch (opt)
+        {
+        case applied_operation_type::all:
+            db.create<filtered_operation_object<applied_operation_type::all>>(
+                [&](filtered_operation_object<applied_operation_type::all>& obj) { obj.op = id; });
+            break;
+        case applied_operation_type::not_virt:
+            db.create<filtered_operation_object<applied_operation_type::not_virt>>(
+                [&](filtered_operation_object<applied_operation_type::not_virt>& obj) { obj.op = id; });
+            break;
+        case applied_operation_type::virt:
+            db.create<filtered_operation_object<applied_operation_type::virt>>(
+                [&](filtered_operation_object<applied_operation_type::virt>& obj) { obj.op = id; });
+            break;
+        case applied_operation_type::market:
+            db.create<filtered_operation_object<applied_operation_type::market>>(
+                [&](filtered_operation_object<applied_operation_type::market>& obj) { obj.op = id; });
+            break;
+        default:;
+        }
+    };
+    update_filtered_operation_index(new_obj, note.op, create);
     for (const auto& item : impacted)
     {
         auto itr = _tracked_accounts.lower_bound(item);

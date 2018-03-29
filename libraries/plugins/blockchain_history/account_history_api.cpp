@@ -53,8 +53,12 @@ public:
 } // namespace detail
 
 account_history_api::account_history_api(const scorum::app::api_context& ctx)
+    : my(new detail::account_history_api_impl(ctx.app))
 {
-    my = std::make_shared<detail::account_history_api_impl>(ctx.app);
+}
+
+account_history_api::~account_history_api()
+{
 }
 
 void account_history_api::on_api_startup()

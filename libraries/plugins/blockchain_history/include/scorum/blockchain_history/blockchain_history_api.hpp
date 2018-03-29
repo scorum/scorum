@@ -19,14 +19,20 @@ namespace blockchain_history {
 using scorum::protocol::annotated_signed_transaction;
 using scorum::protocol::transaction_id_type;
 
+namespace detail {
+class blockchain_history_api_impl;
+}
+
 class blockchain_history_api
 {
 public:
     blockchain_history_api(const scorum::app::api_context& ctx);
+    ~blockchain_history_api();
 
     void on_api_startup();
 
-    std::map<uint32_t, applied_operation> get_not_virtual_ops_history(uint32_t from_op, uint32_t limit) const;
+    std::map<uint32_t, applied_operation>
+    get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& opt) const;
 
     /**
      *  @brief Get sequence of operations included/generated within a particular block
@@ -39,10 +45,9 @@ public:
     annotated_signed_transaction get_transaction(transaction_id_type trx_id) const;
 
 private:
-    scorum::app::application& _app;
+    std::unique_ptr<detail::blockchain_history_api_impl> _impl;
 };
 } // namespace blockchain_history
 } // namespace scorum
 
-FC_API(scorum::blockchain_history::blockchain_history_api,
-       (get_not_virtual_ops_history)(get_ops_in_block)(get_transaction))
+FC_API(scorum::blockchain_history::blockchain_history_api, (get_ops_history)(get_ops_in_block)(get_transaction))
