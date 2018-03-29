@@ -21,7 +21,7 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_not_virtual_op
 {
     using namespace scorum::chain;
 
-    static const uint32_t max_history_depth = 10000;
+    static const uint32_t max_history_depth = 100;
 
     const auto& db = _app.chain_database();
 

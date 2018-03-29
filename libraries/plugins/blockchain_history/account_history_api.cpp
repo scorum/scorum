@@ -24,7 +24,7 @@ public:
     template <typename history_object_type>
     std::map<uint32_t, applied_operation> get_history(const std::string& account, uint64_t from, uint32_t limit) const
     {
-        static const uint32_t max_history_depth = 10000;
+        static const uint32_t max_history_depth = 100;
 
         const auto db = _app.chain_database();
 

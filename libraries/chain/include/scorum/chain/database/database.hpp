@@ -126,11 +126,10 @@ public:
     block_id_type get_block_id_for_num(uint32_t block_num) const;
     optional<signed_block> fetch_block_by_id(const block_id_type& id) const;
     optional<signed_block> fetch_block_by_number(uint32_t num) const;
-    template <typename block_api_object>
-    void
-    get_blocks_history_by_number(std::map<uint32_t, block_api_object>& result, uint32_t block_num, uint32_t limit) const
+    template <typename T>
+    void get_blocks_history_by_number(std::map<uint32_t, T>& result, uint32_t block_num, uint32_t limit) const
     {
-        static const uint32_t max_history_depth = 500;
+        static const uint32_t max_history_depth = 100;
 
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
         FC_ASSERT(limit <= max_history_depth, "Limit of ${l} is greater than maxmimum allowed ${2}",
@@ -153,7 +152,7 @@ public:
             {
                 b = _block_log.read_block_by_num(block_num);
                 if (b.valid())
-                    result[block_num] = *b; // conver from signed_block to block_api_object
+                    result[block_num] = *b; // conver from signed_block to type T
                 --block_num;
             }
         }
