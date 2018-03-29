@@ -128,7 +128,7 @@ public:
     optional<signed_block> fetch_block_by_number(uint32_t num) const;
     template <typename block_api_object>
     void
-    get_blocks_history_by_number(std::map<uint32_t, block_api_object> result, uint32_t block_num, uint32_t limit) const
+    get_blocks_history_by_number(std::map<uint32_t, block_api_object>& result, uint32_t block_num, uint32_t limit) const
     {
         static const uint32_t max_history_depth = 500;
 
