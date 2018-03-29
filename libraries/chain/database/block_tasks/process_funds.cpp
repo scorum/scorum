@@ -51,7 +51,7 @@ void process_funds::on_apply(block_task_context& ctx)
 
     // 50% of revenue is distributed in SCR among users.
     // pass it through reward balancer
-    reward_service.increase_pool_ballance(advertising_budgets_reward - dev_team_reward);
+    reward_service.increase_ballance(advertising_budgets_reward - dev_team_reward);
     asset users_reward = reward_service.take_block_reward();
 
     distribute_reward(ctx, users_reward);

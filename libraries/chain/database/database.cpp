@@ -1911,7 +1911,7 @@ void database::validate_invariants() const
 
         total_supply += obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
-        total_supply += obtain_service<dbs_reward>().get_pool().balance;
+        total_supply += obtain_service<dbs_reward>().get().balance;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {

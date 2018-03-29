@@ -36,8 +36,8 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
     // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
     FC_ASSERT(post_rf.id._id == 0);
 
-    FC_ASSERT(!reward_service.is_pool_exists());
-    reward_service.create_pool(asset(0, SCORUM_SYMBOL));
+    FC_ASSERT(!reward_service.is_exists());
+    reward_service.create_balancer(asset(0, SCORUM_SYMBOL));
 
     fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 

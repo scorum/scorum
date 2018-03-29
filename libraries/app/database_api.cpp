@@ -323,7 +323,7 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
 
     gpao.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
     gpao.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
-    gpao.reward_pool_balance = _db.obtain_service<dbs_reward>().get_pool().balance;
+    gpao.reward_pool_balance = _db.obtain_service<dbs_reward>().get().balance;
     gpao.content_reward_balance = _db.obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
 
     return gpao;
