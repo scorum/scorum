@@ -1,5 +1,7 @@
 file(GLOB_RECURSE HEADERS "include/scorum/blockchain_history/*.hpp")
 
+set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall -Werror" )
+
 add_library( scorum_blockchain_history
              blockchain_history_plugin.cpp
              account_history_api.cpp

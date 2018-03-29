@@ -1,27 +1,43 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
-#include <scorum/blockchain_history/schema/account_history_object.hpp>
-#include <scorum/blockchain_history/schema/applied_operation.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
+#include <scorum/app/api_context.hpp>
+
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
+#include <scorum/blockchain_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/applied_operation.hpp>
+
+#include <scorum/blockchain_history/account_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
+
 #include "database_trx_integration.hpp"
+
+#include <scorum/protocol/operations.hpp>
 
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
+using namespace scorum::app;
 using fc::string;
 
 using operation_map_type = std::map<uint32_t, blockchain_history::applied_operation>;
 
-namespace account_stat {
+namespace blockchain_history_tests {
 
 struct history_database_fixture : public database_fixture::database_trx_integration_fixture
 {
     std::shared_ptr<scorum::blockchain_history::blockchain_history_plugin> _plugin;
 
     history_database_fixture()
+        : buratino("buratino")
+        , maugli("maugli")
+        , alice("alice")
+        , bob("bob")
+        , sam("sam")
+        , _account_history_api_ctx(app, "account_history_api", std::make_shared<api_session_data>())
+        , account_history_api_call(_account_history_api_ctx)
     {
         boost::program_options::variables_map options;
 
@@ -31,6 +47,18 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
         open_database();
         generate_block();
         validate_database();
+
+        actor(initdelegate).create_account(alice);
+        actor(initdelegate).give_scr(alice, feed_amount);
+        actor(initdelegate).give_sp(alice, feed_amount);
+
+        actor(initdelegate).create_account(bob);
+        actor(initdelegate).give_scr(bob, feed_amount);
+        actor(initdelegate).give_sp(bob, feed_amount);
+
+        actor(initdelegate).create_account(sam);
+        actor(initdelegate).give_scr(sam, feed_amount);
+        actor(initdelegate).give_sp(sam, feed_amount);
     }
 
     template <typename history_object_type>
@@ -53,18 +81,68 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
             result[itr->sequence] = db.get(itr->op);
             ++itr;
         }
-        return std::move(result);
+        return result;
     }
-};
-} // namespace account_stat
 
-BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests, account_stat::history_database_fixture)
+    const int feed_amount = 99000;
+
+    Actor buratino;
+    Actor maugli;
+    Actor alice;
+    Actor bob;
+    Actor sam;
+
+    api_context _account_history_api_ctx;
+    blockchain_history::account_history_api account_history_api_call;
+};
+
+struct check_saved_opetations_visitor
+{
+    check_saved_opetations_visitor(const operation& input_op)
+        : _input_op(input_op)
+    {
+    }
+
+    using result_type = void;
+
+    void operator()(const transfer_to_scorumpower_operation& saved_op) const
+    {
+        BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
+        const auto& input_op = _input_op.get<transfer_to_scorumpower_operation>();
+
+        BOOST_REQUIRE_EQUAL(saved_op.amount, input_op.amount);
+        BOOST_REQUIRE_EQUAL(saved_op.from, input_op.from);
+        BOOST_REQUIRE_EQUAL(saved_op.to, input_op.to);
+    }
+
+    void operator()(const transfer_operation& saved_op) const
+    {
+        BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
+        const auto& input_op = _input_op.get<transfer_operation>();
+
+        BOOST_REQUIRE_EQUAL(saved_op.amount, input_op.amount);
+        BOOST_REQUIRE_EQUAL(saved_op.from, input_op.from);
+        BOOST_REQUIRE_EQUAL(saved_op.to, input_op.to);
+        BOOST_REQUIRE_EQUAL(saved_op.memo, input_op.memo);
+    }
+
+    template <typename Op> void operator()(const Op&) const
+    {
+        // invalid type recived
+        BOOST_REQUIRE(false);
+    }
+
+private:
+    const operation& _input_op;
+};
+
+} // namespace blockchain_history_tests
+
+BOOST_FIXTURE_TEST_SUITE(account_history_tests, blockchain_history_tests::history_database_fixture)
 
 SCORUM_TEST_CASE(check_account_nontransfer_operation_only_in_full_history_test)
 {
-    const char* buratino = "buratino";
-
-    account_create(buratino, initdelegate.public_key);
+    actor(initdelegate).create_account(buratino);
 
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
@@ -82,11 +160,8 @@ SCORUM_TEST_CASE(check_account_nontransfer_operation_only_in_full_history_test)
 
 SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_scr_history_test)
 {
-    const char* buratino = "buratino";
-
-    account_create(buratino, initdelegate.public_key);
-
-    fund(buratino, SCORUM_MIN_PRODUCER_REWARD);
+    actor(initdelegate).create_account(buratino);
+    actor(initdelegate).give_scr(buratino, SCORUM_MIN_PRODUCER_REWARD.amount.value);
 
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
@@ -108,11 +183,8 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_scr_h
 
 SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_sp_history_test)
 {
-    const char* buratino = "buratino";
-
-    account_create(buratino, initdelegate.public_key);
-
-    vest(buratino, SCORUM_MIN_PRODUCER_REWARD);
+    actor(initdelegate).create_account(buratino);
+    actor(initdelegate).give_sp(buratino, SCORUM_MIN_PRODUCER_REWARD.amount.value);
 
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
@@ -134,13 +206,10 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_sp_hi
 
 SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 {
-    const char* buratino = "buratino";
-    const char* maugli = "maugli";
+    actor(initdelegate).create_account(buratino);
+    actor(initdelegate).create_account(maugli);
 
-    account_create(buratino, initdelegate.public_key);
-    account_create(maugli, initdelegate.public_key);
-
-    fund(buratino, SCORUM_MIN_PRODUCER_REWARD);
+    actor(initdelegate).give_scr(buratino, SCORUM_MIN_PRODUCER_REWARD.amount.value);
 
     {
         operation_map_type buratino_ops
@@ -153,7 +222,7 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 
         transfer_operation& op = buratino_ops[0].op.get<transfer_operation>();
         BOOST_REQUIRE_EQUAL(op.from, TEST_INIT_DELEGATE_NAME);
-        BOOST_REQUIRE_EQUAL(op.to, buratino);
+        BOOST_REQUIRE_EQUAL(op.to, buratino.name);
         BOOST_REQUIRE_EQUAL(op.amount, SCORUM_MIN_PRODUCER_REWARD);
     }
 
@@ -179,13 +248,10 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 
 SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 {
-    const char* buratino = "buratino";
-    const char* maugli = "maugli";
+    actor(initdelegate).create_account(buratino);
+    actor(initdelegate).create_account(maugli);
 
-    account_create(buratino, initdelegate.public_key);
-    account_create(maugli, initdelegate.public_key);
-
-    fund(buratino, SCORUM_MIN_PRODUCER_REWARD);
+    actor(initdelegate).give_scr(buratino, SCORUM_MIN_PRODUCER_REWARD.amount.value);
 
     {
         operation_map_type buratino_ops
@@ -214,6 +280,161 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
         BOOST_REQUIRE(buratino_ops[0].op == op);
         BOOST_REQUIRE(maugli_ops[0].op == op);
+    }
+}
+
+SCORUM_TEST_CASE(check_get_account_history_list)
+{
+    using input_operation_vector_type = std::vector<operation>;
+    input_operation_vector_type input_ops;
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = bob.name;
+        op.to = alice.name;
+        op.amount = ASSET_SCR(feed_amount / 20);
+        op.memo = "test";
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount / 30);
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    using saved_operation_vector_type = std::vector<operation_map_type::value_type>;
+    saved_operation_vector_type saved_ops;
+
+    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, 0), fc::exception);
+
+    operation_map_type ret1 = account_history_api_call.get_account_history(alice, -1, 1);
+    BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
+
+    auto next_page_id = ret1.begin()->first;
+    next_page_id--;
+    operation_map_type ret2 = account_history_api_call.get_account_history(alice, next_page_id, 2);
+    BOOST_REQUIRE_EQUAL(ret2.size(), 2u);
+
+    for (const auto& val : ret2) // oldest history
+    {
+        saved_ops.push_back(val);
+    }
+
+    for (const auto& val : ret1)
+    {
+        saved_ops.push_back(val);
+    }
+
+    BOOST_REQUIRE_EQUAL(input_ops.size(), saved_ops.size());
+
+    auto it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& op_saved = op_val.second.op;
+        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+namespace blockchain_history_tests {
+struct blokchain_not_virtual_history_database_fixture : public history_database_fixture
+{
+    blokchain_not_virtual_history_database_fixture()
+        : _blockchain_history_api_ctx(app, "blockchain_history_api", std::make_shared<api_session_data>())
+        , blockchain_history_api_call(_blockchain_history_api_ctx)
+    {
+    }
+
+    api_context _blockchain_history_api_ctx;
+    blockchain_history::blockchain_history_api blockchain_history_api_call;
+};
+} // namespace blockchain_history_tests
+
+BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests,
+                         blockchain_history_tests::blokchain_not_virtual_history_database_fixture)
+
+SCORUM_TEST_CASE(check_get_not_virtual_operations_list)
+{
+    using input_operation_vector_type = std::vector<operation>;
+    input_operation_vector_type input_ops;
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = bob.name;
+        op.to = alice.name;
+        op.amount = ASSET_SCR(feed_amount / 20);
+        op.memo = "test";
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount / 30);
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    using saved_operation_vector_type = std::vector<operation_map_type::value_type>;
+    saved_operation_vector_type saved_ops;
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_not_virtual_ops_history(-1, 0), fc::exception);
+
+    operation_map_type ret1 = blockchain_history_api_call.get_not_virtual_ops_history(-1, 1);
+    BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
+
+    auto next_page_id = ret1.begin()->first;
+    next_page_id--;
+    operation_map_type ret2 = blockchain_history_api_call.get_not_virtual_ops_history(next_page_id, 2);
+    BOOST_REQUIRE_EQUAL(ret2.size(), 2u);
+
+    for (const auto& val : ret2) // oldest history
+    {
+        saved_ops.push_back(val);
+    }
+
+    for (const auto& val : ret1)
+    {
+        saved_ops.push_back(val);
+    }
+
+    BOOST_REQUIRE_EQUAL(input_ops.size(), saved_ops.size());
+
+    auto it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& op_saved = op_val.second.op;
+        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
     }
 }
 

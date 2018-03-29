@@ -50,7 +50,6 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_not_virtual_op
         {
             auto start = idx.lower_bound(std::max(int64_t(0), int64_t(itr->id._id) - limit));
             FC_ASSERT(start != idx.end(), "Invalid range");
-            applied_operation temp;
             while (itr != start)
             {
                 auto id = itr->id;
