@@ -153,10 +153,7 @@ void blockchain_history_api::on_api_startup()
 std::map<uint32_t, applied_operation>
 blockchain_history_api::get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& opt) const
 {
-    applied_operation_variant_type opt_v;
-    opt_v.set_which(int(opt));
-
-    return opt_v.visit(detail::get_ops_history_visitor(*_impl, from_op, limit));
+    return get_applied_operation_variant(opt).visit(detail::get_ops_history_visitor(*_impl, from_op, limit));
 }
 
 std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(uint32_t block_num,
@@ -164,8 +161,7 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(u
 {
     using namespace scorum::chain;
 
-    applied_operation_variant_type opt_v;
-    opt_v.set_which(int(opt));
+    applied_operation_variant_type opt_v = get_applied_operation_variant(opt);
 
     const auto& db = _impl->_app.chain_database();
 
