@@ -5,7 +5,6 @@ add_library( scorum_blockchain_history
              account_history_api.cpp
              blockchain_history_api.cpp
              schema/applied_operation.cpp
-             schema/operation_objects.cpp
            )
 
 target_link_libraries( scorum_blockchain_history

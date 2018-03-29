@@ -79,12 +79,24 @@ enum class applied_operation_type
     market
 };
 
-using filtered_operation_creator_type
-    = std::function<void(const applied_operation_type&, const operation_object::id_type&)>;
-void update_filtered_operation_index(const operation_object& object,
-                                     const operation& op,
-                                     const filtered_operation_creator_type& create);
-bool operation_type_filter(const operation& op, const applied_operation_type& opt);
+template <applied_operation_type T> struct applied_operation_wrapper_type
+{
+};
+
+using applied_operation_all = applied_operation_wrapper_type<applied_operation_type::all>;
+using applied_operation_not_virt = applied_operation_wrapper_type<applied_operation_type::not_virt>;
+using applied_operation_virt = applied_operation_wrapper_type<applied_operation_type::virt>;
+using applied_operation_market = applied_operation_wrapper_type<applied_operation_type::market>;
+
+using applied_operation_variant_type = fc::
+    static_variant<applied_operation_all, applied_operation_not_virt, applied_operation_virt, applied_operation_market>;
+
+inline applied_operation_variant_type get_applied_operation_variant(const applied_operation_type& opt)
+{
+    applied_operation_variant_type ret;
+    ret.set_which(int(opt));
+    return ret;
+}
 
 constexpr uint16_t get_object_type(uint16_t base_id, const applied_operation_type& opt)
 {

@@ -54,6 +54,7 @@ public:
     }
 
     const operation_object& create_operation_obj(const operation_notification& note);
+    void update_filtered_operation_index(const operation_object& object, const operation& op);
     void on_operation(const operation_notification& note);
 
     blockchain_history_plugin& _self;
@@ -144,6 +145,45 @@ struct operation_visitor_filter : operation_visitor
     }
 };
 
+struct filtered_operation_obj_creator_visitor
+{
+    filtered_operation_obj_creator_visitor(chain::database& db, const operation_object::id_type& id)
+        : _db(db)
+        , _id(id)
+    {
+    }
+
+    using result_type = void;
+
+    result_type operator()(const applied_operation_all&) const
+    {
+        _db.create<filtered_operation_object<applied_operation_type::all>>(
+            [&](filtered_operation_object<applied_operation_type::all>& obj) { obj.op = _id; });
+    }
+
+    result_type operator()(const applied_operation_not_virt&) const
+    {
+        _db.create<filtered_operation_object<applied_operation_type::not_virt>>(
+            [&](filtered_operation_object<applied_operation_type::not_virt>& obj) { obj.op = _id; });
+    }
+
+    result_type operator()(const applied_operation_virt&) const
+    {
+        _db.create<filtered_operation_object<applied_operation_type::virt>>(
+            [&](filtered_operation_object<applied_operation_type::virt>& obj) { obj.op = _id; });
+    }
+
+    result_type operator()(const applied_operation_market&) const
+    {
+        _db.create<filtered_operation_object<applied_operation_type::market>>(
+            [&](filtered_operation_object<applied_operation_type::market>& obj) { obj.op = _id; });
+    }
+
+private:
+    chain::database& _db;
+    const operation_object::id_type& _id;
+};
+
 const operation_object& blockchain_history_plugin_impl::create_operation_obj(const operation_notification& note)
 {
     scorum::chain::database& db = database();
@@ -161,6 +201,28 @@ const operation_object& blockchain_history_plugin_impl::create_operation_obj(con
     });
 }
 
+void blockchain_history_plugin_impl::update_filtered_operation_index(const operation_object& object,
+                                                                     const operation& op)
+{
+    scorum::chain::database& db = database();
+
+    filtered_operation_obj_creator_visitor create(db, object.id);
+
+    get_applied_operation_variant(applied_operation_type::all).visit(create);
+    if (is_virtual_operation(op))
+    {
+        get_applied_operation_variant(applied_operation_type::virt).visit(create);
+    }
+    else
+    {
+        get_applied_operation_variant(applied_operation_type::not_virt).visit(create);
+    }
+    if (is_market_operation(op))
+    {
+        get_applied_operation_variant(applied_operation_type::market).visit(create);
+    }
+}
+
 void blockchain_history_plugin_impl::on_operation(const operation_notification& note)
 {
     flat_set<account_name_type> impacted;
@@ -169,30 +231,7 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
     app::operation_get_impacted_accounts(note.op, impacted);
 
     const operation_object& new_obj = create_operation_obj(note);
-    auto create = [&](const applied_operation_type& opt, const operation_object::id_type id) {
-        scorum::chain::database& db = database();
-        switch (opt)
-        {
-        case applied_operation_type::all:
-            db.create<filtered_operation_object<applied_operation_type::all>>(
-                [&](filtered_operation_object<applied_operation_type::all>& obj) { obj.op = id; });
-            break;
-        case applied_operation_type::not_virt:
-            db.create<filtered_operation_object<applied_operation_type::not_virt>>(
-                [&](filtered_operation_object<applied_operation_type::not_virt>& obj) { obj.op = id; });
-            break;
-        case applied_operation_type::virt:
-            db.create<filtered_operation_object<applied_operation_type::virt>>(
-                [&](filtered_operation_object<applied_operation_type::virt>& obj) { obj.op = id; });
-            break;
-        case applied_operation_type::market:
-            db.create<filtered_operation_object<applied_operation_type::market>>(
-                [&](filtered_operation_object<applied_operation_type::market>& obj) { obj.op = id; });
-            break;
-        default:;
-        }
-    };
-    update_filtered_operation_index(new_obj, note.op, create);
+    update_filtered_operation_index(new_obj, note.op);
     for (const auto& item : impacted)
     {
         auto itr = _tracked_accounts.lower_bound(item);

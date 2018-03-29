@@ -53,7 +53,7 @@ public:
 } // namespace detail
 
 account_history_api::account_history_api(const scorum::app::api_context& ctx)
-    : my(new detail::account_history_api_impl(ctx.app))
+    : _impl(new detail::account_history_api_impl(ctx.app))
 {
 }
 
@@ -68,22 +68,22 @@ void account_history_api::on_api_startup()
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
-    return my->_app.chain_database()->with_read_lock(
-        [&]() { return my->get_history<transfers_to_scr_history_object>(account, from, limit); });
+    return _impl->_app.chain_database()->with_read_lock(
+        [&]() { return _impl->get_history<transfers_to_scr_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
-    return my->_app.chain_database()->with_read_lock(
-        [&]() { return my->get_history<transfers_to_sp_history_object>(account, from, limit); });
+    return _impl->_app.chain_database()->with_read_lock(
+        [&]() { return _impl->get_history<transfers_to_sp_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_history(const std::string& account, uint64_t from, uint32_t limit) const
 {
-    return my->_app.chain_database()->with_read_lock(
-        [&]() { return my->get_history<account_history_object>(account, from, limit); });
+    return _impl->_app.chain_database()->with_read_lock(
+        [&]() { return _impl->get_history<account_history_object>(account, from, limit); });
 }
 
 } // namespace blockchain_history
