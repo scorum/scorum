@@ -435,6 +435,7 @@ private:
     void recursively_fetch_content(state& _state, discussion& root, std::set<std::string>& referenced_accounts) const;
 
     std::shared_ptr<database_api_impl> my;
+    application& _app;
 };
 } // namespace app
 } // namespace scorum

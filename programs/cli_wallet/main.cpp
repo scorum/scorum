@@ -201,16 +201,22 @@ int main(int argc, char** argv)
 
         auto wallet_cli = std::make_shared<wallet_app>();
 
+        enum class wallet_state_type
+        {
+            no_password,
+            locked,
+            unlocked
+        };
+        static const std::map<wallet_state_type, std::string> wallet_states
+            = { { wallet_state_type::no_password, "(!)" },
+                { wallet_state_type::locked, "(!)" },
+                { wallet_state_type::unlocked, " ok" } };
+
         auto promptFormatter = [](const std::string& state = "") -> std::string {
-            static const char* prompt = "~$ ";
-            static const size_t state_max_size = 8;
-            static const size_t prompt_size = 4;
-            cli::formatter p(state_max_size + prompt_size);
-            p.set_alignment(cli::formatter_alignment::right);
-            p.print_cell(state, state_max_size, 2);
-            p.set_alignment(cli::formatter_alignment::right);
-            p.print_cell(prompt, prompt_size, 2);
-            return p.str();
+            static const std::string prompt = ">>> ";
+            std::stringstream out;
+            out << state << " " << prompt;
+            return out.str();
         };
 
         for (auto& name_formatter : wapiptr->get_result_formatters())
@@ -225,13 +231,20 @@ int main(int argc, char** argv)
         if (wapiptr->is_new())
         {
             std::cout << "Please use the set_password method to initialize a new wallet before continuing\n";
-            wallet_cli->set_prompt(promptFormatter("new"));
+            wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::no_password)));
         }
         else
-            wallet_cli->set_prompt(promptFormatter("locked"));
+            wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::locked)));
 
         boost::signals2::scoped_connection locked_connection(wapiptr->lock_changed.connect([&](bool locked) {
-            wallet_cli->set_prompt(locked ? promptFormatter("locked") : promptFormatter("unlocked"));
+            if (locked)
+            {
+                wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::locked)));
+            }
+            else
+            {
+                wallet_cli->set_prompt(promptFormatter(wallet_states.at(wallet_state_type::unlocked)));
+            }
         }));
 
         auto _websocket_server = std::make_shared<fc::http::websocket_server>();
