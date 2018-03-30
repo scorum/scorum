@@ -289,10 +289,6 @@ SCORUM_TEST_CASE(check_get_account_history)
 
     SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, max_history_depth + 1), fc::exception);
 
-    // alice is not witness. There are no producer_reward_operation for alice
-    // exepect transfer_to_scorumpower_operation, transfer_operation, transfer_to_scorumpower_operation
-    BOOST_REQUIRE_EQUAL(account_history_api_call.get_account_history(alice, -1, max_history_depth).size(), 3u);
-
     operation_map_type ret1 = account_history_api_call.get_account_history(alice, -1, 1);
     BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
 
@@ -452,7 +448,6 @@ SCORUM_TEST_CASE(check_get_ops_history)
         op.url = "witness creation";
         op.block_signing_key = signing_key;
         push_operation(op, alice.private_key);
-        input_ops.push_back(op);
     }
 
     {
@@ -476,14 +471,6 @@ SCORUM_TEST_CASE(check_get_ops_history)
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history(
                              -1, max_history_depth + 1, blockchain_history::applied_operation_type::market),
                          fc::exception);
-
-    // expect transfer_to_scorumpower_operation, transfer_operation, witness_update_operation,
-    // transfer_to_scorumpower_operation
-    BOOST_REQUIRE_EQUAL(
-        blockchain_history_api_call
-            .get_ops_history(-1, max_history_depth, blockchain_history::applied_operation_type::not_virt)
-            .size(),
-        4u);
 
     operation_map_type ret1
         = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::market);
