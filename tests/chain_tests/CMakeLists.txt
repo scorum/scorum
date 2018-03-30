@@ -27,6 +27,7 @@ set( SOURCES
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
     plugins/blockchain_history_tests.cpp
+    plugins/blockinfo_tests.cpp
     genesis_db_tests.cpp
     withdraw_scorumpower/old_tests.cpp
     withdraw_scorumpower/withdraw_scorumpower_check_common.cpp

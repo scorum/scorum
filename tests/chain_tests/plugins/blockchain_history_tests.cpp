@@ -1,7 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include <scorum/app/api_context.hpp>
 
@@ -124,6 +126,16 @@ struct check_saved_opetations_visitor
         BOOST_REQUIRE_EQUAL(saved_op.from, input_op.from);
         BOOST_REQUIRE_EQUAL(saved_op.to, input_op.to);
         BOOST_REQUIRE_EQUAL(saved_op.memo, input_op.memo);
+    }
+
+    void operator()(const witness_update_operation& saved_op) const
+    {
+        BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
+        const auto& input_op = _input_op.get<witness_update_operation>();
+
+        BOOST_REQUIRE_EQUAL(saved_op.owner, input_op.owner);
+        BOOST_REQUIRE_EQUAL(saved_op.url, input_op.url);
+        BOOST_REQUIRE_EQUAL(saved_op.block_signing_key, input_op.block_signing_key);
     }
 
     template <typename Op> void operator()(const Op&) const
@@ -283,7 +295,7 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
     }
 }
 
-SCORUM_TEST_CASE(check_get_account_history_list)
+SCORUM_TEST_CASE(check_get_account_history)
 {
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
@@ -320,6 +332,10 @@ SCORUM_TEST_CASE(check_get_account_history_list)
     saved_operation_vector_type saved_ops;
 
     SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, 0), fc::exception);
+
+    static const uint32_t max_history_depth = 100;
+
+    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, max_history_depth + 1), fc::exception);
 
     operation_map_type ret1 = account_history_api_call.get_account_history(alice, -1, 1);
     BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
@@ -370,7 +386,75 @@ struct blokchain_not_virtual_history_database_fixture : public history_database_
 BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests,
                          blockchain_history_tests::blokchain_not_virtual_history_database_fixture)
 
-SCORUM_TEST_CASE(check_get_not_virtual_operations_list)
+SCORUM_TEST_CASE(check_get_ops_in_block)
+{
+    using input_operation_vector_type = std::vector<operation>;
+    input_operation_vector_type input_ops;
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        push_operation(op);
+        input_ops.push_back(op);
+    }
+
+    {
+        auto signing_key = private_key_type::regenerate(fc::sha256::hash("witness")).get_public_key();
+        witness_update_operation op;
+        op.owner = alice;
+        op.url = "witness creation";
+        op.block_signing_key = signing_key;
+        push_operation(op, alice.private_key);
+        input_ops.push_back(op);
+    }
+
+    generate_block();
+
+    dynamic_global_property_service_i& dpo_service = db.dynamic_global_property_service();
+
+    operation_map_type ret = blockchain_history_api_call.get_ops_in_block(
+        dpo_service.get().head_block_number, blockchain_history::applied_operation_type::all);
+    BOOST_REQUIRE_EQUAL(ret.size(), 3u);
+
+    auto it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& op_saved = op_val.second.op;
+        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+
+    ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
+                                                       blockchain_history::applied_operation_type::no_virt);
+    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
+
+    it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& op_saved = op_val.second.op;
+        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+
+    ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
+                                                       blockchain_history::applied_operation_type::market);
+    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
+
+    it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& op_saved = op_val.second.op;
+        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+}
+
+SCORUM_TEST_CASE(check_get_ops_history)
 {
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
@@ -409,6 +493,12 @@ SCORUM_TEST_CASE(check_get_not_virtual_operations_list)
     SCORUM_REQUIRE_THROW(
         blockchain_history_api_call.get_ops_history(-1, 0, blockchain_history::applied_operation_type::market),
         fc::exception);
+
+    static const uint32_t max_history_depth = 100;
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history(
+                             -1, max_history_depth + 1, blockchain_history::applied_operation_type::market),
+                         fc::exception);
 
     operation_map_type ret1
         = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::market);
