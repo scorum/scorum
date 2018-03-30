@@ -157,7 +157,7 @@ private:
 
     const std::shared_ptr<plugin> null_plugin;
 
-    bool _read_only = true;
+    bool _read_only = false;
 };
 
 template <class C, typename... Args>

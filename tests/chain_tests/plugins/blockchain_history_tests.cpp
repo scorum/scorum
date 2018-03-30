@@ -18,6 +18,8 @@
 
 #include <scorum/protocol/operations.hpp>
 
+#include "operation_check.hpp"
+
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -96,56 +98,6 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
 
     api_context _account_history_api_ctx;
     blockchain_history::account_history_api account_history_api_call;
-};
-
-struct check_saved_opetations_visitor
-{
-    check_saved_opetations_visitor(const operation& input_op)
-        : _input_op(input_op)
-    {
-    }
-
-    using result_type = void;
-
-    void operator()(const transfer_to_scorumpower_operation& saved_op) const
-    {
-        BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
-        const auto& input_op = _input_op.get<transfer_to_scorumpower_operation>();
-
-        BOOST_REQUIRE_EQUAL(saved_op.amount, input_op.amount);
-        BOOST_REQUIRE_EQUAL(saved_op.from, input_op.from);
-        BOOST_REQUIRE_EQUAL(saved_op.to, input_op.to);
-    }
-
-    void operator()(const transfer_operation& saved_op) const
-    {
-        BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
-        const auto& input_op = _input_op.get<transfer_operation>();
-
-        BOOST_REQUIRE_EQUAL(saved_op.amount, input_op.amount);
-        BOOST_REQUIRE_EQUAL(saved_op.from, input_op.from);
-        BOOST_REQUIRE_EQUAL(saved_op.to, input_op.to);
-        BOOST_REQUIRE_EQUAL(saved_op.memo, input_op.memo);
-    }
-
-    void operator()(const witness_update_operation& saved_op) const
-    {
-        BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
-        const auto& input_op = _input_op.get<witness_update_operation>();
-
-        BOOST_REQUIRE_EQUAL(saved_op.owner, input_op.owner);
-        BOOST_REQUIRE_EQUAL(saved_op.url, input_op.url);
-        BOOST_REQUIRE_EQUAL(saved_op.block_signing_key, input_op.block_signing_key);
-    }
-
-    template <typename Op> void operator()(const Op&) const
-    {
-        // invalid type recived
-        BOOST_REQUIRE(false);
-    }
-
-private:
-    const operation& _input_op;
 };
 
 } // namespace blockchain_history_tests
@@ -337,6 +289,10 @@ SCORUM_TEST_CASE(check_get_account_history)
 
     SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, max_history_depth + 1), fc::exception);
 
+    // alice is not witness. There are no producer_reward_operation for alice
+    // exepect transfer_to_scorumpower_operation, transfer_operation, transfer_to_scorumpower_operation
+    BOOST_REQUIRE_EQUAL(account_history_api_call.get_account_history(alice, -1, max_history_depth).size(), 3u);
+
     operation_map_type ret1 = account_history_api_call.get_account_history(alice, -1, 1);
     BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
 
@@ -360,8 +316,8 @@ SCORUM_TEST_CASE(check_get_account_history)
     auto it = input_ops.begin();
     for (const auto& op_val : saved_ops)
     {
-        const auto& op_saved = op_val.second.op;
-        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+        const auto& saved_op = op_val.second.op;
+        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
 
         ++it;
     }
@@ -391,12 +347,101 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
 
+    generate_block();
+
     {
         transfer_to_scorumpower_operation op;
         op.from = alice.name;
         op.to = bob.name;
         op.amount = ASSET_SCR(feed_amount / 10);
-        push_operation(op);
+        push_operation(op, alice.private_key, false);
+        input_ops.push_back(op);
+    }
+
+    {
+        auto signing_key = private_key_type::regenerate(fc::sha256::hash("witness")).get_public_key();
+        witness_update_operation op;
+        op.owner = alice;
+        op.url = "witness creation";
+        op.block_signing_key = signing_key;
+        push_operation(op, alice.private_key, false);
+        input_ops.push_back(op);
+    }
+
+    generate_block();
+
+    dynamic_global_property_service_i& dpo_service = db.dynamic_global_property_service();
+
+    using saved_operation_vector_type = std::vector<operation_map_type::value_type>;
+    saved_operation_vector_type saved_ops;
+
+    // expect transfer_to_scorumpower_operation, witness_update_operation
+    operation_map_type ret = blockchain_history_api_call.get_ops_in_block(
+        dpo_service.get().head_block_number, blockchain_history::applied_operation_type::not_virt);
+    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
+
+    saved_ops.clear();
+    for (const auto& val : ret)
+    {
+        saved_ops.push_back(val);
+    }
+
+    auto it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& saved_op = op_val.second.op;
+        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+
+    // expect transfer_to_scorumpower_operation
+    ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
+                                                       blockchain_history::applied_operation_type::market);
+    BOOST_REQUIRE_EQUAL(ret.size(), 1u);
+
+    saved_ops.clear();
+    for (const auto& val : ret)
+    {
+        saved_ops.push_back(val);
+    }
+
+    it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& saved_op = op_val.second.op;
+        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+
+    // expect transfer_to_scorumpower_operation, witness_update_operation, producer_reward_operation
+    ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
+                                                       blockchain_history::applied_operation_type::all);
+    BOOST_REQUIRE_EQUAL(ret.size(), 3u);
+}
+
+SCORUM_TEST_CASE(check_get_ops_history)
+{
+    using input_operation_vector_type = std::vector<operation>;
+    input_operation_vector_type input_ops;
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        push_operation(op, alice.private_key);
+        input_ops.push_back(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = bob.name;
+        op.to = alice.name;
+        op.amount = ASSET_SCR(feed_amount / 20);
+        op.memo = "test";
+        push_operation(op, bob.private_key);
         input_ops.push_back(op);
     }
 
@@ -410,80 +455,12 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
         input_ops.push_back(op);
     }
 
-    generate_block();
-
-    dynamic_global_property_service_i& dpo_service = db.dynamic_global_property_service();
-
-    operation_map_type ret = blockchain_history_api_call.get_ops_in_block(
-        dpo_service.get().head_block_number, blockchain_history::applied_operation_type::all);
-    BOOST_REQUIRE_EQUAL(ret.size(), 3u);
-
-    auto it = input_ops.begin();
-    for (const auto& op_val : saved_ops)
-    {
-        const auto& op_saved = op_val.second.op;
-        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
-
-        ++it;
-    }
-
-    ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
-                                                       blockchain_history::applied_operation_type::no_virt);
-    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
-
-    it = input_ops.begin();
-    for (const auto& op_val : saved_ops)
-    {
-        const auto& op_saved = op_val.second.op;
-        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
-
-        ++it;
-    }
-
-    ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
-                                                       blockchain_history::applied_operation_type::market);
-    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
-
-    it = input_ops.begin();
-    for (const auto& op_val : saved_ops)
-    {
-        const auto& op_saved = op_val.second.op;
-        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
-
-        ++it;
-    }
-}
-
-SCORUM_TEST_CASE(check_get_ops_history)
-{
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
-
-    {
-        transfer_to_scorumpower_operation op;
-        op.from = alice.name;
-        op.to = bob.name;
-        op.amount = ASSET_SCR(feed_amount / 10);
-        push_operation(op);
-        input_ops.push_back(op);
-    }
-
-    {
-        transfer_operation op;
-        op.from = bob.name;
-        op.to = alice.name;
-        op.amount = ASSET_SCR(feed_amount / 20);
-        op.memo = "test";
-        push_operation(op);
-        input_ops.push_back(op);
-    }
-
     {
         transfer_to_scorumpower_operation op;
         op.from = alice.name;
         op.to = sam.name;
         op.amount = ASSET_SCR(feed_amount / 30);
-        push_operation(op);
+        push_operation(op, alice.private_key);
         input_ops.push_back(op);
     }
 
@@ -499,6 +476,14 @@ SCORUM_TEST_CASE(check_get_ops_history)
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history(
                              -1, max_history_depth + 1, blockchain_history::applied_operation_type::market),
                          fc::exception);
+
+    // expect transfer_to_scorumpower_operation, transfer_operation, witness_update_operation,
+    // transfer_to_scorumpower_operation
+    BOOST_REQUIRE_EQUAL(
+        blockchain_history_api_call
+            .get_ops_history(-1, max_history_depth, blockchain_history::applied_operation_type::not_virt)
+            .size(),
+        4u);
 
     operation_map_type ret1
         = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::market);
@@ -525,8 +510,8 @@ SCORUM_TEST_CASE(check_get_ops_history)
     auto it = input_ops.begin();
     for (const auto& op_val : saved_ops)
     {
-        const auto& op_saved = op_val.second.op;
-        op_saved.visit(blockchain_history_tests::check_saved_opetations_visitor(*it));
+        const auto& saved_op = op_val.second.op;
+        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
 
         ++it;
     }
