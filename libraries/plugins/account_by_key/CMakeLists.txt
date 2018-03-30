@@ -12,6 +12,8 @@ target_link_libraries( scorum_account_by_key
 target_include_directories( scorum_account_by_key
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
+add_custom_target( scorum_account_by_key_manifest SOURCES plugin.json)
+
 install( TARGETS
    scorum_account_by_key
 

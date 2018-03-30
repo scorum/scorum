@@ -13,3 +13,5 @@ target_link_libraries( scorum_raw_block
                        fc )
 target_include_directories( scorum_raw_block
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
+add_custom_target( scorum_raw_block_manifest SOURCES plugin.json)

@@ -12,6 +12,7 @@ target_link_libraries(wallet_tests
                       common_test
                       scorum_app
                       scorum_egenesis_none
+                      scorum_blockchain_history
                       scorum_wallet
                       graphene_utilities
                       )

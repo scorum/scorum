@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fc/api.hpp>
-#include <scorum/app/applied_operation.hpp>
+#include <scorum/blockchain_history/schema/applied_operation.hpp>
 
 namespace scorum {
 namespace app {
@@ -10,18 +10,17 @@ struct api_context;
 } // namespace scorum
 
 namespace scorum {
-namespace account_history {
+namespace blockchain_history {
 
 namespace detail {
 class account_history_api_impl;
 }
 
-using scorum::app::applied_operation;
-
 class account_history_api
 {
 public:
     account_history_api(const scorum::app::api_context& ctx);
+    ~account_history_api();
 
     void on_api_startup();
 
@@ -42,10 +41,10 @@ public:
     get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
 
 private:
-    std::shared_ptr<detail::account_history_api_impl> my;
+    std::unique_ptr<detail::account_history_api_impl> _impl;
 };
-} // namespace account_history
+} // namespace blockchain_history
 } // namespace scorum
 
-FC_API(scorum::account_history::account_history_api,
+FC_API(scorum::blockchain_history::account_history_api,
        (get_account_history)(get_account_scr_to_scr_transfers)(get_account_scr_to_sp_transfers))
