@@ -22,7 +22,7 @@ target_link_libraries(common_test
                       chainbase
                       scorum_chain
                       scorum_protocol
-                      scorum_account_history
+                      scorum_blockchain_history
                       scorum_witness
                       scorum_debug_node
                       cli

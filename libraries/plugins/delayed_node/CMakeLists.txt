@@ -15,6 +15,8 @@ if(MSVC)
   set_source_files_properties( delayed_node_plugin.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
+add_custom_target( scorum_delayed_node_manifest SOURCES plugin.json)
+
 install( TARGETS
    scorum_delayed_node
 
