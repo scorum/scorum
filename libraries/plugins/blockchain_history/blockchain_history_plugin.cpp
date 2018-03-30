@@ -71,7 +71,7 @@ class operation_visitor
     account_name_type _item;
 
 public:
-    typedef void result_type;
+    using result_type = void;
 
     operation_visitor(database& db, const operation_object& obj, const account_name_type& i)
         : _db(db)
@@ -114,35 +114,35 @@ private:
     }
 };
 
-struct operation_visitor_filter : operation_visitor
+struct operation_visitor_filter
 {
-    operation_visitor_filter(database& db,
-                             const operation_object& obj,
-                             const account_name_type& i,
-                             const flat_set<std::string>& filter,
-                             bool blacklist)
-        : operation_visitor(db, obj, i)
-        , _filter(filter)
+    operation_visitor_filter(const flat_set<std::string>& filter, bool blacklist)
+        : _filter(filter)
         , _blacklist(blacklist)
     {
     }
 
-    const flat_set<std::string>& _filter;
-    bool _blacklist;
+    using result_type = bool;
 
-    template <typename T> void operator()(const T& op) const
+    template <typename T> bool operator()(const T& op) const
     {
         if (_filter.find(fc::get_typename<T>::name()) != _filter.end())
         {
             if (!_blacklist)
-                operation_visitor::operator()(op);
+                return true;
         }
         else
         {
             if (_blacklist)
-                operation_visitor::operator()(op);
+                return true;
         }
+
+        return false;
     }
+
+private:
+    const flat_set<std::string>& _filter;
+    bool _blacklist;
 };
 
 struct filtered_operation_obj_creator_visitor
@@ -228,6 +228,9 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
     flat_set<account_name_type> impacted;
     scorum::chain::database& db = database();
 
+    if (_filter_content && !note.op.visit(operation_visitor_filter(_op_list, _blacklist)))
+        return;
+
     app::operation_get_impacted_accounts(note.op, impacted);
 
     const operation_object& new_obj = create_operation_obj(note);
@@ -263,14 +266,7 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
 
         if (!_tracked_accounts.size() || (itr != _tracked_accounts.end() && itr->first <= item && item <= itr->second))
         {
-            if (_filter_content)
-            {
-                note.op.visit(operation_visitor_filter(db, new_obj, item, _op_list, _blacklist));
-            }
-            else
-            {
-                note.op.visit(operation_visitor(db, new_obj, item));
-            }
+            note.op.visit(operation_visitor(db, new_obj, item));
         }
     }
 }
