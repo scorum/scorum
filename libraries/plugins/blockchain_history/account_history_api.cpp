@@ -39,8 +39,12 @@ public:
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
         if (itr != idx.end())
         {
-            auto end
-                = idx.lower_bound(boost::make_tuple(account, std::max(int64_t(0), int64_t(itr->sequence) - limit)));
+            auto end = idx.end();
+            int64_t pos = int64_t(itr->sequence) - limit;
+            if (pos > 0)
+            {
+                end = idx.lower_bound(boost::make_tuple(account, pos));
+            }
             while (itr != end)
             {
                 result[itr->sequence] = db->get(itr->op);
