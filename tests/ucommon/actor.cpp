@@ -48,3 +48,8 @@ Actor& Actor::percent(float prc)
     sp_percent = prc;
     return *this;
 }
+
+Actor::operator const std::string&() const
+{
+    return name;
+}
