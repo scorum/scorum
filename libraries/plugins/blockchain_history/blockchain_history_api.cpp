@@ -94,9 +94,9 @@ public:
     }
 };
 
-bool operation_filter(operation& op, const applied_operation_type& opt)
+bool operation_filter(operation& op, const applied_operation_type& type_of_operation)
 {
-    switch (opt)
+    switch (type_of_operation)
     {
     case applied_operation_type::market:
         return is_market_operation(op);
@@ -125,10 +125,10 @@ void blockchain_history_api::on_api_startup()
 {
 }
 
-std::map<uint32_t, applied_operation>
-blockchain_history_api::get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& opt) const
+std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
+    uint32_t from_op, uint32_t limit, const applied_operation_type& type_of_operation) const
 {
-    switch (opt)
+    switch (type_of_operation)
     {
     case applied_operation_type::not_virt:
         return _impl->get_ops_history<filtered_not_virt_operations_history_index>(from_op, limit);
@@ -142,8 +142,8 @@ blockchain_history_api::get_ops_history(uint32_t from_op, uint32_t limit, const 
     return _impl->get_ops_history<operation_index>(from_op, limit);
 }
 
-std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(uint32_t block_num,
-                                                                               applied_operation_type opt) const
+std::map<uint32_t, applied_operation>
+blockchain_history_api::get_ops_in_block(uint32_t block_num, applied_operation_type type_of_operation) const
 {
     using namespace scorum::chain;
 
@@ -159,7 +159,7 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(u
         {
             auto id = itr->id;
             temp = *itr;
-            if (detail::operation_filter(temp.op, opt))
+            if (detail::operation_filter(temp.op, type_of_operation))
             {
                 FC_ASSERT(id._id >= 0, "Invalid operation_object id");
                 result[(uint32_t)id._id] = temp;
