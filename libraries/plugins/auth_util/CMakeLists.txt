@@ -13,3 +13,5 @@ target_link_libraries( scorum_auth_util
                        fc )
 target_include_directories( scorum_auth_util
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
+add_custom_target( scorum_auth_util_manifest SOURCES plugin.json)

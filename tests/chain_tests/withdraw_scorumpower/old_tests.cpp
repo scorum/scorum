@@ -11,7 +11,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 
 using namespace database_fixture;
 
@@ -156,7 +156,7 @@ struct withdraw_scorumpower_withdrawals_tests_fixture : public database_trx_inte
         , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
     {
         boost::program_options::variables_map options;
-        auto ahplugin = app.register_plugin<scorum::account_history::account_history_plugin>();
+        auto ahplugin = app.register_plugin<scorum::blockchain_history::blockchain_history_plugin>();
         ahplugin->plugin_initialize(options);
 
         open_database();
