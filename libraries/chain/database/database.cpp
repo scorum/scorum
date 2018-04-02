@@ -887,6 +887,11 @@ inline void database::push_hf_operation(const operation& op)
     notify_post_apply_operation(note);
 }
 
+void database::notify_pre_applied_block(const signed_block& block)
+{
+    SCORUM_TRY_NOTIFY(pre_applied_block, block)
+}
+
 void database::notify_applied_block(const signed_block& block)
 {
     SCORUM_TRY_NOTIFY(applied_block, block)
@@ -1260,6 +1265,8 @@ void database::_apply_block(const signed_block& next_block)
 {
     try
     {
+        notify_pre_applied_block(next_block);
+
         uint32_t next_block_num = next_block.block_num();
         // block_id_type next_block_id = next_block.id();
 
