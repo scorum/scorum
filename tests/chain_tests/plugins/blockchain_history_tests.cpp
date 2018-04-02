@@ -422,6 +422,8 @@ SCORUM_TEST_CASE(check_get_ops_history)
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
 
+    generate_block();
+
     {
         transfer_to_scorumpower_operation op;
         op.from = alice.name;
@@ -501,6 +503,27 @@ SCORUM_TEST_CASE(check_get_ops_history)
         saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
 
         ++it;
+    }
+
+    // emit producer_reward_operation
+    generate_block();
+
+    ret2 = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::virt);
+    BOOST_REQUIRE_EQUAL(ret2.size(), 1u);
+
+    {
+        const auto& saved_op = ret2.begin()->second.op;
+
+        BOOST_REQUIRE(is_virtual_operation(saved_op));
+    }
+
+    ret2 = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::all);
+    BOOST_REQUIRE_EQUAL(ret2.size(), 1u);
+
+    {
+        const auto& saved_op = ret2.begin()->second.op;
+
+        BOOST_REQUIRE(is_virtual_operation(saved_op));
     }
 }
 

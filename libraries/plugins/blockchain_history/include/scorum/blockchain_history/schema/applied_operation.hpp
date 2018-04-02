@@ -21,7 +21,17 @@ struct applied_operation
     fc::time_point_sec timestamp;
     operation op;
 };
+
+enum class applied_operation_type
+{
+    all = 0,
+    not_virt,
+    virt,
+    market
+};
 }
 }
+
+FC_REFLECT_ENUM(scorum::blockchain_history::applied_operation_type, (all)(not_virt)(virt)(market))
 
 FC_REFLECT(scorum::blockchain_history::applied_operation, (trx_id)(block)(trx_in_block)(op_in_trx)(timestamp)(op))
