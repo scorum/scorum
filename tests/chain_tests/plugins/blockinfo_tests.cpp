@@ -4,9 +4,10 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
-#include "database_trx_integration.hpp"
-
 #include <scorum/protocol/operations.hpp>
+#include <scorum/common_api/defines.hpp>
+
+#include "database_trx_integration.hpp"
 
 #include "operation_check.hpp"
 
@@ -78,14 +79,12 @@ SCORUM_TEST_CASE(check_get_blocks_history_test)
 
     SCORUM_REQUIRE_THROW(database_api_call.get_blocks_history(-1, 0), fc::exception);
 
-    static const uint32_t max_history_depth = 100;
-
-    SCORUM_REQUIRE_THROW(database_api_call.get_blocks_history(-1, max_history_depth + 1), fc::exception);
+    SCORUM_REQUIRE_THROW(database_api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
 
     auto last_irreversible_block_num = dpo_service.get().last_irreversible_block_num;
-    BOOST_REQUIRE_LE(last_irreversible_block_num, max_history_depth);
+    BOOST_REQUIRE_LE(last_irreversible_block_num, MAX_BLOCKS_HISTORY_DEPTH);
 
-    blockinfo_tests::block_map_type ret = database_api_call.get_blocks_history(-1, max_history_depth);
+    blockinfo_tests::block_map_type ret = database_api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
     BOOST_REQUIRE_EQUAL(ret.size(), last_irreversible_block_num);
     BOOST_REQUIRE_EQUAL(ret.rbegin()->first, last_irreversible_block_num);
 
@@ -108,14 +107,13 @@ SCORUM_TEST_CASE(get_block_headers_history_test)
 
     SCORUM_REQUIRE_THROW(database_api_call.get_block_headers_history(-1, 0), fc::exception);
 
-    static const uint32_t max_history_depth = 100;
-
-    SCORUM_REQUIRE_THROW(database_api_call.get_block_headers_history(-1, max_history_depth + 1), fc::exception);
+    SCORUM_REQUIRE_THROW(database_api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
 
     auto last_irreversible_block_num = dpo_service.get().last_irreversible_block_num;
-    BOOST_REQUIRE_LE(last_irreversible_block_num, max_history_depth);
+    BOOST_REQUIRE_LE(last_irreversible_block_num, MAX_BLOCKS_HISTORY_DEPTH);
 
-    blockinfo_tests::blockheader_map_type ret = database_api_call.get_block_headers_history(-1, max_history_depth);
+    blockinfo_tests::blockheader_map_type ret
+        = database_api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
     BOOST_REQUIRE_EQUAL(ret.size(), last_irreversible_block_num);
     BOOST_REQUIRE_EQUAL(ret.rbegin()->first, last_irreversible_block_num);
 }
