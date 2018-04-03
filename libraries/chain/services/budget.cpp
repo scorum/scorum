@@ -47,9 +47,6 @@ const budget_object& dbs_budget::get_fund_budget() const
 
 std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_DB_LIST_SIZE,
-              "Limit must be less or equal than ${1}, actual limit value == ${2}.",
-              ("1", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE)("2", limit));
     std::set<std::string> result;
 
     const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();

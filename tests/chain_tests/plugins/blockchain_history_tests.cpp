@@ -14,9 +14,10 @@
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
 
-#include "database_trx_integration.hpp"
-
 #include <scorum/protocol/operations.hpp>
+#include <scorum/common_api/config.hpp>
+
+#include "database_trx_integration.hpp"
 
 #include "operation_check.hpp"
 
@@ -462,9 +463,8 @@ SCORUM_TEST_CASE(check_get_account_history)
 
     SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, 0), fc::exception);
 
-    static const uint32_t max_history_depth = 100;
-
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, max_history_depth + 1), fc::exception);
+    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+                         fc::exception);
 
     operation_map_type ret1 = account_history_api_call.get_account_history(alice, -1, 1);
     BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
@@ -643,10 +643,8 @@ SCORUM_TEST_CASE(check_get_ops_history)
         blockchain_history_api_call.get_ops_history(-1, 0, blockchain_history::applied_operation_type::market),
         fc::exception);
 
-    static const uint32_t max_history_depth = 100;
-
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history(
-                             -1, max_history_depth + 1, blockchain_history::applied_operation_type::market),
+                             -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1, blockchain_history::applied_operation_type::market),
                          fc::exception);
 
     operation_map_type ret1

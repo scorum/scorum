@@ -29,6 +29,8 @@
 #include <scorum/chain/schema/reward_pool_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 
+#include <scorum/common_api/config.hpp>
+
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/crypto/hex.hpp>
@@ -42,13 +44,8 @@
 #include <cfenv>
 #include <iostream>
 
-#define GET_REQUIRED_FEES_MAX_RECURSION (4)
-
 namespace scorum {
 namespace app {
-
-constexpr uint32_t LOOKUP_LIMIT = 1000;
-constexpr uint32_t GET_ACCOUNT_HISTORY_LIMIT = 10000;
 
 class database_api_impl;
 
@@ -251,6 +248,9 @@ std::map<uint32_t, block_header> database_api::get_block_headers_history(uint32_
 
 std::map<uint32_t, block_header> database_api_impl::get_block_headers_history(uint32_t block_num, uint32_t limit) const
 {
+    FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+              ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
+
     std::map<uint32_t, block_header> ret;
     _db.get_blocks_history_by_number<block_header>(ret, block_num, limit);
     return ret;
@@ -264,6 +264,9 @@ std::map<uint32_t, signed_block_api_obj> database_api::get_blocks_history(uint32
 
 std::map<uint32_t, signed_block_api_obj> database_api_impl::get_blocks_history(uint32_t block_num, uint32_t limit) const
 {
+    FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+              ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
+
     std::map<uint32_t, signed_block_api_obj> ret;
     _db.get_blocks_history_by_number<signed_block_api_obj>(ret, block_num, limit);
     return ret;
@@ -1066,8 +1069,8 @@ std::vector<budget_api_obj> database_api::get_budgets(const std::set<std::string
 
 std::vector<budget_api_obj> database_api_impl::get_budgets(const std::set<std::string>& names) const
 {
-    FC_ASSERT(names.size() <= SCORUM_BUDGET_LIMIT_API_LIST_SIZE, "names size must be less or equal than ${1}",
-              ("1", SCORUM_BUDGET_LIMIT_API_LIST_SIZE));
+    FC_ASSERT(names.size() <= MAX_BUDGETS_LIST_SIZE, "names size must be less or equal than ${1}",
+              ("1", MAX_BUDGETS_LIST_SIZE));
 
     std::vector<budget_api_obj> results;
 
@@ -1076,7 +1079,7 @@ std::vector<budget_api_obj> database_api_impl::get_budgets(const std::set<std::s
     for (const auto& name : names)
     {
         auto budgets = budget_service.get_budgets(name);
-        if (results.size() + budgets.size() > SCORUM_BUDGET_LIMIT_API_LIST_SIZE)
+        if (results.size() + budgets.size() > MAX_BUDGETS_LIST_SIZE)
         {
             break;
         }
@@ -1097,8 +1100,7 @@ std::set<std::string> database_api::lookup_budget_owners(const std::string& lowe
 
 std::set<std::string> database_api_impl::lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_API_LIST_SIZE, "limit must be less or equal than ${1}",
-              ("1", SCORUM_BUDGET_LIMIT_API_LIST_SIZE));
+    FC_ASSERT(limit <= MAX_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}", ("1", MAX_BUDGETS_LIST_SIZE));
 
     chain::dbs_budget& budget_service = _db.obtain_service<chain::dbs_budget>();
 

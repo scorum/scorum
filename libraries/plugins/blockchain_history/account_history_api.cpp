@@ -4,6 +4,8 @@
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
+#include <scorum/common_api/config.hpp>
+
 #include <map>
 
 namespace scorum {
@@ -24,13 +26,11 @@ public:
     template <typename history_object_type>
     std::map<uint32_t, applied_operation> get_history(const std::string& account, uint64_t from, uint32_t limit) const
     {
-        static const uint32_t max_history_depth = 100;
-
         const auto db = _app.chain_database();
 
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(limit <= max_history_depth, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", max_history_depth));
+        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
         FC_ASSERT(from >= limit, "From must be greater than limit");
 
         std::map<uint32_t, applied_operation> result;

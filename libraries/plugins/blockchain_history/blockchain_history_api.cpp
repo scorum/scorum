@@ -1,6 +1,7 @@
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include <fc/static_variant.hpp>
 
@@ -55,13 +56,11 @@ public:
     {
         using namespace scorum::chain;
 
-        static const uint32_t max_history_depth = 100;
-
         const auto& db = _app.chain_database();
 
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(limit <= max_history_depth, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", max_history_depth));
+        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
         FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
         return db->with_read_lock([&]() {
