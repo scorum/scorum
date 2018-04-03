@@ -32,10 +32,7 @@ public:
 
     Actor& percent(float prc);
 
-    operator const std::string&() const
-    {
-        return name;
-    }
+    operator const std::string&() const;
 
     std::string name;
     asset scr_amount = asset(0, SCORUM_SYMBOL);

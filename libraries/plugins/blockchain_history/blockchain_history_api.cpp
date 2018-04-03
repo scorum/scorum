@@ -9,12 +9,39 @@ namespace blockchain_history {
 
 namespace detail {
 
-using result_type = std::map<uint32_t, applied_operation>;
-
 class blockchain_history_api_impl
 {
 public:
     scorum::app::application& _app;
+
+private:
+    template <typename ObjectType> applied_operation get_filtered_operation(const ObjectType& obj) const
+    {
+        const auto& db = _app.chain_database();
+        return db->get(obj.op);
+    }
+
+    applied_operation get_operation(const filtered_not_virt_operations_history_object& obj) const
+    {
+        return get_filtered_operation(obj);
+    }
+
+    applied_operation get_operation(const filtered_virt_operations_history_object& obj) const
+    {
+        return get_filtered_operation(obj);
+    }
+
+    applied_operation get_operation(const filtered_market_operations_history_object& obj) const
+    {
+        return get_filtered_operation(obj);
+    }
+
+    applied_operation get_operation(const operation_object& obj) const
+    {
+        applied_operation temp;
+        temp = obj;
+        return temp;
+    }
 
 public:
     blockchain_history_api_impl(scorum::app::application& app)
@@ -22,7 +49,9 @@ public:
     {
     }
 
-    template <applied_operation_type T> result_type get_ops_history(uint32_t from_op, uint32_t limit) const
+    using result_type = std::map<uint32_t, applied_operation>;
+
+    template <typename IndexType> result_type get_ops_history(uint32_t from_op, uint32_t limit) const
     {
         using namespace scorum::chain;
 
@@ -39,7 +68,7 @@ public:
 
             result_type result;
 
-            const auto& idx = db->get_index<filtered_operation_index<T>>().indices().get<by_id>();
+            const auto& idx = db->get_index<IndexType>().indices().get<by_id>();
             if (idx.empty())
                 return result;
 
@@ -57,7 +86,7 @@ public:
             {
                 auto id = itr->id;
                 FC_ASSERT(id._id >= 0, "Invalid operation_object id");
-                result[(uint32_t)id._id] = db->get(itr->op);
+                result[(uint32_t)id._id] = get_operation(*itr);
                 --itr;
             }
             return result;
@@ -65,75 +94,21 @@ public:
     }
 };
 
-struct get_ops_history_visitor
+bool operation_filter(operation& op, const applied_operation_type& type_of_operation)
 {
-    get_ops_history_visitor(const detail::blockchain_history_api_impl& impl, uint32_t from_op, uint32_t limit)
-        : _impl(impl)
-        , _from_op(from_op)
-        , _limit(limit)
+    switch (type_of_operation)
     {
+    case applied_operation_type::market:
+        return is_market_operation(op);
+    case applied_operation_type::virt:
+        return is_virtual_operation(op);
+    case applied_operation_type::not_virt:
+        return !is_virtual_operation(op);
+    default:;
     }
 
-    using result_type = detail::result_type;
-
-    result_type operator()(const applied_operation_all&) const
-    {
-        return _impl.get_ops_history<applied_operation_type::all>(_from_op, _limit);
-    }
-
-    result_type operator()(const applied_operation_not_virt&) const
-    {
-        return _impl.get_ops_history<applied_operation_type::not_virt>(_from_op, _limit);
-    }
-
-    result_type operator()(const applied_operation_virt&) const
-    {
-        return _impl.get_ops_history<applied_operation_type::virt>(_from_op, _limit);
-    }
-
-    result_type operator()(const applied_operation_market&) const
-    {
-        return _impl.get_ops_history<applied_operation_type::market>(_from_op, _limit);
-    }
-
-private:
-    const detail::blockchain_history_api_impl& _impl;
-    uint32_t _from_op;
-    uint32_t _limit;
-};
-
-struct operation_filter_visitor
-{
-    operation_filter_visitor(const operation& op)
-        : _op(op)
-    {
-    }
-
-    using result_type = bool;
-
-    result_type operator()(const applied_operation_all&) const
-    {
-        return true;
-    }
-
-    result_type operator()(const applied_operation_not_virt&) const
-    {
-        return !is_virtual_operation(_op);
-    }
-
-    result_type operator()(const applied_operation_virt&) const
-    {
-        return is_virtual_operation(_op);
-    }
-
-    result_type operator()(const applied_operation_market&) const
-    {
-        return is_market_operation(_op);
-    }
-
-private:
-    const operation& _op;
-};
+    return true;
+}
 
 } // namespace detail
 
@@ -150,18 +125,27 @@ void blockchain_history_api::on_api_startup()
 {
 }
 
-std::map<uint32_t, applied_operation>
-blockchain_history_api::get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& opt) const
+std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
+    uint32_t from_op, uint32_t limit, const applied_operation_type& type_of_operation) const
 {
-    return get_applied_operation_variant(opt).visit(detail::get_ops_history_visitor(*_impl, from_op, limit));
+    switch (type_of_operation)
+    {
+    case applied_operation_type::not_virt:
+        return _impl->get_ops_history<filtered_not_virt_operations_history_index>(from_op, limit);
+    case applied_operation_type::virt:
+        return _impl->get_ops_history<filtered_virt_operations_history_index>(from_op, limit);
+    case applied_operation_type::market:
+        return _impl->get_ops_history<filtered_market_operations_history_index>(from_op, limit);
+    default:;
+    }
+
+    return _impl->get_ops_history<operation_index>(from_op, limit);
 }
 
-std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(uint32_t block_num,
-                                                                               applied_operation_type opt) const
+std::map<uint32_t, applied_operation>
+blockchain_history_api::get_ops_in_block(uint32_t block_num, applied_operation_type type_of_operation) const
 {
     using namespace scorum::chain;
-
-    applied_operation_variant_type opt_v = get_applied_operation_variant(opt);
 
     const auto& db = _impl->_app.chain_database();
 
@@ -175,7 +159,7 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_in_block(u
         {
             auto id = itr->id;
             temp = *itr;
-            if (opt_v.visit(detail::operation_filter_visitor(temp.op)))
+            if (detail::operation_filter(temp.op, type_of_operation))
             {
                 FC_ASSERT(id._id >= 0, "Invalid operation_object id");
                 result[(uint32_t)id._id] = temp;
