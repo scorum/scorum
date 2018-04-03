@@ -31,10 +31,14 @@ public:
     */
     uint32_t get_last_block_duration_microseconds() const;
 
+    uint32_t get_free_shared_memory_mb() const;
+    uint32_t get_total_shared_memory_mb() const;
+
 private:
     std::shared_ptr<detail::node_monitoring_api_impl> my;
 };
 } // namespace blockchain_statistics
 } // namespace scorum
 
-FC_API(scorum::blockchain_statistics::node_monitoring_api, (get_last_block_duration_microseconds))
+FC_API(scorum::blockchain_statistics::node_monitoring_api,
+       (get_last_block_duration_microseconds)(get_free_shared_memory_mb)(get_total_shared_memory_mb))

@@ -13,9 +13,12 @@ protected:
 
     std::unique_ptr<boost::interprocess::managed_mapped_file> _segment;
 
-protected:
+public:
     size_t get_free_memory() const;
 
+    size_t get_size() const;
+
+protected:
     void create_segment_file(const boost::filesystem::path& file, bool read_only, uint64_t shared_file_size);
 
     void flush_segment_file();

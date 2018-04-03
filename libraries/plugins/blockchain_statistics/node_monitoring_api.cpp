@@ -46,5 +46,16 @@ uint32_t node_monitoring_api::get_last_block_duration_microseconds() const
         [&]() { return my->get_plugin()->get_last_block_duration_microseconds(); });
 }
 
+uint32_t node_monitoring_api::get_free_shared_memory_mb() const
+{
+    return my->_app.chain_database()->with_read_lock(
+        [&]() { return uint32_t(my->_app.chain_database()->get_free_memory() / (1024 * 1024)); });
+}
+uint32_t node_monitoring_api::get_total_shared_memory_mb() const
+{
+    return my->_app.chain_database()->with_read_lock(
+        [&]() { return uint32_t(my->_app.chain_database()->get_size() / (1024 * 1024)); });
+}
+
 } // namespace blockchain_statistics
 } // namespace scorum

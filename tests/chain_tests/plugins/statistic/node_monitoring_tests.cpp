@@ -70,4 +70,26 @@ SCORUM_TEST_CASE(check_block_processing_duration)
     BOOST_REQUIRE_GE(_api_call.get_last_block_duration_microseconds(), 10u);
 }
 
+SCORUM_TEST_CASE(check_total_shared_memory)
+{
+    const std::size_t total_avaliable_shmem = TEST_SHARED_MEM_SIZE_10MB / (1024 * 1024);
+
+    BOOST_REQUIRE_EQUAL(_api_call.get_total_shared_memory_mb(), total_avaliable_shmem);
+
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(_api_call.get_total_shared_memory_mb(), total_avaliable_shmem);
+}
+
+SCORUM_TEST_CASE(check_free_shared_memory)
+{
+    BOOST_REQUIRE_LT(_api_call.get_free_shared_memory_mb(), _api_call.get_total_shared_memory_mb());
+    BOOST_REQUIRE_GT(_api_call.get_free_shared_memory_mb(), 0u);
+
+    generate_block();
+
+    BOOST_REQUIRE_LT(_api_call.get_free_shared_memory_mb(), _api_call.get_total_shared_memory_mb());
+    BOOST_REQUIRE_GT(_api_call.get_free_shared_memory_mb(), 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
