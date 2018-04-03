@@ -24,6 +24,7 @@ set( SOURCES
     budget/budget_operations_tests.cpp
     budget/budget_check_common.cpp
     proposal/proposal_tests.cpp
+    plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
     plugins/blockchain_history_tests.cpp

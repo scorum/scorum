@@ -349,12 +349,12 @@ void blockchain_history_plugin::plugin_initialize(const boost::program_options::
 
 void blockchain_history_plugin::plugin_startup()
 {
-    ilog("account_history plugin: plugin_startup() begin");
+    ilog("blockchain_history plugin: plugin_startup() begin");
 
     app().register_api_factory<account_history_api>("account_history_api");
     app().register_api_factory<blockchain_history_api>("blockchain_history_api");
 
-    ilog("account_history plugin: plugin_startup() end");
+    ilog("blockchain_history plugin: plugin_startup() end");
 }
 
 flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracked_accounts() const

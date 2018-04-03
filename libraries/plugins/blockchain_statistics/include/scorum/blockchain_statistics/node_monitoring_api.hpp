@@ -2,6 +2,10 @@
 
 #include <fc/api.hpp>
 
+#ifndef API_NODE_MONITORING
+#define API_NODE_MONITORING "node_monitoring_api"
+#endif
+
 namespace scorum {
 namespace app {
 struct api_context;

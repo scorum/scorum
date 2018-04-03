@@ -9,15 +9,24 @@ class node_monitoring_api_impl
 {
 public:
     scorum::app::application& _app;
-    std::shared_ptr<blockchain_statistics_plugin> _plugin;
 
 public:
     node_monitoring_api_impl(scorum::app::application& app)
         : _app(app)
     {
-        _plugin = _app.get_plugin<blockchain_statistics_plugin>(BLOCKCHAIN_STATISTICS_PLUGIN_NAME);
+    }
 
-        FC_ASSERT(_plugin, "Cann't get " BLOCKCHAIN_STATISTICS_PLUGIN_NAME " plugin from application.");
+    void startup()
+    {
+    }
+
+    std::shared_ptr<blockchain_statistics_plugin> get_plugin() const
+    {
+        auto plugin = _app.get_plugin<blockchain_statistics_plugin>(BLOCKCHAIN_STATISTICS_PLUGIN_NAME);
+
+        FC_ASSERT(plugin, "Cann't get " BLOCKCHAIN_STATISTICS_PLUGIN_NAME " plugin from application.");
+
+        return plugin;
     }
 };
 } // namespace detail
@@ -34,7 +43,7 @@ void node_monitoring_api::on_api_startup()
 uint32_t node_monitoring_api::get_last_block_duration_microseconds() const
 {
     return my->_app.chain_database()->with_read_lock(
-        [&]() { return my->_plugin->get_last_block_duration_microseconds(); });
+        [&]() { return my->get_plugin()->get_last_block_duration_microseconds(); });
 }
 
 } // namespace blockchain_statistics
