@@ -29,7 +29,7 @@
 #include <scorum/chain/schema/reward_pool_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 
-#include <scorum/common_api/defines.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>

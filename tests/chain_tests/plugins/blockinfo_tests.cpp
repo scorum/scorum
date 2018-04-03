@@ -5,7 +5,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include <scorum/protocol/operations.hpp>
-#include <scorum/common_api/defines.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include "database_trx_integration.hpp"
 

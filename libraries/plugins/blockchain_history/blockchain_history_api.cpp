@@ -1,7 +1,7 @@
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
-#include <scorum/common_api/defines.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include <fc/static_variant.hpp>
 

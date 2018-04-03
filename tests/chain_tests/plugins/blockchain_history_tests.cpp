@@ -15,7 +15,7 @@
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
 
 #include <scorum/protocol/operations.hpp>
-#include <scorum/common_api/defines.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include "database_trx_integration.hpp"
 

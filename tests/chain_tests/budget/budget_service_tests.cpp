@@ -7,7 +7,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 
-#include <scorum/common_api/defines.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include "budget_check_common.hpp"
 
