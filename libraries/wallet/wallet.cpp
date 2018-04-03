@@ -1043,19 +1043,20 @@ std::map<uint32_t, signed_block_api_obj> wallet_api::get_blocks_history(uint32_t
     return my->_remote_db->get_blocks_history(num, limit);
 }
 
-std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, applied_operation_type opt) const
+std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num,
+                                                                   applied_operation_type type_of_operation) const
 {
     my->use_remote_blockchain_history_api();
 
-    return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, opt);
+    return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, type_of_operation);
 }
 
 std::map<uint32_t, applied_operation>
-wallet_api::get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type opt) const
+wallet_api::get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type type_of_operation) const
 {
     my->use_remote_blockchain_history_api();
 
-    return (*my->_remote_blockchain_history_api)->get_ops_history(from_op, limit, opt);
+    return (*my->_remote_blockchain_history_api)->get_ops_history(from_op, limit, type_of_operation);
 }
 
 std::vector<account_api_obj> wallet_api::list_my_accounts()
