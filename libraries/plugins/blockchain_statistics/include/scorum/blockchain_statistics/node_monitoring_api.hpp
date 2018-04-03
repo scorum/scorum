@@ -35,7 +35,7 @@ public:
     uint32_t get_total_shared_memory_mb() const;
 
 private:
-    std::shared_ptr<detail::node_monitoring_api_impl> my;
+    std::shared_ptr<detail::node_monitoring_api_impl> _my;
 };
 } // namespace blockchain_statistics
 } // namespace scorum

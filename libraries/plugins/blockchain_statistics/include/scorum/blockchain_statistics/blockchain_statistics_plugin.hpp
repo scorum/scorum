@@ -34,9 +34,6 @@ public:
     const flat_set<uint32_t>& get_tracked_buckets() const;
     uint32_t get_max_history_per_bucket() const;
 
-    // node monitoring API
-    uint32_t get_last_block_duration_microseconds() const;
-
 private:
     friend class detail::blockchain_statistics_plugin_impl;
     std::unique_ptr<detail::blockchain_statistics_plugin_impl> _my;
