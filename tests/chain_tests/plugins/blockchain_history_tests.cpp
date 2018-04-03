@@ -306,10 +306,9 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 
     SCORUM_REQUIRE_THROW(account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, 0), fc::exception);
 
-    static const uint32_t max_history_depth = 100;
-
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, max_history_depth + 1),
-                         fc::exception);
+    SCORUM_REQUIRE_THROW(
+        account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+        fc::exception);
 
     ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, 1u);
     BOOST_REQUIRE_EQUAL(ret.size(), 1u);
@@ -394,10 +393,9 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 
     SCORUM_REQUIRE_THROW(account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, 0), fc::exception);
 
-    static const uint32_t max_history_depth = 100;
-
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, max_history_depth + 1),
-                         fc::exception);
+    SCORUM_REQUIRE_THROW(
+        account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+        fc::exception);
 
     ret = account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, 1u);
     BOOST_REQUIRE_EQUAL(ret.size(), 1u);
