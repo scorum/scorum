@@ -173,35 +173,28 @@ void dbs_budget::close_budget(const budget_object& budget)
 
 asset dbs_budget::allocate_cash(const budget_object& budget)
 {
-    asset ret(0, SCORUM_SYMBOL);
-
     time_point_sec t = db_impl().head_block_time();
     auto head_block_num = db_impl().head_block_num();
 
     if (budget.last_cashout_block >= head_block_num)
     {
-        return ret; // empty (allocation waits new block)
+        return asset(0, SCORUM_SYMBOL); // empty (allocation waits new block)
     }
 
     FC_ASSERT(budget.per_block > 0, "Invalid per_block.");
-    ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
+    asset ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
 
-    if (budget.deadline <= t)
-    {
-        if (_is_fund_budget(budget))
-        {
-            // cash back from budget to requesting beneficiary
-            // to save from burning (no owner for fund budget)
-            ret.amount += budget.balance.amount;
-        }
-        _close_budget(budget);
-    }
-    else
+    // for fund budget if we have missed blocks we continue payments even after deadline until money is over
+    if (t < budget.deadline || _is_fund_budget(budget))
     {
         if (!_check_autoclose(budget))
         {
             db_impl().modify(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
         }
+    }
+    else
+    {
+        _close_budget(budget);
     }
     return ret;
 }
