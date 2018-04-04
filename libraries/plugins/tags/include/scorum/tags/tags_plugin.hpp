@@ -44,9 +44,9 @@ typedef fc::fixed_string_32 tag_name_type;
 enum
 {
     tag_object_type = (TAG_SPACE_ID << 8),
-    tag_stats_object_type = (TAG_SPACE_ID << 8) + 1,
-    peer_stats_object_type = (TAG_SPACE_ID << 8) + 2,
-    author_tag_stats_object_type = (TAG_SPACE_ID << 8) + 3
+    tag_stats_object_type,
+    peer_stats_object_type,
+    author_tag_stats_object_type
 };
 
 namespace detail {

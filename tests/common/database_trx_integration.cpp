@@ -4,14 +4,14 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/operation_object.hpp>
-#include <scorum/account_history/account_history_plugin.hpp>
+#include <scorum/blockchain_history/schema/operation_objects.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/account_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/account_history_object.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -242,7 +242,7 @@ void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::e
 
 std::vector<operation> database_trx_integration_fixture::get_last_operations(uint32_t num_ops)
 {
-    using scorum::account_history::account_operations_full_history_index;
+    using scorum::blockchain_history::account_operations_full_history_index;
 
     std::vector<operation> ops;
     const auto& acc_hist_idx = db.get_index<account_operations_full_history_index>().indices().get<by_id>();

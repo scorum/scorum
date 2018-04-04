@@ -8,7 +8,8 @@
 #include <scorum/wallet/reflect_util.hpp>
 
 #include <scorum/account_by_key/account_by_key_api.hpp>
-#include <scorum/account_history/account_history_api.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 
@@ -884,7 +885,7 @@ public:
         }
         catch (const fc::exception& e)
         {
-            elog("Couldn't get network node API");
+            elog("Couldn't get network_node_api");
             throw(e);
         }
     }
@@ -901,7 +902,7 @@ public:
         }
         catch (const fc::exception& e)
         {
-            elog("Couldn't get account_by_key API");
+            elog("Couldn't get account_by_key_api");
             throw(e);
         }
     }
@@ -914,11 +915,28 @@ public:
         try
         {
             _remote_account_history_api
-                = _remote_api->get_api_by_name("account_history_api")->as<account_history::account_history_api>();
+                = _remote_api->get_api_by_name("account_history_api")->as<blockchain_history::account_history_api>();
         }
         catch (const fc::exception& e)
         {
-            elog("Couldn't get account_history API");
+            elog("Couldn't get account_history_api");
+            throw(e);
+        }
+    }
+
+    void use_remote_blockchain_history_api()
+    {
+        if (_remote_blockchain_history_api.valid())
+            return;
+
+        try
+        {
+            _remote_blockchain_history_api = _remote_api->get_api_by_name("blockchain_history_api")
+                                                 ->as<blockchain_history::blockchain_history_api>();
+        }
+        catch (const fc::exception& e)
+        {
+            elog("Couldn't get blockchain_history_api");
             throw(e);
         }
     }
@@ -968,7 +986,8 @@ public:
     fc::api<network_broadcast_api> _remote_net_broadcast;
     optional<fc::api<network_node_api>> _remote_net_node;
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
-    optional<fc::api<account_history::account_history_api>> _remote_account_history_api;
+    optional<fc::api<blockchain_history::account_history_api>> _remote_account_history_api;
+    optional<fc::api<blockchain_history::blockchain_history_api>> _remote_blockchain_history_api;
 
     uint32_t _tx_expiration_seconds = 30;
 
@@ -1004,14 +1023,40 @@ bool wallet_api::copy_wallet_file(const std::string& destination_filename)
     return my->copy_wallet_file(destination_filename);
 }
 
-optional<signed_block_api_obj> wallet_api::get_block(uint32_t num)
+optional<block_header> wallet_api::get_block_header(uint32_t num) const
+{
+    return my->_remote_db->get_block_header(num);
+}
+
+optional<signed_block_api_obj> wallet_api::get_block(uint32_t num) const
 {
     return my->_remote_db->get_block(num);
 }
 
-std::vector<applied_operation> wallet_api::get_ops_in_block(uint32_t block_num, bool only_virtual)
+std::map<uint32_t, block_header> wallet_api::get_block_headers_history(uint32_t num, uint32_t limit) const
 {
-    return my->_remote_db->get_ops_in_block(block_num, only_virtual);
+    return my->_remote_db->get_block_headers_history(num, limit);
+}
+
+std::map<uint32_t, signed_block_api_obj> wallet_api::get_blocks_history(uint32_t num, uint32_t limit) const
+{
+    return my->_remote_db->get_blocks_history(num, limit);
+}
+
+std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num,
+                                                                   applied_operation_type type_of_operation) const
+{
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_ops_in_block(block_num, type_of_operation);
+}
+
+std::map<uint32_t, applied_operation>
+wallet_api::get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type type_of_operation) const
+{
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_ops_history(from_op, limit, type_of_operation);
 }
 
 std::vector<account_api_obj> wallet_api::list_my_accounts()
@@ -1019,15 +1064,7 @@ std::vector<account_api_obj> wallet_api::list_my_accounts()
     FC_ASSERT(!is_locked(), "Wallet must be unlocked to list accounts");
     std::vector<account_api_obj> result;
 
-    try
-    {
-        my->use_remote_account_by_key_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_by_key_api();
 
     std::vector<public_key_type> pub_keys;
     pub_keys.reserve(my->_keys.size());
@@ -2189,21 +2226,13 @@ annotated_signed_transaction wallet_api::decline_voting_rights(const std::string
 }
 
 std::map<uint32_t, applied_operation>
-wallet_api::get_account_history(const std::string& account, uint32_t from, uint32_t limit)
+wallet_api::get_account_history(const std::string& account, uint64_t from, uint32_t limit)
 {
     FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
 
     std::map<uint32_t, applied_operation> result;
 
-    try
-    {
-        my->use_remote_account_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_history_api();
 
     result = (*my->_remote_account_history_api)->get_account_history(account, from, limit);
 
@@ -2226,15 +2255,7 @@ wallet_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_
 
     std::map<uint32_t, applied_operation> result;
 
-    try
-    {
-        my->use_remote_account_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_history_api();
 
     result = (*my->_remote_account_history_api)->get_account_scr_to_scr_transfers(account, from, limit);
 
@@ -2257,15 +2278,7 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
 
     std::map<uint32_t, applied_operation> result;
 
-    try
-    {
-        my->use_remote_account_history_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return result;
-    }
+    my->use_remote_account_history_api();
 
     result = (*my->_remote_account_history_api)->get_account_scr_to_sp_transfers(account, from, limit);
 
@@ -2379,22 +2392,16 @@ annotated_signed_transaction wallet_api::prove(const std::string& challenged, bo
 
 annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id) const
 {
-    return my->_remote_db->get_transaction(id);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_transaction(id);
 }
 
 std::vector<budget_api_obj> wallet_api::list_my_budgets()
 {
     FC_ASSERT(!is_locked());
 
-    try
-    {
-        my->use_remote_account_by_key_api();
-    }
-    catch (fc::exception& e)
-    {
-        elog("Connected node needs to enable account_by_key_api");
-        return {};
-    }
+    my->use_remote_account_by_key_api();
 
     std::vector<public_key_type> pub_keys;
     pub_keys.reserve(my->_keys.size());

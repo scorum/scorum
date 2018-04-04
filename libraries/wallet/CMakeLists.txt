@@ -35,7 +35,7 @@ target_link_libraries( scorum_wallet PRIVATE
                        graphene_utilities
                        scorum_app
                        scorum_account_by_key
-                       scorum_account_history
+                       scorum_blockchain_history
                        cli
                        fc
                        ${PLATFORM_SPECIFIC_LIBS} )
