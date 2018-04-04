@@ -15,7 +15,7 @@
 #include <scorum/chain/services/proposal_executor.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
-#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
