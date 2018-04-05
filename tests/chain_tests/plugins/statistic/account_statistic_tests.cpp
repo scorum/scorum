@@ -15,14 +15,9 @@ namespace account_stat {
 
 struct stat_database_fixture : public database_trx_integration_fixture
 {
-    std::shared_ptr<scorum::account_statistics::account_statistics_plugin> db_stat;
-
     stat_database_fixture()
     {
-        boost::program_options::variables_map options;
-
-        db_stat = app.register_plugin<scorum::account_statistics::account_statistics_plugin>();
-        db_stat->plugin_initialize(options);
+        init_plugin<scorum::account_statistics::account_statistics_plugin>();
 
         open_database();
         generate_block();

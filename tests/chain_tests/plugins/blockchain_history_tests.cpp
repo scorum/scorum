@@ -32,8 +32,6 @@ namespace blockchain_history_tests {
 
 struct history_database_fixture : public database_fixture::database_trx_integration_fixture
 {
-    std::shared_ptr<scorum::blockchain_history::blockchain_history_plugin> _plugin;
-
     history_database_fixture()
         : buratino("buratino")
         , maugli("maugli")
@@ -43,10 +41,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
         , _account_history_api_ctx(app, "account_history_api", std::make_shared<api_session_data>())
         , account_history_api_call(_account_history_api_ctx)
     {
-        boost::program_options::variables_map options;
-
-        _plugin = app.register_plugin<scorum::blockchain_history::blockchain_history_plugin>();
-        _plugin->plugin_initialize(options);
+        init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
 
         open_database();
         generate_block();

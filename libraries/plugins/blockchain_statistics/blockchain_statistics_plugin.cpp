@@ -197,6 +197,11 @@ public:
             }
         });
     }
+
+    void operator()(const witness_miss_block_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.missed_blocks[op.block_num] = op.owner; });
+    }
 };
 
 void blockchain_statistics_plugin_impl::process_block(const bucket_object& bucket, const signed_block& b)

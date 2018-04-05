@@ -1591,6 +1591,8 @@ void database::update_global_dynamic_data(const signed_block& b)
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
 
+                        push_virtual_operation(witness_miss_block_operation(w.owner, b.block_num()));
+
                         if (head_block_num() - w.last_confirmed_block_num > SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD)
                         {
                             w.signing_key = public_key_type();

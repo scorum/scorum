@@ -155,9 +155,7 @@ struct withdraw_scorumpower_withdrawals_tests_fixture : public database_trx_inte
         : account_service(db.account_service())
         , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
     {
-        boost::program_options::variables_map options;
-        auto ahplugin = app.register_plugin<scorum::blockchain_history::blockchain_history_plugin>();
-        ahplugin->plugin_initialize(options);
+        init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
 
         open_database();
 

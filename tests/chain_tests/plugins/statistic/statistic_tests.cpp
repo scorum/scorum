@@ -1,7 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
+#include <scorum/app/api_context.hpp>
+
 #include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
+#include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
 #include <scorum/common_statistics/base_plugin_impl.hpp>
+#include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
@@ -9,23 +13,34 @@
 
 using namespace scorum;
 using namespace scorum::blockchain_statistics;
+using namespace scorum::app;
 using namespace database_fixture;
 
 namespace blockchain_stat {
 
 struct stat_database_fixture : public database_trx_integration_fixture
 {
-    std::shared_ptr<scorum::blockchain_statistics::blockchain_statistics_plugin> db_stat;
+    Actor alice;
+    Actor bob;
 
-    const char* alice = "alice";
-    const char* bob = "bob";
+    Actor witness1;
+    Actor witness2;
+
+    api_context _api_ctx;
+    blockchain_statistics::blockchain_statistics_api _api_call;
 
     stat_database_fixture()
+        : alice("alice")
+        , bob("bob")
+        , witness1("witness1")
+        , witness2("witness2")
+        , _api_ctx(app, API_BLOCKCHAIN_STATISTICS, std::make_shared<api_session_data>())
+        , _api_call(_api_ctx)
     {
-        boost::program_options::variables_map options;
+        witness1.public_key = initdelegate.public_key;
+        witness2.public_key = initdelegate.public_key;
 
-        db_stat = app.register_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
-        db_stat->plugin_initialize(options);
+        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
 
         static const asset registration_bonus = ASSET_SCR(100);
         genesis_state_type::registration_schedule_item single_stage{ 1u, 1u, 100u };
@@ -34,12 +49,14 @@ struct stat_database_fixture : public database_trx_integration_fixture
                                          .registration_bonus(registration_bonus)
                                          .registration_schedule(single_stage)
                                          .committee(TEST_INIT_DELEGATE_NAME)
+                                         .accounts(witness1, witness2)
+                                         .witnesses(witness1, witness2)
                                          .generate();
 
         open_database(genesis);
         generate_block();
 
-        vest(TEST_INIT_DELEGATE_NAME, 10000);
+        vest(initdelegate, 10000);
 
         account_create(alice, initdelegate.public_key);
         fund(alice, SCORUM_MIN_PRODUCER_REWARD);
@@ -72,6 +89,31 @@ struct stat_database_fixture : public database_trx_integration_fixture
 } // namespace blockchain_stat
 
 BOOST_FIXTURE_TEST_SUITE(statistic_tests, blockchain_stat::stat_database_fixture)
+
+SCORUM_TEST_CASE(get_missed_blocks_via_api_test)
+{
+    statistics stat = _api_call.get_lifetime_stats();
+
+    BOOST_REQUIRE(stat.missed_blocks.empty());
+
+    db_plugin->debug_update(
+        [=](database& db) {
+            db.obtain_service<dbs_witness_schedule>().update(
+                [&](witness_schedule_object& wso) { wso.num_scheduled_witnesses = 3; });
+        },
+        default_skip);
+
+    auto current_block = db.head_block_num();
+
+    auto slots_to_miss = 1u;
+    db_plugin->debug_generate_blocks(debug_key, 1, default_skip, slots_to_miss);
+
+    stat = _api_call.get_lifetime_stats();
+
+    BOOST_REQUIRE_EQUAL(stat.missed_blocks.size(), 1u);
+    BOOST_REQUIRE_EQUAL(stat.missed_blocks.begin()->first, current_block + 1);
+    BOOST_REQUIRE_EQUAL(stat.missed_blocks.begin()->second, initdelegate.name);
+}
 
 SCORUM_TEST_CASE(produced_blocks_stat_test)
 {
@@ -225,7 +267,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    const account_object& alice_acc = db.obtain_service<dbs_account>().get_account(alice);
+    const account_object& alice_acc = db.obtain_service<dbs_account>().get_account(alice.name);
 
     {
         auto orig_val = bucket.new_vesting_withdrawal_requests;

@@ -21,24 +21,17 @@ namespace blockchain_statistics_tests {
 
 struct monitoring_database_fixture : public database_fixture::database_integration_fixture
 {
-    std::shared_ptr<scorum::blockchain_statistics::blockchain_statistics_plugin> _plugin;
+    api_context _api_ctx;
+    blockchain_statistics::node_monitoring_api _api_call;
 
     monitoring_database_fixture()
         : _api_ctx(app, API_NODE_MONITORING, std::make_shared<api_session_data>())
         , _api_call(_api_ctx)
     {
-        boost::program_options::variables_map options;
-
-        _plugin = app.register_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
-        app.enable_plugin(_plugin->plugin_name());
-        _plugin->plugin_initialize(options);
-        _plugin->plugin_startup();
+        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
 
         open_database();
     }
-
-    api_context _api_ctx;
-    blockchain_statistics::node_monitoring_api _api_call;
 };
 
 } // namespace blockchain_statistics_tests
