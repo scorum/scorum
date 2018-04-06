@@ -14,6 +14,8 @@ target_link_libraries( scorum_debug_node
 target_include_directories( scorum_debug_node
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
+add_custom_target( scorum_debug_node_manifest SOURCES plugin.json)
+
 install( TARGETS scorum_debug_node
          RUNTIME DESTINATION bin
          LIBRARY DESTINATION lib

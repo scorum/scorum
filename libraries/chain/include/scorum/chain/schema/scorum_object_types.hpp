@@ -49,7 +49,6 @@ enum object_type
     dynamic_global_property_object_type,
     escrow_object_type,
     hardfork_property_object_type,
-    operation_object_type,
     owner_authority_history_object_type,
     proposal_object_type,
     registration_committee_member_object_type,
@@ -84,7 +83,6 @@ class decline_voting_rights_request_object;
 class dynamic_global_property_object;
 class escrow_object;
 class hardfork_property_object;
-class operation_object;
 class owner_authority_history_object;
 class proposal_object;
 class registration_committee_member_object;
@@ -118,7 +116,6 @@ using decline_voting_rights_request_id_type = oid<decline_voting_rights_request_
 using dynamic_global_property_id_type = oid<dynamic_global_property_object>;
 using escrow_id_type = oid<escrow_object>;
 using hardfork_property_id_type = oid<hardfork_property_object>;
-using operation_id_type = oid<operation_object>;
 using owner_authority_history_id_type = oid<owner_authority_history_object>;
 using proposal_id_type = oid<proposal_object>;
 using registration_committee_member_id_type = oid<registration_committee_member_object>;
@@ -166,7 +163,6 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (dynamic_global_property_object_type)
                 (escrow_object_type)
                 (hardfork_property_object_type)
-                (operation_object_type)
                 (owner_authority_history_object_type)
                 (proposal_object_type)
                 (registration_committee_member_object_type)

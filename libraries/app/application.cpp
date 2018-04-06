@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #include <scorum/app/api.hpp>
+#include <scorum/app/database_api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
@@ -341,10 +342,8 @@ public:
                 _self->_disable_get_block = true;
             }
 
-            bool read_only = _options->count("read-only");
-            if (!read_only)
+            if (!_self->is_read_only())
             {
-                _self->_read_only = false;
                 ilog("Starting Scorum node in write mode.");
                 _max_block_age = _options->at("max-block-age").as<int32_t>();
 
@@ -446,6 +445,7 @@ public:
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
                 wild_access.allowed_apis.push_back("account_history_api");
+                wild_access.allowed_apis.push_back("blockchain_history_api");
                 wild_access.allowed_apis.push_back("account_stats_api");
                 wild_access.allowed_apis.push_back("chain_stats_api");
                 _apiaccess.permission_map["*"] = wild_access;
@@ -463,7 +463,7 @@ public:
             }
             _running = true;
 
-            if (!read_only)
+            if (!_self->is_read_only())
             {
                 reset_p2p_node(_data_dir);
             }
@@ -1051,6 +1051,18 @@ public:
         }
     }
 
+    template <typename API> fc::api<API> create_write_node_api(const std::string& api_name)
+    {
+        FC_ASSERT(_self->_remote_endpoint, "Write node RPC not configured properly or not currently connected.");
+        auto ws_ptr = _self->_client.connect(*_self->_remote_endpoint);
+        auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*ws_ptr);
+        auto login = apic->get_remote_api<login_api>(1);
+        FC_ASSERT(login->login("", ""));
+        fc::api_ptr ret = login->get_api_by_name(api_name);
+        FC_ASSERT(ret, "Can't get API '${a}'.", ("a", api_name));
+        return ret->template as<API>();
+    }
+
     application* _self;
 
     fc::path _data_dir;
@@ -1065,7 +1077,7 @@ public:
 
     // These plugins have API that push block to DB.
     // It is not expected for read-only mode
-    const plugin_names_type _plugins_locked_in_readonly_mode = { "witness", "raw_block", "debug_node" };
+    const plugin_names_type _plugins_locked_in_readonly_mode = { "witness", "debug_node" };
 
     plugins_type _plugins_available;
     plugins_type _plugins_enabled;
@@ -1106,12 +1118,13 @@ void application::set_program_options(boost::program_options::options_descriptio
     default_apis.push_back("login_api");
     default_apis.push_back("account_by_key_api");
     default_apis.push_back("account_history_api");
+    default_apis.push_back("blockchain_history_api");
     default_apis.push_back("account_stats_api");
     default_apis.push_back("chain_stats_api");
     std::string str_default_apis = boost::algorithm::join(default_apis, " ");
 
     std::vector<std::string> default_plugins;
-    default_plugins.push_back("account_history");
+    default_plugins.push_back("blockchain_history");
     default_plugins.push_back("account_by_key");
     default_plugins.push_back("account_stats");
     default_plugins.push_back("chain_stats");
@@ -1270,6 +1283,7 @@ void application::startup()
 {
     try
     {
+        _read_only = my->_options->count("read-only");
         my->startup();
     }
     catch (const fc::exception& e)
@@ -1337,17 +1351,21 @@ void application::get_max_block_age(int32_t& result)
     my->get_max_block_age(result);
 }
 
-void application::connect_to_write_node()
+fc::api<network_broadcast_api>& application::get_write_node_net_api()
 {
-    if (_remote_endpoint)
-    {
-        _remote_net_api.reset();
-        auto ws_ptr = _client.connect(*_remote_endpoint);
-        auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*ws_ptr);
-        auto login = apic->get_remote_api<login_api>(1);
-        FC_ASSERT(login->login("", ""));
-        _remote_net_api = login->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>();
-    }
+    if (_remote_net_api)
+        return *_remote_net_api;
+
+    _remote_net_api = my->create_write_node_api<network_broadcast_api>(BOOST_PP_STRINGIZE(network_broadcast_api));
+    return *_remote_net_api;
+}
+fc::api<database_api>& application::get_write_node_database_api()
+{
+    if (_remote_database_api)
+        return *_remote_database_api;
+
+    _remote_database_api = my->create_write_node_api<database_api>(BOOST_PP_STRINGIZE(database_api));
+    return *_remote_database_api;
 }
 
 void application::shutdown_plugins()

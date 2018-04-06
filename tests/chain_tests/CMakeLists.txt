@@ -26,7 +26,8 @@ set( SOURCES
     proposal/proposal_tests.cpp
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
-    plugins/account_history_tests.cpp
+    plugins/blockchain_history_tests.cpp
+    plugins/blockinfo_tests.cpp
     genesis_db_tests.cpp
     withdraw_scorumpower/old_tests.cpp
     withdraw_scorumpower/withdraw_scorumpower_check_common.cpp
@@ -46,7 +47,7 @@ target_link_libraries(chain_tests
                       scorum_egenesis_none
                       scorum_blockchain_statistics
                       scorum_account_statistics
-                      scorum_account_history
+                      scorum_blockchain_history
                       )
 target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

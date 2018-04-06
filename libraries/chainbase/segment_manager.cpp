@@ -43,6 +43,8 @@ void segment_manager::create_segment_file(const boost::filesystem::path& file,
                                           bool read_only,
                                           uint64_t shared_file_size)
 {
+    ilog("Try to open segment file");
+
     if (boost::filesystem::exists(file))
     {
         if (read_only)

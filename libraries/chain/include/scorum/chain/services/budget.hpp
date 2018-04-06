@@ -41,11 +41,6 @@ protected:
 public:
     bool is_fund_budget_exists() const override;
 
-    /** Lists all budget owners.
-     *
-     *  @warning limit must be less or equal than SCORUM_BUDGET_LIMIT_DB_LIST_SIZE.
-     *
-     */
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const override;
 

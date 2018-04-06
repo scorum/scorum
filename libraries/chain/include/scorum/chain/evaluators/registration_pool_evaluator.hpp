@@ -16,6 +16,7 @@ class data_service_factory_i;
 class account_service_i;
 class registration_pool_service_i;
 class registration_committee_service_i;
+class dynamic_global_property_service_i;
 
 class registration_pool_object;
 class account_object;
@@ -38,6 +39,7 @@ private:
     account_service_i& _account_service;
     registration_pool_service_i& _registration_pool_service;
     registration_committee_service_i& _registration_committee_service;
+    dynamic_global_property_service_i& _dprops_service;
 };
 
 using scorum::protocol::account_name_type;

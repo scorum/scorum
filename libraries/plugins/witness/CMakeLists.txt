@@ -11,6 +11,8 @@ target_link_libraries( scorum_witness
 target_include_directories( scorum_witness
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
+add_custom_target( scorum_witness_manifest SOURCES plugin.json)
+
 install( TARGETS
    scorum_witness
 

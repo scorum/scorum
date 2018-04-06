@@ -47,7 +47,8 @@ public:
 
     std::vector<operation> get_last_operations(uint32_t ops);
 
-    template <typename T> void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key())
+    template <typename T>
+    void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key(), bool put_in_block = true)
     {
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -58,7 +59,10 @@ public:
         }
         db.push_transaction(tx, default_skip);
 
-        generate_block();
+        if (put_in_block)
+        {
+            generate_block();
+        }
     }
 
 protected:

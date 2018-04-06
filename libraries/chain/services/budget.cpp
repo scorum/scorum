@@ -46,9 +46,6 @@ const budget_object& dbs_budget::get_fund_budget() const
 
 std::set<std::string> dbs_budget::lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= SCORUM_BUDGET_LIMIT_DB_LIST_SIZE,
-              "Limit must be less or equal than ${1}, actual limit value == ${2}.",
-              ("1", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE)("2", limit));
     std::set<std::string> result;
 
     const auto& budgets_by_owner_name = db_impl().get_index<budget_index>().indices().get<by_owner_name>();
@@ -173,35 +170,28 @@ void dbs_budget::close_budget(const budget_object& budget)
 
 asset dbs_budget::allocate_cash(const budget_object& budget)
 {
-    asset ret(0, SCORUM_SYMBOL);
-
     time_point_sec t = db_impl().head_block_time();
     auto head_block_num = db_impl().head_block_num();
 
     if (budget.last_cashout_block >= head_block_num)
     {
-        return ret; // empty (allocation waits new block)
+        return asset(0, SCORUM_SYMBOL); // empty (allocation waits new block)
     }
 
     FC_ASSERT(budget.per_block > 0, "Invalid per_block.");
-    ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
+    asset ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
 
-    if (budget.deadline <= t)
-    {
-        if (_is_fund_budget(budget))
-        {
-            // cash back from budget to requesting beneficiary
-            // to save from burning (no owner for fund budget)
-            ret.amount += budget.balance.amount;
-        }
-        _close_budget(budget);
-    }
-    else
+    // for fund budget if we have missed blocks we continue payments even after deadline until money is over
+    if (t < budget.deadline || _is_fund_budget(budget))
     {
         if (!_check_autoclose(budget))
         {
-            update(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
+            db_impl().modify(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
         }
+    }
+    else
+    {
+        _close_budget(budget);
     }
     return ret;
 }
