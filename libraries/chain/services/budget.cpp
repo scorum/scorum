@@ -184,18 +184,18 @@ asset dbs_budget::allocate_cash(const budget_object& budget)
     FC_ASSERT(budget.per_block > 0, "Invalid per_block.");
     asset ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
 
-    // for fund budget if we have missed blocks we continue payments even after deadline until money is over
-    if (t < budget.deadline || _is_fund_budget(budget))
+    if (budget.balance.amount > 0)
     {
-        if (!_check_autoclose(budget))
+        // for fund budget if we have missed blocks we continue payments even after deadline until money is over
+        if (t < budget.deadline || _is_fund_budget(budget))
         {
             db_impl().modify(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
+            return ret;
         }
     }
-    else
-    {
-        _close_budget(budget);
-    }
+
+    _close_budget(budget);
+
     return ret;
 }
 
@@ -246,19 +246,6 @@ asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& ba
     });
 
     return ret;
-}
-
-bool dbs_budget::_check_autoclose(const budget_object& budget)
-{
-    if (budget.balance.amount <= 0)
-    {
-        _close_budget(budget);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 bool dbs_budget::_is_fund_budget(const budget_object& budget) const
