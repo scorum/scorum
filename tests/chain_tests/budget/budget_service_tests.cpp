@@ -7,10 +7,13 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 
+#include <scorum/common_api/config.hpp>
+
 #include "budget_check_common.hpp"
 
 #include <limits>
 
+using namespace scorum;
 using namespace database_fixture;
 
 class budget_service_check_fixture : public budget_check_fixture
@@ -200,7 +203,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    BOOST_REQUIRE_GT(SCORUM_BUDGET_LIMIT_DB_LIST_SIZE, 1);
+    BOOST_REQUIRE_GT(MAX_BUDGETS_LIST_SIZE, 1u);
 
     BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));
@@ -209,22 +212,18 @@ SCORUM_TEST_CASE(lookup_budget_owners)
 
     BOOST_REQUIRE_EQUAL(budget_service.get_budgets().size(), 3u);
 
-    BOOST_CHECK_THROW(budget_service.lookup_budget_owners("alice", std::numeric_limits<uint32_t>::max()),
-                      fc::assert_exception);
-
     {
-        auto owners
-            = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT_ACCOUNT, SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners(SCORUM_ROOT_POST_PARENT_ACCOUNT, MAX_BUDGETS_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 2);
     }
 
     {
-        auto owners = budget_service.lookup_budget_owners("alice", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners("alice", MAX_BUDGETS_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 2);
     }
 
     {
-        auto owners = budget_service.lookup_budget_owners("bob", SCORUM_BUDGET_LIMIT_DB_LIST_SIZE);
+        auto owners = budget_service.lookup_budget_owners("bob", MAX_BUDGETS_LIST_SIZE);
         BOOST_REQUIRE(owners.size() == 1);
     }
 

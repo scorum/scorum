@@ -33,7 +33,7 @@ each individual to inspect the code to understand the consensus rules.
 # Quickstart
 
 Just want to get up and running quickly?  Try deploying a prebuilt
-dockerized container.  Both common binary types are included.
+dockerized container.
 
 ## Dockerized Node
 

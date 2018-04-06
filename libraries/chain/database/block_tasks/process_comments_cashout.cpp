@@ -60,7 +60,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
         {
             util::comment_reward_context comr_ctx;
             comr_ctx.total_reward_shares2 = recent_claims;
-            comr_ctx.total_reward_fund_scorum = rf.reward_balance;
+            comr_ctx.total_reward_fund_scorum = rf.activity_reward_balance_scr;
             comr_ctx.reward_curve = rf.author_reward_curve;
             comr_ctx.rshares = comment.net_rshares;
             comr_ctx.reward_weight = comment.reward_weight;
@@ -101,7 +101,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     // Write the cached fund state back to the database
     reward_fund_service.update([&](reward_fund_object& rfo) {
         rfo.recent_claims = recent_claims;
-        rfo.reward_balance -= scorum_awarded;
+        rfo.activity_reward_balance_scr -= scorum_awarded;
     });
 }
 
@@ -241,4 +241,5 @@ process_comments_cashout::pay_curators(block_task_context& ctx, const comment_ob
 }
 }
 }
+
 

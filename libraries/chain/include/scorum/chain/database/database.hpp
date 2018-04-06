@@ -129,13 +129,8 @@ public:
     template <typename T>
     void get_blocks_history_by_number(std::map<uint32_t, T>& result, uint32_t block_num, uint32_t limit) const
     {
-        static const uint32_t max_history_depth = 100;
-
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(limit <= max_history_depth, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", max_history_depth));
         FC_ASSERT(block_num >= limit, "From must be greater than limit");
-
         try
         {
             uint32_t last_irreversible_block_num = get_last_irreversible_block_num();

@@ -32,7 +32,7 @@ public:
     void on_api_startup();
 
     std::map<uint32_t, applied_operation>
-    get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& opt) const;
+    get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& type_of_operation) const;
 
     /**
      *  @brief Get sequence of operations included/generated within a particular block
@@ -40,7 +40,8 @@ public:
      *  @param only_virtual Whether to only include virtual operations in returned results (default: true)
      *  @return sequence of operations included/generated within the block
      */
-    std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num, applied_operation_type opt) const;
+    std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num,
+                                                           applied_operation_type type_of_operation) const;
 
     annotated_signed_transaction get_transaction(transaction_id_type trx_id) const;
 
