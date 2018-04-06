@@ -31,6 +31,18 @@ public:
     blockchain_history_plugin_impl(blockchain_history_plugin& _plugin)
         : _self(_plugin)
     {
+    }
+    virtual ~blockchain_history_plugin_impl()
+    {
+    }
+
+    scorum::chain::database& database()
+    {
+        return _self.database();
+    }
+
+    void startup()
+    {
         chain::database& db = database();
 
         db.add_plugin_index<operation_index>();
@@ -43,14 +55,6 @@ public:
         db.add_plugin_index<filtered_operation_index<applied_operation_type::market>>();
 
         db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
-    }
-    virtual ~blockchain_history_plugin_impl()
-    {
-    }
-
-    scorum::chain::database& database()
-    {
-        return _self.database();
     }
 
     const operation_object& create_operation_obj(const operation_notification& note);
@@ -275,7 +279,7 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
 
 blockchain_history_plugin::blockchain_history_plugin(application* app)
     : plugin(app)
-    , my(new detail::blockchain_history_plugin_impl(*this))
+    , _my(new detail::blockchain_history_plugin_impl(*this))
 {
     // ilog("Loading account history plugin" );
 }
@@ -305,12 +309,12 @@ void blockchain_history_plugin::plugin_set_program_options(boost::program_option
 void blockchain_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     typedef std::pair<account_name_type, account_name_type> pairstring;
-    LOAD_VALUE_SET(options, "track-account-range", my->_tracked_accounts, pairstring);
+    LOAD_VALUE_SET(options, "track-account-range", _my->_tracked_accounts, pairstring);
 
     if (options.count("history-whitelist-ops"))
     {
-        my->_filter_content = true;
-        my->_blacklist = false;
+        _my->_filter_content = true;
+        _my->_blacklist = false;
 
         for (auto& arg : options.at("history-whitelist-ops").as<std::vector<std::string>>())
         {
@@ -320,16 +324,16 @@ void blockchain_history_plugin::plugin_initialize(const boost::program_options::
             for (const std::string& op : ops)
             {
                 if (op.size())
-                    my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
+                    _my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
             }
         }
 
-        ilog("Account History: whitelisting ops ${o}", ("o", my->_op_list));
+        ilog("Account History: whitelisting ops ${o}", ("o", _my->_op_list));
     }
     else if (options.count("history-blacklist-ops"))
     {
-        my->_filter_content = true;
-        my->_blacklist = true;
+        _my->_filter_content = true;
+        _my->_blacklist = true;
         for (auto& arg : options.at("history-blacklist-ops").as<std::vector<std::string>>())
         {
             std::vector<std::string> ops;
@@ -338,11 +342,11 @@ void blockchain_history_plugin::plugin_initialize(const boost::program_options::
             for (const std::string& op : ops)
             {
                 if (op.size())
-                    my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
+                    _my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
             }
         }
 
-        ilog("Account History: blacklisting ops ${o}", ("o", my->_op_list));
+        ilog("Account History: blacklisting ops ${o}", ("o", _my->_op_list));
     }
     print_greeting();
 }
@@ -350,6 +354,8 @@ void blockchain_history_plugin::plugin_initialize(const boost::program_options::
 void blockchain_history_plugin::plugin_startup()
 {
     ilog("blockchain_history plugin: plugin_startup() begin");
+
+    _my->startup();
 
     app().register_api_factory<account_history_api>("account_history_api");
     app().register_api_factory<blockchain_history_api>("blockchain_history_api");
@@ -359,7 +365,7 @@ void blockchain_history_plugin::plugin_startup()
 
 flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracked_accounts() const
 {
-    return my->_tracked_accounts;
+    return _my->_tracked_accounts;
 }
 }
 }

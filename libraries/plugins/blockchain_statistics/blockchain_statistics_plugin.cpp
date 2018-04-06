@@ -332,6 +332,8 @@ void blockchain_statistics_plugin::plugin_startup()
 {
     ilog("chain_stats plugin: plugin_startup() begin");
 
+    _my->startup();
+
     app().register_api_factory<blockchain_statistics_api>(API_BLOCKCHAIN_STATISTICS);
     app().register_api_factory<node_monitoring_api>(API_NODE_MONITORING);
 
