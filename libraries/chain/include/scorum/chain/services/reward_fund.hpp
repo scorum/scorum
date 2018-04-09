@@ -9,6 +9,8 @@ class reward_fund_object;
 
 struct reward_fund_service_i
 {
+    virtual bool is_exists() const = 0;
+
     virtual const reward_fund_object& get() const = 0;
 
     using modifier_type = std::function<void(reward_fund_object&)>;
@@ -26,6 +28,8 @@ protected:
     explicit dbs_reward_fund(database& db);
 
 public:
+    bool is_exists() const override;
+
     const reward_fund_object& get() const override;
 
     const reward_fund_object& create(const modifier_type& modifier) override;

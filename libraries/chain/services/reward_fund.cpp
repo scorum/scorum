@@ -11,6 +11,11 @@ dbs_reward_fund::dbs_reward_fund(database& db)
 {
 }
 
+bool dbs_reward_fund::is_exists() const
+{
+    return nullptr != db_impl().find<reward_fund_object>();
+}
+
 const reward_fund_object& dbs_reward_fund::get() const
 {
     return db_impl().get<reward_fund_object>();

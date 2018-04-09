@@ -1,6 +1,6 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/services/budget.hpp>
-#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
@@ -10,8 +10,7 @@
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-
-#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/reward_balancer_object.hpp>
 
 #include <scorum/chain/genesis/genesis.hpp>
 
