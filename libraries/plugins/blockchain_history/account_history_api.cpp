@@ -39,7 +39,7 @@ public:
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
         if (itr != idx.end())
         {
-            auto end = idx.end();
+            auto end = idx.upper_bound(boost::make_tuple(account, int64_t(0)));
             int64_t pos = int64_t(itr->sequence) - limit;
             if (pos > 0)
             {
