@@ -47,7 +47,7 @@ using namespace scorum::protocol;
 
 BOOST_FIXTURE_TEST_SUITE(witness_data_service, database_fixture::witness_data_service_fixture)
 
-BOOST_AUTO_TEST_CASE(check_create_witness)
+SCORUM_TEST_CASE(check_create_witness)
 {
     try
     {
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(check_create_witness)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(check_create_witness_with_empty_key)
+SCORUM_TEST_CASE(check_create_witness_with_empty_key)
 {
     try
     {
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(check_create_witness_with_empty_key)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(check_update_witness)
+SCORUM_TEST_CASE(check_update_witness)
 {
     try
     {
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(check_update_witness)
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(check_signing_key_reset)
+SCORUM_TEST_CASE(check_signing_key_reset)
 {
     try
     {
