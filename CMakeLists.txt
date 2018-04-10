@@ -61,6 +61,12 @@ if( BUILD_SCORUM_TESTNET  )
   SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIS_TEST_NET" )
 endif()
 
+OPTION( FORCE_REBUILD_GENESIS "Always rebuild genesis (ON OR OFF)" OFF )
+if( FORCE_REBUILD_GENESIS  )
+    execute_process(COMMAND rm -f genesis.json
+                    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
 OPTION( GENESIS_TESTNET "Build embedded genesis for TEST NET (ON OR OFF)" OFF )
 MESSAGE( STATUS "GENESIS_TESTNET: ${GENESIS_TESTNET}" )
 if( GENESIS_TESTNET  )
