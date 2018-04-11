@@ -893,6 +893,11 @@ inline void database::push_hf_operation(const operation& op)
     notify_post_apply_operation(note);
 }
 
+void database::notify_pre_applied_block(const signed_block& block)
+{
+    SCORUM_TRY_NOTIFY(pre_applied_block, block)
+}
+
 void database::notify_applied_block(const signed_block& block)
 {
     SCORUM_TRY_NOTIFY(applied_block, block)
@@ -1265,6 +1270,8 @@ void database::_apply_block(const signed_block& next_block)
 {
     try
     {
+        notify_pre_applied_block(next_block);
+
         uint32_t next_block_num = next_block.block_num();
         // block_id_type next_block_id = next_block.id();
 
@@ -1583,6 +1590,8 @@ void database::update_global_dynamic_data(const signed_block& b)
                 {
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
+
+                        push_virtual_operation(witness_miss_block_operation(w.owner, b.block_num()));
 
                         if (head_block_num() - w.last_confirmed_block_num > SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD)
                         {

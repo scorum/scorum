@@ -1,5 +1,6 @@
 #include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
 #include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
+#include <scorum/blockchain_statistics/node_monitoring_api.hpp>
 #include <scorum/common_statistics/base_plugin_impl.hpp>
 
 #include <scorum/app/impacted.hpp>
@@ -33,6 +34,7 @@ public:
     {
     }
 
+private:
     virtual void process_bucket_creation(const bucket_object& bucket)
     {
         auto& db = _self.database();
@@ -195,6 +197,11 @@ public:
             }
         });
     }
+
+    void operator()(const witness_miss_block_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.missed_blocks[op.block_num] = op.owner; });
+    }
 };
 
 void blockchain_statistics_plugin_impl::process_block(const bucket_object& bucket, const signed_block& b)
@@ -325,7 +332,10 @@ void blockchain_statistics_plugin::plugin_startup()
 {
     ilog("chain_stats plugin: plugin_startup() begin");
 
-    app().register_api_factory<blockchain_statistics_api>("chain_stats_api");
+    _my->startup();
+
+    app().register_api_factory<blockchain_statistics_api>(API_BLOCKCHAIN_STATISTICS);
+    app().register_api_factory<node_monitoring_api>(API_NODE_MONITORING);
 
     ilog("chain_stats plugin: plugin_startup() end");
 }

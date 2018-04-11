@@ -6,6 +6,9 @@ namespace scorum {
 namespace blockchain_statistics {
 
 using scorum::protocol::share_type;
+using scorum::protocol::account_name_type;
+
+struct bucket_object;
 
 struct base_metric
 {
@@ -64,7 +67,9 @@ struct total_metric
 
 struct statistics : public base_metric, public total_metric
 {
-    statistics& operator+=(const base_metric&);
+    statistics& operator+=(const bucket_object&);
+
+    std::map<uint32_t, std::string> missed_blocks; ///< map missed block to witness which missed
 };
 
 } // namespace blockchain_statistics
@@ -85,4 +90,4 @@ FC_REFLECT(scorum::blockchain_statistics::total_metric,
 
 FC_REFLECT_DERIVED(scorum::blockchain_statistics::statistics,
                    (scorum::blockchain_statistics::base_metric)(scorum::blockchain_statistics::total_metric),
-                   BOOST_PP_SEQ_NIL)
+                   (missed_blocks))

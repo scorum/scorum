@@ -155,10 +155,6 @@ struct withdraw_scorumpower_withdrawals_tests_fixture : public database_trx_inte
         : account_service(db.account_service())
         , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
     {
-        boost::program_options::variables_map options;
-        auto ahplugin = app.register_plugin<scorum::blockchain_history::blockchain_history_plugin>();
-        ahplugin->plugin_initialize(options);
-
         open_database();
 
         ACTORS((alice))
@@ -174,9 +170,42 @@ struct withdraw_scorumpower_withdrawals_tests_fixture : public database_trx_inte
 
 BOOST_FIXTURE_TEST_SUITE(withdraw_scorumpower_withdrawals_tests, withdraw_scorumpower_withdrawals_tests_fixture)
 
+struct withdraw_operation_hook
+{
+    using result_type = void;
+
+    withdraw_operation_hook(scorum::chain::database& db)
+    {
+        db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
+    }
+
+    void on_operation(const operation_notification& note)
+    {
+        note.op.visit(*this);
+    }
+
+    template <typename Op> void operator()(const Op&)
+    {
+    }
+
+    void operator()(const fill_vesting_withdraw_operation& op)
+    {
+        _op = op;
+    }
+
+    const fill_vesting_withdraw_operation& get_last_withdraw_operation() const
+    {
+        return _op;
+    }
+
+    fill_vesting_withdraw_operation _op;
+};
+
 SCORUM_TEST_CASE(vesting_withdrawals)
 {
     const auto& alice = account_service.get_account("alice");
+
+    withdraw_operation_hook hook(db);
 
     BOOST_TEST_MESSAGE("Setting up withdrawal");
 
@@ -206,7 +235,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     BOOST_TEST_MESSAGE("Generating block to cause withdrawal");
     generate_block();
 
-    auto fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
+    auto fill_op = hook.get_last_withdraw_operation();
     auto gpo = db.obtain_service<dbs_dynamic_global_property>().get();
 
     BOOST_REQUIRE(account_service.get_account("alice").scorumpower.amount.value
@@ -232,7 +261,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
         const auto& alice = account_service.get_account("alice");
 
         gpo = db.obtain_service<dbs_dynamic_global_property>().get();
-        fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
+        fill_op = hook.get_last_withdraw_operation();
 
         BOOST_REQUIRE(alice.scorumpower.amount.value == (scorumpower - withdraw_rate).amount.value);
         BOOST_REQUIRE_LE(balance.amount.value + (ASSET_SCR(withdraw_rate.amount.value) - alice.balance).amount.value,
@@ -259,7 +288,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     {
         BOOST_TEST_MESSAGE("Generating one more block to take care of remainder");
         generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
-        fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
+        fill_op = hook.get_last_withdraw_operation();
         gpo = db.obtain_service<dbs_dynamic_global_property>().get();
 
         const auto& alice_wvo = withdraw_scorumpower_service.get(alice_id);
@@ -272,7 +301,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
 
         generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS, true);
         gpo = db.obtain_service<dbs_dynamic_global_property>().get();
-        fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
+        fill_op = hook.get_last_withdraw_operation();
 
         BOOST_REQUIRE(alice_wvo.next_vesting_withdrawal.sec_since_epoch()
                       == fc::time_point_sec::maximum().sec_since_epoch());
@@ -288,7 +317,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
 
         BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice_id));
 
-        fill_op = get_last_operations(1)[0].get<fill_vesting_withdraw_operation>();
+        fill_op = hook.get_last_withdraw_operation();
         BOOST_REQUIRE(fill_op.from_account == "alice");
         BOOST_REQUIRE(fill_op.to_account == "alice");
         BOOST_REQUIRE(fill_op.withdrawn.amount.value == withdraw_rate.amount.value);

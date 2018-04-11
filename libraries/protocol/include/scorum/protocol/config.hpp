@@ -13,8 +13,6 @@
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
-#define SCORUM_BLOCKID_POOL_SIZE 0xffff
-
 #define SCORUM_CURRENCY_PRECISION  9
 
 // Scorum Coin = SCR with 9 digits of precision
@@ -47,6 +45,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef IS_TEST_NET
 
+#define SCORUM_BLOCKID_POOL_SIZE 0xfff
+
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
 
@@ -68,8 +68,11 @@
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        2
 
 #define SCORUM_VESTING_WITHDRAW_INTERVALS                                (13)
+#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS                         (60*7) 
 
 #else // IS LIVE SCORUM NETWORK
+
+#define SCORUM_BLOCKID_POOL_SIZE 0xffff
 
 #define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
 #define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
@@ -92,6 +95,7 @@
 #define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        10
 
 #define SCORUM_VESTING_WITHDRAW_INTERVALS                                (52)
+#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS    (DAYS_TO_SECONDS(7)) /// 1 week per interval
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,8 +121,6 @@
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
 #define SCORUM_MAX_MEMO_SIZE                   2048
 #define SCORUM_MAX_PROXY_RECURSION_DEPTH       4
-
-#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS    (DAYS_TO_SECONDS(7)) /// 1 week per interval
 
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
 #define SCORUM_SAVINGS_WITHDRAW_TIME           (fc::days(3))

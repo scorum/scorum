@@ -203,7 +203,7 @@ SCORUM_TEST_CASE(lookup_budget_owners)
     asset balance(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    BOOST_REQUIRE_GT(MAX_BUDGETS_LIST_SIZE, 1);
+    BOOST_REQUIRE_GT(MAX_BUDGETS_LIST_SIZE, 1u);
 
     BOOST_CHECK_NO_THROW(budget_service.get_fund_budget());
     BOOST_CHECK_NO_THROW(budget_service.create_budget(alice, balance, deadline));

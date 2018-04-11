@@ -5,6 +5,7 @@
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <scorum/blockchain_statistics/schema/metrics.hpp>
 #include <scorum/common_statistics/base_bucket_object.hpp>
+#include <fc/shared_containers.hpp>
 
 #ifndef BLOCKCHAIN_STATISTICS_SPACE_ID
 #define BLOCKCHAIN_STATISTICS_SPACE_ID 9
@@ -24,9 +25,11 @@ struct bucket_object : public common_statistics::base_bucket_object,
                        public base_metric,
                        public object<bucket_object_type, bucket_object>
 {
-    CHAINBASE_DEFAULT_CONSTRUCTOR(bucket_object)
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(bucket_object, (missed_blocks))
 
     id_type id;
+
+    fc::shared_map<uint32_t, account_name_type> missed_blocks; ///< map missed block to witness which missed
 };
 
 typedef oid<bucket_object> bucket_id_type;

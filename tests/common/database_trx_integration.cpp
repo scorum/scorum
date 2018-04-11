@@ -4,14 +4,11 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/blockchain_history/schema/operation_objects.hpp>
-#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/blockchain_history/schema/account_history_object.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -238,23 +235,6 @@ const asset& database_trx_integration_fixture::get_balance(const std::string& ac
 void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)
 {
     trx.sign(key, db.get_chain_id());
-}
-
-std::vector<operation> database_trx_integration_fixture::get_last_operations(uint32_t num_ops)
-{
-    using scorum::blockchain_history::account_operations_full_history_index;
-
-    std::vector<operation> ops;
-    const auto& acc_hist_idx = db.get_index<account_operations_full_history_index>().indices().get<by_id>();
-    auto itr = acc_hist_idx.end();
-
-    while (itr != acc_hist_idx.begin() && ops.size() < num_ops)
-    {
-        itr--;
-        ops.push_back(fc::raw::unpack<scorum::chain::operation>(db.get(itr->op).serialized_op));
-    }
-
-    return ops;
 }
 
 void database_trx_integration_fixture::open_database_impl(const genesis_state_type& genesis)

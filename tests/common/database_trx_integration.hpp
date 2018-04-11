@@ -45,8 +45,6 @@ public:
     const asset& get_balance(const std::string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);
 
-    std::vector<operation> get_last_operations(uint32_t ops);
-
     template <typename T>
     void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key(), bool put_in_block = true)
     {

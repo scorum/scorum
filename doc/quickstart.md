@@ -31,7 +31,7 @@ Use low memory node.
 
 Also make sure that your `config.ini` contains:
 ```
-enable-plugin = account_history
+enable-plugin = blockchain_history
 public-api = database_api login_api
 track-account-range = ["yourexchangeid", "yourexchangeid"]
 ```

@@ -58,7 +58,7 @@ public:
     flat_map<account_name_type, account_name_type> tracked_accounts() const; /// map start_range to end_range
 
     friend class detail::blockchain_history_plugin_impl;
-    std::unique_ptr<detail::blockchain_history_plugin_impl> my;
+    std::unique_ptr<detail::blockchain_history_plugin_impl> _my;
 };
 }
 } // scorum::blockchain_history
