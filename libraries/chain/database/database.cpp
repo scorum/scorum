@@ -70,8 +70,6 @@
 namespace scorum {
 namespace chain {
 
-using boost::container::flat_set;
-
 class database_impl
 {
 public:
