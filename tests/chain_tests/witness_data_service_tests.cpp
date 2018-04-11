@@ -14,27 +14,16 @@ class witness_data_service_fixture : public database_default_integration_fixture
 {
 public:
     witness_data_service_fixture()
-        : account_service(db.obtain_service<dbs_account>())
-        , witness_service(db.obtain_service<dbs_witness>())
+        : witness_service(db.obtain_service<dbs_witness>())
         , user("user")
     {
     }
 
     void create_account()
     {
-        account_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
-                                       authority(), asset(0, SCORUM_SYMBOL));
+        actor(initdelegate).create_account(user);
     }
 
-    share_type calc_fee()
-    {
-        const auto& dprops = db.obtain_service<dbs_dynamic_global_property>().get();
-        return std::max(dprops.median_chain_props.account_creation_fee.amount
-                            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER,
-                        share_type(100));
-    }
-
-    dbs_account& account_service;
     dbs_witness& witness_service;
 
     const Actor user;
