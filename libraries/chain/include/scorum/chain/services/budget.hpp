@@ -116,7 +116,6 @@ private:
     share_type
     _calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, share_type balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance);
-    bool _check_autoclose(const budget_object&);
     bool _is_fund_budget(const budget_object&) const;
     void _close_budget(const budget_object&);
     void _close_owned_budget(const budget_object&);
