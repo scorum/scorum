@@ -34,12 +34,11 @@ public:
     std::map<uint32_t, applied_operation>
     get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& type_of_operation) const;
 
-    /**
-     *  @brief Get sequence of operations included/generated within a particular block
-     *  @param block_num Height of the block whose generated virtual operations should be returned
-     *  @param only_virtual Whether to only include virtual operations in returned results (default: true)
-     *  @return sequence of operations included/generated within the block
-     */
+    /** Returns sequence of operations included/generated in a specified block
+    *
+    * @param block_num Block height of specified block
+    * @param type_of_operation Operations type (all = 0, not_virt = 1, virt = 2, market = 3)
+    */
     std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num,
                                                            applied_operation_type type_of_operation) const;
 

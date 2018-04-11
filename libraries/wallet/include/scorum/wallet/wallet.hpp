@@ -133,7 +133,7 @@ public:
     /** Returns information about the block headers in range [from-limit, from]
      *
      * @param num Block num, -1 means most recent, limit is the number of blocks before from.
-     * @param limit the maximum number of items that can be queried (0 to 500], must be less than from
+     * @param limit the maximum number of items that can be queried (0 to 100], must be less than from
      *
      */
     std::map<uint32_t, block_header> get_block_headers_history(uint32_t num, uint32_t limit) const;
@@ -141,7 +141,7 @@ public:
     /** Returns information about the blocks in range [from-limit, from]
      *
      * @param num Block num, -1 means most recent, limit is the number of blocks before from.
-     * @param limit the maximum number of items that can be queried (0 to 500], must be less than from
+     * @param limit the maximum number of items that can be queried (0 to 100], must be less than from
      *
      */
     std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t num, uint32_t limit) const;
