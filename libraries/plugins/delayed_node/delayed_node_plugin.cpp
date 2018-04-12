@@ -85,34 +85,35 @@ void delayed_node_plugin::plugin_initialize(const boost::program_options::variab
 
 void delayed_node_plugin::sync_with_trusted_node()
 {
-    auto& db = database();
-    uint32_t synced_blocks = 0;
-    uint32_t pass_count = 0;
-    while (true)
-    {
-        scorum::chain::dynamic_global_property_object remote_dpo = my->database_api->get_dynamic_global_properties();
-        if (remote_dpo.last_irreversible_block_num <= db.head_block_num())
-        {
-            if (remote_dpo.last_irreversible_block_num < db.head_block_num())
-            {
-                wlog("Trusted node seems to be behind delayed node");
-            }
-            if (synced_blocks > 1)
-            {
-                ilog("Delayed node finished syncing ${n} blocks in ${k} passes", ("n", synced_blocks)("k", pass_count));
-            }
-            break;
-        }
-        pass_count++;
-        while (remote_dpo.last_irreversible_block_num > db.head_block_num())
-        {
-            fc::optional<scorum::chain::signed_block> block = my->database_api->get_block(db.head_block_num() + 1);
-            FC_ASSERT(block, "Trusted node claims it has blocks it doesn't actually have.");
-            ilog("Pushing block #${n}", ("n", block->block_num()));
-            db.push_block(*block);
-            synced_blocks++;
-        }
-    }
+    // auto& db = database();
+    // uint32_t synced_blocks = 0;
+    // uint32_t pass_count = 0;
+    // while (true)
+    //{
+    //    scorum::chain::dynamic_global_property_object remote_dpo = my->database_api->get_dynamic_global_properties();
+    //    if (remote_dpo.last_irreversible_block_num <= db.head_block_num())
+    //    {
+    //        if (remote_dpo.last_irreversible_block_num < db.head_block_num())
+    //        {
+    //            wlog("Trusted node seems to be behind delayed node");
+    //        }
+    //        if (synced_blocks > 1)
+    //        {
+    //            ilog("Delayed node finished syncing ${n} blocks in ${k} passes", ("n", synced_blocks)("k",
+    //            pass_count));
+    //        }
+    //        break;
+    //    }
+    //    pass_count++;
+    //    while (remote_dpo.last_irreversible_block_num > db.head_block_num())
+    //    {
+    //        fc::optional<scorum::chain::signed_block> block = my->database_api->get_block(db.head_block_num() + 1);
+    //        FC_ASSERT(block, "Trusted node claims it has blocks it doesn't actually have.");
+    //        ilog("Pushing block #${n}", ("n", block->block_num()));
+    //        db.push_block(*block);
+    //        synced_blocks++;
+    //    }
+    //}
 }
 
 void delayed_node_plugin::mainloop()

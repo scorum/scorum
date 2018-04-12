@@ -1,23 +1,25 @@
 #pragma once
 
+#include <map>
 #include <fc/api.hpp>
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
+#include <scorum/blockchain_history/api_objects.hpp>
 #include <scorum/protocol/transaction.hpp>
 
-#include <map>
+#ifndef API_BLOCKCHAIN_HISTORY
+#define API_BLOCKCHAIN_HISTORY "blockchain_history_api"
+#endif
 
 namespace scorum {
 namespace app {
 struct api_context;
-class application;
 }
 } // namespace scorum
 
 namespace scorum {
 namespace blockchain_history {
 
-using scorum::protocol::annotated_signed_transaction;
-using scorum::protocol::transaction_id_type;
+using namespace scorum::protocol;
 
 namespace detail {
 class blockchain_history_api_impl;
@@ -32,7 +34,7 @@ public:
     void on_api_startup();
 
     std::map<uint32_t, applied_operation>
-    get_ops_history(uint32_t from_op, uint32_t limit, const applied_operation_type& type_of_operation) const;
+    get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type type_of_operation) const;
 
     /** Returns sequence of operations included/generated in a specified block
     *
@@ -42,7 +44,43 @@ public:
     std::map<uint32_t, applied_operation> get_ops_in_block(uint32_t block_num,
                                                            applied_operation_type type_of_operation) const;
 
+    /////////////////////////////
+    // Blocks and transactions //
+    /////////////////////////////
+
     annotated_signed_transaction get_transaction(transaction_id_type trx_id) const;
+
+    /**
+    * @brief Retrieve a block header
+    * @param block_num Height of the block whose header should be returned
+    * @return header of the referenced block, or null if no matching block was found
+    */
+    optional<block_header> get_block_header(uint32_t block_num) const;
+
+    /**
+    * Retrieve the list of block headers in range [from-limit, from]
+    *
+    * @param block_num Height of the block to be returned
+    * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
+    * @return the list of block headers
+    */
+    std::map<uint32_t, block_header> get_block_headers_history(uint32_t block_num, uint32_t limit) const;
+
+    /**
+    * @brief Retrieve a full, signed block
+    * @param block_num Height of the block to be returned
+    * @return the referenced block, or null if no matching block was found
+    */
+    optional<signed_block_api_obj> get_block(uint32_t block_num) const;
+
+    /**
+    * Retrieve the list of signed block from block log (irreversible blocks) in range [from-limit, from]
+    *
+    * @param block_num Height of the block to be returned
+    * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
+    * @return the list of signed blocks
+    */
+    std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
 
 private:
     std::unique_ptr<detail::blockchain_history_api_impl> _impl;
@@ -50,4 +88,7 @@ private:
 } // namespace blockchain_history
 } // namespace scorum
 
-FC_API(scorum::blockchain_history::blockchain_history_api, (get_ops_history)(get_ops_in_block)(get_transaction))
+FC_API(scorum::blockchain_history::blockchain_history_api,
+       (get_ops_history)(get_ops_in_block)
+       // Blocks and transactions
+       (get_transaction)(get_block_header)(get_block_headers_history)(get_block)(get_blocks_history))

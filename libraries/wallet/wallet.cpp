@@ -1025,22 +1025,30 @@ bool wallet_api::copy_wallet_file(const std::string& destination_filename)
 
 optional<block_header> wallet_api::get_block_header(uint32_t num) const
 {
-    return my->_remote_db->get_block_header(num);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_block_header(num);
 }
 
 optional<signed_block_api_obj> wallet_api::get_block(uint32_t num) const
 {
-    return my->_remote_db->get_block(num);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_block(num);
 }
 
 std::map<uint32_t, block_header> wallet_api::get_block_headers_history(uint32_t num, uint32_t limit) const
 {
-    return my->_remote_db->get_block_headers_history(num, limit);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_block_headers_history(num, limit);
 }
 
 std::map<uint32_t, signed_block_api_obj> wallet_api::get_blocks_history(uint32_t num, uint32_t limit) const
 {
-    return my->_remote_db->get_blocks_history(num, limit);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_blocks_history(num, limit);
 }
 
 std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num,

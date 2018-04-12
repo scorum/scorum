@@ -58,12 +58,6 @@ public:
     // Subscriptions
     void set_block_applied_callback(std::function<void(const variant& block_id)> cb);
 
-    // Blocks and transactions
-    optional<block_header> get_block_header(uint32_t block_num) const;
-    optional<signed_block_api_obj> get_block(uint32_t block_num) const;
-    std::map<uint32_t, block_header> get_block_headers_history(uint32_t block_num, uint32_t limit) const;
-    std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
-
     // Globals
     fc::variant_object get_config() const;
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
@@ -119,8 +113,6 @@ public:
     scorum::chain::database& _db;
 
     boost::signals2::scoped_connection _block_applied_connection;
-
-    bool _disable_get_block = false;
 
     registration_committee_api_obj get_registration_committee() const;
     development_committee_api_obj get_development_committee() const;
@@ -180,8 +172,6 @@ database_api_impl::database_api_impl(const scorum::app::api_context& ctx)
     : _db(*ctx.app.chain_database())
 {
     wlog("creating database api ${x}", ("x", int64_t(this)));
-
-    _disable_get_block = ctx.app._disable_get_block;
 }
 
 database_api_impl::~database_api_impl()
@@ -191,85 +181,6 @@ database_api_impl::~database_api_impl()
 
 void database_api::on_api_startup()
 {
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
-// Blocks and transactions                                          //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-optional<block_header> database_api::get_block_header(uint32_t block_num) const
-{
-    FC_ASSERT(!my->_disable_get_block, "get_block_header is disabled on this node.");
-
-    if (_app.is_read_only())
-    {
-        return _app.get_write_node_database_api()->get_block_header(block_num);
-    }
-    else
-    {
-        return my->_db.with_read_lock([&]() { return my->get_block_header(block_num); });
-    }
-}
-
-optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
-{
-    auto result = _db.fetch_block_by_number(block_num);
-    if (result)
-        return *result;
-    return {};
-}
-
-optional<signed_block_api_obj> database_api::get_block(uint32_t block_num) const
-{
-    FC_ASSERT(!my->_disable_get_block, "get_block is disabled on this node.");
-
-    if (_app.is_read_only())
-    {
-        return _app.get_write_node_database_api()->get_block(block_num);
-    }
-    else
-    {
-        return my->_db.with_read_lock([&]() { return my->get_block(block_num); });
-    }
-}
-
-optional<signed_block_api_obj> database_api_impl::get_block(uint32_t block_num) const
-{
-    return _db.fetch_block_by_number(block_num);
-}
-
-std::map<uint32_t, block_header> database_api::get_block_headers_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(!_app.is_read_only(), "Disabled for read only mode");
-    return my->_db.with_read_lock([&]() { return my->get_block_headers_history(block_num, limit); });
-}
-
-std::map<uint32_t, block_header> database_api_impl::get_block_headers_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-              ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
-
-    std::map<uint32_t, block_header> ret;
-    _db.get_blocks_history_by_number<block_header>(ret, block_num, limit);
-    return ret;
-}
-
-std::map<uint32_t, signed_block_api_obj> database_api::get_blocks_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(!_app.is_read_only(), "Disabled for read only mode");
-    return my->_db.with_read_lock([&]() { return my->get_blocks_history(block_num, limit); });
-}
-
-std::map<uint32_t, signed_block_api_obj> database_api_impl::get_blocks_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-              ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
-
-    std::map<uint32_t, signed_block_api_obj> ret;
-    _db.get_blocks_history_by_number<signed_block_api_obj>(ret, block_num, limit);
-    return ret;
 }
 
 //////////////////////////////////////////////////////////////////////

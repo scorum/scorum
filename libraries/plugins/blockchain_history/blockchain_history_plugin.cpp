@@ -65,6 +65,8 @@ public:
     bool _filter_content = false;
     bool _blacklist = false;
     flat_set<std::string> _op_list;
+
+    bool _disable_get_block = false;
 };
 
 class operation_visitor
@@ -308,6 +310,12 @@ void blockchain_history_plugin::plugin_initialize(const boost::program_options::
 
         ilog("Account History: blacklisting ops ${o}", ("o", _my->_op_list));
     }
+
+    if (options.count("disable_get_block"))
+    {
+        _my->_disable_get_block = true;
+    }
+
     print_greeting();
 }
 
@@ -318,7 +326,7 @@ void blockchain_history_plugin::plugin_startup()
     _my->startup();
 
     app().register_api_factory<account_history_api>("account_history_api");
-    app().register_api_factory<blockchain_history_api>("blockchain_history_api");
+    app().register_api_factory<blockchain_history_api>(API_BLOCKCHAIN_HISTORY);
 
     ilog("blockchain_history plugin: plugin_startup() end");
 }
@@ -326,6 +334,11 @@ void blockchain_history_plugin::plugin_startup()
 flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracked_accounts() const
 {
     return _my->_tracked_accounts;
+}
+
+bool blockchain_history_plugin::get_block_disabled() const
+{
+    return _my->_disable_get_block;
 }
 }
 }

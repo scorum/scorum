@@ -559,7 +559,7 @@ namespace blockchain_history_tests {
 struct blokchain_not_virtual_history_database_fixture : public history_database_fixture
 {
     blokchain_not_virtual_history_database_fixture()
-        : _blockchain_history_api_ctx(app, "blockchain_history_api", std::make_shared<api_session_data>())
+        : _blockchain_history_api_ctx(app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>())
         , blockchain_history_api_call(_blockchain_history_api_ctx)
     {
     }

@@ -11,6 +11,7 @@
 #include <functional>
 
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
+#include <scorum/blockchain_history/api_objects.hpp>
 
 using namespace scorum::app;
 using namespace scorum::chain;
@@ -20,6 +21,7 @@ namespace wallet {
 
 using scorum::blockchain_history::applied_operation;
 using scorum::blockchain_history::applied_operation_type;
+using scorum::blockchain_history::signed_block_api_obj;
 
 using transaction_handle_type = uint16_t;
 

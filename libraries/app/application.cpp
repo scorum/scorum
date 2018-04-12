@@ -337,11 +337,6 @@ public:
                 _shared_dir = _data_dir / "blockchain";
             }
 
-            if (_options->count("disable_get_block"))
-            {
-                _self->_disable_get_block = true;
-            }
-
             if (!_self->is_read_only())
             {
                 ilog("Starting Scorum node in write mode.");
@@ -1358,14 +1353,6 @@ fc::api<network_broadcast_api>& application::get_write_node_net_api()
 
     _remote_net_api = my->create_write_node_api<network_broadcast_api>(BOOST_PP_STRINGIZE(network_broadcast_api));
     return *_remote_net_api;
-}
-fc::api<database_api>& application::get_write_node_database_api()
-{
-    if (_remote_database_api)
-        return *_remote_database_api;
-
-    _remote_database_api = my->create_write_node_api<database_api>(BOOST_PP_STRINGIZE(database_api));
-    return *_remote_database_api;
 }
 
 void application::shutdown_plugins()

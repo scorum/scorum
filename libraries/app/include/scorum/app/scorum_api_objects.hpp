@@ -454,26 +454,6 @@ struct witness_api_obj
     time_point_sec hardfork_time_vote;
 };
 
-struct signed_block_api_obj : public signed_block
-{
-    signed_block_api_obj(const signed_block& block)
-        : signed_block(block)
-    {
-        block_id = id();
-        signing_key = signee();
-        transaction_ids.reserve(transactions.size());
-        for (const signed_transaction& tx : transactions)
-            transaction_ids.push_back(tx.id());
-    }
-    signed_block_api_obj()
-    {
-    }
-
-    block_id_type block_id;
-    public_key_type signing_key;
-    std::vector<transaction_id_type> transaction_ids;
-};
-
 struct budget_api_obj
 {
     budget_api_obj(const chain::budget_object& b)
@@ -717,12 +697,6 @@ FC_REFLECT( scorum::app::proposal_api_obj,
             (voted_accounts)
             (quorum_percent)
           )
-
-FC_REFLECT_DERIVED( scorum::app::signed_block_api_obj, (scorum::protocol::signed_block),
-                     (block_id)
-                     (signing_key)
-                     (transaction_ids)
-                  )
 
 FC_REFLECT( scorum::app::budget_api_obj,
             (id)
