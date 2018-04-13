@@ -1,6 +1,6 @@
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
 
-#include <scorum/chain/util/reward.hpp>
+#include <scorum/rewards/curve.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -932,8 +932,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 {
                     const auto& reward_fund = db().reward_fund_service().get();
                     auto curve = reward_fund.curation_reward_curve;
-                    uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
-                    uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
+                    uint64_t old_weight = rewards::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
+                    uint64_t new_weight = rewards::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
                     cv.weight = new_weight - old_weight;
 
                     max_vote_weight = cv.weight;

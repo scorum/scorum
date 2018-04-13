@@ -15,6 +15,7 @@ namespace chain {
 
 using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
+using scorum::protocol::curve_id;
 
 class escrow_object : public object<escrow_object_type, escrow_object>
 {
@@ -51,14 +52,6 @@ public:
 
     account_id_type account;
     time_point_sec effective_date;
-};
-
-enum curve_id
-{
-    quadratic,
-    linear,
-    square_root,
-    power1dot5
 };
 
 class reward_fund_object : public object<reward_fund_object_type, reward_fund_object>
@@ -165,9 +158,6 @@ typedef shared_multi_index_container<reward_fund_object,
 } // namespace scorum
 
 // clang-format off
-
-FC_REFLECT_ENUM( scorum::chain::curve_id,
-                  (quadratic)(linear)(square_root)(power1dot5))
 
 FC_REFLECT( scorum::chain::escrow_object,
              (id)(escrow_id)(from)(to)(agent)

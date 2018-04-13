@@ -45,6 +45,7 @@ add_executable(chain_tests
 target_link_libraries(chain_tests
                       common_test
                       scorum_app
+                      scorum_rewards
                       scorum_egenesis_none
                       scorum_blockchain_statistics
                       scorum_account_statistics

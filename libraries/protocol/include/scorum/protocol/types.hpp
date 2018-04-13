@@ -140,6 +140,14 @@ struct extended_private_key_type
     friend bool operator!=(const extended_private_key_type& p1, const extended_private_key_type& p2);
 };
 
+enum class curve_id
+{
+    quadratic,
+    linear,
+    square_root,
+    power1dot5
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -158,5 +166,7 @@ FC_REFLECT(scorum::protocol::extended_public_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_public_key_type::binary_key, (check)(data))
 FC_REFLECT(scorum::protocol::extended_private_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_private_key_type::binary_key, (check)(data))
+
+FC_REFLECT_ENUM(scorum::protocol::curve_id, (quadratic)(linear)(square_root)(power1dot5))
 
 FC_REFLECT(scorum::void_t, )

@@ -8,8 +8,6 @@
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 
-#include <scorum/chain/util/reward.hpp>
-
 #include <scorum/witness/witness_objects.hpp>
 
 #include <fc/crypto/digest.hpp>

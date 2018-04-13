@@ -9,7 +9,8 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
-#include <scorum/chain/util/reward.hpp>
+#include <scorum/rewards/curve.hpp>
+#include <scorum/rewards/formulas.hpp>
 
 namespace scorum {
 namespace chain {
@@ -25,30 +26,13 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 #endif
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
-    // Add all reward funds to the local cache and decay their recent rshares
-    reward_fund_service.update([&](reward_fund_object& rfo) {
-        fc::microseconds decay_rate = SCORUM_RECENT_RSHARES_DECAY_RATE;
-        rfo.recent_claims -= (rfo.recent_claims * (dgp_service.head_block_time() - rfo.last_update).to_seconds())
-            / decay_rate.to_seconds();
-        rfo.last_update = dgp_service.head_block_time();
-    });
-
     auto comments = comment_service.get_by_cashout_time();
 
-    uint128_t recent_claims = get_recent_claims(ctx, comments);
-
-    /*
-     * Payout all comments
-     *
-     * Each payout follows a similar pattern, but for a different reason.
-     * The helper only does token allocation based on curation rewards and the SCR
-     * global %, etc.
-     *
-     * Each context is used by get_rshare_reward to determine what part of each budget
-     * the comment is entitled to. Each payout is done
-     * against a reward fund state that is snapshotted before all payouts in the block.
-     */
     const auto& rf = reward_fund_service.get();
+
+    share_types total_rshares = get_total_rshares(ctx, comments);
+    fc::uint128_t total_claims = rewards::calculate_total_claims(rf.recent_claims, dgp_service.head_block_time(),
+                                                                 rf.last_update, rf.author_reward_curve, total_rshares);
 
     asset scorum_awarded = asset(0, SCORUM_SYMBOL);
     for (const comment_object& comment : comments)
@@ -58,15 +42,10 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 
         if (comment.net_rshares > 0)
         {
-            util::comment_reward_context comr_ctx;
-            comr_ctx.total_reward_shares2 = recent_claims;
-            comr_ctx.total_reward_fund_scorum = rf.activity_reward_balance_scr;
-            comr_ctx.reward_curve = rf.author_reward_curve;
-            comr_ctx.rshares = comment.net_rshares;
-            comr_ctx.reward_weight = comment.reward_weight;
-            comr_ctx.max_scr = comment.max_accepted_payout;
-
-            scorum_awarded += pay_for_comment(ctx, comment, util::get_rshare_reward(comr_ctx));
+            auto payout
+                = rewards::calculate_payout(comment.net_rshares, total_claims, rf.activity_reward_balance_scr.amount,
+                                            rf.author_reward_curve, comment.max_accepted_payout.amount);
+            scorum_awarded += pay_for_comment(ctx, comment, asset(payout, SCORUM_SYMBOL));
         }
 
         comment_service.update(comment, [&](comment_object& c) {
@@ -100,22 +79,20 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 
     // Write the cached fund state back to the database
     reward_fund_service.update([&](reward_fund_object& rfo) {
-        rfo.recent_claims = recent_claims;
+        rfo.recent_claims = total_claims;
         rfo.activity_reward_balance_scr -= scorum_awarded;
+        rfo.last_update = dgp_service.head_block_time();
     });
 }
 
-uint128_t process_comments_cashout::get_recent_claims(block_task_context& ctx,
-                                                      const comment_service_i::comment_refs_type& comments)
+share_types process_comments_cashout::get_total_rshares(block_task_context& ctx,
+                                                        const comment_service_i::comment_refs_type& comments)
 {
+    share_types ret;
+
     data_service_factory_i& services = ctx.services();
-    reward_fund_service_i& reward_fund_service = services.reward_fund_service();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
-    //  add all rshares about to be cashed out to the reward funds. This ensures equal satoshi per rshare payment
-    const auto& rf = reward_fund_service.get();
-
-    uint128_t recent_claims = rf.recent_claims;
     for (const comment_object& comment : comments)
     {
         if (comment.cashout_time > dgp_service.head_block_time())
@@ -123,11 +100,11 @@ uint128_t process_comments_cashout::get_recent_claims(block_task_context& ctx,
 
         if (comment.net_rshares > 0)
         {
-            recent_claims += util::evaluate_reward_curve(comment.net_rshares.value, rf.author_reward_curve);
+            ret.push_back(comment.net_rshares);
         }
     }
 
-    return recent_claims;
+    return ret;
 }
 
 asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
@@ -143,7 +120,7 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
         if (reward.amount > 0)
         {
             // clang-format off
-            asset curation_tokens = asset((uint128_t(reward.amount.value) * SCORUM_CURATION_REWARD_PERCENT / SCORUM_100_PERCENT).to_uint64(), reward.symbol());
+            asset curation_tokens = asset(rewards::calculate_curations_payout(reward.amount), reward.symbol());
             asset author_tokens = reward - curation_tokens;
 
             author_tokens += pay_curators(ctx, comment, curation_tokens); // curation_tokens can be changed inside pay_curators()
@@ -199,8 +176,6 @@ process_comments_cashout::pay_curators(block_task_context& ctx, const comment_ob
 
     try
     {
-        uint128_t total_weight(comment.total_vote_weight);
-        // edump( (total_weight)(max_rewards) );
         asset unclaimed_rewards = max_rewards;
 
         if (!comment.allow_curation_rewards)
@@ -215,9 +190,8 @@ process_comments_cashout::pay_curators(block_task_context& ctx, const comment_ob
             auto comment_votes = comment_vote_service.get_by_comment_weight_voter(comment.id);
             for (const comment_vote_object& vote : comment_votes)
             {
-                uint128_t weight(vote.weight);
-                auto claim = asset((max_rewards.amount.value * weight / total_weight).to_uint64(), max_rewards.symbol());
-                if (claim.amount > 0) // min_amt is non-zero satoshis
+                auto claim = asset(rewards::calculate_curation_payout(max_rewards.amount, comment.total_vote_weight, vote.weight) , max_rewards.symbol());
+                if (claim.amount > 0)
                 {
                     unclaimed_rewards -= claim;
                     const auto& voter = account_service.get(vote.voter);
@@ -238,6 +212,7 @@ process_comments_cashout::pay_curators(block_task_context& ctx, const comment_ob
     }
     FC_CAPTURE_AND_RETHROW()
 }
+
 }
 }
 }

@@ -17,8 +17,6 @@
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/util/asset.hpp>
-#include <scorum/chain/util/reward.hpp>
-#include <scorum/chain/util/uint256.hpp>
 
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
