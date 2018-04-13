@@ -13,7 +13,7 @@ struct api_context;
 } // namespace scorum
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 namespace detail {
 class node_monitoring_api_impl;
@@ -37,8 +37,8 @@ public:
 private:
     std::shared_ptr<detail::node_monitoring_api_impl> _my;
 };
-} // namespace blockchain_statistics
+} // namespace blockchain_monitoring
 } // namespace scorum
 
-FC_API(scorum::blockchain_statistics::node_monitoring_api,
+FC_API(scorum::blockchain_monitoring::node_monitoring_api,
        (get_last_block_duration_microseconds)(get_free_shared_memory_mb)(get_total_shared_memory_mb))

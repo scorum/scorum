@@ -1,8 +1,8 @@
-#include <scorum/blockchain_statistics/schema/metrics.hpp>
-#include <scorum/blockchain_statistics/schema/bucket_object.hpp>
+#include <scorum/blockchain_monitoring/schema/metrics.hpp>
+#include <scorum/blockchain_monitoring/schema/bucket_object.hpp>
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 statistics& statistics::operator+=(const bucket_object& b)
 {
@@ -57,4 +57,4 @@ statistics& statistics::operator+=(const bucket_object& b)
     return (*this);
 }
 }
-} // scorum::blockchain_statistics
+} // scorum::blockchain_monitoring

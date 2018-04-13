@@ -1,6 +1,6 @@
-#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
-#include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
-#include <scorum/blockchain_statistics/node_monitoring_api.hpp>
+#include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
+#include <scorum/blockchain_monitoring/blockchain_statistics_api.hpp>
+#include <scorum/blockchain_monitoring/node_monitoring_api.hpp>
 #include <scorum/common_statistics/base_plugin_impl.hpp>
 
 #include <scorum/app/impacted.hpp>
@@ -16,21 +16,21 @@
 #include <scorum/chain/operation_notification.hpp>
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 namespace detail {
 
 using namespace scorum::protocol;
 
-class blockchain_statistics_plugin_impl
-    : public common_statistics::common_statistics_plugin_impl<bucket_object, blockchain_statistics_plugin>
+class blockchain_monitoring_plugin_impl
+    : public common_statistics::common_statistics_plugin_impl<bucket_object, blockchain_monitoring_plugin>
 {
 public:
-    blockchain_statistics_plugin_impl(blockchain_statistics_plugin& plugin)
+    blockchain_monitoring_plugin_impl(blockchain_monitoring_plugin& plugin)
         : base_plugin_impl(plugin)
     {
     }
-    virtual ~blockchain_statistics_plugin_impl()
+    virtual ~blockchain_monitoring_plugin_impl()
     {
     }
 
@@ -204,7 +204,7 @@ public:
     }
 };
 
-void blockchain_statistics_plugin_impl::process_block(const bucket_object& bucket, const signed_block& b)
+void blockchain_monitoring_plugin_impl::process_block(const bucket_object& bucket, const signed_block& b)
 {
     auto& db = _self.database();
 
@@ -223,7 +223,7 @@ void blockchain_statistics_plugin_impl::process_block(const bucket_object& bucke
     });
 }
 
-void blockchain_statistics_plugin_impl::process_pre_operation(const bucket_object& bucket,
+void blockchain_monitoring_plugin_impl::process_pre_operation(const bucket_object& bucket,
                                                               const operation_notification& o)
 {
     auto& db = _self.database();
@@ -270,7 +270,7 @@ void blockchain_statistics_plugin_impl::process_pre_operation(const bucket_objec
     }
 }
 
-void blockchain_statistics_plugin_impl::process_post_operation(const bucket_object& bucket,
+void blockchain_monitoring_plugin_impl::process_post_operation(const bucket_object& bucket,
                                                                const operation_notification& o)
 {
     auto& db = _self.database();
@@ -284,17 +284,17 @@ void blockchain_statistics_plugin_impl::process_post_operation(const bucket_obje
 
 } // detail
 
-blockchain_statistics_plugin::blockchain_statistics_plugin(application* app)
+blockchain_monitoring_plugin::blockchain_monitoring_plugin(application* app)
     : plugin(app)
-    , _my(new detail::blockchain_statistics_plugin_impl(*this))
+    , _my(new detail::blockchain_monitoring_plugin_impl(*this))
 {
 }
 
-blockchain_statistics_plugin::~blockchain_statistics_plugin()
+blockchain_monitoring_plugin::~blockchain_monitoring_plugin()
 {
 }
 
-void blockchain_statistics_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
+void blockchain_monitoring_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
                                                               boost::program_options::options_description& cfg)
 {
     cli.add_options()(
@@ -307,7 +307,7 @@ void blockchain_statistics_plugin::plugin_set_program_options(boost::program_opt
     cfg.add(cli);
 }
 
-void blockchain_statistics_plugin::plugin_initialize(const boost::program_options::variables_map& options)
+void blockchain_monitoring_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try
     {
@@ -328,7 +328,7 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
     print_greeting();
 }
 
-void blockchain_statistics_plugin::plugin_startup()
+void blockchain_monitoring_plugin::plugin_startup()
 {
     ilog("chain_stats plugin: plugin_startup() begin");
 
@@ -340,16 +340,16 @@ void blockchain_statistics_plugin::plugin_startup()
     ilog("chain_stats plugin: plugin_startup() end");
 }
 
-const flat_set<uint32_t>& blockchain_statistics_plugin::get_tracked_buckets() const
+const flat_set<uint32_t>& blockchain_monitoring_plugin::get_tracked_buckets() const
 {
     return _my->_tracked_buckets;
 }
 
-uint32_t blockchain_statistics_plugin::get_max_history_per_bucket() const
+uint32_t blockchain_monitoring_plugin::get_max_history_per_bucket() const
 {
     return _my->_maximum_history_per_bucket_size;
 }
 }
-} // scorum::blockchain_statistics
+} // scorum::blockchain_monitoring
 
-SCORUM_DEFINE_PLUGIN(blockchain_statistics, scorum::blockchain_statistics::blockchain_statistics_plugin);
+SCORUM_DEFINE_PLUGIN(blockchain_monitoring, scorum::blockchain_monitoring::blockchain_monitoring_plugin);
