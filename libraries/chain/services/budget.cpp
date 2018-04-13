@@ -118,7 +118,7 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
     FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= balance, "Insufficient funds.");
-    FC_ASSERT(_get_budget_count(owner.name) < SCORUM_BUDGETS_LIMIT_PER_OWNER, "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
+    FC_ASSERT(_get_budget_count(owner.name) < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER, "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
     time_point_sec start_date = dprops.time;
     FC_ASSERT(dprops.circulating_capital > balance, "Invalid balance. Must ${1} > ${2}.", ("1", dprops.circulating_capital)("2", balance));

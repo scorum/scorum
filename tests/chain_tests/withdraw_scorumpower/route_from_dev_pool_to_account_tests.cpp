@@ -87,7 +87,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
 
     BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(pool.id));
 
-    for (int ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    for (uint32_t ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
     {
         next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
         generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);

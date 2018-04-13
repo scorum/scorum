@@ -5,6 +5,47 @@
 // clang-format off
 
 #pragma once
+#include <cstdint>
+#include <fc/time.hpp>
+
+namespace scorum {
+namespace protocol {
+namespace detail {
+
+    struct config
+    {
+        static uint32_t blockid_pool_size;
+
+        static uint32_t cashout_window_seconds;
+
+        static fc::microseconds upvote_lockout;
+
+        static fc::microseconds owner_auth_recovery_period;
+        static fc::microseconds account_recovery_request_expiration_period;
+        static fc::microseconds owner_update_limit;
+
+        static uint32_t rewards_initial_supply_period_in_days;
+        static uint32_t guaranted_reward_supply_period_in_days;
+        static uint32_t reward_increase_threshold_in_days;
+
+        static uint32_t budgets_limit_per_owner;
+
+        static uint32_t atomicswap_initiator_refund_lock_secs;
+        static uint32_t atomicswap_participant_refund_lock_secs;
+
+        static uint32_t atomicswap_limit_requested_contracts_per_owner;
+        static uint32_t atomicswap_limit_requested_contracts_per_recipient;
+
+        static uint32_t vesting_withdraw_intervals;
+        static uint32_t vesting_withdraw_interval_seconds;
+
+        static bool is_test_net;
+
+        static void override_for_test_net();
+    };
+}
+}
+}
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
@@ -42,61 +83,33 @@
 
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef IS_TEST_NET
+#define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::config::blockid_pool_size)
 
-#define SCORUM_BLOCKID_POOL_SIZE 0xfff
+#define SCORUM_CASHOUT_WINDOW_SECONDS           (scorum::protocol::detail::config::cashout_window_seconds)
 
-#define SCORUM_CASHOUT_WINDOW_SECONDS          (60*60) /// 1 hr
-#define SCORUM_UPVOTE_LOCKOUT                  (fc::minutes(5))
+#define SCORUM_UPVOTE_LOCKOUT                   (scorum::protocol::detail::config::upvote_lockout)
 
-#define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
-#define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
-#define SCORUM_OWNER_UPDATE_LIMIT                          fc::seconds(0)
+#define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                   (scorum::protocol::detail::config::owner_auth_recovery_period)
+#define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD   (scorum::protocol::detail::config::account_recovery_request_expiration_period)
+#define SCORUM_OWNER_UPDATE_LIMIT                           (scorum::protocol::detail::config::owner_update_limit)
 
-#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS    5
+#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS        (scorum::protocol::detail::config::rewards_initial_supply_period_in_days)
 
-#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   2
-#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        3
+#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS       (scorum::protocol::detail::config::guaranted_reward_supply_period_in_days)
+#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS            (scorum::protocol::detail::config::reward_increase_threshold_in_days)
 
-#define SCORUM_BUDGETS_LIMIT_PER_OWNER          5
+#define SCORUM_BUDGETS_LIMIT_PER_OWNER                      (scorum::protocol::detail::config::budgets_limit_per_owner)
 
-#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           60*20
-#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         60*10
+#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS        (scorum::protocol::detail::config::atomicswap_initiator_refund_lock_secs)
+#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS      (scorum::protocol::detail::config::atomicswap_participant_refund_lock_secs)
 
-#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER            5
-#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        2
+#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER       (scorum::protocol::detail::config::atomicswap_limit_requested_contracts_per_owner)
+#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT   (scorum::protocol::detail::config::atomicswap_limit_requested_contracts_per_recipient)
 
-#define SCORUM_VESTING_WITHDRAW_INTERVALS                                (13)
-#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS                         (60*7) 
-
-#else // IS LIVE SCORUM NETWORK
-
-#define SCORUM_BLOCKID_POOL_SIZE 0xffff
-
-#define SCORUM_CASHOUT_WINDOW_SECONDS          (DAYS_TO_SECONDS(7))
-#define SCORUM_UPVOTE_LOCKOUT                  (fc::hours(12))
-
-#define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
-#define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
-#define SCORUM_OWNER_UPDATE_LIMIT                          fc::minutes(60)
-
-#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS    (2 * 365)
-
-#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS   30
-#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS        100
-
-#define SCORUM_BUDGETS_LIMIT_PER_OWNER            1000000
-
-#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS           48*3600
-#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS         24*3600
-
-#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER            1000
-#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT        10
-
-#define SCORUM_VESTING_WITHDRAW_INTERVALS                                (52)
-#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS    (DAYS_TO_SECONDS(7)) /// 1 week per interval
-#endif
+#define SCORUM_VESTING_WITHDRAW_INTERVALS                           (scorum::protocol::detail::config::vesting_withdraw_intervals)
+#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS                    (scorum::protocol::detail::config::vesting_withdraw_interval_seconds) /// 1 week per interval
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    100 /// * registration_bonus

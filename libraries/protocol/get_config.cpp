@@ -11,16 +11,6 @@ fc::variant_object get_config()
 {
     fc::mutable_variant_object result;
 
-// clang-format off
-
-#ifdef IS_TEST_NET
-    result[ "IS_TEST_NET" ] = true;
-#else
-    result[ "IS_TEST_NET" ] = false;
-#endif
-
-    // clang-format on
-
     result["SCORUM_100_PERCENT"] = SCORUM_100_PERCENT;
     result["SCORUM_1_PERCENT"] = SCORUM_1_PERCENT;
     result["SCORUM_1_TENTH_PERCENT"] = SCORUM_1_TENTH_PERCENT;
