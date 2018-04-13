@@ -1911,18 +1911,6 @@ void database::validate_invariants() const
             total_supply += itr->pending_fee;
         }
 
-        fc::uint128_t total_rshares2;
-
-        const auto& comment_idx = get_index<comment_index>().indices();
-        for (auto itr = comment_idx.begin(); itr != comment_idx.end(); ++itr)
-        {
-            if (itr->net_rshares.value > 0)
-            {
-                auto delta = util::evaluate_reward_curve(itr->net_rshares.value);
-                total_rshares2 += delta;
-            }
-        }
-
         total_supply += obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get().balance;
