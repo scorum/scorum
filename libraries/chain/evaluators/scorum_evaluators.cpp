@@ -834,7 +834,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
         }
 
 #ifndef IS_TEST_NET
-        FC_ASSERT(dprops_service.head_block_time() - voter.last_vote_time >= SCORUM_MIN_VOTE_INTERVAL_SEC,
+        FC_ASSERT((dprops_service.head_block_time() - voter.last_vote_time).to_seconds()
+                      >= SCORUM_MIN_VOTE_INTERVAL_SEC,
                   "Can only vote once every 3 seconds.");
 #endif
 

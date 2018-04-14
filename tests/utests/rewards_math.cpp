@@ -143,12 +143,10 @@ BOOST_AUTO_TEST_CASE(calculate_restoring_power_check)
     BOOST_CHECK_EQUAL(calculate_restoring_power(voting_power, now, last_voted, SCORUM_VOTE_REGENERATION_SECONDS),
                       voting_power);
 
-    voting_power /= 2u;
-
-    BOOST_CHECK_GT(calculate_restoring_power(voting_power, now, last_voted, SCORUM_VOTE_REGENERATION_SECONDS),
-                   voting_power);
-
     SCORUM_REQUIRE_THROW(calculate_restoring_power(voting_power, now, last_voted, fc::microseconds(0)), fc::exception);
+
+    SCORUM_REQUIRE_THROW(calculate_restoring_power(voting_power, last_voted, now, SCORUM_VOTE_REGENERATION_SECONDS),
+                         fc::exception);
 }
 
 BOOST_AUTO_TEST_CASE(calculate_used_power_check)
@@ -173,6 +171,28 @@ BOOST_AUTO_TEST_CASE(calculate_abs_reward_shares_check)
     BOOST_CHECK_LT(calculate_abs_reward_shares(used_voting_power, effective_balance_shares), effective_balance_shares);
 
     BOOST_CHECK_EQUAL(calculate_abs_reward_shares(used_voting_power, share_type(0)), share_type(0));
+}
+
+BOOST_AUTO_TEST_CASE(restoring_voting_power_check)
+{
+    uint16_t voting_power = SCORUM_100_PERCENT;
+    int16_t vote_weight = SCORUM_PERCENT(50);
+
+    int ci = 0;
+    // decrease power with limiting by result percent or iterations (if decreasing too slow)
+    while (voting_power > SCORUM_PERCENT(75) && ci++ < SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE * 10)
+    {
+        uint16_t used_power = calculate_used_power(
+            voting_power, vote_weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE, SCORUM_VOTE_REGENERATION_SECONDS);
+        voting_power -= used_power;
+    }
+
+    fc::time_point_sec last_voted(TEST_GENESIS_TIMESTAMP);
+    fc::time_point_sec now(last_voted);
+    now += SCORUM_VOTE_REGENERATION_SECONDS.to_seconds() / 2;
+
+    BOOST_CHECK_EQUAL(calculate_restoring_power(voting_power, now, last_voted, SCORUM_VOTE_REGENERATION_SECONDS),
+                      SCORUM_100_PERCENT);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
