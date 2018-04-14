@@ -12,7 +12,7 @@
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/rewards/curve.hpp>
+#include <scorum/rewards_math/curve.hpp>
 
 #include <scorum/plugins/debug_node/debug_node_plugin.hpp>
 
@@ -430,9 +430,6 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test1")).reward_weight
-                      == SCORUM_100_PERCENT);
-
         tx.operations.clear();
         tx.signatures.clear();
 
@@ -444,9 +441,6 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test2")).reward_weight
-                      == SCORUM_100_PERCENT);
 
         generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
@@ -460,9 +454,6 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test3")).reward_weight
-                      == SCORUM_100_PERCENT);
-
         generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
 
@@ -475,9 +466,6 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test4")).reward_weight
-                      == SCORUM_100_PERCENT);
-
         generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
                         true);
 
@@ -489,9 +477,6 @@ BOOST_AUTO_TEST_CASE(post_rate_limit)
         tx.operations.push_back(op);
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
-
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test5")).reward_weight
-                      == SCORUM_100_PERCENT);
     }
     FC_LOG_AND_RETHROW()
 }

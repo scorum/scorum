@@ -4,7 +4,7 @@
 
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/rewards/formulas.hpp>
+#include <scorum/rewards_math/formulas.hpp>
 
 namespace scorum {
 namespace chain {

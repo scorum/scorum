@@ -9,8 +9,8 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 
-#include <scorum/rewards/curve.hpp>
-#include <scorum/rewards/formulas.hpp>
+#include <scorum/rewards_math/curve.hpp>
+#include <scorum/rewards_math/formulas.hpp>
 
 namespace scorum {
 namespace chain {
@@ -31,8 +31,9 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     const auto& rf = reward_fund_service.get();
 
     share_types total_rshares = get_total_rshares(ctx, comments);
-    fc::uint128_t total_claims = rewards::calculate_total_claims(rf.recent_claims, dgp_service.head_block_time(),
-                                                                 rf.last_update, rf.author_reward_curve, total_rshares);
+    fc::uint128_t total_claims
+        = rewards::calculate_total_claims(rf.recent_claims, dgp_service.head_block_time(), rf.last_update,
+                                          rf.author_reward_curve, total_rshares, SCORUM_RECENT_RSHARES_DECAY_RATE);
 
     asset scorum_awarded = asset(0, SCORUM_SYMBOL);
     for (const comment_object& comment : comments)
@@ -42,9 +43,9 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 
         if (comment.net_rshares > 0)
         {
-            auto payout
-                = rewards::calculate_payout(comment.net_rshares, total_claims, rf.activity_reward_balance_scr.amount,
-                                            rf.author_reward_curve, comment.max_accepted_payout.amount);
+            auto payout = rewards::calculate_payout(
+                comment.net_rshares, total_claims, rf.activity_reward_balance_scr.amount, rf.author_reward_curve,
+                comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
             scorum_awarded += pay_for_comment(ctx, comment, asset(payout, SCORUM_SYMBOL));
         }
 
@@ -120,7 +121,7 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
         if (reward.amount > 0)
         {
             // clang-format off
-            asset curation_tokens = asset(rewards::calculate_curations_payout(reward.amount), reward.symbol());
+            asset curation_tokens = asset(rewards::calculate_curations_payout(reward.amount, SCORUM_CURATION_REWARD_PERCENT), reward.symbol());
             asset author_tokens = reward - curation_tokens;
 
             author_tokens += pay_curators(ctx, comment, curation_tokens); // curation_tokens can be changed inside pay_curators()

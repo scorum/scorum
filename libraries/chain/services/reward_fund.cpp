@@ -1,7 +1,7 @@
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/reward_objects.hpp>
 
 namespace scorum {
 namespace chain {

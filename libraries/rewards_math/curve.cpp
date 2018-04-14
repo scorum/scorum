@@ -1,5 +1,5 @@
 
-#include <scorum/rewards/curve.hpp>
+#include <scorum/rewards_math/curve.hpp>
 
 namespace scorum {
 namespace rewards {

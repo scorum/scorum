@@ -69,13 +69,6 @@ public:
     uint8_t participation_count = 0; ///< Divide by 128 to compute participation percentage
 
     uint32_t last_irreversible_block_num = 0;
-
-    /**
-     * The number of votes regenerated per day.  Any user voting slower than this rate will be
-     * "wasting" voting power through spillover; any user voting faster than this rate will have
-     * their votes reduced.
-     */
-    uint32_t vote_power_reserve_rate = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE;
 };
 
 typedef shared_multi_index_container<dynamic_global_property_object,
@@ -102,8 +95,7 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (current_aslot)
           (recent_slots_filled)
           (participation_count)
-          (last_irreversible_block_num)
-          (vote_power_reserve_rate))
+          (last_irreversible_block_num))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)

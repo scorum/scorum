@@ -102,7 +102,7 @@ add_library( scorum_chain
 add_dependencies( scorum_chain scorum_protocol build_hardfork_hpp )
 target_link_libraries( scorum_chain
                        scorum_protocol
-                       scorum_rewards
+                       scorum_rewards_math
                        fc
                        chainbase
                        graphene_schema
