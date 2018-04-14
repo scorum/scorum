@@ -20,13 +20,13 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
     FC_ASSERT(ctx.genesis_state().rewards_supply.symbol() == SCORUM_SYMBOL);
 
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
-    reward_fund_service_i& reward_fund_service = ctx.services().reward_fund_service();
+    reward_fund_scr_service_i& reward_fund_service = ctx.services().reward_fund_scr_service();
     reward_service_i& reward_service = ctx.services().reward_service();
     budget_service_i& budget_service = ctx.services().budget_service();
 
     FC_ASSERT(!reward_fund_service.is_exists());
 
-    const auto& post_rf = reward_fund_service.create([&](reward_fund_object& rfo) {
+    const auto& post_rf = reward_fund_service.create([&](reward_fund_scr_object& rfo) {
         rfo.last_update = dgp_service.head_block_time();
         rfo.author_reward_curve = curve_id::linear;
         rfo.curation_reward_curve = curve_id::square_root;

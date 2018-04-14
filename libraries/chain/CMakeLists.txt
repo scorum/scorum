@@ -49,7 +49,6 @@ add_library( scorum_chain
              services/registration_committee.cpp
              services/registration_pool.cpp
              services/reward_balancer.cpp
-             services/reward_fund.cpp
              services/scorumpower_delegation.cpp
              services/withdraw_scorumpower.cpp
              services/withdraw_scorumpower_route.cpp

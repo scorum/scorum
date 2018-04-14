@@ -163,7 +163,7 @@ public:
     witness_schedule_api_obj get_witness_schedule() const;
     hardfork_version get_hardfork_version() const;
     scheduled_hardfork get_next_scheduled_hardfork() const;
-    reward_fund_api_obj get_reward_fund() const;
+    reward_fund_scr_api_obj get_reward_fund() const;
 
     //////////
     // Keys //

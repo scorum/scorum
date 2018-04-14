@@ -2,25 +2,27 @@
 
 #include <scorum/chain/services/dbs_base.hpp>
 
+#include <scorum/chain/database/database.hpp>
+
+#include <scorum/chain/schema/reward_objects.hpp>
+
 namespace scorum {
 namespace chain {
 
-class reward_fund_object;
-
-struct reward_fund_service_i
+template <typename FundObjectType> struct reward_fund_service_i
 {
     virtual bool is_exists() const = 0;
 
-    virtual const reward_fund_object& get() const = 0;
+    virtual const FundObjectType& get() const = 0;
 
-    using modifier_type = std::function<void(reward_fund_object&)>;
+    using modifier_type = std::function<void(FundObjectType&)>;
 
-    virtual const reward_fund_object& create(const modifier_type& modifier) = 0;
+    virtual const FundObjectType& create(const modifier_type& modifier) = 0;
 
     virtual void update(const modifier_type& modifier) = 0;
 };
 
-class dbs_reward_fund : public dbs_base, public reward_fund_service_i
+template <typename FundObjectType> class dbs_reward_fund : public dbs_base, public reward_fund_service_i<FundObjectType>
 {
     friend class dbservice_dbs_factory;
 
@@ -28,14 +30,32 @@ protected:
     explicit dbs_reward_fund(database& db);
 
 public:
-    bool is_exists() const override;
+    bool is_exists() const
+    {
+        return nullptr != db_impl().find<FundObjectType>();
+    }
 
-    const reward_fund_object& get() const override;
+    const FundObjectType& get() const
+    {
+        return db_impl().get<FundObjectType>();
+    }
 
-    const reward_fund_object& create(const modifier_type& modifier) override;
+    const FundObjectType& create(const typename reward_fund_service_i<FundObjectType>::modifier_type& modifier)
+    {
+        return db_impl().create<FundObjectType>([&](FundObjectType& o) { modifier(o); });
+    }
 
-    void update(const modifier_type& modifier) override;
+    void update(const typename reward_fund_service_i<FundObjectType>::modifier_type& modifier)
+    {
+        db_impl().modify(get(), [&](FundObjectType& o) { modifier(o); });
+    }
 };
+
+using reward_fund_scr_service_i = reward_fund_service_i<reward_fund_scr_object>;
+using reward_fund_sp_service_i = reward_fund_service_i<reward_fund_sp_object>;
+
+using dbs_reward_fund_scr = dbs_reward_fund<reward_fund_scr_object>;
+using dbs_reward_fund_sp = dbs_reward_fund<reward_fund_sp_object>;
 
 } // namespace scorum
 } // namespace chain

@@ -83,7 +83,7 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
         = account_service.create_scorumpower(account_service.get_account(cwit.owner), witness_reward);
     ctx.push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
 
-    reward_fund_service.update([&](reward_fund_object& rfo) { rfo.activity_reward_balance_scr += content_reward; });
+    reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance_scr += content_reward; });
     dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += users_reward; });
 }
 }

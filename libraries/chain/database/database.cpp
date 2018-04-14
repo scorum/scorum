@@ -1133,7 +1133,8 @@ void database::initialize_indexes()
     add_index<proposal_object_index>();
     add_index<registration_committee_member_index>();
     add_index<registration_pool_index>();
-    add_index<reward_fund_index>();
+    add_index<reward_fund_scr_index>();
+    add_index<reward_fund_sp_index>();
     add_index<reward_pool_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();

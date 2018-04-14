@@ -19,7 +19,7 @@ namespace database_ns {
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services();
-    reward_fund_service_i& reward_fund_service = services.reward_fund_service();
+    reward_fund_scr_service_i& reward_fund_service = services.reward_fund_service();
     comment_service_i& comment_service = services.comment_service();
 #ifdef CLEAR_VOTES
     comment_vote_service_i& comment_vote_service = services.comment_vote_service();
@@ -79,7 +79,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     }
 
     // Write the cached fund state back to the database
-    reward_fund_service.update([&](reward_fund_object& rfo) {
+    reward_fund_service.update([&](reward_fund_scr_object& rfo) {
         rfo.recent_claims = total_claims;
         rfo.activity_reward_balance_scr -= scorum_awarded;
         rfo.last_update = dgp_service.head_block_time();

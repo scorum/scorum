@@ -353,10 +353,10 @@ scheduled_hardfork database_api::get_next_scheduled_hardfork() const
     });
 }
 
-reward_fund_api_obj database_api::get_reward_fund() const
+reward_fund_scr_api_obj database_api::get_reward_fund() const
 {
     return my->_db.with_read_lock([&]() {
-        auto fund = my->_db.find<reward_fund_object>();
+        auto fund = my->_db.find<reward_fund_scr_object>();
         FC_ASSERT(fund != nullptr, "reward fund object does not exist");
 
         return *fund;
