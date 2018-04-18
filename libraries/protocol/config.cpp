@@ -1,4 +1,5 @@
 #include <scorum/protocol/config.hpp>
+#include <boost/make_unique.hpp>
 
 #define DAYS_TO_SECONDS(X) (60u*60u*24u*X)
 
@@ -6,62 +7,82 @@ namespace scorum {
 namespace protocol {
 namespace detail {
 
-    uint32_t config::blockid_pool_size      = 0xffff;
+    std::unique_ptr<config> config::instance = boost::make_unique<config>();
 
-    uint32_t config::cashout_window_seconds = DAYS_TO_SECONDS(7);
+    config::config() /// production config
+        : blockid_pool_size       (0xffff)
 
-    fc::microseconds config::upvote_lockout = fc::hours(12);
+        , cashout_window_seconds  (DAYS_TO_SECONDS(7))
 
-    fc::microseconds config::owner_auth_recovery_period                 = fc::days(30);
-    fc::microseconds config::account_recovery_request_expiration_period = fc::days(1);
-    fc::microseconds config::owner_update_limit                         = fc::minutes(60);
+        , upvote_lockout          (fc::hours(12))
 
-    uint32_t config::rewards_initial_supply_period_in_days      = 2 * 365;
-    uint32_t config::guaranted_reward_supply_period_in_days     = 30;
-    uint32_t config::reward_increase_threshold_in_days          = 100;
+        , owner_auth_recovery_period                 (fc::days(30))
+        , account_recovery_request_expiration_period (fc::days(1))
+        , owner_update_limit                         (fc::minutes(60))
 
-    uint32_t config::budgets_limit_per_owner                    = 1000000;
+        , rewards_initial_supply_period_in_days      (2 * 365)
+        , guaranted_reward_supply_period_in_days     (30)
+        , reward_increase_threshold_in_days          (100)
 
-    uint32_t config::atomicswap_initiator_refund_lock_secs      = 48*3600;
-    uint32_t config::atomicswap_participant_refund_lock_secs    = 24*3600;
+        , budgets_limit_per_owner                    (1000000)
 
-    uint32_t config::atomicswap_limit_requested_contracts_per_owner     = 1000;
-    uint32_t config::atomicswap_limit_requested_contracts_per_recipient = 10;
+        , atomicswap_initiator_refund_lock_secs      (48*3600)
+        , atomicswap_participant_refund_lock_secs    (24*3600)
 
-    uint32_t config::vesting_withdraw_intervals                 = 52;
-    uint32_t config::vesting_withdraw_interval_seconds          = DAYS_TO_SECONDS(7); // 1 week per interval
+        , atomicswap_limit_requested_contracts_per_owner     (1000)
+        , atomicswap_limit_requested_contracts_per_recipient (10)
 
-    bool config::is_test_net = false;
+        , vesting_withdraw_intervals                 (52)
+        , vesting_withdraw_interval_seconds          (DAYS_TO_SECONDS(7)) // 1 week per interval
 
+        , min_vote_interval_sec         (3)
 
-    void config::override_for_test_net()
+        , db_free_memory_threshold_mb   (100)
     {
-        config::blockid_pool_size           = 0xfff;
+        //do nothing
+    }
 
-        config::cashout_window_seconds      = 60*60; //1 hr
+    config::config(test_mode) /// test config
+        : blockid_pool_size           (0xfff)
 
-        config::upvote_lockout              = fc::minutes(5);
+        , cashout_window_seconds      (60*60) //1 hr
 
-        config::owner_auth_recovery_period                  = fc::seconds(60);
-        config::account_recovery_request_expiration_period  = fc::seconds(12);
-        config::owner_update_limit                          = fc::seconds(0);
+        , upvote_lockout              (fc::minutes(5))
 
-        config::rewards_initial_supply_period_in_days   = 5;
-        config::guaranted_reward_supply_period_in_days  = 2;
-        config::reward_increase_threshold_in_days       = 3;
+        , owner_auth_recovery_period                  (fc::seconds(60))
+        , account_recovery_request_expiration_period  (fc::seconds(12))
+        , owner_update_limit                          (fc::seconds(0))
 
-        config::budgets_limit_per_owner                 = 5;
+        , rewards_initial_supply_period_in_days   (5)
+        , guaranted_reward_supply_period_in_days  (2)
+        , reward_increase_threshold_in_days       (3)
 
-        config::atomicswap_initiator_refund_lock_secs   = 60*20;
-        config::atomicswap_participant_refund_lock_secs = 60*10;
+        , budgets_limit_per_owner                 (5)
 
-        config::atomicswap_limit_requested_contracts_per_owner      = 5;
-        config::atomicswap_limit_requested_contracts_per_recipient  = 2;
+        , atomicswap_initiator_refund_lock_secs   (60*20)
+        , atomicswap_participant_refund_lock_secs (60*10)
 
-        config::vesting_withdraw_intervals              = 13;
-        config::vesting_withdraw_interval_seconds       = 60*7;
+        , atomicswap_limit_requested_contracts_per_owner      (5)
+        , atomicswap_limit_requested_contracts_per_recipient  (2)
 
-        config::is_test_net = true;
+        , vesting_withdraw_intervals              (13)
+        , vesting_withdraw_interval_seconds       (60*7)
+
+        , min_vote_interval_sec         (0)
+
+        , db_free_memory_threshold_mb   (5)
+    {
+        //do nothing
+    }
+
+    const config& get_config()
+    {
+        return *config::instance;
+    }
+
+    void override_config(std::unique_ptr<config> new_config)
+    {
+        config::instance = std::move(new_config);
     }
 }
 }

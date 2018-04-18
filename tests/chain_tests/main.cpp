@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <boost/make_unique.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include <fc/log/logger.hpp>
@@ -10,7 +11,8 @@
 
 boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
-    scorum::protocol::detail::config::override_for_test_net();
+    using namespace scorum::protocol;
+    detail::override_config(boost::make_unique<detail::config>(detail::config::test));
 
     std::srand(time(NULL));
     std::cout << "Random number generator seeded to " << time(NULL) << std::endl;

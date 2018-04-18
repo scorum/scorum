@@ -876,8 +876,7 @@ void database::notify_post_apply_operation(const operation_notification& note)
 inline void database::push_virtual_operation(const operation& op)
 {
 #if defined(IS_LOW_MEM)
-    if (!protocol::detail::config::is_test_net)
-        return;
+    return;
 #endif
 
     FC_ASSERT(is_virtual_operation(op));
@@ -1245,9 +1244,6 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
 void database::show_free_memory(bool force)
 {
-    if (protocol::detail::config::is_test_net)
-        return;
-
     uint32_t free_gb = uint32_t(get_free_memory() / (1024 * 1024 * 1024));
     if (force || (free_gb < _last_free_gb_printed) || (free_gb > _last_free_gb_printed + 1))
     {
@@ -1259,7 +1255,7 @@ void database::show_free_memory(bool force)
     {
         uint32_t free_mb = uint32_t(get_free_memory() / (1024 * 1024));
 
-        if (free_mb <= 100 && head_block_num() % 10 == 0)
+        if (free_mb <= SCORUM_DB_FREE_MEMORY_THRESHOLD_MB && head_block_num() % 10 == 0)
         {
             elog("Free memory is now ${n}M. Increase shared file size immediately!", ("n", free_mb));
         }

@@ -115,8 +115,7 @@ public:
      */
     template <typename Api> void register_api_factory(const std::string& name)
     {
-        if (!protocol::detail::config::is_test_net)
-            idump((name));
+        idump((name));
 
         register_api_factory(name, [](const api_context& ctx) -> fc::api_ptr {
             // apparently the compiler is smart enough to downcast shared_ptr< api<Api> > to shared_ptr< api_base >

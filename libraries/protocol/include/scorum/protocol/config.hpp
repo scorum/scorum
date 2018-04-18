@@ -14,35 +14,46 @@ namespace detail {
 
     struct config
     {
-        static uint32_t blockid_pool_size;
+        static std::unique_ptr<config> instance;
 
-        static uint32_t cashout_window_seconds;
+        const uint32_t blockid_pool_size;
 
-        static fc::microseconds upvote_lockout;
+        const uint32_t cashout_window_seconds;
 
-        static fc::microseconds owner_auth_recovery_period;
-        static fc::microseconds account_recovery_request_expiration_period;
-        static fc::microseconds owner_update_limit;
+        const fc::microseconds upvote_lockout;
 
-        static uint32_t rewards_initial_supply_period_in_days;
-        static uint32_t guaranted_reward_supply_period_in_days;
-        static uint32_t reward_increase_threshold_in_days;
+        const fc::microseconds owner_auth_recovery_period;
+        const fc::microseconds account_recovery_request_expiration_period;
+        const fc::microseconds owner_update_limit;
 
-        static uint32_t budgets_limit_per_owner;
+        const uint32_t rewards_initial_supply_period_in_days;
+        const uint32_t guaranted_reward_supply_period_in_days;
+        const uint32_t reward_increase_threshold_in_days;
 
-        static uint32_t atomicswap_initiator_refund_lock_secs;
-        static uint32_t atomicswap_participant_refund_lock_secs;
+        const uint32_t budgets_limit_per_owner;
 
-        static uint32_t atomicswap_limit_requested_contracts_per_owner;
-        static uint32_t atomicswap_limit_requested_contracts_per_recipient;
+        const uint32_t atomicswap_initiator_refund_lock_secs;
+        const uint32_t atomicswap_participant_refund_lock_secs;
 
-        static uint32_t vesting_withdraw_intervals;
-        static uint32_t vesting_withdraw_interval_seconds;
+        const uint32_t atomicswap_limit_requested_contracts_per_owner;
+        const uint32_t atomicswap_limit_requested_contracts_per_recipient;
 
-        static bool is_test_net;
+        const uint32_t vesting_withdraw_intervals;
+        const uint32_t vesting_withdraw_interval_seconds;
 
-        static void override_for_test_net();
+        const uint32_t min_vote_interval_sec;
+
+        const uint32_t db_free_memory_threshold_mb;
+
+        enum test_mode { test };
+
+        explicit config(test_mode);
+        config();
     };
+
+    const config& get_config();
+
+    void override_config(std::unique_ptr<config> new_config);
 }
 }
 }
@@ -85,31 +96,35 @@ namespace detail {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-#define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::config::blockid_pool_size)
+#define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::get_config().blockid_pool_size)
 
-#define SCORUM_CASHOUT_WINDOW_SECONDS           (scorum::protocol::detail::config::cashout_window_seconds)
+#define SCORUM_CASHOUT_WINDOW_SECONDS           (scorum::protocol::detail::get_config().cashout_window_seconds)
 
-#define SCORUM_UPVOTE_LOCKOUT                   (scorum::protocol::detail::config::upvote_lockout)
+#define SCORUM_UPVOTE_LOCKOUT                   (scorum::protocol::detail::get_config().upvote_lockout)
 
-#define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                   (scorum::protocol::detail::config::owner_auth_recovery_period)
-#define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD   (scorum::protocol::detail::config::account_recovery_request_expiration_period)
-#define SCORUM_OWNER_UPDATE_LIMIT                           (scorum::protocol::detail::config::owner_update_limit)
+#define SCORUM_OWNER_AUTH_RECOVERY_PERIOD                   (scorum::protocol::detail::get_config().owner_auth_recovery_period)
+#define SCORUM_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD   (scorum::protocol::detail::get_config().account_recovery_request_expiration_period)
+#define SCORUM_OWNER_UPDATE_LIMIT                           (scorum::protocol::detail::get_config().owner_update_limit)
 
-#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS        (scorum::protocol::detail::config::rewards_initial_supply_period_in_days)
+#define SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS        (scorum::protocol::detail::get_config().rewards_initial_supply_period_in_days)
 
-#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS       (scorum::protocol::detail::config::guaranted_reward_supply_period_in_days)
-#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS            (scorum::protocol::detail::config::reward_increase_threshold_in_days)
+#define SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS       (scorum::protocol::detail::get_config().guaranted_reward_supply_period_in_days)
+#define SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS            (scorum::protocol::detail::get_config().reward_increase_threshold_in_days)
 
-#define SCORUM_BUDGETS_LIMIT_PER_OWNER                      (scorum::protocol::detail::config::budgets_limit_per_owner)
+#define SCORUM_BUDGETS_LIMIT_PER_OWNER                      (scorum::protocol::detail::get_config().budgets_limit_per_owner)
 
-#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS        (scorum::protocol::detail::config::atomicswap_initiator_refund_lock_secs)
-#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS      (scorum::protocol::detail::config::atomicswap_participant_refund_lock_secs)
+#define SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS        (scorum::protocol::detail::get_config().atomicswap_initiator_refund_lock_secs)
+#define SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS      (scorum::protocol::detail::get_config().atomicswap_participant_refund_lock_secs)
 
-#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER       (scorum::protocol::detail::config::atomicswap_limit_requested_contracts_per_owner)
-#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT   (scorum::protocol::detail::config::atomicswap_limit_requested_contracts_per_recipient)
+#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER       (scorum::protocol::detail::get_config().atomicswap_limit_requested_contracts_per_owner)
+#define SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT   (scorum::protocol::detail::get_config().atomicswap_limit_requested_contracts_per_recipient)
 
-#define SCORUM_VESTING_WITHDRAW_INTERVALS                           (scorum::protocol::detail::config::vesting_withdraw_intervals)
-#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS                    (scorum::protocol::detail::config::vesting_withdraw_interval_seconds) /// 1 week per interval
+#define SCORUM_VESTING_WITHDRAW_INTERVALS                           (scorum::protocol::detail::get_config().vesting_withdraw_intervals)
+#define SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS                    (scorum::protocol::detail::get_config().vesting_withdraw_interval_seconds) /// 1 week per interval
+
+#define SCORUM_MIN_VOTE_INTERVAL_SEC            (scorum::protocol::detail::get_config().min_vote_interval_sec)
+
+#define SCORUM_DB_FREE_MEMORY_THRESHOLD_MB      (scorum::protocol::detail::get_config().db_free_memory_threshold_mb)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    100 /// * registration_bonus
@@ -141,7 +156,6 @@ namespace detail {
 #define SCORUM_VOTE_REGENERATION_SECONDS       (DAYS_TO_SECONDS(5))
 #define SCORUM_MAX_VOTE_CHANGES                3
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (60*30) /// 30 minutes
-#define SCORUM_MIN_VOTE_INTERVAL_SEC           3
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds

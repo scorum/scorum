@@ -189,13 +189,10 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
 
     if (o.owner)
     {
-        if (!protocol::detail::config::is_test_net)
-        {
-            dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
+        dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
-            FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
-                      "Owner authority can only be updated once an hour.");
-        }
+        FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
+                  "Owner authority can only be updated once an hour.");
 
         account_service.check_account_existence(o.owner->account_auths);
 
@@ -838,8 +835,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
         int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
 
-        if (!protocol::detail::config::is_test_net)
-            FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
+        FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
 
         int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / SCORUM_VOTE_REGENERATION_SECONDS;
         int64_t current_power = std::min(int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
