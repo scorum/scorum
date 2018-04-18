@@ -85,12 +85,12 @@ SCORUM_TEST_CASE(check_get_blocks_history_test)
 
     SCORUM_REQUIRE_THROW(_api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
 
-    auto last_irreversible_block_num = dpo_service.get().last_irreversible_block_num;
-    BOOST_REQUIRE_LE(last_irreversible_block_num, MAX_BLOCKS_HISTORY_DEPTH);
+    auto head_block_number = dpo_service.get().head_block_number;
+    BOOST_REQUIRE_LE(head_block_number, MAX_BLOCKS_HISTORY_DEPTH);
 
     blockinfo_tests::block_map_type ret = _api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
-    BOOST_REQUIRE_EQUAL(ret.size(), last_irreversible_block_num);
-    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, last_irreversible_block_num);
+    BOOST_REQUIRE_EQUAL(ret.size(), head_block_number);
+    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, head_block_number);
 
     ret = _api_call.get_blocks_history(transfer_block_num, 1);
     BOOST_REQUIRE_EQUAL(ret.begin()->first, transfer_block_num);
@@ -113,12 +113,12 @@ SCORUM_TEST_CASE(get_block_headers_history_test)
 
     SCORUM_REQUIRE_THROW(_api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
 
-    auto last_irreversible_block_num = dpo_service.get().last_irreversible_block_num;
-    BOOST_REQUIRE_LE(last_irreversible_block_num, MAX_BLOCKS_HISTORY_DEPTH);
+    auto head_block_number = dpo_service.get().head_block_number;
+    BOOST_REQUIRE_LE(head_block_number, MAX_BLOCKS_HISTORY_DEPTH);
 
     blockinfo_tests::blockheader_map_type ret = _api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
-    BOOST_REQUIRE_EQUAL(ret.size(), last_irreversible_block_num);
-    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, last_irreversible_block_num);
+    BOOST_REQUIRE_EQUAL(ret.size(), head_block_number);
+    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, head_block_number);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -49,9 +49,9 @@ private:
         return temp;
     }
 
-    inline uint32_t get_last_irreversible_block() const
+    inline uint32_t get_head_block() const
     {
-        return _db->obtain_service<dbs_dynamic_global_property>().get().last_irreversible_block_num;
+        return _db->obtain_service<dbs_dynamic_global_property>().get().head_block_number;
     }
 
 public:
@@ -156,19 +156,19 @@ public:
 
         try
         {
-            uint32_t last_irreversible_block_num = get_last_irreversible_block();
-            if (block_num > last_irreversible_block_num)
+            uint32_t head_block_num = get_head_block();
+            if (block_num > head_block_num)
             {
-                block_num = last_irreversible_block_num;
+                block_num = head_block_num;
             }
 
-            uint32_t from_block_num = block_num - limit;
+            uint32_t from_block_num = (block_num > limit) ? block_num - limit : 0;
 
             std::map<uint32_t, T> result;
             optional<signed_block> b;
             while (from_block_num != block_num)
             {
-                b = _db->read_block_by_number(block_num);
+                b = _db->fetch_block_by_number(block_num);
                 if (b.valid())
                     result[block_num] = *b; // convert from signed_block to type T
                 --block_num;
