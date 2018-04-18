@@ -31,7 +31,7 @@ public:
         : reward_service(db.obtain_service<dbs_reward>())
         , budget_service(db.obtain_service<dbs_budget>())
         , dev_service(db.obtain_service<dbs_dev_pool>())
-        , reward_fund_service(db.obtain_service<dbs_reward_fund>())
+        , reward_fund_service(db.obtain_service<dbs_reward_fund_scr>())
         , account_service(db.obtain_service<dbs_account>())
         , dgp_service(db.obtain_service<dbs_dynamic_global_property>())
     {
@@ -41,7 +41,7 @@ public:
     dbs_reward& reward_service;
     dbs_budget& budget_service;
     dbs_dev_pool& dev_service;
-    dbs_reward_fund& reward_fund_service;
+    dbs_reward_fund_scr& reward_fund_service;
     dbs_account& account_service;
     dynamic_global_property_service_i& dgp_service;
 

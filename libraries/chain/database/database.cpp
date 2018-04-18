@@ -1910,7 +1910,7 @@ void database::validate_invariants() const
             total_supply += itr->pending_fee;
         }
 
-        total_supply += obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
+        total_supply += obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance_scr;
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get().balance;
 
