@@ -7,6 +7,8 @@
 
 #include <fc/static_variant.hpp>
 
+#include <boost/lambda/lambda.hpp>
+
 namespace scorum {
 namespace blockchain_history {
 
@@ -47,6 +49,11 @@ private:
         return temp;
     }
 
+    inline uint32_t get_last_irreversible_block() const
+    {
+        return _db->obtain_service<dbs_dynamic_global_property>().get().last_irreversible_block_num;
+    }
+
 public:
     blockchain_history_api_impl(scorum::app::application& app)
         : _app(app)
@@ -70,22 +77,21 @@ public:
             return result;
 
         // move to last operation object
-        auto itr = idx.end();
-        --itr;
-        if (itr->id._id > from_op)
+        auto itr = idx.lower_bound(from_op);
+        if (itr == idx.end())
+            --itr;
+
+        auto start = (int64_t(itr->id._id) - limit);
+        auto end = itr->id._id;
+        auto range = idx.range(start < boost::lambda::_1, boost::lambda::_1 <= end);
+
+        for (auto it = range.first; it != range.second; ++it)
         {
-            itr = idx.lower_bound(from_op);
+            auto id = it->id;
+            FC_ASSERT(id._id >= 0, "Invalid operation_object id");
+            result[(uint32_t)id._id] = get_operation(*it);
         }
 
-        auto start = idx.lower_bound(std::max(int64_t(0), int64_t(itr->id._id) - limit));
-        FC_ASSERT(start != idx.end(), "Invalid range");
-        while (itr != start)
-        {
-            auto id = itr->id;
-            FC_ASSERT(id._id >= 0, "Invalid operation_object id");
-            result[(uint32_t)id._id] = get_operation(*itr);
-            --itr;
-        }
         return result;
     }
 
@@ -146,13 +152,11 @@ public:
         FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
                   ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(block_num >= limit, "From must be greater than limit");
+        FC_ASSERT(block_num >= limit, "block_num must be greater than limit");
 
         try
         {
-            const dynamic_global_property_object& dgpo = _db->obtain_service<dbs_dynamic_global_property>().get();
-
-            uint32_t last_irreversible_block_num = dgpo.last_irreversible_block_num;
+            uint32_t last_irreversible_block_num = get_last_irreversible_block();
             if (block_num > last_irreversible_block_num)
             {
                 block_num = last_irreversible_block_num;
