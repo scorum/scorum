@@ -180,12 +180,12 @@ struct producer_reward_operation : public virtual_operation
     }
     producer_reward_operation(const std::string& p, const asset& v)
         : producer(p)
-        , scorumpower(v)
+        , reward(v)
     {
     }
 
     account_name_type producer;
-    asset scorumpower = asset(0, SP_SYMBOL);
+    asset reward; // in SCR or SP
 };
 }
 } // scorum::protocol
@@ -200,4 +200,4 @@ FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
 FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink))
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation, (account)(scorumpower))
 FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward))
-FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(scorumpower))
+FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(reward))

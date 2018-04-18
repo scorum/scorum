@@ -35,7 +35,7 @@ void process_funds::on_apply(block_task_context& ctx)
     {
         const budget_object& budget = budget_service.get_fund_budget();
         asset original_fund_reward = budget_service.allocate_cash(budget);
-        distribute_reward(ctx, original_fund_reward);
+        distribute_reward(ctx, asset(original_fund_reward.amount, SP_SYMBOL));
     }
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
@@ -64,7 +64,6 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
 
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
-    reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     witness_service_i& witness_service = services.witness_service();
 
@@ -79,12 +78,26 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
     }
 
-    const auto producer_reward
-        = account_service.create_scorumpower(account_service.get_account(cwit.owner), witness_reward);
-    ctx.push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
+    const auto& witness = account_service.get_account(cwit.owner);
+    if (SCORUM_SYMBOL == users_reward.symbol())
+    {
+        account_service.increase_balance(witness, witness_reward);
 
-    reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += content_reward; });
-    dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += users_reward; });
+        reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
+        reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += content_reward; });
+    }
+    else if (SP_SYMBOL == users_reward.symbol())
+    {
+        account_service.increase_scorumpower(witness, witness_reward);
+
+        reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
+        reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += content_reward; });
+    }
+
+    ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
+
+    dgp_service.update(
+        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(users_reward.amount, SCORUM_SYMBOL); });
 }
 }
 }
