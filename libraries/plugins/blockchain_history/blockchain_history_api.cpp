@@ -98,22 +98,22 @@ public:
     template <typename Filter> result_type get_ops_in_block(uint32_t block_num, Filter operation_filter) const
     {
         const auto& idx = _db->get_index<operation_index>().indices().get<by_location>();
-        auto itr = idx.lower_bound(block_num);
 
         result_type result;
 
-        applied_operation temp;
-        while (itr != idx.end() && itr->block == block_num)
+        auto range = idx.equal_range(block_num);
+
+        for (auto it = range.first; it != range.second; ++it)
         {
-            auto id = itr->id;
-            temp = *itr;
+            auto id = it->id;
+            applied_operation temp = *it;
             if (operation_filter(temp.op))
             {
                 FC_ASSERT(id._id >= 0, "Invalid operation_object id");
                 result[(uint32_t)id._id] = temp;
             }
-            ++itr;
         }
+
         return result;
     }
 
