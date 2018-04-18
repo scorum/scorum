@@ -85,9 +85,6 @@ public:
     /// SCR value of the maximum payout this post will receive
     asset max_accepted_payout = asset::maximum(SCORUM_SYMBOL);
 
-    /// the percent of SCR to pay, unkept amounts will be received as SP
-    uint16_t percent_scrs = SCORUM_100_PERCENT;
-
     /// allows a post to disable replies.
     bool allow_replies = true;
 
@@ -297,7 +294,7 @@ FC_REFLECT( scorum::chain::comment_object,
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
              (total_vote_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(author_rewards)(net_votes)(root_comment)
-             (max_accepted_payout)(percent_scrs)(allow_replies)(allow_votes)(allow_curation_rewards)
+             (max_accepted_payout)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_object, scorum::chain::comment_index )

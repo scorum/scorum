@@ -144,14 +144,31 @@ public:
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             b.payouts++;
-            b.scr_paid_to_authors += op.scorum_payout.amount;
-            b.scorumpower_paid_to_authors += op.vesting_payout.amount;
+            auto reward_symbol = op.reward.symbol();
+            if (SCORUM_SYMBOL == reward_symbol)
+            {
+                b.scr_paid_to_authors += op.reward.amount;
+            }
+            else if (SP_SYMBOL == reward_symbol)
+            {
+                b.scorumpower_paid_to_authors += op.reward.amount;
+            }
         });
     }
 
     void operator()(const curation_reward_operation& op) const
     {
-        _db.modify(_bucket, [&](bucket_object& b) { b.scorumpower_paid_to_curators += op.reward.amount; });
+        _db.modify(_bucket, [&](bucket_object& b) {
+            auto reward_symbol = op.reward.symbol();
+            if (SCORUM_SYMBOL == reward_symbol)
+            {
+                b.scr_paid_to_curators += op.reward.amount;
+            }
+            else if (SP_SYMBOL == reward_symbol)
+            {
+                b.scorumpower_paid_to_curators += op.reward.amount;
+            }
+        });
     }
 
     void operator()(const transfer_to_scorumpower_operation& op) const

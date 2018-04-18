@@ -49,6 +49,7 @@ struct base_metric
     uint32_t payouts = 0; ///< Number of comment payouts
     share_type scr_paid_to_authors = 0; ///< Amount of SCR paid to authors
     share_type scorumpower_paid_to_authors = 0; ///< Amount of SP paid to authors
+    share_type scr_paid_to_curators = 0; ///< Amount of SCR paid to curators
     share_type scorumpower_paid_to_curators = 0; ///< Amount of SP paid to curators
 };
 
@@ -79,7 +80,7 @@ FC_REFLECT(scorum::blockchain_statistics::base_metric,
            (blocks)(bandwidth)(operations)(transactions)(transfers)(scorum_transferred)(paid_accounts_created)(
                free_accounts_created)(root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(
                replies_deleted)(new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(payouts)(
-               scr_paid_to_authors)(scorumpower_paid_to_authors)(scorumpower_paid_to_curators)(
+               scr_paid_to_authors)(scorumpower_paid_to_authors)(scr_paid_to_curators)(scorumpower_paid_to_curators)(
                transfers_to_scorumpower)(scorum_transferred_to_scorumpower)(new_vesting_withdrawal_requests)(
                modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(
                finished_vesting_withdrawals)(scorumpower_withdrawn)(scorumpower_transferred))

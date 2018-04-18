@@ -31,7 +31,8 @@ public:
         : reward_service(db.obtain_service<dbs_reward>())
         , budget_service(db.obtain_service<dbs_budget>())
         , dev_service(db.obtain_service<dbs_dev_pool>())
-        , reward_fund_service(db.obtain_service<dbs_reward_fund_scr>())
+        , reward_fund_scr_service(db.obtain_service<dbs_reward_fund_scr>())
+        , reward_fund_sp_service(db.obtain_service<dbs_reward_fund_sp>())
         , account_service(db.obtain_service<dbs_account>())
         , dgp_service(db.obtain_service<dbs_dynamic_global_property>())
     {
@@ -41,7 +42,8 @@ public:
     dbs_reward& reward_service;
     dbs_budget& budget_service;
     dbs_dev_pool& dev_service;
-    dbs_reward_fund_scr& reward_fund_service;
+    dbs_reward_fund_scr& reward_fund_scr_service;
+    dbs_reward_fund_sp& reward_fund_sp_service;
     dbs_account& account_service;
     dynamic_global_property_service_i& dgp_service;
 
@@ -56,7 +58,7 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
     generate_block();
 
     const auto& fund_budget = budget_service.get_fund_budget();
-    asset initial_per_block_reward = asset(fund_budget.per_block, SCORUM_SYMBOL);
+    asset initial_per_block_reward = asset(fund_budget.per_block, SP_SYMBOL);
 
     auto witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     auto content_reward = initial_per_block_reward - witness_reward;
@@ -64,32 +66,30 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, NULL_BALANCE);
-    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance, content_reward);
+    BOOST_REQUIRE_EQUAL(reward_fund_sp_service.get().activity_reward_balance, content_reward);
     BOOST_REQUIRE_EQUAL(account.scorumpower, asset(witness_reward.amount, SP_SYMBOL));
 }
 
 SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_budgets)
 {
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
-    auto advertising_budget = asset(2, SCORUM_SYMBOL);
+    asset old_balance = account.balance;
+    auto advertising_budget = ASSET_SCR(1e+5);
     auto deadline = db.get_slot_time(1);
 
     BOOST_CHECK_NO_THROW(budget_service.create_budget(account, advertising_budget, deadline));
 
     generate_block();
 
-    const auto& fund_budget = budget_service.get_fund_budget();
-    asset initial_per_block_reward = asset(fund_budget.per_block, SCORUM_SYMBOL);
-
     auto dev_team_reward = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto user_reward = initial_per_block_reward + advertising_budget - dev_team_reward;
+    auto user_reward = advertising_budget - dev_team_reward;
 
     auto witness_reward = user_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     auto content_reward = user_reward - witness_reward;
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, dev_team_reward);
-    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance, content_reward);
-    BOOST_REQUIRE_EQUAL(account.scorumpower, asset(witness_reward.amount, SP_SYMBOL));
+    BOOST_REQUIRE_EQUAL(reward_fund_scr_service.get().activity_reward_balance, content_reward);
+    BOOST_REQUIRE_EQUAL(account.balance - old_balance, asset(witness_reward.amount, SCORUM_SYMBOL));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

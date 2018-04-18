@@ -67,6 +67,8 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     witness_service_i& witness_service = services.witness_service();
 
+    auto reward_symbol = users_reward.symbol();
+
     // 5% of total per block reward(equal to 10% of users only reward) to witness pay
     asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     asset content_reward = users_reward - witness_reward;
@@ -79,16 +81,18 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     }
 
     const auto& witness = account_service.get_account(cwit.owner);
-    if (SCORUM_SYMBOL == users_reward.symbol())
+    if (SCORUM_SYMBOL == reward_symbol)
     {
         account_service.increase_balance(witness, witness_reward);
 
         reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
         reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += content_reward; });
     }
-    else if (SP_SYMBOL == users_reward.symbol())
+    else if (SP_SYMBOL == reward_symbol)
     {
         account_service.increase_scorumpower(witness, witness_reward);
+
+        dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += witness_reward; });
 
         reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
         reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += content_reward; });

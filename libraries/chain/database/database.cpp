@@ -1911,6 +1911,7 @@ void database::validate_invariants() const
         }
 
         total_supply += obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
+        total_supply += asset(obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get().balance;
 
