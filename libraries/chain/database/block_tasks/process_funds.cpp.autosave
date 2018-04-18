@@ -35,7 +35,7 @@ void process_funds::on_apply(block_task_context& ctx)
     {
         const budget_object& budget = budget_service.get_fund_budget();
         asset original_fund_reward = budget_service.allocate_cash(budget);
-        distribute_reward(ctx, original_fund_reward);
+        distribute_reward(ctx, asset(original_fund_reward.amount, SP_SYMBOL));
     }
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);

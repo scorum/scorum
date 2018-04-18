@@ -9,9 +9,10 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
+using scorum::protocol::asset_symbol_type;
 using scorum::protocol::curve_id;
 
-enum class reward_fund_asset_symbol : uint64_t
+enum class reward_fund_asset_symbol : asset_symbol_type
 {
     scr = SCORUM_SYMBOL,
     sp = SP_SYMBOL,
@@ -27,7 +28,7 @@ public:
 
     id_type id;
 
-    asset activity_reward_balance = asset(0, SymbolType);
+    asset activity_reward_balance = asset(0, (asset_symbol_type)SymbolType);
     fc::uint128_t recent_claims = 0;
     time_point_sec last_update;
     curve_id author_reward_curve;

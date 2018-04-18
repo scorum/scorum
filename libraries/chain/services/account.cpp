@@ -10,7 +10,7 @@ namespace scorum {
 namespace chain {
 
 dbs_account::dbs_account(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
 }
 
@@ -18,7 +18,7 @@ const account_object& dbs_account::get(const account_id_type& account_id) const
 {
     try
     {
-        return db_impl().get(account_id);
+        return get_by<by_id>(account_id);
     }
     FC_CAPTURE_AND_RETHROW((account_id))
 }
@@ -27,14 +27,14 @@ const account_object& dbs_account::get_account(const account_name_type& name) co
 {
     try
     {
-        return db_impl().get<account_object, by_name>(name);
+        return get_by<by_name>(name);
     }
     FC_CAPTURE_AND_RETHROW((name))
 }
 
 bool dbs_account::is_exists(const account_name_type& name) const
 {
-    return nullptr != db_impl().find<account_object, by_name>(name);
+    return find_by<by_name>(name);
 }
 
 const account_authority_object& dbs_account::get_account_authority(const account_name_type& name) const
@@ -49,7 +49,7 @@ const account_authority_object& dbs_account::get_account_authority(const account
 void dbs_account::check_account_existence(const account_name_type& name,
                                           const optional<const char*>& context_type_name) const
 {
-    auto acc = db_impl().find<account_object, by_name>(name);
+    auto acc = find_by<by_name>(name);
     if (context_type_name.valid())
     {
         FC_ASSERT(acc != nullptr, "\"${1}\" \"${2}\" must exist.", ("1", *context_type_name)("2", name));
@@ -86,7 +86,7 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
     const auto& new_account
         = _create_account_objects(new_account_name, account_name_type(), memo_key, json_metadata, owner, owner, owner);
 
-    db_impl().modify(new_account, [&](account_object& acc) {
+    update(new_account, [&](account_object& acc) {
         acc.created_by_genesis = true;
         acc.balance = balance;
     });
@@ -107,7 +107,7 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
 
     const auto& creator = get_account(creator_name);
 
-    db_impl().modify(creator, [&](account_object& c) { c.balance -= fee; });
+    update(creator, [&](account_object& c) { c.balance -= fee; });
 
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
@@ -132,7 +132,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
 
     const auto& creator = get_account(creator_name);
 
-    db_impl().modify(creator, [&](account_object& c) {
+    update(creator, [&](account_object& c) {
         c.balance -= fee;
         c.delegated_scorumpower += delegation;
     });
@@ -140,7 +140,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
 
-    db_impl().modify(new_account, [&](account_object& acc) { acc.received_scorumpower = delegation; });
+    update(new_account, [&](account_object& acc) { acc.received_scorumpower = delegation; });
 
     if (delegation.amount > 0)
     {
@@ -192,7 +192,7 @@ void dbs_account::update_acount(const account_object& account,
 {
     time_point_sec t = db_impl().head_block_time();
 
-    db_impl().modify(account, [&](account_object& acc) {
+    update(account, [&](account_object& acc) {
         if (memo_key != public_key_type())
             acc.memo_key = memo_key;
 
@@ -241,7 +241,7 @@ void dbs_account::update_owner_authority(const account_object& account, const au
 void dbs_account::increase_balance(const account_object& account, const asset& scorums)
 {
     FC_ASSERT(scorums.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& acnt) { acnt.balance += scorums; });
+    update(account, [&](account_object& acnt) { acnt.balance += scorums; });
 }
 
 void dbs_account::decrease_balance(const account_object& account, const asset& scorums)
@@ -252,19 +252,19 @@ void dbs_account::decrease_balance(const account_object& account, const asset& s
 void dbs_account::increase_scorumpower(const account_object& account, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.scorumpower += amount; });
+    update(account, [&](account_object& a) { a.scorumpower += amount; });
 }
 
 void dbs_account::increase_delegated_scorumpower(const account_object& account, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.delegated_scorumpower += amount; });
+    update(account, [&](account_object& a) { a.delegated_scorumpower += amount; });
 }
 
 void dbs_account::increase_received_scorumpower(const account_object& account, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
-    db_impl().modify(account, [&](account_object& a) { a.received_scorumpower += amount; });
+    update(account, [&](account_object& a) { a.received_scorumpower += amount; });
 }
 
 void dbs_account::decrease_received_scorumpower(const account_object& account, const asset& amount)
@@ -274,12 +274,12 @@ void dbs_account::decrease_received_scorumpower(const account_object& account, c
 
 void dbs_account::increase_posting_rewards(const account_object& account, const asset& amount)
 {
-    db_impl().modify(account, [&](account_object& a) { a.posting_rewards += amount; });
+    update(account, [&](account_object& a) { a.posting_rewards += amount; });
 }
 
 void dbs_account::increase_curation_rewards(const account_object& account, const asset& amount)
 {
-    db_impl().modify(account, [&](account_object& a) { a.curation_rewards += amount; });
+    update(account, [&](account_object& a) { a.curation_rewards += amount; });
 }
 
 void dbs_account::drop_challenged(const account_object& account)
@@ -288,7 +288,7 @@ void dbs_account::drop_challenged(const account_object& account)
 
     if (account.active_challenged)
     {
-        db_impl().modify(account, [&](account_object& a) {
+        update(account, [&](account_object& a) {
             a.active_challenged = false;
             a.last_active_proved = t;
         });
@@ -299,7 +299,7 @@ void dbs_account::prove_authority(const account_object& account, bool require_ow
 {
     time_point_sec t = db_impl().head_block_time();
 
-    db_impl().modify(account, [&](account_object& a) {
+    update(account, [&](account_object& a) {
         a.active_challenged = false;
         a.last_active_proved = t;
         if (require_owner)
@@ -312,19 +312,19 @@ void dbs_account::prove_authority(const account_object& account, bool require_ow
 
 void dbs_account::increase_witnesses_voted_for(const account_object& account)
 {
-    db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for++; });
+    update(account, [&](account_object& a) { a.witnesses_voted_for++; });
 }
 
 void dbs_account::decrease_witnesses_voted_for(const account_object& account)
 {
-    db_impl().modify(account, [&](account_object& a) { a.witnesses_voted_for--; });
+    update(account, [&](account_object& a) { a.witnesses_voted_for--; });
 }
 
 void dbs_account::add_post(const account_object& author_account, const account_name_type& parent_author_name)
 {
     time_point_sec t = db_impl().head_block_time();
 
-    db_impl().modify(author_account, [&](account_object& a) {
+    update(author_account, [&](account_object& a) {
         if (parent_author_name == SCORUM_ROOT_POST_PARENT_ACCOUNT)
         {
             a.last_root_post = t;
@@ -338,7 +338,7 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
 {
     time_point_sec t = db_impl().head_block_time();
 
-    db_impl().modify(account, [&](account_object& a) {
+    update(account, [&](account_object& a) {
         a.voting_power = voting_power;
         a.last_vote_time = t;
     });
@@ -413,7 +413,7 @@ void dbs_account::submit_account_recovery(const account_object& account_to_recov
 
     db_impl().remove(*request); // Remove first, update_owner_authority may invalidate iterator
     update_owner_authority(account_to_recover, new_owner_authority);
-    db_impl().modify(account_to_recover, [&](account_object& a) { a.last_account_recovery = t; });
+    update(account_to_recover, [&](account_object& a) { a.last_account_recovery = t; });
 }
 
 void dbs_account::change_recovery_account(const account_object& account_to_recover,
@@ -474,7 +474,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
         /// clear all individual vote records
         clear_witness_votes(account);
 
-        db_impl().modify(account, [&](account_object& a) { a.proxy = (*proxy_account).name; });
+        update(account, [&](account_object& a) { a.proxy = (*proxy_account).name; });
 
         /// add all new votes
         for (int i = 0; i <= SCORUM_MAX_PROXY_RECURSION_DEPTH; ++i)
@@ -483,8 +483,7 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
     else
     { /// we are clearing the proxy which means we simply update the account
-        db_impl().modify(account,
-                         [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
+        update(account, [&](account_object& a) { a.proxy = account_name_type(SCORUM_PROXY_TO_SELF_ACCOUNT); });
     }
 }
 
@@ -494,7 +493,7 @@ const asset dbs_account::create_scorumpower(const account_object& to_account, co
     {
         asset new_scorumpower = asset(scorum.amount, SP_SYMBOL);
 
-        db_impl().modify(to_account, [&](account_object& to) { to.scorumpower += new_scorumpower; });
+        update(to_account, [&](account_object& to) { to.scorumpower += new_scorumpower; });
 
         db_impl().obtain_service<dbs_dynamic_global_property>().update(
             [&](dynamic_global_property_object& props) { props.total_scorumpower += new_scorumpower; });
@@ -517,7 +516,7 @@ void dbs_account::clear_witness_votes(const account_object& account)
         db_impl().remove(current);
     }
 
-    db_impl().modify(account, [&](account_object& acc) { acc.witnesses_voted_for = 0; });
+    update(account, [&](account_object& acc) { acc.witnesses_voted_for = 0; });
 }
 
 void dbs_account::adjust_proxied_witness_votes(
@@ -533,7 +532,7 @@ void dbs_account::adjust_proxied_witness_votes(
 
         const auto& proxy = get_account(account.proxy);
 
-        db_impl().modify(proxy, [&](account_object& a) {
+        update(proxy, [&](account_object& a) {
             for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth - 1; i >= 0; --i)
             {
                 a.proxied_vsf_votes[i + depth] += delta[i];
@@ -563,7 +562,7 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
 
         const auto& proxy = get_account(account.proxy);
 
-        db_impl().modify(proxy, [&](account_object& a) { a.proxied_vsf_votes[depth] += delta; });
+        update(proxy, [&](account_object& a) { a.proxied_vsf_votes[depth] += delta; });
 
         adjust_proxied_witness_votes(proxy, delta, depth + 1);
     }
@@ -571,11 +570,6 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
     {
         witness_service.adjust_witness_votes(account, delta);
     }
-}
-
-void dbs_account::update(const account_object& obj, const modifier_type& modifier)
-{
-    db_impl().modify(obj, [&](account_object& o) { modifier(o); });
 }
 
 const account_object& dbs_account::_create_account_objects(const account_name_type& new_account_name,
@@ -588,7 +582,7 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
 {
     const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
-    const auto& new_account = db_impl().create<account_object>([&](account_object& acc) {
+    const auto& new_account = create([&](account_object& acc) {
         acc.name = new_account_name;
         acc.recovery_account = recovery_account;
         acc.memo_key = memo_key;

@@ -64,7 +64,7 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, NULL_BALANCE);
-    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance_scr, content_reward);
+    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance, content_reward);
     BOOST_REQUIRE_EQUAL(account.scorumpower, asset(witness_reward.amount, SP_SYMBOL));
 }
 
@@ -88,7 +88,7 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_b
     auto content_reward = user_reward - witness_reward;
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, dev_team_reward);
-    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance_scr, content_reward);
+    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance, content_reward);
     BOOST_REQUIRE_EQUAL(account.scorumpower, asset(witness_reward.amount, SP_SYMBOL));
 }
 

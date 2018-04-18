@@ -3,15 +3,15 @@
 namespace scorum {
 namespace chain {
 
-explicit dbs_reward_fund_scr::dbs_reward_fund_scr(database& db)
-    : base_service_type(db)
-{
-}
+// explicit dbs_reward_fund_scr::dbs_reward_fund_scr(database& db)
+//    : base_service_type(db)
+//{
+//}
 
-explicit dbs_reward_fund_sp::dbs_reward_fund_sp(database& db)
-    : base_service_type(db)
-{
-}
+// explicit dbs_reward_fund_sp::dbs_reward_fund_sp(database& db)
+//    : base_service_type(db)
+//{
+//}
 
 // dbs_reward_fund::dbs_reward_fund(database& db)
 //    : dbs_base(db)

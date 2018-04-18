@@ -19,11 +19,8 @@ namespace database_ns {
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services();
-    reward_fund_scr_service_i& reward_fund_service = services.reward_fund_service();
+    reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
     comment_service_i& comment_service = services.comment_service();
-#ifdef CLEAR_VOTES
-    comment_vote_service_i& comment_vote_service = services.comment_vote_service();
-#endif
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
     auto comments = comment_service.get_by_cashout_time();
@@ -44,7 +41,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
         if (comment.net_rshares > 0)
         {
             auto payout = rewards::calculate_payout(
-                comment.net_rshares, total_claims, rf.activity_reward_balance_scr.amount, rf.author_reward_curve,
+                comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
                 comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
             scorum_awarded += pay_for_comment(ctx, comment, asset(payout, SCORUM_SYMBOL));
         }
@@ -70,6 +67,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
         ctx.push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
 
 #ifdef CLEAR_VOTES
+        comment_vote_service_i& comment_vote_service = services.comment_vote_service();
         auto comment_votes = comment_vote_service.get_by_comment(comment.id);
         for (const comment_vote_object& vote : comment_votes)
         {
@@ -81,7 +79,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     // Write the cached fund state back to the database
     reward_fund_service.update([&](reward_fund_scr_object& rfo) {
         rfo.recent_claims = total_claims;
-        rfo.activity_reward_balance_scr -= scorum_awarded;
+        rfo.activity_reward_balance -= scorum_awarded;
         rfo.last_update = dgp_service.head_block_time();
     });
 }

@@ -43,7 +43,6 @@ add_library( scorum_chain
              services/development_committee.cpp
              services/dynamic_global_property.cpp
              services/escrow.cpp
-             services/hardfork_property.cpp
              services/proposal.cpp
              services/proposal_executor.cpp
              services/registration_committee.cpp
@@ -54,7 +53,6 @@ add_library( scorum_chain
              services/withdraw_scorumpower_route.cpp
              services/withdraw_scorumpower_route_statistic.cpp
              services/witness.cpp
-             services/witness_schedule.cpp
              services/witness_vote.cpp
              services/genesis_state.cpp
              services/reward_fund.cpp

@@ -10,7 +10,7 @@ namespace scorum {
 namespace chain {
 
 dbs_decline_voting_rights_request::dbs_decline_voting_rights_request(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
 }
 
@@ -19,33 +19,27 @@ dbs_decline_voting_rights_request::get(const account_id_type& account_id) const
 {
     try
     {
-        return db_impl().get<decline_voting_rights_request_object, by_account>(account_id);
+        return get_by<by_account>(account_id);
     }
     FC_CAPTURE_AND_RETHROW((account_id))
 }
 
 bool dbs_decline_voting_rights_request::is_exists(const account_id_type& account_id) const
 {
-    return nullptr != db_impl().find<decline_voting_rights_request_object, by_account>(account_id);
+    return find_by<by_account>(account_id);
 }
 
 const decline_voting_rights_request_object&
-dbs_decline_voting_rights_request::create(const account_id_type& account, const fc::microseconds& time_to_life)
+dbs_decline_voting_rights_request::create_rights(const account_id_type& account, const fc::microseconds& time_to_life)
 {
     const dynamic_global_property_object& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
-    const auto& new_object
-        = db_impl().create<decline_voting_rights_request_object>([&](decline_voting_rights_request_object& req) {
-              req.account = account;
-              req.effective_date = props.time + time_to_life;
-          });
+    const auto& new_object = create([&](decline_voting_rights_request_object& req) {
+        req.account = account;
+        req.effective_date = props.time + time_to_life;
+    });
 
     return new_object;
-}
-
-void dbs_decline_voting_rights_request::remove(const decline_voting_rights_request_object& req)
-{
-    db_impl().remove(req);
 }
 
 } // namespace chain

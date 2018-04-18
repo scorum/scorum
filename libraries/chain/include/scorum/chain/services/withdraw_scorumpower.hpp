@@ -1,17 +1,12 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <memory>
-#include <vector>
-#include <functional>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-class withdraw_scorumpower_object;
-
-struct withdraw_scorumpower_service_i
+struct withdraw_scorumpower_service_i : public base_service_i<withdraw_scorumpower_object>
 {
     virtual bool is_exists(const account_id_type& from) const = 0;
 
@@ -26,19 +21,9 @@ struct withdraw_scorumpower_service_i
     virtual withdraw_scorumpower_refs_type get_until(const time_point_sec& until) const = 0;
 
     virtual asset get_withdraw_rest(const account_id_type& from) const = 0;
-
-    using modifier_type = std::function<void(withdraw_scorumpower_object&)>;
-
-    virtual const withdraw_scorumpower_object& create(const modifier_type&) = 0;
-
-    virtual void update(const withdraw_scorumpower_object& obj, const modifier_type&) = 0;
-
-    virtual void remove(const withdraw_scorumpower_object& obj) = 0;
 };
 
-class dbs_withdraw_scorumpower_impl;
-
-class dbs_withdraw_scorumpower : public dbs_base, public withdraw_scorumpower_service_i
+class dbs_withdraw_scorumpower : public dbs_service_base<withdraw_scorumpower_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -59,15 +44,6 @@ public:
     virtual withdraw_scorumpower_refs_type get_until(const time_point_sec& until) const override;
 
     virtual asset get_withdraw_rest(const account_id_type& from) const override;
-
-    virtual const withdraw_scorumpower_object& create(const modifier_type&) override;
-
-    virtual void update(const withdraw_scorumpower_object& obj, const modifier_type&) override;
-
-    virtual void remove(const withdraw_scorumpower_object& obj) override;
-
-private:
-    std::unique_ptr<dbs_withdraw_scorumpower_impl> _impl;
 };
 
 } // namespace chain
