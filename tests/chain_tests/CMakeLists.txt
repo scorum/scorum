@@ -3,6 +3,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 set( SOURCES
     main.cpp
     block_tests.cpp
+    chain_api_tests.cpp
     operation_tests.cpp
     escrow_transfer_operation_tests.cpp
     account_data_service_tests.cpp
