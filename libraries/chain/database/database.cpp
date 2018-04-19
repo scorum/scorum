@@ -93,10 +93,20 @@ database_impl::database_impl(database& self)
 }
 
 database::database()
+#ifdef IS_LOW_MEM
+    : database(opt_log_hardforks)
+#else
+    : database(opt_log_hardforks | opt_notify_virtual_op_applying)
+#endif
+{
+}
+
+database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
     , _my(new database_impl(*this))
+    , _options(options)
 {
 }
 
@@ -875,14 +885,13 @@ void database::notify_post_apply_operation(const operation_notification& note)
 
 inline void database::push_virtual_operation(const operation& op)
 {
-#if defined(IS_LOW_MEM)
-    return;
-#endif
-
-    FC_ASSERT(is_virtual_operation(op));
-    operation_notification note(op);
-    notify_pre_apply_operation(note);
-    notify_post_apply_operation(note);
+    if (_options & opt_notify_virtual_op_applying)
+    {
+        FC_ASSERT(is_virtual_operation(op));
+        operation_notification note(op);
+        notify_pre_apply_operation(note);
+        notify_post_apply_operation(note);
+    }
 }
 
 inline void database::push_hf_operation(const operation& op)
@@ -1842,7 +1851,7 @@ void database::set_hardfork(uint32_t hardfork, bool apply_now)
 
 void database::apply_hardfork(uint32_t hardfork)
 {
-    if (_log_hardforks)
+    if (_options & opt_log_hardforks)
     {
         elog("HARDFORK ${hf} at block ${b}", ("hf", hardfork)("b", head_block_num()));
     }

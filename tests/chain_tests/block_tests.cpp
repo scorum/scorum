@@ -76,7 +76,6 @@ void db_setup_and_open(database& db, const fc::path& path)
 
     genesis = database_integration_fixture::create_default_genesis_state();
 
-    db._log_hardforks = false;
     db.open(path, path, TEST_SHARED_MEM_SIZE_10MB, chainbase::database::read_write, genesis);
 }
 

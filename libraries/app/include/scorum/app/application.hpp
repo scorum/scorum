@@ -62,6 +62,7 @@ class application
 {
 public:
     application();
+    application(std::shared_ptr<chain::database> db);
     ~application();
 
     void set_program_options(boost::program_options::options_description& command_line_options,
