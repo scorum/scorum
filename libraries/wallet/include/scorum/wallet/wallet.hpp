@@ -170,11 +170,6 @@ public:
     std::vector<account_name_type> get_active_witnesses() const;
 
     /**
-     * Returns the state info associated with the URL
-     */
-    app::state get_state(const std::string& url);
-
-    /**
      * Returns vesting withdraw routes for an account.
      *
      * @param account Account to query routes
@@ -1339,7 +1334,6 @@ FC_API( scorum::wallet::wallet_api,
         (get_account_history)
         (get_account_scr_to_scr_transfers)
         (get_account_scr_to_sp_transfers)
-        (get_state)
         (get_withdraw_routes)
         (list_my_budgets)
         (list_budget_owners)
@@ -1407,7 +1401,7 @@ FC_API( scorum::wallet::wallet_api,
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
 
-        //Atomic Swap API
+        // Atomic Swap API
         (atomicswap_initiate)
         (atomicswap_participate)
         (atomicswap_redeem)
