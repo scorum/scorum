@@ -1093,7 +1093,7 @@ public:
 }
 
 application::application()
-    : application(std::make_shared<chain::database>())
+    : application(std::make_shared<chain::database>(chain::database::opt_default))
 {
 }
 

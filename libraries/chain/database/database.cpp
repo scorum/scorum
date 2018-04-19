@@ -92,15 +92,6 @@ database_impl::database_impl(database& self)
 {
 }
 
-database::database()
-#ifdef IS_LOW_MEM
-    : database(opt_log_hardforks)
-#else
-    : database(opt_log_hardforks | opt_notify_virtual_op_applying)
-#endif
-{
-}
-
 database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)

@@ -53,10 +53,15 @@ public:
     {
         opt_none = 0,
         opt_log_hardforks = 1 << 0,
-        opt_notify_virtual_op_applying = 1 << 1
+        opt_notify_virtual_op_applying = 1 << 1,
+
+#ifdef IS_LOW_MEM
+        opt_default = opt_log_hardforks
+#else
+        opt_default = opt_log_hardforks | opt_notify_virtual_op_applying
+#endif
     };
 
-    database();
     database(uint32_t opt);
     virtual ~database();
 
