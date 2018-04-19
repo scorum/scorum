@@ -31,9 +31,11 @@
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
         (account)
+        (account_blogging_statistic)
         (atomicswap)
         (budget)
         (comment)
+        (comment_statistic)
         (comment_vote)
         (decline_voting_rights_request)
         (dynamic_global_property)

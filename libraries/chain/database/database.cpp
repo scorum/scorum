@@ -1118,12 +1118,14 @@ void database::initialize_indexes()
 {
     add_index<account_authority_index>();
     add_index<account_index>();
+    add_index<account_blogging_statistic_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
     add_index<budget_index>();
     add_index<chain_property_index>();
     add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
+    add_index<comment_statistic_index>();
     add_index<comment_vote_index>();
     add_index<decline_voting_rights_request_index>();
     add_index<dynamic_global_property_index>();

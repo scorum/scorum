@@ -168,7 +168,8 @@ BOOST_AUTO_TEST_CASE(old_tests)
                             (db.obtain_service<dbs_account>().get_account("sam").scorumpower - sam_sp_before));
 
         // clang-format off
-        BOOST_REQUIRE_EQUAL(asset(db.obtain_service<dbs_comment>().get("alice", std::string("test")).beneficiary_payout_value.amount, SP_SYMBOL),
+        const auto &alice_post_id = db.obtain_service<dbs_comment>().get("alice", std::string("test")).id;
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_comment_statistic>().get(alice_post_id).beneficiary_payout_sp_value,
                             (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
         // clang-format on
     }

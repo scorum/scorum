@@ -36,6 +36,7 @@ enum object_type
 {
     account_authority_object_type,
     account_object_type,
+    account_blogging_statistic_object_type,
     account_recovery_request_object_type,
     atomicswap_contract_object_type,
     block_stats_object_type,
@@ -44,6 +45,7 @@ enum object_type
     chain_property_object_type,
     change_recovery_account_request_object_type,
     comment_object_type,
+    comment_statistic_object_type,
     comment_vote_object_type,
     decline_voting_rights_request_object_type,
     dynamic_global_property_object_type,
@@ -71,6 +73,7 @@ enum object_type
 
 class account_authority_object;
 class account_object;
+class account_blogging_statistic_object;
 class account_recovery_request_object;
 class atomicswap_contract_object;
 class block_stats_object;
@@ -79,6 +82,7 @@ class budget_object;
 class chain_property_object;
 class change_recovery_account_request_object;
 class comment_object;
+class comment_statistic_object;
 class comment_vote_object;
 class decline_voting_rights_request_object;
 class dynamic_global_property_object;
@@ -103,6 +107,7 @@ class dev_committee_member_object;
 
 using account_authority_id_type = oid<account_authority_object>;
 using account_id_type = oid<account_object>;
+using account_blogging_statistic_id_type = oid<account_blogging_statistic_object>;
 using account_recovery_request_id_type = oid<account_recovery_request_object>;
 using atomicswap_contract_id_type = oid<atomicswap_contract_object>;
 using block_stats_id_type = oid<block_stats_object>;
@@ -111,6 +116,7 @@ using budget_id_type = oid<budget_object>;
 using chain_property_id_type = oid<chain_property_object>;
 using change_recovery_account_request_id_type = oid<change_recovery_account_request_object>;
 using comment_id_type = oid<comment_object>;
+using comment_statistic_id_type = oid<comment_statistic_object>;
 using comment_vote_id_type = oid<comment_vote_object>;
 using decline_voting_rights_request_id_type = oid<decline_voting_rights_request_object>;
 using dynamic_global_property_id_type = oid<dynamic_global_property_object>;
@@ -149,6 +155,7 @@ enum bandwidth_type
 FC_REFLECT_ENUM(scorum::chain::object_type,
                 (account_authority_object_type)
                 (account_object_type)
+                (account_blogging_statistic_object_type)
                 (account_recovery_request_object_type)
                 (atomicswap_contract_object_type)
                 (block_stats_object_type)
@@ -157,6 +164,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (chain_property_object_type)
                 (change_recovery_account_request_object_type)
                 (comment_object_type)
+                (comment_statistic_object_type)
                 (comment_vote_object_type)
                 (decline_voting_rights_request_object_type)
                 (dynamic_global_property_object_type)

@@ -454,7 +454,6 @@ database_api_impl::lookup_account_names(const std::vector<std::string>& account_
 {
     std::vector<optional<account_api_obj>> result;
     result.reserve(account_names.size());
-
     for (auto& name : account_names)
     {
         auto itr = _db.find<account_object, by_name>(name);
@@ -923,7 +922,7 @@ discussion database_api::get_content(const std::string& author, const std::strin
         auto itr = by_permlink_idx.find(boost::make_tuple(author, permlink));
         if (itr != by_permlink_idx.end())
         {
-            discussion result(*itr);
+            discussion result(*itr, my->_db);
             set_pending_payout(result);
             result.active_votes = get_active_votes(author, permlink);
             return result;
@@ -1039,7 +1038,7 @@ std::vector<discussion> database_api::get_content_replies(const std::string& aut
         while (itr != by_permlink_idx.end() && itr->parent_author == author
                && fc::to_string(itr->parent_permlink) == permlink)
         {
-            result.push_back(discussion(*itr));
+            result.push_back(discussion(*itr, my->_db));
             set_pending_payout(result.back());
             ++itr;
         }
@@ -1183,7 +1182,7 @@ std::vector<discussion> database_api::get_replies_by_last_update(account_name_ty
 
         while (itr != last_update_idx.end() && result.size() < limit && itr->parent_author == *parent_author)
         {
-            result.push_back(*itr);
+            result.emplace_back(*itr, my->_db);
             set_pending_payout(result.back());
             result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
             ++itr;
@@ -1247,7 +1246,7 @@ std::vector<tag_api_obj> database_api::get_trending_tags(const std::string& afte
 
 discussion database_api::get_discussion(comment_id_type id, uint32_t truncate_body) const
 {
-    discussion d = my->_db.get(id);
+    discussion d(my->_db.get(id), my->_db);
     set_url(d);
     set_pending_payout(d);
     d.active_votes = get_active_votes(d.author, d.permlink);
@@ -1647,7 +1646,7 @@ std::vector<discussion> database_api::get_discussions_by_author_before_date(cons
             {
                 if (itr->parent_author.size() == 0)
                 {
-                    result.push_back(*itr);
+                    result.emplace_back(*itr, my->_db);
                     set_pending_payout(result.back());
                     result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
                     ++count;
@@ -1807,7 +1806,7 @@ state database_api::get_state(std::string path) const
                         {
                             const auto link = acnt + "/" + fc::to_string(itr->permlink);
                             eacnt.comments->push_back(link);
-                            _state.content[link] = *itr;
+                            _state.content[link] = discussion(*itr, my->_db);
                             set_pending_payout(_state.content[link]);
                             ++count;
                         }

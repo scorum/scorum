@@ -47,10 +47,11 @@ struct account_vote
 
 struct discussion : public comment_api_obj
 {
-    discussion(const comment_object& o)
-        : comment_api_obj(o)
+    discussion(const comment_object& o, const database& db)
+        : comment_api_obj(o, db)
     {
     }
+
     discussion()
     {
     }

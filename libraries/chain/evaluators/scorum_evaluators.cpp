@@ -329,7 +329,10 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
 void comment_evaluator::do_apply(const comment_operation& o)
 {
     account_service_i& account_service = db().account_service();
+    account_blogging_statistic_service_i& account_blogging_statistic_service
+        = db().account_blogging_statistic_service();
     comment_service_i& comment_service = db().comment_service();
+    comment_statistic_service_i& comment_statistic_service = db().comment_statistic_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     try
@@ -396,7 +399,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 pr_root_comment = parent.root_comment;
             }
 
-            comment_service.create([&](comment_object& com) {
+            const comment_object& new_comment = comment_service.create([&](comment_object& com) {
 
                 com.author = o.author;
                 fc::from_string(com.permlink, o.permlink);
@@ -437,6 +440,18 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #endif
             });
 
+            comment_statistic_service.create([&](comment_statistic_object& stat) { stat.comment = new_comment.id; });
+
+#ifndef IS_LOW_MEM
+            {
+                const auto& author_stat = account_blogging_statistic_service.obtain(auth.id);
+                account_blogging_statistic_service.add_post(author_stat);
+                if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+                {
+                    account_blogging_statistic_service.add_comment(author_stat);
+                }
+            }
+#endif
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
             while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
@@ -792,6 +807,8 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
 void vote_evaluator::do_apply(const vote_operation& o)
 {
     account_service_i& account_service = db().account_service();
+    account_blogging_statistic_service_i& account_blogging_statistic_service
+        = db().account_blogging_statistic_service();
     comment_service_i& comment_service = db().comment_service();
     comment_vote_service_i& comment_vote_service = db().comment_vote_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
@@ -914,6 +931,13 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     cv.weight = 0;
                 }
             });
+
+#ifndef IS_LOW_MEM
+            {
+                const auto& voter_stat = account_blogging_statistic_service.obtain(voter.id);
+                account_blogging_statistic_service.add_vote(voter_stat);
+            }
+#endif
 
             if (max_vote_weight) // Optimization
             {
