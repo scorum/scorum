@@ -1,5 +1,6 @@
 #include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
 
+#include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -13,9 +14,13 @@
 #include <scorum/rewards_math/curve.hpp>
 #include <scorum/rewards_math/formulas.hpp>
 
+#include <map>
+
 namespace scorum {
 namespace chain {
 namespace database_ns {
+
+using scorum::rewards::share_types;
 
 class process_comments_cashout_impl
 {
@@ -26,10 +31,44 @@ public:
         , account_service(ctx.services().account_service())
         , comment_service(ctx.services().comment_service())
         , comment_vote_service(ctx.services().comment_vote_service())
+        , reward_fund_scr_service(ctx.services().reward_fund_scr_service())
+        , reward_fund_sp_service(ctx.services().reward_fund_sp_service())
     {
     }
 
-    template <typename FundService> void apply(FundService& fund_service)
+    void apply()
+    {
+        comment_map_refs_type rewarded;
+
+        apply_for_scr_fund(rewarded);
+        apply_for_sp_fund(rewarded);
+
+        for (const auto& p : rewarded)
+        {
+            const comment_object& comment = p.second;
+            close_comment_payout(comment);
+        }
+    }
+
+private:
+    using comment_map_refs_type = std::map<comment_object::id_type, std::reference_wrapper<const comment_object>>;
+
+    void apply_for_scr_fund(comment_map_refs_type& rewarded)
+    {
+        if (reward_fund_scr_service.get().activity_reward_balance.amount > 0)
+        {
+            reward(reward_fund_scr_service, rewarded);
+        }
+    }
+    void apply_for_sp_fund(comment_map_refs_type& rewarded)
+    {
+        if (reward_fund_sp_service.get().activity_reward_balance.amount > 0)
+        {
+            reward(reward_fund_sp_service, rewarded);
+        }
+    }
+
+    template <typename FundService> void reward(FundService& fund_service, comment_map_refs_type& rewarded)
     {
         using fund_object_type = typename FundService::object_type;
 
@@ -57,7 +96,7 @@ public:
                 reward += pay_for_comment(comment, asset(payout, reward_symbol));
             }
 
-            close_comment_payout(comment);
+            rewarded.insert(comment_map_refs_type::value_type(comment.id, std::cref(comment)));
         }
 
         // Write the cached fund state back to the database
@@ -68,7 +107,6 @@ public:
         });
     }
 
-private:
     share_types get_total_rshares(const comment_service_i::comment_refs_type& comments)
     {
         share_types ret;
@@ -106,7 +144,7 @@ private:
                 for (auto& b : comment.beneficiaries)
                 {
                     asset benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                    pay_to(account_service.get_account(b.account), benefactor_tokens);
+                    pay_account(account_service.get_account(b.account), benefactor_tokens);
                     _ctx.push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
                     total_beneficiary += benefactor_tokens;
                 }
@@ -114,7 +152,7 @@ private:
                 author_tokens -= total_beneficiary;
 
                 const auto& author = account_service.get_account(comment.author);
-                pay_to(author, author_tokens);
+                pay_account(author, author_tokens);
 
                 _ctx.push_virtual_operation(author_reward_operation(comment.author, fc::to_string(comment.permlink), author_tokens));
                 _ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), claimed_reward));
@@ -155,7 +193,7 @@ private:
                         unclaimed_rewards -= claim;
 
                         const auto& voter = account_service.get(vote.voter);
-                        pay_to(voter, claim);
+                        pay_account(voter, claim);
 
                         _ctx.push_virtual_operation(
                             curation_reward_operation(voter.name, claim, comment.author, fc::to_string(comment.permlink)));
@@ -202,7 +240,7 @@ private:
     #endif
     }
 
-    void pay_to(const account_object &recipient, const asset &reward)
+    void pay_account(const account_object &recipient, const asset &reward)
     {
         if (SCORUM_SYMBOL == reward.symbol())
         {
@@ -248,33 +286,15 @@ private:
     account_service_i& account_service;
     comment_service_i& comment_service;
     comment_vote_service_i& comment_vote_service;
+    reward_fund_scr_service_i& reward_fund_scr_service;
+    reward_fund_sp_service_i& reward_fund_sp_service;
 };
 
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
     process_comments_cashout_impl impl(ctx);
 
-    apply_for_scr_fund(ctx, impl);
-    apply_for_sp_fund(ctx, impl);
-}
-
-void process_comments_cashout::apply_for_scr_fund(block_task_context& ctx, process_comments_cashout_impl &impl)
-{
-    reward_fund_scr_service_i& reward_fund_service = ctx.services().reward_fund_scr_service();
-
-    if (reward_fund_service.get().activity_reward_balance.amount > 0)
-    {
-        impl.apply(reward_fund_service);
-    }
-}
-void process_comments_cashout::apply_for_sp_fund(block_task_context& ctx, process_comments_cashout_impl &impl)
-{
-    reward_fund_sp_service_i& reward_fund_service = ctx.services().reward_fund_sp_service();
-
-    if (reward_fund_service.get().activity_reward_balance.amount > 0)
-    {
-        impl.apply(reward_fund_service);
-    }
+    impl.apply();
 }
 
 }

@@ -72,9 +72,14 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
 
 SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_budgets)
 {
+    //          | r[i] + max(1, r[i]*5/100) if B > r[i]*D(100),
+    // r[i+1] = | max(1, r[i] - r[i]*5/100) if B < r[i]*D(30),                          (1)
+    //          | r[i]                      if B in [r[i]*D(30), r[i]*D(100)].
+    //
+    // TODO: there are not tests for this formula.
+
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
-    asset old_balance = account.balance;
-    auto advertising_budget = ASSET_SCR(1e+5);
+    auto advertising_budget = ASSET_SCR(2e+9);
     auto deadline = db.get_slot_time(1);
 
     BOOST_CHECK_NO_THROW(budget_service.create_budget(account, advertising_budget, deadline));
@@ -82,14 +87,15 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_b
     generate_block();
 
     auto dev_team_reward = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto user_reward = advertising_budget - dev_team_reward;
+
+    // We get two SCORUM_MIN_PER_BLOCK_REWARD after one block by (1) for advertising_budget = 2.000000000 SCR
+    auto user_reward = SCORUM_MIN_PER_BLOCK_REWARD * 2;
 
     auto witness_reward = user_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     auto content_reward = user_reward - witness_reward;
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, dev_team_reward);
     BOOST_REQUIRE_EQUAL(reward_fund_scr_service.get().activity_reward_balance, content_reward);
-    BOOST_REQUIRE_EQUAL(account.balance - old_balance, asset(witness_reward.amount, SCORUM_SYMBOL));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
