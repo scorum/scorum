@@ -10,7 +10,7 @@ class blockchain_statistics_api_impl : public common_statistics::common_statisti
 {
 public:
     blockchain_statistics_api_impl(scorum::app::application& app)
-        : base_api_impl(app, blockchain_monitoring_plugin_NAME)
+        : base_api_impl(app, BLOCKCHAIN_MONITORING_PLUGIN_NAME)
     {
     }
 };

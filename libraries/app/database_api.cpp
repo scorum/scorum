@@ -204,12 +204,6 @@ dynamic_global_property_api_obj database_api::get_dynamic_global_properties() co
     return my->_db.with_read_lock([&]() { return my->get_dynamic_global_properties(); });
 }
 
-chain_properties database_api::get_chain_properties() const
-{
-    return my->_db.with_read_lock(
-        [&]() { return my->_db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props; });
-}
-
 dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties() const
 {
     dynamic_global_property_api_obj gpao;
@@ -246,32 +240,6 @@ chain_id_type database_api_impl::get_chain_id() const
 witness_schedule_api_obj database_api::get_witness_schedule() const
 {
     return my->_db.with_read_lock([&]() { return my->_db.get(witness_schedule_id_type()); });
-}
-
-hardfork_version database_api::get_hardfork_version() const
-{
-    return my->_db.with_read_lock([&]() { return my->_db.get(hardfork_property_id_type()).current_hardfork_version; });
-}
-
-scheduled_hardfork database_api::get_next_scheduled_hardfork() const
-{
-    return my->_db.with_read_lock([&]() {
-        scheduled_hardfork shf;
-        const auto& hpo = my->_db.get(hardfork_property_id_type());
-        shf.hf_version = hpo.next_hardfork;
-        shf.live_time = hpo.next_hardfork_time;
-        return shf;
-    });
-}
-
-reward_fund_api_obj database_api::get_reward_fund() const
-{
-    return my->_db.with_read_lock([&]() {
-        auto fund = my->_db.find<reward_fund_object>();
-        FC_ASSERT(fund != nullptr, "reward fund object does not exist");
-
-        return *fund;
-    });
 }
 
 //////////////////////////////////////////////////////////////////////

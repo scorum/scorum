@@ -2,6 +2,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 
 #include <scorum/app/api.hpp>
+#include <scorum/app/chain_api.hpp>
 #include <scorum/protocol/base.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/wallet/api_documentation.hpp>
@@ -143,6 +144,7 @@ public:
         , _chain_id(initial_data.chain_id)
         , _remote_api(rapi)
         , _remote_db(rapi->get_api_by_name("database_api")->as<database_api>())
+        , _chain_api(rapi->get_api_by_name(CHAIN_API)->as<chain_api>())
         , _remote_net_broadcast(rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>())
     {
         init_prototype_ops();
@@ -219,7 +221,7 @@ public:
         fc::mutable_variant_object result = fc::variant(dynamic_props).get_object();
 
         result["witness_majority_version"] = fc::string(dynamic_props.majority_version);
-        result["hardfork_version"] = fc::string(_remote_db->get_hardfork_version());
+        result["hardfork_version"] = fc::string(_chain_api->get_chain_properties().hf_version);
 
         result["chain_properties"] = fc::variant(dynamic_props.median_chain_props).get_object();
 
@@ -442,7 +444,7 @@ public:
 
             account_create_op.creator = creator_account_name;
             account_create_op.new_account_name = account_name;
-            account_create_op.fee = _remote_db->get_chain_properties().account_creation_fee;
+            account_create_op.fee = _chain_api->get_chain_properties().median_chain_props.account_creation_fee;
             account_create_op.owner = authority(1, owner_pubkey, 1);
             account_create_op.active = authority(1, active_pubkey, 1);
             account_create_op.memo_key = memo_pubkey;
@@ -983,6 +985,7 @@ public:
 
     fc::api<login_api> _remote_api;
     fc::api<database_api> _remote_db;
+    fc::api<chain_api> _chain_api;
     fc::api<network_broadcast_api> _remote_net_broadcast;
     optional<fc::api<network_node_api>> _remote_net_node;
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
@@ -1357,8 +1360,8 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
         op.posting = authority(1, posting, 1);
         op.memo_key = memo;
         op.json_metadata = json_meta;
-        op.fee
-            = my->_remote_db->get_chain_properties().account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
+        op.fee = my->_chain_api->get_chain_properties().median_chain_props.account_creation_fee
+            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
 
         signed_transaction tx;
         tx.operations.push_back(op);

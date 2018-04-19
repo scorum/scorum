@@ -3,8 +3,8 @@
 
 #include <scorum/blockchain_monitoring/schema/bucket_object.hpp>
 
-#ifndef blockchain_monitoring_plugin_NAME
-#define blockchain_monitoring_plugin_NAME "chain_stats"
+#ifndef BLOCKCHAIN_MONITORING_PLUGIN_NAME
+#define BLOCKCHAIN_MONITORING_PLUGIN_NAME "chain_stats"
 #endif
 
 namespace scorum {
@@ -24,7 +24,7 @@ public:
 
     virtual std::string plugin_name() const override
     {
-        return blockchain_monitoring_plugin_NAME;
+        return BLOCKCHAIN_MONITORING_PLUGIN_NAME;
     }
     virtual void plugin_set_program_options(boost::program_options::options_description& cli,
                                             boost::program_options::options_description& cfg) override;

@@ -21,33 +21,12 @@
 
 #include <scorum/witness/witness_objects.hpp>
 
+#include <scorum/app/schema/api_template.hpp>
+
 namespace scorum {
 namespace app {
 
 using namespace scorum::chain;
-
-template <class T> class api_obj : public T
-{
-    struct constructor
-    {
-        void operator()(const T&)
-        {
-        }
-    };
-
-public:
-    api_obj()
-        : T(constructor(), std::allocator<T>())
-    {
-    }
-
-    api_obj(const T& other)
-        : T(constructor(), std::allocator<T>())
-    {
-        T& base = static_cast<T&>(*this);
-        base = other;
-    }
-};
 
 typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
@@ -55,7 +34,6 @@ typedef api_obj<scorum::chain::change_recovery_account_request_object> change_re
 typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
 typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
 typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
-typedef api_obj<scorum::chain::reward_fund_object> reward_fund_api_obj;
 typedef api_obj<scorum::chain::scorumpower_delegation_expiration_object> scorumpower_delegation_expiration_api_obj;
 typedef api_obj<scorum::chain::scorumpower_delegation_object> scorumpower_delegation_api_obj;
 typedef api_obj<scorum::chain::withdraw_scorumpower_route_object> withdraw_scorumpower_route_api_obj;
@@ -607,7 +585,6 @@ FC_REFLECT_DERIVED(scorum::app::change_recovery_account_request_api_obj, (scorum
 FC_REFLECT_DERIVED(scorum::app::comment_vote_api_obj, (scorum::chain::comment_vote_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::decline_voting_rights_request_api_obj, (scorum::chain::decline_voting_rights_request_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::escrow_api_obj, (scorum::chain::escrow_object), BOOST_PP_SEQ_NIL)
-FC_REFLECT_DERIVED(scorum::app::reward_fund_api_obj, (scorum::chain::reward_fund_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::scorumpower_delegation_api_obj, (scorum::chain::scorumpower_delegation_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::scorumpower_delegation_expiration_api_obj, (scorum::chain::scorumpower_delegation_expiration_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::withdraw_scorumpower_route_api_obj, (scorum::chain::withdraw_scorumpower_route_object), BOOST_PP_SEQ_NIL)

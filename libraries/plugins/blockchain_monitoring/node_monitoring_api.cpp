@@ -62,9 +62,9 @@ public:
 
     std::shared_ptr<blockchain_monitoring_plugin> get_plugin() const
     {
-        auto plugin = _app.get_plugin<blockchain_monitoring_plugin>(blockchain_monitoring_plugin_NAME);
+        auto plugin = _app.get_plugin<blockchain_monitoring_plugin>(BLOCKCHAIN_MONITORING_PLUGIN_NAME);
 
-        FC_ASSERT(plugin, "Cann't get " blockchain_monitoring_plugin_NAME " plugin from application.");
+        FC_ASSERT(plugin, "Cann't get " BLOCKCHAIN_MONITORING_PLUGIN_NAME " plugin from application.");
 
         return plugin;
     }

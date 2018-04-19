@@ -30,12 +30,6 @@ using namespace scorum::protocol;
 
 struct api_context;
 
-struct scheduled_hardfork
-{
-    hardfork_version hf_version;
-    fc::time_point_sec live_time;
-};
-
 struct withdraw_route
 {
     std::string from_account;
@@ -123,11 +117,7 @@ public:
      * @brief Retrieve the current @ref dynamic_global_property_object
      */
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
-    chain_properties get_chain_properties() const;
     witness_schedule_api_obj get_witness_schedule() const;
-    hardfork_version get_hardfork_version() const;
-    scheduled_hardfork get_next_scheduled_hardfork() const;
-    reward_fund_api_obj get_reward_fund() const;
 
     //////////
     // Keys //
@@ -413,7 +403,6 @@ private:
 
 // clang-format off
 
-FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) )
 FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 
 FC_REFLECT( scorum::app::discussion_query, (tag)(filter_tags)(select_tags)(select_authors)(truncate_body)(start_author)(start_permlink)(parent_author)(parent_permlink)(limit) )
@@ -446,11 +435,8 @@ FC_API(scorum::app::database_api,
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
-   (get_chain_properties)
    (get_witness_schedule)
-   (get_hardfork_version)
-   (get_next_scheduled_hardfork)
-   (get_reward_fund)
+   
 
    // Keys
    (get_key_references)

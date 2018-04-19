@@ -3,6 +3,7 @@ file(GLOB EGENESIS_HEADERS "../egenesis/include/scorum/app/*.hpp")
 
 add_library( scorum_app
              database_api.cpp
+             chain_api.cpp
              api.cpp
              application.cpp
              impacted.cpp
