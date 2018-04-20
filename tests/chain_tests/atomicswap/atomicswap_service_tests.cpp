@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/atomicswap.hpp>
@@ -30,7 +29,7 @@ public:
         account_service.increase_balance(alice, ALICE_BALANCE);
         account_service.increase_balance(bob, BOB_BALANCE);
 
-        for (int ci = 0; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1; ++ci)
+        for (uint32_t ci = 0; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER + 1; ++ci)
         {
             std::stringstream store;
             store << "man" << ci;
@@ -121,7 +120,7 @@ SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_owner)
 {
     std::string secret_hash = atomicswap::get_secret_hash(ALICE_SECRET);
 
-    int ci = 0;
+    uint32_t ci = 0;
     for (; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_OWNER; ++ci)
     {
         const account_object& man = account_service.get_account(people[ci]);
@@ -145,7 +144,7 @@ SCORUM_TEST_CASE(create_initiator_contract_check_limit_per_recipient)
 {
     std::string secret_hash = atomicswap::get_secret_hash(MAN_SECRET);
 
-    int ci = 0;
+    uint32_t ci = 0;
     for (; ci < SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT; ++ci)
     {
         const account_object& man = account_service.get_account(people[ci]);
@@ -253,5 +252,3 @@ SCORUM_TEST_CASE(refund)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

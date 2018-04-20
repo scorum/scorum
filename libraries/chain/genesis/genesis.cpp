@@ -72,7 +72,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
         db_genesis genesis(*this, genesis_state);
 
         // Nothing to do
-        for (int i = 0; i <= SCORUM_BLOCKID_POOL_SIZE; ++i)
+        for (uint32_t i = 0; i <= SCORUM_BLOCKID_POOL_SIZE; ++i)
             create<block_summary_object>([&](block_summary_object&) {});
 
         create<hardfork_property_object>(

@@ -17,14 +17,13 @@ void test_database(const genesis_state_type& genesis, unsigned int shared_mem_mb
 
     uint64_t test_shared_mem_size = (uint64_t)shared_mem_mb_size * 1024 * 1024;
 
-    chain::database db;
+    chain::database db(chain::database::opt_notify_virtual_op_applying);
 
     ilog("Test starting.");
 
     try
     {
         fc::temp_directory data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
-        db._log_hardforks = false;
         db.open(data_dir.path(), data_dir.path(), test_shared_mem_size, chainbase::database::read_write, genesis);
 
         ilog("Test completed. Database is opened successfully.");

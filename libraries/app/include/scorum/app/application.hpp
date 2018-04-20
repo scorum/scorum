@@ -62,6 +62,7 @@ class application
 {
 public:
     application();
+    application(std::shared_ptr<chain::database> db);
     ~application();
 
     void set_program_options(boost::program_options::options_description& command_line_options,
@@ -115,9 +116,8 @@ public:
      */
     template <typename Api> void register_api_factory(const std::string& name)
     {
-#ifndef IS_TEST_NET
         idump((name));
-#endif
+
         register_api_factory(name, [](const api_context& ctx) -> fc::api_ptr {
             // apparently the compiler is smart enough to downcast shared_ptr< api<Api> > to shared_ptr< api_base >
             // automatically

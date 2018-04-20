@@ -23,7 +23,7 @@ Actor database_fixture::database_integration_fixture::initdelegate = Actor(TEST_
 namespace database_fixture {
 
 database_integration_fixture::database_integration_fixture()
-    : app()
+    : app(std::make_shared<database>(database::opt_notify_virtual_op_applying))
     , db(*app.chain_database())
     , debug_key(graphene::utilities::key_to_wif(initdelegate.private_key))
     , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
@@ -145,7 +145,6 @@ void database_integration_fixture::open_database_impl(const genesis_state_type& 
     if (!data_dir)
     {
         data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
-        db._log_hardforks = false;
         db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_10MB, chainbase::database::read_write,
                 genesis);
         genesis_state = genesis;
