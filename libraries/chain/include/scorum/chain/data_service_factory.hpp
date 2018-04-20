@@ -10,6 +10,7 @@ DATA_SERVICE_FACTORY_DECLARE(
         (budget)
         (comment)
         (comment_statistic)
+        (comments_bounty_fund)
         (comment_vote)
         (decline_voting_rights_request)
         (dynamic_global_property)

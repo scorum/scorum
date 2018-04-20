@@ -27,6 +27,7 @@
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/services/genesis_state.hpp>
+#include <scorum/chain/services/comments_bounty_fund.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -35,6 +36,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (atomicswap)
         (budget)
         (comment)
+        (comments_bounty_fund)
         (comment_statistic)
         (comment_vote)
         (decline_voting_rights_request)

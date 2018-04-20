@@ -5,6 +5,7 @@
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comments_bounty_fund.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
@@ -323,6 +324,36 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 
     impl.apply();
 }
+#ifdef BLOGGING_BOUNTY_CASHOUT_DATE
+void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
+{
+    static const time_point_sec cashout_time
+                = time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_BOUNTY_CASHOUT_DATE));
+
+    dynamic_global_property_service_i &dprops_service = ctx.services().dynamic_global_property_service();
+
+    if (dprops_service.head_block_time() < cashout_time)
+    {
+        return;
+    }
+
+    comments_bounty_fund_service_i &comments_bounty_fund_service = ctx.services().comments_bounty_fund_service();
+
+    if (!comments_bounty_fund_service.is_exists())
+    {
+        return;
+    }
+
+    //TODO
+
+    process_comments_cashout_impl impl(ctx);
+
+    impl.apply();
+    }
+#else
+void process_comments_bounty_cashout::on_apply(block_task_context& )
+{}
+#endif
 
 }
 }
