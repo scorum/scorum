@@ -28,7 +28,7 @@ struct chain_api_database_fixture : public database_fixture::database_integratio
     chain_api _api_call;
 
     chain_api_database_fixture()
-        : _api_ctx(app, CHAIN_API, std::make_shared<api_session_data>())
+        : _api_ctx(app, API_CHAIN, std::make_shared<api_session_data>())
         , _api_call(_api_ctx)
     {
         static const asset registration_bonus = ASSET_SCR(100);

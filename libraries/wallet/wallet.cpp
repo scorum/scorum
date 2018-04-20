@@ -144,7 +144,7 @@ public:
         , _chain_id(initial_data.chain_id)
         , _remote_api(rapi)
         , _remote_db(rapi->get_api_by_name("database_api")->as<database_api>())
-        , _chain_api(rapi->get_api_by_name(CHAIN_API)->as<chain_api>())
+        , _chain_api(rapi->get_api_by_name(API_CHAIN)->as<chain_api>())
         , _remote_net_broadcast(rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>())
     {
         init_prototype_ops();
@@ -917,7 +917,7 @@ public:
         try
         {
             _remote_account_history_api
-                = _remote_api->get_api_by_name("account_history_api")->as<blockchain_history::account_history_api>();
+                = _remote_api->get_api_by_name(API_ACCOUNT_HISTORY)->as<blockchain_history::account_history_api>();
         }
         catch (const fc::exception& e)
         {
@@ -933,7 +933,7 @@ public:
 
         try
         {
-            _remote_blockchain_history_api = _remote_api->get_api_by_name("blockchain_history_api")
+            _remote_blockchain_history_api = _remote_api->get_api_by_name(API_BLOCKCHAIN_HISTORY)
                                                  ->as<blockchain_history::blockchain_history_api>();
         }
         catch (const fc::exception& e)

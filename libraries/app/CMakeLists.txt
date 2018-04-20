@@ -26,7 +26,8 @@ target_include_directories( scorum_app
                             PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
-                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_api/include")
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_api/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/blockchain_history/include")
 
 if(MSVC)
   set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

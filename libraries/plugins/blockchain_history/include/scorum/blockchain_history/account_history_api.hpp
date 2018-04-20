@@ -3,6 +3,10 @@
 #include <fc/api.hpp>
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
 
+#ifndef API_ACCOUNT_HISTORY
+#define API_ACCOUNT_HISTORY "account_history_api"
+#endif
+
 namespace scorum {
 namespace app {
 struct api_context;

@@ -1,6 +1,6 @@
 #pragma once
 
-#define CHAIN_API "chain_api"
+#define API_CHAIN "chain_api"
 
 #include <memory>
 #include <fc/api.hpp>

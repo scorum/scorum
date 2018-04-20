@@ -57,8 +57,6 @@ public:
 
     flat_map<account_name_type, account_name_type> tracked_accounts() const; /// map start_range to end_range
 
-    bool get_block_disabled() const;
-
     friend class detail::blockchain_history_plugin_impl;
     std::unique_ptr<detail::blockchain_history_plugin_impl> _my;
 };

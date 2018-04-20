@@ -27,6 +27,8 @@
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
@@ -281,7 +283,7 @@ public:
     {
         _self->register_api_factory<login_api>("login_api");
         _self->register_api_factory<database_api>("database_api");
-        _self->register_api_factory<chain_api>(CHAIN_API);
+        _self->register_api_factory<chain_api>(API_CHAIN);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }
@@ -439,11 +441,11 @@ public:
                 wild_access.password_hash_b64 = "*";
                 wild_access.password_salt_b64 = "*";
                 wild_access.allowed_apis.push_back("database_api");
-                wild_access.allowed_apis.push_back(CHAIN_API);
+                wild_access.allowed_apis.push_back(API_CHAIN);
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
-                wild_access.allowed_apis.push_back("account_history_api");
-                wild_access.allowed_apis.push_back("blockchain_history_api");
+                wild_access.allowed_apis.push_back(API_ACCOUNT_HISTORY);
+                wild_access.allowed_apis.push_back(API_BLOCKCHAIN_HISTORY);
                 wild_access.allowed_apis.push_back("account_stats_api");
                 wild_access.allowed_apis.push_back("chain_stats_api");
                 _apiaccess.permission_map["*"] = wild_access;
@@ -1113,11 +1115,11 @@ void application::set_program_options(boost::program_options::options_descriptio
 {
     std::vector<std::string> default_apis;
     default_apis.push_back("database_api");
-    default_apis.push_back(CHAIN_API);
+    default_apis.push_back(API_CHAIN);
     default_apis.push_back("login_api");
     default_apis.push_back("account_by_key_api");
-    default_apis.push_back("account_history_api");
-    default_apis.push_back("blockchain_history_api");
+    default_apis.push_back(API_ACCOUNT_HISTORY);
+    default_apis.push_back(API_BLOCKCHAIN_HISTORY);
     default_apis.push_back("account_stats_api");
     default_apis.push_back("chain_stats_api");
     std::string str_default_apis = boost::algorithm::join(default_apis, " ");

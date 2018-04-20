@@ -23,7 +23,6 @@ public:
 private:
     template <typename ObjectType> applied_operation get_filtered_operation(const ObjectType& obj) const
     {
-        const auto& _db = _app.chain_database();
         return _db->get(obj.op);
     }
 
@@ -244,17 +243,11 @@ annotated_signed_transaction blockchain_history_api::get_transaction(transaction
 
 optional<block_header> blockchain_history_api::get_block_header(uint32_t block_num) const
 {
-    FC_ASSERT(!_impl->_app.get_plugin<blockchain_history_plugin>(BLOCKCHAIN_HISTORY_PLUGIN_NAME)->get_block_disabled(),
-              "get_block_header is disabled on this node.");
-
     return _impl->_db->with_read_lock([&]() { return _impl->get_block(block_num); });
 }
 
 optional<signed_block_api_obj> blockchain_history_api::get_block(uint32_t block_num) const
 {
-    FC_ASSERT(!_impl->_app.get_plugin<blockchain_history_plugin>(BLOCKCHAIN_HISTORY_PLUGIN_NAME)->get_block_disabled(),
-              "get_block is disabled on this node.");
-
     return _impl->_db->with_read_lock([&]() { return _impl->get_block(block_num); });
 }
 
