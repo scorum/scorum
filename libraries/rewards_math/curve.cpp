@@ -2,7 +2,7 @@
 #include <scorum/rewards_math/curve.hpp>
 
 namespace scorum {
-namespace rewards {
+namespace rewards_math {
 
 uint8_t find_msb(const uint128_t& u)
 {
@@ -58,4 +58,4 @@ uint128_t evaluate_reward_curve(const uint128_t& rshares, const curve_id& curve)
     return result;
 }
 }
-} // scorum::rewards
+} // scorum::rewards_math

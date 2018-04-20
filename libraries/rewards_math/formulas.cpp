@@ -2,7 +2,7 @@
 #include <scorum/rewards_math/curve.hpp>
 
 namespace scorum {
-namespace rewards {
+namespace rewards_math {
 
 using scorum::protocol::share_value_type;
 
@@ -32,17 +32,15 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
                                  const time_point_sec& now,
                                  const time_point_sec& last_payout_check,
                                  curve_id author_reward_curve,
-                                 const share_types& vrshares,
+                                 const shares_vector_type& vrshares,
                                  const fc::microseconds& decay_rate)
 {
     try
     {
-        uint128_t total_claims;
-
         FC_ASSERT(now >= last_payout_check);
         FC_ASSERT(decay_rate.to_seconds() > 0);
 
-        total_claims = recent_claims;
+        uint128_t total_claims = recent_claims;
         total_claims -= (total_claims * (now - last_payout_check).to_seconds()) / decay_rate.to_seconds();
         for (const share_type& rshares : vrshares)
         {
@@ -83,7 +81,7 @@ share_type calculate_payout(const share_type& rshares,
     FC_CAPTURE_AND_RETHROW((rshares)(total_claims)(reward_fund)(author_reward_curve)(max_share))
 }
 
-share_type calculate_curations_payout(const share_type& payout, uint16_t scorum_curation_reward_percent)
+share_type calculate_curations_payout(const share_type& payout, percent_type scorum_curation_reward_percent)
 {
     try
     {
@@ -165,10 +163,10 @@ uint64_t calculate_vote_weight(uint64_t max_vote_weight,
     FC_CAPTURE_AND_RETHROW((max_vote_weight)(now)(when_comment_created))
 }
 
-uint16_t calculate_restoring_power(uint16_t voting_power,
-                                   const time_point_sec& now,
-                                   const time_point_sec& last_voted,
-                                   const fc::microseconds& vote_regeneration_seconds)
+percent_type calculate_restoring_power(percent_type voting_power,
+                                       const time_point_sec& now,
+                                       const time_point_sec& last_voted,
+                                       const fc::microseconds& vote_regeneration_seconds)
 {
     try
     {
@@ -179,15 +177,15 @@ uint16_t calculate_restoring_power(uint16_t voting_power,
         int64_t elapsed_seconds = (now - last_voted).to_seconds();
 
         int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / vote_regeneration_seconds_;
-        return (uint16_t)std::min(int64_t(voting_power) + regenerated_power, int64_t(SCORUM_100_PERCENT));
+        return (percent_type)std::min(int64_t(voting_power) + regenerated_power, int64_t(SCORUM_100_PERCENT));
     }
     FC_CAPTURE_AND_RETHROW((voting_power)(now)(last_voted))
 }
 
-uint16_t calculate_used_power(uint16_t voting_power,
-                              int16_t vote_weight,
-                              uint16_t max_votes_per_day_voting_power_rate,
-                              const fc::microseconds& vote_regeneration_seconds)
+percent_type calculate_used_power(percent_type voting_power,
+                                  vote_weight_type vote_weight,
+                                  uint16_t max_votes_per_day_voting_power_rate,
+                                  const fc::microseconds& vote_regeneration_seconds)
 {
     try
     {
@@ -203,12 +201,12 @@ uint16_t calculate_used_power(uint16_t voting_power,
         FC_ASSERT(max_vote_denom > 0);
 
         used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
-        return (uint16_t)used_power;
+        return (percent_type)used_power;
     }
     FC_CAPTURE_AND_RETHROW((voting_power)(vote_weight))
 }
 
-share_type calculate_abs_reward_shares(uint16_t used_voting_power, const share_type& effective_balance_shares)
+share_type calculate_abs_reward_shares(percent_type used_voting_power, const share_type& effective_balance_shares)
 {
     try
     {

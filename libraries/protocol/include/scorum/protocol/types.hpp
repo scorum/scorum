@@ -62,8 +62,9 @@ typedef fc::ripemd160 checksum_type;
 typedef fc::ripemd160 transaction_id_type;
 typedef fc::sha256 digest_type;
 typedef fc::ecc::compact_signature signature_type;
-typedef uint16_t weight_type;
+typedef uint16_t authority_weight_type;
 typedef uint16_t percent_type;
+typedef int16_t vote_weight_type;
 
 struct public_key_type
 {

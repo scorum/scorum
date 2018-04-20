@@ -20,7 +20,7 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-using scorum::rewards::share_types;
+using scorum::rewards_math::shares_vector_type;
 
 class process_comments_cashout_impl
 {
@@ -78,10 +78,10 @@ private:
 
         const auto& rf = fund_service.get();
 
-        share_types total_rshares = get_total_rshares(comments);
-        fc::uint128_t total_claims
-            = rewards::calculate_total_claims(rf.recent_claims, dgp_service.head_block_time(), rf.last_update,
-                                              rf.author_reward_curve, total_rshares, SCORUM_RECENT_RSHARES_DECAY_RATE);
+        shares_vector_type total_rshares = get_total_rshares(comments);
+        fc::uint128_t total_claims = rewards_math::calculate_total_claims(
+            rf.recent_claims, dgp_service.head_block_time(), rf.last_update, rf.author_reward_curve, total_rshares,
+            SCORUM_RECENT_RSHARES_DECAY_RATE);
 
         auto reward_symbol = rf.activity_reward_balance.symbol();
         asset reward = asset(0, reward_symbol);
@@ -92,7 +92,7 @@ private:
 
             if (comment.net_rshares > 0)
             {
-                auto payout = rewards::calculate_payout(
+                auto payout = rewards_math::calculate_payout(
                     comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
                     comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
                 reward += pay_for_comment(comment, asset(payout, reward_symbol));
@@ -109,9 +109,9 @@ private:
         });
     }
 
-    share_types get_total_rshares(const comment_service_i::comment_refs_type& comments)
+    shares_vector_type get_total_rshares(const comment_service_i::comment_refs_type& comments)
     {
-        share_types ret;
+        shares_vector_type ret;
 
         for (const comment_object& comment : comments)
         {
@@ -135,7 +135,7 @@ private:
             if (reward.amount > 0)
             {
                 // clang-format off
-                asset curation_tokens = asset(rewards::calculate_curations_payout(reward.amount, SCORUM_CURATION_REWARD_PERCENT), reward_symbol);
+                asset curation_tokens = asset(rewards_math::calculate_curations_payout(reward.amount, SCORUM_CURATION_REWARD_PERCENT), reward_symbol);
                 asset author_tokens = reward - curation_tokens;
 
                 author_tokens += pay_curators(comment, curation_tokens); // curation_tokens can be changed inside pay_curators()
@@ -189,7 +189,7 @@ private:
                 auto comment_votes = comment_vote_service.get_by_comment_weight_voter(comment.id);
                 for (const comment_vote_object& vote : comment_votes)
                 {
-                    auto claim = asset(rewards::calculate_curation_payout(max_rewards.amount, comment.total_vote_weight, vote.weight) , reward_symbol);
+                    auto claim = asset(rewards_math::calculate_curation_payout(max_rewards.amount, comment.total_vote_weight, vote.weight) , reward_symbol);
                     if (claim.amount > 0)
                     {
                         unclaimed_rewards -= claim;
