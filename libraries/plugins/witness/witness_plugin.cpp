@@ -361,19 +361,22 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
             b.last_bandwidth_update = _db.head_block_time();
         });
 
-        fc::uint128 account_vshares(a.effective_scorumpower().amount.value);
-        fc::uint128 total_vshares(props.total_scorumpower.amount.value);
-        fc::uint128 account_average_bandwidth(band->average_bandwidth.value);
-        fc::uint128 max_virtual_bandwidth(_db.get(reserve_ratio_id_type()).max_virtual_bandwidth);
+        if (BOOST_LIKELY(_db.find(reserve_ratio_id_type()) != nullptr))
+        {
+            fc::uint128 account_vshares(a.effective_scorumpower().amount.value);
+            fc::uint128 total_vshares(props.total_scorumpower.amount.value);
+            fc::uint128 account_average_bandwidth(band->average_bandwidth.value);
+            fc::uint128 max_virtual_bandwidth = _db.get(reserve_ratio_id_type()).max_virtual_bandwidth;
 
-        has_bandwidth = (account_vshares * max_virtual_bandwidth) > (account_average_bandwidth * total_vshares);
+            has_bandwidth = (account_vshares * max_virtual_bandwidth) > (account_average_bandwidth * total_vshares);
 
-        if (_db.is_producing())
-            SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
-                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCR.",
-                          ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
-                                                                                  account_average_bandwidth)(
-                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_scorumpower", total_vshares));
+            if (_db.is_producing())
+                SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
+                              "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCR.",
+                              ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
+                                                                                      account_average_bandwidth)(
+                                  "max_virtual_bandwidth", max_virtual_bandwidth)("total_scorumpower", total_vshares));
+        }
     }
 }
 }

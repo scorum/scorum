@@ -43,9 +43,10 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
         , _account_history_api_ctx(app, "account_history_api", std::make_shared<api_session_data>())
         , account_history_api_call(_account_history_api_ctx)
     {
+        open_database();
+
         init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
 
-        open_database();
         generate_block();
         validate_database();
 

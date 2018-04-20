@@ -40,8 +40,6 @@ struct stat_database_fixture : public database_trx_integration_fixture
         witness1.public_key = initdelegate.public_key;
         witness2.public_key = initdelegate.public_key;
 
-        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
-
         static const asset registration_bonus = ASSET_SCR(100);
         genesis_state_type::registration_schedule_item single_stage{ 1u, 1u, 100u };
         genesis_state_type genesis = database_integration_fixture::default_genesis_state()
@@ -54,6 +52,9 @@ struct stat_database_fixture : public database_trx_integration_fixture
                                          .generate();
 
         open_database(genesis);
+
+        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
+
         generate_block();
 
         vest(initdelegate, 10000);

@@ -79,17 +79,28 @@ void database_integration_fixture::open_database(const genesis_state_type& genes
         }
 
         db_plugin = app.register_plugin<scorum::plugin::debug_node::debug_node_plugin>();
-        auto wit_plugin = app.register_plugin<scorum::witness::witness_plugin>();
-
-        boost::program_options::variables_map options;
-
         db_plugin->logging = false;
-        db_plugin->plugin_initialize(options);
-        wit_plugin->plugin_initialize(options);
 
         open_database_impl(genesis);
 
         db_plugin->plugin_startup();
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        std::string str_default_witness = fc::json::to_string(initdelegate.name);
+        std::string str_default_key = "5KfKqccHS6StbbcpCHYznZ5opfmPbTdYQLwaQDTVkRkQdKxHUQs";
+
+        // clang-format off
+        boost::program_options::options_description desc;
+        desc.add_options()
+            ("witness", boost::program_options::value< std::vector<std::string> >()->composing()->DEFAULT_VALUE_VECTOR(str_default_witness), "")
+            ("private-key", boost::program_options::value< std::vector<std::string> >()->composing()->default_value({ str_default_key }, str_default_key), "")
+            ;
+        // clang-format on
+
+        boost::program_options::variables_map options;
+        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), options);
+
+        init_plugin<scorum::witness::witness_plugin>(options);
 
         validate_database();
     }
