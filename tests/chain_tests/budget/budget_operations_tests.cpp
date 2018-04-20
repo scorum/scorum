@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -246,5 +245,3 @@ SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_miss
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -99,5 +98,3 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_b
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

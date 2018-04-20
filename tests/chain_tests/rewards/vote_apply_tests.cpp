@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -717,5 +716,3 @@ SCORUM_TEST_CASE(failure_with_a_new_vote_within_lockout_period_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif
