@@ -32,6 +32,8 @@
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/egenesis/egenesis.hpp>
+#include <scorum/account_by_key/account_by_key_api.hpp>
+#include <scorum/account_by_key/account_by_key_plugin.hpp>
 
 #include <fc/time.hpp>
 
@@ -54,6 +56,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/signals2.hpp>
 #include <boost/range/algorithm/reverse.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <iostream>
 #include <set>
@@ -61,8 +64,6 @@
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
-
-#include <boost/range/adaptor/reversed.hpp>
 
 namespace scorum {
 namespace app {
@@ -1116,7 +1117,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     std::vector<std::string> default_apis;
     default_apis.push_back("database_api");
     default_apis.push_back("login_api");
-    default_apis.push_back("account_by_key_api");
+    default_apis.push_back(API_ACCOUNT_BY_KEY);
     default_apis.push_back("account_history_api");
     default_apis.push_back("blockchain_history_api");
     default_apis.push_back("account_stats_api");
@@ -1125,7 +1126,7 @@ void application::set_program_options(boost::program_options::options_descriptio
 
     std::vector<std::string> default_plugins;
     default_plugins.push_back("blockchain_history");
-    default_plugins.push_back("account_by_key");
+    default_plugins.push_back(ACCOUNT_BY_KEY_PLUGIN_NAME);
     default_plugins.push_back("account_stats");
     default_plugins.push_back("chain_stats");
 

@@ -27,6 +27,16 @@ public:
         return _self.database();
     }
 
+    void startup()
+    {
+        chain::database& db = database();
+
+        db.add_plugin_index<key_lookup_index>();
+
+        db.pre_apply_operation.connect([&](const operation_notification& o) { pre_operation(o); });
+        db.post_apply_operation.connect([&](const operation_notification& o) { post_operation(o); });
+    }
+
     void pre_operation(const operation_notification& op_obj);
     void post_operation(const operation_notification& op_obj);
     void clear_cache();
@@ -54,33 +64,33 @@ struct pre_operation_visitor
 
     void operator()(const account_create_operation& op) const
     {
-        _plugin.my->clear_cache();
+        _plugin._my->clear_cache();
     }
 
     void operator()(const account_create_with_delegation_operation& op) const
     {
-        _plugin.my->clear_cache();
+        _plugin._my->clear_cache();
     }
 
     void operator()(const account_create_by_committee_operation& op) const
     {
-        _plugin.my->clear_cache();
+        _plugin._my->clear_cache();
     }
 
     void operator()(const account_update_operation& op) const
     {
-        _plugin.my->clear_cache();
+        _plugin._my->clear_cache();
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.account);
         if (acct_itr)
-            _plugin.my->cache_auths(*acct_itr);
+            _plugin._my->cache_auths(*acct_itr);
     }
 
     void operator()(const recover_account_operation& op) const
     {
-        _plugin.my->clear_cache();
+        _plugin._my->clear_cache();
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.account_to_recover);
         if (acct_itr)
-            _plugin.my->cache_auths(*acct_itr);
+            _plugin._my->cache_auths(*acct_itr);
     }
 };
 
@@ -113,35 +123,35 @@ struct post_operation_visitor
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
         if (acct_itr)
-            _plugin.my->update_key_lookup(*acct_itr);
+            _plugin._my->update_key_lookup(*acct_itr);
     }
 
     void operator()(const account_create_with_delegation_operation& op) const
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
         if (acct_itr)
-            _plugin.my->update_key_lookup(*acct_itr);
+            _plugin._my->update_key_lookup(*acct_itr);
     }
 
     void operator()(const account_create_by_committee_operation& op) const
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.new_account_name);
         if (acct_itr)
-            _plugin.my->update_key_lookup(*acct_itr);
+            _plugin._my->update_key_lookup(*acct_itr);
     }
 
     void operator()(const account_update_operation& op) const
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.account);
         if (acct_itr)
-            _plugin.my->update_key_lookup(*acct_itr);
+            _plugin._my->update_key_lookup(*acct_itr);
     }
 
     void operator()(const recover_account_operation& op) const
     {
         auto acct_itr = _plugin.database().find<account_authority_object, by_account>(op.account_to_recover);
         if (acct_itr)
-            _plugin.my->update_key_lookup(*acct_itr);
+            _plugin._my->update_key_lookup(*acct_itr);
     }
 
     void operator()(const hardfork_operation& op) const
@@ -229,7 +239,7 @@ void account_by_key_plugin_impl::post_operation(const operation_notification& no
 
 account_by_key_plugin::account_by_key_plugin(scorum::app::application* app)
     : plugin(app)
-    , my(new detail::account_by_key_plugin_impl(*this))
+    , _my(new detail::account_by_key_plugin_impl(*this))
 {
 }
 
@@ -240,22 +250,16 @@ void account_by_key_plugin::plugin_set_program_options(boost::program_options::o
 
 void account_by_key_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    try
-    {
-        chain::database& db = database();
-
-        db.pre_apply_operation.connect([&](const operation_notification& o) { my->pre_operation(o); });
-        db.post_apply_operation.connect([&](const operation_notification& o) { my->post_operation(o); });
-
-        db.add_plugin_index<key_lookup_index>();
-    }
-    FC_CAPTURE_AND_RETHROW()
     print_greeting();
 }
 
 void account_by_key_plugin::plugin_startup()
 {
-    app().register_api_factory<account_by_key_api>("account_by_key_api");
+    ilog("account_by_key plugin: plugin_startup() begin");
+
+    _my->startup();
+
+    app().register_api_factory<account_by_key_api>(API_ACCOUNT_BY_KEY);
 
     chain::database& db = database();
 
@@ -269,11 +273,13 @@ void account_by_key_plugin::plugin_startup()
         const auto it_2_end = it_2_pair.second;
         while (it_2 != it_2_end)
         {
-            my->update_key_lookup(*it_2);
+            _my->update_key_lookup(*it_2);
             ++it_2;
         }
         ++it;
     }
+
+    ilog("account_by_key plugin: plugin_startup() end");
 }
 }
 } // scorum::account_by_key

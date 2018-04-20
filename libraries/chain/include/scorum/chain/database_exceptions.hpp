@@ -36,6 +36,10 @@
     {                                                                                                                  \
         elog("Caught exception in plugin: ${e}", ("e", e.to_detail_string()));                                         \
     }                                                                                                                  \
+    catch (const std::exception& e)                                                                                    \
+    {                                                                                                                  \
+        elog("Caught exception in plugin: ${e}", ("e", e.what()));                                                     \
+    }                                                                                                                  \
     catch (...)                                                                                                        \
     {                                                                                                                  \
         wlog("Caught unexpected exception in plugin");                                                                 \

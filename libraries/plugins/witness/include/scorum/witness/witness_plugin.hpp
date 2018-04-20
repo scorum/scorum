@@ -29,6 +29,8 @@
 #include <fc/thread/future.hpp>
 #include <fc/api.hpp>
 
+#define WITNESS_PLUGIN_NAME "witness"
+
 #define RESERVE_RATIO_PRECISION ((int64_t)10000)
 #define RESERVE_RATIO_MIN_INCREMENT ((int64_t)5000)
 
@@ -65,7 +67,10 @@ public:
     witness_plugin(application* app);
     virtual ~witness_plugin();
 
-    std::string plugin_name() const override;
+    std::string plugin_name() const override
+    {
+        return WITNESS_PLUGIN_NAME;
+    }
 
     virtual void plugin_set_program_options(boost::program_options::options_description& command_line_options,
                                             boost::program_options::options_description& config_file_options) override;
@@ -97,7 +102,6 @@ private:
     std::set<std::string> _witnesses;
     fc::future<void> _block_production_task;
 
-    friend class detail::witness_plugin_impl;
     std::unique_ptr<detail::witness_plugin_impl> _my;
 };
 }

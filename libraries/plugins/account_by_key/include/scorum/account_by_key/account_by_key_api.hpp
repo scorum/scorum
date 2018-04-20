@@ -6,6 +6,10 @@
 
 #include <fc/api.hpp>
 
+#ifndef API_ACCOUNT_BY_KEY
+#define API_ACCOUNT_BY_KEY "account_by_key_api"
+#endif
+
 namespace scorum {
 namespace account_by_key {
 
