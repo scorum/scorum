@@ -303,7 +303,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_finish_stat_test)
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    for (int i = 0; i < SCORUM_VESTING_WITHDRAW_INTERVALS; ++i)
+    for (uint32_t i = 0; i < SCORUM_VESTING_WITHDRAW_INTERVALS; ++i)
     {
         BOOST_REQUIRE_EQUAL(bucket.finished_vesting_withdrawals, orig_val);
         BOOST_REQUIRE_EQUAL(bucket.vesting_withdrawals_processed, orig_val_processed + i);

@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -163,7 +162,7 @@ SCORUM_TEST_CASE(budget_creation_limit)
     asset balance(BOB_ACCOUNT_BUDGET / bp, SCORUM_SYMBOL);
     fc::time_point_sec deadline(default_deadline);
 
-    for (int ci = 0; ci < SCORUM_BUDGETS_LIMIT_PER_OWNER; ++ci)
+    for (uint32_t ci = 0; ci < SCORUM_BUDGETS_LIMIT_PER_OWNER; ++ci)
     {
         BOOST_REQUIRE_NO_THROW(budget_service.create_budget(bob, balance, deadline));
     }
@@ -307,5 +306,3 @@ SCORUM_TEST_CASE(allocate_cash_per_block)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

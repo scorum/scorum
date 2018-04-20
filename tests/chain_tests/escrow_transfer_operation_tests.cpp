@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -147,5 +146,3 @@ BOOST_AUTO_TEST_CASE(success_escrow_transfer_apply)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

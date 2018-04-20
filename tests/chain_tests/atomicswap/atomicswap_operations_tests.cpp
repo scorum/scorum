@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include "database_default_integration.hpp"
@@ -323,5 +322,3 @@ SCORUM_TEST_CASE(redeem_by_participant_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

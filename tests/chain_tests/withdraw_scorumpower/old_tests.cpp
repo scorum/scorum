@@ -254,7 +254,7 @@ SCORUM_TEST_CASE(vesting_withdrawals)
     auto balance = account_service.get_account("alice").balance;
     auto old_next_vesting = withdraw_scorumpower_service.get(alice_id).next_vesting_withdrawal;
 
-    for (int i = 1; i < SCORUM_VESTING_WITHDRAW_INTERVALS - 1; i++)
+    for (uint32_t i = 1; i < SCORUM_VESTING_WITHDRAW_INTERVALS - 1; i++)
     {
         generate_blocks(db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
 

@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <math.h>
@@ -281,5 +280,3 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif
