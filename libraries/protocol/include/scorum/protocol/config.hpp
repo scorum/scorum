@@ -74,7 +74,7 @@ namespace detail {
 
 #define SCORUM_MAX_SHARE_SUPPLY                share_value_type(100000000e+9) //100 million
 
-#define SCORUM_VOTE_DUST_THRESHOLD             share_value_type(50)
+#define SCORUM_VOTE_DUST_THRESHOLD             share_type(50)
 
 #define SCORUM_ATOMICSWAP_CONTRACT_METADATA_MAX_LENGTH  10*1024
 #define SCORUM_ATOMICSWAP_SECRET_MAX_LENGTH             1024
@@ -82,7 +82,7 @@ namespace detail {
 //Got only minimum for transactions bandwidth. Required spend SCR to enlarge up to SCORUM_VOTE_DUST_THRESHOLD
 #define SCORUM_MIN_ACCOUNT_CREATION_FEE        asset(SCORUM_VOTE_DUST_THRESHOLD/2, SCORUM_SYMBOL)
 
-#define SCORUM_MIN_COMMENT_PAYOUT              (asset(5, SCORUM_SYMBOL))
+#define SCORUM_MIN_COMMENT_PAYOUT_SHARE        share_type(5)
 
 #define SCORUM_MIN_PER_BLOCK_REWARD            (asset(1, SCORUM_SYMBOL))
 
@@ -153,9 +153,9 @@ namespace detail {
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
 #define SCORUM_SAVINGS_WITHDRAW_TIME           (fc::days(3))
 #define SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT  100
-#define SCORUM_VOTE_REGENERATION_SECONDS       (DAYS_TO_SECONDS(5))
+#define SCORUM_VOTE_REGENERATION_SECONDS       (fc::days(5))
 #define SCORUM_MAX_VOTE_CHANGES                3
-#define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (60*30) /// 30 minutes
+#define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
@@ -211,6 +211,11 @@ namespace detail {
 #define SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT            (50u)
 #define SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT         (60u)
 
+/**
+ * The number of votes regenerated per day.  Any user voting slower than this rate will be
+ * "wasting" voting power through spillover; any user voting faster than this rate will have
+ * their votes reduced.
+ */
 #define SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE 40
 
 #define SCORUM_MIN_QUORUM_VALUE_PERCENT         (50u)

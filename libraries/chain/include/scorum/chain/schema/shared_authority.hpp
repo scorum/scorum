@@ -7,7 +7,7 @@ namespace chain {
 using scorum::protocol::authority;
 using scorum::protocol::public_key_type;
 using scorum::protocol::account_name_type;
-using scorum::protocol::weight_type;
+using scorum::protocol::authority_weight_type;
 
 /**
  *  The purpose of this class is to represent an authority object in a manner compatible with
@@ -61,15 +61,15 @@ public:
 
     shared_authority& operator=(const authority& a);
 
-    void add_authority(const public_key_type& k, weight_type w);
-    void add_authority(const account_name_type& k, weight_type w);
+    void add_authority(const public_key_type& k, authority_weight_type w);
+    void add_authority(const account_name_type& k, authority_weight_type w);
 
-    template <typename AuthType> void add_authorities(AuthType k, weight_type w)
+    template <typename AuthType> void add_authorities(AuthType k, authority_weight_type w)
     {
         add_authority(k, w);
     }
 
-    template <typename AuthType, class... Args> void add_authorities(AuthType k, weight_type w, Args... auths)
+    template <typename AuthType, class... Args> void add_authorities(AuthType k, authority_weight_type w, Args... auths)
     {
         add_authority(k, w);
         add_authorities(auths...);
@@ -82,8 +82,8 @@ public:
     void clear();
     void validate() const;
 
-    typedef fc::shared_flat_map<account_name_type, weight_type> account_authority_map;
-    typedef fc::shared_flat_map<public_key_type, weight_type> key_authority_map;
+    typedef fc::shared_flat_map<account_name_type, authority_weight_type> account_authority_map;
+    typedef fc::shared_flat_map<public_key_type, authority_weight_type> key_authority_map;
 
     uint32_t weight_threshold = 0;
     account_authority_map account_auths;

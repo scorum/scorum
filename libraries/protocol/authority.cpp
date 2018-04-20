@@ -5,12 +5,12 @@ namespace scorum {
 namespace protocol {
 
 // authority methods
-void authority::add_authority(const public_key_type& k, weight_type w)
+void authority::add_authority(const public_key_type& k, authority_weight_type w)
 {
     key_auths[k] = w;
 }
 
-void authority::add_authority(const account_name_type& k, weight_type w)
+void authority::add_authority(const account_name_type& k, authority_weight_type w)
 {
     account_auths[k] = w;
 }

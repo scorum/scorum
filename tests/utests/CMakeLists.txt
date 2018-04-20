@@ -25,6 +25,7 @@ set(SOURCES
     proposal/development_committee_transfer_evaluator_tests.cpp
     tasks_base_tests.cpp
     block_tasks_tests.cpp
+    rewards_math.cpp
 )
 
 add_executable(utests
@@ -34,6 +35,7 @@ add_executable(utests
 target_link_libraries(utests
                       ucommon_test
                       scorum_app
+                      scorum_rewards_math
                       scorum_egenesis_none)
 
 target_include_directories(utests PUBLIC

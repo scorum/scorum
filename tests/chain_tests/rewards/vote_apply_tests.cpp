@@ -60,7 +60,7 @@ public:
         sam_comment_op.parent_permlink = "foo";
         sam_comment_op.parent_author = "alice";
 
-        max_vote = (global_property_service.get().vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS)
+        max_vote = (SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE * SCORUM_VOTE_REGENERATION_SECONDS.to_seconds())
             / (60 * 60 * 24);
     }
 
@@ -395,8 +395,8 @@ SCORUM_TEST_CASE(restore_power_check)
     // clang-format on
     //=================================================================================================
 
-    int64_t elapsed_seconds
-        = SCORUM_VOTE_REGENERATION_SECONDS * (SCORUM_100_PERCENT - alice_vested.voting_power) / SCORUM_100_PERCENT;
+    int64_t elapsed_seconds = SCORUM_VOTE_REGENERATION_SECONDS.to_seconds()
+        * (SCORUM_100_PERCENT - alice_vested.voting_power) / SCORUM_100_PERCENT;
     generate_blocks(global_property_service.head_block_time() + elapsed_seconds, true);
 
     vote("alice", "bob", 100);

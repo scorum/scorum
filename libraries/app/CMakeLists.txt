@@ -14,6 +14,7 @@ add_library( scorum_app
 target_link_libraries( scorum_app
                        scorum_chain
                        scorum_protocol
+                       scorum_rewards_math
                        scorum_tags
                        scorum_witness
                        scorum_mf_plugins

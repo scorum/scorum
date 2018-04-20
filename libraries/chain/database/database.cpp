@@ -17,8 +17,6 @@
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/util/asset.hpp>
-#include <scorum/chain/util/reward.hpp>
-#include <scorum/chain/util/uint256.hpp>
 
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
@@ -1905,18 +1903,6 @@ void database::validate_invariants() const
         {
             total_supply += itr->scorum_balance;
             total_supply += itr->pending_fee;
-        }
-
-        fc::uint128_t total_rshares2;
-
-        const auto& comment_idx = get_index<comment_index>().indices();
-        for (auto itr = comment_idx.begin(); itr != comment_idx.end(); ++itr)
-        {
-            if (itr->net_rshares.value > 0)
-            {
-                auto delta = util::evaluate_reward_curve(itr->net_rshares.value);
-                total_rshares2 += delta;
-            }
         }
 
         total_supply += obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
