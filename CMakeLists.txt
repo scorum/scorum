@@ -51,16 +51,6 @@ LIST(APPEND BOOST_COMPONENTS thread
                              coroutine)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-OPTION( BUILD_SCORUM_TESTNET "Build sources for special integration tests (ON OR OFF)" OFF )
-MESSAGE( STATUS "BUILD_SCORUM_TESTNET: ${BUILD_SCORUM_TESTNET}" )
-if( BUILD_SCORUM_TESTNET  )
-    MESSAGE( STATUS "     " )
-    MESSAGE( STATUS "             BUILDING FOR TEST NET             " )
-    MESSAGE( STATUS "     " )
-    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIS_TEST_NET" )
-  SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIS_TEST_NET" )
-endif()
-
 OPTION( GENESIS_TESTNET "Build embedded genesis for TEST NET (ON OR OFF)" ON )
 MESSAGE( STATUS "GENESIS_TESTNET: ${GENESIS_TESTNET}" )
 if( GENESIS_TESTNET  )
@@ -282,12 +272,6 @@ endif(LINUX)
 
  include(CPack)
 endif(ENABLE_INSTALLER)
-
-if( BUILD_SCORUM_TESTNET )
-  MESSAGE( STATUS "\n\n             BUILT FOR TEST NETWORK             \n\n" )
-else()
-  MESSAGE( STATUS "\n\n             BUILT FOR MAIN NETWORK             \n\n" )
-endif()
 
 if( GENESIS_TESTNET )
   MESSAGE( STATUS "\n\n             EMBEDDED GENESIS FOR TEST NETWORK             \n\n" )

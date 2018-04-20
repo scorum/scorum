@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -605,4 +604,3 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-#endif

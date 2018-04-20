@@ -1,15 +1,19 @@
-#ifdef IS_TEST_NET
-
 #include <cstdlib>
 #include <iostream>
+#include <boost/make_unique.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 #include <fc/reflect/variant.hpp>
 
+#include <scorum/protocol/config.hpp>
+
 boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
+    using namespace scorum::protocol;
+    detail::override_config(boost::make_unique<detail::config>(detail::config::test));
+
     std::srand(time(NULL));
     std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
     fc::logging_config log_conf;
@@ -32,10 +36,3 @@ boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
     fc::configure_logging(log_conf);
     return nullptr;
 }
-
-#else
-int main(int argc, char** argv)
-{
-    return 0;
-}
-#endif

@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/reward_balancer_object.hpp>
@@ -195,5 +194,3 @@ BOOST_AUTO_TEST_CASE(check_automatic_reward_decreasing_with_int_arithmetic_corre
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

@@ -191,12 +191,11 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
 
     if (o.owner)
     {
-#ifndef IS_TEST_NET
         dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
         FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
-#endif
+
         account_service.check_account_existence(o.owner->account_auths);
 
         account_service.update_owner_authority(account, *o.owner);
@@ -850,12 +849,10 @@ void vote_evaluator::do_apply(const vote_operation& o)
             return;
         }
 
-#ifndef IS_TEST_NET
         {
             int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
             FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
         }
-#endif
 
         uint16_t current_power
             = rewards_math::calculate_restoring_power(voter.voting_power, dprops_service.head_block_time(),

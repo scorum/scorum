@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/database/database.hpp>
@@ -177,5 +176,3 @@ BOOST_AUTO_TEST_CASE(old_tests)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

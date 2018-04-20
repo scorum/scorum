@@ -90,11 +90,12 @@ database_impl::database_impl(database& self)
 {
 }
 
-database::database()
+database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
     , _my(new database_impl(*this))
+    , _options(options)
 {
 }
 
@@ -299,7 +300,7 @@ block_id_type database::find_block_id_for_num(uint32_t block_num) const
 
         // Reversible blocks are *usually* in the TAPOS buffer.  Since this
         // is the fastest check, we do it first.
-        block_summary_id_type bsid = block_num & SCORUM_BLOCKID_POOL_SIZE;
+        block_summary_id_type bsid = block_num & (uint32_t)SCORUM_BLOCKID_POOL_SIZE;
         const block_summary_object* bs = find<block_summary_object, by_id>(bsid);
         if (bs != nullptr)
         {
@@ -873,14 +874,13 @@ void database::notify_post_apply_operation(const operation_notification& note)
 
 inline void database::push_virtual_operation(const operation& op)
 {
-#if defined(IS_LOW_MEM) && !defined(IS_TEST_NET)
-    return;
-#endif
-
-    FC_ASSERT(is_virtual_operation(op));
-    operation_notification note(op);
-    notify_pre_apply_operation(note);
-    notify_post_apply_operation(note);
+    if (_options & opt_notify_virtual_op_applying)
+    {
+        FC_ASSERT(is_virtual_operation(op));
+        operation_notification note(op);
+        notify_pre_apply_operation(note);
+        notify_post_apply_operation(note);
+    }
 }
 
 inline void database::push_hf_operation(const operation& op)
@@ -1245,9 +1245,6 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
 void database::show_free_memory(bool force)
 {
-#ifdef IS_TEST_NET
-    boost::ignore_unused(force);
-#else
     uint32_t free_gb = uint32_t(get_free_memory() / (1024 * 1024 * 1024));
     if (force || (free_gb < _last_free_gb_printed) || (free_gb > _last_free_gb_printed + 1))
     {
@@ -1259,12 +1256,11 @@ void database::show_free_memory(bool force)
     {
         uint32_t free_mb = uint32_t(get_free_memory() / (1024 * 1024));
 
-        if (free_mb <= 100 && head_block_num() % 10 == 0)
+        if (free_mb <= SCORUM_DB_FREE_MEMORY_THRESHOLD_MB && head_block_num() % 10 == 0)
         {
             elog("Free memory is now ${n}M. Increase shared file size immediately!", ("n", free_mb));
         }
     }
-#endif
 }
 
 void database::_apply_block(const signed_block& next_block)
@@ -1565,7 +1561,7 @@ void database::create_block_summary(const signed_block& next_block)
 {
     try
     {
-        block_summary_id_type sid(next_block.block_num() & SCORUM_BLOCKID_POOL_SIZE);
+        block_summary_id_type sid(next_block.block_num() & (uint32_t)SCORUM_BLOCKID_POOL_SIZE);
         modify(get<block_summary_object>(sid), [&](block_summary_object& p) { p.block_id = next_block.id(); });
     }
     FC_CAPTURE_AND_RETHROW()
@@ -1847,7 +1843,7 @@ void database::set_hardfork(uint32_t hardfork, bool apply_now)
 
 void database::apply_hardfork(uint32_t hardfork)
 {
-    if (_log_hardforks)
+    if (_options & opt_log_hardforks)
     {
         elog("HARDFORK ${hf} at block ${b}", ("hf", hardfork)("b", head_block_num()));
     }

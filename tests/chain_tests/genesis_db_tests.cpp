@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include "database_integration.hpp"
@@ -321,5 +320,3 @@ BOOST_FIXTURE_TEST_CASE(dev_pool_test, dev_poll_test_fixture)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif
