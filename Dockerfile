@@ -109,6 +109,11 @@ RUN \
     ./tests/chain_tests/chain_tests && \
     ./tests/wallet_tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
+    cd /usr/local/src/scorum && \
+    doxygen && \
+    programs/build_helpers/check_reflect.py && \
+    programs/build_helpers/get_config_check.sh && \
+    cd /usr/local/src/scorum/build && \
     make install && \
     cd / && \
     rm -rf /usr/local/src/scorum
