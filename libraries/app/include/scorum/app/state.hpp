@@ -60,7 +60,8 @@ struct discussion : public comment_api_obj
 
     std::string url; /// /category/@rootauthor/root_permlink#author/permlink
     std::string root_title;
-    asset pending_payout_value = asset(0, SCORUM_SYMBOL);
+    asset pending_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset pending_payout_sp_value = asset(0, SP_SYMBOL);
     std::vector<vote_state> active_votes;
     std::vector<std::string> replies; ///< author/slug mapping
     asset promoted = asset(0, SCORUM_SYMBOL);
@@ -140,7 +141,9 @@ FC_REFLECT( scorum::app::account_vote, (authorperm)(weight)(rshares)(percent)(ti
 
 FC_REFLECT( scorum::app::discussion_index, (trending)(payout)(payout_comments)(created)(responses)(active)(votes)(hot)(promoted)(cashout) )
 FC_REFLECT( scorum::app::tag_index, (trending) )
-FC_REFLECT_DERIVED( scorum::app::discussion, (scorum::app::comment_api_obj), (url)(root_title)(pending_payout_value)(active_votes)(replies)(promoted)(body_length)(reblogged_by)(first_reblogged_by)(first_reblogged_on) )
+FC_REFLECT_DERIVED( scorum::app::discussion, (scorum::app::comment_api_obj), (url)(root_title)
+                    (pending_payout_scr_value)(pending_payout_sp_value)
+                    (active_votes)(replies)(promoted)(body_length)(reblogged_by)(first_reblogged_by)(first_reblogged_on) )
 
 FC_REFLECT( scorum::app::state, (current_route)(props)(tag_idx)(tags)(content)(accounts)(witnesses)(discussion_idx)(witness_schedule)(error) )
 

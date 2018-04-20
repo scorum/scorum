@@ -77,7 +77,10 @@ struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_g
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
     asset fund_budget_balance = asset(0, SCORUM_SYMBOL);
     asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
-    asset content_reward_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_balance
+        = asset(0, SCORUM_SYMBOL); // total SCR and SP content reward balance (for backward compatibility)
+    asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_sp_balance = asset(0, SP_SYMBOL);
 };
 
 struct comment_api_obj
@@ -552,7 +555,10 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
                    (registration_pool_balance)
                    (fund_budget_balance)
                    (reward_pool_balance)
-                   (content_reward_balance))
+                   (content_reward_balance)
+                   (content_reward_scr_balance)
+                   (content_reward_sp_balance)
+                   )
 FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
