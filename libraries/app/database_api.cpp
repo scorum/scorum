@@ -1004,7 +1004,7 @@ void database_api::set_pending_payout(discussion& d) const
     const auto& reward_fund_obj = my->_db.obtain_service<dbs_reward_fund>().get();
 
     share_type pending_payout_value
-        = rewards::predict_payout(reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount,
+        = rewards_math::predict_payout(reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount,
                                   d.net_rshares, reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount,
                                   SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
     d.pending_payout_value = asset(pending_payout_value, SCORUM_SYMBOL);

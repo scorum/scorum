@@ -5,7 +5,7 @@
 #include <scorum/protocol/asset.hpp>
 #include <scorum/rewards_math/formulas.hpp>
 
-using namespace scorum::rewards;
+using namespace scorum::rewards_math;
 using namespace scorum::protocol;
 
 using scorum::protocol::curve_id;
@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(calculate_restoring_power_check)
 
 BOOST_AUTO_TEST_CASE(calculate_used_power_check)
 {
-    uint16_t voting_power = SCORUM_100_PERCENT;
-    int16_t vote_weight = SCORUM_PERCENT(50);
+    percent_type voting_power = SCORUM_100_PERCENT;
+    vote_weight_type vote_weight = SCORUM_PERCENT(50);
 
     BOOST_CHECK_GT(calculate_used_power(voting_power, vote_weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE,
                                         SCORUM_VOTE_REGENERATION_SECONDS),
@@ -175,8 +175,8 @@ BOOST_AUTO_TEST_CASE(calculate_abs_reward_shares_check)
 
 BOOST_AUTO_TEST_CASE(restoring_voting_power_check)
 {
-    uint16_t voting_power = SCORUM_100_PERCENT;
-    int16_t vote_weight = SCORUM_PERCENT(50);
+    percent_type voting_power = SCORUM_100_PERCENT;
+    vote_weight_type vote_weight = SCORUM_PERCENT(50);
 
     int ci = 0;
     // decrease power with limiting by result percent or iterations (if decreasing too slow)

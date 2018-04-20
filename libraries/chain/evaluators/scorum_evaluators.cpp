@@ -805,7 +805,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
         FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
-        const int16_t weight = o.weight * SCORUM_1_PERCENT;
+        const vote_weight_type weight = o.weight * SCORUM_1_PERCENT;
         if (weight > 0)
             FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 
@@ -834,22 +834,24 @@ void vote_evaluator::do_apply(const vote_operation& o)
         }
 
 #ifndef IS_TEST_NET
-        FC_ASSERT((dprops_service.head_block_time() - voter.last_vote_time).to_seconds()
-                      >= SCORUM_MIN_VOTE_INTERVAL_SEC,
-                  "Can only vote once every 3 seconds.");
+        {
+            int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
+            FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
+        }
 #endif
 
         uint16_t current_power
-            = rewards::calculate_restoring_power(voter.voting_power, dprops_service.head_block_time(),
-                                                 voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
+            = rewards_math::calculate_restoring_power(voter.voting_power, dprops_service.head_block_time(),
+                                                      voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
         FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
-        uint16_t used_power = rewards::calculate_used_power(
+        uint16_t used_power = rewards_math::calculate_used_power(
             current_power, weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE, SCORUM_VOTE_REGENERATION_SECONDS);
 
         FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
 
-        share_type abs_rshares = rewards::calculate_abs_reward_shares(used_power, voter.effective_scorumpower().amount);
+        share_type abs_rshares
+            = rewards_math::calculate_abs_reward_shares(used_power, voter.effective_scorumpower().amount);
 
         FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || weight == 0,
                   "Voting weight is too small, please accumulate more voting power or scorum power.");
@@ -903,10 +905,10 @@ void vote_evaluator::do_apply(const vote_operation& o)
                 if (curation_reward_eligible)
                 {
                     const auto& reward_fund = db().reward_fund_service().get();
-                    max_vote_weight = rewards::calculate_max_vote_weight(comment.vote_rshares, old_vote_rshares,
-                                                                         reward_fund.curation_reward_curve);
-                    cv.weight = rewards::calculate_vote_weight(max_vote_weight, cv.last_update, comment.created,
-                                                               SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+                    max_vote_weight = rewards_math::calculate_max_vote_weight(comment.vote_rshares, old_vote_rshares,
+                                                                              reward_fund.curation_reward_curve);
+                    cv.weight = rewards_math::calculate_vote_weight(max_vote_weight, cv.last_update, comment.created,
+                                                                    SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
                 }
                 else
                 {

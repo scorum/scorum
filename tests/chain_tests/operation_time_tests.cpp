@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         tx.sign(alice_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        auto alice_vshares = scorum::rewards::evaluate_reward_curve(
+        auto alice_vshares = scorum::rewards_math::evaluate_reward_curve(
             db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value,
             db.obtain_service<dbs_reward_fund>().get().author_reward_curve);
 
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         }
 
         auto bob_cashout_time = db.obtain_service<dbs_comment>().get("bob", std::string("test")).cashout_time;
-        auto bob_vshares = scorum::rewards::evaluate_reward_curve(
+        auto bob_vshares = scorum::rewards_math::evaluate_reward_curve(
             db.obtain_service<dbs_comment>().get("bob", std::string("test")).net_rshares.value,
             db.obtain_service<dbs_reward_fund>().get().author_reward_curve);
 

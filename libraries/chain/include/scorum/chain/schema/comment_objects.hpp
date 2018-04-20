@@ -16,7 +16,8 @@
 namespace scorum {
 namespace chain {
 
-using protocol::beneficiary_route_type;
+using scorum::protocol::beneficiary_route_type;
+using scorum::protocol::vote_weight_type;
 
 class comment_object : public object<comment_object_type, comment_object>
 {
@@ -120,7 +121,7 @@ public:
     share_type rshares;
 
     /// The percent weight of the vote
-    int16_t vote_percent = 0;
+    vote_weight_type vote_percent = 0;
 
     /// The time of the last update of the vote
     time_point_sec last_update;
