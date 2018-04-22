@@ -15,13 +15,12 @@
 #include <scorum/rewards_math/curve.hpp>
 #include <scorum/rewards_math/formulas.hpp>
 
-#include <map>
-
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
 using scorum::rewards_math::shares_vector_type;
+using comment_refs_type = scorum::chain::comment_service_i::comment_refs_type;
 
 class process_comments_cashout_impl
 {
@@ -41,41 +40,37 @@ public:
 
     void apply()
     {
-        comment_map_refs_type rewarded;
+        const auto fn = [&](const comment_object& c) { return c.cashout_time <= dgp_service.head_block_time(); };
+        auto comments = comment_service.get_by_cashout_time(fn);
 
-        apply_for_scr_fund(rewarded);
-        apply_for_sp_fund(rewarded);
+        apply_for_scr_fund(comments);
+        apply_for_sp_fund(comments);
 
-        for (const auto& p : rewarded)
+        for (const comment_object& comment : comments)
         {
-            const comment_object& comment = p.second;
             close_comment_payout(comment);
         }
     }
 
 private:
-    using comment_map_refs_type = std::map<comment_id_type, std::reference_wrapper<const comment_object>>;
-
-    void apply_for_scr_fund(comment_map_refs_type& rewarded)
+    void apply_for_scr_fund(const comment_refs_type& comment)
     {
         if (reward_fund_scr_service.get().activity_reward_balance.amount > 0)
         {
-            reward(reward_fund_scr_service, rewarded);
+            reward(reward_fund_scr_service, comment);
         }
     }
-    void apply_for_sp_fund(comment_map_refs_type& rewarded)
+    void apply_for_sp_fund(const comment_refs_type& comment)
     {
         if (reward_fund_sp_service.get().activity_reward_balance.amount > 0)
         {
-            reward(reward_fund_sp_service, rewarded);
+            reward(reward_fund_sp_service, comment);
         }
     }
 
-    template <typename FundService> void reward(FundService& fund_service, comment_map_refs_type& rewarded)
+    template <typename FundService> void reward(FundService& fund_service, const comment_refs_type& comments)
     {
         using fund_object_type = typename FundService::object_type;
-
-        auto comments = comment_service.get_by_cashout_time();
 
         const auto& rf = fund_service.get();
 
@@ -88,9 +83,6 @@ private:
         asset reward = asset(0, reward_symbol);
         for (const comment_object& comment : comments)
         {
-            if (comment.cashout_time > dgp_service.head_block_time())
-                break;
-
             if (comment.net_rshares > 0)
             {
                 auto payout = rewards_math::calculate_payout(
@@ -98,8 +90,6 @@ private:
                     comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
                 reward += pay_for_comment(comment, asset(payout, reward_symbol));
             }
-
-            rewarded.insert(comment_map_refs_type::value_type(comment.id, std::cref(comment)));
         }
 
         // Write the cached fund state back to the database

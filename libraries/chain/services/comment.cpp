@@ -33,7 +33,7 @@ const comment_object& dbs_comment::get(const account_name_type& author, const st
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
-dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time() const
+dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time(const until_checker_type& fn) const
 {
     comment_refs_type ret;
 
@@ -42,6 +42,8 @@ dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time() const
     const auto it_end = idx.cend();
     while (it != it_end)
     {
+        if (!fn(*it))
+            break;
         ret.push_back(std::cref(*it));
         ++it;
     }
