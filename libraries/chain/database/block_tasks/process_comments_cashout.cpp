@@ -33,39 +33,38 @@ public:
         , comment_service(ctx.services().comment_service())
         , comment_statistic_service(ctx.services().comment_statistic_service())
         , comment_vote_service(ctx.services().comment_vote_service())
-        , reward_fund_scr_service(ctx.services().reward_fund_scr_service())
-        , reward_fund_sp_service(ctx.services().reward_fund_sp_service())
     {
     }
 
-    void apply()
+    void close_comment_payout(const comment_object& comment)
     {
-        const auto fn = [&](const comment_object& c) { return c.cashout_time <= dgp_service.head_block_time(); };
-        auto comments = comment_service.get_by_cashout_time(fn);
+        comment_service.update(comment, [&](comment_object& c) {
+            /**
+             * A payout is only made for positive rshares, negative rshares hang around
+             * for the next time this post might get an upvote.
+             */
+            if (c.net_rshares > 0)
+            {
+                c.net_rshares = 0;
+            }
+            c.children_abs_rshares = 0; // remove at all
+            c.abs_rshares = 0; // remove at all
+            c.vote_rshares = 0;
+            c.total_vote_weight = 0;
+            c.max_cashout_time = fc::time_point_sec::maximum(); // remove at all
+            c.cashout_time = fc::time_point_sec::maximum();
+            c.last_payout = dgp_service.head_block_time();
+        });
 
-        apply_for_scr_fund(comments);
-        apply_for_sp_fund(comments);
+        _ctx.push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
 
-        for (const comment_object& comment : comments)
+#ifdef CLEAR_VOTES
+        auto comment_votes = comment_vote_service.get_by_comment(comment.id);
+        for (const comment_vote_object& vote : comment_votes)
         {
-            close_comment_payout(comment);
+            comment_vote_service.remove(vote);
         }
-    }
-
-private:
-    void apply_for_scr_fund(const comment_refs_type& comment)
-    {
-        if (reward_fund_scr_service.get().activity_reward_balance.amount > 0)
-        {
-            reward(reward_fund_scr_service, comment);
-        }
-    }
-    void apply_for_sp_fund(const comment_refs_type& comment)
-    {
-        if (reward_fund_sp_service.get().activity_reward_balance.amount > 0)
-        {
-            reward(reward_fund_sp_service, comment);
-        }
+#endif
     }
 
     template <typename FundService> void reward(FundService& fund_service, const comment_refs_type& comments)
@@ -73,6 +72,9 @@ private:
         using fund_object_type = typename FundService::object_type;
 
         const auto& rf = fund_service.get();
+
+        if (comments.empty() || rf.activity_reward_balance.amount < 1)
+            return;
 
         shares_vector_type total_rshares = get_total_rshares(comments);
         fc::uint128_t total_claims = rewards_math::calculate_total_claims(
@@ -100,6 +102,7 @@ private:
         });
     }
 
+private:
     shares_vector_type get_total_rshares(const comment_service_i::comment_refs_type& comments)
     {
         shares_vector_type ret;
@@ -202,37 +205,6 @@ private:
         FC_CAPTURE_AND_RETHROW()
     }
 
-    void close_comment_payout(const comment_object& comment)
-    {
-        comment_service.update(comment, [&](comment_object& c) {
-            /**
-             * A payout is only made for positive rshares, negative rshares hang around
-             * for the next time this post might get an upvote.
-             */
-            if (c.net_rshares > 0)
-            {
-                c.net_rshares = 0;
-            }
-            c.children_abs_rshares = 0;
-            c.abs_rshares = 0;
-            c.vote_rshares = 0;
-            c.total_vote_weight = 0;
-            c.max_cashout_time = fc::time_point_sec::maximum();
-            c.cashout_time = fc::time_point_sec::maximum();
-            c.last_payout = dgp_service.head_block_time();
-        });
-
-        _ctx.push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
-
-    #ifdef CLEAR_VOTES
-        auto comment_votes = comment_vote_service.get_by_comment(comment.id);
-        for (const comment_vote_object& vote : comment_votes)
-        {
-            comment_vote_service.remove(vote);
-        }
-    #endif
-    }
-
     void pay_account(const account_object &recipient, const asset &reward)
     {
         if (SCORUM_SYMBOL == reward.symbol())
@@ -304,25 +276,37 @@ private:
     comment_service_i& comment_service;
     comment_statistic_service_i& comment_statistic_service;
     comment_vote_service_i& comment_vote_service;
-    reward_fund_scr_service_i& reward_fund_scr_service;
-    reward_fund_sp_service_i& reward_fund_sp_service;
 };
 
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
     process_comments_cashout_impl impl(ctx);
 
-    impl.apply();
+    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
+    comment_service_i& comment_service = ctx.services().comment_service();
+    reward_fund_scr_service_i &reward_fund_scr_service = ctx.services().reward_fund_scr_service();
+    reward_fund_sp_service_i &reward_fund_sp_service = ctx.services().reward_fund_sp_service();
+
+    const auto fn = [&](const comment_object& c) { return c.cashout_time <= dgp_service.head_block_time(); };
+    auto comments = comment_service.get_by_cashout_time(fn);
+
+    impl.reward(reward_fund_scr_service, comments);
+    impl.reward(reward_fund_sp_service, comments);
+
+    for (const comment_object& comment : comments)
+    {
+        impl.close_comment_payout(comment);
+    }
 }
 #ifdef BLOGGING_BOUNTY_CASHOUT_DATE
 void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
 {
-    static const time_point_sec cashout_time
+    static const time_point_sec bounty_time
                 = time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_BOUNTY_CASHOUT_DATE));
 
     dynamic_global_property_service_i &dprops_service = ctx.services().dynamic_global_property_service();
 
-    if (dprops_service.head_block_time() < cashout_time)
+    if (dprops_service.head_block_time() < bounty_time)
     {
         return;
     }
@@ -334,12 +318,17 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
         return;
     }
 
-    //TODO
+    comment_service_i &comment_service = ctx.services().comment_service();
+
+    const auto fn = [&](const comment_object& c) { return c.created <= bounty_time; };
+    auto comments = comment_service.get_by_cashout_time(fn);
 
     process_comments_cashout_impl impl(ctx);
 
-    impl.apply();
-    }
+    impl.reward(comments_bounty_fund_service, comments);
+
+    comments_bounty_fund_service.remove();
+}
 #else
 void process_comments_bounty_cashout::on_apply(block_task_context& )
 {}
