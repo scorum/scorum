@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -223,6 +222,26 @@ SCORUM_TEST_CASE(auto_close_budget_by_deadline)
     BOOST_REQUIRE_NO_THROW(validate_database());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_missing_blocks)
+{
+    BOOST_REQUIRE_NO_THROW(alice_create_budget(asset(BUDGET_BALANCE_DEFAULT, SCORUM_SYMBOL),
+                                               db.head_block_time() + SCORUM_BLOCK_INTERVAL * BUDGET_BALANCE_DEFAULT));
 
-#endif
+    BOOST_REQUIRE(!budget_service.get_budgets("alice").empty());
+
+    const budget_object budget = (*budget_service.get_budgets("alice").cbegin());
+
+    auto original_balance = account_service.get_account("alice").balance;
+
+    auto miss_intermediate_blocks = true;
+    auto actually_generated_blocks
+        = db_plugin->debug_generate_blocks_until(debug_key, budget.deadline, miss_intermediate_blocks, default_skip);
+    BOOST_REQUIRE_LT((db.head_block_time() - budget.deadline).to_seconds(), SCORUM_BLOCK_INTERVAL);
+
+    BOOST_REQUIRE(budget_service.get_budgets("alice").empty());
+
+    BOOST_REQUIRE_EQUAL(account_service.get_account("alice").balance,
+                        original_balance + asset(BUDGET_BALANCE_DEFAULT - actually_generated_blocks, SCORUM_SYMBOL));
+}
+
+BOOST_AUTO_TEST_SUITE_END()

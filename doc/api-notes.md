@@ -99,7 +99,7 @@ Now let's protect the `hello_api_api` API to only be usable by user `bytemaster`
 sure we have the correct plugin which provides the sensitive API, make sure the sensitive API is not accessible in `public-api`, and add an
 `api-user` definition to define the access policy:
 
-    enable-plugin = witness account_history hello_api
+    enable-plugin = witness blockchain_history hello_api
     public-api = database_api login_api
     api-user = {"username" : "bytemaster", "password_hash_b64" : "T2k/wMBB9BKyv7X+ngghL+MaoubEuFb6GWvF3qQ9NU0=", "password_salt_b64" : "HqK9mAQCkWU=", "allowed_apis" : ["hello_api_api"]}
 

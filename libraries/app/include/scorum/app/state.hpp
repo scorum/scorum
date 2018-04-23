@@ -8,6 +8,8 @@
 namespace scorum {
 namespace app {
 
+using scorum::protocol::percent_type;
+
 struct discussion_index
 {
     std::vector<std::string> trending; /// trending posts over the last 24 hours
@@ -32,7 +34,7 @@ struct vote_state
     std::string voter;
     uint64_t weight = 0;
     int64_t rshares = 0;
-    int16_t percent = 0;
+    percent_type percent = 0;
     time_point_sec time;
 };
 
@@ -41,7 +43,7 @@ struct account_vote
     std::string authorperm;
     uint64_t weight = 0;
     int64_t rshares = 0;
-    int16_t percent = 0;
+    percent_type percent = 0;
     time_point_sec time;
 };
 

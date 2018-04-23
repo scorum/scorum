@@ -526,7 +526,7 @@ public:
     annotated_signed_transaction update_account_auth_key(const std::string& account_name,
                                                          const authority_type& type,
                                                          const public_key_type& key,
-                                                         weight_type weight,
+                                                         authority_weight_type weight,
                                                          bool broadcast);
 
     /**
@@ -545,7 +545,7 @@ public:
     annotated_signed_transaction update_account_auth_account(const std::string& account_name,
                                                              authority_type type,
                                                              const std::string& auth_account,
-                                                             weight_type weight,
+                                                             authority_weight_type weight,
                                                              bool broadcast);
 
     /**

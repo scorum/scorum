@@ -1,6 +1,7 @@
 add_subdirectory( fc )
 add_subdirectory( schema )
 add_subdirectory( chainbase )
+add_subdirectory( rewards_math )
 add_subdirectory( chain )
 add_subdirectory( egenesis )
 add_subdirectory( protocol )

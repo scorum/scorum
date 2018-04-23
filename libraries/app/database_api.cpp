@@ -4,7 +4,7 @@
 
 #include <scorum/protocol/get_config.hpp>
 
-#include <scorum/chain/util/reward.hpp>
+#include <scorum/rewards_math/formulas.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -946,7 +946,7 @@ std::vector<vote_state> database_api::get_active_votes(const std::string& author
             vote_state vstate;
             vstate.voter = vo.name;
             vstate.weight = itr->weight;
-            vstate.rshares = itr->rshares;
+            vstate.rshares = itr->rshares.value;
             vstate.percent = itr->vote_percent;
             vstate.time = itr->last_update;
 
@@ -974,7 +974,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
             account_vote avote;
             avote.authorperm = vo.author + "/" + fc::to_string(vo.permlink);
             avote.weight = itr->weight;
-            avote.rshares = itr->rshares;
+            avote.rshares = itr->rshares.value;
             avote.percent = itr->vote_percent;
             avote.time = itr->last_update;
             result.push_back(avote);
@@ -1003,21 +1003,11 @@ void database_api::set_pending_payout(discussion& d) const
 
     const auto& reward_fund_obj = my->_db.obtain_service<dbs_reward_fund>().get();
 
-    asset pot = reward_fund_obj.activity_reward_balance_scr;
-    u256 total_r2 = to256(reward_fund_obj.recent_claims);
-    if (total_r2 > 0)
-    {
-        uint128_t vshares;
-        vshares = d.net_rshares.value > 0
-            ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, reward_fund_obj.author_reward_curve)
-            : 0;
-
-        u256 r2 = to256(vshares); // to256(abs_net_rshares);
-        r2 *= pot.amount.value;
-        r2 /= total_r2;
-
-        d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
-    }
+    share_type pending_payout_value = rewards_math::predict_payout(
+        reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount, d.net_rshares,
+        reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
+        SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+    d.pending_payout_value = asset(pending_payout_value, SCORUM_SYMBOL);
 
     if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
         d.cashout_time = my->_db.calculate_discussion_payout_time(my->_db.get<comment_object>(d.id));

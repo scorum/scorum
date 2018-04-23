@@ -12,8 +12,8 @@ Registering plugins
 -------------------
 
 - Plugins are enabled with the `enable-plugin` config file option.
-- When specifying plugins, you should specify `witness` and `account_history` in addition to the new plugins.
-- Some plugins may keep records in the database (currently only `account_history` does).  If you change whether such a plugin is disabled/enabled, you should also replay the chain.  Detecting this situation and automatically replaying when needed will be implemented in a future release.
+- When specifying plugins, you should specify `witness` and `blockchain_history` in addition to the new plugins.
+- Some plugins may keep records in the database (currently only `blockchain_history` does).  If you change whether such a plugin is disabled/enabled, you should also replay the chain.  Detecting this situation and automatically replaying when needed will be implemented in a future release.
 - If you want to make API's available publicly, you must use the `public-api` option.
 - When specifying public API's, you should specify `database_api` and `login_api` in addition to the new plugins.
 - The `api-user` option allows for password protected access to an API.

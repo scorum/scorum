@@ -508,12 +508,6 @@ tags_plugin::tags_plugin(application* app)
     : plugin(app)
     , my(new detail::tags_plugin_impl(*this))
 {
-    chain::database& db = database();
-
-    db.add_plugin_index<tag_index>();
-    db.add_plugin_index<tag_stats_index>();
-    db.add_plugin_index<peer_stats_index>();
-    db.add_plugin_index<author_tag_stats_index>();
 }
 
 tags_plugin::~tags_plugin()
@@ -527,16 +521,27 @@ void tags_plugin::plugin_set_program_options(boost::program_options::options_des
 
 void tags_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    database().post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+    try
+    {
+        chain::database& db = database();
 
-    app().register_api_factory<tag_api>("tag_api");
+        db.post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+
+        db.add_plugin_index<tag_index>();
+        db.add_plugin_index<tag_stats_index>();
+        db.add_plugin_index<peer_stats_index>();
+        db.add_plugin_index<author_tag_stats_index>();
+    }
+    FC_LOG_AND_RETHROW()
 
     print_greeting();
 }
 
 void tags_plugin::plugin_startup()
 {
+    app().register_api_factory<tag_api>("tag_api");
 }
+
 } // namespace tags
 } // namespace scorum
 

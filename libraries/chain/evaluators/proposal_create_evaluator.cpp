@@ -39,7 +39,7 @@ void proposal_create_evaluator::do_apply(const proposal_create_evaluator::operat
 
     const protocol::percent_type quorum = operation_get_required_quorum(committee_service, op.operation);
 
-    _proposal_service.create(op.creator, op.operation, expiration, quorum);
+    _proposal_service.create_proposal(op.creator, op.operation, expiration, quorum);
 }
 
 } // namespace chain

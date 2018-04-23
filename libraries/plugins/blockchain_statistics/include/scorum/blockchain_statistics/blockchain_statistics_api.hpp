@@ -3,6 +3,10 @@
 #include <scorum/blockchain_statistics/schema/metrics.hpp>
 #include <fc/api.hpp>
 
+#ifndef API_BLOCKCHAIN_STATISTICS
+#define API_BLOCKCHAIN_STATISTICS "chain_stats_api"
+#endif
+
 namespace scorum {
 namespace app {
 struct api_context;
