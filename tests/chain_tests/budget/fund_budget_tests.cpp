@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -91,5 +90,3 @@ SCORUM_TEST_CASE(fund_budget_payments_after_deadline_is_over_and_we_have_missing
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

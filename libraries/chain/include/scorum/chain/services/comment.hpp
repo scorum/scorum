@@ -1,15 +1,14 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <functional>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
 class comment_object;
 
-struct comment_service_i
+struct comment_service_i : public base_service_i<comment_object>
 {
     virtual const comment_object& get(const comment_id_type& comment_id) const = 0;
     virtual const comment_object& get(const account_name_type& author, const std::string& permlink) const = 0;
@@ -19,17 +18,9 @@ struct comment_service_i
     virtual comment_refs_type get_by_cashout_time() const = 0;
 
     virtual bool is_exists(const account_name_type& author, const std::string& permlink) const = 0;
-
-    using modifier_type = std::function<void(comment_object&)>;
-
-    virtual const comment_object& create(const modifier_type& modifier) = 0;
-
-    virtual void update(const comment_object& comment, const modifier_type& modifier) = 0;
-
-    virtual void remove(const comment_object& comment) = 0;
 };
 
-class dbs_comment : public dbs_base, public comment_service_i
+class dbs_comment : public dbs_service_base<comment_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -43,12 +34,6 @@ public:
     comment_refs_type get_by_cashout_time() const override;
 
     bool is_exists(const account_name_type& author, const std::string& permlink) const override;
-
-    const comment_object& create(const modifier_type& modifier) override;
-
-    void update(const comment_object& comment, const modifier_type& modifier) override;
-
-    void remove(const comment_object& comment) override;
 };
 } // namespace chain
 } // namespace scorum

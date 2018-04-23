@@ -49,15 +49,26 @@ class database : public chainbase::database,
 {
 
 public:
-    database();
+    enum creation_option
+    {
+        opt_none = 0,
+        opt_log_hardforks = 1 << 0,
+        opt_notify_virtual_op_applying = 1 << 1,
+
+#ifdef IS_LOW_MEM
+        opt_default = opt_log_hardforks
+#else
+        opt_default = opt_log_hardforks | opt_notify_virtual_op_applying
+#endif
+    };
+
+    database(uint32_t opt);
     virtual ~database();
 
     bool is_producing() const
     {
         return _is_producing;
     }
-
-    bool _log_hardforks = true;
 
     enum validation_steps
     {
@@ -356,6 +367,7 @@ private:
     std::unique_ptr<database_impl> _my;
 
     bool _is_producing = false;
+    uint32_t _options;
 
     optional<chainbase::abstract_undo_session_ptr> _pending_tx_session;
 

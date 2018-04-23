@@ -17,6 +17,7 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::authority;
+using scorum::protocol::percent_type;
 
 // clang-format off
 class account_object : public object<account_object_type, account_object>
@@ -46,7 +47,7 @@ public:
     uint32_t post_count = 0;
 
     bool can_vote = true;
-    uint16_t voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
+    percent_type voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
     time_point_sec last_vote_time;              ///< used to increase the voting power of this account the longer it goes without voting.
 
     asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account

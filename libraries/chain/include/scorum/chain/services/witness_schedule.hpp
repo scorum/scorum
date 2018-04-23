@@ -1,44 +1,16 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-class witness_schedule_object;
-
-struct witness_schedule_service_i
+struct witness_schedule_service_i : public base_service_i<witness_schedule_object>
 {
-    virtual const witness_schedule_object& get() const = 0;
-
-    using modifier_type = std::function<void(witness_schedule_object&)>;
-
-    virtual const witness_schedule_object& create(const modifier_type& modifier) = 0;
-
-    virtual void update(const modifier_type& modifier) = 0;
-
-    virtual void remove() = 0;
-
-    virtual bool is_exists() const = 0;
 };
 
-class dbs_witness_schedule : public dbs_base, public witness_schedule_service_i
-{
-    friend class dbservice_dbs_factory;
+using dbs_witness_schedule = dbs_service_base<witness_schedule_service_i>;
 
-protected:
-    explicit dbs_witness_schedule(database& db);
-
-public:
-    virtual const witness_schedule_object& get() const override;
-
-    virtual const witness_schedule_object& create(const modifier_type& modifier) override;
-
-    virtual void update(const modifier_type& modifier) override;
-
-    virtual void remove() override;
-
-    virtual bool is_exists() const override;
-};
 } // namespace chain
 } // namespace scorum

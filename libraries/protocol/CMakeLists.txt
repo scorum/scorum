@@ -8,6 +8,7 @@ add_library( scorum_protocol
              authority.cpp
              block.cpp
              comment.cpp
+             config.cpp
              get_config.cpp
              operation_util_impl.cpp
              operations.cpp

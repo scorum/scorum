@@ -83,7 +83,6 @@ struct comment_api_obj
         , cashout_time(o.cashout_time)
         , max_cashout_time(o.max_cashout_time)
         , total_vote_weight(o.total_vote_weight)
-        , reward_weight(o.reward_weight)
         , total_payout_value(o.total_payout_value)
         , curator_payout_value(o.curator_payout_value)
         , author_rewards(o.author_rewards)
@@ -131,8 +130,6 @@ struct comment_api_obj
     time_point_sec cashout_time;
     time_point_sec max_cashout_time;
     uint64_t total_vote_weight = 0;
-
-    uint16_t reward_weight = 0;
 
     asset total_payout_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
@@ -609,7 +606,7 @@ FC_REFLECT( scorum::app::comment_api_obj,
              (depth)(children)
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
-             (total_vote_weight)(reward_weight)(total_payout_value)(curator_payout_value)(author_rewards)(net_votes)(root_comment)
+             (total_vote_weight)(total_payout_value)(curator_payout_value)(author_rewards)(net_votes)(root_comment)
              (max_accepted_payout)(percent_scrs)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
