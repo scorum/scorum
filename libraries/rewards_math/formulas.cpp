@@ -61,8 +61,9 @@ share_type calculate_payout(const share_type& rshares,
 {
     try
     {
-        FC_ASSERT(rshares > 0);
-        FC_ASSERT(total_claims > 0);
+        // TODO: try to avoid in calling code. then uncomment checks.
+        //        FC_ASSERT(rshares > 0);
+        //        FC_ASSERT(total_claims > 0);
 
         u256 rf(reward_fund.value);
         u256 total_claims_ = to256(total_claims);
