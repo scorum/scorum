@@ -36,44 +36,13 @@ public:
     {
     }
 
-    void close_comment_payout(const comment_object& comment)
-    {
-        comment_service.update(comment, [&](comment_object& c) {
-            /**
-             * A payout is only made for positive rshares, negative rshares hang around
-             * for the next time this post might get an upvote.
-             */
-            if (c.net_rshares > 0)
-            {
-                c.net_rshares = 0;
-            }
-            c.children_abs_rshares = 0; // remove at all
-            c.abs_rshares = 0; // remove at all
-            c.vote_rshares = 0;
-            c.total_vote_weight = 0;
-            c.max_cashout_time = fc::time_point_sec::maximum(); // remove at all
-            c.cashout_time = fc::time_point_sec::maximum();
-            c.last_payout = dgp_service.head_block_time();
-        });
-
-        _ctx.push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
-
-#ifdef CLEAR_VOTES
-        auto comment_votes = comment_vote_service.get_by_comment(comment.id);
-        for (const comment_vote_object& vote : comment_votes)
-        {
-            comment_vote_service.remove(vote);
-        }
-#endif
-    }
-
     template <typename FundService> void reward(FundService& fund_service, const comment_refs_type& comments)
     {
         using fund_object_type = typename FundService::object_type;
 
         const auto& rf = fund_service.get();
 
-        if (comments.empty() || rf.activity_reward_balance.amount < 1)
+        if (rf.activity_reward_balance.amount < 1 || comments.empty())
             return;
 
         shares_vector_type total_rshares = get_total_rshares(comments);
@@ -102,6 +71,38 @@ public:
         });
     }
 
+    void close_comment_payout(const comment_object& comment)
+    {
+        comment_service.update(comment, [&](comment_object& c) {
+            /**
+             * A payout is only made for positive rshares, negative rshares hang around
+             * for the next time this post might get an upvote.
+             */
+            if (c.net_rshares > 0)
+            {
+                c.net_rshares = 0;
+            }
+            c.total_vote_weight = 0;
+
+            c.children_abs_rshares = 0;
+            c.abs_rshares = 0;
+            c.vote_rshares = 0;
+            c.max_cashout_time = fc::time_point_sec::maximum();
+            c.cashout_time = fc::time_point_sec::maximum();
+            c.last_payout = dgp_service.head_block_time();
+        });
+
+        _ctx.push_virtual_operation(comment_payout_update_operation(comment.author, fc::to_string(comment.permlink)));
+
+#ifdef CLEAR_VOTES
+        auto comment_votes = comment_vote_service.get_by_comment(comment.id);
+        for (const comment_vote_object& vote : comment_votes)
+        {
+            comment_vote_service.remove(vote);
+        }
+#endif
+    }
+
 private:
     shares_vector_type get_total_rshares(const comment_service_i::comment_refs_type& comments)
     {
@@ -109,9 +110,6 @@ private:
 
         for (const comment_object& comment : comments)
         {
-            if (comment.cashout_time > dgp_service.head_block_time())
-                break;
-
             if (comment.net_rshares > 0)
             {
                 ret.push_back(comment.net_rshares);
@@ -126,45 +124,46 @@ private:
         try
         {
             auto reward_symbol = reward.symbol();
-            if (reward.amount > 0)
+            if (reward.amount < 1)
+                return asset(0, reward_symbol);
+
+            asset curation_tokens = asset(
+                rewards_math::calculate_curations_payout(reward.amount, SCORUM_CURATION_REWARD_PERCENT), reward_symbol);
+            asset author_tokens = reward - curation_tokens;
+
+            author_tokens
+                += pay_curators(comment, curation_tokens); // curation_tokens can be changed inside pay_curators()
+
+            asset claimed_reward = author_tokens + curation_tokens;
+
+            auto total_beneficiary = asset(0, reward_symbol);
+            for (auto& b : comment.beneficiaries)
             {
-                // clang-format off
-                asset curation_tokens = asset(rewards_math::calculate_curations_payout(reward.amount, SCORUM_CURATION_REWARD_PERCENT), reward_symbol);
-                asset author_tokens = reward - curation_tokens;
-
-                author_tokens += pay_curators(comment, curation_tokens); // curation_tokens can be changed inside pay_curators()
-
-                asset claimed_reward = author_tokens + curation_tokens;
-
-                auto total_beneficiary = asset(0, reward_symbol);
-                for (auto& b : comment.beneficiaries)
-                {
-                    asset benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
-                    pay_account(account_service.get_account(b.account), benefactor_tokens);
-                    _ctx.push_virtual_operation(comment_benefactor_reward_operation(b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
-                    total_beneficiary += benefactor_tokens;
-                }
-
-                author_tokens -= total_beneficiary;
-
-                const auto& author = account_service.get_account(comment.author);
-                pay_account(author, author_tokens);
-
-                _ctx.push_virtual_operation(author_reward_operation(comment.author, fc::to_string(comment.permlink), author_tokens));
-                _ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), claimed_reward));
-
-                accumulate_statistic(comment, author, author_tokens, curation_tokens, total_beneficiary, reward_symbol);
-
-                return claimed_reward;
+                asset benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
+                pay_account(account_service.get_account(b.account), benefactor_tokens);
+                _ctx.push_virtual_operation(comment_benefactor_reward_operation(
+                    b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
+                total_beneficiary += benefactor_tokens;
             }
 
-            return asset(0, reward_symbol);
+            author_tokens -= total_beneficiary;
+
+            const auto& author = account_service.get_account(comment.author);
+            pay_account(author, author_tokens);
+
+            _ctx.push_virtual_operation(
+                author_reward_operation(comment.author, fc::to_string(comment.permlink), author_tokens));
+            _ctx.push_virtual_operation(
+                comment_reward_operation(comment.author, fc::to_string(comment.permlink), claimed_reward));
+
+            accumulate_statistic(comment, author, author_tokens, curation_tokens, total_beneficiary, reward_symbol);
+
+            return claimed_reward;
         }
         FC_CAPTURE_AND_RETHROW((comment))
     }
 
-    asset
-    pay_curators(const comment_object& comment, asset& max_rewards)
+    asset pay_curators(const comment_object& comment, asset& max_rewards)
     {
         try
         {
@@ -183,7 +182,9 @@ private:
                 auto comment_votes = comment_vote_service.get_by_comment_weight_voter(comment.id);
                 for (const comment_vote_object& vote : comment_votes)
                 {
-                    auto claim = asset(rewards_math::calculate_curation_payout(max_rewards.amount, comment.total_vote_weight, vote.weight) , reward_symbol);
+                    auto claim = asset(rewards_math::calculate_curation_payout(max_rewards.amount,
+                                                                               comment.total_vote_weight, vote.weight),
+                                       reward_symbol);
                     if (claim.amount > 0)
                     {
                         unclaimed_rewards -= claim;
@@ -191,8 +192,8 @@ private:
                         const auto& voter = account_service.get(vote.voter);
                         pay_account(voter, claim);
 
-                        _ctx.push_virtual_operation(
-                            curation_reward_operation(voter.name, claim, comment.author, fc::to_string(comment.permlink)));
+                        _ctx.push_virtual_operation(curation_reward_operation(voter.name, claim, comment.author,
+                                                                              fc::to_string(comment.permlink)));
 
                         accumulate_statistic(voter, claim);
                     }
@@ -205,25 +206,28 @@ private:
         FC_CAPTURE_AND_RETHROW()
     }
 
-    void pay_account(const account_object &recipient, const asset &reward)
+    void pay_account(const account_object& recipient, const asset& reward)
     {
         if (SCORUM_SYMBOL == reward.symbol())
         {
             account_service.increase_balance(recipient, reward);
-        }else if (SP_SYMBOL == reward.symbol())
+        }
+        else if (SP_SYMBOL == reward.symbol())
         {
             account_service.increase_scorumpower(recipient, reward);
 
-            dgp_service.update(
-                [&](dynamic_global_property_object& props) { props.total_scorumpower += reward; });
+            dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += reward; });
         }
     }
 
-    void accumulate_statistic(const comment_object& comment, const account_object &author,
-                              const asset &author_tokens, const asset &curation_tokens, const asset &total_beneficiary,
+    void accumulate_statistic(const comment_object& comment,
+                              const account_object& author,
+                              const asset& author_tokens,
+                              const asset& curation_tokens,
+                              const asset& total_beneficiary,
                               asset_symbol_type reward_symbol)
     {
-        const auto &comment_stat = comment_statistic_service.get(comment.id);
+        const auto& comment_stat = comment_statistic_service.get(comment.id);
 
         FC_ASSERT(author_tokens.symbol() == reward_symbol);
         FC_ASSERT(curation_tokens.symbol() == reward_symbol);
@@ -241,7 +245,8 @@ private:
                 c.curator_payout_scr_value += curation_tokens;
                 c.beneficiary_payout_scr_value += total_beneficiary;
             });
-        }else if (SP_SYMBOL == reward_symbol)
+        }
+        else if (SP_SYMBOL == reward_symbol)
         {
             comment_statistic_service.update(comment_stat, [&](comment_statistic_object& c) {
                 c.total_payout_sp_value += total_payout;
@@ -253,26 +258,25 @@ private:
 
 #ifndef IS_LOW_MEM
         {
-            const auto &author_stat = account_blogging_statistic_service.obtain(author.id);
+            const auto& author_stat = account_blogging_statistic_service.obtain(author.id);
             account_blogging_statistic_service.increase_posting_rewards(author_stat, author_tokens);
         }
 #endif
     }
 
-    void accumulate_statistic(const account_object &voter, const asset &curation_tokens)
+    void accumulate_statistic(const account_object& voter, const asset& curation_tokens)
     {
 #ifndef IS_LOW_MEM
-        const auto &voter_stat = account_blogging_statistic_service.obtain(voter.id);
+        const auto& voter_stat = account_blogging_statistic_service.obtain(voter.id);
         account_blogging_statistic_service.increase_curation_rewards(voter_stat, curation_tokens);
 #endif
     }
 
 private:
-
     block_task_context& _ctx;
     dynamic_global_property_service_i& dgp_service;
     account_service_i& account_service;
-    account_blogging_statistic_service_i &account_blogging_statistic_service;
+    account_blogging_statistic_service_i& account_blogging_statistic_service;
     comment_service_i& comment_service;
     comment_statistic_service_i& comment_statistic_service;
     comment_vote_service_i& comment_vote_service;
@@ -280,12 +284,11 @@ private:
 
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
-    process_comments_cashout_impl impl(ctx);
-
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
+    reward_fund_scr_service_i& reward_fund_scr_service = ctx.services().reward_fund_scr_service();
+    reward_fund_sp_service_i& reward_fund_sp_service = ctx.services().reward_fund_sp_service();
     comment_service_i& comment_service = ctx.services().comment_service();
-    reward_fund_scr_service_i &reward_fund_scr_service = ctx.services().reward_fund_scr_service();
-    reward_fund_sp_service_i &reward_fund_sp_service = ctx.services().reward_fund_sp_service();
+    process_comments_cashout_impl impl(ctx);
 
     const auto fn = [&](const comment_object& c) { return c.cashout_time <= dgp_service.head_block_time(); };
     auto comments = comment_service.get_by_cashout_time(fn);
@@ -298,27 +301,28 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
         impl.close_comment_payout(comment);
     }
 }
+
 #ifdef BLOGGING_BOUNTY_CASHOUT_DATE
 void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
 {
     static const time_point_sec bounty_time
-                = time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_BOUNTY_CASHOUT_DATE));
+        = time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_BOUNTY_CASHOUT_DATE));
 
-    dynamic_global_property_service_i &dprops_service = ctx.services().dynamic_global_property_service();
+    dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
     if (dprops_service.head_block_time() < bounty_time)
     {
         return;
     }
 
-    comments_bounty_fund_service_i &comments_bounty_fund_service = ctx.services().comments_bounty_fund_service();
+    comments_bounty_fund_service_i& comments_bounty_fund_service = ctx.services().comments_bounty_fund_service();
 
     if (!comments_bounty_fund_service.is_exists())
     {
         return;
     }
 
-    comment_service_i &comment_service = ctx.services().comment_service();
+    comment_service_i& comment_service = ctx.services().comment_service();
 
     const auto fn = [&](const comment_object& c) { return c.created <= bounty_time; };
     auto comments = comment_service.get_by_cashout_time(fn);
@@ -330,12 +334,10 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
     comments_bounty_fund_service.remove();
 }
 #else
-void process_comments_bounty_cashout::on_apply(block_task_context& )
-{}
+void process_comments_bounty_cashout::on_apply(block_task_context&)
+{
+}
 #endif
-
 }
 }
 }
-
-
