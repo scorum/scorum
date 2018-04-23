@@ -40,7 +40,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
         , alice("alice")
         , bob("bob")
         , sam("sam")
-        , _account_history_api_ctx(app, "account_history_api", std::make_shared<api_session_data>())
+        , _account_history_api_ctx(app, API_ACCOUNT_HISTORY, std::make_shared<api_session_data>())
         , account_history_api_call(_account_history_api_ctx)
     {
         init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
@@ -559,7 +559,7 @@ namespace blockchain_history_tests {
 struct blokchain_not_virtual_history_database_fixture : public history_database_fixture
 {
     blokchain_not_virtual_history_database_fixture()
-        : _blockchain_history_api_ctx(app, "blockchain_history_api", std::make_shared<api_session_data>())
+        : _blockchain_history_api_ctx(app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>())
         , blockchain_history_api_call(_blockchain_history_api_ctx)
     {
     }

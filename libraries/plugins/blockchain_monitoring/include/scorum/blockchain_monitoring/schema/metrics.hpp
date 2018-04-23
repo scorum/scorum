@@ -3,7 +3,7 @@
 #include <scorum/protocol/asset.hpp>
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 using scorum::protocol::share_type;
 using scorum::protocol::account_name_type;
@@ -72,10 +72,10 @@ struct statistics : public base_metric, public total_metric
     std::map<uint32_t, std::string> missed_blocks; ///< map missed block to witness which missed
 };
 
-} // namespace blockchain_statistics
+} // namespace blockchain_monitoring
 } // namespace scorum
 
-FC_REFLECT(scorum::blockchain_statistics::base_metric,
+FC_REFLECT(scorum::blockchain_monitoring::base_metric,
            (blocks)(bandwidth)(operations)(transactions)(transfers)(scorum_transferred)(paid_accounts_created)(
                free_accounts_created)(root_comments)(root_comment_edits)(root_comments_deleted)(replies)(reply_edits)(
                replies_deleted)(new_root_votes)(changed_root_votes)(new_reply_votes)(changed_reply_votes)(payouts)(
@@ -84,10 +84,10 @@ FC_REFLECT(scorum::blockchain_statistics::base_metric,
                modified_vesting_withdrawal_requests)(vesting_withdraw_rate_delta)(vesting_withdrawals_processed)(
                finished_vesting_withdrawals)(scorumpower_withdrawn)(scorumpower_transferred))
 
-FC_REFLECT(scorum::blockchain_statistics::total_metric,
+FC_REFLECT(scorum::blockchain_monitoring::total_metric,
            (total_accounts_created)(total_comments)(total_comment_edits)(total_comments_deleted)(total_votes)(
                new_votes)(changed_votes)(total_root_votes)(total_reply_votes))
 
-FC_REFLECT_DERIVED(scorum::blockchain_statistics::statistics,
-                   (scorum::blockchain_statistics::base_metric)(scorum::blockchain_statistics::total_metric),
+FC_REFLECT_DERIVED(scorum::blockchain_monitoring::statistics,
+                   (scorum::blockchain_monitoring::base_metric)(scorum::blockchain_monitoring::total_metric),
                    (missed_blocks))
