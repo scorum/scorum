@@ -73,10 +73,9 @@ public:
     void close_comment_payout(const comment_object& comment)
     {
         comment_service.update(comment, [&](comment_object& c) {
-            /**
-             * A payout is only made for positive rshares, negative rshares hang around
-             * for the next time this post might get an upvote.
-             */
+
+            // used for recalculate R-shares and vote weight at next vote
+            // TODO: It waits tag-tasks to remove this section
             if (c.net_rshares > 0)
             {
                 c.net_rshares = 0;
@@ -84,10 +83,10 @@ public:
             c.total_vote_weight = 0;
             c.vote_rshares = 0;
 
+            // TODO: remove abs_* fields (it is used only in tests)
             c.children_abs_rshares = 0;
             c.abs_rshares = 0;
 
-            c.max_cashout_time = fc::time_point_sec::maximum();
             c.cashout_time = fc::time_point_sec::maximum();
             c.last_payout = dgp_service.head_block_time();
         });
