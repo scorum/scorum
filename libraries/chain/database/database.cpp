@@ -1148,8 +1148,6 @@ void database::initialize_indexes()
 
     add_index<dev_committee_index>();
     add_index<dev_committee_member_index>();
-
-    _plugin_index_signal();
 }
 
 void database::validate_transaction(const signed_transaction& trx)

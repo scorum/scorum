@@ -104,7 +104,7 @@ public:
               const genesis_state_type& genesis_state);
 
     /**
-     * @brief Rebuild object graph from block history and open detabase
+     * @brief Rebuild object graph from block history and open database
      *
      * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
      * replaying blockchain history. When this method exits successfully, the database will be open.
@@ -333,10 +333,9 @@ public:
     void show_free_memory(bool force);
 
     // index
-
     template <typename MultiIndexType> void add_plugin_index()
     {
-        _plugin_index_signal.connect([this]() { this->add_index<MultiIndexType>(); });
+        this->add_index<MultiIndexType>();
     }
 
     const genesis_persistent_state_type& genesis_persistent_state() const;
@@ -404,8 +403,6 @@ private:
     protocol::hardfork_version _hardfork_versions[SCORUM_NUM_HARDFORKS + 1];
 
     block_log _block_log;
-
-    fc::signal<void()> _plugin_index_signal;
 
     transaction_id_type _current_trx_id;
     uint32_t _current_block_num = 0;

@@ -63,7 +63,7 @@ public:
     {
     }
 
-    void plugin_initialize();
+    void startup();
 
     void pre_transaction(const signed_transaction& trx);
     void pre_operation(const operation_notification& note);
@@ -74,8 +74,16 @@ public:
     witness_plugin& _self;
 };
 
-void witness_plugin_impl::plugin_initialize()
+void witness_plugin_impl::startup()
 {
+    chain::database& db = _self.database();
+
+    db.add_plugin_index<account_bandwidth_index>();
+    db.add_plugin_index<reserve_ratio_index>();
+
+    db.on_pre_apply_transaction.connect([&](const signed_transaction& tx) { pre_transaction(tx); });
+    db.pre_apply_operation.connect([&](const operation_notification& note) { pre_operation(note); });
+    db.applied_block.connect([&](const signed_block& b) { on_block(b); });
 }
 
 void check_memo(const std::string& memo, const account_object& account, const account_authority_object& auth)
@@ -353,19 +361,22 @@ void witness_plugin_impl::update_account_bandwidth(const account_object& a,
             b.last_bandwidth_update = _db.head_block_time();
         });
 
-        fc::uint128 account_vshares(a.effective_scorumpower().amount.value);
-        fc::uint128 total_vshares(props.total_scorumpower.amount.value);
-        fc::uint128 account_average_bandwidth(band->average_bandwidth.value);
-        fc::uint128 max_virtual_bandwidth(_db.get(reserve_ratio_id_type()).max_virtual_bandwidth);
+        if (BOOST_LIKELY(_db.find(reserve_ratio_id_type()) != nullptr))
+        {
+            fc::uint128 account_vshares(a.effective_scorumpower().amount.value);
+            fc::uint128 total_vshares(props.total_scorumpower.amount.value);
+            fc::uint128 account_average_bandwidth(band->average_bandwidth.value);
+            fc::uint128 max_virtual_bandwidth = _db.get(reserve_ratio_id_type()).max_virtual_bandwidth;
 
-        has_bandwidth = (account_vshares * max_virtual_bandwidth) > (account_average_bandwidth * total_vshares);
+            has_bandwidth = (account_vshares * max_virtual_bandwidth) > (account_average_bandwidth * total_vshares);
 
-        if (_db.is_producing())
-            SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
-                          "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCR.",
-                          ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
-                                                                                  account_average_bandwidth)(
-                              "max_virtual_bandwidth", max_virtual_bandwidth)("total_scorumpower", total_vshares));
+            if (_db.is_producing())
+                SCORUM_ASSERT(has_bandwidth, chain::plugin_exception,
+                              "Account: ${account} bandwidth limit exceeded. Please wait to transact or power up SCR.",
+                              ("account", a.name)("account_vshares", account_vshares)("account_average_bandwidth",
+                                                                                      account_average_bandwidth)(
+                                  "max_virtual_bandwidth", max_virtual_bandwidth)("total_scorumpower", total_vshares));
+        }
     }
 }
 }
@@ -413,11 +424,6 @@ void witness_plugin::plugin_set_program_options(boost::program_options::options_
     config_file_options.add(command_line_options);
 }
 
-std::string witness_plugin::plugin_name() const
-{
-    return "witness";
-}
-
 void witness_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try
@@ -435,15 +441,6 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
                 _private_keys[private_key->get_public_key()] = *private_key;
             }
         }
-
-        chain::database& db = database();
-
-        db.on_pre_apply_transaction.connect([&](const signed_transaction& tx) { _my->pre_transaction(tx); });
-        db.pre_apply_operation.connect([&](const operation_notification& note) { _my->pre_operation(note); });
-        db.applied_block.connect([&](const signed_block& b) { _my->on_block(b); });
-
-        db.add_plugin_index<account_bandwidth_index>();
-        db.add_plugin_index<reserve_ratio_index>();
     }
     FC_LOG_AND_RETHROW()
 
@@ -455,6 +452,8 @@ void witness_plugin::plugin_startup()
     try
     {
         ilog("witness plugin:  plugin_startup() begin");
+
+        _my->startup();
 
         if (!_witnesses.empty())
         {

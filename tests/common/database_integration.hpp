@@ -44,10 +44,11 @@ public:
 protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 
-    template <class Plugin> std::shared_ptr<Plugin> init_plugin()
+    // should be called after open_database
+    template <class Plugin>
+    std::shared_ptr<Plugin> init_plugin(const boost::program_options::variables_map& options
+                                        = boost::program_options::variables_map())
     {
-        boost::program_options::variables_map options;
-
         auto plugin = app.register_plugin<Plugin>();
         app.enable_plugin(plugin->plugin_name());
         plugin->plugin_initialize(options);

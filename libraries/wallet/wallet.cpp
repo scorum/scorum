@@ -898,11 +898,11 @@ public:
         try
         {
             _remote_account_by_key_api
-                = _remote_api->get_api_by_name("account_by_key_api")->as<account_by_key::account_by_key_api>();
+                = _remote_api->get_api_by_name(API_ACCOUNT_BY_KEY)->as<account_by_key::account_by_key_api>();
         }
         catch (const fc::exception& e)
         {
-            elog("Couldn't get account_by_key_api");
+            elog("Couldn't get " API_ACCOUNT_BY_KEY);
             throw(e);
         }
     }

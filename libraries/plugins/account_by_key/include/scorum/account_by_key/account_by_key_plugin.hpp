@@ -25,8 +25,7 @@ public:
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
     virtual void plugin_startup() override;
 
-    friend class detail::account_by_key_plugin_impl;
-    std::unique_ptr<detail::account_by_key_plugin_impl> my;
+    std::unique_ptr<detail::account_by_key_plugin_impl> _my;
 };
 }
 } // scorum::account_by_key

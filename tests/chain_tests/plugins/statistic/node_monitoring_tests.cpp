@@ -28,9 +28,9 @@ struct monitoring_database_fixture : public database_fixture::database_integrati
         : _api_ctx(app, API_NODE_MONITORING, std::make_shared<api_session_data>())
         , _api_call(_api_ctx)
     {
-        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
-
         open_database();
+
+        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
     }
 };
 

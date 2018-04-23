@@ -17,9 +17,10 @@ struct stat_database_fixture : public database_trx_integration_fixture
 {
     stat_database_fixture()
     {
+        open_database();
+
         init_plugin<scorum::account_statistics::account_statistics_plugin>();
 
-        open_database();
         generate_block();
         validate_database();
     }
