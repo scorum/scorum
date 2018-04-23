@@ -95,7 +95,6 @@ struct comment_api_obj
 
     share_type children_abs_rshares;
     time_point_sec cashout_time;
-    time_point_sec max_cashout_time;
     uint64_t total_vote_weight = 0;
 
     asset total_payout_scr_value = asset(0, SCORUM_SYMBOL);
@@ -527,7 +526,7 @@ FC_REFLECT( scorum::app::comment_api_obj,
              (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
              (depth)(children)
              (net_rshares)(abs_rshares)(vote_rshares)
-             (children_abs_rshares)(cashout_time)(max_cashout_time)
+             (children_abs_rshares)(cashout_time)
              (total_vote_weight)
              (total_payout_scr_value)
              (total_payout_sp_value)

@@ -44,7 +44,6 @@ void comment_api_obj::set_comment(const chain::comment_object& o)
     vote_rshares = o.vote_rshares;
     children_abs_rshares = o.children_abs_rshares;
     cashout_time = o.cashout_time;
-    max_cashout_time = o.max_cashout_time;
     total_vote_weight = o.total_vote_weight;
     net_votes = o.net_votes;
     root_comment = o.root_comment;
