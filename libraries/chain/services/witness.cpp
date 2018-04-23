@@ -27,7 +27,7 @@ const witness_object& dbs_witness::get(const account_name_type& name) const
 
 bool dbs_witness::is_exists(const account_name_type& name) const
 {
-    return find_by<by_name>(name);
+    return find_by<by_name>(name) != nullptr;
 }
 
 const witness_object& dbs_witness::get_top_witness() const
@@ -43,7 +43,6 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
                                                   const chain_properties& props)
 {
     FC_ASSERT(owner.size(), "Witness 'owner_name' should not be empty.");
-    FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
 
     const auto& dprops = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
@@ -83,8 +82,6 @@ void dbs_witness::update_witness(const witness_object& witness,
                                  const public_key_type& block_signing_key,
                                  const chain_properties& props)
 {
-    FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
-
     update(witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
         w.signing_key = block_signing_key;

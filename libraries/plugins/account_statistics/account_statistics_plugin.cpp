@@ -113,18 +113,18 @@ void account_statistics_plugin::plugin_set_program_options(boost::program_option
 
 void account_statistics_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
+    try
+    {
+        _my->initialize();
+    }
+    FC_LOG_AND_RETHROW()
+
     print_greeting();
 }
 
 void account_statistics_plugin::plugin_startup()
 {
-    ilog("account_stats plugin: plugin_startup() begin");
-
-    _my->startup();
-
     app().register_api_factory<account_statistics_api>("account_stats_api");
-
-    ilog("account_stats plugin: plugin_startup() end");
 }
 
 const flat_set<uint32_t>& account_statistics_plugin::get_tracked_buckets() const

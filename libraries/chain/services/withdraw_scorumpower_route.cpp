@@ -57,22 +57,26 @@ dbs_withdraw_scorumpower_route::~dbs_withdraw_scorumpower_route()
 
 bool dbs_withdraw_scorumpower_route::is_exists(const account_id_type& from, const account_id_type& to) const
 {
-    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)));
+    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)))
+        != nullptr;
 }
 
 bool dbs_withdraw_scorumpower_route::is_exists(const account_id_type& from, const dev_committee_id_type& to) const
 {
-    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)));
+    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)))
+        != nullptr;
 }
 
 bool dbs_withdraw_scorumpower_route::is_exists(const dev_committee_id_type& from, const dev_committee_id_type& to) const
 {
-    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)));
+    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)))
+        != nullptr;
 }
 
 bool dbs_withdraw_scorumpower_route::is_exists(const dev_committee_id_type& from, const account_id_type& to) const
 {
-    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)));
+    return find_by<by_withdraw_route>(boost::make_tuple(withdrawable_id_type(from), withdrawable_id_type(to)))
+        != nullptr;
 }
 
 const withdraw_scorumpower_route_object& dbs_withdraw_scorumpower_route::get(const account_id_type& from,

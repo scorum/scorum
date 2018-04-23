@@ -3,7 +3,7 @@
 #include <boost/multi_index/composite_key.hpp>
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
-#include <scorum/blockchain_statistics/schema/metrics.hpp>
+#include <scorum/blockchain_monitoring/schema/metrics.hpp>
 #include <scorum/common_statistics/base_bucket_object.hpp>
 #include <fc/shared_containers.hpp>
 
@@ -12,7 +12,7 @@
 #endif
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 using namespace scorum::chain;
 
@@ -53,11 +53,11 @@ typedef shared_multi_index_container<bucket_object,
                                                                                     &common_statistics::
                                                                                         base_bucket_object::open>>>>>
     bucket_index;
-} // namespace blockchain_statistics
+} // namespace blockchain_monitoring
 } // namespace scorum
 
-FC_REFLECT_DERIVED(scorum::blockchain_statistics::bucket_object,
-                   (scorum::common_statistics::base_bucket_object)(scorum::blockchain_statistics::base_metric),
+FC_REFLECT_DERIVED(scorum::blockchain_monitoring::bucket_object,
+                   (scorum::common_statistics::base_bucket_object)(scorum::blockchain_monitoring::base_metric),
                    (id))
 
-CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_statistics::bucket_object, scorum::blockchain_statistics::bucket_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_monitoring::bucket_object, scorum::blockchain_monitoring::bucket_index)

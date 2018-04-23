@@ -3,9 +3,11 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 set( SOURCES
     main.cpp
     block_tests.cpp
+    chain_api_tests.cpp
     operation_tests.cpp
     escrow_transfer_operation_tests.cpp
     account_data_service_tests.cpp
+    witness_data_service_tests.cpp
     operation_time_tests.cpp
     reward_service_tests.cpp
     rewards/vote_apply_tests.cpp
@@ -47,8 +49,8 @@ target_link_libraries(chain_tests
                       scorum_app
                       scorum_rewards_math
                       scorum_egenesis_none
-                      scorum_blockchain_statistics
                       scorum_account_statistics
+                      scorum_blockchain_monitoring
                       scorum_blockchain_history
                       )
 target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

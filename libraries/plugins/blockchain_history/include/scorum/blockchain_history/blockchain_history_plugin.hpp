@@ -49,7 +49,7 @@ public:
     blockchain_history_plugin(application* app);
     virtual ~blockchain_history_plugin();
 
-    std::string plugin_name() const override;
+    virtual std::string plugin_name() const override;
     virtual void plugin_set_program_options(boost::program_options::options_description& cli,
                                             boost::program_options::options_description& cfg) override;
     virtual void plugin_initialize(const boost::program_options::variables_map& options) override;

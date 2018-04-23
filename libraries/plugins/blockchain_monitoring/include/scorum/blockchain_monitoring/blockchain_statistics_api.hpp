@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorum/blockchain_statistics/schema/metrics.hpp>
+#include <scorum/blockchain_monitoring/schema/metrics.hpp>
 #include <fc/api.hpp>
 
 #ifndef API_BLOCKCHAIN_STATISTICS
@@ -14,7 +14,7 @@ struct api_context;
 } // namespace scorum
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 namespace detail {
 class blockchain_statistics_api_impl;
@@ -51,8 +51,8 @@ public:
 private:
     std::shared_ptr<detail::blockchain_statistics_api_impl> my;
 };
-} // namespace blockchain_statistics
+} // namespace blockchain_monitoring
 } // namespace scorum
 
-FC_API(scorum::blockchain_statistics::blockchain_statistics_api,
+FC_API(scorum::blockchain_monitoring::blockchain_statistics_api,
        (get_stats_for_time)(get_stats_for_interval)(get_lifetime_stats))

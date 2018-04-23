@@ -136,12 +136,9 @@ public:
     void get_max_block_age(int32_t& result);
 
     fc::api<network_broadcast_api>& get_write_node_net_api();
-    fc::api<database_api>& get_write_node_database_api();
 
-    bool _disable_get_block = false;
     fc::optional<std::string> _remote_endpoint;
     fc::optional<fc::api<network_broadcast_api>> _remote_net_api;
-    fc::optional<fc::api<database_api>> _remote_database_api;
     fc::optional<fc::api<login_api>> _remote_login;
     fc::http::websocket_connection_ptr _ws_ptr;
     std::shared_ptr<fc::rpc::websocket_api_connection> _ws_apic;

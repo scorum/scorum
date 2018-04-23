@@ -25,7 +25,7 @@ using namespace scorum::chain;
 enum blockchain_history_object_type
 {
     operations_history = (BLOCKCHAIN_HISTORY_SPACE_ID << 8),
-    all_account_operations_history,
+    account_all_operations_history,
     account_scr_to_scr_transfers_history,
     account_scr_to_sp_transfers_history,
     filtered_not_virt_operations_history,
