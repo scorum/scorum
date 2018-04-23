@@ -34,7 +34,7 @@ const account_object& dbs_account::get_account(const account_name_type& name) co
 
 bool dbs_account::is_exists(const account_name_type& name) const
 {
-    return find_by<by_name>(name);
+    return find_by<by_name>(name) != nullptr;
 }
 
 const account_authority_object& dbs_account::get_account_authority(const account_name_type& name) const

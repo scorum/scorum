@@ -17,7 +17,7 @@ dbs_budget::dbs_budget(database& db)
 
 bool dbs_budget::is_fund_budget_exists() const
 {
-    return find_by<by_owner_name>(SCORUM_ROOT_POST_PARENT_ACCOUNT);
+    return find_by<by_owner_name>(SCORUM_ROOT_POST_PARENT_ACCOUNT) != nullptr;
 }
 
 dbs_budget::budget_refs_type dbs_budget::get_budgets() const

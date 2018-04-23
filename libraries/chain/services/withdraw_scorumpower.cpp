@@ -18,12 +18,12 @@ dbs_withdraw_scorumpower::~dbs_withdraw_scorumpower()
 
 bool dbs_withdraw_scorumpower::is_exists(const account_id_type& from) const
 {
-    return find_by<by_destination>(from);
+    return find_by<by_destination>(from) != nullptr;
 }
 
 bool dbs_withdraw_scorumpower::is_exists(const dev_committee_id_type& from) const
 {
-    return find_by<by_destination>(from);
+    return find_by<by_destination>(from) != nullptr;
 }
 
 const withdraw_scorumpower_object& dbs_withdraw_scorumpower::get(const account_id_type& from) const
