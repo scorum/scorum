@@ -27,7 +27,7 @@ const witness_object& dbs_witness::get(const account_name_type& name) const
 
 bool dbs_witness::is_exists(const account_name_type& name) const
 {
-    return find_by<by_name>(name);
+    return find_by<by_name>(name) != nullptr;
 }
 
 const witness_object& dbs_witness::get_top_witness() const

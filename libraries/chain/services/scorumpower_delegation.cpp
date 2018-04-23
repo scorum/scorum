@@ -26,7 +26,7 @@ const scorumpower_delegation_object& dbs_scorumpower_delegation::get(const accou
 
 bool dbs_scorumpower_delegation::is_exists(const account_name_type& delegator, const account_name_type& delegatee) const
 {
-    return find_by<by_delegation>(boost::make_tuple(delegator, delegatee));
+    return find_by<by_delegation>(boost::make_tuple(delegator, delegatee)) != nullptr;
 }
 
 const scorumpower_delegation_expiration_object& dbs_scorumpower_delegation::create_expiration(

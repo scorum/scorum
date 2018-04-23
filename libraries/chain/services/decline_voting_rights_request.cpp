@@ -26,7 +26,7 @@ dbs_decline_voting_rights_request::get(const account_id_type& account_id) const
 
 bool dbs_decline_voting_rights_request::is_exists(const account_id_type& account_id) const
 {
-    return find_by<by_account>(account_id);
+    return find_by<by_account>(account_id) != nullptr;
 }
 
 const decline_voting_rights_request_object&

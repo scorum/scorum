@@ -404,7 +404,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.created = com.last_update;
                 com.active = com.last_update;
                 com.last_payout = fc::time_point_sec();
-                com.max_cashout_time = fc::time_point_sec::maximum();
 
                 if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {

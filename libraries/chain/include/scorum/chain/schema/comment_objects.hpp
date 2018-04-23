@@ -68,7 +68,6 @@ public:
 
     /// 24 hours from the weighted average of vote time
     time_point_sec cashout_time;
-    time_point_sec max_cashout_time;
 
     /// the total weight of voting rewards, used to calculate pro-rata share of curation payouts
     uint64_t total_vote_weight = 0;
@@ -333,7 +332,7 @@ FC_REFLECT( scorum::chain::comment_object,
              (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
              (depth)(children)
              (net_rshares)(abs_rshares)(vote_rshares)
-             (children_abs_rshares)(cashout_time)(max_cashout_time)
+             (children_abs_rshares)(cashout_time)
              (total_vote_weight)(net_votes)(root_comment)
              (max_accepted_payout)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)

@@ -14,7 +14,7 @@ dbs_witness_vote::dbs_witness_vote(database& db)
 
 bool dbs_witness_vote::is_exists(witness_id_type witness_id, account_id_type vouter_id) const
 {
-    return find_by<by_account_witness>(boost::make_tuple(vouter_id, witness_id));
+    return find_by<by_account_witness>(boost::make_tuple(vouter_id, witness_id)) != nullptr;
 }
 
 const witness_vote_object& dbs_witness_vote::get(witness_id_type witness_id, account_id_type vouter_id)
