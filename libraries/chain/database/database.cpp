@@ -1948,3 +1948,4 @@ void database::validate_invariants() const
 
 } // namespace chain
 } // namespace scorum
+

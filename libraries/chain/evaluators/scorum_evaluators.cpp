@@ -238,7 +238,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     if (comment.net_rshares > 0)
         return;
 
-    comment_vote_service.remove(comment_id_type(comment.id));
+    comment_vote_service.remove_by_comment(comment_id_type(comment.id));
 
     account_name_type parent_author = comment.parent_author;
     std::string parent_permlink = fc::to_string(comment.parent_permlink);
@@ -552,8 +552,8 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 
         account_service.decrease_balance(from_account, scorum_spent);
 
-        escrow_service.create(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
-                              o.scorum_amount, o.fee);
+        escrow_service.create_escrow(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
+                                     o.scorum_amount, o.fee);
     }
     FC_CAPTURE_AND_RETHROW((o))
 }
@@ -768,7 +768,10 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
         FC_ASSERT(voter.witnesses_voted_for < SCORUM_MAX_ACCOUNT_WITNESS_VOTES,
                   "Account has voted for too many witnesses."); // TODO: Remove after hardfork 2
 
-        witness_vote_service.create(witness.id, voter.id);
+        witness_vote_service.create([&](witness_vote_object& v) {
+            v.witness = witness.id;
+            v.account = voter.id;
+        });
 
         witness_service.adjust_witness_vote(witness, voter.witness_vote_weight());
 
@@ -1037,7 +1040,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
     {
         FC_ASSERT(!dvrr_service.is_exists(account.id), "Cannot create new request because one already exists.");
 
-        dvrr_service.create(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
+        dvrr_service.create_rights(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
     }
     else
     {
@@ -1050,7 +1053,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operation& op)
 {
     account_service_i& account_service = db().account_service();
-    scorumpower_delegation_service_i& vd_service = db().scorumpower_delegation_service();
+    scorumpower_delegation_service_i& sp_delegation_service = db().scorumpower_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
     withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 
@@ -1060,25 +1063,30 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
     auto available_shares = delegator.scorumpower - delegator.delegated_scorumpower
         - withdraw_scorumpower_service.get_withdraw_rest(delegator.id);
 
-    const auto dprops = dprops_service.get();
+    const auto& dprops = dprops_service.get();
     auto min_delegation = asset(
         dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER, SP_SYMBOL);
     auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, SP_SYMBOL);
 
     // If delegation doesn't exist, create it
-    if (!vd_service.is_exists(op.delegator, op.delegatee))
+    if (!sp_delegation_service.is_exists(op.delegator, op.delegatee))
     {
         FC_ASSERT(available_shares >= op.scorumpower, "Account does not have enough scorumpower to delegate.");
         FC_ASSERT(op.scorumpower >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation));
 
-        vd_service.create(op.delegator, op.delegatee, op.scorumpower);
+        sp_delegation_service.create([&](scorumpower_delegation_object& spdo) {
+            spdo.delegator = op.delegator;
+            spdo.delegatee = op.delegatee;
+            spdo.scorumpower = op.scorumpower;
+            spdo.min_delegation_time = dprops.time;
+        });
 
         account_service.increase_delegated_scorumpower(delegator, op.scorumpower);
         account_service.increase_received_scorumpower(delegatee, op.scorumpower);
     }
     else
     {
-        const auto& delegation = vd_service.get(op.delegator, op.delegatee);
+        const auto& delegation = sp_delegation_service.get(op.delegator, op.delegatee);
 
         // Else if the delegation is increasing
         if (op.scorumpower >= delegation.scorumpower)
@@ -1093,7 +1101,8 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
             account_service.increase_delegated_scorumpower(delegator, delta);
             account_service.increase_received_scorumpower(delegatee, delta);
 
-            vd_service.update(delegation, op.scorumpower);
+            sp_delegation_service.update(delegation,
+                                         [&](scorumpower_delegation_object& obj) { obj.scorumpower = op.scorumpower; });
         }
         // Else the delegation is decreasing
         else /* delegation.scorumpower > op.scorumpower */
@@ -1115,19 +1124,20 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
                           "Delegation would set scorumpower to zero, but it is already zero");
             }
 
-            vd_service.create_expiration(op.delegator, delta,
-                                         std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
-                                                  delegation.min_delegation_time));
+            sp_delegation_service.create_expiration(
+                op.delegator, delta, std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
+                                              delegation.min_delegation_time));
 
             account_service.decrease_received_scorumpower(delegatee, delta);
 
             if (op.scorumpower.amount > 0)
             {
-                vd_service.update(delegation, op.scorumpower);
+                sp_delegation_service.update(
+                    delegation, [&](scorumpower_delegation_object& obj) { obj.scorumpower = op.scorumpower; });
             }
             else
             {
-                vd_service.remove(delegation);
+                sp_delegation_service.remove(delegation);
             }
         }
     }

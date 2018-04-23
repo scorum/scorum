@@ -99,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(expiration_time_is_sum_of_head_block_time_and_lifetime, 
     create_expectations();
     const fc::time_point_sec expected_expiration = current_time + op.lifetime_sec;
 
-    mocks.ExpectCall(proposal_service, proposal_service_i::create)
+    mocks.ExpectCall(proposal_service, proposal_service_i::create_proposal)
         .With(_, _, expected_expiration, _)
         .ReturnByRef(proposal);
 

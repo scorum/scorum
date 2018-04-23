@@ -1,24 +1,18 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <functional>
-#include <vector>
-
+#include <scorum/chain/services/service_base.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 
 namespace scorum {
 namespace chain {
 
-struct proposal_service_i
+struct proposal_service_i : public base_service_i<proposal_object>
 {
-    virtual const proposal_object& create(const account_name_type& creator,
-                                          const protocol::proposal_operation& operation,
-                                          const fc::time_point_sec& expiration,
-                                          uint64_t quorum)
+    virtual const proposal_object& create_proposal(const account_name_type& creator,
+                                                   const protocol::proposal_operation& operation,
+                                                   const fc::time_point_sec& expiration,
+                                                   uint64_t quorum)
         = 0;
-
-    virtual void remove(const proposal_object& proposal) = 0;
 
     virtual bool is_exists(proposal_id_type proposal_id) = 0;
 
@@ -39,7 +33,7 @@ struct proposal_service_i
     virtual proposal_refs_type get_proposals() = 0;
 };
 
-class dbs_proposal : public dbs_base, public proposal_service_i
+class dbs_proposal : public dbs_service_base<proposal_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -47,12 +41,10 @@ protected:
     explicit dbs_proposal(database& db);
 
 public:
-    virtual const proposal_object& create(const account_name_type& creator,
-                                          const protocol::proposal_operation& operation,
-                                          const fc::time_point_sec& expiration,
-                                          uint64_t quorum) override;
-
-    void remove(const proposal_object& proposal) override;
+    virtual const proposal_object& create_proposal(const account_name_type& creator,
+                                                   const protocol::proposal_operation& operation,
+                                                   const fc::time_point_sec& expiration,
+                                                   uint64_t quorum) override;
 
     bool is_exists(proposal_id_type proposal_id) override;
 
