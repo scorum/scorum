@@ -1,10 +1,10 @@
-#include <scorum/blockchain_statistics/node_monitoring_api.hpp>
-#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
+#include <scorum/blockchain_monitoring/node_monitoring_api.hpp>
+#include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
 
 #include <chrono>
 
 namespace scorum {
-namespace blockchain_statistics {
+namespace blockchain_monitoring {
 
 namespace detail {
 class perfomance_timer
@@ -60,11 +60,11 @@ public:
     {
     }
 
-    std::shared_ptr<blockchain_statistics_plugin> get_plugin() const
+    std::shared_ptr<blockchain_monitoring_plugin> get_plugin() const
     {
-        auto plugin = _app.get_plugin<blockchain_statistics_plugin>(BLOCKCHAIN_STATISTICS_PLUGIN_NAME);
+        auto plugin = _app.get_plugin<blockchain_monitoring_plugin>(BLOCKCHAIN_MONITORING_PLUGIN_NAME);
 
-        FC_ASSERT(plugin, "Cann't get " BLOCKCHAIN_STATISTICS_PLUGIN_NAME " plugin from application.");
+        FC_ASSERT(plugin, "Cann't get " BLOCKCHAIN_MONITORING_PLUGIN_NAME " plugin from application.");
 
         return plugin;
     }
@@ -98,5 +98,5 @@ uint32_t node_monitoring_api::get_total_shared_memory_mb() const
         [&]() { return uint32_t(_my->_app.chain_database()->get_size() / (1024 * 1024)); });
 }
 
-} // namespace blockchain_statistics
+} // namespace blockchain_monitoring
 } // namespace scorum

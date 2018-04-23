@@ -1,5 +1,7 @@
 #include <boost/test/unit_test.hpp>
-#include <scorum/app/database_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
+#include <scorum/blockchain_history/api_objects.hpp>
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -18,7 +20,7 @@ using namespace scorum::app;
 
 namespace blockinfo_tests {
 
-using block_map_type = std::map<uint32_t, signed_block_api_obj>;
+using block_map_type = std::map<uint32_t, scorum::blockchain_history::signed_block_api_obj>;
 using blockheader_map_type = std::map<uint32_t, block_header>;
 
 struct blockinfo_database_fixture : public database_fixture::database_trx_integration_fixture
@@ -26,10 +28,12 @@ struct blockinfo_database_fixture : public database_fixture::database_trx_integr
     blockinfo_database_fixture()
         : alice("alice")
         , bob("bob")
-        , _database_api_ctx(app, "database_api", std::make_shared<api_session_data>())
-        , database_api_call(_database_api_ctx)
+        , _api_ctx(app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>())
+        , _api_call(_api_ctx)
         , dpo_service(db.dynamic_global_property_service())
     {
+        init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
+
         open_database();
         generate_block();
         validate_database();
@@ -48,8 +52,8 @@ struct blockinfo_database_fixture : public database_fixture::database_trx_integr
     Actor alice;
     Actor bob;
 
-    api_context _database_api_ctx;
-    database_api database_api_call;
+    api_context _api_ctx;
+    scorum::blockchain_history::blockchain_history_api _api_call;
 
     dynamic_global_property_service_i& dpo_service;
 };
@@ -77,20 +81,20 @@ SCORUM_TEST_CASE(check_get_blocks_history_test)
 
     generate_blocks(40); // move to block_log
 
-    SCORUM_REQUIRE_THROW(database_api_call.get_blocks_history(-1, 0), fc::exception);
+    SCORUM_REQUIRE_THROW(_api_call.get_blocks_history(-1, 0), fc::exception);
 
-    SCORUM_REQUIRE_THROW(database_api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
+    SCORUM_REQUIRE_THROW(_api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
 
-    auto last_irreversible_block_num = dpo_service.get().last_irreversible_block_num;
-    BOOST_REQUIRE_LE(last_irreversible_block_num, MAX_BLOCKS_HISTORY_DEPTH);
+    auto head_block_number = dpo_service.get().head_block_number;
+    BOOST_REQUIRE_LE(head_block_number, MAX_BLOCKS_HISTORY_DEPTH);
 
-    blockinfo_tests::block_map_type ret = database_api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
-    BOOST_REQUIRE_EQUAL(ret.size(), last_irreversible_block_num);
-    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, last_irreversible_block_num);
+    blockinfo_tests::block_map_type ret = _api_call.get_blocks_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(ret.size(), head_block_number);
+    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, head_block_number);
 
-    ret = database_api_call.get_blocks_history(transfer_block_num, 1);
+    ret = _api_call.get_blocks_history(transfer_block_num, 1);
     BOOST_REQUIRE_EQUAL(ret.begin()->first, transfer_block_num);
-    signed_block_api_obj block_api = ret.begin()->second;
+    scorum::blockchain_history::signed_block_api_obj block_api = ret.begin()->second;
 
     BOOST_REQUIRE_EQUAL(block_api.transactions.size(), 1u);
 
@@ -105,17 +109,16 @@ SCORUM_TEST_CASE(get_block_headers_history_test)
 
     generate_blocks(40); // move to block_log
 
-    SCORUM_REQUIRE_THROW(database_api_call.get_block_headers_history(-1, 0), fc::exception);
+    SCORUM_REQUIRE_THROW(_api_call.get_block_headers_history(-1, 0), fc::exception);
 
-    SCORUM_REQUIRE_THROW(database_api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
+    SCORUM_REQUIRE_THROW(_api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH + 1), fc::exception);
 
-    auto last_irreversible_block_num = dpo_service.get().last_irreversible_block_num;
-    BOOST_REQUIRE_LE(last_irreversible_block_num, MAX_BLOCKS_HISTORY_DEPTH);
+    auto head_block_number = dpo_service.get().head_block_number;
+    BOOST_REQUIRE_LE(head_block_number, MAX_BLOCKS_HISTORY_DEPTH);
 
-    blockinfo_tests::blockheader_map_type ret
-        = database_api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
-    BOOST_REQUIRE_EQUAL(ret.size(), last_irreversible_block_num);
-    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, last_irreversible_block_num);
+    blockinfo_tests::blockheader_map_type ret = _api_call.get_block_headers_history(-1, MAX_BLOCKS_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(ret.size(), head_block_number);
+    BOOST_REQUIRE_EQUAL(ret.rbegin()->first, head_block_number);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
