@@ -52,10 +52,13 @@
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
+#include <scorum/chain/services/comments_bounty_fund.hpp>
 
-#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_bounty_initialize.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_bounty_cashout.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -81,6 +84,7 @@ public:
 
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
+    database_ns::process_comments_bounty_initialize _process_comments_bounty_initialize;
     database_ns::process_comments_bounty_cashout _process_comments_bounty_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
 };
@@ -1138,6 +1142,7 @@ void database::initialize_indexes()
     add_index<registration_pool_index>();
     add_index<reward_fund_scr_index>();
     add_index<reward_fund_sp_index>();
+    add_index<comments_bounty_fund_index>();
     add_index<reward_pool_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
@@ -1349,10 +1354,14 @@ void database::_apply_block(const signed_block& next_block)
                                             static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds.before(_my->_process_comments_cashout)
+        // clang-format off
+        _my->_process_funds
+            .before(_my->_process_comments_bounty_initialize)
+            .before(_my->_process_comments_cashout)
             .before(_my->_process_comments_bounty_cashout)
             .before(_my->_process_vesting_withdrawals)
             .apply(ctx);
+        // clang-format on
 
         obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
@@ -1914,6 +1923,13 @@ void database::validate_invariants() const
 
         total_supply += obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
         total_supply += asset(obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
+
+        dbs_comments_bounty_fund& comments_bounty_fund_service = obtain_service<dbs_comments_bounty_fund>();
+        if (comments_bounty_fund_service.is_exists())
+        {
+            total_supply += asset(comments_bounty_fund_service.get().activity_reward_balance.amount, SCORUM_SYMBOL);
+        }
+
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get().balance;
 
