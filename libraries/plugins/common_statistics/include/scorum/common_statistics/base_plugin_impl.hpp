@@ -49,7 +49,7 @@ public:
     {
     }
 
-    void startup()
+    void initialize()
     {
         auto& db = _self.database();
 
