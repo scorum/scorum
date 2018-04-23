@@ -6,6 +6,7 @@ set( SOURCES
     operation_tests.cpp
     escrow_transfer_operation_tests.cpp
     account_data_service_tests.cpp
+    witness_data_service_tests.cpp
     operation_time_tests.cpp
     reward_service_tests.cpp
     rewards/vote_apply_tests.cpp
