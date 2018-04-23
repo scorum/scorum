@@ -25,7 +25,7 @@ const proposal_object& dbs_proposal::create_proposal(const account_name_type& cr
 
 bool dbs_proposal::is_exists(proposal_id_type proposal_id)
 {
-    return find_by<by_id>(proposal_id);
+    return find_by<by_id>(proposal_id) != nullptr;
 }
 
 const proposal_object& dbs_proposal::get(proposal_id_type proposal_id)

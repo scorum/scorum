@@ -82,10 +82,11 @@ public:
                 c.net_rshares = 0;
             }
             c.total_vote_weight = 0;
+            c.vote_rshares = 0;
 
             c.children_abs_rshares = 0;
             c.abs_rshares = 0;
-            c.vote_rshares = 0;
+
             c.max_cashout_time = fc::time_point_sec::maximum();
             c.cashout_time = fc::time_point_sec::maximum();
             c.last_payout = dgp_service.head_block_time();
