@@ -35,12 +35,12 @@ shared_authority& shared_authority::operator=(const authority& a)
     return *this;
 }
 
-void shared_authority::add_authority(const public_key_type& k, weight_type w)
+void shared_authority::add_authority(const public_key_type& k, authority_weight_type w)
 {
     key_auths[k] = w;
 }
 
-void shared_authority::add_authority(const account_name_type& k, weight_type w)
+void shared_authority::add_authority(const account_name_type& k, authority_weight_type w)
 {
     account_auths[k] = w;
 }

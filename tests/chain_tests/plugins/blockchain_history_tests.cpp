@@ -34,8 +34,6 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     using operation_map_type = std::map<uint32_t, blockchain_history::applied_operation>;
     using saved_operation_vector_type = std::vector<operation_map_type::value_type>;
 
-    std::shared_ptr<scorum::blockchain_history::blockchain_history_plugin> _plugin;
-
     history_database_fixture()
         : buratino("buratino")
         , maugli("maugli")
@@ -45,10 +43,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
         , _account_history_api_ctx(app, "account_history_api", std::make_shared<api_session_data>())
         , account_history_api_call(_account_history_api_ctx)
     {
-        boost::program_options::variables_map options;
-
-        _plugin = app.register_plugin<scorum::blockchain_history::blockchain_history_plugin>();
-        _plugin->plugin_initialize(options);
+        init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
 
         open_database();
         generate_block();
@@ -252,7 +247,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
 
-    const int over_limit = 10;
+    const size_t over_limit = 10;
 
     // sam has not been feeded yet
 
@@ -342,7 +337,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
 
-    const int over_limit = 10;
+    const size_t over_limit = 10;
 
     // sam has not been feeded yet
 
@@ -415,6 +410,70 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     BOOST_REQUIRE_EQUAL(input_ops.size(), saved_ops.size());
 
     auto it = input_ops.begin();
+    for (const auto& op_val : saved_ops)
+    {
+        const auto& saved_op = op_val.second.op;
+        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+
+        ++it;
+    }
+}
+
+SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
+{
+    using input_operation_vector_type = std::vector<operation>;
+
+    const int over_limit = 10;
+
+    // sam has not been feeded yet
+
+    generate_block();
+
+    input_operation_vector_type input_sam_ops;
+
+    {
+        transfer_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        op.memo = "from alice";
+        push_operation(op);
+        input_sam_ops.push_back(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = bob.name;
+        op.to = alice.name;
+        op.amount = ASSET_SCR(feed_amount / 11);
+        op.memo = "from bob to alice";
+        push_operation(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount / 20);
+        op.memo = "from alice (2)";
+        push_operation(op);
+        input_sam_ops.push_back(op);
+    }
+
+    operation_map_type ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, over_limit);
+    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
+
+    account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, 2u);
+    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
+
+    saved_operation_vector_type saved_ops;
+
+    for (const auto& val : ret)
+    {
+        saved_ops.push_back(val);
+    }
+
+    auto it = input_sam_ops.begin();
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;

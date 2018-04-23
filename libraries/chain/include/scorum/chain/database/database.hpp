@@ -49,15 +49,26 @@ class database : public chainbase::database,
 {
 
 public:
-    database();
+    enum creation_option
+    {
+        opt_none = 0,
+        opt_log_hardforks = 1 << 0,
+        opt_notify_virtual_op_applying = 1 << 1,
+
+#ifdef IS_LOW_MEM
+        opt_default = opt_log_hardforks
+#else
+        opt_default = opt_log_hardforks | opt_notify_virtual_op_applying
+#endif
+    };
+
+    database(uint32_t opt);
     virtual ~database();
 
     bool is_producing() const
     {
         return _is_producing;
     }
-
-    bool _log_hardforks = true;
 
     enum validation_steps
     {
@@ -201,6 +212,7 @@ public:
     inline void push_virtual_operation(const operation& op);
     inline void push_hf_operation(const operation& op);
 
+    void notify_pre_applied_block(const signed_block& block);
     void notify_applied_block(const signed_block& block);
     void notify_on_pending_transaction(const signed_transaction& tx);
     void notify_on_pre_apply_transaction(const signed_transaction& tx);
@@ -211,6 +223,7 @@ public:
      */
     fc::signal<void(const operation_notification&)> pre_apply_operation;
     fc::signal<void(const operation_notification&)> post_apply_operation;
+    fc::signal<void(const signed_block&)> pre_applied_block;
 
     /**
      *  This signal is emitted after all operations and virtual operation for a
@@ -381,6 +394,7 @@ private:
     std::unique_ptr<database_impl> _my;
 
     bool _is_producing = false;
+    uint32_t _options;
 
     optional<chainbase::abstract_undo_session_ptr> _pending_tx_session;
 

@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
@@ -111,5 +110,3 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
 BOOST_AUTO_TEST_SUITE_END()
 
 } // database_fixture
-
-#endif

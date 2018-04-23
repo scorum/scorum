@@ -32,8 +32,9 @@ huge gain if you do not need this functionality.
 
 We ship a Dockerfile.  This builds both common node type binaries.
 
-    git clone https://gitlab.scorum.com/blockchain/node.git
+    git clone https://github.com/scorum/scorum.git
     cd scorum
+    git submodule update --init --recursive
     docker build -t scorum/scorum .
 
 ## Building on Ubuntu 16.04

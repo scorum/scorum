@@ -230,6 +230,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const witness_miss_block_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
     void operator()(const return_scorumpower_delegation_operation& op)
     {
         _impacted.insert(op.account);

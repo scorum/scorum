@@ -61,7 +61,7 @@ access to its API to anyone:
     # no seed-node in config file or command line
     p2p-endpoint = 127.0.0.1:2001       # bind to localhost to prevent remote p2p nodes from connecting to us
     rpc-endpoint = 127.0.0.1:8090       # bind to localhost to secure RPC API access
-    enable-plugin = witness account_history debug_node
+    enable-plugin = witness blockchain_history debug_node
     public-api = database_api login_api debug_node_api
 
 The `public-api` section lists API's accessible to the RPC endpoint.  Since (as explained above) the `debug_node_api`

@@ -266,9 +266,9 @@ public:
         c->set_session_data(session);
     }
 
-    application_impl(application* self)
+    application_impl(application* self, std::shared_ptr<chain::database> chain_db)
         : _self(self)
-        , _chain_db(std::make_shared<chain::database>())
+        , _chain_db(std::move(chain_db))
     {
     }
 
@@ -1093,7 +1093,12 @@ public:
 }
 
 application::application()
-    : my(new detail::application_impl(this))
+    : application(std::make_shared<chain::database>(chain::database::opt_default))
+{
+}
+
+application::application(std::shared_ptr<chain::database> db)
+    : my(new detail::application_impl(this, db))
 {
 }
 

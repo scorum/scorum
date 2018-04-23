@@ -91,8 +91,6 @@ add_library( scorum_chain
              database/block_tasks/process_vesting_withdrawals.cpp
              database/block_tasks/withdrawable_actors_impl.cpp
 
-             util/reward.cpp
-
              ${HEADERS}
              ${hardfork_hpp_file}
              "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/hardfork.hpp"
@@ -101,6 +99,7 @@ add_library( scorum_chain
 add_dependencies( scorum_chain scorum_protocol build_hardfork_hpp )
 target_link_libraries( scorum_chain
                        scorum_protocol
+                       scorum_rewards_math
                        fc
                        chainbase
                        graphene_schema

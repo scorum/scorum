@@ -21,8 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifdef IS_TEST_NET
-
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -78,7 +76,6 @@ void db_setup_and_open(database& db, const fc::path& path)
 
     genesis = database_integration_fixture::create_default_genesis_state();
 
-    db._log_hardforks = false;
     db.open(path, path, TEST_SHARED_MEM_SIZE_10MB, chainbase::database::read_write, genesis);
 }
 
@@ -94,7 +91,7 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
         signed_block cutoff_block;
         {
-            database db;
+            database db(database::opt_default);
             db_setup_and_open(db, data_dir.path());
             b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key,
                                   database::skip_nothing);
@@ -122,7 +119,7 @@ BOOST_AUTO_TEST_CASE(generate_empty_blocks)
             db.close();
         }
         {
-            database db;
+            database db(database::opt_default);
             db_setup_and_open(db, data_dir.path());
             BOOST_CHECK_EQUAL(db.head_block_num(), cutoff_block.block_num());
             b = cutoff_block;
@@ -150,7 +147,7 @@ BOOST_AUTO_TEST_CASE(undo_block)
     {
         fc::temp_directory data_dir(graphene::utilities::temp_directory_path());
         {
-            database db;
+            database db(database::opt_default);
             db_setup_and_open(db, data_dir.path());
             fc::time_point_sec now(TEST_GENESIS_TIMESTAMP);
             std::vector<fc::time_point_sec> time_stack;
@@ -206,9 +203,9 @@ BOOST_AUTO_TEST_CASE(fork_blocks)
 
         // TODO This test needs 6-7 ish witnesses prior to fork
 
-        database db1;
+        database db1(database::opt_default);
         db_setup_and_open(db1, data_dir1.path());
-        database db2;
+        database db2(database::opt_default);
         db_setup_and_open(db2, data_dir2.path());
 
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
@@ -279,9 +276,9 @@ BOOST_AUTO_TEST_CASE(switch_forks_undo_create)
         fc::temp_directory dir1(graphene::utilities::temp_directory_path());
         fc::temp_directory dir2(graphene::utilities::temp_directory_path());
 
-        database db1;
+        database db1(database::opt_default);
         db_setup_and_open(db1, dir1.path());
-        database db2;
+        database db2(database::opt_default);
         db_setup_and_open(db2, dir2.path());
 
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
@@ -345,9 +342,9 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
         fc::temp_directory dir1(graphene::utilities::temp_directory_path());
         fc::temp_directory dir2(graphene::utilities::temp_directory_path());
 
-        database db1;
+        database db1(database::opt_default);
         db_setup_and_open(db1, dir1.path());
-        database db2;
+        database db2(database::opt_default);
         db_setup_and_open(db2, dir2.path());
 
         BOOST_CHECK(db1.get_chain_id() == db2.get_chain_id());
@@ -403,7 +400,7 @@ BOOST_AUTO_TEST_CASE(tapos)
     {
         fc::temp_directory dir1(graphene::utilities::temp_directory_path());
 
-        database db1;
+        database db1(database::opt_default);
         db_setup_and_open(db1, dir1.path());
 
         auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string(TEST_INIT_KEY)));
@@ -833,4 +830,3 @@ op_msg.end() ) );
 */
 
 BOOST_AUTO_TEST_SUITE_END()
-#endif

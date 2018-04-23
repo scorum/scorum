@@ -93,6 +93,21 @@ struct shutdown_witness_operation : public virtual_operation
     account_name_type owner;
 };
 
+struct witness_miss_block_operation : public virtual_operation
+{
+    witness_miss_block_operation()
+    {
+    }
+    witness_miss_block_operation(const std::string& o, uint32_t num)
+        : owner(o)
+        , block_num(num)
+    {
+    }
+
+    account_name_type owner;
+    uint32_t block_num = 0;
+};
+
 struct hardfork_operation : public virtual_operation
 {
     hardfork_operation()
@@ -180,6 +195,7 @@ FC_REFLECT(scorum::protocol::curation_reward_operation, (curator)(reward)(commen
 FC_REFLECT(scorum::protocol::comment_reward_operation, (author)(permlink)(payout))
 FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
+FC_REFLECT(scorum::protocol::witness_miss_block_operation, (owner)(block_num))
 FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
 FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink))
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation, (account)(scorumpower))

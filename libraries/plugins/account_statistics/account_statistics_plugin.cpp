@@ -120,6 +120,8 @@ void account_statistics_plugin::plugin_startup()
 {
     ilog("account_stats plugin: plugin_startup() begin");
 
+    _my->startup();
+
     app().register_api_factory<account_statistics_api>("account_stats_api");
 
     ilog("account_stats plugin: plugin_startup() end");
