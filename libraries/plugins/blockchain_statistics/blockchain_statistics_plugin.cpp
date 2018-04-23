@@ -322,22 +322,17 @@ void blockchain_statistics_plugin::plugin_initialize(const boost::program_option
         ilog("chain-stats-bucket-size: ${b}", ("b", _my->_tracked_buckets));
         ilog("chain-stats-history-per-bucket: ${h}", ("h", _my->_maximum_history_per_bucket_size));
 
-        dlog("chain_stats_plugin: plugin_initialize() end");
+        _my->initialize();
     }
     FC_CAPTURE_AND_RETHROW()
+
     print_greeting();
 }
 
 void blockchain_statistics_plugin::plugin_startup()
 {
-    ilog("chain_stats plugin: plugin_startup() begin");
-
-    _my->startup();
-
     app().register_api_factory<blockchain_statistics_api>(API_BLOCKCHAIN_STATISTICS);
     app().register_api_factory<node_monitoring_api>(API_NODE_MONITORING);
-
-    ilog("chain_stats plugin: plugin_startup() end");
 }
 
 const flat_set<uint32_t>& blockchain_statistics_plugin::get_tracked_buckets() const

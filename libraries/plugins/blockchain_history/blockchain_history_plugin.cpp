@@ -41,7 +41,7 @@ public:
         return _self.database();
     }
 
-    void startup()
+    void initialize()
     {
         chain::database& db = database();
 
@@ -268,59 +268,61 @@ void blockchain_history_plugin::plugin_set_program_options(boost::program_option
 
 void blockchain_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    typedef std::pair<account_name_type, account_name_type> pairstring;
-    LOAD_VALUE_SET(options, "track-account-range", _my->_tracked_accounts, pairstring);
-
-    if (options.count("history-whitelist-ops"))
+    try
     {
-        _my->_filter_content = true;
-        _my->_blacklist = false;
 
-        for (auto& arg : options.at("history-whitelist-ops").as<std::vector<std::string>>())
+        typedef std::pair<account_name_type, account_name_type> pairstring;
+        LOAD_VALUE_SET(options, "track-account-range", _my->_tracked_accounts, pairstring);
+
+        if (options.count("history-whitelist-ops"))
         {
-            std::vector<std::string> ops;
-            boost::split(ops, arg, boost::is_any_of(" \t,"));
+            _my->_filter_content = true;
+            _my->_blacklist = false;
 
-            for (const std::string& op : ops)
+            for (auto& arg : options.at("history-whitelist-ops").as<std::vector<std::string>>())
             {
-                if (op.size())
-                    _my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
+                std::vector<std::string> ops;
+                boost::split(ops, arg, boost::is_any_of(" \t,"));
+
+                for (const std::string& op : ops)
+                {
+                    if (op.size())
+                        _my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
+                }
             }
+
+            ilog("Account History: whitelisting ops ${o}", ("o", _my->_op_list));
+        }
+        else if (options.count("history-blacklist-ops"))
+        {
+            _my->_filter_content = true;
+            _my->_blacklist = true;
+            for (auto& arg : options.at("history-blacklist-ops").as<std::vector<std::string>>())
+            {
+                std::vector<std::string> ops;
+                boost::split(ops, arg, boost::is_any_of(" \t,"));
+
+                for (const std::string& op : ops)
+                {
+                    if (op.size())
+                        _my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
+                }
+            }
+
+            ilog("Account History: blacklisting ops ${o}", ("o", _my->_op_list));
         }
 
-        ilog("Account History: whitelisting ops ${o}", ("o", _my->_op_list));
+        _my->initialize();
     }
-    else if (options.count("history-blacklist-ops"))
-    {
-        _my->_filter_content = true;
-        _my->_blacklist = true;
-        for (auto& arg : options.at("history-blacklist-ops").as<std::vector<std::string>>())
-        {
-            std::vector<std::string> ops;
-            boost::split(ops, arg, boost::is_any_of(" \t,"));
+    FC_LOG_AND_RETHROW()
 
-            for (const std::string& op : ops)
-            {
-                if (op.size())
-                    _my->_op_list.insert(SCORUM_NAMESPACE_PREFIX + op);
-            }
-        }
-
-        ilog("Account History: blacklisting ops ${o}", ("o", _my->_op_list));
-    }
     print_greeting();
 }
 
 void blockchain_history_plugin::plugin_startup()
 {
-    ilog("blockchain_history plugin: plugin_startup() begin");
-
-    _my->startup();
-
     app().register_api_factory<account_history_api>("account_history_api");
     app().register_api_factory<blockchain_history_api>("blockchain_history_api");
-
-    ilog("blockchain_history plugin: plugin_startup() end");
 }
 
 flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracked_accounts() const
