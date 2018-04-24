@@ -8,6 +8,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include "database_default_integration.hpp"
 

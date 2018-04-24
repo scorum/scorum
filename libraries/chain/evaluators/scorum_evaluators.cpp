@@ -17,6 +17,8 @@
 #include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 

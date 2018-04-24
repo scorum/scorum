@@ -5,6 +5,8 @@
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
@@ -213,9 +215,7 @@ private:
         }
         else if (SP_SYMBOL == reward.symbol())
         {
-            account_service.increase_scorumpower(recipient, reward);
-
-            dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += reward; });
+            account_service.create_scorumpower(recipient, reward);
         }
     }
 

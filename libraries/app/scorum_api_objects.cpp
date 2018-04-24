@@ -1,7 +1,9 @@
 #include <scorum/app/scorum_api_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include <scorum/chain/database/database.hpp>
 

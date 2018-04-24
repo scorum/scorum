@@ -32,9 +32,11 @@ add_library( scorum_chain
              database/database_witness_schedule.cpp
 
              services/account.cpp
+             services/account_blogging_statistic.cpp
              services/atomicswap.cpp
              services/budget.cpp
              services/comment.cpp
+             services/comment_statistic.cpp
              services/comment_vote.cpp
              services/dbs_base.cpp
              services/dbservice_dbs_factory.cpp
