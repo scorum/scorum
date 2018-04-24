@@ -39,6 +39,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -1126,7 +1127,8 @@ void database::initialize_indexes()
     add_index<chain_property_index>();
     add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
-    add_index<comment_statistic_index>();
+    add_index<comment_statistic_scr_index>();
+    add_index<comment_statistic_sp_index>();
     add_index<comment_vote_index>();
     add_index<decline_voting_rights_request_index>();
     add_index<dynamic_global_property_index>();

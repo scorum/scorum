@@ -8,6 +8,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include "database_default_integration.hpp"
 
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE(old_tests)
 
         // clang-format off
         const auto &alice_post_id = db.obtain_service<dbs_comment>().get("alice", std::string("test")).id;
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_comment_statistic>().get(alice_post_id).beneficiary_payout_sp_value,
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_comment_statistic_sp>().get(alice_post_id).beneficiary_payout_value,
                             (visitor.reward_map["sam"] + visitor.reward_map["bob"]));
         // clang-format on
     }

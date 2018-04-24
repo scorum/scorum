@@ -3,9 +3,11 @@
 #include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -37,7 +39,8 @@ DATA_SERVICE_FACTORY_IMPL(
         (budget)
         (comment)
         (comments_bounty_fund)
-        (comment_statistic)
+        (comment_statistic_scr)
+        (comment_statistic_sp)
         (comment_vote)
         (decline_voting_rights_request)
         (dynamic_global_property)

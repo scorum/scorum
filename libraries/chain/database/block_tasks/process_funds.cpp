@@ -90,9 +90,7 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     }
     else if (SP_SYMBOL == reward_symbol)
     {
-        account_service.increase_scorumpower(witness, witness_reward);
-
-        dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += witness_reward; });
+        account_service.create_scorumpower(witness, witness_reward);
 
         reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
         reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += content_reward; });

@@ -3,10 +3,12 @@
 #include <scorum/chain/database/block_tasks/block_tasks.hpp>
 
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comments_bounty_fund.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -75,6 +77,25 @@ private:
 
     void pay_account(const account_object& recipient, const asset& reward);
 
+    template <class CommentStatisticService>
+    void accumulate_comment_statistic(CommentStatisticService& stat_service,
+                                      const comment_object& comment,
+                                      const asset& total_payout,
+                                      const asset& author_tokens,
+                                      const asset& curation_tokens,
+                                      const asset& total_beneficiary)
+    {
+        using comment_object_type = typename CommentStatisticService::object_type;
+
+        const auto& stat = stat_service.get(comment.id);
+        stat_service.update(stat, [&](comment_object_type& c) {
+            c.total_payout_value += total_payout;
+            c.author_payout_value += author_tokens;
+            c.curator_payout_value += curation_tokens;
+            c.beneficiary_payout_value += total_beneficiary;
+        });
+    }
+
     void accumulate_statistic(const comment_object& comment,
                               const account_object& author,
                               const asset& author_tokens,
@@ -90,7 +111,8 @@ private:
     account_service_i& account_service;
     account_blogging_statistic_service_i& account_blogging_statistic_service;
     comment_service_i& comment_service;
-    comment_statistic_service_i& comment_statistic_service;
+    comment_statistic_scr_service_i& comment_statistic_scr_service;
+    comment_statistic_sp_service_i& comment_statistic_sp_service;
     comment_vote_service_i& comment_vote_service;
 };
 }

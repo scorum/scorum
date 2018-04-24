@@ -1,7 +1,9 @@
 #include <scorum/app/scorum_api_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include <scorum/chain/database/database.hpp>
 
@@ -17,8 +19,8 @@ comment_api_obj::comment_api_obj(const chain::comment_object& o)
 comment_api_obj::comment_api_obj(const chain::comment_object& o, const chain::database& db)
 {
     set_comment(o);
-    dbs_comment_statistic& comment_statistic_service = db.obtain_service<dbs_comment_statistic>();
-    set_comment_statistic(comment_statistic_service.get(o.id));
+    set_comment_statistic(db.obtain_service<dbs_comment_statistic_scr>().get(o.id));
+    set_comment_statistic(db.obtain_service<dbs_comment_statistic_sp>().get(o.id));
     initialize(o);
 }
 
@@ -53,16 +55,20 @@ void comment_api_obj::set_comment(const chain::comment_object& o)
     allow_curation_rewards = o.allow_curation_rewards;
 }
 
-void comment_api_obj::set_comment_statistic(const chain::comment_statistic_object& stat)
+void comment_api_obj::set_comment_statistic(const chain::comment_statistic_scr_object& stat)
 {
-    total_payout_scr_value = stat.total_payout_scr_value;
-    total_payout_sp_value = stat.total_payout_sp_value;
-    author_payout_scr_value = stat.author_payout_scr_value;
-    author_payout_sp_value = stat.author_payout_sp_value;
-    curator_payout_scr_value = stat.curator_payout_scr_value;
-    curator_payout_sp_value = stat.curator_payout_sp_value;
-    beneficiary_payout_scr_value = stat.beneficiary_payout_scr_value;
-    beneficiary_payout_sp_value = stat.beneficiary_payout_sp_value;
+    total_payout_scr_value = stat.total_payout_value;
+    author_payout_scr_value = stat.author_payout_value;
+    curator_payout_scr_value = stat.curator_payout_value;
+    beneficiary_payout_scr_value = stat.beneficiary_payout_value;
+}
+
+void comment_api_obj::set_comment_statistic(const chain::comment_statistic_sp_object& stat)
+{
+    total_payout_sp_value = stat.total_payout_value;
+    author_payout_sp_value = stat.author_payout_value;
+    curator_payout_sp_value = stat.curator_payout_value;
+    beneficiary_payout_sp_value = stat.beneficiary_payout_value;
 }
 
 void comment_api_obj::initialize(const chain::comment_object& o)

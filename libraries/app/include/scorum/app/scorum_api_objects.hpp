@@ -118,7 +118,8 @@ struct comment_api_obj
 
 private:
     inline void set_comment(const chain::comment_object&);
-    inline void set_comment_statistic(const chain::comment_statistic_object&);
+    inline void set_comment_statistic(const chain::comment_statistic_scr_object&);
+    inline void set_comment_statistic(const chain::comment_statistic_sp_object&);
     inline void initialize(const chain::comment_object& a);
 };
 

@@ -10,7 +10,8 @@ process_comments_cashout_impl::process_comments_cashout_impl(block_task_context&
     , account_service(ctx.services().account_service())
     , account_blogging_statistic_service(ctx.services().account_blogging_statistic_service())
     , comment_service(ctx.services().comment_service())
-    , comment_statistic_service(ctx.services().comment_statistic_service())
+    , comment_statistic_scr_service(ctx.services().comment_statistic_scr_service())
+    , comment_statistic_sp_service(ctx.services().comment_statistic_sp_service())
     , comment_vote_service(ctx.services().comment_vote_service())
 {
 }
@@ -148,9 +149,7 @@ void process_comments_cashout_impl::pay_account(const account_object& recipient,
     }
     else if (SP_SYMBOL == reward.symbol())
     {
-        account_service.increase_scorumpower(recipient, reward);
-
-        dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += reward; });
+        account_service.create_scorumpower(recipient, reward);
     }
 }
 
@@ -161,8 +160,6 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
                                                          const asset& total_beneficiary,
                                                          asset_symbol_type reward_symbol)
 {
-    const auto& comment_stat = comment_statistic_service.get(comment.id);
-
     FC_ASSERT(author_tokens.symbol() == reward_symbol);
     FC_ASSERT(curation_tokens.symbol() == reward_symbol);
     FC_ASSERT(total_beneficiary.symbol() == reward_symbol);
@@ -173,21 +170,13 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
 
     if (SCORUM_SYMBOL == reward_symbol)
     {
-        comment_statistic_service.update(comment_stat, [&](comment_statistic_object& c) {
-            c.total_payout_scr_value += total_payout;
-            c.author_payout_scr_value += author_tokens;
-            c.curator_payout_scr_value += curation_tokens;
-            c.beneficiary_payout_scr_value += total_beneficiary;
-        });
+        accumulate_comment_statistic(comment_statistic_scr_service, comment, total_payout, author_tokens,
+                                     curation_tokens, total_beneficiary);
     }
     else if (SP_SYMBOL == reward_symbol)
     {
-        comment_statistic_service.update(comment_stat, [&](comment_statistic_object& c) {
-            c.total_payout_sp_value += total_payout;
-            c.author_payout_sp_value += author_tokens;
-            c.curator_payout_sp_value += curation_tokens;
-            c.beneficiary_payout_sp_value += total_beneficiary;
-        });
+        accumulate_comment_statistic(comment_statistic_sp_service, comment, total_payout, author_tokens,
+                                     curation_tokens, total_beneficiary);
     }
 
 #ifndef IS_LOW_MEM

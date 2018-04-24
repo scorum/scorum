@@ -17,6 +17,8 @@
 #include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -329,7 +331,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
 {
     account_service_i& account_service = db().account_service();
     comment_service_i& comment_service = db().comment_service();
-    comment_statistic_service_i& comment_statistic_service = db().comment_statistic_service();
+    comment_statistic_scr_service_i& comment_statistic_scr_service = db().comment_statistic_scr_service();
+    comment_statistic_sp_service_i& comment_statistic_sp_service = db().comment_statistic_sp_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     try
@@ -436,7 +439,10 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #endif
             });
 
-            comment_statistic_service.create([&](comment_statistic_object& stat) { stat.comment = new_comment.id; });
+            comment_statistic_scr_service.create(
+                [&](comment_statistic_scr_object& stat) { stat.comment = new_comment.id; });
+            comment_statistic_sp_service.create(
+                [&](comment_statistic_sp_object& stat) { stat.comment = new_comment.id; });
 
 #ifndef IS_LOW_MEM
             {
