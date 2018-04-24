@@ -12,13 +12,7 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::curve_id;
 
-enum class reward_fund_asset_symbol : asset_symbol_type
-{
-    scr = SCORUM_SYMBOL,
-    sp = SP_SYMBOL,
-};
-
-template <uint16_t ObjectType, reward_fund_asset_symbol SymbolType>
+template <uint16_t ObjectType, asset_symbol_type SymbolType>
 class reward_fund_object : public object<ObjectType, reward_fund_object<ObjectType, SymbolType>>
 {
 public:
@@ -28,7 +22,7 @@ public:
 
     id_type id;
 
-    asset activity_reward_balance = asset(0, (asset_symbol_type)SymbolType);
+    asset activity_reward_balance = asset(0, SymbolType);
     fc::uint128_t recent_claims = 0;
     time_point_sec last_update;
     curve_id author_reward_curve;
@@ -43,8 +37,8 @@ using reward_fund_index
                                                                     typename FundObjectType::id_type,
                                                                     &FundObjectType::id>>>>;
 
-using reward_fund_scr_object = reward_fund_object<reward_fund_scr_object_type, reward_fund_asset_symbol::scr>;
-using reward_fund_sp_object = reward_fund_object<reward_fund_sp_object_type, reward_fund_asset_symbol::sp>;
+using reward_fund_scr_object = reward_fund_object<reward_fund_scr_object_type, SCORUM_SYMBOL>;
+using reward_fund_sp_object = reward_fund_object<reward_fund_sp_object_type, SP_SYMBOL>;
 
 using reward_fund_scr_index = reward_fund_index<reward_fund_scr_object>;
 using reward_fund_sp_index = reward_fund_index<reward_fund_sp_object>;

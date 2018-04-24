@@ -117,27 +117,26 @@ public:
     int8_t num_changes = 0;
 };
 
-class comment_statistic_object : public object<comment_statistic_object_type, comment_statistic_object>
+template <uint16_t ObjectType, asset_symbol_type SymbolType>
+class comment_statistic_object : public object<ObjectType, comment_statistic_object<ObjectType, SymbolType>>
 {
 public:
     CHAINBASE_DEFAULT_CONSTRUCTOR(comment_statistic_object)
+
+    typedef typename object<ObjectType, comment_statistic_object<ObjectType, SymbolType>>::id_type id_type;
 
     id_type id;
 
     comment_id_type comment;
 
     /// tracks the total payout this comment has received over time
-    asset total_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset total_payout_sp_value = asset(0, SP_SYMBOL);
+    asset total_payout_value = asset(0, SymbolType);
 
-    asset author_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset author_payout_sp_value = asset(0, SP_SYMBOL);
+    asset author_payout_value = asset(0, SymbolType);
 
-    asset curator_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset curator_payout_sp_value = asset(0, SP_SYMBOL);
+    asset curator_payout_value = asset(0, SymbolType);
 
-    asset beneficiary_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset beneficiary_payout_sp_value = asset(0, SP_SYMBOL);
+    asset beneficiary_payout_value = asset(0, SymbolType);
 };
 
 // clang-format off
@@ -297,17 +296,24 @@ typedef shared_multi_index_container<comment_object,
     comment_index;
 
 struct by_comment_id;
-typedef shared_multi_index_container<comment_statistic_object,
+
+template <typename CommentStatisticObjectType>
+using comment_statistic_index = shared_multi_index_container<CommentStatisticObjectType,
                               indexed_by<ordered_unique<tag<by_id>,
-                                                        member<comment_statistic_object,
-                                                               comment_statistic_id_type,
-                                                               &comment_statistic_object::id>>,
+                                                        member<CommentStatisticObjectType,
+                                                               typename CommentStatisticObjectType::id_type,
+                                                               &CommentStatisticObjectType::id>>,
                                          ordered_unique<tag<by_comment_id>,
-member<comment_statistic_object,
+member<CommentStatisticObjectType,
        comment_id_type,
-       &comment_statistic_object::comment>>>
-     >
-    comment_statistic_index;
+       &CommentStatisticObjectType::comment>>>
+     >;
+
+using comment_statistic_scr_object = comment_statistic_object<comment_statistic_scr_object_type, SCORUM_SYMBOL>;
+using comment_statistic_sp_object = comment_statistic_object<comment_statistic_sp_object_type, SP_SYMBOL>;
+
+using comment_statistic_scr_index = comment_statistic_index<comment_statistic_scr_object>;
+using comment_statistic_sp_index = comment_statistic_index<comment_statistic_sp_object>;
 
 // clang-format on
 } // namespace chain
@@ -333,13 +339,22 @@ FC_REFLECT( scorum::chain::comment_vote_object,
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_vote_object, scorum::chain::comment_vote_index )
 
-FC_REFLECT( scorum::chain::comment_statistic_object,
+FC_REFLECT( scorum::chain::comment_statistic_scr_object,
              (id)(comment)
-            (total_payout_scr_value)(total_payout_sp_value)
-            (author_payout_scr_value)(author_payout_sp_value)
-            (curator_payout_scr_value)(curator_payout_sp_value)
-            (beneficiary_payout_scr_value)(beneficiary_payout_sp_value)
+            (total_payout_value)
+            (author_payout_value)
+            (curator_payout_value)
+            (beneficiary_payout_value)
           )
-CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_object, scorum::chain::comment_statistic_index )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_scr_object, scorum::chain::comment_statistic_scr_index )
+
+FC_REFLECT( scorum::chain::comment_statistic_sp_object,
+             (id)(comment)
+            (total_payout_value)
+            (author_payout_value)
+            (curator_payout_value)
+            (beneficiary_payout_value)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_sp_object, scorum::chain::comment_statistic_sp_index )
 
 // clang-format on

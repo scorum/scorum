@@ -32,7 +32,8 @@ public:
         , account_service(ctx.services().account_service())
         , account_blogging_statistic_service(ctx.services().account_blogging_statistic_service())
         , comment_service(ctx.services().comment_service())
-        , comment_statistic_service(ctx.services().comment_statistic_service())
+        , comment_statistic_scr_service(ctx.services().comment_statistic_scr_service())
+        , comment_statistic_sp_service(ctx.services().comment_statistic_sp_service())
         , comment_vote_service(ctx.services().comment_vote_service())
     {
     }
@@ -219,6 +220,25 @@ private:
         }
     }
 
+    template <class CommentStatisticService>
+    void accumulate_comment_statistic(CommentStatisticService& stat_service,
+                                      const comment_object& comment,
+                                      const asset& total_payout,
+                                      const asset& author_tokens,
+                                      const asset& curation_tokens,
+                                      const asset& total_beneficiary)
+    {
+        using comment_object_type = typename CommentStatisticService::object_type;
+
+        const auto& stat = stat_service.get(comment.id);
+        stat_service.update(stat, [&](comment_object_type& c) {
+            c.total_payout_value += total_payout;
+            c.author_payout_value += author_tokens;
+            c.curator_payout_value += curation_tokens;
+            c.beneficiary_payout_value += total_beneficiary;
+        });
+    }
+
     void accumulate_statistic(const comment_object& comment,
                               const account_object& author,
                               const asset& author_tokens,
@@ -226,8 +246,6 @@ private:
                               const asset& total_beneficiary,
                               asset_symbol_type reward_symbol)
     {
-        const auto& comment_stat = comment_statistic_service.get(comment.id);
-
         FC_ASSERT(author_tokens.symbol() == reward_symbol);
         FC_ASSERT(curation_tokens.symbol() == reward_symbol);
         FC_ASSERT(total_beneficiary.symbol() == reward_symbol);
@@ -238,21 +256,13 @@ private:
 
         if (SCORUM_SYMBOL == reward_symbol)
         {
-            comment_statistic_service.update(comment_stat, [&](comment_statistic_object& c) {
-                c.total_payout_scr_value += total_payout;
-                c.author_payout_scr_value += author_tokens;
-                c.curator_payout_scr_value += curation_tokens;
-                c.beneficiary_payout_scr_value += total_beneficiary;
-            });
+            accumulate_comment_statistic(comment_statistic_scr_service, comment, total_payout, author_tokens,
+                                         curation_tokens, total_beneficiary);
         }
         else if (SP_SYMBOL == reward_symbol)
         {
-            comment_statistic_service.update(comment_stat, [&](comment_statistic_object& c) {
-                c.total_payout_sp_value += total_payout;
-                c.author_payout_sp_value += author_tokens;
-                c.curator_payout_sp_value += curation_tokens;
-                c.beneficiary_payout_sp_value += total_beneficiary;
-            });
+            accumulate_comment_statistic(comment_statistic_sp_service, comment, total_payout, author_tokens,
+                                         curation_tokens, total_beneficiary);
         }
 
 #ifndef IS_LOW_MEM
@@ -277,7 +287,8 @@ private:
     account_service_i& account_service;
     account_blogging_statistic_service_i& account_blogging_statistic_service;
     comment_service_i& comment_service;
-    comment_statistic_service_i& comment_statistic_service;
+    comment_statistic_scr_service_i& comment_statistic_scr_service;
+    comment_statistic_sp_service_i& comment_statistic_sp_service;
     comment_vote_service_i& comment_vote_service;
 };
 

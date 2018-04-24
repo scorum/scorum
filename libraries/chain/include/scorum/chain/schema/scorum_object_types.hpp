@@ -45,7 +45,8 @@ enum object_type
     chain_property_object_type,
     change_recovery_account_request_object_type,
     comment_object_type,
-    comment_statistic_object_type,
+    comment_statistic_scr_object_type,
+    comment_statistic_sp_object_type,
     comment_vote_object_type,
     decline_voting_rights_request_object_type,
     dynamic_global_property_object_type,
@@ -82,7 +83,6 @@ class budget_object;
 class chain_property_object;
 class change_recovery_account_request_object;
 class comment_object;
-class comment_statistic_object;
 class comment_vote_object;
 class decline_voting_rights_request_object;
 class dynamic_global_property_object;
@@ -116,7 +116,6 @@ using budget_id_type = oid<budget_object>;
 using chain_property_id_type = oid<chain_property_object>;
 using change_recovery_account_request_id_type = oid<change_recovery_account_request_object>;
 using comment_id_type = oid<comment_object>;
-using comment_statistic_id_type = oid<comment_statistic_object>;
 using comment_vote_id_type = oid<comment_vote_object>;
 using decline_voting_rights_request_id_type = oid<decline_voting_rights_request_object>;
 using dynamic_global_property_id_type = oid<dynamic_global_property_object>;
@@ -164,7 +163,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (chain_property_object_type)
                 (change_recovery_account_request_object_type)
                 (comment_object_type)
-                (comment_statistic_object_type)
+                (comment_statistic_scr_object_type)
+                (comment_statistic_sp_object_type)
                 (comment_vote_object_type)
                 (decline_voting_rights_request_object_type)
                 (dynamic_global_property_object_type)
