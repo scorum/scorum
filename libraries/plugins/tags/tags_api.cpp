@@ -140,5 +140,18 @@ std::vector<discussion> tags_api::get_discussions_by_author_before_date(const st
     FC_CAPTURE_AND_RETHROW((author)(start_permlink)(before_date)(limit))
 }
 
+state tags_api::get_state(std::string path) const
+{
+    try
+    {
+        // clang-format off
+        return guard().with_read_lock([&]() {
+            return _impl->get_state(path);
+        });
+        // clang-format on
+    }
+    FC_CAPTURE_AND_RETHROW((path))
+}
+
 } // namespace tags
 } // namespace scorum

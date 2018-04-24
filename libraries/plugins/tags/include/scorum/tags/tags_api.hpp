@@ -75,6 +75,12 @@ public:
                                                                        const std::string& start_permlink,
                                                                        time_point_sec before_date,
                                                                        uint32_t limit) const;
+
+    /**
+     *  This API is a short-cut for returning all of the state required for a particular URL
+     *  with a single query.
+     */
+    scorum::tags::api::state get_state(std::string path) const;
 };
 
 } // namespace tags
@@ -96,6 +102,8 @@ FC_API(scorum::tags::tags_api,
        (get_discussions_by_votes)
        (get_discussions_by_children)
        (get_discussions_by_comments)
+
+       (get_state)
 
        // content
        (get_content)
