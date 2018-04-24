@@ -1,5 +1,3 @@
-#file(GLOB HEADERS "include/scorum/tags/*.hpp")
-
 set (TAGS_HPP "include/scorum/tags/tags_plugin.hpp"
               "include/scorum/tags/tags_api.hpp"
               "include/scorum/tags/tags_api_impl.hpp"
