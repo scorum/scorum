@@ -378,8 +378,8 @@ SCORUM_TEST_CASE(check_expired_contracts_refund)
     auto alice_balance_before_refund = db.obtain_service<dbs_account>().get_account("alice").balance;
     auto bob_balance_before_refund = db.obtain_service<dbs_account>().get_account("bob").balance;
 
-    // after 1000 blocks all contracts will be expired
-    generate_block(0, initdelegate.private_key, 1000);
+    generate_blocks(db.head_block_time() + std::max(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS,
+                                                    SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS));
 
     BOOST_REQUIRE_EQUAL(visitor.refund_map.size(), std::size_t(2));
     BOOST_REQUIRE(visitor.refund_map.find("alice") != visitor.refund_map.end());
@@ -430,8 +430,8 @@ SCORUM_TEST_CASE(check_redeemed_expired_contracts)
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
     BOOST_REQUIRE_NO_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash));
 
-    // after 1000 blocks all contracts will be expired
-    generate_block(0, initdelegate.private_key, 1000);
+    generate_blocks(db.head_block_time() + std::max(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS,
+                                                    SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS));
 
     BOOST_REQUIRE_EQUAL(visitor.refund_map.size(), std::size_t(0));
 
