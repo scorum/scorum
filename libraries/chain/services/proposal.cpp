@@ -5,46 +5,37 @@ namespace scorum {
 namespace chain {
 
 dbs_proposal::dbs_proposal(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
 }
 
-const proposal_object& dbs_proposal::create(const account_name_type& creator,
-                                            const protocol::proposal_operation& operation,
-                                            const fc::time_point_sec& expiration,
-                                            uint64_t quorum)
+const proposal_object& dbs_proposal::create_proposal(const account_name_type& creator,
+                                                     const protocol::proposal_operation& operation,
+                                                     const fc::time_point_sec& expiration,
+                                                     uint64_t quorum)
 {
-    const auto& proposal = db_impl().create<proposal_object>([&](proposal_object& proposal) {
+    return create([&](proposal_object& proposal) {
         proposal.creator = creator;
         proposal.operation = operation;
         proposal.created = db_impl().head_block_time();
         proposal.expiration = expiration;
         proposal.quorum_percent = quorum;
     });
-
-    return proposal;
-}
-
-void dbs_proposal::remove(const proposal_object& proposal)
-{
-    db_impl().remove(proposal);
 }
 
 bool dbs_proposal::is_exists(proposal_id_type proposal_id)
 {
-    auto proposal = db_impl().find<proposal_object, by_id>(proposal_id);
-
-    return (proposal == nullptr) ? false : true;
+    return find_by<by_id>(proposal_id) != nullptr;
 }
 
 const proposal_object& dbs_proposal::get(proposal_id_type proposal_id)
 {
-    return db_impl().get<proposal_object, by_id>(proposal_id);
+    return get_by<by_id>(proposal_id);
 }
 
 void dbs_proposal::vote_for(const protocol::account_name_type& voter, const proposal_object& proposal)
 {
-    db_impl().modify(proposal, [&](proposal_object& p) { p.voted_accounts.insert(voter); });
+    update(proposal, [&](proposal_object& p) { p.voted_accounts.insert(voter); });
 }
 
 size_t dbs_proposal::get_votes(const proposal_object& proposal)
@@ -63,7 +54,7 @@ void dbs_proposal::clear_expired_proposals()
 
     while (!proposal_expiration_index.empty() && is_expired(*proposal_expiration_index.begin()))
     {
-        db_impl().remove(*proposal_expiration_index.begin());
+        remove(*proposal_expiration_index.begin());
     }
 }
 
@@ -73,7 +64,7 @@ void dbs_proposal::for_all_proposals_remove_from_voting_list(const account_name_
 
     for (const proposal_object& proposal : proposals)
     {
-        db_impl().modify(proposal, [&](proposal_object& p) {
+        update(proposal, [&](proposal_object& p) {
 
             auto it = p.voted_accounts.find(member);
 

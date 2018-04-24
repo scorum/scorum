@@ -528,20 +528,24 @@ void tags_plugin::plugin_set_program_options(boost::program_options::options_des
 
 void tags_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
+    try
+    {
+        chain::database& db = database();
+
+        db.post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+
+        db.add_plugin_index<tags::tag_index>();
+        db.add_plugin_index<tag_stats_index>();
+        db.add_plugin_index<peer_stats_index>();
+        db.add_plugin_index<author_tag_stats_index>();
+    }
+    FC_LOG_AND_RETHROW()
+
     print_greeting();
 }
 
 void tags_plugin::plugin_startup()
 {
-    chain::database& db = database();
-
-    db.add_plugin_index<tags::tag_index>();
-    db.add_plugin_index<tag_stats_index>();
-    db.add_plugin_index<peer_stats_index>();
-    db.add_plugin_index<author_tag_stats_index>();
-
-    database().post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
-
     app().register_api_factory<tags_api>("tags_api");
 }
 

@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -8,8 +7,6 @@
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/escrow.hpp>
-
-#include <scorum/chain/util/reward.hpp>
 
 #include <scorum/witness/witness_objects.hpp>
 
@@ -149,5 +146,3 @@ BOOST_AUTO_TEST_CASE(success_escrow_transfer_apply)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

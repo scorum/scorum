@@ -32,12 +32,6 @@ using namespace scorum::protocol;
 
 struct api_context;
 
-struct scheduled_hardfork
-{
-    hardfork_version hf_version;
-    fc::time_point_sec live_time;
-};
-
 struct withdraw_route
 {
     std::string from_account;
@@ -76,42 +70,6 @@ public:
 
     std::vector<account_name_type> get_active_witnesses() const;
 
-    /////////////////////////////
-    // Blocks and transactions //
-    /////////////////////////////
-
-    /**
-     * @brief Retrieve a block header
-     * @param block_num Height of the block whose header should be returned
-     * @return header of the referenced block, or null if no matching block was found
-     */
-    optional<block_header> get_block_header(uint32_t block_num) const;
-
-    /**
-     * @brief Retrieve a full, signed block
-     * @param block_num Height of the block to be returned
-     * @return the referenced block, or null if no matching block was found
-     */
-    optional<signed_block_api_obj> get_block(uint32_t block_num) const;
-
-    /**
-     * Retrieve the list of block headers in range [from-limit, from]
-     *
-     * @param block_num Height of the block to be returned
-     * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
-     * @return the list of block headers
-     */
-    std::map<uint32_t, block_header> get_block_headers_history(uint32_t block_num, uint32_t limit) const;
-
-    /**
-     * Retrieve the list of signed block from block log (irreversible blocks) in range [from-limit, from]
-     *
-     * @param block_num Height of the block to be returned
-     * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
-     * @return the list of signed blocks
-     */
-    std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
-
     /////////////
     // Globals //
     /////////////
@@ -130,11 +88,7 @@ public:
      * @brief Retrieve the current @ref dynamic_global_property_object
      */
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
-    chain_properties get_chain_properties() const;
     witness_schedule_api_obj get_witness_schedule() const;
-    hardfork_version get_hardfork_version() const;
-    scheduled_hardfork get_next_scheduled_hardfork() const;
-    reward_fund_api_obj get_reward_fund() const;
 
     //////////
     // Keys //
@@ -326,7 +280,6 @@ private:
 
 // clang-format off
 
-FC_REFLECT( scorum::app::scheduled_hardfork, (hf_version)(live_time) )
 FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 
 FC_REFLECT_ENUM( scorum::app::withdraw_route_type, (incoming)(outgoing)(all) )
@@ -335,21 +288,13 @@ FC_API(scorum::app::database_api,
    // Subscriptions
    (set_block_applied_callback)
 
-   // Blocks and transactions
-   (get_block_header)
-   (get_block)
-   (get_block_headers_history)
-   (get_blocks_history)
 
    // Globals
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
-   (get_chain_properties)
    (get_witness_schedule)
-   (get_hardfork_version)
-   (get_next_scheduled_hardfork)
-   (get_reward_fund)
+
 
    // Keys
    (get_key_references)

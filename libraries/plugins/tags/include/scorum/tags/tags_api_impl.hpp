@@ -10,7 +10,7 @@
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/chain/util/reward.hpp>
+#include <scorum/rewards_math/formulas.hpp>
 
 #include <scorum/common_api/config.hpp>
 #include <scorum/tags/tags_api_objects.hpp>
@@ -449,26 +449,55 @@ private:
         return result;
     }
 
+    //    void set_pending_payout(discussion& d) const
+    //    {
+    //        _tags_service.set_promoted_balance(d.id, d.promoted);
+
+    //        const auto& reward_fund_obj = _services.reward_fund_service().get();
+
+    //        asset pot = reward_fund_obj.activity_reward_balance_scr;
+    //        u256 total_r2 = to256(reward_fund_obj.recent_claims);
+    //        if (total_r2 > 0)
+    //        {
+    //            uint128_t vshares;
+    //            vshares = d.net_rshares.value > 0
+    //                ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value,
+    //                reward_fund_obj.author_reward_curve)
+    //                : 0;
+
+    //            u256 r2 = to256(vshares); // to256(abs_net_rshares);
+    //            r2 *= pot.amount.value;
+    //            r2 /= total_r2;
+
+    //            d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
+    //        }
+
+    //        if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+    //            d.cashout_time =
+    //            _tags_service.calculate_discussion_payout_time(_services.comment_service().get(d.id));
+
+    //        if (d.body.size() > 1024 * 128)
+    //            d.body = "body pruned due to size";
+    //        if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
+    //            d.body = "comment pruned due to size";
+
+    //        set_url(d);
+    //    }
+
     void set_pending_payout(discussion& d) const
     {
         _tags_service.set_promoted_balance(d.id, d.promoted);
 
         const auto& reward_fund_obj = _services.reward_fund_service().get();
 
-        asset pot = reward_fund_obj.activity_reward_balance_scr;
-        u256 total_r2 = to256(reward_fund_obj.recent_claims);
-        if (total_r2 > 0)
+        if (reward_fund_obj.recent_claims > 0)
         {
-            uint128_t vshares;
-            vshares = d.net_rshares.value > 0
-                ? scorum::chain::util::evaluate_reward_curve(d.net_rshares.value, reward_fund_obj.author_reward_curve)
-                : 0;
+            share_type pending_payout_value = rewards_math::predict_payout(
+                reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount, d.net_rshares,
+                reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
+                SCORUM_MIN_COMMENT_PAYOUT_SHARE);
 
-            u256 r2 = to256(vshares); // to256(abs_net_rshares);
-            r2 *= pot.amount.value;
-            r2 /= total_r2;
-
-            d.pending_payout_value = asset(static_cast<uint64_t>(r2), pot.symbol());
+            d.pending_payout_value = asset(pending_payout_value, SCORUM_SYMBOL);
         }
 
         if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
@@ -497,7 +526,7 @@ private:
             api::vote_state vstate;
             vstate.voter = vouter.name;
             vstate.weight = comment_voute.weight;
-            vstate.rshares = comment_voute.rshares;
+            vstate.rshares = comment_voute.rshares.value;
             vstate.percent = comment_voute.vote_percent;
             vstate.time = comment_voute.last_update;
 

@@ -2,8 +2,8 @@
 
 #include <scorum/app/api_context.hpp>
 
-#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
-#include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
+#include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
+#include <scorum/blockchain_monitoring/blockchain_statistics_api.hpp>
 #include <scorum/common_statistics/base_plugin_impl.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/account.hpp>
@@ -12,7 +12,7 @@
 #include "database_trx_integration.hpp"
 
 using namespace scorum;
-using namespace scorum::blockchain_statistics;
+using namespace scorum::blockchain_monitoring;
 using namespace scorum::app;
 using namespace database_fixture;
 
@@ -27,7 +27,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
     Actor witness2;
 
     api_context _api_ctx;
-    blockchain_statistics::blockchain_statistics_api _api_call;
+    blockchain_monitoring::blockchain_statistics_api _api_call;
 
     stat_database_fixture()
         : alice("alice")
@@ -40,7 +40,7 @@ struct stat_database_fixture : public database_trx_integration_fixture
         witness1.public_key = initdelegate.public_key;
         witness2.public_key = initdelegate.public_key;
 
-        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
+        init_plugin<scorum::blockchain_monitoring::blockchain_monitoring_plugin>();
 
         static const asset registration_bonus = ASSET_SCR(100);
         genesis_state_type::registration_schedule_item single_stage{ 1u, 1u, 100u };
@@ -303,7 +303,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_finish_stat_test)
 
     start_withdraw(share_type(SCORUM_VESTING_WITHDRAW_INTERVALS));
 
-    for (int i = 0; i < SCORUM_VESTING_WITHDRAW_INTERVALS; ++i)
+    for (uint32_t i = 0; i < SCORUM_VESTING_WITHDRAW_INTERVALS; ++i)
     {
         BOOST_REQUIRE_EQUAL(bucket.finished_vesting_withdrawals, orig_val);
         BOOST_REQUIRE_EQUAL(bucket.vesting_withdrawals_processed, orig_val_processed + i);

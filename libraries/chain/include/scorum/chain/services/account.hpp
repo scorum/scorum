@@ -1,14 +1,12 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-class account_object;
-class account_authority_object;
-
-struct account_service_i
+struct account_service_i : public base_service_i<account_object>
 {
     virtual const account_object& get(const account_id_type&) const = 0;
 
@@ -125,15 +123,11 @@ struct account_service_i
 
     virtual void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0)
         = 0;
-
-    using modifier_type = std::function<void(account_object&)>;
-
-    virtual void update(const account_object& obj, const modifier_type&) = 0;
 };
 
 // DB operations with account_*** objects
 //
-class dbs_account : public dbs_base, public account_service_i
+class dbs_account : public dbs_service_base<account_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -260,8 +254,6 @@ public:
     /** this updates the votes for all witnesses as a result of account SP changing */
     virtual void
     adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0) override;
-
-    virtual void update(const account_object& obj, const modifier_type&) override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,

@@ -16,7 +16,8 @@
 namespace scorum {
 namespace chain {
 
-using protocol::beneficiary_route_type;
+using scorum::protocol::beneficiary_route_type;
+using scorum::protocol::vote_weight_type;
 
 class comment_object : public object<comment_object_type, comment_object>
 {
@@ -71,8 +72,6 @@ public:
     /// the total weight of voting rewards, used to calculate pro-rata share of curation payouts
     uint64_t total_vote_weight = 0;
 
-    uint16_t reward_weight = 0;
-
     /// tracks the total payout this comment has received over time, measured in SCR
     asset total_payout_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
@@ -119,10 +118,10 @@ public:
     uint64_t weight = 0;
 
     /// The number of rshares this vote is responsible for
-    int64_t rshares = 0;
+    share_type rshares;
 
     /// The percent weight of the vote
-    int16_t vote_percent = 0;
+    vote_weight_type vote_percent = 0;
 
     /// The time of the last update of the vote
     time_point_sec last_update;
@@ -298,7 +297,7 @@ FC_REFLECT( scorum::chain::comment_object,
              (depth)(children)
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
-             (total_vote_weight)(reward_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(author_rewards)(net_votes)(root_comment)
+             (total_vote_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(author_rewards)(net_votes)(root_comment)
              (max_accepted_payout)(percent_scrs)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )

@@ -62,6 +62,7 @@ class application
 {
 public:
     application();
+    application(std::shared_ptr<chain::database> db);
     ~application();
 
     void set_program_options(boost::program_options::options_description& command_line_options,
@@ -115,9 +116,8 @@ public:
      */
     template <typename Api> void register_api_factory(const std::string& name)
     {
-#ifndef IS_TEST_NET
         idump((name));
-#endif
+
         register_api_factory(name, [](const api_context& ctx) -> fc::api_ptr {
             // apparently the compiler is smart enough to downcast shared_ptr< api<Api> > to shared_ptr< api_base >
             // automatically
@@ -136,12 +136,9 @@ public:
     void get_max_block_age(int32_t& result);
 
     fc::api<network_broadcast_api>& get_write_node_net_api();
-    fc::api<database_api>& get_write_node_database_api();
 
-    bool _disable_get_block = false;
     fc::optional<std::string> _remote_endpoint;
     fc::optional<fc::api<network_broadcast_api>> _remote_net_api;
-    fc::optional<fc::api<database_api>> _remote_database_api;
     fc::optional<fc::api<login_api>> _remote_login;
     fc::http::websocket_connection_ptr _ws_ptr;
     std::shared_ptr<fc::rpc::websocket_api_connection> _ws_apic;

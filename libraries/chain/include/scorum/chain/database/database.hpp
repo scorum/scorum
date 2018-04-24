@@ -49,15 +49,26 @@ class database : public chainbase::database,
 {
 
 public:
-    database();
+    enum creation_option
+    {
+        opt_none = 0,
+        opt_log_hardforks = 1 << 0,
+        opt_notify_virtual_op_applying = 1 << 1,
+
+#ifdef IS_LOW_MEM
+        opt_default = opt_log_hardforks
+#else
+        opt_default = opt_log_hardforks | opt_notify_virtual_op_applying
+#endif
+    };
+
+    database(uint32_t opt);
     virtual ~database();
 
     bool is_producing() const
     {
         return _is_producing;
     }
-
-    bool _log_hardforks = true;
 
     enum validation_steps
     {
@@ -126,33 +137,8 @@ public:
     block_id_type get_block_id_for_num(uint32_t block_num) const;
     optional<signed_block> fetch_block_by_id(const block_id_type& id) const;
     optional<signed_block> fetch_block_by_number(uint32_t num) const;
-    template <typename T>
-    void get_blocks_history_by_number(std::map<uint32_t, T>& result, uint32_t block_num, uint32_t limit) const
-    {
-        FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(block_num >= limit, "From must be greater than limit");
-        try
-        {
-            uint32_t last_irreversible_block_num = get_last_irreversible_block_num();
-            if (block_num > last_irreversible_block_num)
-            {
-                block_num = last_irreversible_block_num;
-            }
+    optional<signed_block> read_block_by_number(uint32_t num) const;
 
-            uint32_t from_block_num = block_num - limit;
-
-            result.clear();
-            optional<signed_block> b;
-            while (from_block_num != block_num)
-            {
-                b = _block_log.read_block_by_num(block_num);
-                if (b.valid())
-                    result[block_num] = *b; // conver from signed_block to type T
-                --block_num;
-            }
-        }
-        FC_LOG_AND_RETHROW()
-    }
     const signed_transaction get_recent_transaction(const transaction_id_type& trx_id) const;
     std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
 
@@ -347,8 +333,6 @@ private:
                                  const account_name_type& witness_owner,
                                  const fc::ecc::private_key& block_signing_private_key);
 
-    uint32_t get_last_irreversible_block_num() const;
-
 protected:
     void set_producing(bool p)
     {
@@ -383,6 +367,7 @@ private:
     std::unique_ptr<database_impl> _my;
 
     bool _is_producing = false;
+    uint32_t _options;
 
     optional<chainbase::abstract_undo_session_ptr> _pending_tx_session;
 

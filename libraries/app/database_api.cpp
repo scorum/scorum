@@ -4,7 +4,7 @@
 
 #include <scorum/protocol/get_config.hpp>
 
-#include <scorum/chain/util/reward.hpp>
+#include <scorum/rewards_math/formulas.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -57,12 +57,6 @@ public:
 
     // Subscriptions
     void set_block_applied_callback(std::function<void(const variant& block_id)> cb);
-
-    // Blocks and transactions
-    optional<block_header> get_block_header(uint32_t block_num) const;
-    optional<signed_block_api_obj> get_block(uint32_t block_num) const;
-    std::map<uint32_t, block_header> get_block_headers_history(uint32_t block_num, uint32_t limit) const;
-    std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
 
     // Globals
     fc::variant_object get_config() const;
@@ -120,8 +114,6 @@ public:
 
     boost::signals2::scoped_connection _block_applied_connection;
 
-    bool _disable_get_block = false;
-
     registration_committee_api_obj get_registration_committee() const;
     development_committee_api_obj get_development_committee() const;
 };
@@ -175,8 +167,6 @@ database_api_impl::database_api_impl(const scorum::app::api_context& ctx)
     : _db(*ctx.app.chain_database())
 {
     wlog("creating database api ${x}", ("x", int64_t(this)));
-
-    _disable_get_block = ctx.app._disable_get_block;
 }
 
 database_api_impl::~database_api_impl()
@@ -186,85 +176,6 @@ database_api_impl::~database_api_impl()
 
 void database_api::on_api_startup()
 {
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
-// Blocks and transactions                                          //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-optional<block_header> database_api::get_block_header(uint32_t block_num) const
-{
-    FC_ASSERT(!my->_disable_get_block, "get_block_header is disabled on this node.");
-
-    if (_app.is_read_only())
-    {
-        return _app.get_write_node_database_api()->get_block_header(block_num);
-    }
-    else
-    {
-        return my->_db.with_read_lock([&]() { return my->get_block_header(block_num); });
-    }
-}
-
-optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
-{
-    auto result = _db.fetch_block_by_number(block_num);
-    if (result)
-        return *result;
-    return {};
-}
-
-optional<signed_block_api_obj> database_api::get_block(uint32_t block_num) const
-{
-    FC_ASSERT(!my->_disable_get_block, "get_block is disabled on this node.");
-
-    if (_app.is_read_only())
-    {
-        return _app.get_write_node_database_api()->get_block(block_num);
-    }
-    else
-    {
-        return my->_db.with_read_lock([&]() { return my->get_block(block_num); });
-    }
-}
-
-optional<signed_block_api_obj> database_api_impl::get_block(uint32_t block_num) const
-{
-    return _db.fetch_block_by_number(block_num);
-}
-
-std::map<uint32_t, block_header> database_api::get_block_headers_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(!_app.is_read_only(), "Disabled for read only mode");
-    return my->_db.with_read_lock([&]() { return my->get_block_headers_history(block_num, limit); });
-}
-
-std::map<uint32_t, block_header> database_api_impl::get_block_headers_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-              ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
-
-    std::map<uint32_t, block_header> ret;
-    _db.get_blocks_history_by_number<block_header>(ret, block_num, limit);
-    return ret;
-}
-
-std::map<uint32_t, signed_block_api_obj> database_api::get_blocks_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(!_app.is_read_only(), "Disabled for read only mode");
-    return my->_db.with_read_lock([&]() { return my->get_blocks_history(block_num, limit); });
-}
-
-std::map<uint32_t, signed_block_api_obj> database_api_impl::get_blocks_history(uint32_t block_num, uint32_t limit) const
-{
-    FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-              ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
-
-    std::map<uint32_t, signed_block_api_obj> ret;
-    _db.get_blocks_history_by_number<signed_block_api_obj>(ret, block_num, limit);
-    return ret;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -286,12 +197,6 @@ fc::variant_object database_api_impl::get_config() const
 dynamic_global_property_api_obj database_api::get_dynamic_global_properties() const
 {
     return my->_db.with_read_lock([&]() { return my->get_dynamic_global_properties(); });
-}
-
-chain_properties database_api::get_chain_properties() const
-{
-    return my->_db.with_read_lock(
-        [&]() { return my->_db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props; });
 }
 
 dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties() const
@@ -330,32 +235,6 @@ chain_id_type database_api_impl::get_chain_id() const
 witness_schedule_api_obj database_api::get_witness_schedule() const
 {
     return my->_db.with_read_lock([&]() { return my->_db.get(witness_schedule_id_type()); });
-}
-
-hardfork_version database_api::get_hardfork_version() const
-{
-    return my->_db.with_read_lock([&]() { return my->_db.get(hardfork_property_id_type()).current_hardfork_version; });
-}
-
-scheduled_hardfork database_api::get_next_scheduled_hardfork() const
-{
-    return my->_db.with_read_lock([&]() {
-        scheduled_hardfork shf;
-        const auto& hpo = my->_db.get(hardfork_property_id_type());
-        shf.hf_version = hpo.next_hardfork;
-        shf.live_time = hpo.next_hardfork_time;
-        return shf;
-    });
-}
-
-reward_fund_api_obj database_api::get_reward_fund() const
-{
-    return my->_db.with_read_lock([&]() {
-        auto fund = my->_db.find<reward_fund_object>();
-        FC_ASSERT(fund != nullptr, "reward fund object does not exist");
-
-        return *fund;
-    });
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -925,7 +804,7 @@ std::vector<vote_state> database_api::get_active_votes(const std::string& author
             vote_state vstate;
             vstate.voter = vo.name;
             vstate.weight = itr->weight;
-            vstate.rshares = itr->rshares;
+            vstate.rshares = itr->rshares.value;
             vstate.percent = itr->vote_percent;
             vstate.time = itr->last_update;
 
@@ -953,7 +832,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
             account_vote avote;
             avote.authorperm = vo.author + "/" + fc::to_string(vo.permlink);
             avote.weight = itr->weight;
-            avote.rshares = itr->rshares;
+            avote.rshares = itr->rshares.value;
             avote.percent = itr->vote_percent;
             avote.time = itr->last_update;
             result.push_back(avote);
@@ -962,7 +841,74 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
         return result;
     });
 }
+/**
+u256 to256(const fc::uint128& t)
+{
+    u256 result(t.high_bits());
+    result <<= 65;
+    result += t.low_bits();
+    return result;
+}
 
+void database_api::set_pending_payout(discussion& d) const
+{
+    const auto& cidx = my->_db.get_index<tags::tag_index>().indices().get<tags::by_comment>();
+    auto itr = cidx.lower_bound(d.id);
+    if (itr != cidx.end() && itr->comment == d.id)
+    {
+        d.promoted = asset(itr->promoted_balance, SCORUM_SYMBOL);
+    }
+
+    const auto& reward_fund_obj = my->_db.obtain_service<dbs_reward_fund>().get();
+
+    if (reward_fund_obj.recent_claims > 0)
+    {
+        share_type pending_payout_value = rewards_math::predict_payout(
+            reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount, d.net_rshares,
+            reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
+            SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+
+        d.pending_payout_value = asset(pending_payout_value, SCORUM_SYMBOL);
+    }
+
+    if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+        d.cashout_time = my->_db.calculate_discussion_payout_time(my->_db.get<comment_object>(d.id));
+
+    if (d.body.size() > 1024 * 128)
+        d.body = "body pruned due to size";
+    if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
+        d.body = "comment pruned due to size";
+
+    set_url(d);
+}
+
+void database_api::set_url(discussion& d) const
+{
+    const comment_api_obj root(my->_db.get<comment_object, by_id>(d.root_comment));
+    d.url = "/" + root.category + "/@" + root.author + "/" + root.permlink;
+    d.root_title = root.title;
+    if (root.id != d.id)
+        d.url += "#@" + d.author + "/" + d.permlink;
+}
+
+std::vector<discussion> database_api::get_content_replies(const std::string& author, const std::string& permlink) const
+{
+    return my->_db.with_read_lock([&]() {
+        account_name_type acc_name = account_name_type(author);
+        const auto& by_permlink_idx = my->_db.get_index<comment_index>().indices().get<by_parent>();
+        auto itr = by_permlink_idx.find(boost::make_tuple(acc_name, permlink));
+        std::vector<discussion> result;
+        while (itr != by_permlink_idx.end() && itr->parent_author == author
+               && fc::to_string(itr->parent_permlink) == permlink)
+        {
+            result.push_back(discussion(*itr));
+            set_pending_payout(result.back());
+            ++itr;
+        }
+        return result;
+    });
+}
+**/
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Budgets                                                          //
