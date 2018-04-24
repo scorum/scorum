@@ -108,8 +108,6 @@ struct comment_api_obj
     time_point_sec max_cashout_time;
     uint64_t total_vote_weight = 0;
 
-    uint16_t reward_weight = 0;
-
     asset total_payout_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
 
