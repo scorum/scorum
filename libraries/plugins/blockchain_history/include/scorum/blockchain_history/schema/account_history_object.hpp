@@ -42,7 +42,7 @@ using history_index
                                                                                    // grater value to less
                                                                                    std::greater<uint32_t>>>>>;
 
-using account_history_object = history_object<all_account_operations_history>;
+using account_history_object = history_object<account_all_operations_history>;
 using transfers_to_scr_history_object = history_object<account_scr_to_scr_transfers_history>;
 using transfers_to_sp_history_object = history_object<account_scr_to_sp_transfers_history>;
 

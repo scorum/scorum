@@ -8,7 +8,7 @@ namespace scorum {
 namespace chain {
 
 dbs_reward::dbs_reward(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
 }
 
@@ -24,26 +24,9 @@ const reward_balancer_object& dbs_reward::create_balancer(const asset& initial_s
     // clang-format on
 }
 
-bool dbs_reward::is_exists() const
-{
-    return nullptr != db_impl().find<reward_balancer_object>();
-}
-
-const reward_balancer_object& dbs_reward::get() const
-{
-    return db_impl().get<reward_balancer_object>();
-}
-
-void dbs_reward::update(const modifier_type& modifier)
-{
-    db_impl().modify(get(), [&](reward_balancer_object& o) { modifier(o); });
-}
-
 const asset& dbs_reward::increase_ballance(const asset& delta)
 {
-    const auto& pool = get();
-
-    db_impl().modify(pool, [&](reward_balancer_object& pool) {
+    update([&](reward_balancer_object& pool) {
         switch (delta.symbol())
         {
         case SCORUM_SYMBOL:
@@ -55,7 +38,7 @@ const asset& dbs_reward::increase_ballance(const asset& delta)
         }
     });
 
-    return pool.balance;
+    return get().balance;
 }
 
 // clang-format off
@@ -63,13 +46,11 @@ const asset dbs_reward::take_block_reward()
 {
     const auto& pool = get();
 
-    FC_ASSERT(pool.current_per_block_reward > asset(0, SCORUM_SYMBOL));
-
     const auto current_per_day_reward = pool.current_per_block_reward * SCORUM_BLOCKS_PER_DAY;
 
     asset real_per_block_reward(0, SCORUM_SYMBOL);
 
-    db_impl().modify(pool, [&](reward_balancer_object& pool) 
+    update([&](reward_balancer_object& pool) 
     {
         asset delta = pool.current_per_block_reward * SCORUM_ADJUST_REWARD_PERCENT / 100;
 

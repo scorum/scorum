@@ -2,9 +2,8 @@
 
 #include <scorum/app/api_context.hpp>
 
-#include <scorum/blockchain_statistics/blockchain_statistics_plugin.hpp>
-#include <scorum/blockchain_statistics/blockchain_statistics_api.hpp>
-#include <scorum/blockchain_statistics/node_monitoring_api.hpp>
+#include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
+#include <scorum/blockchain_monitoring/node_monitoring_api.hpp>
 
 #include <scorum/protocol/block.hpp>
 
@@ -17,26 +16,26 @@ using namespace scorum;
 using namespace scorum::app;
 using namespace scorum::protocol;
 
-namespace blockchain_statistics_tests {
+namespace blockchain_monitoring_tests {
 
 struct monitoring_database_fixture : public database_fixture::database_integration_fixture
 {
     api_context _api_ctx;
-    blockchain_statistics::node_monitoring_api _api_call;
+    blockchain_monitoring::node_monitoring_api _api_call;
 
     monitoring_database_fixture()
         : _api_ctx(app, API_NODE_MONITORING, std::make_shared<api_session_data>())
         , _api_call(_api_ctx)
     {
-        init_plugin<scorum::blockchain_statistics::blockchain_statistics_plugin>();
+        init_plugin<scorum::blockchain_monitoring::blockchain_monitoring_plugin>();
 
         open_database();
     }
 };
 
-} // namespace blockchain_statistics_tests
+} // namespace blockchain_monitoring_tests
 
-BOOST_FIXTURE_TEST_SUITE(node_monitoring_tests, blockchain_statistics_tests::monitoring_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(node_monitoring_tests, blockchain_monitoring_tests::monitoring_database_fixture)
 
 class test_delay
 {

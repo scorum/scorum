@@ -1,17 +1,11 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <functional>
-#include <vector>
-#include <set>
-
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
 namespace scorum {
 namespace chain {
 
-class budget_object;
-
-struct budget_service_i
+struct budget_service_i : public base_service_i<budget_object>
 {
     using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
 
@@ -37,7 +31,7 @@ struct budget_service_i
 /**
  * DB service for operations with budget_object
  */
-class dbs_budget : public dbs_base, public budget_service_i
+class dbs_budget : public dbs_service_base<budget_service_i>
 {
     friend class dbservice_dbs_factory;
 

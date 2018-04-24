@@ -23,9 +23,12 @@
  */
 #include <scorum/app/api.hpp>
 #include <scorum/app/database_api.hpp>
+#include <scorum/app/chain_api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
@@ -280,6 +283,7 @@ public:
     {
         _self->register_api_factory<login_api>("login_api");
         _self->register_api_factory<database_api>("database_api");
+        _self->register_api_factory<chain_api>(API_CHAIN);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }
@@ -335,11 +339,6 @@ public:
             else
             {
                 _shared_dir = _data_dir / "blockchain";
-            }
-
-            if (_options->count("disable_get_block"))
-            {
-                _self->_disable_get_block = true;
             }
 
             if (!_self->is_read_only())
@@ -442,10 +441,11 @@ public:
                 wild_access.password_hash_b64 = "*";
                 wild_access.password_salt_b64 = "*";
                 wild_access.allowed_apis.push_back("database_api");
+                wild_access.allowed_apis.push_back(API_CHAIN);
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
-                wild_access.allowed_apis.push_back("account_history_api");
-                wild_access.allowed_apis.push_back("blockchain_history_api");
+                wild_access.allowed_apis.push_back(API_ACCOUNT_HISTORY);
+                wild_access.allowed_apis.push_back(API_BLOCKCHAIN_HISTORY);
                 wild_access.allowed_apis.push_back("account_stats_api");
                 wild_access.allowed_apis.push_back("chain_stats_api");
                 _apiaccess.permission_map["*"] = wild_access;
@@ -1120,10 +1120,11 @@ void application::set_program_options(boost::program_options::options_descriptio
 {
     std::vector<std::string> default_apis;
     default_apis.push_back("database_api");
+    default_apis.push_back(API_CHAIN);
     default_apis.push_back("login_api");
     default_apis.push_back("account_by_key_api");
-    default_apis.push_back("account_history_api");
-    default_apis.push_back("blockchain_history_api");
+    default_apis.push_back(API_ACCOUNT_HISTORY);
+    default_apis.push_back(API_BLOCKCHAIN_HISTORY);
     default_apis.push_back("account_stats_api");
     default_apis.push_back("chain_stats_api");
     std::string str_default_apis = boost::algorithm::join(default_apis, " ");
@@ -1363,14 +1364,6 @@ fc::api<network_broadcast_api>& application::get_write_node_net_api()
 
     _remote_net_api = my->create_write_node_api<network_broadcast_api>(BOOST_PP_STRINGIZE(network_broadcast_api));
     return *_remote_net_api;
-}
-fc::api<database_api>& application::get_write_node_database_api()
-{
-    if (_remote_database_api)
-        return *_remote_database_api;
-
-    _remote_database_api = my->create_write_node_api<database_api>(BOOST_PP_STRINGIZE(database_api));
-    return *_remote_database_api;
 }
 
 void application::shutdown_plugins()

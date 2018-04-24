@@ -32,6 +32,14 @@ namespace chainbase {
         {
             return a._id > b._id;
         }
+        friend bool operator<=(const oid& a, const oid& b)
+        {
+            return a._id <= b._id;
+        }
+        friend bool operator>=(const oid& a, const oid& b)
+        {
+            return a._id >= b._id;
+        }
         friend bool operator==(const oid& a, const oid& b)
         {
             return a._id == b._id;

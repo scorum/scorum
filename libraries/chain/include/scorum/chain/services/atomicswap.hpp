@@ -1,18 +1,15 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <functional>
-#include <vector>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/atomicswap_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
 class account_object;
-class atomicswap_contract_object;
 enum atomicswap_contract_type : bool;
 
-struct atomicswap_service_i
+struct atomicswap_service_i : public base_service_i<atomicswap_contract_object>
 {
     using atomicswap_contracts_refs_type = std::vector<std::reference_wrapper<const atomicswap_contract_object>>;
 
@@ -31,7 +28,6 @@ struct atomicswap_service_i
                                                               = optional<std::string>())
         = 0;
 
-    virtual void close_contract(const atomicswap_contract_object& contract) = 0;
     virtual void redeem_contract(const atomicswap_contract_object& contract, const std::string& secret) = 0;
     virtual void refund_contract(const atomicswap_contract_object& contract) = 0;
 };
@@ -39,7 +35,7 @@ struct atomicswap_service_i
 /**
  * DB service for operations with atomicswap_contract_object
  */
-class dbs_atomicswap : public dbs_base, public atomicswap_service_i
+class dbs_atomicswap : public dbs_service_base<atomicswap_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -60,8 +56,6 @@ public:
                                                               const std::string& secret_hash,
                                                               const optional<std::string>& metadata
                                                               = optional<std::string>()) override;
-
-    virtual void close_contract(const atomicswap_contract_object& contract) override;
 
     virtual void redeem_contract(const atomicswap_contract_object& contract, const std::string& secret) override;
 

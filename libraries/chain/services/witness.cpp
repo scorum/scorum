@@ -12,7 +12,7 @@ namespace scorum {
 namespace chain {
 
 dbs_witness::dbs_witness(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
 }
 
@@ -20,14 +20,14 @@ const witness_object& dbs_witness::get(const account_name_type& name) const
 {
     try
     {
-        return db_impl().get<witness_object, by_name>(name);
+        return get_by<by_name>(name);
     }
     FC_CAPTURE_AND_RETHROW((name))
 }
 
 bool dbs_witness::is_exists(const account_name_type& name) const
 {
-    return nullptr != db_impl().find<witness_object, by_name>(name);
+    return find_by<by_name>(name) != nullptr;
 }
 
 const witness_object& dbs_witness::get_top_witness() const
@@ -43,13 +43,12 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
                                                   const chain_properties& props)
 {
     FC_ASSERT(owner.size(), "Witness 'owner_name' should not be empty.");
-    FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
 
     const auto& dprops = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const auto& new_witness = create_internal(owner, block_signing_key);
 
-    db_impl().modify(new_witness, [&](witness_object& w) {
+    update(new_witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
         w.created = dprops.time;
         w.proposed_chain_props = props;
@@ -63,7 +62,7 @@ const witness_object& dbs_witness::create_initial_witness(const account_name_typ
 {
     const auto& new_witness = create_internal(owner, block_signing_key);
 
-    db_impl().modify(new_witness, [&](witness_object& w) { w.schedule = witness_object::top20; });
+    update(new_witness, [&](witness_object& w) { w.schedule = witness_object::top20; });
 
     return new_witness;
 }
@@ -71,13 +70,11 @@ const witness_object& dbs_witness::create_initial_witness(const account_name_typ
 const witness_object& dbs_witness::create_internal(const account_name_type& owner,
                                                    const public_key_type& block_signing_key)
 {
-    const auto& new_witness = db_impl().create<witness_object>([&](witness_object& w) {
+    return create([&](witness_object& w) {
         w.owner = owner;
         w.signing_key = block_signing_key;
         w.hardfork_time_vote = db_impl().get_genesis_time();
     });
-
-    return new_witness;
 }
 
 void dbs_witness::update_witness(const witness_object& witness,
@@ -85,9 +82,7 @@ void dbs_witness::update_witness(const witness_object& witness,
                                  const public_key_type& block_signing_key,
                                  const chain_properties& props)
 {
-    FC_ASSERT(block_signing_key != public_key_type(), "Witness 'block_signing_key' should not be empty.");
-
-    db_impl().modify(witness, [&](witness_object& w) {
+    update(witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
         w.signing_key = block_signing_key;
         w.proposed_chain_props = props;
@@ -110,7 +105,7 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
     const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 
     const witness_schedule_object& wso = db_impl().obtain_service<dbs_witness_schedule>().get();
-    db_impl().modify(witness, [&](witness_object& w) {
+    update(witness, [&](witness_object& w) {
         auto delta_pos = w.votes.value * (wso.current_virtual_time - w.virtual_last_update);
         w.virtual_position += delta_pos;
 

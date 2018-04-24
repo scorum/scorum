@@ -69,8 +69,6 @@
 namespace scorum {
 namespace chain {
 
-using boost::container::flat_set;
-
 class database_impl
 {
 public:
@@ -382,6 +380,11 @@ optional<signed_block> database::fetch_block_by_number(uint32_t block_num) const
     FC_LOG_AND_RETHROW()
 }
 
+optional<signed_block> database::read_block_by_number(uint32_t block_num) const
+{
+    return _block_log.read_block_by_num(block_num);
+}
+
 const signed_transaction database::get_recent_transaction(const transaction_id_type& trx_id) const
 {
     try
@@ -596,13 +599,6 @@ bool database::_push_block(const signed_block& new_block)
         return false;
     }
     FC_CAPTURE_AND_RETHROW()
-}
-
-uint32_t database::get_last_irreversible_block_num() const
-{
-    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
-
-    return dpo.last_irreversible_block_num;
 }
 
 /**

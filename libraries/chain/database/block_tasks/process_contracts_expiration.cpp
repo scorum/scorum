@@ -33,7 +33,7 @@ void process_contracts_expiration::on_apply(block_task_context& ctx)
             }
             else
             {
-                atomicswap_service.close_contract(contract);
+                atomicswap_service.remove(contract);
             }
         }
     }
