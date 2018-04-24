@@ -23,9 +23,13 @@ void process_contracts_expiration::on_apply(block_task_context& ctx)
         {
             if (contract.secret.empty())
             {
+                auto owner = contract.owner;
+                auto refund_amount = contract.amount;
+
                 // only for initiator or not redeemed participant contracts
                 atomicswap_service.refund_contract(contract);
-                ctx.push_virtual_operation(expired_contract_refund_operation(contract.owner, contract.amount));
+
+                ctx.push_virtual_operation(expired_contract_refund_operation(owner, refund_amount));
             }
             else
             {
