@@ -1,7 +1,6 @@
 #pragma once
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
@@ -31,7 +30,6 @@ using namespace scorum::chain;
 typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
 typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
-typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
 typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
 typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
 typedef api_obj<scorum::chain::scorumpower_delegation_expiration_object> scorumpower_delegation_expiration_api_obj;
@@ -59,92 +57,6 @@ struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_g
         = asset(0, SCORUM_SYMBOL); // total SCR and SP content reward balance (for backward compatibility)
     asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
     asset content_reward_sp_balance = asset(0, SP_SYMBOL);
-};
-
-struct comment_api_obj
-{
-    comment_api_obj(const chain::comment_object& o);
-
-    comment_api_obj(const chain::comment_object& o, const chain::database& db);
-
-    comment_api_obj()
-    {
-    }
-
-    comment_id_type id;
-    std::string category;
-    account_name_type parent_author;
-    std::string parent_permlink;
-    account_name_type author;
-    std::string permlink;
-
-    std::string title;
-    std::string body;
-    std::string json_metadata;
-    time_point_sec last_update;
-    time_point_sec created;
-    time_point_sec active;
-    time_point_sec last_payout;
-
-    uint8_t depth = 0;
-    uint32_t children = 0;
-
-    share_type net_rshares;
-    share_type abs_rshares;
-    share_type vote_rshares;
-
-    share_type children_abs_rshares;
-    time_point_sec cashout_time;
-    uint64_t total_vote_weight = 0;
-
-    asset total_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset total_payout_sp_value = asset(0, SP_SYMBOL);
-    asset author_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset author_payout_sp_value = asset(0, SP_SYMBOL);
-    asset curator_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset curator_payout_sp_value = asset(0, SP_SYMBOL);
-    asset beneficiary_payout_scr_value = asset(0, SCORUM_SYMBOL);
-    asset beneficiary_payout_sp_value = asset(0, SP_SYMBOL);
-
-    int32_t net_votes = 0;
-
-    comment_id_type root_comment;
-
-    asset max_accepted_payout = asset(0, SCORUM_SYMBOL);
-    bool allow_replies = false;
-    bool allow_votes = false;
-    bool allow_curation_rewards = false;
-    std::vector<beneficiary_route_type> beneficiaries;
-
-private:
-    inline void set_comment(const chain::comment_object&);
-    inline void set_comment_statistic(const chain::comment_statistic_scr_object&);
-    inline void set_comment_statistic(const chain::comment_statistic_sp_object&);
-    inline void initialize(const chain::comment_object& a);
-};
-
-struct tag_api_obj
-{
-    tag_api_obj(const tags::tag_stats_object& o)
-        : name(o.tag)
-        , total_payouts(o.total_payout)
-        , net_votes(o.net_votes)
-        , top_posts(o.top_posts)
-        , comments(o.comments)
-        , trending(o.total_trending)
-    {
-    }
-
-    tag_api_obj()
-    {
-    }
-
-    std::string name;
-    asset total_payouts = asset(0, SCORUM_SYMBOL);
-    int32_t net_votes = 0;
-    uint32_t top_posts = 0;
-    uint32_t comments = 0;
-    fc::uint128 trending = 0;
 };
 
 struct account_api_obj
@@ -498,7 +410,6 @@ struct registration_committee_api_obj
 FC_REFLECT_DERIVED(scorum::app::account_bandwidth_api_obj, (scorum::witness::account_bandwidth_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::block_summary_api_obj, (scorum::chain::block_summary_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::change_recovery_account_request_api_obj, (scorum::chain::change_recovery_account_request_object), BOOST_PP_SEQ_NIL)
-FC_REFLECT_DERIVED(scorum::app::comment_vote_api_obj, (scorum::chain::comment_vote_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::decline_voting_rights_request_api_obj, (scorum::chain::decline_voting_rights_request_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::escrow_api_obj, (scorum::chain::escrow_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::scorumpower_delegation_api_obj, (scorum::chain::scorumpower_delegation_object), BOOST_PP_SEQ_NIL)
@@ -519,28 +430,6 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
 FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
-
-
-FC_REFLECT( scorum::app::comment_api_obj,
-             (id)(author)(permlink)
-             (category)(parent_author)(parent_permlink)
-             (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
-             (depth)(children)
-             (net_rshares)(abs_rshares)(vote_rshares)
-             (children_abs_rshares)(cashout_time)
-             (total_vote_weight)
-             (total_payout_scr_value)
-             (total_payout_sp_value)
-             (author_payout_scr_value)
-             (author_payout_sp_value)
-             (curator_payout_scr_value)
-             (curator_payout_sp_value)
-             (beneficiary_payout_scr_value)
-             (beneficiary_payout_sp_value)
-             (net_votes)(root_comment)
-             (max_accepted_payout)(allow_replies)(allow_votes)(allow_curation_rewards)
-             (beneficiaries)
-          )
 
 FC_REFLECT( scorum::app::account_api_obj,
              (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)
@@ -575,15 +464,6 @@ FC_REFLECT( scorum::app::account_recovery_request_api_obj,
              (account_to_recover)
              (new_owner_authority)
              (expires)
-          )
-
-FC_REFLECT( scorum::app::tag_api_obj,
-            (name)
-            (total_payouts)
-            (net_votes)
-            (top_posts)
-            (comments)
-            (trending)
           )
 
 FC_REFLECT( scorum::app::witness_api_obj,
