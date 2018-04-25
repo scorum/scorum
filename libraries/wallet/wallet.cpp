@@ -2305,11 +2305,6 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
     return result;
 }
 
-app::state wallet_api::get_state(const std::string& url)
-{
-    return my->_remote_db->get_state(url);
-}
-
 std::vector<withdraw_route> wallet_api::get_withdraw_routes(const std::string& account, withdraw_route_type type) const
 {
     return my->_remote_db->get_withdraw_routes(account, type);
