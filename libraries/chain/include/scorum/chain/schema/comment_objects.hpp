@@ -143,20 +143,6 @@ public:
 using comment_statistic_scr_object = comment_statistic_object<comment_statistic_scr_object_type, SCORUM_SYMBOL>;
 using comment_statistic_sp_object = comment_statistic_object<comment_statistic_sp_object_type, SP_SYMBOL>;
 
-class comments_bounty_fund_object : public object<comments_bounty_fund_object_type, comments_bounty_fund_object>
-{
-public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(comments_bounty_fund_object)
-
-    id_type id;
-
-    asset activity_reward_balance = asset(0, SP_SYMBOL);
-    fc::uint128_t recent_claims = 0;
-    time_point_sec last_update;
-    curve_id author_reward_curve;
-    curve_id curation_reward_curve;
-};
-
 // clang-format off
 
 struct by_comment_voter;
@@ -327,13 +313,6 @@ member<CommentStatisticObjectType,
        &CommentStatisticObjectType::comment>>>
      >;
 
-typedef shared_multi_index_container<comments_bounty_fund_object,
-                                     indexed_by<ordered_unique<tag<by_id>,
-                                                               member<comments_bounty_fund_object,
-                                                                      comments_bounty_fund_id_type,
-                                                                      &comments_bounty_fund_object::id>>>>
-    comments_bounty_fund_index;
-
 using comment_statistic_scr_index = comment_statistic_index<comment_statistic_scr_object>;
 using comment_statistic_sp_index = comment_statistic_index<comment_statistic_sp_object>;
 
@@ -378,15 +357,5 @@ FC_REFLECT( scorum::chain::comment_statistic_sp_object,
             (beneficiary_payout_value)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_sp_object, scorum::chain::comment_statistic_sp_index )
-
-FC_REFLECT( scorum::chain::comments_bounty_fund_object,
-            (id)
-            (activity_reward_balance)
-            (recent_claims)
-            (last_update)
-            (author_reward_curve)
-            (curation_reward_curve)
-          )
-CHAINBASE_SET_INDEX_TYPE( scorum::chain::comments_bounty_fund_object, scorum::chain::comments_bounty_fund_index )
 
 // clang-format on

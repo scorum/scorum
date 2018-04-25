@@ -2,7 +2,6 @@
 
 #include "database_default_integration.hpp"
 
-#include <scorum/chain/services/comments_bounty_fund.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/comment.hpp>
@@ -20,10 +19,10 @@
 using namespace scorum::chain;
 
 namespace database_fixture {
-struct comments_bounty_fund_fixture : public database_default_integration_fixture
+struct fifa_world_cup_2018_bounty_reward_fund_fixture : public database_default_integration_fixture
 {
-    comments_bounty_fund_fixture()
-        : comments_bounty_fund_service(db.comments_bounty_fund_service())
+    fifa_world_cup_2018_bounty_reward_fund_fixture()
+        : fifa_world_cup_2018_bounty_reward_fund_service(db.fifa_world_cup_2018_bounty_reward_fund_service())
         , reward_fund_sp_service(db.reward_fund_sp_service())
         , budget_service(db.budget_service())
         , comment_service(db.comment_service())
@@ -126,7 +125,7 @@ struct comments_bounty_fund_fixture : public database_default_integration_fixtur
         push_operation_only(vote, voter.private_key);
     }
 
-    comments_bounty_fund_service_i& comments_bounty_fund_service;
+    fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service;
     reward_fund_sp_service_i& reward_fund_sp_service;
     budget_service_i& budget_service;
     comment_service_i& comment_service;
@@ -147,11 +146,11 @@ struct comments_bounty_fund_fixture : public database_default_integration_fixtur
 
 using namespace database_fixture;
 
-BOOST_FIXTURE_TEST_SUITE(comments_bounty_fund_tests, comments_bounty_fund_fixture)
+BOOST_FIXTURE_TEST_SUITE(fifa_world_cup_2018_bounty_reward_fund_tests, fifa_world_cup_2018_bounty_reward_fund_fixture)
 
 BOOST_AUTO_TEST_CASE(bounty_fund_creation_check)
 {
-    BOOST_REQUIRE(!comments_bounty_fund_service.is_exists());
+    BOOST_REQUIRE(!fifa_world_cup_2018_bounty_reward_fund_service.is_exists());
 
     generate_blocks(SCORUM_BLOGGING_START_DATE - SCORUM_BLOCK_INTERVAL);
 
@@ -161,20 +160,20 @@ BOOST_AUTO_TEST_CASE(bounty_fund_creation_check)
 
     balance += content_reward;
 
-    BOOST_REQUIRE(comments_bounty_fund_service.is_exists());
-    BOOST_REQUIRE_EQUAL(comments_bounty_fund_service.get().activity_reward_balance, balance);
+    BOOST_REQUIRE(fifa_world_cup_2018_bounty_reward_fund_service.is_exists());
+    BOOST_REQUIRE_EQUAL(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance, balance);
     BOOST_REQUIRE_EQUAL(reward_fund_sp_service.get().activity_reward_balance, ASSET_NULL_SP);
 }
 
 BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
 {
-    BOOST_REQUIRE(!comments_bounty_fund_service.is_exists());
+    BOOST_REQUIRE(!fifa_world_cup_2018_bounty_reward_fund_service.is_exists());
 
     generate_blocks(SCORUM_BLOGGING_START_DATE);
 
-    BOOST_REQUIRE(comments_bounty_fund_service.is_exists());
+    BOOST_REQUIRE(fifa_world_cup_2018_bounty_reward_fund_service.is_exists());
 
-    auto bounty_fund = comments_bounty_fund_service.get().activity_reward_balance;
+    auto bounty_fund = fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance;
 
     BOOST_REQUIRE_GT(bounty_fund, ASSET_NULL_SP);
 
@@ -211,7 +210,7 @@ BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
 
     generate_blocks(SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE);
 
-    BOOST_REQUIRE_EQUAL(comments_bounty_fund_service.get().activity_reward_balance, ASSET_NULL_SP);
+    BOOST_REQUIRE_EQUAL(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance, ASSET_NULL_SP);
 
     auto alice_balance = account_service.get_account(alice.name).scorumpower;
     auto bob_balance = account_service.get_account(bob.name).scorumpower;

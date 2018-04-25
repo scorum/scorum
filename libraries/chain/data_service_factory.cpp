@@ -29,7 +29,6 @@
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/services/genesis_state.hpp>
-#include <scorum/chain/services/comments_bounty_fund.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -38,7 +37,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (atomicswap)
         (budget)
         (comment)
-        (comments_bounty_fund)
         (comment_statistic_scr)
         (comment_statistic_sp)
         (comment_vote)
@@ -54,6 +52,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (reward)
         (reward_fund_scr)
         (reward_fund_sp)
+        (fifa_world_cup_2018_bounty_reward_fund)
         (scorumpower_delegation)
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)

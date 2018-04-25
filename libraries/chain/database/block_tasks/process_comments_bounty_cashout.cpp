@@ -15,14 +15,16 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
         return;
     }
 
-    comments_bounty_fund_service_i& comments_bounty_fund_service = ctx.services().comments_bounty_fund_service();
+    fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service
+        = ctx.services().fifa_world_cup_2018_bounty_reward_fund_service();
 
-    if (!comments_bounty_fund_service.is_exists())
+    if (!fifa_world_cup_2018_bounty_reward_fund_service.is_exists())
     {
         return;
     }
 
-    const comments_bounty_fund_object& bounty_fund = comments_bounty_fund_service.get();
+    const fifa_world_cup_2018_bounty_reward_fund_object& bounty_fund
+        = fifa_world_cup_2018_bounty_reward_fund_service.get();
 
     if (bounty_fund.activity_reward_balance.amount < 1)
     {
@@ -37,7 +39,7 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
 
     process_comments_cashout_impl impl(ctx);
 
-    impl.reward(comments_bounty_fund_service, comments);
+    impl.reward(fifa_world_cup_2018_bounty_reward_fund_service, comments);
 
     auto balance = bounty_fund.activity_reward_balance;
 
@@ -50,8 +52,8 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
 
         impl.pay_for_comment(oldest_comment, balance);
 
-        comments_bounty_fund_service.update(
-            [&](comments_bounty_fund_object& bfo) { bfo.activity_reward_balance -= balance; });
+        fifa_world_cup_2018_bounty_reward_fund_service.update(
+            [&](fifa_world_cup_2018_bounty_reward_fund_object& bfo) { bfo.activity_reward_balance -= balance; });
     }
     else if (balance.amount > 0)
     {
@@ -59,8 +61,8 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
 
         reward_fund_sp_service_i& reward_fund_service = ctx.services().reward_fund_sp_service();
 
-        comments_bounty_fund_service.update(
-            [&](comments_bounty_fund_object& bfo) { bfo.activity_reward_balance -= balance; });
+        fifa_world_cup_2018_bounty_reward_fund_service.update(
+            [&](fifa_world_cup_2018_bounty_reward_fund_object& bfo) { bfo.activity_reward_balance -= balance; });
 
         reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += balance; });
     }

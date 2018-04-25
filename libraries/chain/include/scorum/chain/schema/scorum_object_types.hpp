@@ -47,7 +47,6 @@ enum object_type
     comment_object_type,
     comment_statistic_scr_object_type,
     comment_statistic_sp_object_type,
-    comments_bounty_fund_object_type,
     comment_vote_object_type,
     decline_voting_rights_request_object_type,
     dynamic_global_property_object_type,
@@ -59,6 +58,7 @@ enum object_type
     registration_pool_object_type,
     reward_fund_scr_object_type,
     reward_fund_sp_object_type,
+    fifa_world_cup_2018_bounty_reward_fund_type,
     reward_balancer_object_type,
     transaction_object_type,
     scorumpower_delegation_expiration_object_type,
@@ -168,7 +168,6 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (comment_object_type)
                 (comment_statistic_scr_object_type)
                 (comment_statistic_sp_object_type)
-                (comments_bounty_fund_object_type)
                 (comment_vote_object_type)
                 (decline_voting_rights_request_object_type)
                 (dynamic_global_property_object_type)
@@ -180,6 +179,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (registration_pool_object_type)
                 (reward_fund_scr_object_type)
                 (reward_fund_sp_object_type)
+                (fifa_world_cup_2018_bounty_reward_fund_type)
                 (reward_balancer_object_type)
                 (transaction_object_type)
                 (scorumpower_delegation_expiration_object_type)

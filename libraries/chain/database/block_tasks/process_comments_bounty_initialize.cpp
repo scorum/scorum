@@ -2,7 +2,6 @@
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
-#include <scorum/chain/services/comments_bounty_fund.hpp>
 
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/reward_objects.hpp>
@@ -23,9 +22,10 @@ void process_comments_bounty_initialize::on_apply(block_task_context& ctx)
         return;
     }
 
-    comments_bounty_fund_service_i& comments_bounty_fund_service = services.comments_bounty_fund_service();
+    fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service
+        = services.fifa_world_cup_2018_bounty_reward_fund_service();
 
-    if (comments_bounty_fund_service.is_exists())
+    if (fifa_world_cup_2018_bounty_reward_fund_service.is_exists())
     {
         return;
     }
@@ -36,11 +36,12 @@ void process_comments_bounty_initialize::on_apply(block_task_context& ctx)
 
     auto balance = rf.activity_reward_balance;
 
-    comments_bounty_fund_service.create([&](comments_bounty_fund_object& bounty_fund) {
-        bounty_fund.activity_reward_balance = balance;
-        bounty_fund.author_reward_curve = rf.author_reward_curve;
-        bounty_fund.curation_reward_curve = rf.curation_reward_curve;
-    });
+    fifa_world_cup_2018_bounty_reward_fund_service.create(
+        [&](fifa_world_cup_2018_bounty_reward_fund_object& bounty_fund) {
+            bounty_fund.activity_reward_balance = balance;
+            bounty_fund.author_reward_curve = rf.author_reward_curve;
+            bounty_fund.curation_reward_curve = rf.curation_reward_curve;
+        });
 
     reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance -= balance; });
 }
