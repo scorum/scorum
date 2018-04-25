@@ -15,7 +15,7 @@
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/registration_pool.hpp>

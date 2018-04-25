@@ -2,7 +2,7 @@
 
 #include "database_default_integration.hpp"
 
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>

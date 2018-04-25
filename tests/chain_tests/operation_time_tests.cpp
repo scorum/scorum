@@ -8,7 +8,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/rewards_math/curve.hpp>

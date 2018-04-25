@@ -15,7 +15,7 @@
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/scorumpower_delegation.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>

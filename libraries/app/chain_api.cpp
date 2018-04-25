@@ -3,7 +3,7 @@
 #include <scorum/app/application.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>

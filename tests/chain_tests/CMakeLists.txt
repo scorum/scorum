@@ -13,7 +13,7 @@ set( SOURCES
     rewards/vote_apply_tests.cpp
     rewards/comment_beneficiaries_apply_tests.cpp
     rewards/per_block_reward_distribution.cpp
-    rewards/comments_bounty_fund_tests.cpp
+    rewards/fifa_world_cup_2018_bounty_reward_fund_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp

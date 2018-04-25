@@ -4,7 +4,7 @@
 
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
