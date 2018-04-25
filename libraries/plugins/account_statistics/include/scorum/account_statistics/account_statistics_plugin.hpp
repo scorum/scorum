@@ -5,7 +5,7 @@
 #include <scorum/account_statistics/schema/objects.hpp>
 
 #ifndef ACCOUNT_STATISTICS_PLUGIN_NAME
-#define ACCOUNT_STATISTICS_PLUGIN_NAME "account_stats"
+#define ACCOUNT_STATISTICS_PLUGIN_NAME "account_statistics"
 #endif
 
 namespace scorum {
