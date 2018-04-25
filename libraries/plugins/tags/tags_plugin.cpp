@@ -1,4 +1,6 @@
 #include <scorum/tags/tags_plugin.hpp>
+#include <scorum/tags/tags_api.hpp>
+#include <scorum/tags/tags_objects.hpp>
 
 #include <scorum/app/impacted.hpp>
 
@@ -267,7 +269,7 @@ struct operation_visitor
             auto hot = calculate_hot(c.net_rshares, c.created);
             auto trending = calculate_trending(c.net_rshares, c.created);
 
-            const auto& comment_idx = _db.get_index<tag_index>().indices().get<by_comment>();
+            const auto& comment_idx = _db.get_index<scorum::tags::tag_index>().indices().get<by_comment>();
 
             if (parse_tags)
             {
@@ -412,7 +414,7 @@ struct operation_visitor
                     const auto& c = comment_service.get(acnt, perm);
                     if (c.parent_author.size() == 0)
                     {
-                        const auto& comment_idx = _db.get_index<tag_index>().indices().get<by_comment>();
+                        const auto& comment_idx = _db.get_index<scorum::tags::tag_index>().indices().get<by_comment>();
                         auto citr = comment_idx.lower_bound(c.id);
                         while (citr != comment_idx.end() && citr->comment == c.id)
                         {
@@ -445,7 +447,7 @@ struct operation_visitor
 
     void operator()(const delete_comment_operation& op) const
     {
-        const auto& idx = _db.get_index<tag_index>().indices().get<by_author_comment>();
+        const auto& idx = _db.get_index<scorum::tags::tag_index>().indices().get<by_author_comment>();
 
         const auto& auth = _db.obtain_service<dbs_account>().get_account(op.author);
         auto itr = idx.lower_bound(boost::make_tuple(auth.id));
@@ -504,7 +506,7 @@ void tags_plugin_impl::on_operation(const operation_notification& note)
 
 } // namespace detail
 
-tags_plugin::tags_plugin(application* app)
+tags_plugin::tags_plugin(scorum::app::application* app)
     : plugin(app)
     , my(new detail::tags_plugin_impl(*this))
 {
@@ -512,6 +514,11 @@ tags_plugin::tags_plugin(application* app)
 
 tags_plugin::~tags_plugin()
 {
+}
+
+std::string tags_plugin::plugin_name() const
+{
+    return TAGS_PLUGIN_NAME;
 }
 
 void tags_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
@@ -527,7 +534,7 @@ void tags_plugin::plugin_initialize(const boost::program_options::variables_map&
 
         db.post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
 
-        db.add_plugin_index<tag_index>();
+        db.add_plugin_index<tags::tag_index>();
         db.add_plugin_index<tag_stats_index>();
         db.add_plugin_index<peer_stats_index>();
         db.add_plugin_index<author_tag_stats_index>();
@@ -539,7 +546,7 @@ void tags_plugin::plugin_initialize(const boost::program_options::variables_map&
 
 void tags_plugin::plugin_startup()
 {
-    app().register_api_factory<tag_api>("tag_api");
+    app().register_api_factory<tags_api>("tags_api");
 }
 
 } // namespace tags

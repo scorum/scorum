@@ -30,6 +30,7 @@ set( SOURCES
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
+    plugins/tags/tags_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     genesis_db_tests.cpp
