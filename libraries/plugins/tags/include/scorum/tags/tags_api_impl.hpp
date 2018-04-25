@@ -307,10 +307,7 @@ public:
     {
         std::vector<discussion> result;
 
-#ifdef IS_LOW_MEM
-        return result;
-#endif
-
+#ifndef IS_LOW_MEM
         FC_ASSERT(limit <= 100);
         const auto& last_update_idx = _db.get_index<comment_index>().indices().get<by_last_update>();
         auto itr = last_update_idx.begin();
@@ -336,6 +333,7 @@ public:
             result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
             ++itr;
         }
+#endif
 
         return result;
     }
@@ -348,10 +346,7 @@ public:
 
         std::vector<discussion> result;
 
-#ifdef IS_LOW_MEM
-        return result;
-#endif
-
+#ifndef IS_LOW_MEM
         FC_ASSERT(limit <= 100);
         result.reserve(limit);
         uint32_t count = 0;
@@ -379,6 +374,7 @@ public:
             }
             ++itr;
         }
+#endif
         return result;
     }
 
