@@ -15,7 +15,7 @@ struct comment_service_i : public base_service_i<comment_object>
 
     using comment_refs_type = std::vector<std::reference_wrapper<const comment_object>>;
 
-    virtual comment_refs_type get_by_cashout_time() const = 0;
+    virtual comment_refs_type get_by_cashout_time(const fc::time_point_sec& upper_bound) const = 0;
 
     virtual bool is_exists(const account_name_type& author, const std::string& permlink) const = 0;
 };
@@ -31,7 +31,7 @@ public:
     const comment_object& get(const comment_id_type& comment_id) const override;
     const comment_object& get(const account_name_type& author, const std::string& permlink) const override;
 
-    comment_refs_type get_by_cashout_time() const override;
+    comment_refs_type get_by_cashout_time(const fc::time_point_sec& upper_bound) const override;
 
     bool is_exists(const account_name_type& author, const std::string& permlink) const override;
 };

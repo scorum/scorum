@@ -51,14 +51,16 @@ public:
     /// used to track the total number of children, grandchildren, etc...
     uint32_t children = 0;
 
-    /// This is the sum of all votes (positive and negative). Used for calculation reward witch is proportional to
+    /// This is the sum of all votes (positive and negative). Used for calculation
+    /// reward witch is proportional to
     /// rshares^2
     share_type net_rshares;
 
     /// This is used to track the total abs(weight) of votes.
     share_type abs_rshares;
 
-    /// Total positive rshares from all votes. Used to calculate delta weights. Needed to handle vote changing and
+    /// Total positive rshares from all votes. Used to calculate delta weights.
+    /// Needed to handle vote changing and
     /// removal.
     share_type vote_rshares;
 
@@ -69,13 +71,16 @@ public:
     time_point_sec cashout_time;
     time_point_sec max_cashout_time;
 
-    /// the total weight of voting rewards, used to calculate pro-rata share of curation payouts
+    /// the total weight of voting rewards, used to calculate pro-rata share of
+    /// curation payouts
     uint64_t total_vote_weight = 0;
 
-    /// tracks the total payout this comment has received over time, measured in SCR
+    /// tracks the total payout this comment has received over time, measured in
+    /// SCR
     asset total_payout_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_value = asset(0, SCORUM_SYMBOL);
     asset beneficiary_payout_value = asset(0, SCORUM_SYMBOL);
+    asset parent_author_payout_value = asset(0, SCORUM_SYMBOL);
 
     asset author_rewards = asset(0, SCORUM_SYMBOL);
 
@@ -101,7 +106,8 @@ public:
 };
 
 /**
- * This index maintains the set of voter/comment pairs that have been used, voters cannot
+ * This index maintains the set of voter/comment pairs that have been used,
+ * voters cannot
  * vote on the same comment more than once per payout period.
  */
 class comment_vote_object : public object<comment_vote_object_type, comment_vote_object>
@@ -114,7 +120,8 @@ public:
     account_id_type voter;
     comment_id_type comment;
 
-    /// defines the score this vote receives, used by vote payout calc. 0 if a negative vote or changed votes.
+    /// defines the score this vote receives, used by vote payout calc. 0 if a
+    /// negative vote or changed votes.
     uint64_t weight = 0;
 
     /// The number of rshares this vote is responsible for
@@ -215,6 +222,9 @@ typedef shared_multi_index_container<comment_object,
                                                                       time_point_sec,
                                                                       &comment_object::cashout_time>,
                                                                member<comment_object,
+                                                                      uint16_t,
+                                                                      &comment_object::depth>,
+                                                               member<comment_object,
                                                                       comment_id_type,
                                                                       &comment_object::id>>>,
                                   ordered_unique<tag<by_permlink>, /// used by consensus to find posts referenced in ops
@@ -297,7 +307,7 @@ FC_REFLECT( scorum::chain::comment_object,
              (depth)(children)
              (net_rshares)(abs_rshares)(vote_rshares)
              (children_abs_rshares)(cashout_time)(max_cashout_time)
-             (total_vote_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(author_rewards)(net_votes)(root_comment)
+             (total_vote_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(parent_author_payout_value)(author_rewards)(net_votes)(root_comment)
              (max_accepted_payout)(percent_scrs)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
