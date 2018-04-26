@@ -48,14 +48,12 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
                 comment.net_rshares, total_claims, rf.activity_reward_balance_scr.amount, rf.author_reward_curve,
                 comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
 
-            scorum_awarded += payout;
-
             asset commenting_reward = commenting_rewards[comment.author];
 
-            asset parent_author_commenting_reward
-                = pay_for_comment(ctx, comment, asset(payout, SCORUM_SYMBOL), commenting_reward);
+            auto payout_result = pay_for_comment(ctx, comment, asset(payout, SCORUM_SYMBOL), commenting_reward);
+            scorum_awarded += payout_result.total_claimed_reward;
 
-            commenting_rewards[comment.parent_author] += parent_author_commenting_reward;
+            commenting_rewards[comment.parent_author] += payout_result.parent_author_reward;
         }
 
         comment_service.update(comment, [&](comment_object& c) {
@@ -113,10 +111,10 @@ shares_vector_type process_comments_cashout::get_total_rshares(block_task_contex
     return ret;
 }
 
-asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
-                                                const comment_object& comment,
-                                                const asset& reward,
-                                                const asset& commenting_reward)
+comment_payout_result process_comments_cashout::pay_for_comment(block_task_context& ctx,
+                                                                const comment_object& comment,
+                                                                const asset& reward,
+                                                                const asset& commenting_reward)
 {
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
@@ -124,6 +122,8 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
 
     try
     {
+        comment_payout_result payout_result;
+
         if (reward.amount > 0)
         {
             // clang-format off
@@ -133,8 +133,13 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
             author_tokens += pay_curators(ctx, comment, curation_tokens); // curation_tokens can be changed inside pay_curators()
 
             auto total_author_reward = author_tokens + commenting_reward;
-            author_tokens = total_author_reward * (SCORUM_100_PERCENT - SCORUM_PARENT_COMMENT_REWARD_PERCENT) / SCORUM_100_PERCENT;
-            auto parent_author_commenting_reward = total_author_reward - author_tokens;
+            auto parent_author_reward = comment.depth == 0
+                ? asset(0, SCORUM_SYMBOL)
+                : total_author_reward * SCORUM_PARENT_COMMENT_REWARD_PERCENT / SCORUM_100_PERCENT;
+            author_tokens = total_author_reward - parent_author_reward;
+
+            payout_result.total_claimed_reward = author_tokens + curation_tokens;
+            payout_result.parent_author_reward = parent_author_reward;
 
             auto total_beneficiary = asset(0, SCORUM_SYMBOL);
             for (auto& b : comment.beneficiaries)
@@ -151,7 +156,7 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
                 c.total_payout_value += author_tokens;
                 c.curator_payout_value += curation_tokens;
                 c.beneficiary_payout_value += total_beneficiary;
-                c.parent_author_payout_value += parent_author_commenting_reward;
+                c.parent_author_payout_value += payout_result.parent_author_reward;
             });
 
             auto payout_scorum = (author_tokens * comment.percent_scrs) / (2 * SCORUM_100_PERCENT);
@@ -162,17 +167,16 @@ asset process_comments_cashout::pay_for_comment(block_task_context& ctx,
             asset sp_created = account_service.create_scorumpower(author, vesting_scorum);
 
             ctx.push_virtual_operation(author_reward_operation(comment.author, fc::to_string(comment.permlink), payout_scorum, sp_created));
-            ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), reward));
+            ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward));
 
 #ifndef IS_LOW_MEM
             comment_service.update(comment, [&](comment_object& c) { c.author_rewards += author_tokens; });
 
             account_service.increase_posting_rewards(author, author_tokens);
 #endif
-            return parent_author_commenting_reward;
         }
 
-        return asset(0, SCORUM_SYMBOL);
+        return payout_result;
     }
     FC_CAPTURE_AND_RETHROW((comment))
 }
