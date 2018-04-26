@@ -6,6 +6,8 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 
+#include <boost/lambda/lambda.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -605,6 +607,11 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
     }
 
     return new_account;
+}
+
+std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() const
+{
+    return get_range_by<by_voting_power>(0 <= boost::lambda::_1, boost::lambda::_1 < SCORUM_100_PERCENT);
 }
 } // namespace chain
 } // namespace scorum

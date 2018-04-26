@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
@@ -142,5 +141,3 @@ SCORUM_TEST_CASE(check_signing_key_reset)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif
