@@ -86,6 +86,12 @@ reward_fund_api_obj chain_api::get_reward_fund(reward_fund_type type_of_fund) co
             FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
             return reward_fund_api_obj(rf_service.get());
         }
+        case reward_fund_type::fifa_world_cup_2018_bounty_reward_fund:
+        {
+            auto& rf_service = _db.obtain_service<dbs_fifa_world_cup_2018_bounty_reward_fund>();
+            FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
+            return reward_fund_api_obj(rf_service.get());
+        }
         default:
             FC_ASSERT(false, "Unknown fund");
             return reward_fund_api_obj();
