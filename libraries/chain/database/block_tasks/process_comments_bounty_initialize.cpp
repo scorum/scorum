@@ -43,7 +43,10 @@ void process_comments_bounty_initialize::on_apply(block_task_context& ctx)
             bounty_fund.curation_reward_curve = rf.curation_reward_curve;
         });
 
-    reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance -= balance; });
+    reward_fund_service.update([&](reward_fund_sp_object& rfo) {
+        rfo.activity_reward_balance -= balance;
+        rfo.recent_claims += fc::uint128_t(balance.amount.value);
+    });
 }
 }
 }
