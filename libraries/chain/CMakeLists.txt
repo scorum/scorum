@@ -86,6 +86,7 @@ add_library( scorum_chain
              genesis/initializators/dev_committee_initialiazator.cpp
 
              database/block_tasks/block_tasks.cpp
+             database/block_tasks/process_contracts_expiration.cpp
              database/block_tasks/process_funds.cpp
              database/block_tasks/process_comments_cashout.cpp
              database/block_tasks/process_vesting_withdrawals.cpp
