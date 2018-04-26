@@ -4,7 +4,7 @@
 #include <fc/api.hpp>
 
 #ifndef API_BLOCKCHAIN_STATISTICS
-#define API_BLOCKCHAIN_STATISTICS "chain_stats_api"
+#define API_BLOCKCHAIN_STATISTICS "blockchain_statistics_api"
 #endif
 
 namespace scorum {
