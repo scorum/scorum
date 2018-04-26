@@ -124,7 +124,7 @@ void account_statistics_plugin::plugin_initialize(const boost::program_options::
 
 void account_statistics_plugin::plugin_startup()
 {
-    app().register_api_factory<account_statistics_api>("account_stats_api");
+    app().register_api_factory<account_statistics_api>(API_ACCOUNT_STATISTICS);
 }
 
 const flat_set<uint32_t>& account_statistics_plugin::get_tracked_buckets() const

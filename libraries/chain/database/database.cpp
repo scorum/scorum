@@ -59,6 +59,7 @@
 #include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_comments_bounty_initialize.hpp>
 #include <scorum/chain/database/block_tasks/process_comments_bounty_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -85,6 +86,7 @@ public:
     database_ns::process_comments_bounty_initialize _process_comments_bounty_initialize;
     database_ns::process_comments_bounty_cashout _process_comments_bounty_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
+    database_ns::process_contracts_expiration _process_contracts_expiration;
 };
 
 database_impl::database_impl(database& self)
@@ -1357,10 +1359,9 @@ void database::_apply_block(const signed_block& next_block)
             .before(_my->_process_comments_cashout)
             .before(_my->_process_comments_bounty_cashout)
             .before(_my->_process_vesting_withdrawals)
+            .before(_my->_process_contracts_expiration)
             .apply(ctx);
         // clang-format on
-
-        obtain_service<dbs_atomicswap>().check_contracts_expiration();
 
         account_recovery_processing();
         expire_escrow_ratification();
