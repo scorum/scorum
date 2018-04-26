@@ -360,17 +360,7 @@ SCORUM_TEST_CASE(check_expired_contracts_refund)
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash), fc::exception);
 
-    signed_transaction tx;
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-    tx.operations.push_back(initiate_op);
-    tx.operations.push_back(participate_op);
-
-    BOOST_REQUIRE_NO_THROW(tx.sign(m_alice_private_key, db.get_chain_id()));
-    BOOST_REQUIRE_NO_THROW(tx.validate());
-
-    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, default_skip));
-
-    BOOST_REQUIRE_NO_THROW(validate_database());
+    BOOST_REQUIRE_NO_THROW(push_operations(m_alice_private_key, false, initiate_op, participate_op));
 
     expired_contract_refund_visitor visitor(db);
     db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
@@ -400,32 +390,13 @@ SCORUM_TEST_CASE(check_redeemed_expired_contracts)
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash), fc::exception);
 
-    signed_transaction tx;
-    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-    tx.operations.push_back(initiate_op);
-    tx.operations.push_back(participate_op);
-
-    BOOST_REQUIRE_NO_THROW(tx.sign(m_alice_private_key, db.get_chain_id()));
-    BOOST_REQUIRE_NO_THROW(tx.validate());
-    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, default_skip));
-    BOOST_REQUIRE_NO_THROW(validate_database());
-
-    generate_block();
+    BOOST_REQUIRE_NO_THROW(push_operations(m_alice_private_key, true, initiate_op, participate_op));
 
     expired_contract_refund_visitor visitor(db);
     db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
 
-    signed_transaction tx2;
-    tx2.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-    tx2.operations.push_back(redeem_by_initiator_op);
-    tx2.operations.push_back(redeem_by_participant_op);
-
-    BOOST_REQUIRE_NO_THROW(tx2.sign(m_alice_private_key, db.get_chain_id()));
-    BOOST_REQUIRE_NO_THROW(tx2.validate());
-    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx2, default_skip));
-    BOOST_REQUIRE_NO_THROW(validate_database());
-
-    generate_block();
+    BOOST_REQUIRE_NO_THROW(
+        push_operations(m_alice_private_key, true, redeem_by_initiator_op, redeem_by_participant_op));
 
     BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
     BOOST_REQUIRE_NO_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash));
