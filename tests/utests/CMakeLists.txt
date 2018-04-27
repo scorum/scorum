@@ -23,9 +23,14 @@ set(SOURCES
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
+    rewards_math/calculate_payout_tests.cpp
+    rewards_math/calculate_total_claims_tests.cpp
+    rewards_math/calculate_curations_payout_tests.cpp
+    rewards_math/calculate_weight_tests.cpp
+    rewards_math/calculate_abs_reward_shares_tests.cpp
+    rewards_math/calculate_voting_power_tests.cpp
     tasks_base_tests.cpp
     block_tasks_tests.cpp
-    rewards_math.cpp
 )
 
 add_executable(utests
