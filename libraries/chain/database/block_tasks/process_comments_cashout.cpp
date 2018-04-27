@@ -14,8 +14,7 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     comment_service_i& comment_service = ctx.services().comment_service();
     process_comments_cashout_impl impl(ctx);
 
-    const auto fn = [&](const comment_object& c) { return c.cashout_time <= dgp_service.head_block_time(); };
-    auto comments = comment_service.get_by_cashout_time(fn);
+    auto comments = comment_service.get_by_cashout_time(dgp_service.head_block_time());
 
     impl.reward(reward_fund_scr_service, comments);
     impl.reward(reward_fund_sp_service, comments);

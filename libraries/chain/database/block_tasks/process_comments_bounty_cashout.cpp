@@ -33,9 +33,8 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
 
     comment_service_i& comment_service = ctx.services().comment_service();
 
-    const auto fn_until = [&](const comment_object& c) { return c.created <= SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE; };
     const auto fn_filter = [&](const comment_object& c) { return c.net_rshares > 0; };
-    auto comments = comment_service.get_by_cashout_time(fn_until, fn_filter);
+    auto comments = comment_service.get_by_create_time(SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE, fn_filter);
 
     process_comments_cashout_impl impl(ctx);
 
