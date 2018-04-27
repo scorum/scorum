@@ -219,8 +219,6 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
     gpao.reward_pool_balance = _db.obtain_service<dbs_reward>().get().balance;
     gpao.content_reward_scr_balance = _db.obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
     gpao.content_reward_sp_balance = _db.obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance;
-    share_type content_reward_balance = gpao.content_reward_scr_balance.amount + gpao.content_reward_sp_balance.amount;
-    gpao.content_reward_balance = asset(content_reward_balance, SCORUM_SYMBOL);
 
     return gpao;
 }
