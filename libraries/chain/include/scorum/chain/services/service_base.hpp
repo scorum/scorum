@@ -46,6 +46,7 @@ protected:
 public:
     using modifier_type = typename service_interface::modifier_type;
     using object_type = typename service_interface::object_type;
+    using object_cref_type = std::reference_wrapper<const object_type>;
 
     virtual const object_type& create(const modifier_type& modifier) override
     {
@@ -100,6 +101,49 @@ public:
         try
         {
             return db_impl().template find<object_type, IndexBy...>(arg);
+        }
+        FC_CAPTURE_AND_RETHROW()
+    }
+
+    template <class... IndexBy, class LowerBounder, class UpperBounder>
+    std::vector<object_cref_type> get_range_by(LowerBounder lower, UpperBounder upper) const
+    {
+        try
+        {
+            std::vector<object_cref_type> ret;
+
+            const auto& idx = db_impl()
+                                  .template get_index<typename chainbase::get_index_type<object_type>::type>()
+                                  .indices()
+                                  .template get<IndexBy...>();
+
+            auto range = idx.range(lower, upper);
+
+            std::copy(range.first, range.second, std::back_inserter(ret));
+
+            return ret;
+        }
+        FC_CAPTURE_AND_RETHROW()
+    }
+
+    template <class... IndexBy, class LowerBounder, class UpperBounder, class UnaryPredicate>
+    std::vector<object_cref_type>
+    get_filtered_range_by(LowerBounder lower, UpperBounder upper, UnaryPredicate filter) const
+    {
+        try
+        {
+            std::vector<object_cref_type> ret;
+
+            const auto& idx = db_impl()
+                                  .template get_index<typename chainbase::get_index_type<object_type>::type>()
+                                  .indices()
+                                  .template get<IndexBy...>();
+
+            auto range = idx.range(lower, upper);
+
+            std::copy_if(range.first, range.second, std::back_inserter(ret), filter);
+
+            return ret;
         }
         FC_CAPTURE_AND_RETHROW()
     }
