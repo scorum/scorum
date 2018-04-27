@@ -67,17 +67,9 @@ public:
 
     /// 24 hours from the weighted average of vote time
     time_point_sec cashout_time;
-    time_point_sec max_cashout_time;
 
     /// the total weight of voting rewards, used to calculate pro-rata share of curation payouts
     uint64_t total_vote_weight = 0;
-
-    /// tracks the total payout this comment has received over time, measured in SCR
-    asset total_payout_value = asset(0, SCORUM_SYMBOL);
-    asset curator_payout_value = asset(0, SCORUM_SYMBOL);
-    asset beneficiary_payout_value = asset(0, SCORUM_SYMBOL);
-
-    asset author_rewards = asset(0, SCORUM_SYMBOL);
 
     int32_t net_votes = 0;
 
@@ -85,9 +77,6 @@ public:
 
     /// SCR value of the maximum payout this post will receive
     asset max_accepted_payout = asset::maximum(SCORUM_SYMBOL);
-
-    /// the percent of SCR to pay, unkept amounts will be received as SP
-    uint16_t percent_scrs = SCORUM_100_PERCENT;
 
     /// allows a post to disable replies.
     bool allow_replies = true;
@@ -126,6 +115,28 @@ public:
     /// The time of the last update of the vote
     time_point_sec last_update;
     int8_t num_changes = 0;
+};
+
+template <uint16_t ObjectType, asset_symbol_type SymbolType>
+class comment_statistic_object : public object<ObjectType, comment_statistic_object<ObjectType, SymbolType>>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(comment_statistic_object)
+
+    typedef typename object<ObjectType, comment_statistic_object<ObjectType, SymbolType>>::id_type id_type;
+
+    id_type id;
+
+    comment_id_type comment;
+
+    /// tracks the total payout this comment has received over time
+    asset total_payout_value = asset(0, SymbolType);
+
+    asset author_payout_value = asset(0, SymbolType);
+
+    asset curator_payout_value = asset(0, SymbolType);
+
+    asset beneficiary_payout_value = asset(0, SymbolType);
 };
 
 // clang-format off
@@ -284,6 +295,26 @@ typedef shared_multi_index_container<comment_object,
     >
     comment_index;
 
+struct by_comment_id;
+
+template <typename CommentStatisticObjectType>
+using comment_statistic_index = shared_multi_index_container<CommentStatisticObjectType,
+                              indexed_by<ordered_unique<tag<by_id>,
+                                                        member<CommentStatisticObjectType,
+                                                               typename CommentStatisticObjectType::id_type,
+                                                               &CommentStatisticObjectType::id>>,
+                                         ordered_unique<tag<by_comment_id>,
+member<CommentStatisticObjectType,
+       comment_id_type,
+       &CommentStatisticObjectType::comment>>>
+     >;
+
+using comment_statistic_scr_object = comment_statistic_object<comment_statistic_scr_object_type, SCORUM_SYMBOL>;
+using comment_statistic_sp_object = comment_statistic_object<comment_statistic_sp_object_type, SP_SYMBOL>;
+
+using comment_statistic_scr_index = comment_statistic_index<comment_statistic_scr_object>;
+using comment_statistic_sp_index = comment_statistic_index<comment_statistic_sp_object>;
+
 // clang-format on
 } // namespace chain
 } // namespace scorum
@@ -296,9 +327,9 @@ FC_REFLECT( scorum::chain::comment_object,
              (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
              (depth)(children)
              (net_rshares)(abs_rshares)(vote_rshares)
-             (children_abs_rshares)(cashout_time)(max_cashout_time)
-             (total_vote_weight)(total_payout_value)(curator_payout_value)(beneficiary_payout_value)(author_rewards)(net_votes)(root_comment)
-             (max_accepted_payout)(percent_scrs)(allow_replies)(allow_votes)(allow_curation_rewards)
+             (children_abs_rshares)(cashout_time)
+             (total_vote_weight)(net_votes)(root_comment)
+             (max_accepted_payout)(allow_replies)(allow_votes)(allow_curation_rewards)
              (beneficiaries)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_object, scorum::chain::comment_index )
@@ -307,5 +338,23 @@ FC_REFLECT( scorum::chain::comment_vote_object,
              (id)(voter)(comment)(weight)(rshares)(vote_percent)(last_update)(num_changes)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_vote_object, scorum::chain::comment_vote_index )
+
+FC_REFLECT( scorum::chain::comment_statistic_scr_object,
+             (id)(comment)
+            (total_payout_value)
+            (author_payout_value)
+            (curator_payout_value)
+            (beneficiary_payout_value)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_scr_object, scorum::chain::comment_statistic_scr_index )
+
+FC_REFLECT( scorum::chain::comment_statistic_sp_object,
+             (id)(comment)
+            (total_payout_value)
+            (author_payout_value)
+            (curator_payout_value)
+            (beneficiary_payout_value)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_sp_object, scorum::chain::comment_statistic_sp_index )
 
 // clang-format on

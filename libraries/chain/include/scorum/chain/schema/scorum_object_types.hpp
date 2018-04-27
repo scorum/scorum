@@ -36,6 +36,7 @@ enum object_type
 {
     account_authority_object_type,
     account_object_type,
+    account_blogging_statistic_object_type,
     account_recovery_request_object_type,
     atomicswap_contract_object_type,
     block_stats_object_type,
@@ -44,6 +45,8 @@ enum object_type
     chain_property_object_type,
     change_recovery_account_request_object_type,
     comment_object_type,
+    comment_statistic_scr_object_type,
+    comment_statistic_sp_object_type,
     comment_vote_object_type,
     decline_voting_rights_request_object_type,
     dynamic_global_property_object_type,
@@ -53,7 +56,8 @@ enum object_type
     proposal_object_type,
     registration_committee_member_object_type,
     registration_pool_object_type,
-    reward_fund_object_type,
+    reward_fund_scr_object_type,
+    reward_fund_sp_object_type,
     reward_balancer_object_type,
     transaction_object_type,
     scorumpower_delegation_expiration_object_type,
@@ -70,6 +74,7 @@ enum object_type
 
 class account_authority_object;
 class account_object;
+class account_blogging_statistic_object;
 class account_recovery_request_object;
 class atomicswap_contract_object;
 class block_stats_object;
@@ -87,7 +92,6 @@ class owner_authority_history_object;
 class proposal_object;
 class registration_committee_member_object;
 class registration_pool_object;
-class reward_fund_object;
 class reward_balancer_object;
 class transaction_object;
 class scorumpower_delegation_expiration_object;
@@ -103,6 +107,7 @@ class dev_committee_member_object;
 
 using account_authority_id_type = oid<account_authority_object>;
 using account_id_type = oid<account_object>;
+using account_blogging_statistic_id_type = oid<account_blogging_statistic_object>;
 using account_recovery_request_id_type = oid<account_recovery_request_object>;
 using atomicswap_contract_id_type = oid<atomicswap_contract_object>;
 using block_stats_id_type = oid<block_stats_object>;
@@ -120,7 +125,6 @@ using owner_authority_history_id_type = oid<owner_authority_history_object>;
 using proposal_id_type = oid<proposal_object>;
 using registration_committee_member_id_type = oid<registration_committee_member_object>;
 using registration_pool_id_type = oid<registration_pool_object>;
-using reward_fund_id_type = oid<reward_fund_object>;
 using reward_pool_id_type = oid<reward_balancer_object>;
 using transaction_object_id_type = oid<transaction_object>;
 using scorumpower_delegation_expiration_id_type = oid<scorumpower_delegation_expiration_object>;
@@ -150,6 +154,7 @@ enum bandwidth_type
 FC_REFLECT_ENUM(scorum::chain::object_type,
                 (account_authority_object_type)
                 (account_object_type)
+                (account_blogging_statistic_object_type)
                 (account_recovery_request_object_type)
                 (atomicswap_contract_object_type)
                 (block_stats_object_type)
@@ -158,6 +163,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (chain_property_object_type)
                 (change_recovery_account_request_object_type)
                 (comment_object_type)
+                (comment_statistic_scr_object_type)
+                (comment_statistic_sp_object_type)
                 (comment_vote_object_type)
                 (decline_voting_rights_request_object_type)
                 (dynamic_global_property_object_type)
@@ -167,7 +174,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (proposal_object_type)
                 (registration_committee_member_object_type)
                 (registration_pool_object_type)
-                (reward_fund_object_type)
+                (reward_fund_scr_object_type)
+                (reward_fund_sp_object_type)
                 (reward_balancer_object_type)
                 (transaction_object_type)
                 (scorumpower_delegation_expiration_object_type)

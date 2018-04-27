@@ -69,12 +69,27 @@ scheduled_hardfork_api_obj chain_api::get_next_scheduled_hardfork() const
     });
 }
 
-reward_fund_api_obj chain_api::get_reward_fund() const
+reward_fund_api_obj chain_api::get_reward_fund(reward_fund_type type_of_fund) const
 {
     return _db.with_read_lock([&]() {
-        auto fund = _db.find<reward_fund_object>();
-        FC_ASSERT(fund != nullptr, "reward fund object does not exist");
-        return *fund;
+        switch (type_of_fund)
+        {
+        case reward_fund_type::reward_fund_scr:
+        {
+            auto& rf_service = _db.obtain_service<dbs_reward_fund_scr>();
+            FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
+            return reward_fund_api_obj(rf_service.get());
+        }
+        case reward_fund_type::reward_fund_sp:
+        {
+            auto& rf_service = _db.obtain_service<dbs_reward_fund_sp>();
+            FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
+            return reward_fund_api_obj(rf_service.get());
+        }
+        default:
+            FC_ASSERT(false, "Unknown fund");
+            return reward_fund_api_obj();
+        }
     });
 }
 
@@ -93,7 +108,8 @@ chain_capital_api_obj chain_api::get_chain_capital() const
         capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
         capital.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
         capital.reward_pool_balance = _db.obtain_service<dbs_reward>().get().balance;
-        capital.content_reward_balance = _db.obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
+        capital.content_reward_scr_balance = _db.obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
+        capital.content_reward_sp_balance = _db.obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance;
 
         return capital;
     });

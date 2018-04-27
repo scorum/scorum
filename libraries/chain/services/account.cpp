@@ -272,16 +272,6 @@ void dbs_account::decrease_received_scorumpower(const account_object& account, c
     increase_received_scorumpower(account, -amount);
 }
 
-void dbs_account::increase_posting_rewards(const account_object& account, const asset& amount)
-{
-    update(account, [&](account_object& a) { a.posting_rewards += amount; });
-}
-
-void dbs_account::increase_curation_rewards(const account_object& account, const asset& amount)
-{
-    update(account, [&](account_object& a) { a.curation_rewards += amount; });
-}
-
 void dbs_account::drop_challenged(const account_object& account)
 {
     time_point_sec t = db_impl().head_block_time();
@@ -330,7 +320,6 @@ void dbs_account::add_post(const account_object& author_account, const account_n
             a.last_root_post = t;
         }
         a.last_post = t;
-        a.post_count++;
     });
 }
 
@@ -606,5 +595,6 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
 
     return new_account;
 }
+
 } // namespace chain
 } // namespace scorum

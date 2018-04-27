@@ -210,8 +210,8 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
         // If comments are paid out independent of order, then the last satoshi of SCR cannot be divided among them
-        const auto& rf = db.obtain_service<dbs_reward_fund>().get();
-        BOOST_REQUIRE_EQUAL(rf.activity_reward_balance_scr, ASSET_SCR(1));
+        const auto& rf = db.obtain_service<dbs_reward_fund_sp>().get();
+        BOOST_REQUIRE_EQUAL(rf.activity_reward_balance, ASSET_SP(1));
 
         validate_database();
 
@@ -234,6 +234,8 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         generate_block();
 
         asset account_initial_vest_supply = db.obtain_service<dbs_account>().get_account("alice").scorumpower;
+        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
+                            account_initial_vest_supply);
 
         const auto blocks_between_comments = 5;
 
@@ -273,9 +275,9 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         tx.sign(bob_private_key, db.get_chain_id());
         db.push_transaction(tx, 0);
 
-        const auto& fund = db.obtain_service<dbs_reward_fund>().get();
+        const auto& fund = db.obtain_service<dbs_reward_fund_sp>().get();
 
-        BOOST_REQUIRE_GT(fund.activity_reward_balance_scr, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_GT(fund.activity_reward_balance, ASSET_NULL_SP);
         BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), uint64_t(0));
 
         share_type alice_comment_net_rshares
@@ -286,18 +288,14 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         {
             generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
-            BOOST_REQUIRE_EQUAL(fund.activity_reward_balance_scr, ASSET_SCR(0));
+            BOOST_REQUIRE_EQUAL(fund.activity_reward_balance, ASSET_NULL_SP);
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
 
-            // clang-format off
-            BOOST_REQUIRE_GT   (db.obtain_service<dbs_account>().get_account("alice").scorumpower, account_initial_vest_supply);
-            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").scorumpower,
-                                account_initial_vest_supply + ASSET_SP(db.obtain_service<dbs_account>().get_account("alice").balance.amount.value));
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower,
+                             account_initial_vest_supply);
 
-            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower, account_initial_vest_supply);
             BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
-                                account_initial_vest_supply + ASSET_SP(db.obtain_service<dbs_account>().get_account("bob").balance.amount.value));
-            // clang-format on
+                                account_initial_vest_supply);
 
             validate_database();
         }
@@ -305,17 +303,18 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         {
             generate_blocks(blocks_between_comments);
 
-            // clang-format off
-            for (auto i=0; i<blocks_between_comments; ++i)
+            for (auto i = 0; i < blocks_between_comments; ++i)
             {
-                alice_comment_net_rshares -= alice_comment_net_rshares * SCORUM_BLOCK_INTERVAL / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
+                alice_comment_net_rshares -= alice_comment_net_rshares * SCORUM_BLOCK_INTERVAL
+                    / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
             }
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
-            BOOST_REQUIRE_GT(fund.activity_reward_balance_scr, ASSET_SCR(0));
+            BOOST_REQUIRE_GT(fund.activity_reward_balance, ASSET_NULL_SP);
 
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower, account_initial_vest_supply);
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").scorumpower, account_initial_vest_supply);
-            // clang-format on
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower,
+                             account_initial_vest_supply);
+            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
+                             account_initial_vest_supply);
 
             validate_database();
         }
@@ -356,7 +355,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
 
         auto alice_vshares = scorum::rewards_math::evaluate_reward_curve(
             db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value,
-            db.obtain_service<dbs_reward_fund>().get().author_reward_curve);
+            db.obtain_service<dbs_reward_fund_sp>().get().author_reward_curve);
 
         generate_blocks(5);
 
@@ -372,7 +371,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time);
 
         {
-            const auto& post_rf = db.obtain_service<dbs_reward_fund>().get();
+            const auto& post_rf = db.obtain_service<dbs_reward_fund_sp>().get();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
             validate_database();
@@ -381,14 +380,14 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         auto bob_cashout_time = db.obtain_service<dbs_comment>().get("bob", std::string("test")).cashout_time;
         auto bob_vshares = scorum::rewards_math::evaluate_reward_curve(
             db.obtain_service<dbs_comment>().get("bob", std::string("test")).net_rshares.value,
-            db.obtain_service<dbs_reward_fund>().get().author_reward_curve);
+            db.obtain_service<dbs_reward_fund_sp>().get().author_reward_curve);
 
         generate_block();
 
         while (db.head_block_time() < bob_cashout_time)
         {
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
-            const auto& post_rf = db.obtain_service<dbs_reward_fund>().get();
+            const auto& post_rf = db.obtain_service<dbs_reward_fund_sp>().get();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
 
@@ -397,7 +396,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
 
         {
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
-            const auto& post_rf = db.obtain_service<dbs_reward_fund>().get();
+            const auto& post_rf = db.obtain_service<dbs_reward_fund_sp>().get();
 
             BOOST_REQUIRE(post_rf.recent_claims == alice_vshares + bob_vshares);
             validate_database();

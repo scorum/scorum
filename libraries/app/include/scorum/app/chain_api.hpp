@@ -16,6 +16,12 @@ namespace app {
 
 struct api_context;
 
+enum class reward_fund_type
+{
+    reward_fund_scr = 0,
+    reward_fund_sp,
+};
+
 /**
 * @brief The chain_api class shows blockchain entrails.
 */
@@ -31,7 +37,7 @@ public:
     scheduled_hardfork_api_obj get_next_scheduled_hardfork() const;
 
     // money properties
-    reward_fund_api_obj get_reward_fund() const;
+    reward_fund_api_obj get_reward_fund(reward_fund_type) const;
 
     chain_capital_api_obj get_chain_capital() const;
 
@@ -40,5 +46,7 @@ private:
 };
 }
 }
+
+FC_REFLECT_ENUM(scorum::app::reward_fund_type, (reward_fund_scr)(reward_fund_sp))
 
 FC_API(scorum::app::chain_api, (get_chain_properties)(get_next_scheduled_hardfork)(get_reward_fund)(get_chain_capital))
