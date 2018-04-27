@@ -33,9 +33,11 @@ struct comment_cashout_from_scr_fund_fixture : public blogging_common_fixture
 
         activity_reward_balance = reward_fund_scr_service.get().activity_reward_balance;
 
+        BOOST_REQUIRE_GT(activity_reward_balance, ASSET_NULL_SCR);
+
         const reward_balancer_object& rb = reward_balancer.get();
 
-        wlog("${a}, ${t}", ("a", activity_reward_balance)("t", rb.balance));
+        BOOST_REQUIRE_EQUAL(rb.balance, ASSET_NULL_SCR);
     }
 
     budget_service_i& budget_service;
