@@ -8,7 +8,7 @@
 
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/comment.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>

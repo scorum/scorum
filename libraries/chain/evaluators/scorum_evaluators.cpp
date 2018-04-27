@@ -15,7 +15,7 @@
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/scorumpower_delegation.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
@@ -406,7 +406,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.last_update = now;
                 com.created = com.last_update;
                 com.active = com.last_update;
-                com.last_payout = fc::time_point_sec::min();
+                com.last_payout = fc::time_point_sec();
 
                 if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
@@ -864,8 +864,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                                                       voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
         FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
-        uint16_t used_power = rewards_math::calculate_used_power(
-            current_power, weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE, SCORUM_VOTE_REGENERATION_SECONDS);
+        uint16_t used_power
+            = rewards_math::calculate_used_power(current_power, weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
 
         FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
 

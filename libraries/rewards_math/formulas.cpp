@@ -17,7 +17,7 @@ inline u256 to256(const fc::uint128& t)
 share_type predict_payout(const uint128_t& recent_claims,
                           const share_type& reward_fund,
                           const share_type& rshares,
-                          curve_id author_reward_curve,
+                          const curve_id author_reward_curve,
                           const share_type& max_payout,
                           const fc::microseconds& decay_rate,
                           const share_type& min_comment_payout_share)
@@ -31,7 +31,7 @@ share_type predict_payout(const uint128_t& recent_claims,
 uint128_t calculate_total_claims(const uint128_t& recent_claims,
                                  const time_point_sec& now,
                                  const time_point_sec& last_payout_check,
-                                 curve_id author_reward_curve,
+                                 const curve_id author_reward_curve,
                                  const shares_vector_type& vrshares,
                                  const fc::microseconds& decay_rate)
 {
@@ -55,7 +55,7 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
 share_type calculate_payout(const share_type& rshares,
                             const uint128_t& total_claims,
                             const share_type& reward_fund,
-                            curve_id author_reward_curve,
+                            const curve_id author_reward_curve,
                             const share_type& max_share,
                             const share_type& min_comment_payout_share)
 {
@@ -81,7 +81,7 @@ share_type calculate_payout(const share_type& rshares,
     FC_CAPTURE_AND_RETHROW((rshares)(total_claims)(reward_fund)(author_reward_curve)(max_share))
 }
 
-share_type calculate_curations_payout(const share_type& payout, percent_type scorum_curation_reward_percent)
+share_type calculate_curations_payout(const share_type& payout, const percent_type scorum_curation_reward_percent)
 {
     try
     {
@@ -92,7 +92,8 @@ share_type calculate_curations_payout(const share_type& payout, percent_type sco
     FC_CAPTURE_AND_RETHROW((payout))
 }
 
-share_type calculate_curation_payout(const share_type& curations_payout, uint64_t total_weight, uint64_t weight)
+share_type
+calculate_curation_payout(const share_type& curations_payout, const uint64_t total_weight, const uint64_t weight)
 {
     try
     {
@@ -110,7 +111,6 @@ share_type calculate_curation_payout(const share_type& curations_payout, uint64_
  *
  *  cv.weight / c.total_vote_weight ==> % of rshares increase that is accounted for by the vote
  *
- *  W(R) = B * R / ( R + 2S )
  *  W(R) is bounded above by B. B is fixed at 2^64 - 1, so all weights fit in a 64 bit integer.
  *
  *  The equation for an individual vote is:
@@ -127,7 +127,7 @@ share_type calculate_curation_payout(const share_type& curations_payout, uint64_
  **/
 uint64_t calculate_max_vote_weight(const share_type& positive_rshares,
                                    const share_type& recent_positive_rshares,
-                                   curve_id curation_reward_curve)
+                                   const curve_id curation_reward_curve)
 {
     try
     {
@@ -140,7 +140,7 @@ uint64_t calculate_max_vote_weight(const share_type& positive_rshares,
     FC_CAPTURE_AND_RETHROW((positive_rshares)(recent_positive_rshares)(curation_reward_curve))
 }
 
-uint64_t calculate_vote_weight(uint64_t max_vote_weight,
+uint64_t calculate_vote_weight(const uint64_t max_vote_weight,
                                const time_point_sec& now,
                                const time_point_sec& when_comment_created,
                                const fc::microseconds& reverse_auction_window_seconds)
@@ -163,7 +163,7 @@ uint64_t calculate_vote_weight(uint64_t max_vote_weight,
     FC_CAPTURE_AND_RETHROW((max_vote_weight)(now)(when_comment_created))
 }
 
-percent_type calculate_restoring_power(percent_type voting_power,
+percent_type calculate_restoring_power(const percent_type voting_power,
                                        const time_point_sec& now,
                                        const time_point_sec& last_voted,
                                        const fc::microseconds& vote_regeneration_seconds)
@@ -182,31 +182,25 @@ percent_type calculate_restoring_power(percent_type voting_power,
     FC_CAPTURE_AND_RETHROW((voting_power)(now)(last_voted))
 }
 
-percent_type calculate_used_power(percent_type voting_power,
-                                  vote_weight_type vote_weight,
-                                  uint16_t max_votes_per_day_voting_power_rate,
-                                  const fc::microseconds& vote_regeneration_seconds)
+percent_type calculate_used_power(const percent_type voting_power,
+                                  const vote_weight_type vote_weight,
+                                  const percent_type decay_percent)
 {
     try
     {
         FC_ASSERT(SCORUM_100_PERCENT > 0);
+        FC_ASSERT(decay_percent > 0 && decay_percent < 100);
 
         int64_t abs_weight = std::abs(vote_weight);
         int64_t used_power = (voting_power * abs_weight) / SCORUM_100_PERCENT;
 
-        int64_t max_vote_denom = max_votes_per_day_voting_power_rate;
-        max_vote_denom *= vote_regeneration_seconds.to_seconds();
-        max_vote_denom /= 60 * 60 * 24;
-
-        FC_ASSERT(max_vote_denom > 0);
-
-        used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
+        used_power = (used_power * decay_percent) / 100;
         return (percent_type)used_power;
     }
     FC_CAPTURE_AND_RETHROW((voting_power)(vote_weight))
 }
 
-share_type calculate_abs_reward_shares(percent_type used_voting_power, const share_type& effective_balance_shares)
+share_type calculate_abs_reward_shares(const percent_type used_voting_power, const share_type& effective_balance_shares)
 {
     try
     {

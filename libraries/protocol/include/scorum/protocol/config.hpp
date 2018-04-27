@@ -20,6 +20,8 @@ namespace detail {
 
         const uint32_t cashout_window_seconds;
 
+        const fc::microseconds vote_regeneration_seconds;
+
         const fc::microseconds upvote_lockout;
 
         const fc::microseconds owner_auth_recovery_period;
@@ -44,6 +46,12 @@ namespace detail {
         const uint32_t min_vote_interval_sec;
 
         const uint32_t db_free_memory_threshold_mb;
+
+        const fc::time_point_sec initial_date;
+
+        const fc::time_point_sec blogging_start_date;
+
+        const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
 
         enum test_mode { test };
 
@@ -153,7 +161,7 @@ namespace detail {
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
 #define SCORUM_SAVINGS_WITHDRAW_TIME           (fc::days(3))
 #define SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT  100
-#define SCORUM_VOTE_REGENERATION_SECONDS       (fc::days(5))
+#define SCORUM_VOTE_REGENERATION_SECONDS       (scorum::protocol::detail::get_config().vote_regeneration_seconds)
 #define SCORUM_MAX_VOTE_CHANGES                3
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
 
@@ -211,12 +219,7 @@ namespace detail {
 #define SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT            (50u)
 #define SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT         (60u)
 
-/**
- * The number of votes regenerated per day.  Any user voting slower than this rate will be
- * "wasting" voting power through spillover; any user voting faster than this rate will have
- * their votes reduced.
- */
-#define SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE 40
+#define SCORUM_VOTING_POWER_DECAY_PERCENT 5
 
 #define SCORUM_MIN_QUORUM_VALUE_PERCENT         (50u)
 #define SCORUM_MAX_QUORUM_VALUE_PERCENT         (100u)
@@ -232,5 +235,9 @@ namespace detail {
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
 ///@}
+
+#define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
+
+#define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
 
 // clang-format on
