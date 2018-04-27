@@ -110,7 +110,6 @@ share_type calculate_curation_payout(const share_type& curations_payout, uint64_
  *
  *  cv.weight / c.total_vote_weight ==> % of rshares increase that is accounted for by the vote
  *
- *  W(R) = B * R / ( R + 2S )
  *  W(R) is bounded above by B. B is fixed at 2^64 - 1, so all weights fit in a 64 bit integer.
  *
  *  The equation for an individual vote is:
