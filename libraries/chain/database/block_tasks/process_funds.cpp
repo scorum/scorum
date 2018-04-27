@@ -118,20 +118,23 @@ asset process_funds::distribute_active_sp_holders_reward(block_task_context& ctx
             active_sp_holders_array.begin(), active_sp_holders_array.end(), asset(0, SP_SYMBOL),
             [&](asset& accumulator, const account_object& account) { return accumulator += account.scorumpower; });
 
-        for (const account_object& account : active_sp_holders_array)
+        if (total_sp.amount > 0)
         {
-            asset account_reward = reward * account.scorumpower.amount / total_sp.amount;
-
-            if (account_reward.symbol() == SCORUM_SYMBOL)
+            for (const account_object& account : active_sp_holders_array)
             {
-                account_service.increase_balance(account, account_reward);
-            }
-            else
-            {
-                account_service.create_scorumpower(account, account_reward);
-            }
+                asset account_reward = reward * account.scorumpower.amount / total_sp.amount;
 
-            distributed_reward += account_reward;
+                if (account_reward.symbol() == SCORUM_SYMBOL)
+                {
+                    account_service.increase_balance(account, account_reward);
+                }
+                else
+                {
+                    account_service.create_scorumpower(account, account_reward);
+                }
+
+                distributed_reward += account_reward;
+            }
         }
     }
     else

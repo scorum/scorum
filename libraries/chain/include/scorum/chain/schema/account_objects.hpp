@@ -173,7 +173,7 @@ struct by_smp_balance;
 struct by_post_count;
 struct by_vote_count;
 struct by_created_by_genesis;
-struct by_voting_power;
+struct by_last_vote_time;
 
 /**
  * @ingroup object_index
@@ -253,10 +253,10 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::id>>,
                                                                composite_key_compare<std::greater<uint32_t>,
                                                                                      std::less<account_id_type>>>,
-                                                ordered_non_unique<tag<by_voting_power>,
+                                                ordered_non_unique<tag<by_last_vote_time>,
                                                                    member<account_object,
-                                                                          percent_type,
-                                                                          &account_object::voting_power>>>>
+                                                                          time_point_sec,
+                                                                          &account_object::last_vote_time>>>>
     account_index;
 
 struct by_account;

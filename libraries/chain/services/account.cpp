@@ -7,6 +7,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 
 #include <boost/lambda/lambda.hpp>
+#include <boost/multi_index/detail/unbounded.hpp>
 
 namespace scorum {
 namespace chain {
@@ -589,7 +590,6 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
         acc.recovery_account = recovery_account;
         acc.memo_key = memo_key;
         acc.created = props.time;
-        acc.last_vote_time = props.time;
 #ifndef IS_LOW_MEM
         fc::from_string(acc.json_metadata, json_metadata);
 #endif
@@ -611,7 +611,13 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
 
 std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() const
 {
-    return get_range_by<by_voting_power>(0 <= boost::lambda::_1, boost::lambda::_1 < SCORUM_100_PERCENT);
+    const auto& dprops_service = db_impl().obtain_service<dbs_dynamic_global_property>();
+
+    fc::time_point_sec current_time = dprops_service.head_block_time();
+    fc::time_point_sec min_vote_time_for_cashout = current_time - SCORUM_VOTE_REGENERATION_SECONDS;
+
+    return get_range_by<by_last_vote_time>(min_vote_time_for_cashout < boost::lambda::_1,
+                                           ::boost::multi_index::unbounded);
 }
 } // namespace chain
 } // namespace scorum
