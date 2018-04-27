@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(calculate_used_power_positive)
     BOOST_CHECK_LE(calculate_used_power(voting_power, vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT), voting_power);
 }
 
-BOOST_AUTO_TEST_CASE(restoring_voting_power_check)
+BOOST_AUTO_TEST_CASE(decreasing_and_restoring_voting_power_check)
 {
     const int max_steps = 1000;
     int ci = 0;
