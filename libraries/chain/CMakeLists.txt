@@ -93,8 +93,8 @@ add_library( scorum_chain
              database/block_tasks/process_vesting_withdrawals.cpp
              database/block_tasks/withdrawable_actors_impl.cpp
              database/block_tasks/comments_cashout_impl.cpp
-             database/block_tasks/process_comments_bounty_cashout.cpp
-             database/block_tasks/process_comments_bounty_initialize.cpp
+             database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.cpp
+             database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.cpp
 
              ${HEADERS}
              ${hardfork_hpp_file}

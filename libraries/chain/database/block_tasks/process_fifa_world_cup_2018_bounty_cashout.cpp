@@ -1,4 +1,4 @@
-#include <scorum/chain/database/block_tasks/process_comments_bounty_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
 
 #include <scorum/chain/database/block_tasks/comments_cashout_impl.hpp>
 
@@ -6,11 +6,11 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
+void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ctx)
 {
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
-    if (dprops_service.head_block_time() < SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE)
+    if (dprops_service.head_block_time() < SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)
     {
         return;
     }
@@ -34,7 +34,7 @@ void process_comments_bounty_cashout::on_apply(block_task_context& ctx)
     comment_service_i& comment_service = ctx.services().comment_service();
 
     const auto fn_filter = [&](const comment_object& c) { return c.net_rshares > 0; };
-    auto comments = comment_service.get_by_create_time(SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE, fn_filter);
+    auto comments = comment_service.get_by_create_time(SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE, fn_filter);
 
     process_comments_cashout_impl impl(ctx);
 

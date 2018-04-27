@@ -57,8 +57,8 @@
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
 #include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
-#include <scorum/chain/database/block_tasks/process_comments_bounty_initialize.hpp>
-#include <scorum/chain/database/block_tasks/process_comments_bounty_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -83,8 +83,8 @@ public:
 
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
-    database_ns::process_comments_bounty_initialize _process_comments_bounty_initialize;
-    database_ns::process_comments_bounty_cashout _process_comments_bounty_cashout;
+    database_ns::process_fifa_world_cup_2018_bounty_initialize _process_comments_bounty_initialize;
+    database_ns::process_fifa_world_cup_2018_bounty_cashout _process_comments_bounty_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
     database_ns::process_contracts_expiration _process_contracts_expiration;
 };

@@ -1,4 +1,4 @@
-#include <scorum/chain/database/block_tasks/process_comments_bounty_initialize.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.hpp>
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
@@ -11,7 +11,7 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-void process_comments_bounty_initialize::on_apply(block_task_context& ctx)
+void process_fifa_world_cup_2018_bounty_initialize::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services();
 

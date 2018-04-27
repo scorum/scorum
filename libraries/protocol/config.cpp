@@ -13,8 +13,8 @@ std::unique_ptr<config> config::instance = boost::make_unique<config>();
 static_assert(false, "Macro BLOGGING_START_DATE required.");
 #endif
 
-#ifndef BLOGGING_BOUNTY_CASHOUT_DATE
-static_assert(false, "Macro BLOGGING_BOUNTY_CASHOUT_DATE required.");
+#ifndef FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE
+static_assert(false, "Macro FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE required.");
 #endif
 
 config::config() /// production config
@@ -51,13 +51,13 @@ config::config() /// production config
 #ifdef BLOGGING_START_DATE
     , blogging_start_date(fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_START_DATE)))
 #endif
-#ifdef BLOGGING_BOUNTY_CASHOUT_DATE
-    , blogging_bounty_cashout_date(
-          fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_BOUNTY_CASHOUT_DATE)))
+#ifdef FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE
+    , fifa_world_cup_2018_bounty_cashout_date(
+          fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)))
 #endif
 {
-    FC_ASSERT(blogging_start_date + cashout_window_seconds < blogging_bounty_cashout_date,
-              "Required: blogging_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
+    FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
+              "Required: fifa_world_cup_2018_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
 }
 
 config::config(test_mode) /// test config
@@ -94,7 +94,7 @@ config::config(test_mode) /// test config
 
     , blogging_start_date(initial_date + cashout_window_seconds * 10)
 
-    , blogging_bounty_cashout_date(blogging_start_date + cashout_window_seconds * 11)
+    , fifa_world_cup_2018_bounty_cashout_date(blogging_start_date + cashout_window_seconds * 11)
 {
     // do nothing
 }

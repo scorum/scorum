@@ -49,7 +49,7 @@ namespace detail {
 
         const fc::time_point_sec blogging_start_date;
 
-        const fc::time_point_sec blogging_bounty_cashout_date;
+        const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
 
         enum test_mode { test };
 
@@ -241,6 +241,6 @@ namespace detail {
 
 #define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
 
-#define SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().blogging_bounty_cashout_date)
+#define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
 
 // clang-format on

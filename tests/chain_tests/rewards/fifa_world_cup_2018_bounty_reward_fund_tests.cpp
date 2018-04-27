@@ -206,9 +206,9 @@ BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
     auto sam_old_balance = account_service.get_account(sam.name).scorumpower;
 
     BOOST_REQUIRE_LT(dgp_service.head_block_time().sec_since_epoch(),
-                     SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE.sec_since_epoch());
+                     SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE.sec_since_epoch());
 
-    generate_blocks(SCORUM_BLOGGING_BOUNTY_CASHOUT_DATE);
+    generate_blocks(SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE);
 
     BOOST_REQUIRE_EQUAL(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance, ASSET_NULL_SP);
 

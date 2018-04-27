@@ -9,7 +9,7 @@ struct asset;
 namespace chain {
 namespace database_ns {
 
-class process_comments_bounty_initialize : public block_task
+class process_fifa_world_cup_2018_bounty_initialize : public block_task
 {
 public:
     virtual void on_apply(block_task_context&);
