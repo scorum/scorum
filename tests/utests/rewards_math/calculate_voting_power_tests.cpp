@@ -41,25 +41,24 @@ BOOST_AUTO_TEST_CASE(calculate_restoring_power_check_voting_power_is_max)
 
 BOOST_AUTO_TEST_CASE(calculate_used_power_positive)
 {
-    BOOST_CHECK_GT(calculate_used_power(voting_power, vote_weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE,
-                                        SCORUM_VOTE_REGENERATION_SECONDS),
-                   0u);
+    BOOST_CHECK_GT(calculate_used_power(voting_power, vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT), 0u);
 
-    BOOST_CHECK_LE(calculate_used_power(voting_power, vote_weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE,
-                                        SCORUM_VOTE_REGENERATION_SECONDS),
-                   voting_power);
+    BOOST_CHECK_LE(calculate_used_power(voting_power, vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT), voting_power);
 }
 
 BOOST_AUTO_TEST_CASE(restoring_voting_power_check)
 {
+    const int max_steps = 1000;
     int ci = 0;
     // decrease power with limiting by result percent or iterations (if decreasing too slow)
-    while (voting_power > SCORUM_PERCENT(75) && ci++ < SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE * 10)
+    while (voting_power > SCORUM_PERCENT(75) && ci++ < max_steps)
     {
-        uint16_t used_power = calculate_used_power(
-            voting_power, vote_weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE, SCORUM_VOTE_REGENERATION_SECONDS);
+        uint16_t used_power = calculate_used_power(voting_power, vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
         voting_power -= used_power;
     }
+
+    // check if power decays too slow
+    BOOST_CHECK_LT(ci, max_steps);
 
     const fc::time_point_sec last_voted(TEST_GENESIS_TIMESTAMP);
     const fc::time_point_sec now(last_voted + SCORUM_VOTE_REGENERATION_SECONDS.to_seconds() / 2);

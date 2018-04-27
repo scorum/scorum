@@ -864,8 +864,8 @@ void vote_evaluator::do_apply(const vote_operation& o)
                                                       voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
         FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
-        uint16_t used_power = rewards_math::calculate_used_power(
-            current_power, weight, SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE, SCORUM_VOTE_REGENERATION_SECONDS);
+        uint16_t used_power
+            = rewards_math::calculate_used_power(current_power, weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
 
         FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
 

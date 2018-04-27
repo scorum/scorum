@@ -22,6 +22,8 @@ config::config() /// production config
 
     , cashout_window_seconds(DAYS_TO_SECONDS(7))
 
+    , vote_regeneration_seconds(fc::days(5))
+
     , upvote_lockout(fc::hours(12))
 
     , owner_auth_recovery_period(fc::days(30))
@@ -63,7 +65,9 @@ config::config() /// production config
 config::config(test_mode) /// test config
     : blockid_pool_size(0xfff)
 
-    , cashout_window_seconds(60 * 60) // 1 hr
+    , cashout_window_seconds(fc::hours(1).to_seconds())
+
+    , vote_regeneration_seconds(fc::minutes(30))
 
     , upvote_lockout(fc::minutes(5))
 

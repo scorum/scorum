@@ -59,8 +59,7 @@ percent_type calculate_restoring_power(const percent_type voting_power,
 
 percent_type calculate_used_power(const percent_type voting_power,
                                   const vote_weight_type vote_weight,
-                                  const uint16_t max_votes_per_day_voting_power_rate,
-                                  const fc::microseconds& vote_regeneration_seconds);
+                                  const percent_type decay_percent);
 
 share_type calculate_abs_reward_shares(const percent_type used_voting_power,
                                        const share_type& effective_balance_shares);

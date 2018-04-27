@@ -184,23 +184,17 @@ percent_type calculate_restoring_power(const percent_type voting_power,
 
 percent_type calculate_used_power(const percent_type voting_power,
                                   const vote_weight_type vote_weight,
-                                  const uint16_t max_votes_per_day_voting_power_rate,
-                                  const fc::microseconds& vote_regeneration_seconds)
+                                  const percent_type decay_percent)
 {
     try
     {
         FC_ASSERT(SCORUM_100_PERCENT > 0);
+        FC_ASSERT(decay_percent > 0 && decay_percent < 100);
 
         int64_t abs_weight = std::abs(vote_weight);
         int64_t used_power = (voting_power * abs_weight) / SCORUM_100_PERCENT;
 
-        int64_t max_vote_denom = max_votes_per_day_voting_power_rate;
-        max_vote_denom *= vote_regeneration_seconds.to_seconds();
-        max_vote_denom /= 60 * 60 * 24;
-
-        FC_ASSERT(max_vote_denom > 0);
-
-        used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
+        used_power = (used_power * decay_percent) / 100;
         return (percent_type)used_power;
     }
     FC_CAPTURE_AND_RETHROW((voting_power)(vote_weight))
