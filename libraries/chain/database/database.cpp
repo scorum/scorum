@@ -1912,7 +1912,7 @@ void database::validate_invariants() const
 
         if (obtain_service<dbs_budget>().is_fund_budget_exists())
         {
-            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance;
+            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance.amount;
         }
 
         if (obtain_service<dbs_registration_pool>().is_exists())

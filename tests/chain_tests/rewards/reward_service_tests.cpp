@@ -55,10 +55,7 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_supply_distribution)
     {
         const reward_balancer_object& pool = reward_service.get();
 
-        asset total_reward_supply = pool.balance;
-        total_reward_supply += budget_service.get_fund_budget().balance;
-
-        BOOST_REQUIRE_EQUAL(total_reward_supply, TEST_REWARD_INITIAL_SUPPLY);
+        BOOST_REQUIRE_EQUAL(pool.balance, asset(0, SCORUM_SYMBOL));
     }
     FC_LOG_AND_RETHROW()
 }

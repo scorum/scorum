@@ -41,7 +41,7 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
 
     fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
-    budget_service.create_fund_budget(ctx.genesis_state().rewards_supply, deadline);
+    budget_service.create_fund_budget(asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL), deadline);
 }
 }
 }

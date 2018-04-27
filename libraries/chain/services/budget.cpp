@@ -92,7 +92,7 @@ const budget_object& dbs_budget::create_fund_budget(const asset& balance, const 
 {
     // clang-format off
     FC_ASSERT(find_by<by_owner_name>(SCORUM_ROOT_POST_PARENT_ACCOUNT) == nullptr, "Recreation of fund budget is not allowed.");
-    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.symbol() == SP_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
     // clang-format on
 
@@ -138,7 +138,7 @@ const budget_object& dbs_budget::_create_budget(const account_name_type& owner,
                                                 const time_point_sec& end_date,
                                                 const optional<std::string>& content_permlink)
 {
-    auto per_block = _calculate_per_block(start_date, end_date, balance.amount);
+    auto per_block = _calculate_per_block(start_date, end_date, balance);
 
     auto head_block_num = db_impl().head_block_num();
     auto head_block_time = db_impl().head_block_time();
@@ -175,18 +175,18 @@ asset dbs_budget::allocate_cash(const budget_object& budget)
 
     if (budget.last_cashout_block >= head_block_num)
     {
-        return asset(0, SCORUM_SYMBOL); // empty (allocation waits new block)
+        return asset(0, budget.balance.symbol()); // empty (allocation waits new block)
     }
 
-    FC_ASSERT(budget.per_block > 0, "Invalid per_block.");
-    asset ret = _decrease_balance(budget, asset(budget.per_block, SCORUM_SYMBOL));
+    FC_ASSERT(budget.per_block.amount > 0, "Invalid per_block.");
+    asset ret = _decrease_balance(budget, budget.per_block);
 
     if (budget.balance.amount > 0)
     {
         // for fund budget if we have missed blocks we continue payments even after deadline until money is over
         if (t < budget.deadline || _is_fund_budget(budget))
         {
-            db_impl().modify(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
+            update(budget, [&](budget_object& b) { b.last_cashout_block = head_block_num; });
             return ret;
         }
     }
@@ -196,14 +196,14 @@ asset dbs_budget::allocate_cash(const budget_object& budget)
     return ret;
 }
 
-share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
-                                            const time_point_sec& end_date,
-                                            share_type balance_amount)
+asset dbs_budget::_calculate_per_block(const time_point_sec& start_date,
+                                       const time_point_sec& end_date,
+                                       const asset& balance)
 {
     FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(),
               "Invalid date interval. Start time ${1} must be less end time ${2}", ("1", start_date)("2", end_date));
 
-    share_type ret(balance_amount);
+    auto ret = balance;
 
     // calculate time interval in seconds.
     // SCORUM_BLOCK_INTERVAL must be in seconds!
@@ -214,9 +214,9 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
     ret /= delta_in_sec;
 
     // non zero budget must return at least one satoshi
-    if (ret < 1)
+    if (ret.amount < 1)
     {
-        ret = 1;
+        ret.amount = 1;
     }
 
     return ret;
@@ -224,7 +224,6 @@ share_type dbs_budget::_calculate_per_block(const time_point_sec& start_date,
 
 asset dbs_budget::_decrease_balance(const budget_object& budget, const asset& balance)
 {
-    FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
     FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
     asset ret(0, SCORUM_SYMBOL);

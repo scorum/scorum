@@ -55,7 +55,7 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
     generate_block();
 
     const auto& fund_budget = budget_service.get_fund_budget();
-    asset initial_per_block_reward = asset(fund_budget.per_block, SCORUM_SYMBOL);
+    asset initial_per_block_reward = fund_budget.per_block;
 
     auto witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     auto content_reward = initial_per_block_reward - witness_reward;
@@ -63,8 +63,9 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, NULL_BALANCE);
-    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance_scr, content_reward);
-    BOOST_REQUIRE_EQUAL(account.scorumpower, asset(witness_reward.amount, SP_SYMBOL));
+    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance_scr,
+                        asset(content_reward.amount, SCORUM_SYMBOL));
+    BOOST_REQUIRE_EQUAL(account.scorumpower, witness_reward);
 }
 
 SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_budgets)
@@ -77,18 +78,21 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_b
 
     generate_block();
 
+    auto dev_team_reward_scr = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    auto user_reward_scr = advertising_budget - dev_team_reward_scr;
+
+    auto witness_reward_scr = user_reward_scr * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    auto content_reward_scr = user_reward_scr - witness_reward_scr;
+
     const auto& fund_budget = budget_service.get_fund_budget();
-    asset initial_per_block_reward = asset(fund_budget.per_block, SCORUM_SYMBOL);
+    auto user_reward_sp = fund_budget.per_block;
+    auto witness_reward_sp = user_reward_sp * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    auto content_reward_sp = user_reward_sp - witness_reward_sp;
 
-    auto dev_team_reward = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto user_reward = initial_per_block_reward + advertising_budget - dev_team_reward;
-
-    auto witness_reward = user_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto content_reward = user_reward - witness_reward;
-
-    BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, dev_team_reward);
-    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance_scr, content_reward);
-    BOOST_REQUIRE_EQUAL(account.scorumpower, asset(witness_reward.amount, SP_SYMBOL));
+    BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, dev_team_reward_scr);
+    BOOST_REQUIRE_EQUAL(reward_fund_service.get().activity_reward_balance_scr,
+                        content_reward_scr + asset(content_reward_sp.amount, SCORUM_SYMBOL));
+    BOOST_REQUIRE_EQUAL(account.scorumpower, witness_reward_sp + asset(witness_reward_scr.amount, SP_SYMBOL));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
