@@ -146,6 +146,20 @@ SCORUM_TEST_CASE(get_discussions_by_created)
     }
 }
 
+std::map<std::string, uint16_t> get_comments_with_depth(scorum::chain::database& db)
+{
+    std::map<std::string, uint16_t> result;
+
+    const auto& index = db.get_index<comment_index>().indices().get<by_parent>();
+
+    for (auto itr = index.begin(); itr != index.end(); ++itr)
+    {
+        result.insert(std::make_pair(fc::to_string(itr->permlink), itr->depth));
+    }
+
+    return result;
+}
+
 SCORUM_TEST_CASE(test_depth)
 {
     {
@@ -161,23 +175,11 @@ SCORUM_TEST_CASE(test_depth)
             op.body = "body";
         });
 
-        const auto& index = this->db.get_index<comment_index>().indices().get<by_parent>();
-        auto itr = index.begin();
+        auto check_list = get_comments_with_depth(this->db);
 
-        BOOST_REQUIRE_EQUAL(index.size(), 3u);
-
-        BOOST_CHECK_EQUAL(itr->permlink, "title");
-        BOOST_CHECK_EQUAL(itr->depth, 0);
-
-        itr++;
-
-        BOOST_CHECK_EQUAL(itr->permlink, "child-two");
-        BOOST_CHECK_EQUAL(itr->depth, 2);
-
-        itr++;
-
-        BOOST_CHECK_EQUAL(itr->permlink, "child-one");
-        BOOST_CHECK_EQUAL(itr->depth, 1);
+        BOOST_REQUIRE_EQUAL(0u, check_list[root.permlink()]);
+        BOOST_REQUIRE_EQUAL(1u, check_list[root_child.permlink()]);
+        BOOST_REQUIRE_EQUAL(2u, check_list[root_child_child.permlink()]);
     }
 }
 
