@@ -69,6 +69,8 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
 
             fixture.push_operation<comment_operation>(operation, actor.private_key);
 
+            fixture.generate_blocks(20 / SCORUM_BLOCK_INTERVAL);
+
             return Comment(operation, fixture);
         }
 
@@ -91,26 +93,22 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
         open_database();
     }
 
-    template <typename OperationType, typename Constructor> OperationType push(private_key_type& key, Constructor&& c)
+    template <typename Constructor> Comment create_post(Actor& actor, Constructor&& c)
     {
-        OperationType op;
-        c(op);
+        comment_operation operation;
+        operation.author = actor.name;
 
-        push_operation<OperationType>(op, key);
+        c(operation);
 
-        return op;
-    }
+        if (operation.permlink.empty())
+            operation.permlink = title_to_permlink(operation.title);
 
-    Comment create_post(const std::string& title, const std::string& body)
-    {
-        comment_operation operation = push<comment_operation>(initdelegate.private_key, [&](comment_operation& op) {
-            op.author = initdelegate.name;
-            op.permlink = title_to_permlink(title);
-            op.parent_permlink = "football";
-            op.title = title;
-            op.body = body;
-            op.json_metadata = "{\"tags\" : [\"football\"]}";
-        });
+        if (operation.parent_permlink.empty())
+            operation.parent_permlink = "category";
+
+        push_operation<comment_operation>(operation, actor.private_key);
+
+        generate_blocks(20 / SCORUM_BLOCK_INTERVAL);
 
         return Comment(operation, *this);
     }
@@ -140,29 +138,34 @@ SCORUM_TEST_CASE(get_discussions_by_created)
 
         BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 0u);
 
-        create_post("title", "body");
+        create_post(initdelegate, [](comment_operation& op) {
+            op.title = "root post";
+            op.body = "body";
+        });
 
         BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
     }
 }
 
-std::map<std::string, uint16_t> get_comments_with_depth(scorum::chain::database& db)
-{
-    std::map<std::string, uint16_t> result;
-
-    const auto& index = db.get_index<comment_index>().indices().get<by_parent>();
-
-    for (auto itr = index.begin(); itr != index.end(); ++itr)
-    {
-        result.insert(std::make_pair(fc::to_string(itr->permlink), itr->depth));
-    }
-
-    return result;
-}
-
 SCORUM_TEST_CASE(test_depth)
 {
-    auto root = create_post("title", "body");
+    auto get_comments_with_depth = [](scorum::chain::database& db) {
+        std::map<std::string, uint16_t> result;
+
+        const auto& index = db.get_index<comment_index>().indices().get<by_parent>();
+
+        for (auto itr = index.begin(); itr != index.end(); ++itr)
+        {
+            result.insert(std::make_pair(fc::to_string(itr->permlink), itr->depth));
+        }
+
+        return result;
+    };
+
+    auto root = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "root post";
+        op.body = "body";
+    });
 
     auto root_child = root.create_comment(initdelegate, [](comment_operation& op) {
         op.title = "child one";
