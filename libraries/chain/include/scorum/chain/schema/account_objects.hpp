@@ -42,18 +42,12 @@ public:
     time_point_sec last_active_proved   = time_point_sec::min();
     account_name_type recovery_account;
     time_point_sec last_account_recovery;
-    uint32_t comment_count = 0;
-    uint32_t lifetime_vote_count = 0;
-    uint32_t post_count = 0;
 
     bool can_vote = true;
     percent_type voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
     time_point_sec last_vote_time;              ///< used to increase the voting power of this account the longer it goes without voting.
 
     asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
-
-    asset curation_rewards = asset(0, SCORUM_SYMBOL);
-    asset posting_rewards = asset(0, SCORUM_SYMBOL);
 
     asset scorumpower =              asset(0, SP_SYMBOL); ///< total scorumpower (SP) held by this account, controls its voting power
     asset delegated_scorumpower =    asset(0, SP_SYMBOL);
@@ -84,6 +78,27 @@ public:
     }
 };
 // clang-format on
+
+class account_blogging_statistic_object
+    : public object<account_blogging_statistic_object_type, account_blogging_statistic_object>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(account_blogging_statistic_object)
+
+    id_type id;
+
+    account_id_type account;
+
+    uint32_t post_count = 0;
+    uint32_t comment_count = 0;
+    uint32_t vote_count = 0;
+
+    asset curation_rewards_scr = asset(0, SCORUM_SYMBOL);
+    asset curation_rewards_sp = asset(0, SP_SYMBOL);
+
+    asset posting_rewards_scr = asset(0, SCORUM_SYMBOL);
+    asset posting_rewards_sp = asset(0, SP_SYMBOL);
+};
 
 class account_authority_object : public object<account_authority_object_type, account_authority_object>
 {
@@ -170,8 +185,6 @@ struct by_proxy;
 struct by_last_post;
 struct by_scorum_balance;
 struct by_smp_balance;
-struct by_post_count;
-struct by_vote_count;
 struct by_created_by_genesis;
 struct by_last_vote_time;
 
@@ -232,32 +245,50 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::id>>,
                                                                composite_key_compare<std::greater<asset>,
                                                                                      std::less<account_id_type>>>,
-                                                ordered_unique<tag<by_post_count>,
-                                                               composite_key<account_object,
-                                                                             member<account_object,
-                                                                                    uint32_t,
-                                                                                    &account_object::post_count>,
-                                                                             member<account_object,
-                                                                                    account_id_type,
-                                                                                    &account_object::id>>,
-                                                               composite_key_compare<std::greater<uint32_t>,
-                                                                                     std::less<account_id_type>>>,
-                                                ordered_unique<tag<by_vote_count>,
-                                                               composite_key<account_object,
-                                                                             member<account_object,
-                                                                                    uint32_t,
-                                                                                    &account_object::
-                                                                                        lifetime_vote_count>,
-                                                                             member<account_object,
-                                                                                    account_id_type,
-                                                                                    &account_object::id>>,
-                                                               composite_key_compare<std::greater<uint32_t>,
-                                                                                     std::less<account_id_type>>>,
                                                 ordered_non_unique<tag<by_last_vote_time>,
                                                                    member<account_object,
                                                                           time_point_sec,
                                                                           &account_object::last_vote_time>>>>
     account_index;
+
+struct by_account_id;
+struct by_post_count;
+struct by_vote_count;
+
+typedef shared_multi_index_container<account_blogging_statistic_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<account_blogging_statistic_object,
+                                                                      account_blogging_statistic_id_type,
+                                                                      &account_blogging_statistic_object::id>>,
+                                                ordered_unique<tag<by_account_id>,
+                                                               member<account_blogging_statistic_object,
+                                                                      account_id_type,
+                                                                      &account_blogging_statistic_object::account>>,
+                                                ordered_unique<tag<by_post_count>,
+                                                               composite_key<account_blogging_statistic_object,
+                                                                             member<account_blogging_statistic_object,
+                                                                                    uint32_t,
+                                                                                    &account_blogging_statistic_object::
+                                                                                        post_count>,
+                                                                             member<account_blogging_statistic_object,
+                                                                                    account_id_type,
+                                                                                    &account_blogging_statistic_object::
+                                                                                        account>>,
+                                                               composite_key_compare<std::greater<uint32_t>,
+                                                                                     std::less<account_id_type>>>,
+                                                ordered_unique<tag<by_vote_count>,
+                                                               composite_key<account_blogging_statistic_object,
+                                                                             member<account_blogging_statistic_object,
+                                                                                    uint32_t,
+                                                                                    &account_blogging_statistic_object::
+                                                                                        vote_count>,
+                                                                             member<account_blogging_statistic_object,
+                                                                                    account_id_type,
+                                                                                    &account_blogging_statistic_object::
+                                                                                        account>>,
+                                                               composite_key_compare<std::greater<uint32_t>,
+                                                                                     std::less<account_id_type>>>>>
+    account_blogging_statistic_index;
 
 struct by_account;
 struct by_last_valid;
@@ -459,15 +490,21 @@ FC_REFLECT( scorum::chain::account_object,
              (id)(name)(memo_key)(json_metadata)(proxy)(last_account_update)
              (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
-             (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
+             (can_vote)(voting_power)(last_vote_time)
              (balance)
              (scorumpower)(delegated_scorumpower)(received_scorumpower)
-             (curation_rewards)
-             (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)
              (last_post)(last_root_post)(post_bandwidth)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::account_object, scorum::chain::account_index )
+
+FC_REFLECT( scorum::chain::account_blogging_statistic_object,
+             (id)(account)
+             (post_count)(comment_count)(vote_count)
+             (curation_rewards_scr)(curation_rewards_sp)
+             (posting_rewards_scr)(posting_rewards_sp)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::account_blogging_statistic_object, scorum::chain::account_blogging_statistic_index )
 
 FC_REFLECT( scorum::chain::account_authority_object,
              (id)(account)(owner)(active)(posting)(last_owner_update)

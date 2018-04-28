@@ -27,6 +27,7 @@ statistics& statistics::operator+=(const bucket_object& b)
     this->payouts += b.payouts;
     this->scr_paid_to_authors += b.scr_paid_to_authors;
     this->scorumpower_paid_to_authors += b.scorumpower_paid_to_authors;
+    this->scr_paid_to_curators += b.scr_paid_to_curators;
     this->scorumpower_paid_to_curators += b.scorumpower_paid_to_curators;
     this->transfers_to_scorumpower += b.transfers_to_scorumpower;
     this->scorum_transferred_to_scorumpower += b.scorum_transferred_to_scorumpower;

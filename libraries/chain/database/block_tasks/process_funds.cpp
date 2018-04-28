@@ -64,9 +64,10 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
 
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
-    reward_fund_service_i& reward_fund_service = services.reward_fund_service();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     witness_service_i& witness_service = services.witness_service();
+
+    auto reward_symbol = users_reward.symbol();
 
     /// 5% of total per block reward(equal to 10% of users only reward) to witness and active sp holder pay
     asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
@@ -83,24 +84,26 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
         wlog("Encountered unknown witness type for witness: ${w}", ("w", cwit.owner));
     }
 
-    const auto producer_reward
-        = account_service.create_scorumpower(account_service.get_account(cwit.owner), witness_reward);
-    ctx.push_virtual_operation(producer_reward_operation(cwit.owner, producer_reward));
+    const auto& witness = account_service.get_account(cwit.owner);
+    if (SCORUM_SYMBOL == reward_symbol)
+    {
+        account_service.increase_balance(witness, witness_reward);
 
-    if (users_reward.symbol() == SCORUM_SYMBOL)
-    {
-        reward_fund_service.update([&](reward_fund_object& rfo) { rfo.activity_reward_balance_scr += content_reward; });
-        dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += users_reward; });
+        reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
+        reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += content_reward; });
     }
-    else
+    else if (SP_SYMBOL == reward_symbol)
     {
-        reward_fund_service.update([&](reward_fund_object& rfo) {
-            rfo.activity_reward_balance_scr += asset(content_reward.amount, SCORUM_SYMBOL);
-        });
-        dgp_service.update([&](dynamic_global_property_object& p) {
-            p.circulating_capital += asset(users_reward.amount, SCORUM_SYMBOL);
-        });
+        account_service.create_scorumpower(witness, witness_reward);
+
+        reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
+        reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += content_reward; });
     }
+
+    ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
+
+    dgp_service.update(
+        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(users_reward.amount, SCORUM_SYMBOL); });
 }
 
 asset process_funds::distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward)

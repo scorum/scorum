@@ -2,6 +2,8 @@
 
 #include <scorum/protocol/types.hpp>
 
+#include <scorum/chain/services/comment_statistic.hpp>
+
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -37,49 +39,15 @@ using scorum::app::account_api_obj;
 
 struct comment_api_obj
 {
-    comment_api_obj(const scorum::chain::comment_object& o)
-        : id(o.id)
-        , category(fc::to_string(o.category))
-        , parent_author(o.parent_author)
-        , parent_permlink(fc::to_string(o.parent_permlink))
-        , author(o.author)
-        , permlink(fc::to_string(o.permlink))
-        , title(fc::to_string(o.title))
-        , body(fc::to_string(o.body))
-        , json_metadata(fc::to_string(o.json_metadata))
-        , last_update(o.last_update)
-        , created(o.created)
-        , active(o.active)
-        , last_payout(o.last_payout)
-        , depth(o.depth)
-        , children(o.children)
-        , net_rshares(o.net_rshares)
-        , abs_rshares(o.abs_rshares)
-        , vote_rshares(o.vote_rshares)
-        , children_abs_rshares(o.children_abs_rshares)
-        , cashout_time(o.cashout_time)
-        , max_cashout_time(o.max_cashout_time)
-        , total_vote_weight(o.total_vote_weight)
-        , total_payout_value(o.total_payout_value)
-        , curator_payout_value(o.curator_payout_value)
-        , author_rewards(o.author_rewards)
-        , net_votes(o.net_votes)
-        , root_comment(o.root_comment)
-        , max_accepted_payout(o.max_accepted_payout)
-        , percent_scrs(o.percent_scrs)
-        , allow_replies(o.allow_replies)
-        , allow_votes(o.allow_votes)
-        , allow_curation_rewards(o.allow_curation_rewards)
-    {
-        for (auto& route : o.beneficiaries)
-        {
-            beneficiaries.push_back(route);
-        }
-    }
-
     comment_api_obj()
     {
     }
+
+    comment_api_obj(const scorum::chain::comment_object& o);
+
+    comment_api_obj(const chain::comment_object& o,
+                    const comment_statistic_scr_service_i&,
+                    const comment_statistic_sp_service_i&);
 
     comment_id_type id;
     std::string category;
@@ -105,24 +73,33 @@ struct comment_api_obj
 
     share_type children_abs_rshares;
     time_point_sec cashout_time;
-    time_point_sec max_cashout_time;
     uint64_t total_vote_weight = 0;
 
-    asset total_payout_value = asset(0, SCORUM_SYMBOL);
-    asset curator_payout_value = asset(0, SCORUM_SYMBOL);
+    asset total_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset author_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset curator_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset beneficiary_payout_scr_value = asset(0, SCORUM_SYMBOL);
 
-    asset author_rewards = asset(0, SCORUM_SYMBOL);
+    asset total_payout_sp_value = asset(0, SP_SYMBOL);
+    asset author_payout_sp_value = asset(0, SP_SYMBOL);
+    asset curator_payout_sp_value = asset(0, SP_SYMBOL);
+    asset beneficiary_payout_sp_value = asset(0, SP_SYMBOL);
 
     int32_t net_votes = 0;
 
     comment_id_type root_comment;
 
     asset max_accepted_payout = asset(0, SCORUM_SYMBOL);
-    uint16_t percent_scrs = 0;
     bool allow_replies = false;
     bool allow_votes = false;
     bool allow_curation_rewards = false;
     std::vector<beneficiary_route_type> beneficiaries;
+
+private:
+    void set_comment(const chain::comment_object& o);
+    void set_comment_statistic(const chain::comment_statistic_scr_object& stat);
+    void set_comment_statistic(const chain::comment_statistic_sp_object& stat);
+    void initialize(const chain::comment_object& o);
 };
 
 struct tag_api_obj
@@ -174,13 +151,22 @@ struct discussion : public comment_api_obj
         : comment_api_obj(o)
     {
     }
+
+    discussion(const chain::comment_object& o,
+               const comment_statistic_scr_service_i& stat_scr,
+               const comment_statistic_sp_service_i& stat_sp)
+        : comment_api_obj(o, stat_scr, stat_sp)
+    {
+    }
+
     discussion()
     {
     }
 
     std::string url; /// /category/@rootauthor/root_permlink#author/permlink
     std::string root_title;
-    asset pending_payout_value = asset(0, SCORUM_SYMBOL);
+    asset pending_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset pending_payout_sp_value = asset(0, SP_SYMBOL);
     std::vector<vote_state> active_votes;
     std::vector<std::string> replies; ///< author/slug mapping
     asset promoted = asset(0, SCORUM_SYMBOL);
@@ -286,15 +272,18 @@ FC_REFLECT(scorum::tags::api::comment_api_obj,
           (vote_rshares)
           (children_abs_rshares)
           (cashout_time)
-          (max_cashout_time)
           (total_vote_weight)
-          (total_payout_value)
-          (curator_payout_value)
-          (author_rewards)
+          (total_payout_scr_value)
+          (author_payout_scr_value)
+          (curator_payout_scr_value)
+          (beneficiary_payout_scr_value)
+          (total_payout_sp_value)
+          (author_payout_sp_value)
+          (curator_payout_sp_value)
+          (beneficiary_payout_sp_value)
           (net_votes)
           (root_comment)
           (max_accepted_payout)
-          (percent_scrs)
           (allow_replies)
           (allow_votes)
           (allow_curation_rewards)
@@ -303,7 +292,8 @@ FC_REFLECT(scorum::tags::api::comment_api_obj,
 FC_REFLECT_DERIVED(scorum::tags::api::discussion, (scorum::tags::api::comment_api_obj),
                   (url)
                   (root_title)
-                  (pending_payout_value)
+                  (pending_payout_scr_value)
+                  (pending_payout_sp_value)
                   (active_votes)
                   (replies)
                   (promoted)

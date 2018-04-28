@@ -17,6 +17,8 @@
 #include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/reward_fund.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -312,11 +314,9 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
     FC_ASSERT(comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled.");
     FC_ASSERT(comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled.");
     FC_ASSERT(comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout.");
-    FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent.");
 
     comment_service.update(comment, [&](comment_object& c) {
         c.max_accepted_payout = o.max_accepted_payout;
-        c.percent_scrs = o.percent_scrs;
         c.allow_votes = o.allow_votes;
         c.allow_curation_rewards = o.allow_curation_rewards;
     });
@@ -331,6 +331,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
 {
     account_service_i& account_service = db().account_service();
     comment_service_i& comment_service = db().comment_service();
+    comment_statistic_scr_service_i& comment_statistic_scr_service = db().comment_statistic_scr_service();
+    comment_statistic_sp_service_i& comment_statistic_sp_service = db().comment_statistic_sp_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     try
@@ -397,7 +399,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 pr_root_comment = parent.root_comment;
             }
 
-            comment_service.create([&](comment_object& com) {
+            const comment_object& new_comment = comment_service.create([&](comment_object& com) {
 
                 com.author = o.author;
                 fc::from_string(com.permlink, o.permlink);
@@ -405,7 +407,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.created = com.last_update;
                 com.active = com.last_update;
                 com.last_payout = fc::time_point_sec::min();
-                com.max_cashout_time = fc::time_point_sec::maximum();
 
                 if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
@@ -438,6 +439,24 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #endif
             });
 
+            comment_statistic_scr_service.create(
+                [&](comment_statistic_scr_object& stat) { stat.comment = new_comment.id; });
+            comment_statistic_sp_service.create(
+                [&](comment_statistic_sp_object& stat) { stat.comment = new_comment.id; });
+
+#ifndef IS_LOW_MEM
+            {
+                account_blogging_statistic_service_i& account_blogging_statistic_service
+                    = db().account_blogging_statistic_service();
+
+                const auto& author_stat = account_blogging_statistic_service.obtain(auth.id);
+                account_blogging_statistic_service.add_post(author_stat);
+                if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+                {
+                    account_blogging_statistic_service.add_comment(author_stat);
+                }
+            }
+#endif
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
             while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
@@ -904,7 +923,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = db().reward_fund_service().get();
+                    const auto& reward_fund = db().reward_fund_scr_service().get();
                     max_vote_weight = rewards_math::calculate_max_vote_weight(comment.vote_rshares, old_vote_rshares,
                                                                               reward_fund.curation_reward_curve);
                     cv.weight = rewards_math::calculate_vote_weight(max_vote_weight, cv.last_update, comment.created,
@@ -915,6 +934,16 @@ void vote_evaluator::do_apply(const vote_operation& o)
                     cv.weight = 0;
                 }
             });
+
+#ifndef IS_LOW_MEM
+            {
+                account_blogging_statistic_service_i& account_blogging_statistic_service
+                    = db().account_blogging_statistic_service();
+
+                const auto& voter_stat = account_blogging_statistic_service.obtain(voter.id);
+                account_blogging_statistic_service.add_vote(voter_stat);
+            }
+#endif
 
             if (max_vote_weight) // Optimization
             {

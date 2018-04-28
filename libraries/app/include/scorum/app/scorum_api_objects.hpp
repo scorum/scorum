@@ -1,7 +1,6 @@
 #pragma once
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
@@ -31,7 +30,6 @@ using namespace scorum::chain;
 typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
 typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
-typedef api_obj<scorum::chain::comment_vote_object> comment_vote_api_obj;
 typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
 typedef api_obj<scorum::chain::escrow_object> escrow_api_obj;
 typedef api_obj<scorum::chain::scorumpower_delegation_expiration_object> scorumpower_delegation_expiration_api_obj;
@@ -55,76 +53,13 @@ struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_g
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
     asset fund_budget_balance = asset(0, SP_SYMBOL);
     asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
-    asset content_reward_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_sp_balance = asset(0, SP_SYMBOL);
 };
 
 struct account_api_obj
 {
-    account_api_obj(const chain::account_object& a, const chain::database& db)
-        : id(a.id)
-        , name(a.name)
-        , memo_key(a.memo_key)
-        , json_metadata(fc::to_string(a.json_metadata))
-        , proxy(a.proxy)
-        , last_account_update(a.last_account_update)
-        , created(a.created)
-        , created_by_genesis(a.created_by_genesis)
-        , owner_challenged(a.owner_challenged)
-        , active_challenged(a.active_challenged)
-        , last_owner_proved(a.last_owner_proved)
-        , last_active_proved(a.last_active_proved)
-        , recovery_account(a.recovery_account)
-        , last_account_recovery(a.last_account_recovery)
-        , comment_count(a.comment_count)
-        , lifetime_vote_count(a.lifetime_vote_count)
-        , post_count(a.post_count)
-        , can_vote(a.can_vote)
-        , voting_power(a.voting_power)
-        , last_vote_time(a.last_vote_time)
-        , balance(a.balance)
-        , curation_rewards(a.curation_rewards)
-        , posting_rewards(a.posting_rewards)
-        , scorumpower(a.scorumpower)
-        , delegated_scorumpower(a.delegated_scorumpower)
-        , received_scorumpower(a.received_scorumpower)
-        , witnesses_voted_for(a.witnesses_voted_for)
-        , last_post(a.last_post)
-        , last_root_post(a.last_root_post)
-    {
-        size_t n = a.proxied_vsf_votes.size();
-        proxied_vsf_votes.reserve(n);
-        for (size_t i = 0; i < n; i++)
-            proxied_vsf_votes.push_back(a.proxied_vsf_votes[i]);
-
-        const auto& auth = db.get<account_authority_object, by_account>(name);
-        owner = authority(auth.owner);
-        active = authority(auth.active);
-        posting = authority(auth.posting);
-        last_owner_update = auth.last_owner_update;
-
-        if (db.has_index<witness::account_bandwidth_index>())
-        {
-            auto forum_bandwidth = db.find<witness::account_bandwidth_object, witness::by_account_bandwidth_type>(
-                boost::make_tuple(name, witness::bandwidth_type::forum));
-
-            if (forum_bandwidth != nullptr)
-            {
-                average_bandwidth = forum_bandwidth->average_bandwidth;
-                lifetime_bandwidth = forum_bandwidth->lifetime_bandwidth;
-                last_bandwidth_update = forum_bandwidth->last_bandwidth_update;
-            }
-
-            auto market_bandwidth = db.find<witness::account_bandwidth_object, witness::by_account_bandwidth_type>(
-                boost::make_tuple(name, witness::bandwidth_type::market));
-
-            if (market_bandwidth != nullptr)
-            {
-                average_market_bandwidth = market_bandwidth->average_bandwidth;
-                lifetime_market_bandwidth = market_bandwidth->lifetime_bandwidth;
-                last_market_bandwidth_update = market_bandwidth->last_bandwidth_update;
-            }
-        }
-    }
+    account_api_obj(const chain::account_object& a, const chain::database& db);
 
     account_api_obj()
     {
@@ -151,18 +86,12 @@ struct account_api_obj
     time_point_sec last_active_proved;
     account_name_type recovery_account;
     time_point_sec last_account_recovery;
-    uint32_t comment_count = 0;
-    uint32_t lifetime_vote_count = 0;
-    uint32_t post_count = 0;
 
     bool can_vote = false;
     uint16_t voting_power = 0;
     time_point_sec last_vote_time;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-
-    asset curation_rewards;
-    asset posting_rewards;
 
     asset scorumpower = asset(0, SP_SYMBOL);
     asset delegated_scorumpower = asset(0, SP_SYMBOL);
@@ -182,6 +111,20 @@ struct account_api_obj
 
     time_point_sec last_post;
     time_point_sec last_root_post;
+
+    uint32_t post_count = 0;
+    uint32_t comment_count = 0;
+    uint32_t vote_count = 0;
+
+    asset curation_rewards_scr = asset(0, SCORUM_SYMBOL);
+    asset curation_rewards_sp = asset(0, SP_SYMBOL);
+    asset posting_rewards_scr = asset(0, SCORUM_SYMBOL);
+    asset posting_rewards_sp = asset(0, SP_SYMBOL);
+
+private:
+    inline void set_account(const chain::account_object&);
+    inline void set_account_blogging_statistic(const chain::account_blogging_statistic_object&);
+    inline void initialize(const chain::account_object& a, const chain::database& db);
 };
 
 struct account_balance_info_api_obj
@@ -465,7 +408,6 @@ struct registration_committee_api_obj
 FC_REFLECT_DERIVED(scorum::app::account_bandwidth_api_obj, (scorum::witness::account_bandwidth_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::block_summary_api_obj, (scorum::chain::block_summary_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::change_recovery_account_request_api_obj, (scorum::chain::change_recovery_account_request_object), BOOST_PP_SEQ_NIL)
-FC_REFLECT_DERIVED(scorum::app::comment_vote_api_obj, (scorum::chain::comment_vote_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::decline_voting_rights_request_api_obj, (scorum::chain::decline_voting_rights_request_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::escrow_api_obj, (scorum::chain::escrow_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::scorumpower_delegation_api_obj, (scorum::chain::scorumpower_delegation_object), BOOST_PP_SEQ_NIL)
@@ -479,7 +421,9 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
                    (registration_pool_balance)
                    (fund_budget_balance)
                    (reward_pool_balance)
-                   (content_reward_balance))
+                   (content_reward_scr_balance)
+                   (content_reward_sp_balance)
+                   )
 FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
@@ -488,15 +432,18 @@ FC_REFLECT( scorum::app::account_api_obj,
              (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)
              (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
-             (comment_count)(lifetime_vote_count)(post_count)(can_vote)(voting_power)(last_vote_time)
+             (can_vote)(voting_power)(last_vote_time)
              (balance)
              (scorumpower)(delegated_scorumpower)(received_scorumpower)
-             (curation_rewards)
-             (posting_rewards)
              (proxied_vsf_votes)(witnesses_voted_for)
              (average_bandwidth)(lifetime_bandwidth)(last_bandwidth_update)
              (average_market_bandwidth)(lifetime_market_bandwidth)(last_market_bandwidth_update)
              (last_post)(last_root_post)
+             (post_count)(comment_count)(vote_count)
+             (curation_rewards_scr)
+             (curation_rewards_sp)
+             (posting_rewards_scr)
+             (posting_rewards_sp)
           )
 
 FC_REFLECT (scorum::app::account_balance_info_api_obj,

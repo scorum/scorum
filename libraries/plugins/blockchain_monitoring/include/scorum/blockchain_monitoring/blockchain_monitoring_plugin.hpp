@@ -4,7 +4,7 @@
 #include <scorum/blockchain_monitoring/schema/bucket_object.hpp>
 
 #ifndef BLOCKCHAIN_MONITORING_PLUGIN_NAME
-#define BLOCKCHAIN_MONITORING_PLUGIN_NAME "chain_stats"
+#define BLOCKCHAIN_MONITORING_PLUGIN_NAME "blockchain_monitoring"
 #endif
 
 namespace scorum {
@@ -33,6 +33,8 @@ public:
 
     const flat_set<uint32_t>& get_tracked_buckets() const;
     uint32_t get_max_history_per_bucket() const;
+
+    uint32_t get_last_block_duration_microseconds() const;
 
 private:
     friend class detail::blockchain_monitoring_plugin_impl;

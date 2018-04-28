@@ -841,16 +841,30 @@ private:
     {
         _tags_service.set_promoted_balance(d.id, d.promoted);
 
-        const auto& reward_fund_obj = _services.reward_fund_service().get();
-
-        if (reward_fund_obj.recent_claims > 0)
         {
-            share_type pending_payout_value = rewards_math::predict_payout(
-                reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount, d.net_rshares,
-                reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
-                SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+            const auto& reward_fund_obj = _services.reward_fund_scr_service().get();
+            share_type pending_payout_value;
+            if (reward_fund_obj.recent_claims > 0)
+            {
+                pending_payout_value = rewards_math::predict_payout(
+                    reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance.amount, d.net_rshares,
+                    reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
+                    SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+            }
+            d.pending_payout_scr_value = asset(pending_payout_value, SCORUM_SYMBOL);
+        }
 
-            d.pending_payout_value = asset(pending_payout_value, SCORUM_SYMBOL);
+        {
+            const auto& reward_fund_obj = _services.reward_fund_sp_service().get();
+            share_type pending_payout_value;
+            if (reward_fund_obj.recent_claims > 0)
+            {
+                pending_payout_value = rewards_math::predict_payout(
+                    reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance.amount, d.net_rshares,
+                    reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
+                    SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+            }
+            d.pending_payout_sp_value = asset(pending_payout_value, SP_SYMBOL);
         }
 
         if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)

@@ -9,6 +9,7 @@ add_library(scorum_tags
             tags_plugin.cpp
             tags_api.cpp
             tags_service.cpp
+            tags_api_objects.cpp
             ${TAGS_HPP})
 
 target_link_libraries(scorum_tags

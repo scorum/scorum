@@ -32,6 +32,7 @@ add_library( scorum_chain
              database/database_witness_schedule.cpp
 
              services/account.cpp
+             services/account_blogging_statistic.cpp
              services/atomicswap.cpp
              services/budget.cpp
              services/comment.cpp
@@ -86,6 +87,7 @@ add_library( scorum_chain
              genesis/initializators/dev_committee_initialiazator.cpp
 
              database/block_tasks/block_tasks.cpp
+             database/block_tasks/process_contracts_expiration.cpp
              database/block_tasks/process_funds.cpp
              database/block_tasks/process_comments_cashout.cpp
              database/block_tasks/process_vesting_withdrawals.cpp

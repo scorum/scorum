@@ -275,16 +275,6 @@ void dbs_account::decrease_received_scorumpower(const account_object& account, c
     increase_received_scorumpower(account, -amount);
 }
 
-void dbs_account::increase_posting_rewards(const account_object& account, const asset& amount)
-{
-    update(account, [&](account_object& a) { a.posting_rewards += amount; });
-}
-
-void dbs_account::increase_curation_rewards(const account_object& account, const asset& amount)
-{
-    update(account, [&](account_object& a) { a.curation_rewards += amount; });
-}
-
 void dbs_account::drop_challenged(const account_object& account)
 {
     time_point_sec t = db_impl().head_block_time();
@@ -333,7 +323,6 @@ void dbs_account::add_post(const account_object& author_account, const account_n
             a.last_root_post = t;
         }
         a.last_post = t;
-        a.post_count++;
     });
 }
 
@@ -617,7 +606,7 @@ std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() c
     fc::time_point_sec min_vote_time_for_cashout = current_time - SCORUM_VOTE_REGENERATION_SECONDS;
 
     return get_range_by<by_last_vote_time>(min_vote_time_for_cashout < boost::lambda::_1,
-                                           ::boost::multi_index::unbounded);
+                                           boost::multi_index::unbounded);
 }
 } // namespace chain
 } // namespace scorum

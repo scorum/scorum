@@ -217,7 +217,8 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
     gpao.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
     gpao.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
     gpao.reward_pool_balance = _db.obtain_service<dbs_reward>().get().balance;
-    gpao.content_reward_balance = _db.obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
+    gpao.content_reward_scr_balance = _db.obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
+    gpao.content_reward_sp_balance = _db.obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance;
 
     return gpao;
 }
@@ -328,7 +329,6 @@ database_api_impl::lookup_account_names(const std::vector<std::string>& account_
 {
     std::vector<optional<account_api_obj>> result;
     result.reserve(account_names.size());
-
     for (auto& name : account_names)
     {
         auto itr = _db.find<account_object, by_name>(name);
@@ -841,74 +841,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
         return result;
     });
 }
-/**
-u256 to256(const fc::uint128& t)
-{
-    u256 result(t.high_bits());
-    result <<= 65;
-    result += t.low_bits();
-    return result;
-}
 
-void database_api::set_pending_payout(discussion& d) const
-{
-    const auto& cidx = my->_db.get_index<tags::tag_index>().indices().get<tags::by_comment>();
-    auto itr = cidx.lower_bound(d.id);
-    if (itr != cidx.end() && itr->comment == d.id)
-    {
-        d.promoted = asset(itr->promoted_balance, SCORUM_SYMBOL);
-    }
-
-    const auto& reward_fund_obj = my->_db.obtain_service<dbs_reward_fund>().get();
-
-    if (reward_fund_obj.recent_claims > 0)
-    {
-        share_type pending_payout_value = rewards_math::predict_payout(
-            reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance_scr.amount, d.net_rshares,
-            reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount, SCORUM_RECENT_RSHARES_DECAY_RATE,
-            SCORUM_MIN_COMMENT_PAYOUT_SHARE);
-
-        d.pending_payout_value = asset(pending_payout_value, SCORUM_SYMBOL);
-    }
-
-    if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
-        d.cashout_time = my->_db.calculate_discussion_payout_time(my->_db.get<comment_object>(d.id));
-
-    if (d.body.size() > 1024 * 128)
-        d.body = "body pruned due to size";
-    if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
-        d.body = "comment pruned due to size";
-
-    set_url(d);
-}
-
-void database_api::set_url(discussion& d) const
-{
-    const comment_api_obj root(my->_db.get<comment_object, by_id>(d.root_comment));
-    d.url = "/" + root.category + "/@" + root.author + "/" + root.permlink;
-    d.root_title = root.title;
-    if (root.id != d.id)
-        d.url += "#@" + d.author + "/" + d.permlink;
-}
-
-std::vector<discussion> database_api::get_content_replies(const std::string& author, const std::string& permlink) const
-{
-    return my->_db.with_read_lock([&]() {
-        account_name_type acc_name = account_name_type(author);
-        const auto& by_permlink_idx = my->_db.get_index<comment_index>().indices().get<by_parent>();
-        auto itr = by_permlink_idx.find(boost::make_tuple(acc_name, permlink));
-        std::vector<discussion> result;
-        while (itr != by_permlink_idx.end() && itr->parent_author == author
-               && fc::to_string(itr->parent_permlink) == permlink)
-        {
-            result.push_back(discussion(*itr));
-            set_pending_payout(result.back());
-            ++itr;
-        }
-        return result;
-    });
-}
-**/
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Budgets                                                          //
