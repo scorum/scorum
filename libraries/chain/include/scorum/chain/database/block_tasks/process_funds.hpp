@@ -7,6 +7,7 @@ namespace protocol {
 struct asset;
 }
 namespace chain {
+class account_object;
 namespace database_ns {
 
 using scorum::protocol::asset;
@@ -19,6 +20,8 @@ public:
 private:
     void distribute_reward(block_task_context& ctx, const asset& reward);
     asset distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward);
+    void charge_account_reward(block_task_context& ctx, const account_object&, const asset& reward);
+    void charge_content_reward(block_task_context& ctx, const asset& reward);
 };
 }
 }

@@ -67,13 +67,12 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     witness_service_i& witness_service = services.witness_service();
 
-    auto reward_symbol = users_reward.symbol();
-
+    // clang-format off
     /// 5% of total per block reward(equal to 10% of users only reward) to witness and active sp holder pay
     asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    asset active_sp_holder_reward = distribute_active_sp_holders_reward(
-        ctx, users_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT);
+    asset active_sp_holder_reward = distribute_active_sp_holders_reward(ctx, users_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT);
     asset content_reward = users_reward - witness_reward - active_sp_holder_reward;
+    // clang-format on
 
     FC_ASSERT(content_reward.amount >= 0, "content_reward(${r}) must not be less zero", ("r", content_reward));
 
@@ -85,20 +84,10 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     }
 
     const auto& witness = account_service.get_account(cwit.owner);
-    if (SCORUM_SYMBOL == reward_symbol)
-    {
-        account_service.increase_balance(witness, witness_reward);
 
-        reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
-        reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += content_reward; });
-    }
-    else if (SP_SYMBOL == reward_symbol)
-    {
-        account_service.create_scorumpower(witness, witness_reward);
+    charge_account_reward(ctx, witness, witness_reward);
 
-        reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
-        reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += content_reward; });
-    }
+    charge_content_reward(ctx, content_reward);
 
     ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
 
@@ -127,14 +116,7 @@ asset process_funds::distribute_active_sp_holders_reward(block_task_context& ctx
             {
                 asset account_reward = reward * account.scorumpower.amount / total_sp.amount;
 
-                if (account_reward.symbol() == SCORUM_SYMBOL)
-                {
-                    account_service.increase_balance(account, account_reward);
-                }
-                else
-                {
-                    account_service.create_scorumpower(account, account_reward);
-                }
+                charge_account_reward(ctx, account, account_reward);
 
                 distributed_reward += account_reward;
             }
@@ -149,6 +131,37 @@ asset process_funds::distribute_active_sp_holders_reward(block_task_context& ctx
     }
 
     return distributed_reward;
+}
+
+void process_funds::charge_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
+{
+    data_service_factory_i& services = ctx.services();
+    account_service_i& account_service = services.account_service();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        account_service.increase_balance(account, reward);
+    }
+    else
+    {
+        account_service.create_scorumpower(account, reward);
+    }
+}
+
+void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
+{
+    data_service_factory_i& services = ctx.services();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
+        reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += reward; });
+    }
+    else
+    {
+        reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
+        reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += reward; });
+    }
 }
 }
 }
