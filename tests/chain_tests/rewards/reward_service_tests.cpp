@@ -1,9 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/protocol/config.hpp>
-#include <scorum/chain/database/block_tasks/balance_reward_algorithm.hpp>
+#include <scorum/chain/database/block_tasks/reward_balance_algorithm.hpp>
 
 #include "database_default_integration.hpp"
 
@@ -15,15 +15,15 @@ class dbs_reward_fixture : public database_integration_fixture
 {
 public:
     dbs_reward_fixture()
-        : reward_service(db.obtain_service<dbs_reward>())
+        : reward_service(db.obtain_service<dbs_content_reward_scr>())
         , balancer(reward_service)
     {
         open_database();
     }
 
-    dbs_reward& reward_service;
+    dbs_content_reward_scr& reward_service;
 
-    database_ns::balance_algorithm<reward_service_i> balancer;
+    database_ns::reward_balance_algorithm<content_reward_scr_service_i> balancer;
 
     const asset NULL_BALANCE = asset(0, SCORUM_SYMBOL);
 };
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_balance_is_null)
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         BOOST_REQUIRE_EQUAL(pool.balance, NULL_BALANCE);
     }
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_initial_per_block_reward_is_not_null)
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         BOOST_REQUIRE_GT(pool.current_per_block_reward, NULL_BALANCE);
     }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_balance_increasing)
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         asset current_balance = pool.balance;
         asset INCREASE_BALANCE(SCORUM_100_PERCENT, SCORUM_SYMBOL);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(check_reward_pool_per_block_reward_decreases_balance)
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         asset initial_balance = pool.balance;
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(check_automatic_reward_increasing)
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         asset current_per_block_reward = pool.current_per_block_reward;
 
@@ -139,14 +139,14 @@ BOOST_AUTO_TEST_CASE(check_automatic_reward_decreasing)
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         int k = (SCORUM_100_PERCENT / SCORUM_ADJUST_REWARD_PERCENT + 1);
 
         asset threshold_balance = asset(pool.current_per_block_reward * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                         * SCORUM_BLOCKS_PER_DAY * k);
 
-        reward_service.update([&](reward_balancer_object& rp) { rp.current_per_block_reward *= k; });
+        reward_service.update([&](content_reward_balancer_scr_object& rp) { rp.current_per_block_reward *= k; });
 
         BOOST_REQUIRE_EQUAL(balancer.increase_ballance(threshold_balance), threshold_balance);
 
@@ -164,14 +164,14 @@ BOOST_AUTO_TEST_CASE(check_automatic_reward_decreasing_with_int_arithmetic_corre
 {
     try
     {
-        const reward_balancer_object& pool = reward_service.get();
+        const content_reward_balancer_scr_object& pool = reward_service.get();
 
         int k = 2;
 
         asset threshold_balance = asset(pool.current_per_block_reward * SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS
                                         * SCORUM_BLOCKS_PER_DAY * k);
 
-        reward_service.update([&](reward_balancer_object& rp) { rp.current_per_block_reward *= k; });
+        reward_service.update([&](content_reward_balancer_scr_object& rp) { rp.current_per_block_reward *= k; });
 
         BOOST_REQUIRE_EQUAL(balancer.increase_ballance(threshold_balance), threshold_balance);
 

@@ -35,7 +35,7 @@
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
@@ -1135,9 +1135,9 @@ void database::initialize_indexes()
     add_index<proposal_object_index>();
     add_index<registration_committee_member_index>();
     add_index<registration_pool_index>();
-    add_index<reward_fund_scr_index>();
-    add_index<reward_fund_sp_index>();
-    add_index<reward_pool_index>();
+    add_index<content_reward_fund_scr_index>();
+    add_index<content_reward_fund_sp_index>();
+    add_index<content_reward_balancer_scr_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
     add_index<scorumpower_delegation_index>();
@@ -1909,10 +1909,11 @@ void database::validate_invariants() const
             total_supply += itr->pending_fee;
         }
 
-        total_supply += obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
-        total_supply += asset(obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
+        total_supply += obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+        total_supply
+            += asset(obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
-        total_supply += obtain_service<dbs_reward>().get().balance;
+        total_supply += obtain_service<dbs_content_reward_scr>().get().balance;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {

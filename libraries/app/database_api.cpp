@@ -26,7 +26,7 @@
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <scorum/common_api/config.hpp>
@@ -216,9 +216,9 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
 
     gpao.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
     gpao.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
-    gpao.reward_pool_balance = _db.obtain_service<dbs_reward>().get().balance;
-    gpao.content_reward_scr_balance = _db.obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
-    gpao.content_reward_sp_balance = _db.obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance;
+    gpao.reward_pool_balance = _db.obtain_service<dbs_content_reward_scr>().get().balance;
+    gpao.content_reward_scr_balance = _db.obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+    gpao.content_reward_sp_balance = _db.obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance;
 
     return gpao;
 }

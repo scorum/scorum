@@ -7,10 +7,9 @@ namespace chain {
 
 namespace database_ns {
 
-using scorum::protocol::asset;
-using scorum::protocol::percent_type;
+using namespace scorum::protocol;
 
-template <class TFundService> class balance_algorithm
+template <class TFundService> class reward_balance_algorithm
 {
     TFundService& _service;
 
@@ -19,10 +18,11 @@ template <class TFundService> class balance_algorithm
     const uint32_t _reward_increase_threshold_in_days;
 
 public:
-    balance_algorithm(TFundService& reward_service,
-                      percent_type adjust_percent = SCORUM_ADJUST_REWARD_PERCENT,
-                      uint32_t guaranted_reward_supply_period_in_days = SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS,
-                      uint32_t reward_increase_threshold_in_days = SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS)
+    reward_balance_algorithm(TFundService& reward_service,
+                             percent_type adjust_percent = SCORUM_ADJUST_REWARD_PERCENT,
+                             uint32_t guaranted_reward_supply_period_in_days
+                             = SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS,
+                             uint32_t reward_increase_threshold_in_days = SCORUM_REWARD_INCREASE_THRESHOLD_IN_DAYS)
         : _service(reward_service)
         , _adjust_percent(adjust_percent)
         , _guaranted_reward_supply_period_in_days(guaranted_reward_supply_period_in_days)
@@ -41,13 +41,14 @@ public:
     const asset take_block_reward()
     {
         const auto current_per_day_reward = _service.get().current_per_block_reward * SCORUM_BLOCKS_PER_DAY;
+        const auto symbol_type = current_per_day_reward.symbol();
 
-        asset real_per_block_reward(0, current_per_day_reward.symbol());
+        asset real_per_block_reward(0, symbol_type);
 
         _service.update([&](typename TFundService::object_type& pool) {
             asset delta = pool.current_per_block_reward * _adjust_percent / SCORUM_100_PERCENT;
 
-            delta = std::max(SCORUM_MIN_PER_BLOCK_REWARD, delta);
+            delta = std::max(asset(SCORUM_MIN_PER_BLOCK_REWARD, symbol_type), delta);
 
             if (pool.balance > current_per_day_reward * _reward_increase_threshold_in_days)
             {
@@ -58,7 +59,7 @@ public:
             {
                 // recalculate
                 pool.current_per_block_reward
-                    = std::max(SCORUM_MIN_PER_BLOCK_REWARD, pool.current_per_block_reward - delta);
+                    = std::max(asset(SCORUM_MIN_PER_BLOCK_REWARD, symbol_type), pool.current_per_block_reward - delta);
             }
             else
             {

@@ -18,7 +18,7 @@ struct reward_fund_api_obj
     {
     }
 
-    reward_fund_api_obj(const scorum::chain::reward_fund_scr_object& obj)
+    reward_fund_api_obj(const scorum::chain::content_reward_fund_scr_object& obj)
         : activity_reward_balance(obj.activity_reward_balance)
         , recent_claims(obj.recent_claims)
         , last_update(obj.last_update)
@@ -27,7 +27,7 @@ struct reward_fund_api_obj
     {
     }
 
-    reward_fund_api_obj(const scorum::chain::reward_fund_sp_object& obj)
+    reward_fund_api_obj(const scorum::chain::content_reward_fund_sp_object& obj)
         : activity_reward_balance(obj.activity_reward_balance)
         , recent_claims(obj.recent_claims)
         , last_update(obj.last_update)

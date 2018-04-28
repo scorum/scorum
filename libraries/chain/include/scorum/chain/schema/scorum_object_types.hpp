@@ -56,9 +56,9 @@ enum object_type
     proposal_object_type,
     registration_committee_member_object_type,
     registration_pool_object_type,
-    reward_fund_scr_object_type,
-    reward_fund_sp_object_type,
-    reward_balancer_object_type,
+    content_reward_fund_scr_object_type,
+    content_reward_fund_sp_object_type,
+    content_reward_balancer_scr_object_type,
     transaction_object_type,
     scorumpower_delegation_expiration_object_type,
     scorumpower_delegation_object_type,
@@ -92,7 +92,6 @@ class owner_authority_history_object;
 class proposal_object;
 class registration_committee_member_object;
 class registration_pool_object;
-class reward_balancer_object;
 class transaction_object;
 class scorumpower_delegation_expiration_object;
 class scorumpower_delegation_object;
@@ -125,7 +124,6 @@ using owner_authority_history_id_type = oid<owner_authority_history_object>;
 using proposal_id_type = oid<proposal_object>;
 using registration_committee_member_id_type = oid<registration_committee_member_object>;
 using registration_pool_id_type = oid<registration_pool_object>;
-using reward_pool_id_type = oid<reward_balancer_object>;
 using transaction_object_id_type = oid<transaction_object>;
 using scorumpower_delegation_expiration_id_type = oid<scorumpower_delegation_expiration_object>;
 using scorumpower_delegation_id_type = oid<scorumpower_delegation_object>;
@@ -174,9 +172,9 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (proposal_object_type)
                 (registration_committee_member_object_type)
                 (registration_pool_object_type)
-                (reward_fund_scr_object_type)
-                (reward_fund_sp_object_type)
-                (reward_balancer_object_type)
+                (content_reward_fund_scr_object_type)
+                (content_reward_fund_sp_object_type)
+                (content_reward_balancer_scr_object_type)
                 (transaction_object_type)
                 (scorumpower_delegation_expiration_object_type)
                 (scorumpower_delegation_object_type)

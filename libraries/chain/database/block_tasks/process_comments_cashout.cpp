@@ -295,16 +295,17 @@ private:
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
-    reward_fund_scr_service_i& reward_fund_scr_service = ctx.services().reward_fund_scr_service();
-    reward_fund_sp_service_i& reward_fund_sp_service = ctx.services().reward_fund_sp_service();
+    content_reward_fund_scr_service_i& content_reward_fund_scr_service
+        = ctx.services().content_reward_fund_scr_service();
+    content_reward_fund_sp_service_i& content_reward_fund_sp_service = ctx.services().content_reward_fund_sp_service();
     comment_service_i& comment_service = ctx.services().comment_service();
     process_comments_cashout_impl impl(ctx);
 
     const auto fn = [&](const comment_object& c) { return c.cashout_time <= dgp_service.head_block_time(); };
     auto comments = comment_service.get_by_cashout_time(fn);
 
-    impl.reward(reward_fund_scr_service, comments);
-    impl.reward(reward_fund_sp_service, comments);
+    impl.reward(content_reward_fund_scr_service, comments);
+    impl.reward(content_reward_fund_sp_service, comments);
 
     for (const comment_object& comment : comments)
     {

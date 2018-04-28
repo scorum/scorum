@@ -27,12 +27,12 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
 
 void rewards_initializator_impl::create_scr_reward_fund(initializator_context& ctx)
 {
-    reward_fund_scr_service_i& reward_fund_service = ctx.services().reward_fund_scr_service();
+    content_reward_fund_scr_service_i& reward_fund_service = ctx.services().content_reward_fund_scr_service();
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
     FC_ASSERT(!reward_fund_service.is_exists());
 
-    reward_fund_service.create([&](reward_fund_scr_object& rfo) {
+    reward_fund_service.create([&](content_reward_fund_scr_object& rfo) {
         rfo.last_update = dgp_service.head_block_time();
         rfo.author_reward_curve = curve_id::linear;
         rfo.curation_reward_curve = curve_id::square_root;
@@ -41,12 +41,12 @@ void rewards_initializator_impl::create_scr_reward_fund(initializator_context& c
 
 void rewards_initializator_impl::create_sp_reward_fund(initializator_context& ctx)
 {
-    reward_fund_sp_service_i& reward_fund_service = ctx.services().reward_fund_sp_service();
+    content_reward_fund_sp_service_i& reward_fund_service = ctx.services().content_reward_fund_sp_service();
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
     FC_ASSERT(!reward_fund_service.is_exists());
 
-    reward_fund_service.create([&](reward_fund_sp_object& rfo) {
+    reward_fund_service.create([&](content_reward_fund_sp_object& rfo) {
         rfo.last_update = dgp_service.head_block_time();
         rfo.author_reward_curve = curve_id::linear;
         rfo.curation_reward_curve = curve_id::square_root;
@@ -55,11 +55,11 @@ void rewards_initializator_impl::create_sp_reward_fund(initializator_context& ct
 
 void rewards_initializator_impl::create_balancer(initializator_context& ctx)
 {
-    reward_service_i& reward_service = ctx.services().reward_service();
+    content_reward_scr_service_i& reward_service = ctx.services().content_reward_scr_service();
 
     FC_ASSERT(!reward_service.is_exists());
 
-    reward_service.create([&](reward_balancer_object& rp) { rp.balance = asset(0, SCORUM_SYMBOL); });
+    reward_service.create([&](content_reward_balancer_scr_object& rp) { rp.balance = asset(0, SCORUM_SYMBOL); });
 }
 
 void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)

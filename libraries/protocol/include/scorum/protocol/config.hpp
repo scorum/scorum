@@ -84,7 +84,7 @@ namespace detail {
 
 #define SCORUM_MIN_COMMENT_PAYOUT_SHARE        share_type(5)
 
-#define SCORUM_MIN_PER_BLOCK_REWARD            (asset(1, SCORUM_SYMBOL))
+#define SCORUM_MIN_PER_BLOCK_REWARD            share_type(1)
 
 #define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER  30
 

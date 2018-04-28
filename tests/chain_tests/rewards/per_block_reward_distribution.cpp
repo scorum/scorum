@@ -9,7 +9,7 @@
 #include <scorum/protocol/config.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -27,22 +27,22 @@ class dbs_reward_fixture : public database_integration_fixture
 {
 public:
     dbs_reward_fixture()
-        : reward_service(db.obtain_service<dbs_reward>())
+        : reward_service(db.obtain_service<dbs_content_reward_scr>())
         , budget_service(db.obtain_service<dbs_budget>())
         , dev_service(db.obtain_service<dbs_dev_pool>())
-        , reward_fund_scr_service(db.obtain_service<dbs_reward_fund_scr>())
-        , reward_fund_sp_service(db.obtain_service<dbs_reward_fund_sp>())
+        , content_reward_fund_scr_service(db.obtain_service<dbs_content_reward_fund_scr>())
+        , content_reward_fund_sp_service(db.obtain_service<dbs_content_reward_fund_sp>())
         , account_service(db.obtain_service<dbs_account>())
         , dgp_service(db.obtain_service<dbs_dynamic_global_property>())
     {
         open_database();
     }
 
-    dbs_reward& reward_service;
+    dbs_content_reward_scr& reward_service;
     dbs_budget& budget_service;
     dbs_dev_pool& dev_service;
-    dbs_reward_fund_scr& reward_fund_scr_service;
-    dbs_reward_fund_sp& reward_fund_sp_service;
+    dbs_content_reward_fund_scr& content_reward_fund_scr_service;
+    dbs_content_reward_fund_sp& content_reward_fund_sp_service;
     dbs_account& account_service;
     dynamic_global_property_service_i& dgp_service;
 
@@ -65,7 +65,7 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, NULL_BALANCE);
-    BOOST_REQUIRE_EQUAL(reward_fund_sp_service.get().activity_reward_balance, content_reward);
+    BOOST_REQUIRE_EQUAL(content_reward_fund_sp_service.get().activity_reward_balance, content_reward);
     BOOST_REQUIRE_EQUAL(account.scorumpower, witness_reward);
 }
 
@@ -98,8 +98,8 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_and_advertising_b
 
     BOOST_REQUIRE_EQUAL(dev_service.get().scr_balance, dev_team_reward_scr);
 
-    BOOST_REQUIRE_EQUAL(reward_fund_scr_service.get().activity_reward_balance, content_reward_scr);
-    BOOST_REQUIRE_EQUAL(reward_fund_sp_service.get().activity_reward_balance, content_reward_sp);
+    BOOST_REQUIRE_EQUAL(content_reward_fund_scr_service.get().activity_reward_balance, content_reward_scr);
+    BOOST_REQUIRE_EQUAL(content_reward_fund_sp_service.get().activity_reward_balance, content_reward_sp);
 
     BOOST_REQUIRE_EQUAL(account.scorumpower, witness_reward_sp);
     BOOST_REQUIRE_EQUAL(account.balance, witness_reward_scr);

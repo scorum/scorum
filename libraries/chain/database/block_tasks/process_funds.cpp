@@ -1,5 +1,5 @@
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
-#include <scorum/chain/database/block_tasks/balance_reward_algorithm.hpp>
+#include <scorum/chain/database/block_tasks/reward_balance_algorithm.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budget.hpp>
@@ -23,7 +23,7 @@ using scorum::protocol::producer_reward_operation;
 void process_funds::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services();
-    reward_service_i& reward_service = services.reward_service();
+    content_reward_scr_service_i& reward_service = services.content_reward_scr_service();
     budget_service_i& budget_service = services.budget_service();
     dev_pool_service_i& dev_service = services.dev_pool_service();
 
@@ -52,7 +52,7 @@ void process_funds::on_apply(block_task_context& ctx)
 
     // 50% of revenue is distributed in SCR among users.
     // pass it through reward balancer
-    balance_algorithm<reward_service_i> balancer(reward_service);
+    reward_balance_algorithm<content_reward_scr_service_i> balancer(reward_service);
     balancer.increase_ballance(advertising_budgets_reward - dev_team_reward);
     asset users_reward = balancer.take_block_reward();
 
@@ -156,13 +156,13 @@ void process_funds::charge_content_reward(block_task_context& ctx, const asset& 
 
     if (reward.symbol() == SCORUM_SYMBOL)
     {
-        reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
-        reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += reward; });
+        content_reward_fund_scr_service_i& reward_fund_service = services.content_reward_fund_scr_service();
+        reward_fund_service.update([&](content_reward_fund_scr_object& rfo) { rfo.activity_reward_balance += reward; });
     }
     else
     {
-        reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
-        reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += reward; });
+        content_reward_fund_sp_service_i& reward_fund_service = services.content_reward_fund_sp_service();
+        reward_fund_service.update([&](content_reward_fund_sp_object& rfo) { rfo.activity_reward_balance += reward; });
     }
 }
 }

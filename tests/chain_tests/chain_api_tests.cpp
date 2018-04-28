@@ -12,7 +12,7 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 
 #include "database_trx_integration.hpp"
 
@@ -106,18 +106,18 @@ SCORUM_TEST_CASE(get_chain_capital_test)
     BOOST_REQUIRE_EQUAL(capital.registration_pool_balance,
                         db.obtain_service<chain::dbs_registration_pool>().get().balance);
     BOOST_REQUIRE_EQUAL(capital.fund_budget_balance, db.obtain_service<chain::dbs_budget>().get_fund_budget().balance);
-    BOOST_REQUIRE_EQUAL(capital.reward_pool_balance, db.obtain_service<chain::dbs_reward>().get().balance);
+    BOOST_REQUIRE_EQUAL(capital.reward_pool_balance, db.obtain_service<chain::dbs_content_reward_scr>().get().balance);
     BOOST_REQUIRE_EQUAL(capital.content_reward_scr_balance,
-                        db.obtain_service<chain::dbs_reward_fund_scr>().get().activity_reward_balance);
+                        db.obtain_service<chain::dbs_content_reward_fund_scr>().get().activity_reward_balance);
     BOOST_REQUIRE_EQUAL(capital.content_reward_sp_balance,
-                        db.obtain_service<chain::dbs_reward_fund_sp>().get().activity_reward_balance);
+                        db.obtain_service<chain::dbs_content_reward_fund_sp>().get().activity_reward_balance);
 }
 
 SCORUM_TEST_CASE(get_reward_fund_test)
 {
-    auto reward = _api_call.get_reward_fund(reward_fund_type::reward_fund_sp);
+    auto reward = _api_call.get_reward_fund(reward_fund_type::content_reward_fund_sp);
 
-    const auto& fund = db.obtain_service<chain::dbs_reward_fund_sp>().get();
+    const auto& fund = db.obtain_service<chain::dbs_content_reward_fund_sp>().get();
 
     BOOST_REQUIRE_EQUAL(reward.activity_reward_balance, fund.activity_reward_balance);
     BOOST_REQUIRE(reward.recent_claims == fund.recent_claims);

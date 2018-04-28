@@ -842,7 +842,7 @@ private:
         _tags_service.set_promoted_balance(d.id, d.promoted);
 
         {
-            const auto& reward_fund_obj = _services.reward_fund_scr_service().get();
+            const auto& reward_fund_obj = _services.content_reward_fund_scr_service().get();
             share_type pending_payout_value;
             if (reward_fund_obj.recent_claims > 0)
             {
@@ -855,7 +855,7 @@ private:
         }
 
         {
-            const auto& reward_fund_obj = _services.reward_fund_sp_service().get();
+            const auto& reward_fund_obj = _services.content_reward_fund_sp_service().get();
             share_type pending_payout_value;
             if (reward_fund_obj.recent_claims > 0)
             {
