@@ -162,25 +162,23 @@ std::map<std::string, uint16_t> get_comments_with_depth(scorum::chain::database&
 
 SCORUM_TEST_CASE(test_depth)
 {
-    {
-        auto root = create_post("title", "body");
+    auto root = create_post("title", "body");
 
-        auto root_child = root.create_comment(initdelegate, [](comment_operation& op) {
-            op.title = "child one";
-            op.body = "body";
-        });
+    auto root_child = root.create_comment(initdelegate, [](comment_operation& op) {
+        op.title = "child one";
+        op.body = "body";
+    });
 
-        auto root_child_child = root_child.create_comment(initdelegate, [](comment_operation& op) {
-            op.title = "child two";
-            op.body = "body";
-        });
+    auto root_child_child = root_child.create_comment(initdelegate, [](comment_operation& op) {
+        op.title = "child two";
+        op.body = "body";
+    });
 
-        auto check_list = get_comments_with_depth(this->db);
+    auto check_list = get_comments_with_depth(this->db);
 
-        BOOST_REQUIRE_EQUAL(0u, check_list[root.permlink()]);
-        BOOST_REQUIRE_EQUAL(1u, check_list[root_child.permlink()]);
-        BOOST_REQUIRE_EQUAL(2u, check_list[root_child_child.permlink()]);
-    }
+    BOOST_REQUIRE_EQUAL(0u, check_list[root.permlink()]);
+    BOOST_REQUIRE_EQUAL(1u, check_list[root_child.permlink()]);
+    BOOST_REQUIRE_EQUAL(2u, check_list[root_child_child.permlink()]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

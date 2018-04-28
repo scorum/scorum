@@ -73,7 +73,7 @@ config::config(test_mode) /// test config
 
     , db_free_memory_threshold_mb(5)
 
-    , min_root_comment_interval(fc::seconds(0))
+    , min_root_comment_interval(fc::minutes(5))
     , min_replay_interval(fc::seconds(0))
 {
     // do nothing
