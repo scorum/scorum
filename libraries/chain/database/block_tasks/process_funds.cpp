@@ -1,4 +1,5 @@
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
+#include <scorum/chain/database/block_tasks/balance_reward_algorithm.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budget.hpp>
@@ -45,14 +46,15 @@ void process_funds::on_apply(block_task_context& ctx)
     }
 
     // 50% of the revenue goes to support and develop the product, namely,
-    // towards the company’s R&D center.
+    // towards the company's R&D center.
     asset dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     dev_service.update([&](dev_committee_object& dco) { dco.scr_balance += dev_team_reward; });
 
     // 50% of revenue is distributed in SCR among users.
     // pass it through reward balancer
-    reward_service.increase_ballance(advertising_budgets_reward - dev_team_reward);
-    asset users_reward = reward_service.take_block_reward();
+    balance_algorithm<reward_service_i> balancer(reward_service);
+    balancer.increase_ballance(advertising_budgets_reward - dev_team_reward);
+    asset users_reward = balancer.take_block_reward();
 
     distribute_reward(ctx, users_reward);
 }

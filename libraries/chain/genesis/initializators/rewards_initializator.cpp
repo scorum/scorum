@@ -59,7 +59,7 @@ void rewards_initializator_impl::create_balancer(initializator_context& ctx)
 
     FC_ASSERT(!reward_service.is_exists());
 
-    reward_service.create_balancer(asset(0, SCORUM_SYMBOL));
+    reward_service.create([&](reward_balancer_object& rp) { rp.balance = asset(0, SCORUM_SYMBOL); });
 }
 
 void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)
