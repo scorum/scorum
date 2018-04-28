@@ -45,6 +45,9 @@ namespace detail {
 
         const uint32_t db_free_memory_threshold_mb;
 
+        const fc::microseconds min_root_comment_interval;
+        const fc::microseconds min_replay_interval;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -157,8 +160,8 @@ namespace detail {
 #define SCORUM_MAX_VOTE_CHANGES                3
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
 
-#define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
-#define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
+#define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (scorum::protocol::detail::get_config().min_root_comment_interval)
+#define SCORUM_MIN_REPLY_INTERVAL              (scorum::protocol::detail::get_config().min_replay_interval)
 
 #define SCORUM_MAX_ACCOUNT_WITNESS_VOTES       30
 

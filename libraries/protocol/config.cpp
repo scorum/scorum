@@ -36,6 +36,9 @@ config::config() /// production config
     , min_vote_interval_sec(3)
 
     , db_free_memory_threshold_mb(100)
+
+    , min_root_comment_interval(fc::minutes(5))
+    , min_replay_interval(fc::seconds(20))
 {
     // do nothing
 }
@@ -69,6 +72,9 @@ config::config(test_mode) /// test config
     , min_vote_interval_sec(0)
 
     , db_free_memory_threshold_mb(5)
+
+    , min_root_comment_interval(fc::seconds(0))
+    , min_replay_interval(fc::seconds(0))
 {
     // do nothing
 }
