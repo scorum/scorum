@@ -27,15 +27,13 @@
 #include <scorum/protocol/operations.hpp>
 #include <scorum/protocol/transaction.hpp>
 
-#include <fc/string.hpp>
-
 namespace scorum {
 namespace account_identity {
 
 void operation_get_impacted_accounts(const scorum::protocol::operation& op,
-                                     fc::flat_set<protocol::account_name_type>& result);
+                                     fc::flat_set<scorum::protocol::account_name_type>& result);
 
 void transaction_get_impacted_accounts(const scorum::protocol::transaction& tx,
-                                       fc::flat_set<protocol::account_name_type>& result);
+                                       fc::flat_set<scorum::protocol::account_name_type>& result);
 }
 } // scorum::account_identity

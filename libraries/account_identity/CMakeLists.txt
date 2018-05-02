@@ -2,6 +2,7 @@ file(GLOB_RECURSE HEADERS "include/scorum/account_identity/*.hpp")
 
 add_library( scorum_account_identity
             impacted.cpp
+            owned.cpp
            )
 
 target_link_libraries( scorum_account_identity
