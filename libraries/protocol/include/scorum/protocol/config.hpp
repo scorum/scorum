@@ -165,8 +165,8 @@ namespace detail {
 #define SCORUM_MAX_VOTE_CHANGES                3
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
 
-#define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
-#define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
+#define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::minutes(5))
+#define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20))
 
 #define SCORUM_MAX_ACCOUNT_WITNESS_VOTES       30
 

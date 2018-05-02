@@ -81,4 +81,39 @@ BOOST_AUTO_TEST_CASE(cashout_check)
     BOOST_REQUIRE_EQUAL(alice_balance_delta + sam_balance_delta, activity_reward_balance);
 }
 
+BOOST_AUTO_TEST_CASE(no_double_cashout_check)
+{
+    auto alice_old_balance = account_service.get_account(alice.name).balance;
+    auto sam_old_balance = account_service.get_account(sam.name).balance;
+
+    auto post_permlink = create_next_post_permlink();
+
+    post(alice, post_permlink); // alice post
+
+    const int vote_interval = SCORUM_CASHOUT_WINDOW_SECONDS / 2;
+
+    generate_blocks(db.head_block_time() + vote_interval);
+
+    vote(alice, post_permlink, sam); // sam upvote alice post
+
+    generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS - vote_interval);
+
+    auto alice_balance = account_service.get_account(alice.name).balance;
+    auto sam_balance = account_service.get_account(sam.name).balance;
+
+    BOOST_REQUIRE_GT(alice_balance - alice_old_balance, ASSET_NULL_SCR);
+    BOOST_REQUIRE_GT(sam_balance - sam_old_balance, ASSET_NULL_SCR);
+
+    alice_old_balance = account_service.get_account(alice.name).balance;
+    sam_old_balance = account_service.get_account(sam.name).balance;
+
+    generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
+
+    alice_balance = account_service.get_account(alice.name).balance;
+    sam_balance = account_service.get_account(sam.name).balance;
+
+    BOOST_REQUIRE_EQUAL(alice_balance - alice_old_balance, ASSET_NULL_SCR);
+    BOOST_REQUIRE_EQUAL(sam_balance - sam_old_balance, ASSET_NULL_SCR);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
