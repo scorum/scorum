@@ -3,7 +3,6 @@
 #include <scorum/blockchain_monitoring/node_monitoring_api.hpp>
 #include <scorum/common_statistics/base_plugin_impl.hpp>
 
-#include <scorum/app/impacted.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>

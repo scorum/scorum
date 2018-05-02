@@ -6,7 +6,6 @@ add_library( scorum_app
              chain_api.cpp
              api.cpp
              application.cpp
-             impacted.cpp
              plugin.cpp
              scorum_api_objects.cpp
              ${HEADERS}

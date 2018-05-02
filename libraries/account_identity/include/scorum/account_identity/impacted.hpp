@@ -26,19 +26,16 @@
 #include <fc/container/flat.hpp>
 #include <scorum/protocol/operations.hpp>
 #include <scorum/protocol/transaction.hpp>
-#include <scorum/chain/schema/scorum_object_types.hpp>
 
 #include <fc/string.hpp>
 
 namespace scorum {
-namespace app {
+namespace account_identity {
 
-using namespace fc;
+void operation_get_impacted_accounts(const scorum::protocol::operation& op,
+                                     fc::flat_set<protocol::account_name_type>& result);
 
-void operation_get_impacted_accounts(
-    const scorum::protocol::operation& op, fc::flat_set<protocol::account_name_type>& result);
-
-void transaction_get_impacted_accounts(
-    const scorum::protocol::transaction& tx, fc::flat_set<protocol::account_name_type>& result);
+void transaction_get_impacted_accounts(const scorum::protocol::transaction& tx,
+                                       fc::flat_set<protocol::account_name_type>& result);
 }
-} // scorum::app
+} // scorum::account_identity

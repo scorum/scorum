@@ -24,12 +24,12 @@
 
 #include <scorum/protocol/authority.hpp>
 
-#include <scorum/app/impacted.hpp>
+#include <scorum/account_identity/impacted.hpp>
 
 #include <fc/utility.hpp>
 
 namespace scorum {
-namespace app {
+namespace account_identity {
 
 using namespace fc;
 using namespace scorum::protocol;
