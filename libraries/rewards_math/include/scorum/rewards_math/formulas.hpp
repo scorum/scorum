@@ -24,6 +24,7 @@ share_type predict_payout(const uint128_t& recent_claims,
                           const share_type& min_comment_payout_share);
 
 uint128_t calculate_total_claims(const uint128_t& recent_claims,
+                                 const share_type& reward_fund,
                                  const time_point_sec& now,
                                  const time_point_sec& last_payout_check,
                                  const curve_id author_reward_curve,

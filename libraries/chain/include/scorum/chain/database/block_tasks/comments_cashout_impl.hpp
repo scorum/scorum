@@ -41,8 +41,8 @@ public:
 
         shares_vector_type total_rshares = get_total_rshares(comments);
         fc::uint128_t total_claims = rewards_math::calculate_total_claims(
-            rf.recent_claims, dgp_service.head_block_time(), rf.last_update, rf.author_reward_curve, total_rshares,
-            SCORUM_RECENT_RSHARES_DECAY_RATE);
+            rf.recent_claims, rf.activity_reward_balance.amount, dgp_service.head_block_time(), rf.last_update,
+            rf.author_reward_curve, total_rshares, SCORUM_RECENT_RSHARES_DECAY_RATE);
 
         auto reward_symbol = rf.activity_reward_balance.symbol();
         asset reward = asset(0, reward_symbol);

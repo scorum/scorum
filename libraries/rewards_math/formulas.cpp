@@ -22,13 +22,14 @@ share_type predict_payout(const uint128_t& recent_claims,
                           const fc::microseconds& decay_rate,
                           const share_type& min_comment_payout_share)
 {
-    uint128_t total_claims = calculate_total_claims(recent_claims, time_point_sec(), time_point_sec(),
+    uint128_t total_claims = calculate_total_claims(recent_claims, reward_fund, time_point_sec(), time_point_sec(),
                                                     author_reward_curve, { rshares }, decay_rate);
     return calculate_payout(rshares, total_claims, reward_fund, author_reward_curve, max_payout,
                             min_comment_payout_share);
 }
 
 uint128_t calculate_total_claims(const uint128_t& recent_claims,
+                                 const share_type& reward_fund,
                                  const time_point_sec& now,
                                  const time_point_sec& last_payout_check,
                                  const curve_id author_reward_curve,
@@ -41,7 +42,16 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
         FC_ASSERT(decay_rate.to_seconds() > 0);
 
         uint128_t total_claims = recent_claims;
-        total_claims -= (total_claims * (now - last_payout_check).to_seconds()) / decay_rate.to_seconds();
+        int64_t decay_rate_s = decay_rate.to_seconds();
+        int64_t delta = std::min((now - last_payout_check).to_seconds(), decay_rate_s);
+
+        total_claims -= (total_claims * delta) / decay_rate_s;
+
+        if (total_claims < uint128_t(reward_fund.value))
+        {
+            total_claims = uint128_t(reward_fund.value);
+        }
+
         for (const share_type& rshares : vrshares)
         {
             total_claims += evaluate_reward_curve(rshares.value, author_reward_curve);
