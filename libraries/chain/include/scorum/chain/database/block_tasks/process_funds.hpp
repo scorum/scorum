@@ -22,6 +22,7 @@ private:
     asset distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward);
     void charge_account_reward(block_task_context& ctx, const account_object&, const asset& reward);
     void charge_content_reward(block_task_context& ctx, const asset& reward);
+    void charge_activity_reward(block_task_context& ctx, const asset& reward);
 };
 }
 }

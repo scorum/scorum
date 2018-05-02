@@ -6,6 +6,8 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 
+#include <scorum/rewards_math/formulas.hpp>
+
 #include <boost/lambda/lambda.hpp>
 #include <boost/multi_index/detail/unbounded.hpp>
 
@@ -333,6 +335,9 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
     update(account, [&](account_object& a) {
         a.voting_power = voting_power;
         a.last_vote_time = t;
+        a.last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
+            voting_power, t, SCORUM_VOTE_REGENERATION_SECONDS);
+        a.vote_reward_competitive_sp = a.effective_scorumpower();
     });
 }
 
@@ -602,11 +607,10 @@ std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() c
 {
     const auto& dprops_service = db_impl().obtain_service<dbs_dynamic_global_property>();
 
-    fc::time_point_sec current_time = dprops_service.head_block_time();
-    fc::time_point_sec min_vote_time_for_cashout = current_time - SCORUM_VOTE_REGENERATION_SECONDS;
+    fc::time_point_sec min_vote_time_for_cashout = dprops_service.head_block_time();
 
-    return get_range_by<by_last_vote_time>(min_vote_time_for_cashout < boost::lambda::_1,
-                                           boost::multi_index::unbounded);
+    return get_range_by<by_last_vote_cashout_time>(min_vote_time_for_cashout < boost::lambda::_1,
+                                                   boost::multi_index::unbounded);
 }
 } // namespace chain
 } // namespace scorum

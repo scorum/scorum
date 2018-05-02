@@ -108,15 +108,16 @@ asset process_funds::distribute_active_sp_holders_reward(block_task_context& ctx
     if (!active_sp_holders_array.empty())
     {
         // distribute
-        asset total_sp = std::accumulate(
-            active_sp_holders_array.begin(), active_sp_holders_array.end(), asset(0, SP_SYMBOL),
-            [&](asset& accumulator, const account_object& account) { return accumulator += account.scorumpower; });
+        asset total_sp = std::accumulate(active_sp_holders_array.begin(), active_sp_holders_array.end(),
+                                         asset(0, SP_SYMBOL), [&](asset& accumulator, const account_object& account) {
+                                             return accumulator += account.vote_reward_competitive_sp;
+                                         });
 
         if (total_sp.amount > 0)
         {
             for (const account_object& account : active_sp_holders_array)
             {
-                asset account_reward = reward * account.scorumpower.amount / total_sp.amount;
+                asset account_reward = reward * account.vote_reward_competitive_sp.amount / total_sp.amount;
 
                 charge_account_reward(ctx, account, account_reward);
 
@@ -127,9 +128,8 @@ asset process_funds::distribute_active_sp_holders_reward(block_task_context& ctx
     else
     {
         // put money in special fund
-        // TODO: replace content fund
-        // reward_fund_service_i& reward_fund_service = services.reward_fund_service();
-        // reward_fund_service.update([&](reward_fund_object& rfo) { rfo.activity_reward_balance_scr += reward; });
+        charge_activity_reward(ctx, reward);
+        distributed_reward += reward;
     }
 
     return distributed_reward;
@@ -139,6 +139,8 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
 {
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
+
+    ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, reward));
 
     if (reward.symbol() == SCORUM_SYMBOL)
     {
@@ -163,6 +165,22 @@ void process_funds::charge_content_reward(block_task_context& ctx, const asset& 
     {
         content_reward_fund_sp_service_i& reward_fund_service = services.content_reward_fund_sp_service();
         reward_fund_service.update([&](content_reward_fund_sp_object& rfo) { rfo.activity_reward_balance += reward; });
+    }
+}
+
+void process_funds::charge_activity_reward(block_task_context& ctx, const asset& reward)
+{
+    // TODO: replace content fund
+    // reward_fund_service_i& reward_fund_service = services.reward_fund_service();
+    // reward_fund_service.update([&](reward_fund_object& rfo) { rfo.activity_reward_balance_scr += reward; });
+
+    // data_service_factory_i& services = ctx.services();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+    }
+    else
+    {
     }
 }
 }

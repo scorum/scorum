@@ -186,6 +186,21 @@ struct producer_reward_operation : public virtual_operation
     asset reward; // in SCR or SP
 };
 
+struct active_sp_holders_reward_operation : public virtual_operation
+{
+    active_sp_holders_reward_operation()
+    {
+    }
+    active_sp_holders_reward_operation(const std::string& h, const asset& v)
+        : sp_holder(h)
+        , reward(v)
+    {
+    }
+
+    account_name_type sp_holder;
+    asset reward; // in SCR or SP
+};
+
 struct expired_contract_refund_operation : public virtual_operation
 {
     expired_contract_refund_operation()
@@ -214,4 +229,5 @@ FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink)
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation, (account)(scorumpower))
 FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward))
 FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(reward))
+FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation, (sp_holder)(reward))
 FC_REFLECT(scorum::protocol::expired_contract_refund_operation, (owner)(refund))

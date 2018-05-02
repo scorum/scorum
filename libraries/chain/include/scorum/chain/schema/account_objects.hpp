@@ -46,6 +46,8 @@ public:
     bool can_vote = true;
     percent_type voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
     time_point_sec last_vote_time;              ///< used to increase the voting power of this account the longer it goes without voting.
+    time_point_sec last_vote_cashout_time;
+    asset vote_reward_competitive_sp = asset(0, SP_SYMBOL);
 
     asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
 
@@ -186,7 +188,7 @@ struct by_last_post;
 struct by_scorum_balance;
 struct by_smp_balance;
 struct by_created_by_genesis;
-struct by_last_vote_time;
+struct by_last_vote_cashout_time;
 
 /**
  * @ingroup object_index
@@ -245,10 +247,10 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::id>>,
                                                                composite_key_compare<std::greater<asset>,
                                                                                      std::less<account_id_type>>>,
-                                                ordered_non_unique<tag<by_last_vote_time>,
+                                                ordered_non_unique<tag<by_last_vote_cashout_time>,
                                                                    member<account_object,
                                                                           time_point_sec,
-                                                                          &account_object::last_vote_time>>>>
+                                                                          &account_object::last_vote_cashout_time>>>>
     account_index;
 
 struct by_account_id;
@@ -485,12 +487,11 @@ typedef shared_multi_index_container<change_recovery_account_request_object,
 } // namespace scorum
 
 // clang-format off
-
 FC_REFLECT( scorum::chain::account_object,
              (id)(name)(memo_key)(json_metadata)(proxy)(last_account_update)
              (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
-             (can_vote)(voting_power)(last_vote_time)
+             (can_vote)(voting_power)(last_vote_time)(last_vote_cashout_time)(vote_reward_competitive_sp)
              (balance)
              (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (proxied_vsf_votes)(witnesses_voted_for)
