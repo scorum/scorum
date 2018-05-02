@@ -56,6 +56,10 @@ percent_type calculate_restoring_power(percent_type voting_power,
                                        const time_point_sec& last_voted,
                                        const fc::microseconds& vote_regeneration_seconds);
 
+time_point_sec calculate_expected_restoring_time(percent_type voting_power,
+                                                 const time_point_sec& now,
+                                                 const fc::microseconds& vote_regeneration_seconds);
+
 percent_type calculate_used_power(percent_type voting_power,
                                   vote_weight_type vote_weight,
                                   uint16_t max_votes_per_day_voting_power_rate,

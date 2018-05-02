@@ -182,6 +182,16 @@ percent_type calculate_restoring_power(percent_type voting_power,
     FC_CAPTURE_AND_RETHROW((voting_power)(now)(last_voted))
 }
 
+time_point_sec calculate_expected_restoring_time(percent_type voting_power,
+                                                 const time_point_sec& now,
+                                                 const fc::microseconds& vote_regeneration_seconds)
+{
+    int64_t time_offset_micro
+        = vote_regeneration_seconds.count() * (SCORUM_100_PERCENT - voting_power) / SCORUM_100_PERCENT;
+
+    return now + fc::microseconds(std::max(int64_t(0), time_offset_micro));
+}
+
 percent_type calculate_used_power(percent_type voting_power,
                                   vote_weight_type vote_weight,
                                   uint16_t max_votes_per_day_voting_power_rate,
