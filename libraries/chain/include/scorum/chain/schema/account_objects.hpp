@@ -180,7 +180,7 @@ public:
 };
 
 class account_registration_bonus_object
-    : public object<change_recovery_account_request_object_type, account_registration_bonus_object>
+    : public object<account_registration_bonus_object_type, account_registration_bonus_object>
 {
 public:
     CHAINBASE_DEFAULT_CONSTRUCTOR(account_registration_bonus_object)
