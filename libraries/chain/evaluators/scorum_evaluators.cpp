@@ -394,7 +394,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 pr_parent_author = parent.author;
                 pr_parent_permlink = fc::to_string(parent.permlink);
-                pr_depth = parent.depth + 1;
+                pr_depth = parent.depth;
                 pr_category = fc::to_string(parent.category);
                 pr_root_comment = parent.root_comment;
             }
