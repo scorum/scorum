@@ -56,6 +56,7 @@ add_library( scorum_chain
              services/witness.cpp
              services/witness_vote.cpp
              services/genesis_state.cpp
+             services/account_registration_bonus.cpp
 
              data_service_factory.cpp
 
@@ -92,6 +93,9 @@ add_library( scorum_chain
              database/block_tasks/process_comments_cashout.cpp
              database/block_tasks/process_vesting_withdrawals.cpp
              database/block_tasks/withdrawable_actors_impl.cpp
+             database/block_tasks/process_account_registration_bonus_expiration.cpp
+
+             database/process_user_activity.cpp
 
              ${HEADERS}
              ${hardfork_hpp_file}

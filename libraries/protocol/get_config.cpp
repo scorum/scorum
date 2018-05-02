@@ -126,6 +126,8 @@ fc::variant_object get_config()
 
     result["SCORUM_START_WITHDRAW_COEFFICIENT"] = SCORUM_START_WITHDRAW_COEFFICIENT;
 
+    result["SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS"] = SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS;
+
     return result;
 }
 } // namespace protocol

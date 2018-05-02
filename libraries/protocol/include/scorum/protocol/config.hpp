@@ -45,6 +45,8 @@ namespace detail {
 
         const uint32_t db_free_memory_threshold_mb;
 
+        const fc::microseconds expiraton_for_registration_bonus;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -231,6 +233,8 @@ namespace detail {
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           (account_name_type())
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
+
+#define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
 ///@}
 
 // clang-format on

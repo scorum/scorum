@@ -36,6 +36,8 @@ config::config() /// production config
     , min_vote_interval_sec(3)
 
     , db_free_memory_threshold_mb(100)
+
+    , expiraton_for_registration_bonus(fc::days(182))
 {
     // do nothing
 }
@@ -69,6 +71,8 @@ config::config(test_mode) /// test config
     , min_vote_interval_sec(0)
 
     , db_free_memory_threshold_mb(5)
+
+    , expiraton_for_registration_bonus(fc::minutes(30))
 {
     // do nothing
 }

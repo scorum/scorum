@@ -179,6 +179,21 @@ public:
     time_point_sec effective_on;
 };
 
+class account_registration_bonus_object
+    : public object<change_recovery_account_request_object_type, account_registration_bonus_object>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(account_registration_bonus_object)
+
+    id_type id;
+
+    account_name_type account;
+
+    asset bonus = asset(0, SP_SYMBOL);
+
+    time_point_sec expires;
+};
+
 struct by_name;
 struct by_proxy;
 struct by_last_post;
@@ -475,6 +490,28 @@ typedef shared_multi_index_container<change_recovery_account_request_object,
                                                                                      std::
                                                                                          less<change_recovery_account_request_id_type>>>>>
     change_recovery_account_request_index;
+
+typedef shared_multi_index_container<account_registration_bonus_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<account_registration_bonus_object,
+                                                                      account_registration_bonus_id_type,
+                                                                      &account_registration_bonus_object::id>>,
+                                                ordered_unique<tag<by_account>,
+                                                               member<account_registration_bonus_object,
+                                                                      account_name_type,
+                                                                      &account_registration_bonus_object::account>>,
+                                                ordered_unique<tag<by_expiration>,
+                                                               composite_key<account_registration_bonus_object,
+                                                                             member<account_registration_bonus_object,
+                                                                                    time_point_sec,
+                                                                                    &account_registration_bonus_object::
+                                                                                        expires>,
+                                                                             member<account_registration_bonus_object,
+                                                                                    account_registration_bonus_id_type,
+                                                                                    &account_registration_bonus_object::
+                                                                                        id>>>>>
+    account_registration_bonus_index;
+
 } // namespace chain
 } // namespace scorum
 
@@ -527,5 +564,10 @@ FC_REFLECT( scorum::chain::change_recovery_account_request_object,
              (id)(account_to_recover)(recovery_account)(effective_on)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::change_recovery_account_request_object, scorum::chain::change_recovery_account_request_index )
+
+FC_REFLECT( scorum::chain::account_registration_bonus_object,
+             (id)(account)(bonus)(expires)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::account_registration_bonus_object, scorum::chain::account_registration_bonus_index )
 
 // clang-format on

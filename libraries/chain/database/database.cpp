@@ -58,6 +58,8 @@
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
+#include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
+#include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -83,6 +85,7 @@ public:
     database_ns::process_comments_cashout _process_comments_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
     database_ns::process_contracts_expiration _process_contracts_expiration;
+    database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
 };
 
 database_impl::database_impl(database& self)
@@ -1117,6 +1120,7 @@ void database::initialize_indexes()
 {
     add_index<account_authority_index>();
     add_index<account_index>();
+    add_index<account_registration_bonus_index>();
     add_index<account_blogging_statistic_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
@@ -1351,6 +1355,7 @@ void database::_apply_block(const signed_block& next_block)
         _my->_process_funds.before(_my->_process_comments_cashout)
             .before(_my->_process_vesting_withdrawals)
             .before(_my->_process_contracts_expiration)
+            .before(_my->_process_account_registration_bonus_expiration)
             .apply(ctx);
 
         account_recovery_processing();
@@ -1500,6 +1505,9 @@ void database::_apply_transaction(const signed_transaction& trx)
         }
 
         notify_on_pre_apply_transaction(trx);
+
+        database_ns::user_activity_context user_activity_ctx(static_cast<data_service_factory&>(*this), trx);
+        database_ns::process_user_activity_task().apply(user_activity_ctx);
 
         // Finally process the operations
         _current_op_in_trx = 0;
