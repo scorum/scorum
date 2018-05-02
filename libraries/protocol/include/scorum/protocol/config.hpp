@@ -45,8 +45,14 @@ namespace detail {
 
         const uint32_t db_free_memory_threshold_mb;
 
-        const fc::microseconds expiraton_for_registration_bonus;
+        const fc::time_point_sec initial_date;
 
+        const fc::time_point_sec blogging_start_date;
+
+        const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
+
+        const fc::microseconds expiraton_for_registration_bonus;
+        
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -233,6 +239,11 @@ namespace detail {
 #define SCORUM_PROXY_TO_SELF_ACCOUNT           (account_name_type())
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
+
+
+#define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
+
+#define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
 
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
 ///@}

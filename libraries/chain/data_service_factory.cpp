@@ -18,7 +18,7 @@
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/scorumpower_delegation.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route.hpp>
 #include <scorum/chain/services/withdraw_scorumpower_route_statistic.hpp>
@@ -54,6 +54,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (reward)
         (reward_fund_scr)
         (reward_fund_sp)
+        (fifa_world_cup_2018_bounty_reward_fund)
         (scorumpower_delegation)
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)

@@ -421,8 +421,6 @@ typedef shared_multi_index_container<scorumpower_delegation_expiration_object,
                                                                                          less<scorumpower_delegation_expiration_id_type>>>>>
     scorumpower_delegation_expiration_index;
 
-struct by_expiration;
-
 typedef shared_multi_index_container<account_recovery_request_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<account_recovery_request_object,

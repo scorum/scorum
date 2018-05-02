@@ -65,7 +65,7 @@ public:
 
         _account_registration_bonus_service.create([&](account_registration_bonus_object& a) {
             a.account = new_account;
-            a.bonus = bonus;
+            a.bonus += asset(bonus.amount, SP_SYMBOL);
             a.expires = _dprops_service.head_block_time() + SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS.to_seconds();
         });
     }

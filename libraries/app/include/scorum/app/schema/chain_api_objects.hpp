@@ -18,16 +18,8 @@ struct reward_fund_api_obj
     {
     }
 
-    reward_fund_api_obj(const scorum::chain::reward_fund_scr_object& obj)
-        : activity_reward_balance(obj.activity_reward_balance)
-        , recent_claims(obj.recent_claims)
-        , last_update(obj.last_update)
-        , author_reward_curve(obj.author_reward_curve)
-        , curation_reward_curve(obj.curation_reward_curve)
-    {
-    }
-
-    reward_fund_api_obj(const scorum::chain::reward_fund_sp_object& obj)
+    template <class FundType>
+    reward_fund_api_obj(const FundType& obj)
         : activity_reward_balance(obj.activity_reward_balance)
         , recent_claims(obj.recent_claims)
         , last_update(obj.last_update)

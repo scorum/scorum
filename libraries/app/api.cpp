@@ -251,7 +251,14 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
 
 class check_banned_operations_visitor
 {
+    bool allow_blogging_api = true;
+
 public:
+    explicit check_banned_operations_visitor(const fc::time_point_sec& now)
+    {
+        allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
+    }
+
     using result_type = bool;
 
     // available by default
@@ -260,24 +267,22 @@ public:
         return true;
     }
 
-#ifdef LOCK_BLOGGING_API
     bool operator()(const scorum::protocol::comment_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::comment_options_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::delete_comment_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::vote_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
-#endif // LOCK_BLOGGING_API
 
 #ifdef LOCK_BUDGETS_API
     bool operator()(const scorum::protocol::create_budget_operation&) const
@@ -300,9 +305,10 @@ void network_broadcast_api::broadcast_transaction_with_callback(confirmation_cal
     else
     {
         FC_ASSERT(!check_max_block_age(_max_block_age));
+        auto now = _app.chain_database()->head_block_time();
         for (const auto& op : trx.operations)
         {
-            FC_ASSERT(op.visit(check_banned_operations_visitor()), "Operation ${op} is locked.", ("op", op));
+            FC_ASSERT(op.visit(check_banned_operations_visitor(now)), "Operation ${op} is locked.", ("op", op));
         }
         trx.validate();
         _callbacks[trx.id()] = cb;

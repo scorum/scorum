@@ -25,6 +25,7 @@ DATA_SERVICE_FACTORY_DECLARE(
         (reward)
         (reward_fund_scr)
         (reward_fund_sp)
+        (fifa_world_cup_2018_bounty_reward_fund)
         (scorumpower_delegation)
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)
