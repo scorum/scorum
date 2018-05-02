@@ -113,6 +113,22 @@ BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
     BOOST_REQUIRE_EQUAL(sam_balance_delta, ASSET_NULL_SP); // no votes for sam comment
 
     BOOST_REQUIRE_EQUAL(alice_balance_delta + bob_balance_delta, bounty_fund);
+
+    BOOST_TEST_MESSAGE("--- Test no double reward");
+
+    alice_old_balance = account_service.get_account(alice.name).scorumpower;
+    bob_old_balance = account_service.get_account(bob.name).scorumpower;
+
+    generate_blocks(dgp_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
+
+    alice_balance = account_service.get_account(alice.name).scorumpower;
+    bob_balance = account_service.get_account(bob.name).scorumpower;
+
+    alice_balance_delta = alice_balance - alice_old_balance;
+    bob_balance_delta = bob_balance - bob_old_balance;
+
+    BOOST_REQUIRE_EQUAL(alice_balance_delta, ASSET_NULL_SP);
+    BOOST_REQUIRE_EQUAL(bob_balance_delta, ASSET_NULL_SP);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
