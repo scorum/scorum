@@ -2,6 +2,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <scorum/tags/tags_objects.hpp>
 #include <scorum/tags/tags_api.hpp>
 #include <scorum/tags/tags_plugin.hpp>
 
@@ -231,6 +232,86 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
 
     BOOST_CHECK_EQUAL(discussions[0].permlink, "one");
     BOOST_CHECK_EQUAL(discussions[1].permlink, "zero");
+}
+
+SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
+{
+    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+
+    BOOST_REQUIRE_EQUAL(0u, index.size());
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "zero";
+        op.body = "post";
+    });
+
+    BOOST_REQUIRE_EQUAL(1u, index.size());
+
+    auto itr = index.begin();
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+}
+
+SCORUM_TEST_CASE(create_tags_from_json_metadata)
+{
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "zero";
+        op.body = "post";
+        op.json_metadata = "{\"tags\" : [\"football\", \"tenis\"]}";
+    });
+
+    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    BOOST_REQUIRE_EQUAL(3u, index.size());
+
+    auto itr = index.begin();
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "football");
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "tenis");
+}
+
+SCORUM_TEST_CASE(create_two_posts_with_same_tags)
+{
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "zero";
+        op.body = "post";
+        op.json_metadata = "{\"tags\" : [\"football\"]}";
+    });
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "one";
+        op.body = "post";
+        op.json_metadata = "{\"tags\" : [\"football\"]}";
+    });
+
+    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    BOOST_REQUIRE_EQUAL(4u, index.size());
+
+    auto itr = index.begin();
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+    BOOST_CHECK(itr->comment == 0u);
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "football");
+    BOOST_CHECK(itr->comment == 0u);
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+    BOOST_CHECK(itr->comment == 1u);
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "football");
+    BOOST_CHECK(itr->comment == 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
