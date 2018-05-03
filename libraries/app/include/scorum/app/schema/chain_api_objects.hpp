@@ -12,7 +12,28 @@ namespace app {
 
 using namespace scorum::protocol;
 
-typedef api_obj<scorum::chain::reward_fund_object> reward_fund_api_obj;
+struct reward_fund_api_obj
+{
+    reward_fund_api_obj()
+    {
+    }
+
+    template <class FundType>
+    reward_fund_api_obj(const FundType& obj)
+        : activity_reward_balance(obj.activity_reward_balance)
+        , recent_claims(obj.recent_claims)
+        , last_update(obj.last_update)
+        , author_reward_curve(obj.author_reward_curve)
+        , curation_reward_curve(obj.curation_reward_curve)
+    {
+    }
+
+    asset activity_reward_balance; // in SCR or SP
+    fc::uint128_t recent_claims = 0;
+    time_point_sec last_update;
+    curve_id author_reward_curve;
+    curve_id curation_reward_curve;
+};
 
 struct scheduled_hardfork_api_obj
 {
@@ -78,18 +99,22 @@ struct chain_capital_api_obj
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
     asset fund_budget_balance = asset(0, SCORUM_SYMBOL);
     asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
-    asset content_reward_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_sp_balance = asset(0, SP_SYMBOL);
 };
 }
 }
 
-FC_REFLECT(scorum::app::scheduled_hardfork_api_obj, (hf_version)(live_time))
-FC_REFLECT(scorum::app::chain_capital_api_obj,
-           (total_supply)(circulating_capital)(total_scorumpower)(registration_pool_balance)(fund_budget_balance)(
-               reward_pool_balance)(content_reward_balance))
+FC_REFLECT(scorum::app::reward_fund_api_obj,
+           (activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
 
-FC_REFLECT_DERIVED(scorum::app::reward_fund_api_obj, (scorum::chain::reward_fund_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT(scorum::app::scheduled_hardfork_api_obj, (hf_version)(live_time))
+
 FC_REFLECT_DERIVED(scorum::app::chain_properties_api_obj,
                    (scorum::witness::reserve_ratio_object),
                    (chain_id)(head_block_id)(head_block_number)(last_irreversible_block_number)(current_aslot)(time)(
                        current_witness)(median_chain_props)(majority_version)(hf_version))
+
+FC_REFLECT(scorum::app::chain_capital_api_obj,
+           (total_supply)(circulating_capital)(total_scorumpower)(registration_pool_balance)(fund_budget_balance)(
+               reward_pool_balance)(content_reward_scr_balance)(content_reward_sp_balance))

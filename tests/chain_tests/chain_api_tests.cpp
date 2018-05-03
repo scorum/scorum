@@ -6,7 +6,7 @@
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
@@ -107,17 +107,19 @@ SCORUM_TEST_CASE(get_chain_capital_test)
                         db.obtain_service<chain::dbs_registration_pool>().get().balance);
     BOOST_REQUIRE_EQUAL(capital.fund_budget_balance, db.obtain_service<chain::dbs_budget>().get_fund_budget().balance);
     BOOST_REQUIRE_EQUAL(capital.reward_pool_balance, db.obtain_service<chain::dbs_reward>().get().balance);
-    BOOST_REQUIRE_EQUAL(capital.content_reward_balance,
-                        db.obtain_service<chain::dbs_reward_fund>().get().activity_reward_balance_scr);
+    BOOST_REQUIRE_EQUAL(capital.content_reward_scr_balance,
+                        db.obtain_service<chain::dbs_reward_fund_scr>().get().activity_reward_balance);
+    BOOST_REQUIRE_EQUAL(capital.content_reward_sp_balance,
+                        db.obtain_service<chain::dbs_reward_fund_sp>().get().activity_reward_balance);
 }
 
 SCORUM_TEST_CASE(get_reward_fund_test)
 {
-    auto reward = _api_call.get_reward_fund();
+    auto reward = _api_call.get_reward_fund(reward_fund_type::reward_fund_sp);
 
-    const auto& fund = db.obtain_service<chain::dbs_reward_fund>().get();
+    const auto& fund = db.obtain_service<chain::dbs_reward_fund_sp>().get();
 
-    BOOST_REQUIRE_EQUAL(reward.activity_reward_balance_scr, fund.activity_reward_balance_scr);
+    BOOST_REQUIRE_EQUAL(reward.activity_reward_balance, fund.activity_reward_balance);
     BOOST_REQUIRE(reward.recent_claims == fund.recent_claims);
     BOOST_REQUIRE(reward.last_update == fund.last_update);
     BOOST_REQUIRE(reward.author_reward_curve == fund.author_reward_curve);

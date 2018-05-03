@@ -17,6 +17,17 @@ dbs_atomicswap::dbs_atomicswap(database& db)
 {
 }
 
+dbs_atomicswap::atomicswap_contracts_refs_type dbs_atomicswap::get_contracts() const
+{
+    atomicswap_contracts_refs_type ret;
+
+    const auto& idx = db_impl().get_index<atomicswap_contract_index>().indices().get<by_owner_name>();
+
+    std::copy(idx.cbegin(), idx.cend(), std::back_inserter(ret));
+
+    return ret;
+}
+
 dbs_atomicswap::atomicswap_contracts_refs_type dbs_atomicswap::get_contracts(const account_object& owner) const
 {
     atomicswap_contracts_refs_type ret;
@@ -135,35 +146,6 @@ void dbs_atomicswap::refund_contract(const atomicswap_contract_object& contract)
     account_service.increase_balance(owner, contract.amount);
 
     remove(contract);
-}
-
-void dbs_atomicswap::check_contracts_expiration()
-{
-    atomicswap_contracts_refs_type contracts;
-
-    const auto& idx = db_impl().get_index<atomicswap_contract_index>().indices().get<by_owner_name>();
-    for (auto it = idx.cbegin(); it != idx.cend(); ++it)
-    {
-        contracts.push_back(std::cref(*it));
-    }
-
-    const dynamic_global_property_object& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
-
-    for (const atomicswap_contract_object& contract : contracts)
-    {
-        if (props.time >= contract.deadline)
-        {
-            if (contract.secret.empty())
-            {
-                // only for initiator or not redeemed participant contracts
-                refund_contract(contract);
-            }
-            else
-            {
-                remove(contract);
-            }
-        }
-    }
 }
 
 std::size_t dbs_atomicswap::_contracts_per_recipient(const account_name_type& owner,

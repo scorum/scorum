@@ -11,9 +11,12 @@ set( SOURCES
     witness_data_service_tests.cpp
     operation_time_tests.cpp
     reward_service_tests.cpp
+    rewards/blogging_common.cpp
     rewards/vote_apply_tests.cpp
     rewards/comment_beneficiaries_apply_tests.cpp
     rewards/per_block_reward_distribution.cpp
+    rewards/fifa_world_cup_2018_bounty_reward_fund_tests.cpp
+    rewards/comment_cashout_from_scr_fund_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp

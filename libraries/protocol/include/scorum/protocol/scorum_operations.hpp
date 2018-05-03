@@ -118,7 +118,6 @@ struct comment_operation : public base_operation
  *  operation allows authors to update properties associated with their post.
  *
  *  The max_accepted_payout may be decreased, but never increased.
- *  The percent_scrs may be decreased, but never increased
  *
  */
 struct comment_options_operation : public base_operation
@@ -128,8 +127,6 @@ struct comment_options_operation : public base_operation
 
     asset max_accepted_payout
         = asset::maximum(SCORUM_SYMBOL); /// SCR value of the maximum payout this post will receive
-    uint16_t percent_scrs
-        = SCORUM_100_PERCENT; /// the percent of Scorum Dollars to key, unkept amounts will be received as Scorum Power
     bool allow_votes = true; /// allows a post to receive votes;
     bool allow_curation_rewards = true; /// allows voters to receive curation rewards. Rewards return to reward fund.
     comment_options_extensions_type extensions;
@@ -791,7 +788,7 @@ FC_REFLECT( scorum::protocol::comment_operation, (parent_author)(parent_permlink
 FC_REFLECT( scorum::protocol::vote_operation, (voter)(author)(permlink)(weight) )
 
 FC_REFLECT( scorum::protocol::delete_comment_operation, (author)(permlink) )
-FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_scrs)(allow_votes)(allow_curation_rewards)(extensions) )
+FC_REFLECT( scorum::protocol::comment_options_operation, (author)(permlink)(max_accepted_payout)(allow_votes)(allow_curation_rewards)(extensions) )
 
 FC_REFLECT( scorum::protocol::escrow_transfer_operation, (from)(to)(scorum_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) )
 FC_REFLECT( scorum::protocol::escrow_approve_operation, (from)(to)(agent)(who)(escrow_id)(approve) )

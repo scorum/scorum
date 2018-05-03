@@ -4,6 +4,10 @@
 
 #include <fc/api.hpp>
 
+#ifndef API_ACCOUNT_STATISTICS
+#define API_ACCOUNT_STATISTICS "account_statistics_api"
+#endif
+
 namespace scorum {
 namespace app {
 struct api_context;

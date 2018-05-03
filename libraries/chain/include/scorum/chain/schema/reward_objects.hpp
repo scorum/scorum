@@ -9,33 +9,54 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
+using scorum::protocol::asset_symbol_type;
 using scorum::protocol::curve_id;
 
-class reward_fund_object : public object<reward_fund_object_type, reward_fund_object>
+template <uint16_t ObjectType, asset_symbol_type SymbolType>
+class reward_fund_object : public object<ObjectType, reward_fund_object<ObjectType, SymbolType>>
 {
 public:
     CHAINBASE_DEFAULT_CONSTRUCTOR(reward_fund_object)
 
+    typedef typename object<ObjectType, reward_fund_object<ObjectType, SymbolType>>::id_type id_type;
+
     id_type id;
 
-    asset activity_reward_balance_scr = asset(0, SCORUM_SYMBOL);
+    asset activity_reward_balance = asset(0, SymbolType);
     fc::uint128_t recent_claims = 0;
     time_point_sec last_update;
     curve_id author_reward_curve;
     curve_id curation_reward_curve;
 };
 
-struct by_name;
-typedef shared_multi_index_container<reward_fund_object,
-                                     indexed_by<ordered_unique<tag<by_id>,
-                                                               member<reward_fund_object,
-                                                                      reward_fund_id_type,
-                                                                      &reward_fund_object::id>>>>
-    reward_fund_index;
+template <typename FundObjectType>
+using reward_fund_index
+    = shared_multi_index_container<FundObjectType,
+                                   indexed_by<ordered_unique<tag<by_id>,
+                                                             member<FundObjectType,
+                                                                    typename FundObjectType::id_type,
+                                                                    &FundObjectType::id>>>>;
+
+using reward_fund_scr_object = reward_fund_object<reward_fund_scr_object_type, SCORUM_SYMBOL>;
+using reward_fund_sp_object = reward_fund_object<reward_fund_sp_object_type, SP_SYMBOL>;
+using fifa_world_cup_2018_bounty_reward_fund_object
+    = reward_fund_object<fifa_world_cup_2018_bounty_reward_fund_type, SP_SYMBOL>;
+
+using reward_fund_scr_index = reward_fund_index<reward_fund_scr_object>;
+using reward_fund_sp_index = reward_fund_index<reward_fund_sp_object>;
+using fifa_world_cup_2018_bounty_reward_fund_index = reward_fund_index<fifa_world_cup_2018_bounty_reward_fund_object>;
 
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::reward_fund_object,
-           (id)(activity_reward_balance_scr)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::reward_fund_object, scorum::chain::reward_fund_index)
+FC_REFLECT(scorum::chain::reward_fund_scr_object,
+           (id)(activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
+FC_REFLECT(scorum::chain::reward_fund_sp_object,
+           (id)(activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
+FC_REFLECT(scorum::chain::fifa_world_cup_2018_bounty_reward_fund_object,
+           (id)(activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
+
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::reward_fund_scr_object, scorum::chain::reward_fund_scr_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::reward_fund_sp_object, scorum::chain::reward_fund_sp_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::fifa_world_cup_2018_bounty_reward_fund_object,
+                         scorum::chain::fifa_world_cup_2018_bounty_reward_fund_index)
