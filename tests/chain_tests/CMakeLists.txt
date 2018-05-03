@@ -10,9 +10,12 @@ set( SOURCES
     witness_data_service_tests.cpp
     operation_time_tests.cpp
     reward_service_tests.cpp
+    rewards/blogging_common.cpp
     rewards/vote_apply_tests.cpp
     rewards/comment_beneficiaries_apply_tests.cpp
     rewards/per_block_reward_distribution.cpp
+    rewards/fifa_world_cup_2018_bounty_reward_fund_tests.cpp
+    rewards/comment_cashout_from_scr_fund_tests.cpp
     rewards/comment_hierarchy_reward_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
@@ -30,6 +33,7 @@ set( SOURCES
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
+    plugins/tags/tags_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     genesis_db_tests.cpp

@@ -15,6 +15,8 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
 
+#include <chrono>
+
 namespace scorum {
 namespace blockchain_monitoring {
 
@@ -22,12 +24,49 @@ namespace detail {
 
 using namespace scorum::protocol;
 
+//////////////////////////////////////////////////////////////////////////
+class perfomance_timer
+{
+    typedef std::chrono::high_resolution_clock Clock;
+    Clock::time_point _block_start_time = Clock::time_point::min();
+    Clock::duration _last_block_processing_duration = Clock::duration::zero();
+
+    void start()
+    {
+        _block_start_time = Clock::now();
+    }
+
+    void stop()
+    {
+        if (_block_start_time != Clock::time_point::min())
+        {
+            _last_block_processing_duration = Clock::now() - _block_start_time;
+            _block_start_time = Clock::time_point::min();
+        }
+    }
+
+public:
+    perfomance_timer(chain::database& db)
+    {
+        db.pre_applied_block.connect([&](const signed_block& b) { this->start(); });
+        db.applied_block.connect([&](const signed_block& b) { this->stop(); });
+    }
+
+    std::chrono::microseconds get_last_block_duration() const
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(_last_block_processing_duration);
+    }
+};
+//////////////////////////////////////////////////////////////////////////
 class blockchain_monitoring_plugin_impl
     : public common_statistics::common_statistics_plugin_impl<bucket_object, blockchain_monitoring_plugin>
 {
 public:
+    perfomance_timer _timer;
+
     blockchain_monitoring_plugin_impl(blockchain_monitoring_plugin& plugin)
         : base_plugin_impl(plugin)
+        , _timer(plugin.database())
     {
     }
     virtual ~blockchain_monitoring_plugin_impl()
@@ -144,14 +183,31 @@ public:
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             b.payouts++;
-            b.scr_paid_to_authors += op.scorum_payout.amount;
-            b.scorumpower_paid_to_authors += op.vesting_payout.amount;
+            auto reward_symbol = op.reward.symbol();
+            if (SCORUM_SYMBOL == reward_symbol)
+            {
+                b.scr_paid_to_authors += op.reward.amount;
+            }
+            else if (SP_SYMBOL == reward_symbol)
+            {
+                b.scorumpower_paid_to_authors += op.reward.amount;
+            }
         });
     }
 
     void operator()(const curation_reward_operation& op) const
     {
-        _db.modify(_bucket, [&](bucket_object& b) { b.scorumpower_paid_to_curators += op.reward.amount; });
+        _db.modify(_bucket, [&](bucket_object& b) {
+            auto reward_symbol = op.reward.symbol();
+            if (SCORUM_SYMBOL == reward_symbol)
+            {
+                b.scr_paid_to_curators += op.reward.amount;
+            }
+            else if (SP_SYMBOL == reward_symbol)
+            {
+                b.scorumpower_paid_to_curators += op.reward.amount;
+            }
+        });
     }
 
     void operator()(const transfer_to_scorumpower_operation& op) const
@@ -343,6 +399,11 @@ const flat_set<uint32_t>& blockchain_monitoring_plugin::get_tracked_buckets() co
 uint32_t blockchain_monitoring_plugin::get_max_history_per_bucket() const
 {
     return _my->_maximum_history_per_bucket_size;
+}
+
+uint32_t blockchain_monitoring_plugin::get_last_block_duration_microseconds() const
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(_my->_timer.get_last_block_duration()).count();
 }
 }
 } // scorum::blockchain_monitoring

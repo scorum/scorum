@@ -45,6 +45,12 @@ namespace detail {
 
         const uint32_t db_free_memory_threshold_mb;
 
+        const fc::time_point_sec initial_date;
+
+        const fc::time_point_sec blogging_start_date;
+
+        const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -157,8 +163,8 @@ namespace detail {
 #define SCORUM_MAX_VOTE_CHANGES                3
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
 
-#define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::seconds(60*5)) // 5 minutes
-#define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20)) // 20 seconds
+#define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::minutes(5))
+#define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20))
 
 #define SCORUM_MAX_ACCOUNT_WITNESS_VOTES       30
 
@@ -233,5 +239,9 @@ namespace detail {
 /// Represents the canonical root post parent account
 #define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
 ///@}
+
+#define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
+
+#define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
 
 // clang-format on

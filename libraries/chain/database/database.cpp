@@ -39,6 +39,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -49,13 +50,16 @@
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 
-#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -79,7 +83,10 @@ public:
 
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
+    database_ns::process_fifa_world_cup_2018_bounty_initialize _process_comments_bounty_initialize;
+    database_ns::process_fifa_world_cup_2018_bounty_cashout _process_comments_bounty_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
+    database_ns::process_contracts_expiration _process_contracts_expiration;
 };
 
 database_impl::database_impl(database& self)
@@ -1114,12 +1121,15 @@ void database::initialize_indexes()
 {
     add_index<account_authority_index>();
     add_index<account_index>();
+    add_index<account_blogging_statistic_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
     add_index<budget_index>();
     add_index<chain_property_index>();
     add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
+    add_index<comment_statistic_scr_index>();
+    add_index<comment_statistic_sp_index>();
     add_index<comment_vote_index>();
     add_index<decline_voting_rights_request_index>();
     add_index<dynamic_global_property_index>();
@@ -1129,7 +1139,9 @@ void database::initialize_indexes()
     add_index<proposal_object_index>();
     add_index<registration_committee_member_index>();
     add_index<registration_pool_index>();
-    add_index<reward_fund_index>();
+    add_index<reward_fund_scr_index>();
+    add_index<reward_fund_sp_index>();
+    add_index<fifa_world_cup_2018_bounty_reward_fund_index>();
     add_index<reward_pool_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
@@ -1341,9 +1353,15 @@ void database::_apply_block(const signed_block& next_block)
                                             static_cast<database_virtual_operations_emmiter_i&>(*this),
                                             _current_block_num);
 
-        _my->_process_funds.before(_my->_process_comments_cashout).before(_my->_process_vesting_withdrawals).apply(ctx);
-
-        obtain_service<dbs_atomicswap>().check_contracts_expiration();
+        // clang-format off
+        _my->_process_funds
+            .before(_my->_process_comments_bounty_initialize)
+            .before(_my->_process_comments_cashout)
+            .before(_my->_process_comments_bounty_cashout)
+            .before(_my->_process_vesting_withdrawals)
+            .before(_my->_process_contracts_expiration)
+            .apply(ctx);
+        // clang-format on
 
         account_recovery_processing();
         expire_escrow_ratification();
@@ -1901,7 +1919,17 @@ void database::validate_invariants() const
             total_supply += itr->pending_fee;
         }
 
-        total_supply += obtain_service<dbs_reward_fund>().get().activity_reward_balance_scr;
+        total_supply += obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
+        total_supply += asset(obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
+
+        dbs_fifa_world_cup_2018_bounty_reward_fund& fifa_world_cup_2018_bounty_reward_fund_service
+            = obtain_service<dbs_fifa_world_cup_2018_bounty_reward_fund>();
+        if (fifa_world_cup_2018_bounty_reward_fund_service.is_exists())
+        {
+            total_supply += asset(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance.amount,
+                                  SCORUM_SYMBOL);
+        }
+
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_reward>().get().balance;
 
