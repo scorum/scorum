@@ -17,7 +17,7 @@ void process_account_registration_bonus_expiration::on_apply(block_task_context&
         = ctx.services().account_registration_bonus_service();
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
-    const auto& accounts = account_registration_bonus_service.get_by_expration_time(dgp_service.head_block_time());
+    const auto& accounts = account_registration_bonus_service.get_by_expiration_time(dgp_service.head_block_time());
     for (const account_registration_bonus_object& account : accounts)
     {
         return_funds(ctx, account);

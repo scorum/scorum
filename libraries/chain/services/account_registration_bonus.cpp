@@ -23,7 +23,7 @@ void dbs_account_registration_bonus::remove_if_exist(const account_name_type& na
 }
 
 dbs_account_registration_bonus::account_registration_bonus_refs_type
-dbs_account_registration_bonus::get_by_expration_time(const fc::time_point_sec& until) const
+dbs_account_registration_bonus::get_by_expiration_time(const fc::time_point_sec& until) const
 {
     try
     {
