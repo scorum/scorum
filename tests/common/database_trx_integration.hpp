@@ -45,34 +45,6 @@ public:
     const asset& get_balance(const std::string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);
 
-    template <typename T>
-    void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key(), bool put_in_block = true)
-    {
-        push_operations(key, put_in_block, op);
-    }
-
-    template <typename... Ts> void push_operations(const fc::ecc::private_key& key, bool put_in_block, Ts&&... ops)
-    {
-        signed_transaction tx;
-
-        using expander = int[];
-        (void)expander{ 0, (void(tx.operations.push_back(std::forward<Ts>(ops))), 0)... };
-
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        if (key != fc::ecc::private_key())
-        {
-            tx.sign(key, db.get_chain_id());
-        }
-        tx.validate();
-        db.push_transaction(tx, default_skip);
-        validate_database();
-
-        if (put_in_block)
-        {
-            generate_block();
-        }
-    }
-
 protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 

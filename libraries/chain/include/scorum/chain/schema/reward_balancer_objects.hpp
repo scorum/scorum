@@ -34,13 +34,23 @@ using reward_balancer_index
 
 using content_reward_balancer_scr_object
     = reward_balancer_object<content_reward_balancer_scr_object_type, SCORUM_SYMBOL>;
+using voters_reward_balancer_scr_object = reward_balancer_object<voters_reward_balancer_scr_object_type, SCORUM_SYMBOL>;
+using voters_reward_balancer_sp_object = reward_balancer_object<voters_reward_balancer_sp_object_type, SP_SYMBOL>;
 
 using content_reward_balancer_scr_index = reward_balancer_index<content_reward_balancer_scr_object>;
+using voters_reward_balancer_scr_index = reward_balancer_index<voters_reward_balancer_scr_object>;
+using voters_reward_balancer_sp_index = reward_balancer_index<voters_reward_balancer_sp_object>;
 
 } // namespace chain
 } // namespace scorum
 
 FC_REFLECT(scorum::chain::content_reward_balancer_scr_object, (id)(balance)(current_per_block_reward))
+FC_REFLECT(scorum::chain::voters_reward_balancer_scr_object, (id)(balance)(current_per_block_reward))
+FC_REFLECT(scorum::chain::voters_reward_balancer_sp_object, (id)(balance)(current_per_block_reward))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::content_reward_balancer_scr_object,
                          scorum::chain::content_reward_balancer_scr_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::voters_reward_balancer_scr_object,
+                         scorum::chain::voters_reward_balancer_scr_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::voters_reward_balancer_sp_object,
+                         scorum::chain::voters_reward_balancer_sp_index)

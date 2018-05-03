@@ -1138,6 +1138,8 @@ void database::initialize_indexes()
     add_index<content_reward_fund_scr_index>();
     add_index<content_reward_fund_sp_index>();
     add_index<content_reward_balancer_scr_index>();
+    add_index<voters_reward_balancer_scr_index>();
+    add_index<voters_reward_balancer_sp_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
     add_index<scorumpower_delegation_index>();
@@ -1914,6 +1916,8 @@ void database::validate_invariants() const
             += asset(obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_content_reward_scr>().get().balance;
+        total_supply += obtain_service<dbs_voters_reward_scr>().get().balance;
+        total_supply += obtain_service<dbs_voters_reward_sp>().get().balance.amount;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {

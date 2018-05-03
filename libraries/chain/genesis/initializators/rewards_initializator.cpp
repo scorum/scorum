@@ -21,7 +21,7 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
 
     create_scr_reward_fund(ctx);
     create_sp_reward_fund(ctx);
-    create_balancer(ctx);
+    create_balancers(ctx);
     create_fund_budget(ctx);
 }
 
@@ -53,13 +53,19 @@ void rewards_initializator_impl::create_sp_reward_fund(initializator_context& ct
     });
 }
 
-void rewards_initializator_impl::create_balancer(initializator_context& ctx)
+void rewards_initializator_impl::create_balancers(initializator_context& ctx)
 {
-    content_reward_scr_service_i& reward_service = ctx.services().content_reward_scr_service();
+    content_reward_scr_service_i& content_reward_service = ctx.services().content_reward_scr_service();
+    voters_reward_scr_service_i& voters_reward_scr_service = ctx.services().voters_reward_scr_service();
+    voters_reward_sp_service_i& voters_reward_sp_service = ctx.services().voters_reward_sp_service();
 
-    FC_ASSERT(!reward_service.is_exists());
+    FC_ASSERT(!content_reward_service.is_exists());
+    FC_ASSERT(!voters_reward_scr_service.is_exists());
+    FC_ASSERT(!voters_reward_sp_service.is_exists());
 
-    reward_service.create([&](content_reward_balancer_scr_object& rp) { rp.balance = asset(0, SCORUM_SYMBOL); });
+    content_reward_service.create([&](content_reward_balancer_scr_object&) {});
+    voters_reward_scr_service.create([&](voters_reward_balancer_scr_object&) {});
+    voters_reward_sp_service.create([&](voters_reward_balancer_sp_object&) {});
 }
 
 void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)

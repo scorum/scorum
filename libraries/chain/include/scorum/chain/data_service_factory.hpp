@@ -24,6 +24,8 @@ DATA_SERVICE_FACTORY_DECLARE(
         (content_reward_scr)
         (content_reward_fund_scr)
         (content_reward_fund_sp)
+        (voters_reward_scr)
+        (voters_reward_sp)
         (scorumpower_delegation)
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)

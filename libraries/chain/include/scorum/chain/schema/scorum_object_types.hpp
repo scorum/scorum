@@ -59,6 +59,8 @@ enum object_type
     content_reward_fund_scr_object_type,
     content_reward_fund_sp_object_type,
     content_reward_balancer_scr_object_type,
+    voters_reward_balancer_scr_object_type,
+    voters_reward_balancer_sp_object_type,
     transaction_object_type,
     scorumpower_delegation_expiration_object_type,
     scorumpower_delegation_object_type,
@@ -175,6 +177,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (content_reward_fund_scr_object_type)
                 (content_reward_fund_sp_object_type)
                 (content_reward_balancer_scr_object_type)
+                (voters_reward_balancer_scr_object_type)
+                (voters_reward_balancer_sp_object_type)
                 (transaction_object_type)
                 (scorumpower_delegation_expiration_object_type)
                 (scorumpower_delegation_object_type)
