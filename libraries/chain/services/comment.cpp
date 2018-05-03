@@ -55,8 +55,7 @@ dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time(const fc::time_p
 
     auto upper_bound_it = idx.upper_bound(upper_bound, comp_cashout_time{});
 
-    comment_refs_type ret;
-    std::copy(idx.cbegin(), upper_bound_it, std::back_inserter(ret));
+    comment_refs_type ret(idx.cbegin(), upper_bound_it);
 
     return ret;
 }

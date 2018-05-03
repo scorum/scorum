@@ -126,14 +126,16 @@ struct comment_payout_update_operation : public virtual_operation
     comment_payout_update_operation()
     {
     }
-    comment_payout_update_operation(const account_name_type& a, const std::string& p)
+    comment_payout_update_operation(const account_name_type& a, const std::string& p, const asset& comment_payout)
         : author(a)
         , permlink(p)
+        , comment_payout(comment_payout)
     {
     }
 
     account_name_type author;
     std::string permlink;
+    asset comment_payout;
 };
 
 struct return_scorumpower_delegation_operation : public virtual_operation
@@ -197,7 +199,7 @@ FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
 FC_REFLECT(scorum::protocol::witness_miss_block_operation, (owner)(block_num))
 FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
-FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink))
+FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink)(comment_payout))
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation, (account)(scorumpower))
 FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward))
 FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(scorumpower))

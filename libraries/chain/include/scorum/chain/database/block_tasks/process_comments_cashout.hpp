@@ -27,10 +27,20 @@ private:
 
     comment_payout_result pay_for_comment(block_task_context& ctx,
                                           const comment_object& comment,
-                                          const asset& reward,
-                                          const asset& commenting_reward);
+                                          const asset& from_voting_payout,
+                                          const asset& from_commenting_payout);
 
     asset pay_curators(block_task_context& ctx, const comment_object& comment, asset& max_rewards);
+
+    struct by_depth_less
+    {
+        bool operator()(const comment_object& lhs, const comment_object& rhs) const;
+    };
+
+    using comment_refs_type = comment_service_i::comment_refs_type;
+    using comment_refs_set = std::set<comment_refs_type::value_type, by_depth_less>;
+
+    comment_refs_type collect_parents(block_task_context& ctx, const comment_refs_type& comments);
 };
 }
 }
