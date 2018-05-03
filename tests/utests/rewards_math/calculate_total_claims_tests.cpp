@@ -27,19 +27,23 @@ BOOST_FIXTURE_TEST_SUITE(rewards_math_calculate_total_claims_tests, rewards_math
 
 BOOST_AUTO_TEST_CASE(calculate_total_claims_invalid_params)
 {
-    SCORUM_REQUIRE_THROW(calculate_total_claims(recent_claims, now, last_payout_check, curve_id::linear,
-                                                { any_typical_rshares }, fc::microseconds()),
+    SCORUM_REQUIRE_THROW(calculate_decreasing_total_claims(recent_claims, now, last_payout_check, fc::microseconds()),
                          fc::exception);
 
-    SCORUM_REQUIRE_THROW(calculate_total_claims(recent_claims, last_payout_check, now, curve_id::linear,
-                                                { any_typical_rshares }, SCORUM_RECENT_RSHARES_DECAY_RATE),
-                         fc::exception);
+    SCORUM_REQUIRE_THROW(
+        calculate_decreasing_total_claims(recent_claims, last_payout_check, now, SCORUM_RECENT_RSHARES_DECAY_RATE),
+        fc::exception);
 }
 
 BOOST_AUTO_TEST_CASE(calculate_total_claims_positive)
 {
-    BOOST_CHECK_NO_THROW(calculate_total_claims(recent_claims, now, last_payout_check, curve_id::linear,
-                                                { any_typical_rshares }, SCORUM_RECENT_RSHARES_DECAY_RATE));
+    BOOST_CHECK_NO_THROW(
+        calculate_decreasing_total_claims(recent_claims, now, last_payout_check, SCORUM_RECENT_RSHARES_DECAY_RATE));
+
+    BOOST_CHECK_NO_THROW(calculate_total_claims(recent_claims, curve_id::linear, { any_typical_rshares }));
+
+    BOOST_CHECK_NO_THROW(calculate_total_claims(recent_claims + uint128_t(any_typical_rshares.value), curve_id::linear,
+                                                { any_typical_rshares }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

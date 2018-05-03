@@ -29,11 +29,11 @@ BOOST_AUTO_TEST_CASE(predict_payout_check_max_payout_limit_payout)
 {
     BOOST_CHECK_EQUAL(predict_payout(0, fund_balance, any_typical_rshares, curve_id::linear, max_payout,
                                      SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE),
-                      0);
+                      max_payout);
 
-    BOOST_CHECK_GT(predict_payout(0, fund_balance * 2, any_typical_rshares, curve_id::linear, max_payout,
+    BOOST_CHECK_GT(predict_payout(0, fund_balance, any_typical_rshares, curve_id::linear, max_payout * 2,
                                   SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE),
-                   0);
+                   max_payout);
 }
 
 BOOST_AUTO_TEST_CASE(predict_payout_check_recent_claims_limit_payout)

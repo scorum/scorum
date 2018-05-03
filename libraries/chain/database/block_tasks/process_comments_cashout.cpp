@@ -16,7 +16,9 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
 
     auto comments = comment_service.get_by_cashout_time(dgp_service.head_block_time());
 
+    impl.update_decreasing_total_claims(reward_fund_scr_service);
     impl.reward(reward_fund_scr_service, comments);
+    impl.update_decreasing_total_claims(reward_fund_sp_service);
     impl.reward(reward_fund_sp_service, comments);
 
     for (const comment_object& comment : comments)

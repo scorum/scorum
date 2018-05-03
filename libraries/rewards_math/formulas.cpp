@@ -22,18 +22,17 @@ share_type predict_payout(const uint128_t& recent_claims,
                           const fc::microseconds& decay_rate,
                           const share_type& min_comment_payout_share)
 {
-    uint128_t total_claims = calculate_total_claims(recent_claims, time_point_sec(), time_point_sec(),
-                                                    author_reward_curve, { rshares }, decay_rate);
+    uint128_t total_claims
+        = calculate_decreasing_total_claims(recent_claims, time_point_sec(), time_point_sec(), decay_rate);
+    total_claims = calculate_total_claims(total_claims, author_reward_curve, { rshares });
     return calculate_payout(rshares, total_claims, reward_fund, author_reward_curve, max_payout,
                             min_comment_payout_share);
 }
 
-uint128_t calculate_total_claims(const uint128_t& recent_claims,
-                                 const time_point_sec& now,
-                                 const time_point_sec& last_payout_check,
-                                 const curve_id author_reward_curve,
-                                 const shares_vector_type& vrshares,
-                                 const fc::microseconds& decay_rate)
+uint128_t calculate_decreasing_total_claims(const uint128_t& recent_claims,
+                                            const time_point_sec& now,
+                                            const time_point_sec& last_payout_check,
+                                            const fc::microseconds& decay_rate)
 {
     try
     {
@@ -46,6 +45,19 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
 
         total_claims -= (total_claims * delta) / decay_rate_s;
 
+        return total_claims;
+    }
+    FC_CAPTURE_AND_RETHROW((recent_claims)(now)(last_payout_check)(decay_rate))
+}
+
+uint128_t calculate_total_claims(const uint128_t& recent_claims,
+                                 const curve_id author_reward_curve,
+                                 const shares_vector_type& vrshares)
+{
+    try
+    {
+        uint128_t total_claims = recent_claims;
+
         for (const share_type& rshares : vrshares)
         {
             total_claims += evaluate_reward_curve(rshares.value, author_reward_curve);
@@ -53,7 +65,7 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
 
         return total_claims;
     }
-    FC_CAPTURE_AND_RETHROW((recent_claims)(now)(last_payout_check)(author_reward_curve)(vrshares))
+    FC_CAPTURE_AND_RETHROW((recent_claims)(author_reward_curve)(vrshares))
 }
 
 share_type calculate_payout(const share_type& rshares,
