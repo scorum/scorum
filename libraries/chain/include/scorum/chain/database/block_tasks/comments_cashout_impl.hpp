@@ -65,7 +65,7 @@ public:
 
         for (const comment_object& comment : comments_from_newest_to_oldest)
         {
-            asset publication_reward(0, SCORUM_SYMBOL);
+            asset publication_reward(0, reward_symbol);
 
             if (comment.net_rshares > 0)
             {
