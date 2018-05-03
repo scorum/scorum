@@ -1,4 +1,5 @@
-file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
+                          "plugins/tags/*.hpp")
 
 set( SOURCES
     main.cpp
@@ -30,6 +31,7 @@ set( SOURCES
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
     plugins/tags/tags_tests.cpp
+    plugins/tags/get_comments_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     genesis_db_tests.cpp
