@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         ACTORS((alice)(bob))
 
         vest("alice", ASSET_SCR(100e+3));
-        vest("bob", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(50e+3));
 
         generate_block();
 
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         {
             const auto& post_rf = db.obtain_service<dbs_reward_fund_sp>().get();
 
-            BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
+            BOOST_REQUIRE_EQUAL(post_rf.recent_claims.to_uint64(), alice_vshares.to_uint64());
             validate_database();
         }
 
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
             const auto& post_rf = db.obtain_service<dbs_reward_fund_sp>().get();
 
-            BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
+            BOOST_REQUIRE_EQUAL(post_rf.recent_claims.to_uint64(), alice_vshares.to_uint64());
 
             generate_block();
         }
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
             alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
             const auto& post_rf = db.obtain_service<dbs_reward_fund_sp>().get();
 
-            BOOST_REQUIRE(post_rf.recent_claims == alice_vshares + bob_vshares);
+            BOOST_REQUIRE_EQUAL(post_rf.recent_claims.to_uint64(), (alice_vshares + bob_vshares).to_uint64());
             validate_database();
         }
     }

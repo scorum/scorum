@@ -28,6 +28,8 @@ namespace detail {
         const fc::microseconds account_recovery_request_expiration_period;
         const fc::microseconds owner_update_limit;
 
+        const fc::microseconds recent_rshares_decay_rate;
+
         const uint32_t rewards_initial_supply_period_in_days;
         const uint32_t guaranted_reward_supply_period_in_days;
         const uint32_t reward_increase_threshold_in_days;
@@ -189,7 +191,7 @@ namespace detail {
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
 
-#define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
+#define SCORUM_RECENT_RSHARES_DECAY_RATE       (scorum::protocol::detail::get_config().recent_rshares_decay_rate)
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3

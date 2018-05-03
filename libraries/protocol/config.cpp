@@ -30,6 +30,8 @@ config::config() /// production config
     , account_recovery_request_expiration_period(fc::days(1))
     , owner_update_limit(fc::minutes(60))
 
+    , recent_rshares_decay_rate(fc::days(15))
+
     , rewards_initial_supply_period_in_days(2 * 365)
     , guaranted_reward_supply_period_in_days(30)
     , reward_increase_threshold_in_days(100)
@@ -74,6 +76,8 @@ config::config(test_mode) /// test config
     , owner_auth_recovery_period(fc::seconds(60))
     , account_recovery_request_expiration_period(fc::seconds(12))
     , owner_update_limit(fc::seconds(0))
+
+    , recent_rshares_decay_rate(fc::hours(1))
 
     , rewards_initial_supply_period_in_days(5)
     , guaranted_reward_supply_period_in_days(2)
