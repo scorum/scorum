@@ -15,7 +15,7 @@
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/scorumpower_delegation.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
@@ -394,7 +394,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 pr_parent_author = parent.author;
                 pr_parent_permlink = fc::to_string(parent.permlink);
-                pr_depth = parent.depth + 1;
+                pr_depth = parent.depth;
                 pr_category = fc::to_string(parent.category);
                 pr_root_comment = parent.root_comment;
             }
@@ -406,7 +406,7 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 com.last_update = now;
                 com.created = com.last_update;
                 com.active = com.last_update;
-                com.last_payout = fc::time_point_sec::min();
+                com.last_payout = fc::time_point_sec();
 
                 if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {

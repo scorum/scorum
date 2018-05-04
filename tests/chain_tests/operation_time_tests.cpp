@@ -8,7 +8,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/rewards_math/curve.hpp>
@@ -596,7 +596,6 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
 
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
                       == fc::time_point_sec::maximum());
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value == 0);
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "bob";
@@ -612,7 +611,6 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
 
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
                       == fc::time_point_sec::maximum());
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value == 0);
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "dave";
@@ -628,7 +626,6 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         db.push_transaction(tx, 0);
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
                       == fc::time_point_sec::maximum());
-        BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).net_rshares.value == 0);
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         comment.body = "test4";

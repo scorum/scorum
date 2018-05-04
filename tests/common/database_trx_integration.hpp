@@ -45,6 +45,12 @@ public:
     const asset& get_balance(const std::string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);
 
+    template <typename T>
+    void push_operation_only(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key())
+    {
+        push_operation(op, key, false);
+    }
+
 protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 

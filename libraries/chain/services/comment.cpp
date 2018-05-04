@@ -1,12 +1,18 @@
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/database/database.hpp>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/multi_index/detail/unbounded.hpp>
+
 #include <tuple>
+#include <limits>
 
 using namespace scorum::protocol;
 
 namespace scorum {
 namespace chain {
+
+#define ALL_IDS std::numeric_limits<int64_t>::max()
 
 dbs_comment::dbs_comment(database& db)
     : base_service_type(db)
@@ -31,22 +37,25 @@ const comment_object& dbs_comment::get(const account_name_type& author, const st
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
-dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time(const until_checker_type& fn) const
+dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time(const fc::time_point_sec& until) const
 {
-    comment_refs_type ret;
-
-    const auto& idx = db_impl().get_index<comment_index>().indices().get<by_cashout_time>();
-    auto it = idx.cbegin();
-    const auto it_end = idx.cend();
-    while (it != it_end)
+    try
     {
-        if (!fn(*it))
-            break;
-        ret.push_back(std::cref(*it));
-        ++it;
+        return get_range_by<by_cashout_time>(::boost::multi_index::unbounded,
+                                             ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
     }
+    FC_CAPTURE_AND_RETHROW((until))
+}
 
-    return ret;
+dbs_comment::comment_refs_type dbs_comment::get_by_create_time(const fc::time_point_sec& until,
+                                                               const checker_type& filter) const
+{
+    try
+    {
+        return get_filtered_range_by<by_created>(::boost::multi_index::unbounded,
+                                                 ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS), filter);
+    }
+    FC_CAPTURE_AND_RETHROW((until))
 }
 
 bool dbs_comment::is_exists(const account_name_type& author, const std::string& permlink) const

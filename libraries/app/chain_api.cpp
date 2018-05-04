@@ -3,7 +3,7 @@
 #include <scorum/app/application.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
@@ -83,6 +83,12 @@ reward_fund_api_obj chain_api::get_reward_fund(reward_fund_type type_of_fund) co
         case reward_fund_type::content_reward_fund_sp:
         {
             auto& rf_service = _db.obtain_service<dbs_content_reward_fund_sp>();
+            FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
+            return reward_fund_api_obj(rf_service.get());
+        }
+        case reward_fund_type::content_fifa_world_cup_2018_bounty_reward_fund:
+        {
+            auto& rf_service = _db.obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
             FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
             return reward_fund_api_obj(rf_service.get());
         }

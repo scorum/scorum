@@ -58,6 +58,7 @@ enum object_type
     registration_pool_object_type,
     content_reward_fund_scr_object_type,
     content_reward_fund_sp_object_type,
+    content_fifa_world_cup_2018_bounty_reward_fund_type,
     content_reward_balancer_scr_object_type,
     voters_reward_balancer_scr_object_type,
     voters_reward_balancer_sp_object_type,
@@ -85,6 +86,7 @@ class budget_object;
 class chain_property_object;
 class change_recovery_account_request_object;
 class comment_object;
+class comments_bounty_fund_object;
 class comment_vote_object;
 class decline_voting_rights_request_object;
 class dynamic_global_property_object;
@@ -117,6 +119,7 @@ using budget_id_type = oid<budget_object>;
 using chain_property_id_type = oid<chain_property_object>;
 using change_recovery_account_request_id_type = oid<change_recovery_account_request_object>;
 using comment_id_type = oid<comment_object>;
+using comments_bounty_fund_id_type = oid<comments_bounty_fund_object>;
 using comment_vote_id_type = oid<comment_vote_object>;
 using decline_voting_rights_request_id_type = oid<decline_voting_rights_request_object>;
 using dynamic_global_property_id_type = oid<dynamic_global_property_object>;
@@ -176,6 +179,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (registration_pool_object_type)
                 (content_reward_fund_scr_object_type)
                 (content_reward_fund_sp_object_type)
+                (content_fifa_world_cup_2018_bounty_reward_fund_type)
                 (content_reward_balancer_scr_object_type)
                 (voters_reward_balancer_scr_object_type)
                 (voters_reward_balancer_sp_object_type)

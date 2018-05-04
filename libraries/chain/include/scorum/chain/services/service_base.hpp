@@ -11,6 +11,7 @@ template <class T> struct base_service_i
 {
     using object_type = T;
     using modifier_type = std::function<void(object_type&)>;
+    using object_cref_type = std::reference_wrapper<const object_type>;
 
     virtual ~base_service_i()
     {
@@ -46,7 +47,7 @@ protected:
 public:
     using modifier_type = typename service_interface::modifier_type;
     using object_type = typename service_interface::object_type;
-    using object_cref_type = std::reference_wrapper<const object_type>;
+    using object_cref_type = typename service_interface::object_cref_type;
 
     virtual const object_type& create(const modifier_type& modifier) override
     {
