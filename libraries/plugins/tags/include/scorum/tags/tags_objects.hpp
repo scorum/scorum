@@ -418,7 +418,7 @@ typedef shared_multi_index_container<
 class category_stats_object : public object<category_stats_object_type, category_stats_object>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(category_stats_object)
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(category_stats_object, (category))
 
     id_type id;
     tag_name_type tag;
@@ -440,9 +440,12 @@ typedef shared_multi_index_container<
         ordered_unique<tag<by_tag_category>,
                        composite_key<category_stats_object,
                                      member<category_stats_object, fc::shared_string, &category_stats_object::category>,
-                                     member<category_stats_object, tag_name_type, &category_stats_object::tag>>>,
+                                     member<category_stats_object, tag_name_type, &category_stats_object::tag>>,
+                       composite_key_compare<fc::strcmp_less,
+                                             std::less<tag_name_type>>>,
         ordered_non_unique<tag<by_category>,
-                       member<category_stats_object, fc::shared_string, &category_stats_object::category>>>>
+                           member<category_stats_object, fc::shared_string, &category_stats_object::category>,
+                           fc::strcmp_less>>>
     category_stats_index;
 
 // clanf-format on

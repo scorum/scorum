@@ -89,10 +89,10 @@ public:
             auto found_it = idx.find(std::make_tuple(category, tag_name_type(tag)));
             if (found_it == idx.end())
             {
-                db_impl().create<category_stats_object>([&](category_stats_object& o) {
-                    o.category = category;
-                    o.tag = tag;
-                    o.tags_count = 1;
+                db_impl().create<category_stats_object>([&](category_stats_object& s) {
+                    s.category = category;
+                    s.tag = tag;
+                    s.tags_count = 1;
                 });
             }
             else
@@ -120,15 +120,19 @@ struct category_stats_pre_operation_visitor
     {
         const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata.parse(c.json_metadata));
+        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata::parse(c.json_metadata));
     }
 
     void operator()(const delete_comment_operation& op) const
     {
         const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata.parse(c.json_metadata));
+        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata::parse(c.json_metadata));
     }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
 };
 
 struct category_stats_post_operation_visitor
@@ -148,8 +152,12 @@ struct category_stats_post_operation_visitor
     {
         const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        _category_stats_service.include_into_category_stats(c.category, comment_metadata.parse(c.json_metadata));
+        _category_stats_service.include_into_category_stats(c.category, comment_metadata::parse(c.json_metadata));
     }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
 };
 
 struct post_operation_visitor
@@ -417,11 +425,6 @@ struct post_operation_visitor
         FC_CAPTURE_LOG_AND_RETHROW((c))
     }
 
-    void update_category_stats(const comment_object& c) const
-    {
-        boost::ignore_unused_variable_warning(c);
-    }
-
     const peer_stats_object& get_or_create_peer_stats(account_id_type voter, account_id_type peer) const
     {
         const auto& peeridx = _db.get_index<peer_stats_index>().indices().get<by_voter_peer>();
@@ -485,7 +488,6 @@ struct post_operation_visitor
         const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
         update_tags(comment, true);
-        update_category_stats(comment);
     }
 
     void operator()(const transfer_operation& op) const

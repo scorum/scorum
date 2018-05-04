@@ -19,6 +19,7 @@
 #include <scorum/common_api/config.hpp>
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_service.hpp>
+#include <boost/lambda/lambda.hpp>
 
 namespace scorum {
 namespace tags {
@@ -93,10 +94,7 @@ public:
         std::transform(it_pair.first, it_pair.second, std::back_inserter(ret),
                        [](const tags::category_stats_object& o) { return std::make_pair(o.tag, o.tags_count); });
 
-        std::sort(ret.begin(), ret.end(),
-                  [](const std::pair<std::string, uint32_t>& lhs, const std::pair<std::string, uint32_t>& rhs) {
-                      return rhs.second < lhs.second;
-                  });
+        std::sort(ret.begin(), ret.end(), ::boost::lambda::_1 > ::boost::lambda::_2);
         return ret;
     }
 
