@@ -220,6 +220,48 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
     FC_LOG_AND_RETHROW()
 }
 
+struct active_voters_reward_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+
+    std::map<account_name_type, asset> vote_reward_map;
+    std::map<account_name_type, asset> author_reward_map;
+
+    active_voters_reward_visitor(database& db)
+        : _db(db)
+    {
+    }
+
+    void put_in_map(std::map<account_name_type, asset>& map, account_name_type name, asset reward)
+    {
+        if (map.find(name) == map.end())
+            map.insert(std::make_pair(name, reward));
+        else
+            map[name] += reward;
+    }
+
+    void operator()(const active_sp_holders_reward_operation& op)
+    {
+        put_in_map(vote_reward_map, op.sp_holder, op.reward);
+    }
+
+    void operator()(const author_reward_operation& op)
+    {
+        put_in_map(author_reward_map, op.author, op.reward);
+    }
+
+    void operator()(const comment_reward_operation& op)
+    {
+        // author[op.author] += op.reward;
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
 BOOST_AUTO_TEST_CASE(reward_fund)
 {
     try
@@ -233,47 +275,43 @@ BOOST_AUTO_TEST_CASE(reward_fund)
 
         generate_block();
 
-        asset account_initial_vest_supply = db.obtain_service<dbs_account>().get_account("alice").scorumpower;
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
-                            account_initial_vest_supply);
+        auto& alice_acc = db.obtain_service<dbs_account>().get_account("alice");
+        auto& bob_acc = db.obtain_service<dbs_account>().get_account("bob");
+
+        BOOST_REQUIRE_EQUAL(alice_acc.balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(bob_acc.balance, asset(0, SCORUM_SYMBOL));
+        BOOST_REQUIRE_EQUAL(alice_acc.scorumpower, bob_acc.scorumpower);
+
+        active_voters_reward_visitor visitor(db);
+        db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
 
         const auto blocks_between_comments = 5;
-
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("alice").balance, asset(0, SCORUM_SYMBOL));
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, asset(0, SCORUM_SYMBOL));
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
-                            account_initial_vest_supply);
+        asset account_initial_vest_supply = alice_acc.scorumpower;
 
         comment_operation comment;
-        vote_operation vote;
-        signed_transaction tx;
-
         comment.author = "alice";
         comment.permlink = "test";
         comment.parent_permlink = "test";
         comment.title = "foo";
         comment.body = "bar";
+
+        vote_operation vote;
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
         vote.weight = (int16_t)100;
-        tx.operations.push_back(comment);
-        tx.operations.push_back(vote);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        tx.sign(alice_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+
+        push_operations(fc::ecc::private_key(), false, comment, vote);
 
         generate_blocks(blocks_between_comments);
 
         comment.author = "bob";
         comment.parent_author = "alice";
+
         vote.voter = "bob";
         vote.author = "bob";
-        tx.clear();
-        tx.operations.push_back(comment);
-        tx.operations.push_back(vote);
-        tx.sign(bob_private_key, db.get_chain_id());
-        db.push_transaction(tx, 0);
+
+        push_operations(fc::ecc::private_key(), false, comment, vote);
 
         const auto& fund = db.obtain_service<dbs_content_reward_fund_sp>().get();
 
@@ -291,11 +329,11 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.activity_reward_balance, ASSET_NULL_SP);
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
 
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower,
-                             account_initial_vest_supply);
-
-            BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
-                                account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(alice_acc.scorumpower,
+                                account_initial_vest_supply + visitor.author_reward_map[alice_acc.name]
+                                    + visitor.vote_reward_map[alice_acc.name]);
+            BOOST_REQUIRE_EQUAL(bob_acc.scorumpower,
+                                account_initial_vest_supply + visitor.vote_reward_map[bob_acc.name]);
 
             validate_database();
         }
@@ -311,10 +349,12 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
             BOOST_REQUIRE_GT(fund.activity_reward_balance, ASSET_NULL_SP);
 
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("alice").scorumpower,
-                             account_initial_vest_supply);
-            BOOST_REQUIRE_GT(db.obtain_service<dbs_account>().get_account("bob").scorumpower,
-                             account_initial_vest_supply);
+            BOOST_REQUIRE_EQUAL(alice_acc.scorumpower,
+                                account_initial_vest_supply + visitor.author_reward_map[alice_acc.name]
+                                    + visitor.vote_reward_map[alice_acc.name]);
+            BOOST_REQUIRE_EQUAL(bob_acc.scorumpower,
+                                account_initial_vest_supply + visitor.author_reward_map[bob_acc.name]
+                                    + visitor.vote_reward_map[bob_acc.name]);
 
             validate_database();
         }

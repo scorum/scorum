@@ -102,7 +102,8 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     charge_account_reward(ctx, witness, witness_reward);
 
-    ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
+    if (witness_reward.amount != 0)
+        ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
 }
 
 void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward)
@@ -133,7 +134,8 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
                 distributed_reward += account_reward;
 
-                ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, account_reward));
+                if (account_reward.amount != 0)
+                    ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, account_reward));
             }
         }
     }
@@ -144,6 +146,9 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
 void process_funds::charge_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
 {
+    if (reward.amount <= 0)
+        return;
+
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
 
@@ -159,6 +164,9 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
 
 void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
 {
+    if (reward.amount <= 0)
+        return;
+
     data_service_factory_i& services = ctx.services();
 
     if (reward.symbol() == SCORUM_SYMBOL)
