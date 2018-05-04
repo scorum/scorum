@@ -141,6 +141,7 @@ SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
     BOOST_CHECK_EQUAL(itr->tag, "");
 }
 
+#ifndef IS_LOW_MEM
 SCORUM_TEST_CASE(create_tags_from_json_metadata)
 {
     create_post(initdelegate, [](comment_operation& op) {
@@ -202,6 +203,7 @@ SCORUM_TEST_CASE(create_two_posts_with_same_tags)
     BOOST_CHECK_EQUAL(itr->tag, "football");
     BOOST_CHECK(itr->comment == 1u);
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 
