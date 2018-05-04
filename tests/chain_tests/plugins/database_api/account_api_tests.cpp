@@ -21,7 +21,9 @@ using namespace scorum::app;
 using namespace scorum::rewards_math;
 using fc::string;
 
-namespace database_fixture {
+namespace account_api_tests {
+
+using namespace database_fixture;
 
 struct account_api_test_fixture : public blogging_common_with_accounts_fixture
 {
@@ -34,9 +36,6 @@ struct account_api_test_fixture : public blogging_common_with_accounts_fixture
     api_context _database_api_ctx;
     database_api database_api_call;
 };
-}
-
-using namespace database_fixture;
 
 BOOST_FIXTURE_TEST_SUITE(database_api_account_tests, account_api_test_fixture)
 
@@ -74,3 +73,4 @@ SCORUM_TEST_CASE(check_voting_power)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+}
