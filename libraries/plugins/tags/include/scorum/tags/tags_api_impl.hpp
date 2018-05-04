@@ -2,6 +2,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <stack>
+
 #include <scorum/protocol/types.hpp>
 
 #include <scorum/chain/database/database.hpp>
@@ -1070,32 +1072,6 @@ private:
     {
         typedef comment_index::index_iterator<by_parent>::type search_iterator;
 
-        template <typename T> class stack
-        {
-        public:
-            void push(const T& t)
-            {
-                _stack.push_back(t);
-            }
-
-            void pop(T& t)
-            {
-                FC_ASSERT(!_stack.empty(), "stack is empty");
-
-                t = _stack.back();
-
-                _stack.pop_back();
-            }
-
-            bool empty() const
-            {
-                return _stack.empty();
-            }
-
-        private:
-            std::vector<T> _stack;
-        };
-
     public:
         index_traverse(const Index& index)
             : _index(index)
@@ -1111,8 +1087,8 @@ private:
 
             while (!_stack.empty())
             {
-                search_iterator itr;
-                _stack.pop(itr);
+                search_iterator itr = _stack.top();
+                _stack.pop();
 
                 on_item(*itr);
 
@@ -1153,7 +1129,7 @@ private:
             }
         }
 
-        stack<search_iterator> _stack;
+        std::stack<search_iterator> _stack;
     };
 };
 
