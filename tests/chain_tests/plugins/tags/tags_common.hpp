@@ -78,7 +78,7 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
 
             fixture->push_operation<comment_operation>(operation, actor.private_key);
 
-            fixture->generate_blocks(20 / SCORUM_BLOCK_INTERVAL);
+            fixture->generate_blocks(fixture->db.head_block_time() + SCORUM_MIN_REPLY_INTERVAL);
 
             return Comment(operation, fixture);
         }
@@ -117,7 +117,7 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
 
         push_operation<comment_operation>(operation, actor.private_key);
 
-        generate_blocks(5 * 60 / SCORUM_BLOCK_INTERVAL);
+        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL);
 
         return Comment(operation, this);
     }
