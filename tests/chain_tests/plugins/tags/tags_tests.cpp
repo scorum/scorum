@@ -72,6 +72,8 @@ SCORUM_TEST_CASE(test_comments_depth_counter)
     BOOST_REQUIRE_EQUAL(2u, check_list[root_child_child.permlink()]);
 }
 
+/// TODO: this is wrong behaviour, `get_discussions_by_created` should return only posts when
+/// parent_author & parent_permlink is not set.
 SCORUM_TEST_CASE(get_discussions_by_created_return_post_and_it_comments_if_its_id_0)
 {
     auto root = create_post(initdelegate, [](comment_operation& op) {
