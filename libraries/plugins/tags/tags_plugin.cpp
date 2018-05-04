@@ -43,7 +43,8 @@ public:
         return _self.database();
     }
 
-    void on_operation(const operation_notification& note);
+    void pre_operation(const operation_notification& note);
+    void post_operation(const operation_notification& note);
 
     tags_plugin& _self;
 };
@@ -53,16 +54,114 @@ tags_plugin_impl::~tags_plugin_impl()
     return;
 }
 
-struct operation_visitor
+class category_stats_service : public scorum::chain::dbs_base
 {
-    operation_visitor(database& db)
-        : _db(db)
+    friend class chain::dbservice_dbs_factory;
+
+public:
+    explicit category_stats_service(database& db)
+        : _base_type(db)
     {
     }
 
+    void exclude_from_category_stats(const fc::shared_string& category, const comment_metadata& meta)
+    {
+        const auto& idx = db_impl().get_index<scorum::tags::category_stats_index>().indices().get<by_category>();
+        auto it_pair = idx.equal_range(category);
+
+        for (auto it = it_pair.first; it != it_pair.second; ++it)
+        {
+            auto cnt = std::count(meta.tags.begin(), meta.tags.end(), it->tag);
+            if (cnt == 1)
+                db_impl().remove(*it);
+            else if (cnt > 1)
+                db_impl().modify(*it, [&](category_stats_object& s) { --s.tags_count; });
+        }
+    }
+
+    void include_into_category_stats(const fc::shared_string& category, const comment_metadata& meta)
+    {
+        for (const std::string& tag : meta.tags)
+        {
+            const auto& idx
+                = db_impl().get_index<scorum::tags::category_stats_index>().indices().get<by_tag_category>();
+
+            auto found_it = idx.find(std::make_tuple(category, tag_name_type(tag)));
+            if (found_it == idx.end())
+            {
+                db_impl().create<category_stats_object>([&](category_stats_object& o) {
+                    o.category = category;
+                    o.tag = tag;
+                    o.tags_count = 1;
+                });
+            }
+            else
+            {
+                db_impl().modify(*found_it, [&](category_stats_object& s) { ++s.tags_count; });
+            }
+        }
+    }
+};
+
+struct category_stats_pre_operation_visitor
+{
     typedef void result_type;
 
     database& _db;
+    category_stats_service& _category_stats_service;
+
+    category_stats_pre_operation_visitor(database& db)
+        : _db(db)
+        , _category_stats_service(_db.obtain_service<category_stats_service>())
+    {
+    }
+
+    void operator()(const comment_operation& op) const
+    {
+        const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata.parse(c.json_metadata));
+    }
+
+    void operator()(const delete_comment_operation& op) const
+    {
+        const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata.parse(c.json_metadata));
+    }
+};
+
+struct category_stats_post_operation_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+    category_stats_service& _category_stats_service;
+
+    category_stats_post_operation_visitor(database& db)
+        : _db(db)
+        , _category_stats_service(_db.obtain_service<category_stats_service>())
+    {
+    }
+
+    void operator()(const comment_operation& op) const
+    {
+        const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        _category_stats_service.include_into_category_stats(c.category, comment_metadata.parse(c.json_metadata));
+    }
+};
+
+struct post_operation_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+
+    post_operation_visitor(database& db)
+        : _db(db)
+    {
+    }
 
     void remove_stats(const tag_object& tag, const tag_stats_object& stats) const
     {
@@ -121,19 +220,7 @@ struct operation_visitor
 
     comment_metadata filter_tags(const comment_object& c) const
     {
-        comment_metadata meta;
-
-        if (c.json_metadata.size())
-        {
-            try
-            {
-                meta = fc::json::from_string(fc::to_string(c.json_metadata)).as<comment_metadata>();
-            }
-            catch (const fc::exception&)
-            {
-                // Do nothing on malformed json_metadata
-            }
-        }
+        comment_metadata meta = comment_metadata::parse(c.json_metadata);
 
         // We need to write the transformed tags into a temporary
         // local container because we can't modify meta.tags concurrently
@@ -330,6 +417,11 @@ struct operation_visitor
         FC_CAPTURE_LOG_AND_RETHROW((c))
     }
 
+    void update_category_stats(const comment_object& c) const
+    {
+        boost::ignore_unused_variable_warning(c);
+    }
+
     const peer_stats_object& get_or_create_peer_stats(account_id_type voter, account_id_type peer) const
     {
         const auto& peeridx = _db.get_index<peer_stats_index>().indices().get<by_voter_peer>();
@@ -390,7 +482,10 @@ struct operation_visitor
 
     void operator()(const comment_operation& op) const
     {
-        update_tags(_db.obtain_service<dbs_comment>().get(op.author, op.permlink), true);
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        update_tags(comment, true);
+        update_category_stats(comment);
     }
 
     void operator()(const transfer_operation& op) const
@@ -487,12 +582,30 @@ struct operation_visitor
     } /// ignore all other ops
 };
 
-void tags_plugin_impl::on_operation(const operation_notification& note)
+void tags_plugin_impl::pre_operation(const operation_notification& note)
 {
     try
     {
         /// plugins shouldn't ever throw
-        note.op.visit(operation_visitor(database()));
+        note.op.visit(category_stats_pre_operation_visitor(database()));
+    }
+    catch (const fc::exception& e)
+    {
+        edump((e.to_detail_string()));
+    }
+    catch (...)
+    {
+        elog("unhandled exception");
+    }
+}
+
+void tags_plugin_impl::post_operation(const operation_notification& note)
+{
+    try
+    {
+        /// plugins shouldn't ever throw
+        note.op.visit(post_operation_visitor(database()));
+        note.op.visit(category_stats_post_operation_visitor(database()));
     }
     catch (const fc::exception& e)
     {
@@ -532,12 +645,14 @@ void tags_plugin::plugin_initialize(const boost::program_options::variables_map&
     {
         chain::database& db = database();
 
-        db.post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+        db.pre_apply_operation.connect([&](const operation_notification& note) { my->pre_operation(note); });
+        db.post_apply_operation.connect([&](const operation_notification& note) { my->post_operation(note); });
 
         db.add_plugin_index<tags::tag_index>();
         db.add_plugin_index<tag_stats_index>();
         db.add_plugin_index<peer_stats_index>();
         db.add_plugin_index<author_tag_stats_index>();
+        db.add_plugin_index<category_stats_index>();
     }
     FC_LOG_AND_RETHROW()
 

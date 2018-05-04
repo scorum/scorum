@@ -83,6 +83,23 @@ public:
         return result;
     }
 
+    std::vector<std::pair<std::string, uint32_t>> get_tags_by_category(const std::string& category) const
+    {
+        const auto& idx = _db.get_index<tags::category_stats_index>().indices().get<tags::by_category>();
+
+        auto it_pair = idx.equal_range(category);
+
+        std::vector<std::pair<std::string, uint32_t>> ret;
+        std::transform(it_pair.first, it_pair.second, std::back_inserter(ret),
+                       [](const tags::category_stats_object& o) { return std::make_pair(o.tag, o.tags_count); });
+
+        std::sort(ret.begin(), ret.end(),
+                  [](const std::pair<std::string, uint32_t>& lhs, const std::pair<std::string, uint32_t>& rhs) {
+                      return rhs.second < lhs.second;
+                  });
+        return ret;
+    }
+
     std::vector<discussion> get_discussions_by_payout(const discussion_query& query) const
     {
         query.validate();
