@@ -219,19 +219,19 @@ void process_comments_cashout_impl::accumulate_statistic(const account_object& v
 
 comment_refs_type process_comments_cashout_impl::collect_parents(const comment_refs_type& comments)
 {
-    struct by_depth_less
+    struct by_depth_greater
     {
         bool operator()(const comment_object& lhs, const comment_object& rhs)
         {
-            return lhs.depth < rhs.depth || (lhs.depth == rhs.depth && lhs.id < rhs.id);
+            return lhs.depth > rhs.depth || (lhs.depth == rhs.depth && lhs.id > rhs.id);
         }
     };
 
-    using comment_refs_set = std::set<comment_refs_type::value_type, by_depth_less>;
+    using comment_refs_set = std::set<comment_refs_type::value_type, by_depth_greater>;
     comment_refs_set _comments(comments.begin(), comments.end());
 
-    // 'comments' set is sorted by depth in asc order. Iterating from the end to the beginning (in desc order)
-    for (auto it = _comments.rbegin(); it != _comments.rend() && it->get().depth != 0; ++it)
+    // '_comments' set is sorted by depth in desc order.
+    for (auto it = _comments.begin(); it != _comments.end() && it->get().depth != 0; ++it)
     {
         const comment_object& comment = it->get();
 
@@ -240,8 +240,8 @@ comment_refs_type process_comments_cashout_impl::collect_parents(const comment_r
             return c.author == comment.parent_author && c.permlink == comment.parent_permlink;
         });
 
-        // if not then add its parent. This parent will be always before 'comment' comment in 'comments' set because of
-        // the set ordering
+        // if not then add its parent. This parent will be always after 'comment' comment in 'comments' set
+        // because of the set ordering
         if (in_comments_it == _comments.end())
         {
             const auto& parent_comment

@@ -61,9 +61,7 @@ public:
         asset total_reward = asset(0, reward_symbol);
 
         // newest, with bigger depth comments first
-        auto comments_from_newest_to_oldest = boost::adaptors::reverse(comments_with_parents);
-
-        for (const comment_object& comment : comments_from_newest_to_oldest)
+        for (const comment_object& comment : comments_with_parents)
         {
             asset publication_reward(0, reward_symbol);
 
