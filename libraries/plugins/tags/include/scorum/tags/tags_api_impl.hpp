@@ -312,7 +312,7 @@ public:
         const auto& index = _db.get_index<comment_index>().indices().get<by_parent>();
         std::vector<discussion> result;
 
-        index_traverse<comment_index::index<by_parent>::type> traverse(index);
+        index_traverse traverse(index);
 
         traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
             if (comment.depth <= depth)
@@ -1068,11 +1068,13 @@ private:
         return result;
     }
 
-    template <typename Index> class index_traverse
+    class index_traverse
     {
         typedef comment_index::index_iterator<by_parent>::type search_iterator;
 
     public:
+        typedef comment_index::index<by_parent>::type Index;
+
         index_traverse(const Index& index)
             : _index(index)
         {
