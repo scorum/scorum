@@ -1,4 +1,4 @@
-#include <boost/test/unit_test.hpp>
+﻿#include <boost/test/unit_test.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -8,6 +8,16 @@
 #include <scorum/protocol/scorum_operations.hpp>
 
 #include "database_trx_integration.hpp"
+#include <sstream>
+
+namespace boost {
+
+std::ostringstream& operator<<(std::ostringstream& os, const std::pair<std::string, unsigned int>& p)
+{
+    os << '[' << p.first << ',' << p.second << ']';
+    return os;
+}
+}
 
 namespace tags_tests {
 
@@ -72,6 +82,17 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
             fixture.generate_blocks(20 / SCORUM_BLOCK_INTERVAL);
 
             return Comment(operation, fixture);
+        }
+
+        void remove(Actor& actor)
+        {
+            delete_comment_operation op;
+            op.author = author();
+            op.permlink = permlink();
+
+            fixture.push_operation<delete_comment_operation>(op, actor.private_key);
+
+            fixture.generate_blocks(20 / SCORUM_BLOCK_INTERVAL);
         }
 
     private:
@@ -182,6 +203,205 @@ SCORUM_TEST_CASE(test_depth)
     BOOST_REQUIRE_EQUAL(0u, check_list[root.permlink()]);
     BOOST_REQUIRE_EQUAL(1u, check_list[root_child.permlink()]);
     BOOST_REQUIRE_EQUAL(2u, check_list[root_child_child.permlink()]);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(get_tags_by_category_tests, tags_fixture)
+
+SCORUM_TEST_CASE(check_couple_categories_several_tags)
+{
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag1","tag2","tag3"]})";
+    });
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post2";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag2","tag3","tag4"]})";
+    });
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post2";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category2";
+        op.json_metadata = R"({tags: ["tag1","tag2","tag3"]})";
+    });
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post3";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category2";
+        op.json_metadata = R"({tags: ["tag3","tag4","tag5"]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("category1");
+    auto cat2_tags = _api.get_tags_by_category("category2");
+    auto cat3_tags = _api.get_tags_by_category("category3");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), 4ul);
+    BOOST_REQUIRE_EQUAL(cat2_tags.size(), 5ul);
+    BOOST_REQUIRE_EQUAL(cat3_tags.size(), 0ul);
+
+    // clang-format off
+    std::vector<std::pair<std::string, uint32_t>> cat1_ethalon = { { "tag3", 2 }, { "tag2", 2 }, { "tag4", 1 }, { "tag1", 1 } };
+    std::vector<std::pair<std::string, uint32_t>> cat2_ethalon = { { "tag3", 2 }, { "tag5", 1 }, { "tag4", 1 }, { "tag2", 1 }, { "tag1", 1 } };
+    std::vector<std::pair<std::string, uint32_t>> cat3_ethalon = { };
+    // clang-format on
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags.begin(), cat1_tags.end(), cat1_ethalon.begin(), cat1_ethalon.end());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat2_tags.begin(), cat2_tags.end(), cat2_ethalon.begin(), cat2_ethalon.end());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat3_tags.begin(), cat3_tags.end(), cat3_ethalon.begin(), cat3_ethalon.end());
+}
+
+SCORUM_TEST_CASE(check_no_posts)
+{
+    auto cat1_tags = _api.get_tags_by_category("category1");
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), 0ul);
+}
+
+SCORUM_TEST_CASE(check_post_removed)
+{
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag1","tag2","tag3"]})";
+    });
+
+    auto post2 = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post2";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag2","tag3","tag4"]})";
+    });
+
+    auto cat_tags_before = _api.get_tags_by_category("category1");
+
+    BOOST_REQUIRE_EQUAL(cat_tags_before.size(), 4ul);
+
+    std::vector<std::pair<std::string, uint32_t>> cat_tags_before_ethalon
+        = { { "tag3", 2 }, { "tag2", 2 }, { "tag4", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat_tags_before.begin(), cat_tags_before.end(), cat_tags_before_ethalon.begin(),
+                                    cat_tags_before_ethalon.end());
+
+    post2.remove(initdelegate);
+
+    auto cat_tags_after = _api.get_tags_by_category("category1");
+
+    BOOST_REQUIRE_EQUAL(cat_tags_after.size(), 3ul);
+
+    std::vector<std::pair<std::string, uint32_t>> cat_tags_after_ethalon
+        = { { "tag3", 1 }, { "tag2", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat_tags_after.begin(), cat_tags_after.end(), cat_tags_after_ethalon.begin(),
+                                    cat_tags_after_ethalon.end());
+}
+
+SCORUM_TEST_CASE(check_posts_tags_changed)
+{
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag1","tag2","tag3"]})";
+    });
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post2";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag2","tag3","tag4"]})";
+    });
+
+    auto cat_tags_before = _api.get_tags_by_category("category1");
+
+    BOOST_REQUIRE_EQUAL(cat_tags_before.size(), 4ul);
+
+    std::vector<std::pair<std::string, uint32_t>> cat_tags_before_ethalon
+        = { { "tag3", 2 }, { "tag2", 2 }, { "tag4", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat_tags_before.begin(), cat_tags_before.end(), cat_tags_before_ethalon.begin(),
+                                    cat_tags_before_ethalon.end());
+
+    // changing post2's tags
+    create_post(initdelegate, [](comment_operation& op) { op.json_metadata = R"({tags: ["tag1","tag2","tag4"]})"; });
+
+    auto cat_tags_after = _api.get_tags_by_category("category1");
+
+    BOOST_REQUIRE_EQUAL(cat_tags_after.size(), 3ul);
+
+    std::vector<std::pair<std::string, uint32_t>> cat_tags_after_ethalon
+        = { { "tag2", 2 }, { "tag1", 2 }, { "tag4", 1 }, { "tag3", 1 } };
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat_tags_after.begin(), cat_tags_after.end(), cat_tags_after_ethalon.begin(),
+                                    cat_tags_after_ethalon.end());
+}
+
+SCORUM_TEST_CASE(check_posts_category_changed)
+{
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag1","tag2","tag3"]})";
+    });
+
+    create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post2";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "category1";
+        op.json_metadata = R"({tags: ["tag2","tag3","tag4"]})";
+    });
+
+    auto cat1_tags_before = _api.get_tags_by_category("category1");
+    auto cat2_tags_before = _api.get_tags_by_category("category2");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags_before.size(), 4ul);
+    BOOST_REQUIRE_EQUAL(cat2_tags_before.size(), 0ul);
+
+    std::vector<std::pair<std::string, uint32_t>> cat1_tags_before_ethalon
+        = { { "tag3", 2 }, { "tag2", 2 }, { "tag4", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags_before.begin(), cat1_tags_before.end(), cat1_tags_before_ethalon.begin(),
+                                    cat1_tags_before_ethalon.end());
+
+    // changing post2's category
+    create_post(initdelegate, [](comment_operation& op) {
+        op.parent_permlink = "category2";
+        op.json_metadata = R"({tags: ["tag1","tag2","tag4"]})";
+    });
+
+    auto cat1_tags_after = _api.get_tags_by_category("category1");
+    auto cat2_tags_after = _api.get_tags_by_category("category2");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags_after.size(), 3ul);
+    BOOST_REQUIRE_EQUAL(cat2_tags_after.size(), 3ul);
+
+    std::vector<std::pair<std::string, uint32_t>> cat1_tags_after_ethalon
+        = { { "tag3", 1 }, { "tag2", 1 }, { "tag1", 1 } };
+    std::vector<std::pair<std::string, uint32_t>> cat2_tags_after_ethalon
+        = { { "tag3", 1 }, { "tag2", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags_after.begin(), cat1_tags_after.end(), cat1_tags_after_ethalon.begin(),
+                                    cat1_tags_after_ethalon.end());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat2_tags_after.begin(), cat2_tags_after.end(), cat2_tags_after_ethalon.begin(),
+                                    cat2_tags_after_ethalon.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
