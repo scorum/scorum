@@ -36,25 +36,23 @@ void process_account_registration_bonus_expiration::return_funds(block_task_cont
 
     const account_object& account_obj = account_service.get_account(account.account);
 
-    if (account_obj.delegated_scorumpower.amount > 0)
+    asset actual_returned_bonus
+        = std::max(asset(0, SP_SYMBOL), std::min(bonus, account_obj.scorumpower - account_obj.delegated_scorumpower));
+    if (actual_returned_bonus < bonus)
     {
-        wlog("Account '${a}' has delegated scorumpower ${d}. Registration funds ${f} can't be returnd.",
-             ("a", account_obj.name)("d", account_obj.delegated_scorumpower)("f", bonus));
+        wlog("Account '${a}' has insufficient funds to return scorumpower ${f}. Actually returned is ${r}.",
+             ("a", account_obj.name)("f", bonus)("r", actual_returned_bonus));
     }
-    else
-    {
-        bonus = std::min(bonus, account_obj.scorumpower);
 
-        account_service.update(account_obj, [&](account_object& a) { a.scorumpower -= bonus; });
+    account_service.update(account_obj, [&](account_object& a) { a.scorumpower -= actual_returned_bonus; });
 
-        dgp_service.update([&](dynamic_global_property_object& o) {
-            o.circulating_capital -= asset(bonus.amount, SCORUM_SYMBOL);
-            o.total_scorumpower -= bonus;
-        });
+    dgp_service.update([&](dynamic_global_property_object& o) {
+        o.circulating_capital -= asset(actual_returned_bonus.amount, SCORUM_SYMBOL);
+        o.total_scorumpower -= actual_returned_bonus;
+    });
 
-        registration_pool_service.update(
-            [&](registration_pool_object& r) { r.balance += asset(bonus.amount, SCORUM_SYMBOL); });
-    }
+    registration_pool_service.update(
+        [&](registration_pool_object& r) { r.balance += asset(actual_returned_bonus.amount, SCORUM_SYMBOL); });
 }
 }
 }
