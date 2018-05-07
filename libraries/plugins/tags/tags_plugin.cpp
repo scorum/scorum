@@ -69,13 +69,19 @@ public:
         const auto& idx = db_impl().get_index<scorum::tags::category_stats_index>().indices().get<by_category>();
         auto it_pair = idx.equal_range(category);
 
-        for (auto it = it_pair.first; it != it_pair.second; ++it)
+        std::vector<std::reference_wrapper<const category_stats_object>> stats;
+        std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
+
+        for (const category_stats_object& s : stats)
         {
-            auto cnt = std::count(meta.tags.begin(), meta.tags.end(), it->tag);
-            if (cnt == 1)
-                db_impl().remove(*it);
-            else if (cnt > 1)
-                db_impl().modify(*it, [&](category_stats_object& s) { --s.tags_count; });
+            auto found_it = std::find(meta.tags.begin(), meta.tags.end(), s.tag);
+            if (found_it == meta.tags.end())
+                continue;
+
+            if (s.tags_count == 1)
+                db_impl().remove(s);
+            else if (s.tags_count > 1)
+                db_impl().modify(s, [&](category_stats_object& s) { --s.tags_count; });
         }
     }
 
@@ -118,9 +124,11 @@ struct category_stats_pre_operation_visitor
 
     void operator()(const comment_operation& op) const
     {
-        const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+        const comment_object* c
+            = _db.obtain_service<dbs_comment>().find_by<by_permlink>(std::make_tuple(op.author, op.permlink));
 
-        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata::parse(c.json_metadata));
+        if (c != nullptr)
+            _category_stats_service.exclude_from_category_stats(c->category, comment_metadata::parse(c->json_metadata));
     }
 
     void operator()(const delete_comment_operation& op) const

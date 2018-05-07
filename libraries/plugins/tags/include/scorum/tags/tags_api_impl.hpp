@@ -94,7 +94,10 @@ public:
         std::transform(it_pair.first, it_pair.second, std::back_inserter(ret),
                        [](const tags::category_stats_object& o) { return std::make_pair(o.tag, o.tags_count); });
 
-        std::sort(ret.begin(), ret.end(), ::boost::lambda::_1 > ::boost::lambda::_2);
+        std::sort(ret.begin(), ret.end(),
+                  [](const std::pair<std::string, uint32_t>& lhs, const std::pair<std::string, uint32_t>& rhs) {
+                      return std::tie(lhs.second, lhs.first) > std::tie(rhs.second, rhs.first);
+                  });
         return ret;
     }
 
