@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_level_two_cashouts)
         // max delay which do not exceed 'user20' comment cashout (considering that 'generate_blocks' calls apply_block
         // twice: for the first block and for the last block in the defined interval)
         auto reward_accumulation_delay = delay - 2 * SCORUM_BLOCK_INTERVAL;
-        // accumulate reward fund
+        // skipping blocks to accumulate reward fund
         generate_blocks(head_time + reward_accumulation_delay, false);
 
         auto last_comment_cashout = delay * 2;
@@ -445,6 +445,46 @@ BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_level_two_cashouts)
         check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
         check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
     }
+}
+
+BOOST_AUTO_TEST_CASE(check_comment_double_cashouts)
+{
+    // clang-format off
+    comment hierarchy =
+        { "user00", 0, {
+            { "user10", 1, {}}}};
+    // clang-format on
+
+    std::vector<ordered_comment_operation> ops = to_flatten_operations(hierarchy, SCORUM_ROOT_POST_PARENT_ACCOUNT);
+
+    create_actors(ops);
+    generate_block();
+
+    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
+    post_comments(ops, delay);
+
+    // wait till voters could obtain max reward
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote_comments(ops);
+
+    auto user00_comment_cashout
+        = fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS) - fc::seconds(delay * 2) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
+
+    // skip blocks till user10 comment cashout. user00 & user10 will be rewarded
+    generate_blocks(db.head_block_time() + user00_comment_cashout);
+
+    share_type user00_capital_after_user00_cashout = get_total_tokens("user00");
+
+    generate_blocks(db.head_block_time() + delay);
+
+    share_type user00_capital_after_user10_cashout = get_total_tokens("user00");
+
+    auto user10_parent_reward = check_comment_rewards(get_statistics("user10"), 0);
+
+    // checking that comment reward from voters was not payed twice to user00
+    BOOST_REQUIRE_EQUAL(user00_capital_after_user10_cashout - user00_capital_after_user00_cashout,
+                        user10_parent_reward);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

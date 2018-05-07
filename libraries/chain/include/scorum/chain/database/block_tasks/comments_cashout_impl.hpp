@@ -65,7 +65,7 @@ public:
         {
             asset publication_reward(0, reward_symbol);
 
-            if (comment.net_rshares > 0)
+            if (comment.net_rshares > 0 && comment.cashout_time < fc::time_point_sec::maximum())
             {
                 auto payout = rewards_math::calculate_payout(
                     comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
