@@ -137,6 +137,12 @@ public:
     asset curator_payout_value = asset(0, SymbolType);
 
     asset beneficiary_payout_value = asset(0, SymbolType);
+
+    /// the payout for the comment/post publication
+    asset comment_publication_reward = asset(0, SymbolType);
+
+    /// the payout obtained from children comments' rewards
+    asset children_comments_reward = asset(0, SymbolType);
 };
 
 using comment_statistic_scr_object = comment_statistic_object<comment_statistic_scr_object_type, SCORUM_SYMBOL>;
@@ -341,6 +347,8 @@ FC_REFLECT( scorum::chain::comment_statistic_scr_object,
             (author_payout_value)
             (curator_payout_value)
             (beneficiary_payout_value)
+            (comment_publication_reward)
+            (children_comments_reward)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_scr_object, scorum::chain::comment_statistic_scr_index )
 
@@ -350,6 +358,8 @@ FC_REFLECT( scorum::chain::comment_statistic_sp_object,
             (author_payout_value)
             (curator_payout_value)
             (beneficiary_payout_value)
+            (comment_publication_reward)
+            (children_comments_reward)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_sp_object, scorum::chain::comment_statistic_sp_index )
 

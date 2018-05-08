@@ -49,7 +49,7 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
 
         const auto& oldest_comment = comments[0];
 
-        impl.pay_for_comment(oldest_comment, balance);
+        impl.pay_for_comment(oldest_comment, balance, asset(0, balance.symbol()));
 
         fifa_world_cup_2018_bounty_reward_fund_service.update(
             [&](fifa_world_cup_2018_bounty_reward_fund_object& bfo) { bfo.activity_reward_balance -= balance; });

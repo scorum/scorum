@@ -17,6 +17,7 @@ set( SOURCES
     rewards/per_block_reward_distribution.cpp
     rewards/fifa_world_cup_2018_bounty_reward_fund_tests.cpp
     rewards/comment_cashout_from_scr_fund_tests.cpp
+    rewards/comment_hierarchy_reward_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
