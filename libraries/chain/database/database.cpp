@@ -1337,6 +1337,10 @@ void database::_apply_block(const signed_block& next_block)
              * for transactions when validating broadcast transactions or
              * when building a block.
              */
+
+            database_ns::user_activity_context user_activity_ctx(static_cast<data_service_factory&>(*this), trx);
+            database_ns::process_user_activity_task().apply(user_activity_ctx);
+
             apply_transaction(trx, skip);
             ++_current_trx_in_block;
         }
@@ -1515,9 +1519,6 @@ void database::_apply_transaction(const signed_transaction& trx)
         }
 
         notify_on_pre_apply_transaction(trx);
-
-        database_ns::user_activity_context user_activity_ctx(static_cast<data_service_factory&>(*this), trx);
-        database_ns::process_user_activity_task().apply(user_activity_ctx);
 
         // Finally process the operations
         _current_op_in_trx = 0;
