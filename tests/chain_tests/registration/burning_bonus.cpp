@@ -68,7 +68,7 @@ struct registration_committee_burning_bonus_fixture : public database_trx_integr
 
 BOOST_FIXTURE_TEST_SUITE(registration_committee_burning_bonus, registration_committee_burning_bonus_fixture)
 
-SCORUM_TEST_CASE(burning_for_sigle_check)
+SCORUM_TEST_CASE(burn_sp_for_one_account)
 {
     asset old_registration_pool_balance = registration_pool_service.get().balance;
 
@@ -90,7 +90,7 @@ SCORUM_TEST_CASE(burning_for_sigle_check)
     validate_database();
 }
 
-SCORUM_TEST_CASE(burning_for_multiple_check)
+SCORUM_TEST_CASE(burn_sp_for_two_accounts)
 {
     create_account_by_committee(alice);
 
@@ -111,7 +111,7 @@ SCORUM_TEST_CASE(burning_for_multiple_check)
     BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).scorumpower, ASSET_NULL_SP);
 }
 
-SCORUM_TEST_CASE(no_burning_for_active_user_check)
+SCORUM_TEST_CASE(dont_burn_for_active_user)
 {
     create_account_by_committee(alice);
 
@@ -126,7 +126,7 @@ SCORUM_TEST_CASE(no_burning_for_active_user_check)
     BOOST_REQUIRE_GT(account_service.get_account(alice.name).scorumpower, ASSET_NULL_SP);
 }
 
-SCORUM_TEST_CASE(no_burning_for_active_user_multiple_check)
+SCORUM_TEST_CASE(dont_burn_for_active_user_burn_for_not_active)
 {
     create_account_by_committee(alice);
     create_account_by_committee(bob);
