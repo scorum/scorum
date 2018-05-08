@@ -38,8 +38,6 @@ struct comments_hierarchy_reward_fixture : public database_default_integration_f
 {
     const share_type account_initial_sp = 1e5;
 
-    std::map<account_name_type, share_type> account_initial_balances;
-
     account_service_i& account_service;
     comment_service_i& comment_service;
     comment_statistic_sp_service_i& comment_statistic_sp_service;
@@ -92,8 +90,6 @@ struct comments_hierarchy_reward_fixture : public database_default_integration_f
 
             actor(initdelegate).give_sp(commenter, account_initial_sp.value);
             actor(initdelegate).give_sp(voter, account_initial_sp.value);
-
-            account_initial_balances[author_name] = get_total_tokens(author_name);
         }
     }
 
@@ -161,10 +157,30 @@ struct comments_hierarchy_reward_fixture : public database_default_integration_f
         return acc.balance.amount + acc.scorumpower.amount;
     }
 
-    share_type check_comment_rewards(const comment_statistic_sp_object& stat, share_type payout_from_children)
+    share_type check_comment_rewards(const char* acc_name,
+                                     const comment_statistic_sp_object& stat,
+                                     share_type payout_from_children)
     {
         asset user_parent_reward = (stat.comment_publication_reward - stat.curator_payout_value + payout_from_children)
             * SCORUM_PARENT_COMMENT_REWARD_PERCENT / SCORUM_100_PERCENT;
+
+        BOOST_TEST_MESSAGE("");
+        BOOST_TEST_MESSAGE("Checking comment rewards distribution:");
+        BOOST_TEST_MESSAGE("");
+        BOOST_TEST_MESSAGE("Comment poster: " << acc_name);
+        BOOST_TEST_MESSAGE("Comment publication reward: " << stat.comment_publication_reward.amount);
+        BOOST_TEST_MESSAGE("Comment commenting reward: " << payout_from_children);
+        BOOST_TEST_MESSAGE("Author reward: " << stat.author_payout_value.amount);
+        BOOST_TEST_MESSAGE("Curators reward: " << stat.curator_payout_value.amount);
+        BOOST_TEST_MESSAGE("Benef. reward: " << stat.beneficiary_payout_value.amount);
+        BOOST_TEST_MESSAGE("Parent comment reward: " << user_parent_reward.amount);
+        BOOST_TEST_MESSAGE("");
+        BOOST_TEST_MESSAGE("([comment publication reward] + [comment commenting reward]) <SHOULD BE EQUAL> ([parent "
+                           "comment reward] + [author reward] + [curators reward] + [benef. reward])"
+                           " WHERE [parent comment reward] is 50% of "
+                           "([comment publication reward] + [comment commenting reward] - [curators reward])");
+        BOOST_TEST_MESSAGE("");
+
         BOOST_REQUIRE_EQUAL(user_parent_reward + stat.total_payout_value,
                             stat.comment_publication_reward + payout_from_children);
 
@@ -174,17 +190,6 @@ struct comments_hierarchy_reward_fixture : public database_default_integration_f
     void check_post_rewards(const comment_statistic_sp_object& stat, share_type payout_from_children)
     {
         BOOST_REQUIRE_EQUAL(stat.total_payout_value, stat.comment_publication_reward + payout_from_children);
-    }
-
-    void check_account_balance(const account_name_type& account, share_type reward)
-    {
-        share_type current_balance = get_total_tokens(account);
-        share_type old_balance = account_initial_balances[account];
-
-        BOOST_TEST_MESSAGE("Account name: " << account << "; reward:" << reward << "; capital before:" << old_balance
-                                            << "; capital after payout:" << current_balance);
-
-        BOOST_REQUIRE_EQUAL(current_balance, old_balance + reward);
     }
 
     void check_4level_hierarchy(const comment& hierarchy);
@@ -210,16 +215,11 @@ void comments_hierarchy_reward_fixture::check_4level_hierarchy(const comment& hi
     // skip blocks till comments cashout
     generate_blocks(db.head_block_time() + last_comment_cashout);
 
-    auto user30_parent_reward = check_comment_rewards(get_statistics("user30"), 0);
-    auto user20_parent_reward = check_comment_rewards(get_statistics("user20"), user30_parent_reward);
-    auto user10_parent_reward = check_comment_rewards(get_statistics("user10"), user20_parent_reward);
+    auto user30_parent_reward = check_comment_rewards("user30", get_statistics("user30"), 0);
+    auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), user30_parent_reward);
+    auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward);
 
     check_post_rewards(get_statistics("user00"), user10_parent_reward);
-
-    check_account_balance("user30", get_statistics("user30").author_payout_value.amount);
-    check_account_balance("user20", get_statistics("user20").author_payout_value.amount);
-    check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
-    check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
 }
 
 void comments_hierarchy_reward_fixture::check_3level_hierarchy_with_multiple_children(const comment& hierarchy)
@@ -241,21 +241,14 @@ void comments_hierarchy_reward_fixture::check_3level_hierarchy_with_multiple_chi
     // skip blocks till comments cashout
     generate_blocks(db.head_block_time() + last_comment_cashout);
 
-    auto user20_parent_reward = check_comment_rewards(get_statistics("user20"), 0);
-    auto user21_parent_reward = check_comment_rewards(get_statistics("user21"), 0);
+    auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), 0);
+    auto user21_parent_reward = check_comment_rewards("user21", get_statistics("user21"), 0);
     auto user10_parent_reward
-        = check_comment_rewards(get_statistics("user10"), user20_parent_reward + user21_parent_reward);
-    auto user22_parent_reward = check_comment_rewards(get_statistics("user22"), 0);
-    auto user11_parent_reward = check_comment_rewards(get_statistics("user11"), user22_parent_reward);
+        = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward + user21_parent_reward);
+    auto user22_parent_reward = check_comment_rewards("user22", get_statistics("user22"), 0);
+    auto user11_parent_reward = check_comment_rewards("user11", get_statistics("user11"), user22_parent_reward);
 
     check_post_rewards(get_statistics("user00"), user10_parent_reward + user11_parent_reward);
-
-    check_account_balance("user22", get_statistics("user22").author_payout_value.amount);
-    check_account_balance("user21", get_statistics("user21").author_payout_value.amount);
-    check_account_balance("user20", get_statistics("user20").author_payout_value.amount);
-    check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
-    check_account_balance("user11", get_statistics("user11").author_payout_value.amount);
-    check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
 }
 
 BOOST_FIXTURE_TEST_SUITE(comment_hierarchy_reward_tests, comments_hierarchy_reward_fixture)
@@ -338,7 +331,7 @@ BOOST_AUTO_TEST_CASE(check_beneficiares_payouts)
     actor(initdelegate).create_account(beneficiar);
     actor(initdelegate).give_sp(beneficiar, account_initial_sp.value);
 
-    account_initial_balances["beneficiar"] = get_total_tokens("beneficiar");
+    auto beneficiar_capital_before = get_total_tokens("beneficiar");
 
     comment_options_operation op;
     op.author = "user10";
@@ -364,18 +357,16 @@ BOOST_AUTO_TEST_CASE(check_beneficiares_payouts)
     // skip blocks till comments cashout
     generate_blocks(db.head_block_time() + last_comment_cashout);
 
-    auto user30_parent_reward = check_comment_rewards(get_statistics("user30"), 0);
-    auto user20_parent_reward = check_comment_rewards(get_statistics("user20"), user30_parent_reward);
-    auto user10_parent_reward = check_comment_rewards(get_statistics("user10"), user20_parent_reward);
+    auto user30_parent_reward = check_comment_rewards("user30", get_statistics("user30"), 0);
+    auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), user30_parent_reward);
+    auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward);
 
     check_post_rewards(get_statistics("user00"), user10_parent_reward);
 
-    check_account_balance("user30", get_statistics("user30").author_payout_value.amount);
-    check_account_balance("user20", get_statistics("user20").author_payout_value.amount);
-    check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
-    check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
+    auto beneficiar_capital_after = get_total_tokens("beneficiar");
 
-    check_account_balance("beneficiar", get_statistics("user10").beneficiary_payout_value.amount);
+    BOOST_REQUIRE_EQUAL(beneficiar_capital_after - beneficiar_capital_before,
+                        get_statistics("user10").beneficiary_payout_value.amount);
 }
 
 BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_level_two_cashouts)
@@ -409,12 +400,9 @@ BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_level_two_cashouts)
         // skip blocks till user10 comment cashout. user00 & user10 will be rewarded
         generate_blocks(db.head_block_time() + user10_comment_cashout);
 
-        auto user10_parent_reward = check_comment_rewards(get_statistics("user10"), 0);
+        auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), 0);
 
         check_post_rewards(get_statistics("user00"), user10_parent_reward);
-
-        check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
-        check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
     }
 
     // perform 'user20' and 'user30' cashout
@@ -431,16 +419,11 @@ BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_level_two_cashouts)
         // reward from children comments
         generate_blocks(head_time + last_comment_cashout);
 
-        auto user30_parent_reward = check_comment_rewards(get_statistics("user30"), 0);
-        auto user20_parent_reward = check_comment_rewards(get_statistics("user20"), user30_parent_reward);
-        auto user10_parent_reward = check_comment_rewards(get_statistics("user10"), user20_parent_reward);
+        auto user30_parent_reward = check_comment_rewards("user30", get_statistics("user30"), 0);
+        auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), user30_parent_reward);
+        auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward);
 
         check_post_rewards(get_statistics("user00"), user10_parent_reward);
-
-        check_account_balance("user30", get_statistics("user30").author_payout_value.amount);
-        check_account_balance("user20", get_statistics("user20").author_payout_value.amount);
-        check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
-        check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
     }
 }
 
@@ -477,7 +460,7 @@ BOOST_AUTO_TEST_CASE(check_comment_double_cashouts)
 
     share_type user00_capital_after_user10_cashout = get_total_tokens("user00");
 
-    auto user10_parent_reward = check_comment_rewards(get_statistics("user10"), 0);
+    auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), 0);
 
     // checking that comment reward from voters was not payed twice to user00
     BOOST_REQUIRE_EQUAL(user00_capital_after_user10_cashout - user00_capital_after_user00_cashout,
