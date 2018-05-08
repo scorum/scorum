@@ -1,3 +1,5 @@
+#ifndef IS_LOW_MEM
+
 #include <boost/test/unit_test.hpp>
 
 #include "tags_common.hpp"
@@ -177,3 +179,5 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
+
+#endif
