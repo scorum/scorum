@@ -94,7 +94,6 @@ struct comments_hierarchy_reward_fixture : public database_default_integration_f
             actor(initdelegate).give_sp(voter, account_initial_sp.value);
 
             account_initial_balances[author_name] = get_total_tokens(author_name);
-            account_initial_balances[voter_name] = get_total_tokens(voter_name);
         }
     }
 
@@ -182,6 +181,9 @@ struct comments_hierarchy_reward_fixture : public database_default_integration_f
         share_type current_balance = get_total_tokens(account);
         share_type old_balance = account_initial_balances[account];
 
+        BOOST_TEST_MESSAGE("Account name: " << account << "; reward:" << reward << "; capital before:" << old_balance
+                                            << "; capital after payout:" << current_balance);
+
         BOOST_REQUIRE_EQUAL(current_balance, old_balance + reward);
     }
 
@@ -218,11 +220,6 @@ void comments_hierarchy_reward_fixture::check_4level_hierarchy(const comment& hi
     check_account_balance("user20", get_statistics("user20").author_payout_value.amount);
     check_account_balance("user10", get_statistics("user10").author_payout_value.amount);
     check_account_balance("user00", get_statistics("user00").author_payout_value.amount);
-
-    check_account_balance("voter30", get_statistics("user30").curator_payout_value.amount);
-    check_account_balance("voter20", get_statistics("user20").curator_payout_value.amount);
-    check_account_balance("voter10", get_statistics("user10").curator_payout_value.amount);
-    check_account_balance("voter00", get_statistics("user00").curator_payout_value.amount);
 }
 
 void comments_hierarchy_reward_fixture::check_3level_hierarchy_with_multiple_children(const comment& hierarchy)
