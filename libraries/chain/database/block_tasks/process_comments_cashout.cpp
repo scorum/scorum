@@ -14,12 +14,17 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     comment_service_i& comment_service = ctx.services().comment_service();
     process_comments_cashout_impl impl(ctx);
 
-    auto comments = comment_service.get_by_cashout_time(dgp_service.head_block_time());
-
     impl.update_decreasing_total_claims(reward_fund_scr_service);
-    impl.reward(reward_fund_scr_service, comments);
     impl.update_decreasing_total_claims(reward_fund_sp_service);
-    impl.reward(reward_fund_sp_service, comments);
+
+    comment_service_i::comment_refs_type comments = comment_service.get_by_cashout_time(dgp_service.head_block_time());
+    comment_service_i::comment_refs_type voted_comments;
+
+    std::copy_if(comments.begin(), comments.end(), std::back_inserter(voted_comments),
+                 [&](const comment_object& c) { return c.net_rshares > 0; });
+
+    impl.reward(reward_fund_scr_service, voted_comments);
+    impl.reward(reward_fund_sp_service, voted_comments);
 
     for (const comment_object& comment : comments)
     {

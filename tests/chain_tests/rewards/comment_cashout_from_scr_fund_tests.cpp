@@ -12,7 +12,7 @@
 using namespace scorum::chain;
 
 namespace database_fixture {
-struct comment_cashout_from_scr_fund_fixture : public blogging_common_fixture
+struct comment_cashout_from_scr_fund_fixture : public blogging_common_with_accounts_fixture
 {
     comment_cashout_from_scr_fund_fixture()
         : budget_service(db.budget_service())
