@@ -9,26 +9,7 @@ blogging_common_fixture::blogging_common_fixture()
     , comment_vote_service(db.comment_vote_service())
     , account_service(db.account_service())
     , dgp_service(db.dynamic_global_property_service())
-    , alice("alice")
-    , bob("bob")
-    , sam("sam")
-    , simon("simon")
 {
-    actor(initdelegate).create_account(alice);
-    actor(initdelegate).give_scr(alice, feed_amount);
-    actor(initdelegate).give_sp(alice, feed_amount);
-
-    actor(initdelegate).create_account(bob);
-    actor(initdelegate).give_scr(bob, feed_amount / 2);
-    actor(initdelegate).give_sp(bob, feed_amount / 2);
-
-    actor(initdelegate).create_account(sam);
-    actor(initdelegate).give_scr(sam, feed_amount / 3);
-    actor(initdelegate).give_sp(sam, feed_amount / 3);
-
-    actor(initdelegate).create_account(simon);
-    actor(initdelegate).give_scr(simon, feed_amount / 4);
-    actor(initdelegate).give_sp(simon, feed_amount / 4);
 }
 
 std::string blogging_common_fixture::create_next_post_permlink()
@@ -91,5 +72,30 @@ blogging_common_fixture::vote(const Actor& author, const std::string& permlink, 
     auto comment_id = comment_service.get(author.name, permlink).id;
     auto voter_id = account_service.get_account(voter.name).id;
     return comment_vote_service.get(comment_id, voter_id);
+}
+
+blogging_common_with_accounts_fixture::blogging_common_with_accounts_fixture()
+    : alice("alice")
+    , bob("bob")
+    , sam("sam")
+    , simon("simon")
+{
+    open_database();
+
+    actor(initdelegate).create_account(alice);
+    actor(initdelegate).give_scr(alice, feed_amount);
+    actor(initdelegate).give_sp(alice, feed_amount);
+
+    actor(initdelegate).create_account(bob);
+    actor(initdelegate).give_scr(bob, feed_amount / 2);
+    actor(initdelegate).give_sp(bob, feed_amount / 2);
+
+    actor(initdelegate).create_account(sam);
+    actor(initdelegate).give_scr(sam, feed_amount / 3);
+    actor(initdelegate).give_sp(sam, feed_amount / 3);
+
+    actor(initdelegate).create_account(simon);
+    actor(initdelegate).give_scr(simon, feed_amount / 4);
+    actor(initdelegate).give_sp(simon, feed_amount / 4);
 }
 }

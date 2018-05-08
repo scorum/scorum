@@ -1,4 +1,5 @@
-file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
+                          "plugins/tags/*.hpp")
 
 set( SOURCES
     main.cpp
@@ -16,6 +17,7 @@ set( SOURCES
     rewards/per_block_reward_distribution.cpp
     rewards/fifa_world_cup_2018_bounty_reward_fund_tests.cpp
     rewards/comment_cashout_from_scr_fund_tests.cpp
+    rewards/comment_hierarchy_reward_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
@@ -33,8 +35,11 @@ set( SOURCES
     plugins/statistic/statistic_tests.cpp
     plugins/statistic/account_statistic_tests.cpp
     plugins/tags/tags_tests.cpp
+    plugins/tags/get_comments_tests.cpp
+    plugins/tags/get_tags_by_category.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
+    plugins/database_api/account_api_tests.cpp
     genesis_db_tests.cpp
     withdraw_scorumpower/old_tests.cpp
     withdraw_scorumpower/withdraw_scorumpower_check_common.cpp

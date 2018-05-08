@@ -2,6 +2,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <stack>
+
 #include <scorum/protocol/types.hpp>
 
 #include <scorum/chain/database/database.hpp>
@@ -315,6 +317,28 @@ public:
             set_pending_payout(result.back());
             ++itr;
         }
+        return result;
+    }
+
+    std::vector<discussion>
+    get_comments(const std::string& parent_author, const std::string& parent_permlink, uint32_t depth) const
+    {
+        FC_ASSERT(!parent_author.empty(), "parent_author could't be empty.");
+        FC_ASSERT(!parent_permlink.empty(), "parent_permlink could't be empty.");
+
+        const auto& index = _db.get_index<comment_index>().indices().get<by_parent>();
+        std::vector<discussion> result;
+
+        index_traverse traverse(index);
+
+        traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
+            if (comment.depth <= depth)
+            {
+                result.push_back(discussion(comment));
+                set_pending_payout(result.back());
+            }
+        });
+
         return result;
     }
 
@@ -1060,6 +1084,72 @@ private:
         }
         return result;
     }
+
+    class index_traverse
+    {
+        typedef comment_index::index_iterator<by_parent>::type search_iterator;
+
+    public:
+        typedef comment_index::index<by_parent>::type Index;
+
+        index_traverse(const Index& index)
+            : _index(index)
+        {
+        }
+
+        template <typename OnItem>
+        void find_comments(const std::string& parent_author, const std::string& parent_permlink, OnItem&& on_item)
+        {
+            account_name_type account_name = account_name_type(parent_author);
+
+            scan_children(account_name, parent_permlink);
+
+            while (!_stack.empty())
+            {
+                search_iterator itr = _stack.top();
+                _stack.pop();
+
+                on_item(*itr);
+
+                scan_children(itr->author, fc::to_string(itr->permlink));
+            }
+        }
+
+    private:
+        const Index& _index;
+
+        void scan_children(const account_name_type& parent_author, const std::string& parent_permlink)
+        {
+            auto itr = _index.find(boost::make_tuple(parent_author, parent_permlink));
+
+            if (itr != _index.end())
+            {
+                put_in_stack(itr);
+            }
+        }
+
+        template <typename StartItr> void put_in_stack(StartItr& itr)
+        {
+            auto parent_author = itr->parent_author;
+            auto parent_permlink = itr->parent_permlink;
+
+            std::vector<search_iterator> array;
+
+            while (itr != _index.end() && itr->parent_author == parent_author
+                   && itr->parent_permlink == parent_permlink)
+            {
+                array.push_back(itr);
+                ++itr;
+            }
+
+            for (auto itr = array.rbegin(); itr != array.rend(); ++itr)
+            {
+                _stack.push(*itr);
+            }
+        }
+
+        std::stack<search_iterator> _stack;
+    };
 };
 
 } // namespace tags

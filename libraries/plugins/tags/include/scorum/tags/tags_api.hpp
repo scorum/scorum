@@ -62,6 +62,10 @@ public:
     std::vector<api::discussion> get_content_replies(const std::string& parent,
                                                      const std::string& parent_permlink) const;
 
+    std::vector<api::discussion> get_comments(const std::string& parent_author,
+                                              const std::string& parent_permlink,
+                                              uint32_t depth = SCORUM_MAX_COMMENT_DEPTH) const;
+
     /**
      *  Return the active discussions with the highest cumulative pending payouts without respect to category, total
      *  pending payout means the pending payout of all children as well.
@@ -119,6 +123,7 @@ FC_API(scorum::tags::tags_api,
        // content
        (get_content)
        (get_content_replies)
+       (get_comments)
        (get_discussions_by_author_before_date)
        (get_replies_by_last_update))
 // clang-format on
