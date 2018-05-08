@@ -360,62 +360,6 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
                                     cat_tags_after_ethalon.end());
 }
 
-SCORUM_TEST_CASE(check_posts_category_changed)
-{
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "category1";
-        op.json_metadata = R"({"tags": ["tag1","tag2","tag3"]})";
-    });
-
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "category1";
-        op.json_metadata = R"({"tags": ["tag2","tag3","tag4"]})";
-    });
-
-    auto cat1_tags_before = _api.get_tags_by_category("category1");
-    auto cat2_tags_before = _api.get_tags_by_category("category2");
-
-    std::vector<std::pair<std::string, uint32_t>> cat1_tags_before_ethalon
-        = { { "tag3", 2 }, { "tag2", 2 }, { "tag4", 1 }, { "tag1", 1 } };
-
-    BOOST_REQUIRE_EQUAL(cat1_tags_before.size(), cat1_tags_before_ethalon.size());
-    BOOST_REQUIRE_EQUAL(cat2_tags_before.size(), 0ul);
-
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags_before.begin(), cat1_tags_before.end(), cat1_tags_before_ethalon.begin(),
-                                    cat1_tags_before_ethalon.end());
-
-    // changing post2's category
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "category2";
-        op.json_metadata = R"({"tags": ["tag2","tag3","tag4"]})";
-    });
-
-    auto cat1_tags_after = _api.get_tags_by_category("category1");
-    auto cat2_tags_after = _api.get_tags_by_category("category2");
-
-    BOOST_REQUIRE_EQUAL(cat1_tags_after.size(), 3ul);
-    BOOST_REQUIRE_EQUAL(cat2_tags_after.size(), 3ul);
-
-    std::vector<std::pair<std::string, uint32_t>> cat1_tags_after_ethalon
-        = { { "tag3", 1 }, { "tag2", 1 }, { "tag1", 1 } };
-    std::vector<std::pair<std::string, uint32_t>> cat2_tags_after_ethalon
-        = { { "tag3", 1 }, { "tag2", 1 }, { "tag1", 1 } };
-
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags_after.begin(), cat1_tags_after.end(), cat1_tags_after_ethalon.begin(),
-                                    cat1_tags_after_ethalon.end());
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat2_tags_after.begin(), cat2_tags_after.end(), cat2_tags_after_ethalon.begin(),
-                                    cat2_tags_after_ethalon.end());
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace tags_tests
