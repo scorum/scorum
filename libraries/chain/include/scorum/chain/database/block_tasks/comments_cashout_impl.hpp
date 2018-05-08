@@ -39,6 +39,23 @@ public:
 
     explicit process_comments_cashout_impl(block_task_context& ctx);
 
+    template <typename FundService> void update_decreasing_total_claims(FundService& fund_service)
+    {
+        using fund_object_type = typename FundService::object_type;
+
+        const auto& rf = fund_service.get();
+
+        auto now = dgp_service.head_block_time();
+
+        fc::uint128_t total_claims = rewards_math::calculate_decreasing_total_claims(
+            rf.recent_claims, now, rf.last_update, SCORUM_RECENT_RSHARES_DECAY_RATE);
+
+        fund_service.update([&](fund_object_type& rfo) {
+            rfo.recent_claims = total_claims;
+            rfo.last_update = now;
+        });
+    }
+
     template <typename FundService> void reward(FundService& fund_service, const comment_refs_type& comments)
     {
         using fund_object_type = typename FundService::object_type;
@@ -49,9 +66,8 @@ public:
             return;
 
         shares_vector_type total_rshares = get_total_rshares(comments);
-        fc::uint128_t total_claims = rewards_math::calculate_total_claims(
-            rf.recent_claims, dgp_service.head_block_time(), rf.last_update, rf.author_reward_curve, total_rshares,
-            SCORUM_RECENT_RSHARES_DECAY_RATE);
+        fc::uint128_t total_claims
+            = rewards_math::calculate_total_claims(rf.recent_claims, rf.author_reward_curve, total_rshares);
 
         struct comment_reward
         {
@@ -91,7 +107,6 @@ public:
             comment_rewards[comment.parent_author].commenting += payout_result.parent_author_reward.amount;
         }
 
-        // Write the cached fund state back to the database
         fund_service.update([&](fund_object_type& rfo) {
             rfo.recent_claims = total_claims;
             rfo.activity_reward_balance -= total_reward;

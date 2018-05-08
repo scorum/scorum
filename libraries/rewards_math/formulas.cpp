@@ -22,18 +22,17 @@ share_type predict_payout(const uint128_t& recent_claims,
                           const fc::microseconds& decay_rate,
                           const share_type& min_comment_payout_share)
 {
-    uint128_t total_claims = calculate_total_claims(recent_claims, time_point_sec(), time_point_sec(),
-                                                    author_reward_curve, { rshares }, decay_rate);
+    uint128_t total_claims
+        = calculate_decreasing_total_claims(recent_claims, time_point_sec(), time_point_sec(), decay_rate);
+    total_claims = calculate_total_claims(total_claims, author_reward_curve, { rshares });
     return calculate_payout(rshares, total_claims, reward_fund, author_reward_curve, max_payout,
                             min_comment_payout_share);
 }
 
-uint128_t calculate_total_claims(const uint128_t& recent_claims,
-                                 const time_point_sec& now,
-                                 const time_point_sec& last_payout_check,
-                                 const curve_id author_reward_curve,
-                                 const shares_vector_type& vrshares,
-                                 const fc::microseconds& decay_rate)
+uint128_t calculate_decreasing_total_claims(const uint128_t& recent_claims,
+                                            const time_point_sec& now,
+                                            const time_point_sec& last_payout_check,
+                                            const fc::microseconds& decay_rate)
 {
     try
     {
@@ -41,7 +40,24 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
         FC_ASSERT(decay_rate.to_seconds() > 0);
 
         uint128_t total_claims = recent_claims;
-        total_claims -= (total_claims * (now - last_payout_check).to_seconds()) / decay_rate.to_seconds();
+        int64_t decay_rate_s = decay_rate.to_seconds();
+        int64_t delta = std::min((now - last_payout_check).to_seconds(), decay_rate_s);
+
+        total_claims -= (total_claims * delta) / decay_rate_s;
+
+        return total_claims;
+    }
+    FC_CAPTURE_AND_RETHROW((recent_claims)(now)(last_payout_check)(decay_rate))
+}
+
+uint128_t calculate_total_claims(const uint128_t& recent_claims,
+                                 const curve_id author_reward_curve,
+                                 const shares_vector_type& vrshares)
+{
+    try
+    {
+        uint128_t total_claims = recent_claims;
+
         for (const share_type& rshares : vrshares)
         {
             total_claims += evaluate_reward_curve(rshares.value, author_reward_curve);
@@ -49,7 +65,7 @@ uint128_t calculate_total_claims(const uint128_t& recent_claims,
 
         return total_claims;
     }
-    FC_CAPTURE_AND_RETHROW((recent_claims)(now)(last_payout_check)(author_reward_curve)(vrshares))
+    FC_CAPTURE_AND_RETHROW((recent_claims)(author_reward_curve)(vrshares))
 }
 
 share_type calculate_payout(const share_type& rshares,
@@ -184,23 +200,17 @@ percent_type calculate_restoring_power(const percent_type voting_power,
 
 percent_type calculate_used_power(const percent_type voting_power,
                                   const vote_weight_type vote_weight,
-                                  const uint16_t max_votes_per_day_voting_power_rate,
-                                  const fc::microseconds& vote_regeneration_seconds)
+                                  const percent_type decay_percent)
 {
     try
     {
         FC_ASSERT(SCORUM_100_PERCENT > 0);
+        FC_ASSERT(decay_percent > 0 && decay_percent < 100);
 
         int64_t abs_weight = std::abs(vote_weight);
         int64_t used_power = (voting_power * abs_weight) / SCORUM_100_PERCENT;
 
-        int64_t max_vote_denom = max_votes_per_day_voting_power_rate;
-        max_vote_denom *= vote_regeneration_seconds.to_seconds();
-        max_vote_denom /= 60 * 60 * 24;
-
-        FC_ASSERT(max_vote_denom > 0);
-
-        used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
+        used_power = (used_power * decay_percent) / 100;
         return (percent_type)used_power;
     }
     FC_CAPTURE_AND_RETHROW((voting_power)(vote_weight))

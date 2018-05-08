@@ -14,6 +14,9 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     comment_service_i& comment_service = ctx.services().comment_service();
     process_comments_cashout_impl impl(ctx);
 
+    impl.update_decreasing_total_claims(reward_fund_scr_service);
+    impl.update_decreasing_total_claims(reward_fund_sp_service);
+
     comment_service_i::comment_refs_type comments = comment_service.get_by_cashout_time(dgp_service.head_block_time());
     comment_service_i::comment_refs_type voted_comments;
 
