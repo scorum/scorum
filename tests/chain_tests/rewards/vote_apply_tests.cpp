@@ -11,8 +11,11 @@
 
 #include "database_default_integration.hpp"
 
+#include <scorum/rewards_math/formulas.hpp>
+
 using namespace scorum;
 using namespace database_fixture;
+using namespace scorum::rewards_math;
 
 class vote_apply_base_fixture : public database_default_integration_fixture
 {
@@ -59,9 +62,6 @@ public:
         sam_comment_op.body = "foo bar";
         sam_comment_op.parent_permlink = "foo";
         sam_comment_op.parent_author = "alice";
-
-        max_vote = (SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE * SCORUM_VOTE_REGENERATION_SECONDS.to_seconds())
-            / (60 * 60 * 24);
     }
 
     std::string comment(const std::string& actor)
@@ -102,8 +102,6 @@ public:
 
     using comment_ops_type = std::map<std::string, comment_operation>;
     comment_ops_type comment_ops;
-
-    int64_t max_vote;
 };
 
 BOOST_FIXTURE_TEST_SUITE(vote_base_tests, vote_apply_base_fixture)
@@ -202,52 +200,15 @@ SCORUM_TEST_CASE(success_vote_for_100_weight_check)
 
     const auto& comment_vote = comment_vote_service.get(alice_comment.id, bob_vested.id);
 
-    // * Math notes
-    //=================================================================================================
-    // clang-format off
-    //
-    //           scorumpower
-    // rshares = -------------- * used_power =
-    //               S100
-    //
-    //    scorumpower                            S100 * elapsed_seconds             weight            1
-    // = -------------- * (( old_voting_power + -------------------------------- ) * ------- + M - 1) * --- =@
-    //        S100                               SCORUM_VOTE_REGENERATION_SECONDS      S100              M
-    //
-    //    scorumpower                                 1
-    // =@ -------------- * (old_voting_power + M - 1) * ---
-    //         S100                                      M
-    //
-    //                 (M - 1)
-    // voting_power =@ ------- * (old_voting_power - 1)
-    //                    M
-    //
-    // used_power = old_voting_power - voting_power
-    //
-    // voting_power = old_voting_power - voting_power_delta =@
-    //
-    //                                                     1
-    // =@ old_voting_power - (old_voting_power + M - 1) * ---
-    //                                                     M
-    //
-    // S100 - SCORUM_100_PERCENT
-    // '=@' - approximately equally
-    // M = max_vote =
-    // = SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24)
-    //
-    // SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE - constant
-    // SCORUM_VOTE_REGENERATION_SECONDS           - constant
-    //
-    // clang-format on
-    //=================================================================================================
-
     //------------------------------------------------------------------------Bob changes
 
     // check last_vote_time
     BOOST_REQUIRE_EQUAL(bob_vested.last_vote_time.sec_since_epoch(),
                         global_property_service.head_block_time().sec_since_epoch());
 
-    BOOST_REQUIRE_EQUAL(bob_vested.voting_power, old_voting_power - ((old_voting_power + max_vote - 1) / max_vote));
+    BOOST_REQUIRE_EQUAL(bob_vested.voting_power,
+                        old_voting_power - calculate_used_power(old_voting_power, SCORUM_PERCENT(100),
+                                                                SCORUM_VOTING_POWER_DECAY_PERCENT));
 
     //------------------------------------------------------------Bob comment vote changes
 
@@ -336,28 +297,9 @@ SCORUM_TEST_CASE(reduced_power_for_50_weight_check)
 
     BOOST_REQUIRE_NO_THROW(validate_database());
 
-    // Look 'Math notes'
-    //=================================================================================================
-    // clang-format off
-    //
-    // check voting_power decrease:
-    //
-    // voting_power = old_voting_power - voting_power_delta =@
-    //
-    //                                                     1
-    // =@ old_voting_power - (old_voting_power + M - 1) * ---
-    //                                                    2*M
-    //
-    // For W = 50S:
-    //                                 1                                   1
-    // (old_voting_power + 2*M - 2) * --- =@ (old_voting_power + M - 1) * ---
-    //                                2*M                                 2*M
-    //
-    // clang-format on
-    //=================================================================================================
-
     BOOST_REQUIRE_EQUAL(alice_vested.voting_power,
-                        old_voting_power - ((old_voting_power + max_vote - 1) / (2 * max_vote)));
+                        old_voting_power - calculate_used_power(old_voting_power, SCORUM_PERCENT(50),
+                                                                SCORUM_VOTING_POWER_DECAY_PERCENT));
 
     share_type rshares = (uint128_t(alice_vested.scorumpower.amount.value)
                           * (old_voting_power - alice_vested.voting_power) / SCORUM_100_PERCENT)
@@ -376,25 +318,6 @@ SCORUM_TEST_CASE(restore_power_check)
 
     auto old_abs_rshares = bob_comment.abs_rshares;
 
-    // Look 'Math notes'
-    //=================================================================================================
-    // clang-format off
-    //
-    //                      S100 * elapsed_seconds
-    // regenerated_power = ------------------------
-    //                 SCORUM_VOTE_REGENERATION_SECONDS
-    //
-    // current_power = voter.voting_power + regenerated_power
-    //
-    // For current_power = S100
-    //
-    //                                                      S100 - voter.voting_power
-    // elapsed_seconds = SCORUM_VOTE_REGENERATION_SECONDS * -------------------------
-    //                                                               S100
-    //
-    // clang-format on
-    //=================================================================================================
-
     int64_t elapsed_seconds = SCORUM_VOTE_REGENERATION_SECONDS.to_seconds()
         * (SCORUM_100_PERCENT - alice_vested.voting_power) / SCORUM_100_PERCENT;
     generate_blocks(global_property_service.head_block_time() + elapsed_seconds, true);
@@ -403,9 +326,10 @@ SCORUM_TEST_CASE(restore_power_check)
 
     // voting_power is total restored
 
-    int64_t used_power = (SCORUM_100_PERCENT + max_vote - 1) / max_vote;
+    int64_t used_power
+        = calculate_used_power(SCORUM_100_PERCENT, SCORUM_PERCENT(100), SCORUM_VOTING_POWER_DECAY_PERCENT);
 
-    BOOST_REQUIRE_EQUAL(alice_vested.voting_power, SCORUM_100_PERCENT - used_power);
+    BOOST_REQUIRE_EQUAL(account_service.get_account("alice").voting_power, SCORUM_100_PERCENT - used_power);
 
     share_type rshares
         = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
@@ -437,7 +361,8 @@ SCORUM_TEST_CASE(negative_vote_check)
                              .to_uint64();
 
     BOOST_REQUIRE_EQUAL(sam_vested.voting_power,
-                        SCORUM_100_PERCENT - ((SCORUM_100_PERCENT + max_vote - 1) / (2 * max_vote)));
+                        SCORUM_100_PERCENT - calculate_used_power(SCORUM_100_PERCENT, SCORUM_PERCENT(50),
+                                                                  SCORUM_VOTING_POWER_DECAY_PERCENT));
 
     BOOST_REQUIRE_EQUAL(bob_comment.net_rshares, old_abs_rshares - rshares);
 
@@ -493,30 +418,8 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_different_voters_check)
 
     const auto alice_vote_weight = 25;
 
-    // Look 'Math notes'
-    //=================================================================================================
-    // clang-format off
-    //
-    //           scorumpower
-    // rshares = -------------- * used_power =
-    //               S100
-    //
-    //    scorumpower                            S100 * elapsed_seconds             weight            1
-    // = -------------- * (( old_voting_power + -------------------------------- ) * ------- + M - 1) * --- =@
-    //        S100                               SCORUM_VOTE_REGENERATION_SECONDS      S100              M
-    //
-    // For weight = S25
-    //
-    //    scorumpower                       S25              1
-    // =@ -------------- * (old_voting_power * ---  + M - 1) * ---
-    //         S100                           S100              M
-    //
-    // clang-format on
-    //=================================================================================================
-
-    auto used_power
-        = ((SCORUM_1_PERCENT * alice_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT) + max_vote - 1)
-        / max_vote;
+    auto used_power = calculate_used_power(alice_vested.voting_power, SCORUM_1_PERCENT * alice_vote_weight,
+                                           SCORUM_VOTING_POWER_DECAY_PERCENT);
     auto alice_voting_power = alice_vested.voting_power - used_power;
     auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
@@ -554,13 +457,19 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_same_voters_check)
 
     const auto alice_second_vote_weight = 35;
 
-    auto used_power = ((SCORUM_1_PERCENT * alice_second_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT)
-                       + max_vote - 1)
-        / max_vote;
-    auto alice_voting_power = alice_vested.voting_power - used_power;
+    auto alice_voting_power
+        = calculate_restoring_power(alice_vested.voting_power, db.head_block_time() + SCORUM_BLOCK_INTERVAL,
+                                    db.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
+    auto used_power = calculate_used_power(alice_voting_power, SCORUM_1_PERCENT * alice_second_vote_weight,
+                                           SCORUM_VOTING_POWER_DECAY_PERCENT);
+    alice_voting_power = alice_voting_power - used_power;
     auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
+    wlog("${v}", ("v", account_service.get_account("alice").voting_power));
+
     vote("alice", "bob", alice_second_vote_weight);
+
+    wlog("${v}", ("v", account_service.get_account("alice").voting_power));
 
     BOOST_REQUIRE_EQUAL(alice_vote.rshares, (int64_t)new_rshares);
 
@@ -594,10 +503,12 @@ SCORUM_TEST_CASE(decreasing_rshares_for_2_same_voters_check)
 
     const auto alice_second_vote_weight = -75;
 
-    auto used_power = ((SCORUM_1_PERCENT * -alice_second_vote_weight * (alice_vested.voting_power) / SCORUM_100_PERCENT)
-                       + max_vote - 1)
-        / max_vote;
-    auto alice_voting_power = alice_vested.voting_power - used_power;
+    auto alice_voting_power
+        = calculate_restoring_power(alice_vested.voting_power, db.head_block_time() + SCORUM_BLOCK_INTERVAL,
+                                    db.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
+    auto used_power = calculate_used_power(alice_voting_power, SCORUM_1_PERCENT * std::abs(alice_second_vote_weight),
+                                           SCORUM_VOTING_POWER_DECAY_PERCENT);
+    alice_voting_power = alice_voting_power - used_power;
     auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
     vote("alice", "bob", alice_second_vote_weight);

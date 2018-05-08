@@ -236,8 +236,7 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
                                                               voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
 
         uint16_t used_power = scorum::rewards_math::calculate_used_power(current_power, vote.weight * SCORUM_1_PERCENT,
-                                                                         SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE,
-                                                                         SCORUM_VOTE_REGENERATION_SECONDS);
+                                                                         SCORUM_VOTING_POWER_DECAY_PERCENT);
 
         auto last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
             current_power - used_power, dprops_service.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
