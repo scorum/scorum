@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(comment_operation_category_changed_should_throw)
     op.author = "alice";
     op.permlink = "alice-permlink";
     op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-    op.parent_permlink = "alice-category";
+    op.parent_permlink = "alice-category-1";
     op.title = "alice-title";
     op.body = "alice-body";
     op.json_metadata = "{\"foo\":\"bar\"}";
