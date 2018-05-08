@@ -49,54 +49,70 @@ process_comments_cashout_impl::get_total_rshares(const comment_service_i::commen
 
     for (const comment_object& comment : comments)
     {
-        if (comment.net_rshares > 0)
-        {
-            ret.push_back(comment.net_rshares);
-        }
+        ret.push_back(comment.net_rshares);
     }
 
     return ret;
 }
 
-asset process_comments_cashout_impl::pay_for_comment(const comment_object& comment, const asset& reward)
+process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment(
+    const comment_object& comment, const asset& publication_reward, const asset& children_comments_reward)
 {
     try
     {
-        auto reward_symbol = reward.symbol();
-        if (reward.amount < 1)
-            return asset(0, reward_symbol);
+        auto reward_symbol = publication_reward.symbol();
+        comment_payout_result payout_result{ asset(0, reward_symbol), asset(0, reward_symbol) };
+        if (publication_reward.amount < 1 && children_comments_reward.amount < 1)
+            return payout_result;
 
-        asset curation_tokens = asset(
-            rewards_math::calculate_curations_payout(reward.amount, SCORUM_CURATION_REWARD_PERCENT), reward_symbol);
-        asset author_tokens = reward - curation_tokens;
+        asset author_reward(0, reward_symbol);
+        asset curators_reward(0, reward_symbol);
 
-        author_tokens += pay_curators(comment, curation_tokens); // curation_tokens can be changed inside pay_curators()
+        if (publication_reward.amount > 0)
+        {
+            curators_reward = asset(
+                rewards_math::calculate_curations_payout(publication_reward.amount, SCORUM_CURATION_REWARD_PERCENT),
+                reward_symbol);
+            author_reward = publication_reward - curators_reward;
 
-        asset claimed_reward = author_tokens + curation_tokens;
+            author_reward
+                += pay_curators(comment, curators_reward); // curation_tokens can be changed inside pay_curators()
+        }
+
+        auto parent_author_reward = comment.depth == 0
+            ? asset(0, reward_symbol)
+            : (author_reward + children_comments_reward) * SCORUM_PARENT_COMMENT_REWARD_PERCENT / SCORUM_100_PERCENT;
+        author_reward = (author_reward + children_comments_reward) - parent_author_reward;
+
+        payout_result.total_claimed_reward = author_reward + curators_reward;
+        payout_result.parent_author_reward = parent_author_reward;
 
         auto total_beneficiary = asset(0, reward_symbol);
         for (auto& b : comment.beneficiaries)
         {
-            asset benefactor_tokens = (author_tokens * b.weight) / SCORUM_100_PERCENT;
+            asset benefactor_tokens = (author_reward * b.weight) / SCORUM_100_PERCENT;
             pay_account(account_service.get_account(b.account), benefactor_tokens);
             _ctx.push_virtual_operation(comment_benefactor_reward_operation(
                 b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
             total_beneficiary += benefactor_tokens;
         }
 
-        author_tokens -= total_beneficiary;
+        author_reward -= total_beneficiary;
 
         const auto& author = account_service.get_account(comment.author);
-        pay_account(author, author_tokens);
+        pay_account(author, author_reward);
+
+        comment_service.update(comment, [&](comment_object& c) { c.last_payout = dgp_service.head_block_time(); });
 
         _ctx.push_virtual_operation(
-            author_reward_operation(comment.author, fc::to_string(comment.permlink), author_tokens));
-        _ctx.push_virtual_operation(
-            comment_reward_operation(comment.author, fc::to_string(comment.permlink), claimed_reward));
+            author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
+        _ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink),
+                                                             payout_result.total_claimed_reward));
 
-        accumulate_statistic(comment, author, author_tokens, curation_tokens, total_beneficiary, reward_symbol);
+        accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, publication_reward,
+                             children_comments_reward, reward_symbol);
 
-        return claimed_reward;
+        return payout_result;
     }
     FC_CAPTURE_AND_RETHROW((comment))
 }
@@ -161,6 +177,8 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
                                                          const asset& author_tokens,
                                                          const asset& curation_tokens,
                                                          const asset& total_beneficiary,
+                                                         const asset& publication_tokens,
+                                                         const asset& children_comments_tokens,
                                                          asset_symbol_type reward_symbol)
 {
     FC_ASSERT(author_tokens.symbol() == reward_symbol);
@@ -174,12 +192,12 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
     if (SCORUM_SYMBOL == reward_symbol)
     {
         accumulate_comment_statistic(comment_statistic_scr_service, comment, total_payout, author_tokens,
-                                     curation_tokens, total_beneficiary);
+                                     curation_tokens, total_beneficiary, publication_tokens, children_comments_tokens);
     }
     else if (SP_SYMBOL == reward_symbol)
     {
         accumulate_comment_statistic(comment_statistic_sp_service, comment, total_payout, author_tokens,
-                                     curation_tokens, total_beneficiary);
+                                     curation_tokens, total_beneficiary, publication_tokens, children_comments_tokens);
     }
 
 #ifndef IS_LOW_MEM
@@ -196,6 +214,36 @@ void process_comments_cashout_impl::accumulate_statistic(const account_object& v
     const auto& voter_stat = account_blogging_statistic_service.obtain(voter.id);
     account_blogging_statistic_service.increase_curation_rewards(voter_stat, curation_tokens);
 #endif
+}
+
+comment_refs_type process_comments_cashout_impl::collect_parents(const comment_refs_type& comments)
+{
+    struct by_depth_greater
+    {
+        bool operator()(const comment_object& lhs, const comment_object& rhs)
+        {
+            return std::tie(lhs.depth, lhs.id) > std::tie(rhs.depth, rhs.id);
+        }
+    };
+
+    using comment_refs_set = std::set<comment_refs_type::value_type, by_depth_greater>;
+    comment_refs_set ordered_comments(comments.begin(), comments.end());
+
+    // 'ordered_comments' set is sorted by depth in desc order.
+    for (auto it = ordered_comments.begin(); it != ordered_comments.end() && it->get().depth != 0; ++it)
+    {
+        const comment_object& comment = it->get();
+
+        const auto& parent_comment = comment_service.get(comment.parent_author, fc::to_string(comment.parent_permlink));
+
+        // insert parent if it doesn't exist or do nothing if exists. Insertable parent will be always 'after' current
+        // comment because of the set ordering
+        ordered_comments.insert(parent_comment);
+    }
+
+    comment_refs_type comments_with_parents(ordered_comments.begin(), ordered_comments.end());
+
+    return comments_with_parents;
 }
 }
 }

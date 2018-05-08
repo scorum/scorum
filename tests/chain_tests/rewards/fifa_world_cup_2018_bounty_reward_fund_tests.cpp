@@ -10,7 +10,7 @@
 using namespace scorum::chain;
 
 namespace database_fixture {
-struct fifa_world_cup_2018_bounty_reward_fund_fixture : public blogging_common_fixture
+struct fifa_world_cup_2018_bounty_reward_fund_fixture : public blogging_common_with_accounts_fixture
 {
     fifa_world_cup_2018_bounty_reward_fund_fixture()
         : fifa_world_cup_2018_bounty_reward_fund_service(db.fifa_world_cup_2018_bounty_reward_fund_service())

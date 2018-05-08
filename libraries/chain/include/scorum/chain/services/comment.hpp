@@ -39,6 +39,5 @@ public:
 
     bool is_exists(const account_name_type& author, const std::string& permlink) const override;
 };
-
 } // namespace chain
 } // namespace scorum
