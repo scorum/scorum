@@ -12,6 +12,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/rewards_math/curve.hpp>
+#include <scorum/rewards_math/formulas.hpp>
 
 #include <scorum/plugins/debug_node/debug_node_plugin.hpp>
 
@@ -341,12 +342,15 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         {
             generate_blocks(blocks_between_comments);
 
+            fc::uint128_t total_claims = alice_comment_net_rshares.value;
             for (auto i = 0; i < blocks_between_comments; ++i)
             {
-                alice_comment_net_rshares -= alice_comment_net_rshares * SCORUM_BLOCK_INTERVAL
-                    / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
+                total_claims = scorum::rewards_math::calculate_decreasing_total_claims(
+                    total_claims, fc::time_point_sec() + SCORUM_BLOCK_INTERVAL, fc::time_point_sec(),
+                    SCORUM_RECENT_RSHARES_DECAY_RATE);
             }
-            BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares + bob_comment_net_rshares);
+            BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(),
+                                (total_claims + bob_comment_net_rshares.value).to_uint64());
             BOOST_REQUIRE_GT(fund.activity_reward_balance, ASSET_NULL_SP);
 
             BOOST_REQUIRE_EQUAL(alice_acc.scorumpower,
@@ -370,7 +374,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         ACTORS((alice)(bob))
 
         vest("alice", ASSET_SCR(100e+3));
-        vest("bob", ASSET_SCR(100e+3));
+        vest("bob", ASSET_SCR(50e+3));
 
         generate_block();
 
@@ -413,7 +417,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         {
             const auto& post_rf = db.obtain_service<dbs_content_reward_fund_sp>().get();
 
-            BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
+            BOOST_REQUIRE_EQUAL(post_rf.recent_claims.to_uint64(), alice_vshares.to_uint64());
             validate_database();
         }
 
@@ -426,19 +430,25 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
 
         while (db.head_block_time() < bob_cashout_time)
         {
-            alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
+            alice_vshares = scorum::rewards_math::calculate_decreasing_total_claims(
+                alice_vshares, db.head_block_time() + SCORUM_BLOCK_INTERVAL, db.head_block_time(),
+                SCORUM_RECENT_RSHARES_DECAY_RATE);
+
             const auto& post_rf = db.obtain_service<dbs_content_reward_fund_sp>().get();
 
-            BOOST_REQUIRE(post_rf.recent_claims == alice_vshares);
+            BOOST_REQUIRE_EQUAL(post_rf.recent_claims.to_uint64(), alice_vshares.to_uint64());
 
             generate_block();
         }
 
         {
-            alice_vshares -= (alice_vshares * SCORUM_BLOCK_INTERVAL) / SCORUM_RECENT_RSHARES_DECAY_RATE.to_seconds();
+            alice_vshares = scorum::rewards_math::calculate_decreasing_total_claims(
+                alice_vshares, db.head_block_time() + SCORUM_BLOCK_INTERVAL, db.head_block_time(),
+                SCORUM_RECENT_RSHARES_DECAY_RATE);
+
             const auto& post_rf = db.obtain_service<dbs_content_reward_fund_sp>().get();
 
-            BOOST_REQUIRE(post_rf.recent_claims == alice_vshares + bob_vshares);
+            BOOST_REQUIRE_EQUAL(post_rf.recent_claims.to_uint64(), (alice_vshares + bob_vshares).to_uint64());
             validate_database();
         }
     }

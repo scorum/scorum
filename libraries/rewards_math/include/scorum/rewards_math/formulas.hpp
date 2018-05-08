@@ -23,12 +23,14 @@ share_type predict_payout(const uint128_t& recent_claims,
                           const fc::microseconds& decay_rate,
                           const share_type& min_comment_payout_share);
 
+uint128_t calculate_decreasing_total_claims(const uint128_t& recent_claims,
+                                            const time_point_sec& now,
+                                            const time_point_sec& last_payout_check,
+                                            const fc::microseconds& decay_rate);
+
 uint128_t calculate_total_claims(const uint128_t& recent_claims,
-                                 const time_point_sec& now,
-                                 const time_point_sec& last_payout_check,
                                  const curve_id author_reward_curve,
-                                 const shares_vector_type& vrshares,
-                                 const fc::microseconds& decay_rate);
+                                 const shares_vector_type& vrshares);
 
 share_type calculate_payout(const share_type& rshares,
                             const uint128_t& total_claims,
@@ -63,8 +65,7 @@ time_point_sec calculate_expected_restoring_time(percent_type voting_power,
 
 percent_type calculate_used_power(const percent_type voting_power,
                                   const vote_weight_type vote_weight,
-                                  const uint16_t max_votes_per_day_voting_power_rate,
-                                  const fc::microseconds& vote_regeneration_seconds);
+                                  const percent_type decay_percent);
 
 share_type calculate_abs_reward_shares(const percent_type used_voting_power,
                                        const share_type& effective_balance_shares);
