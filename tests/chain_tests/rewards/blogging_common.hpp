@@ -1,6 +1,6 @@
 #pragma once
 
-#include "database_default_integration.hpp"
+#include "database_trx_integration.hpp"
 
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
@@ -13,7 +13,7 @@
 
 namespace database_fixture {
 
-struct blogging_common_fixture : public database_default_integration_fixture
+struct blogging_common_fixture : public database_trx_integration_fixture
 {
     blogging_common_fixture();
 
@@ -32,6 +32,11 @@ struct blogging_common_fixture : public database_default_integration_fixture
     comment_vote_service_i& comment_vote_service;
     account_service_i& account_service;
     dynamic_global_property_service_i& dgp_service;
+};
+
+struct blogging_common_with_accounts_fixture : public blogging_common_fixture
+{
+    blogging_common_with_accounts_fixture();
 
     Actor alice;
     Actor bob;

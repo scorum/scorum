@@ -12,7 +12,7 @@
 namespace scorum {
 namespace tags {
 
-// using namespace scorum::chain;
+using namespace scorum::chain;
 using namespace boost::multi_index;
 
 using chainbase::object;

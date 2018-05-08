@@ -20,7 +20,7 @@ enum class reward_fund_type
 {
     content_reward_fund_scr = 0,
     content_reward_fund_sp,
-	content_fifa_world_cup_2018_bounty_reward_fund
+    content_fifa_world_cup_2018_bounty_reward_fund
 };
 
 /**
@@ -48,6 +48,7 @@ private:
 }
 }
 
-FC_REFLECT_ENUM(scorum::app::reward_fund_type, (content_reward_fund_scr)(content_reward_fund_sp)(content_fifa_world_cup_2018_bounty_reward_fund))
+FC_REFLECT_ENUM(scorum::app::reward_fund_type,
+                (content_reward_fund_scr)(content_reward_fund_sp)(content_fifa_world_cup_2018_bounty_reward_fund))
 
 FC_API(scorum::app::chain_api, (get_chain_properties)(get_next_scheduled_hardfork)(get_reward_fund)(get_chain_capital))

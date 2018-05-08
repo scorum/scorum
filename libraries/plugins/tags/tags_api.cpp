@@ -109,6 +109,12 @@ std::vector<discussion> tags_api::get_content_replies(const std::string& parent,
     return guard().with_read_lock([&]() { return _impl->get_content_replies(parent, parent_permlink); });
 }
 
+std::vector<discussion>
+tags_api::get_comments(const std::string& parent_author, const std::string& parent_permlink, uint32_t depth) const
+{
+    return guard().with_read_lock([&]() { return _impl->get_comments(parent_author, parent_permlink, depth); });
+}
+
 std::vector<discussion> tags_api::get_replies_by_last_update(account_name_type start_author,
                                                              const std::string& start_permlink,
                                                              uint32_t limit) const

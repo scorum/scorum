@@ -282,7 +282,10 @@ std::vector<extended_account> database_api_impl::get_accounts(const std::vector<
         auto itr = idx.find(name);
         if (itr != idx.end())
         {
-            results.push_back(extended_account(*itr, _db));
+            extended_account api_obj(*itr, _db);
+            api_obj.voting_power = rewards_math::calculate_restoring_power(
+                api_obj.voting_power, _db.head_block_time(), api_obj.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
+            results.push_back(std::move(api_obj));
 
             auto vitr = vidx.lower_bound(boost::make_tuple(itr->id, witness_id_type()));
             while (vitr != vidx.end() && vitr->account == itr->id)
