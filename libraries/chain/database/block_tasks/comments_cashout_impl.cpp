@@ -49,10 +49,7 @@ process_comments_cashout_impl::get_total_rshares(const comment_service_i::commen
 
     for (const comment_object& comment : comments)
     {
-        if (comment.net_rshares > 0)
-        {
-            ret.push_back(comment.net_rshares);
-        }
+        ret.push_back(comment.net_rshares);
     }
 
     return ret;
