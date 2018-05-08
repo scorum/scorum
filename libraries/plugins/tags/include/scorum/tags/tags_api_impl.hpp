@@ -309,10 +309,9 @@ public:
         FC_ASSERT(!parent_author.empty(), "parent_author could't be empty.");
         FC_ASSERT(!parent_permlink.empty(), "parent_permlink could't be empty.");
 
-        const auto& index = _db.get_index<comment_index>().indices().get<by_parent>();
         std::vector<discussion> result;
 
-        index_traverse traverse(index);
+        index_traverse traverse(_db.obtain_service<dbs_comment>());
 
         traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
             if (comment.depth <= depth)
@@ -1075,8 +1074,8 @@ private:
     public:
         typedef comment_index::index<by_parent>::type Index;
 
-        index_traverse(const Index& index)
-            : _index(index)
+        index_traverse(scorum::chain::comment_service_i& s)
+            : _comment_service(s)
         {
         }
 
@@ -1089,49 +1088,29 @@ private:
 
             while (!_stack.empty())
             {
-                search_iterator itr = _stack.top();
+                auto comment = _stack.top();
                 _stack.pop();
 
-                on_item(*itr);
+                on_item(comment.get());
 
-                scan_children(itr->author, fc::to_string(itr->permlink));
+                scan_children(comment.get().author, fc::to_string(comment.get().permlink));
             }
         }
 
     private:
-        const Index& _index;
-
         void scan_children(const account_name_type& parent_author, const std::string& parent_permlink)
         {
-            auto itr = _index.find(boost::make_tuple(parent_author, parent_permlink));
+            auto range = _comment_service.get_children(parent_author, parent_permlink);
 
-            if (itr != _index.end())
-            {
-                put_in_stack(itr);
-            }
-        }
-
-        template <typename StartItr> void put_in_stack(StartItr& itr)
-        {
-            auto parent_author = itr->parent_author;
-            auto parent_permlink = itr->parent_permlink;
-
-            std::vector<search_iterator> array;
-
-            while (itr != _index.end() && itr->parent_author == parent_author
-                   && itr->parent_permlink == parent_permlink)
-            {
-                array.push_back(itr);
-                ++itr;
-            }
-
-            for (auto itr = array.rbegin(); itr != array.rend(); ++itr)
+            for (auto itr = range.rbegin(); itr != range.rend(); ++itr)
             {
                 _stack.push(*itr);
             }
         }
 
-        std::stack<search_iterator> _stack;
+        std::stack<scorum::chain::comment_service_i::object_cref_type> _stack;
+
+        scorum::chain::comment_service_i& _comment_service;
     };
 };
 
