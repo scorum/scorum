@@ -19,7 +19,6 @@
 #include <scorum/common_api/config.hpp>
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_service.hpp>
-#include <boost/lambda/lambda.hpp>
 
 namespace scorum {
 namespace tags {
