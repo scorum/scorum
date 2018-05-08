@@ -48,41 +48,47 @@ public:
         if (rf.activity_reward_balance.amount < 1 || comments.empty())
             return;
 
-        comment_refs_type comments_with_parents = collect_parents(comments);
-
         shares_vector_type total_rshares = get_total_rshares(comments);
         fc::uint128_t total_claims = rewards_math::calculate_total_claims(
             rf.recent_claims, dgp_service.head_block_time(), rf.last_update, rf.author_reward_curve, total_rshares,
             SCORUM_RECENT_RSHARES_DECAY_RATE);
 
-        std::map<account_name_type, share_type> rewards_from_children_comments;
+        struct comment_reward
+        {
+            share_type publication; // the result of voting this comment
+            share_type commenting; // the result of commenting of this comment
+        };
 
-        auto reward_symbol = rf.activity_reward_balance.symbol();
+        std::map<account_name_type, comment_reward> comment_rewards;
+
+        for (const comment_object& comment : comments)
+        {
+            share_type payout = rewards_math::calculate_payout(
+                comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
+                comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+
+            comment_rewards.emplace(comment.author, comment_reward{ payout, 0 });
+        }
+
+        asset_symbol_type reward_symbol = rf.activity_reward_balance.symbol();
         asset total_reward = asset(0, reward_symbol);
 
         // newest, with bigger depth comments first
+        comment_refs_type comments_with_parents = collect_parents(comments);
+
         for (const comment_object& comment : comments_with_parents)
         {
-            asset publication_reward(0, reward_symbol);
+            const comment_reward& reward = comment_rewards[comment.author];
 
-            if (comment.net_rshares > 0 && comment.cashout_time < fc::time_point_sec::maximum())
-            {
-                auto payout = rewards_math::calculate_payout(
-                    comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
-                    comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+            asset publication_reward = asset(reward.publication, reward_symbol);
+            asset commenting_reward = asset(reward.commenting, reward_symbol);
 
-                publication_reward = asset(payout, reward_symbol);
-            }
+            comment_payout_result payout_result = pay_for_comment(comment, publication_reward, commenting_reward);
 
-            // the result of commenting of this comment
-            asset children_comments_reward = asset(rewards_from_children_comments[comment.author], reward_symbol);
-
-            comment_payout_result payout_result
-                = pay_for_comment(comment, publication_reward, children_comments_reward);
             total_reward += payout_result.total_claimed_reward;
 
-            // payout for the parent comment
-            rewards_from_children_comments[comment.parent_author] += payout_result.parent_author_reward.amount;
+            // save payout for the parent comment
+            comment_rewards[comment.parent_author].commenting += payout_result.parent_author_reward.amount;
         }
 
         // Write the cached fund state back to the database

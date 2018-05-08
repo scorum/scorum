@@ -105,6 +105,8 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         const auto& author = account_service.get_account(comment.author);
         pay_account(author, author_reward);
 
+        comment_service.update(comment, [&](comment_object& c) { c.last_payout = dgp_service.head_block_time(); });
+
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
         _ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink),
@@ -223,35 +225,26 @@ comment_refs_type process_comments_cashout_impl::collect_parents(const comment_r
     {
         bool operator()(const comment_object& lhs, const comment_object& rhs)
         {
-            return lhs.depth > rhs.depth || (lhs.depth == rhs.depth && lhs.id > rhs.id);
+            return std::tie(lhs.depth, lhs.id) > std::tie(rhs.depth, rhs.id);
         }
     };
 
     using comment_refs_set = std::set<comment_refs_type::value_type, by_depth_greater>;
-    comment_refs_set _comments(comments.begin(), comments.end());
+    comment_refs_set ordered_comments(comments.begin(), comments.end());
 
-    // '_comments' set is sorted by depth in desc order.
-    for (auto it = _comments.begin(); it != _comments.end() && it->get().depth != 0; ++it)
+    // 'ordered_comments' set is sorted by depth in desc order.
+    for (auto it = ordered_comments.begin(); it != ordered_comments.end() && it->get().depth != 0; ++it)
     {
         const comment_object& comment = it->get();
 
-        // checking if the parent of current comment is already in 'comments' collection
-        auto in_comments_it = std::find_if(_comments.begin(), _comments.end(), [&](const comment_object& c) {
-            return c.author == comment.parent_author && c.permlink == comment.parent_permlink;
-        });
+        const auto& parent_comment = comment_service.get(comment.parent_author, fc::to_string(comment.parent_permlink));
 
-        // if not then add its parent. This parent will be always after 'comment' comment in 'comments' set
-        // because of the set ordering
-        if (in_comments_it == _comments.end())
-        {
-            const auto& parent_comment
-                = comment_service.get(comment.parent_author, fc::to_string(comment.parent_permlink));
-
-            _comments.insert(parent_comment);
-        }
+        // insert parent if it doesn't exist or do nothing if exists. Insertable parent will be always 'after' current
+        // comment because of the set ordering
+        ordered_comments.insert(parent_comment);
     }
 
-    comment_refs_type comments_with_parents(_comments.begin(), _comments.end());
+    comment_refs_type comments_with_parents(ordered_comments.begin(), ordered_comments.end());
 
     return comments_with_parents;
 }
