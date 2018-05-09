@@ -11,460 +11,658 @@
 #include <scorum/chain/services/comment_statistic.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 
-#include "database_default_integration.hpp"
+#include "blogging_common.hpp"
 #include "actoractions.hpp"
 
-#include <boost/algorithm/string/replace.hpp>
-#include <string>
 #include <map>
-#include <set>
 
 using namespace database_fixture;
-struct comment
+
+struct comment_stats
 {
-    account_name_type author;
-    uint32_t block_num;
-    std::vector<comment> children;
+    share_type author_reward;
+    share_type curator_reward;
+    share_type benefactor_reward;
+    share_type fund_reward;
 };
 
-struct ordered_comment_operation
+struct comments_hierarchy_reward_visitor
 {
-    comment_operation chain_op;
-    uint32_t block_num;
-    uint32_t order; // this member is used to keep order of comments which are posted within same block
+    typedef void result_type;
+
+    database& _db;
+    fc::scoped_connection conn;
+
+    std::map<std::string, comment_stats> stats;
+
+    comments_hierarchy_reward_visitor(database& db)
+        : _db(db)
+    {
+        conn = db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
+    }
+
+    ~comments_hierarchy_reward_visitor()
+    {
+        conn.disconnect();
+    }
+
+    void operator()(const comment_benefactor_reward_operation& op)
+    {
+        stats[op.author].benefactor_reward += op.reward.amount;
+    }
+
+    void operator()(const curation_reward_operation& op)
+    {
+        stats[op.comment_author].curator_reward += op.reward.amount;
+    }
+
+    void operator()(const author_reward_operation& op)
+    {
+        stats[op.author].author_reward += op.reward.amount;
+    }
+
+    void operator()(const comment_reward_operation& op)
+    {
+        stats[op.author].fund_reward += op.fund_reward.amount;
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
 };
 
-struct comments_hierarchy_reward_fixture : public database_default_integration_fixture
+struct comments_hierarchy_reward_fixture : public blogging_common_fixture
 {
-    const share_type account_initial_sp = 1e5;
-
-    account_service_i& account_service;
-    comment_service_i& comment_service;
     comment_statistic_sp_service_i& comment_statistic_sp_service;
 
     comments_hierarchy_reward_fixture()
-        : account_service(db.obtain_service<dbs_account>())
-        , comment_service(db.obtain_service<dbs_comment>())
-        , comment_statistic_sp_service(db.obtain_service<dbs_comment_statistic_sp>())
+        : comment_statistic_sp_service(db.obtain_service<dbs_comment_statistic_sp>())
     {
+        open_database();
     }
 
-    std::vector<ordered_comment_operation>
-    to_flatten_operations(const comment& cmt, const account_name_type& parent_author, uint32_t order = 0)
+    Actor create_actor(const char* name)
     {
-        std::vector<ordered_comment_operation> ops;
+        Actor acc(name);
 
-        ordered_comment_operation op;
-        op.chain_op.author = cmt.author;
-        op.chain_op.body = cmt.author + "-body";
-        op.chain_op.permlink = cmt.author + "-permlink";
-        op.chain_op.title = cmt.author + "-title";
-        op.chain_op.parent_author = parent_author;
-        op.chain_op.parent_permlink = parent_author + "-permlink";
-        op.block_num = cmt.block_num;
-        op.order = order;
+        actor(initdelegate).create_account(acc);
 
-        for (auto& child_cmt : cmt.children)
-        {
-            auto children_ops = to_flatten_operations(child_cmt, cmt.author, order + 1);
-            std::copy(children_ops.begin(), children_ops.end(), std::back_inserter(ops));
-        }
+        actor(initdelegate).give_sp(acc, 1e5);
 
-        ops.push_back(op);
-
-        return ops;
+        return acc;
     }
 
-    void create_actors(const std::vector<ordered_comment_operation>& ops)
+    std::string re(const std::string& permlink)
     {
-        for (const auto& op : ops)
-        {
-            auto author_name = op.chain_op.author;
-            auto voter_name = boost::replace_all_copy((std::string)op.chain_op.author, "user", "voter");
-
-            Actor commenter(author_name);
-            Actor voter(voter_name);
-
-            actor(initdelegate).create_account(commenter);
-            actor(initdelegate).create_account(voter);
-
-            actor(initdelegate).give_sp(commenter, account_initial_sp.value);
-            actor(initdelegate).give_sp(voter, account_initial_sp.value);
-        }
+        return get_comment_permlink(permlink);
     }
 
-    void post_comments(const std::vector<ordered_comment_operation>& ops, const uint32_t delay_between_blocks)
+    share_type check_comment_rewards(const Actor& acc, const comment_stats& stat, share_type payout_from_children)
     {
-        // group by 'block num'
-        std::map<uint32_t, std::vector<std::reference_wrapper<const ordered_comment_operation>>> groupped_ops;
-        for (const auto& op : ops)
-            groupped_ops[op.block_num].push_back(std::cref(op));
-
-        for (auto& group : groupped_ops)
-        {
-            // children comments should be posted after its parents within same block
-            std::sort(group.second.begin(), group.second.end(),
-                      [](const ordered_comment_operation& lhs, const ordered_comment_operation& rhs) {
-                          return lhs.order < rhs.order;
-                      });
-
-            signed_transaction tx;
-            std::transform(group.second.begin(), group.second.end(), std::back_inserter(tx.operations),
-                           [](const ordered_comment_operation& op) { return op.chain_op; });
-
-            tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
-            tx.sign(initdelegate.private_key, db.get_chain_id());
-            db.push_transaction(tx, default_skip);
-
-            generate_blocks(db.head_block_time() + delay_between_blocks);
-        }
-    }
-
-    void vote_comments(const std::vector<ordered_comment_operation>& ops)
-    {
-        signed_transaction tx;
-
-        for (const ordered_comment_operation& op : ops)
-        {
-            vote_operation vote_op;
-            vote_op.author = op.chain_op.author;
-            vote_op.permlink = op.chain_op.permlink;
-            vote_op.voter = boost::replace_all_copy((std::string)op.chain_op.author, "user", "voter");
-            vote_op.weight = 100;
-
-            tx.operations.push_back(vote_op);
-        }
-
-        tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
-        tx.sign(initdelegate.private_key, db.get_chain_id());
-
-        db.push_transaction(tx, default_skip);
-    }
-
-    const comment_statistic_sp_object& get_statistics(const account_name_type& account)
-    {
-        const comment_object& c = comment_service.get(account, account + "-permlink");
-
-        const comment_statistic_sp_object& statistics = comment_statistic_sp_service.get(c.id);
-
-        return statistics;
-    }
-
-    share_type get_total_tokens(account_name_type account)
-    {
-        const account_object& acc = account_service.get_account(account);
-
-        return acc.balance.amount + acc.scorumpower.amount;
-    }
-
-    share_type check_comment_rewards(const char* acc_name,
-                                     const comment_statistic_sp_object& stat,
-                                     share_type payout_from_children)
-    {
-        asset user_parent_reward = (stat.comment_publication_reward - stat.curator_payout_value + payout_from_children)
+        share_type user_parent_reward = (stat.fund_reward - stat.curator_reward + payout_from_children)
             * SCORUM_PARENT_COMMENT_REWARD_PERCENT / SCORUM_100_PERCENT;
 
         BOOST_TEST_MESSAGE("");
-        BOOST_TEST_MESSAGE("Checking comment rewards distribution:");
-        BOOST_TEST_MESSAGE("");
-        BOOST_TEST_MESSAGE("Comment poster: " << acc_name);
-        BOOST_TEST_MESSAGE("Comment publication reward: " << stat.comment_publication_reward.amount);
+        BOOST_TEST_MESSAGE("Comment author: " << acc.name);
+        BOOST_TEST_MESSAGE("Comment publication reward: " << stat.fund_reward);
         BOOST_TEST_MESSAGE("Comment commenting reward: " << payout_from_children);
-        BOOST_TEST_MESSAGE("Author reward: " << stat.author_payout_value.amount);
-        BOOST_TEST_MESSAGE("Curators reward: " << stat.curator_payout_value.amount);
-        BOOST_TEST_MESSAGE("Benef. reward: " << stat.beneficiary_payout_value.amount);
-        BOOST_TEST_MESSAGE("Parent comment reward: " << user_parent_reward.amount);
-        BOOST_TEST_MESSAGE("");
-        BOOST_TEST_MESSAGE("([comment publication reward] + [comment commenting reward]) <SHOULD BE EQUAL> ([parent "
-                           "comment reward] + [author reward] + [curators reward] + [benef. reward])"
-                           " WHERE [parent comment reward] is 50% of "
-                           "([comment publication reward] + [comment commenting reward] - [curators reward])");
+        BOOST_TEST_MESSAGE("Author reward: " << stat.author_reward);
+        BOOST_TEST_MESSAGE("Curators reward: " << stat.curator_reward);
+        BOOST_TEST_MESSAGE("Beneficiary reward: " << stat.benefactor_reward);
+        BOOST_TEST_MESSAGE("Parent comment reward: " << user_parent_reward);
         BOOST_TEST_MESSAGE("");
 
-        BOOST_REQUIRE_EQUAL(user_parent_reward + stat.total_payout_value,
-                            stat.comment_publication_reward + payout_from_children);
+        BOOST_REQUIRE_EQUAL(user_parent_reward + stat.author_reward + stat.curator_reward + stat.benefactor_reward,
+                            stat.fund_reward + payout_from_children);
 
-        return user_parent_reward.amount;
+        return user_parent_reward;
     }
 
-    void check_post_rewards(const comment_statistic_sp_object& stat, share_type payout_from_children)
+    void check_post_rewards(const comment_stats& stat, share_type payout_from_children)
     {
-        BOOST_REQUIRE_EQUAL(stat.total_payout_value, stat.comment_publication_reward + payout_from_children);
+        BOOST_TEST_MESSAGE("");
+        BOOST_TEST_MESSAGE("Comment publication reward: " << stat.fund_reward);
+        BOOST_TEST_MESSAGE("Comment commenting reward: " << payout_from_children);
+        BOOST_TEST_MESSAGE("Author reward: " << stat.author_reward);
+        BOOST_TEST_MESSAGE("Curators reward: " << stat.curator_reward);
+        BOOST_TEST_MESSAGE("Beneficiary reward: " << stat.benefactor_reward);
+        BOOST_TEST_MESSAGE("");
+
+        BOOST_REQUIRE_EQUAL(stat.author_reward + stat.benefactor_reward + stat.curator_reward,
+                            stat.fund_reward + payout_from_children);
     }
-
-    void check_4level_hierarchy(const comment& hierarchy);
-    void check_3level_hierarchy_with_multiple_children(const comment& hierarchy);
 };
-
-void comments_hierarchy_reward_fixture::check_4level_hierarchy(const comment& hierarchy)
-{
-    std::vector<ordered_comment_operation> ops = to_flatten_operations(hierarchy, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-
-    create_actors(ops);
-    generate_block();
-
-    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
-    post_comments(ops, delay);
-
-    // wait till voters could obtain max reward
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote_comments(ops);
-
-    auto last_comment_cashout = fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-    // skip blocks till comments cashout
-    generate_blocks(db.head_block_time() + last_comment_cashout);
-
-    auto user30_parent_reward = check_comment_rewards("user30", get_statistics("user30"), 0);
-    auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), user30_parent_reward);
-    auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward);
-
-    check_post_rewards(get_statistics("user00"), user10_parent_reward);
-}
-
-void comments_hierarchy_reward_fixture::check_3level_hierarchy_with_multiple_children(const comment& hierarchy)
-{
-    std::vector<ordered_comment_operation> ops = to_flatten_operations(hierarchy, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-
-    create_actors(ops);
-    generate_block();
-
-    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
-    post_comments(ops, delay);
-
-    // wait till voters could obtain max reward
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote_comments(ops);
-
-    auto last_comment_cashout = fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-    // skip blocks till comments cashout
-    generate_blocks(db.head_block_time() + last_comment_cashout);
-
-    auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), 0);
-    auto user21_parent_reward = check_comment_rewards("user21", get_statistics("user21"), 0);
-    auto user10_parent_reward
-        = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward + user21_parent_reward);
-    auto user22_parent_reward = check_comment_rewards("user22", get_statistics("user22"), 0);
-    auto user11_parent_reward = check_comment_rewards("user11", get_statistics("user11"), user22_parent_reward);
-
-    check_post_rewards(get_statistics("user00"), user10_parent_reward + user11_parent_reward);
-}
 
 BOOST_FIXTURE_TEST_SUITE(comment_hierarchy_reward_tests, comments_hierarchy_reward_fixture)
 
-BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_block)
+BOOST_AUTO_TEST_CASE(check_all_comments_on_same_block)
 {
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {
-                { "user20", 2, {
-                    { "user30", 3, {} } }} }} } };
-    // clang-format on
+    /*
+        user00 -> block1
+            user10 -> block1
+                user20 -> block1
+    */
 
-    check_4level_hierarchy(hierarchy);
-}
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user20 = create_actor("user20");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter20 = create_actor("voter20");
 
-BOOST_AUTO_TEST_CASE(check_several_comments_on_same_block)
-{
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {
-                { "user20", 1, {
-                    { "user30", 2, {} } }} }} } };
-    // clang-format on
-
-    check_4level_hierarchy(hierarchy);
-}
-
-BOOST_AUTO_TEST_CASE(check_multiple_children_each_level_on_diff_block)
-{
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {
-                { "user20", 2, {}},
-                { "user21", 2, {}} }},
-            { "user11", 1, {
-                { "user22", 2, {}} }} }};
-    // clang-format on
-
-    check_3level_hierarchy_with_multiple_children(hierarchy);
-}
-
-BOOST_AUTO_TEST_CASE(check_multiple_children_with_parent_within_same_block)
-{
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {
-                { "user20", 1, {}},
-                { "user21", 1, {}} }},
-            { "user11", 1, {
-                { "user22", 2, {}} }} }};
-    // clang-format on
-
-    check_3level_hierarchy_with_multiple_children(hierarchy);
-}
-
-BOOST_AUTO_TEST_CASE(check_beneficiares_payouts)
-{
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {
-                { "user20", 2, {
-                    { "user30", 3, {} } }} }} } };
-    // clang-format on
-
-    std::vector<ordered_comment_operation> ops = to_flatten_operations(hierarchy, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-
-    create_actors(ops);
     generate_block();
 
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    comment(user00, lnk, user10);
+    comment(user10, re(lnk), user20);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user20, re(re(lnk)), voter20);
+
+    comments_hierarchy_reward_visitor v(db);
+
+    // go to cashout
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                    - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+    auto user20_parent_reward = check_comment_rewards(user20, v.stats[user20.name], 0);
+    auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], user20_parent_reward);
+    check_post_rewards(v.stats[user00.name], user10_parent_reward);
+}
+
+BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_block)
+{
+    /*
+        user00 -> block1
+            user10 -> block2
+                user20 -> block3
+    */
+
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
-    post_comments(ops, delay);
+    uint32_t blocks_after_post = 2;
 
-    Actor beneficiar("beneficiar");
-    actor(initdelegate).create_account(beneficiar);
-    actor(initdelegate).give_sp(beneficiar, account_initial_sp.value);
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user20 = create_actor("user20");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter20 = create_actor("voter20");
 
-    auto beneficiar_capital_before = get_total_tokens("beneficiar");
+    generate_block();
+
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user10);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user20);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user20, re(re(lnk)), voter20);
+
+    BOOST_TEST_MESSAGE("User00 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user00 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                        - fc::seconds(blocks_after_post * delay) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+        check_post_rewards(v.stats[user00.name], 0);
+    }
+    BOOST_TEST_MESSAGE("User10 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user10 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], 0);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+    BOOST_TEST_MESSAGE("User20 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user20 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user20_parent_reward = check_comment_rewards(user20, v.stats[user20.name], 0);
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], user20_parent_reward);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(check_multiple_children_on_diff_block)
+{
+    /*
+        user00 -> block1
+            user10 -> block2
+                user20 -> block3
+                user21 -> block4
+            user11 -> block5
+    */
+
+    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
+    uint32_t blocks_after_post = 4;
+
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user11 = create_actor("user11");
+    Actor user20 = create_actor("user20");
+    Actor user21 = create_actor("user21");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter11 = create_actor("voter11");
+    Actor voter20 = create_actor("voter20");
+    Actor voter21 = create_actor("voter21");
+
+    generate_block();
+
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user10);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user20);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user21);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user11);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user11, re(lnk), voter11);
+    vote(user20, re(re(lnk)), voter20);
+    vote(user21, re(re(lnk)), voter21);
+
+    BOOST_TEST_MESSAGE("User00 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user00 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                        - fc::seconds(blocks_after_post * delay) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+        check_post_rewards(v.stats[user00.name], 0);
+    }
+    BOOST_TEST_MESSAGE("User10 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user10 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], 0);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+    BOOST_TEST_MESSAGE("User20 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user20 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user20_parent_reward = check_comment_rewards(user20, v.stats[user20.name], 0);
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], user20_parent_reward);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+    BOOST_TEST_MESSAGE("User21 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user21 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user21_parent_reward = check_comment_rewards(user21, v.stats[user21.name], 0);
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], user21_parent_reward);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+    BOOST_TEST_MESSAGE("User11 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user11 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user11_parent_reward = check_comment_rewards(user11, v.stats[user11.name], 0);
+        check_post_rewards(v.stats[user00.name], user11_parent_reward);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(check_multiple_children_each_level_on_same_block)
+{
+    /*
+        user00 -> block1
+            user10 -> block2
+                user20 -> block3
+                user21 -> block3
+            user11 -> block2
+    */
+
+    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
+    uint32_t blocks_after_post = 2;
+
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user11 = create_actor("user11");
+    Actor user20 = create_actor("user20");
+    Actor user21 = create_actor("user21");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter11 = create_actor("voter11");
+    Actor voter20 = create_actor("voter20");
+    Actor voter21 = create_actor("voter21");
+
+    generate_block();
+
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user10);
+    comment(user00, lnk, user11);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user20);
+    comment(user10, re(lnk), user21);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user11, re(lnk), voter11);
+    vote(user20, re(re(lnk)), voter20);
+    vote(user21, re(re(lnk)), voter21);
+
+    BOOST_TEST_MESSAGE("User00 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user00 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                        - fc::seconds(blocks_after_post * delay) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+        check_post_rewards(v.stats[user00.name], 0);
+    }
+    BOOST_TEST_MESSAGE("User10 & User11 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user10 & user11 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], 0);
+        auto user11_parent_reward = check_comment_rewards(user11, v.stats[user11.name], 0);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward + user11_parent_reward);
+    }
+    BOOST_TEST_MESSAGE("User20 & User21 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user20 & user21 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user20_parent_reward = check_comment_rewards(user20, v.stats[user20.name], 0);
+        auto user21_parent_reward = check_comment_rewards(user21, v.stats[user21.name], 0);
+        auto user10_parent_reward
+            = check_comment_rewards(user10, v.stats[user10.name], user20_parent_reward + user21_parent_reward);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(check_children_parents_mixing_blocks)
+{
+    /*
+        user00 -> block1
+            user10 -> block2
+                user20 -> block2
+                user21 -> block3
+            user11 -> block3
+    */
+
+    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
+    uint32_t blocks_after_post = 2;
+
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user11 = create_actor("user11");
+    Actor user20 = create_actor("user20");
+    Actor user21 = create_actor("user21");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter11 = create_actor("voter11");
+    Actor voter20 = create_actor("voter20");
+    Actor voter21 = create_actor("voter21");
+
+    generate_block();
+
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user10);
+    comment(user10, re(lnk), user20);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user21);
+    comment(user00, lnk, user11);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user11, re(lnk), voter11);
+    vote(user20, re(re(lnk)), voter20);
+    vote(user21, re(re(lnk)), voter21);
+
+    BOOST_TEST_MESSAGE("User00 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user00 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                        - fc::seconds(blocks_after_post * delay) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+        check_post_rewards(v.stats[user00.name], 0);
+    }
+    BOOST_TEST_MESSAGE("User10 & User20 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user10 & user20 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user20_parent_reward = check_comment_rewards(user20, v.stats[user20.name], 0);
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], user20_parent_reward);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward);
+    }
+    BOOST_TEST_MESSAGE("User11 & User21 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user11 & user21 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(delay));
+        auto user21_parent_reward = check_comment_rewards(user21, v.stats[user21.name], 0);
+        auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], user21_parent_reward);
+        auto user11_parent_reward = check_comment_rewards(user11, v.stats[user11.name], 0);
+        check_post_rewards(v.stats[user00.name], user10_parent_reward + user11_parent_reward);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(check_beneficiares_rewards)
+{
+    /*
+        user00 -> block1
+            user10 -> block2 + benefaciary
+                user20 -> block3
+    */
+
+    uint32_t benef_percent = 50;
+    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
+
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user20 = create_actor("user20");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter20 = create_actor("voter20");
+    Actor user10_benef = create_actor("user10benef");
+
+    generate_block();
+
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user10);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user20);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
     comment_options_operation op;
-    op.author = "user10";
-    op.permlink = "user10-permlink";
+    op.author = user10.name;
+    op.permlink = re(lnk);
     op.allow_curation_rewards = true;
     comment_payout_beneficiaries b;
-    b.beneficiaries.push_back(beneficiary_route_type(account_name_type("beneficiar"), 50 * SCORUM_1_PERCENT));
+    b.beneficiaries.push_back(beneficiary_route_type(user10_benef.name, benef_percent * SCORUM_1_PERCENT));
     op.extensions.insert(b);
     signed_transaction tx;
     tx.operations.push_back(op);
     tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
     tx.sign(initdelegate.private_key, db.get_chain_id());
     db.push_transaction(tx, default_skip);
-    generate_block();
 
-    // wait till voters could obtain max reward
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user20, re(re(lnk)), voter20);
 
-    vote_comments(ops);
+    comments_hierarchy_reward_visitor v(db);
 
-    auto last_comment_cashout = fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-
-    // skip blocks till comments cashout
-    generate_blocks(db.head_block_time() + last_comment_cashout);
-
-    auto user30_parent_reward = check_comment_rewards("user30", get_statistics("user30"), 0);
-    auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), user30_parent_reward);
-    auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward);
-
-    check_post_rewards(get_statistics("user00"), user10_parent_reward);
-
-    auto beneficiar_capital_after = get_total_tokens("beneficiar");
-
-    BOOST_REQUIRE_EQUAL(beneficiar_capital_after - beneficiar_capital_before,
-                        get_statistics("user10").beneficiary_payout_value.amount);
-}
-
-BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_level_two_cashouts)
-{
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {
-                { "user20", 2, {
-                    { "user30", 3, {} } }} }} } };
-    // clang-format on
-
-    std::vector<ordered_comment_operation> ops = to_flatten_operations(hierarchy, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-
-    create_actors(ops);
-    generate_block();
-
-    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
-    post_comments(ops, delay);
-
-    // wait till voters could obtain max reward
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote_comments(ops);
-
-    // perform 'user00' and 'user10' cashout
-    {
-        auto user10_comment_cashout = fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS) - fc::seconds(delay * 3)
-            - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-
-        // skip blocks till user10 comment cashout. user00 & user10 will be rewarded
-        generate_blocks(db.head_block_time() + user10_comment_cashout);
-
-        auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), 0);
-
-        check_post_rewards(get_statistics("user00"), user10_parent_reward);
-    }
-
-    // perform 'user20' and 'user30' cashout
-    {
-        auto head_time = db.head_block_time();
-        // max delay which do not exceed 'user20' comment cashout (considering that 'generate_blocks' calls apply_block
-        // twice: for the first block and for the last block in the defined interval)
-        auto reward_accumulation_delay = delay - 2 * SCORUM_BLOCK_INTERVAL;
-        // skipping blocks to accumulate reward fund
-        generate_blocks(head_time + reward_accumulation_delay, false);
-
-        auto last_comment_cashout = delay * 2;
-        // skip blocks till last comment cashout. all users will be rewarded but user00 & user10 only with 'commenting'
-        // reward from children comments
-        generate_blocks(head_time + last_comment_cashout);
-
-        auto user30_parent_reward = check_comment_rewards("user30", get_statistics("user30"), 0);
-        auto user20_parent_reward = check_comment_rewards("user20", get_statistics("user20"), user30_parent_reward);
-        auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), user20_parent_reward);
-
-        check_post_rewards(get_statistics("user00"), user10_parent_reward);
-    }
+    BOOST_CHECK_EQUAL((v.stats[user10.name].author_reward + v.stats[user10.name].benefactor_reward) * benef_percent
+                          / 100,
+                      v.stats[user10.name].benefactor_reward);
 }
 
 BOOST_AUTO_TEST_CASE(check_comment_double_cashouts)
 {
-    // clang-format off
-    comment hierarchy =
-        { "user00", 0, {
-            { "user10", 1, {}}}};
-    // clang-format on
-
-    std::vector<ordered_comment_operation> ops = to_flatten_operations(hierarchy, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-
-    create_actors(ops);
-    generate_block();
+    /*
+        user00 -> block1
+            user10 -> block2
+    */
 
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
-    post_comments(ops, delay);
+    uint32_t blocks_after_post = 1;
 
-    // wait till voters could obtain max reward
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
 
-    vote_comments(ops);
+    generate_block();
 
-    auto user00_comment_cashout
-        = fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS) - fc::seconds(delay * 2) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
+    auto lnk = "post-link";
 
-    // skip blocks till user10 comment cashout. user00 & user10 will be rewarded
-    generate_blocks(db.head_block_time() + user00_comment_cashout);
-
-    share_type user00_capital_after_user00_cashout = get_total_tokens("user00");
-
+    post(user00, lnk);
     generate_blocks(db.head_block_time() + delay);
 
-    share_type user00_capital_after_user10_cashout = get_total_tokens("user00");
+    comment(user00, lnk, user10);
 
-    auto user10_parent_reward = check_comment_rewards("user10", get_statistics("user10"), 0);
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    // checking that comment reward from voters was not payed twice to user00
-    BOOST_REQUIRE_EQUAL(user00_capital_after_user10_cashout - user00_capital_after_user00_cashout,
-                        user10_parent_reward);
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+
+    BOOST_TEST_MESSAGE("User00 cashout");
+    {
+        comments_hierarchy_reward_visitor v(db);
+
+        // go to user00 cashout
+        generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                        - fc::seconds(blocks_after_post * delay) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+        check_post_rewards(v.stats[user00.name], 0);
+    }
+    auto user00_sp_after_user00_cashout = account_service.get_account(user00.name).scorumpower.amount;
+
+    comments_hierarchy_reward_visitor v(db);
+
+    BOOST_TEST_MESSAGE("User10 cashout");
+    // go to user10 cashout
+    generate_blocks(db.head_block_time() + fc::seconds(delay));
+    auto user10_parent_reward = check_comment_rewards(user10, v.stats[user10.name], 0);
+    check_post_rewards(v.stats[user00.name], user10_parent_reward);
+
+    auto user00_sp_after_user10_cashout = account_service.get_account(user00.name).scorumpower.amount;
+
+    BOOST_REQUIRE_EQUAL(user00_sp_after_user10_cashout - user00_sp_after_user00_cashout, user10_parent_reward);
+}
+
+BOOST_AUTO_TEST_CASE(check_accounts_balance)
+{
+    /*
+        user00 -> block1
+            user10 -> block2
+                user20 -> block3
+    */
+
+    uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
+    uint32_t blocks_after_post = 2;
+
+    Actor user00 = create_actor("user00");
+    Actor user10 = create_actor("user10");
+    Actor user20 = create_actor("user20");
+    Actor voter00 = create_actor("voter00");
+    Actor voter10 = create_actor("voter10");
+    Actor voter20 = create_actor("voter20");
+
+    generate_block();
+
+    auto user00_sp_before = account_service.get_account(user00.name).scorumpower.amount;
+    auto user10_sp_before = account_service.get_account(user10.name).scorumpower.amount;
+    auto user20_sp_before = account_service.get_account(user20.name).scorumpower.amount;
+
+    auto lnk = "post-link";
+
+    post(user00, lnk);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user00, lnk, user10);
+    generate_blocks(db.head_block_time() + delay);
+
+    comment(user10, re(lnk), user20);
+
+    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+
+    vote(user00, lnk, voter00);
+    vote(user10, re(lnk), voter10);
+    vote(user20, re(re(lnk)), voter20);
+
+    comments_hierarchy_reward_visitor v(db);
+
+    // go to user00 cashout
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_CASHOUT_WINDOW_SECONDS)
+                    - fc::seconds(blocks_after_post * delay) - SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+    // go to user10 cashout
+    generate_blocks(db.head_block_time() + fc::seconds(delay));
+    // go to user20 cashout
+    generate_blocks(db.head_block_time() + fc::seconds(delay));
+
+    auto user00_sp_after = account_service.get_account(user00.name).scorumpower.amount;
+    auto user10_sp_after = account_service.get_account(user10.name).scorumpower.amount;
+    auto user20_sp_after = account_service.get_account(user20.name).scorumpower.amount;
+
+    BOOST_CHECK_EQUAL(user00_sp_after - user00_sp_before, v.stats[user00.name].author_reward);
+    BOOST_CHECK_EQUAL(user10_sp_after - user10_sp_before, v.stats[user10.name].author_reward);
+    BOOST_CHECK_EQUAL(user20_sp_after - user20_sp_before, v.stats[user20.name].author_reward);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

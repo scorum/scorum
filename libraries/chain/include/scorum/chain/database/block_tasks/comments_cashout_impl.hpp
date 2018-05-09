@@ -71,8 +71,8 @@ public:
 
         struct comment_reward
         {
-            share_type publication; // the result of voting this comment
-            share_type commenting; // the result of commenting of this comment
+            share_type fund; // reward accrued from fund
+            share_type commenting; // reward accrued from children comments
         };
 
         std::map<account_name_type, comment_reward> comment_rewards;
@@ -96,10 +96,10 @@ public:
         {
             const comment_reward& reward = comment_rewards[comment.author];
 
-            asset publication_reward = asset(reward.publication, reward_symbol);
+            asset fund_reward = asset(reward.fund, reward_symbol);
             asset commenting_reward = asset(reward.commenting, reward_symbol);
 
-            comment_payout_result payout_result = pay_for_comment(comment, publication_reward, commenting_reward);
+            comment_payout_result payout_result = pay_for_comment(comment, fund_reward, commenting_reward);
 
             total_reward += payout_result.total_claimed_reward;
 
