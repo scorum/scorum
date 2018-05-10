@@ -604,6 +604,28 @@ BOOST_AUTO_TEST_CASE(comment_apply)
     FC_LOG_AND_RETHROW()
 }
 
+BOOST_AUTO_TEST_CASE(comment_operation_category_changed_should_throw)
+{
+    BOOST_TEST_MESSAGE("Testing: comment_operation category changing");
+
+    ACTORS((alice))
+
+    comment_operation op;
+    op.author = "alice";
+    op.permlink = "alice-permlink";
+    op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+    op.parent_permlink = "alice-category-1";
+    op.title = "alice-title";
+    op.body = "alice-body";
+    op.json_metadata = "{\"foo\":\"bar\"}";
+
+    BOOST_REQUIRE_NO_THROW(push_operation(op, initdelegate.private_key));
+
+    op.parent_permlink = "alice-category-2";
+
+    BOOST_REQUIRE_THROW(push_operation(op, initdelegate.private_key), fc::assert_exception);
+}
+
 BOOST_AUTO_TEST_CASE(comment_delete_apply)
 {
     try

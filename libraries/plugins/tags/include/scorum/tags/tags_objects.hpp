@@ -45,7 +45,8 @@ enum
     tag_object_type = (TAG_SPACE_ID << 8),
     tag_stats_object_type,
     peer_stats_object_type,
-    author_tag_stats_object_type
+    author_tag_stats_object_type,
+    category_stats_object_type
 };
 
 /**
@@ -282,8 +283,10 @@ typedef shared_multi_index_container<
 // clang-format on
 
 /**
- *  The purpose of this object is to track the relationship between accounts based upon how a user votes. Every time
- *  a user votes on a post, the relationship between voter and author increases direct rshares.
+ *  The purpose of this object is to track the relationship between accounts based upon
+ * how a user votes. Every time
+ *  a user votes on a post, the relationship between voter and author increases direct
+ * rshares.
  */
 class peer_stats_object : public object<peer_stats_object_type, peer_stats_object>
 {
@@ -409,11 +412,69 @@ typedef shared_multi_index_container<
 // clang-format on
 
 /**
+ * @brief The category_stats_object class
+ * This class is used to maintain stats about which tags are used within particular category and how often.
+ */
+class category_stats_object : public object<category_stats_object_type, category_stats_object>
+{
+public:
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(category_stats_object, (category))
+
+    id_type id;
+    tag_name_type tag;
+    fc::shared_string category;
+    uint32_t tags_count = 0;
+};
+
+typedef oid<category_stats_object> category_stats_id_type;
+
+struct by_category;
+struct by_tag_category;
+
+// clang-format off
+typedef shared_multi_index_container<
+    category_stats_object,
+    indexed_by<
+        ordered_unique<tag<by_id>,
+                       member<category_stats_object, category_stats_id_type, &category_stats_object::id>>,
+        ordered_unique<tag<by_tag_category>,
+                       composite_key<category_stats_object,
+                                     member<category_stats_object, fc::shared_string, &category_stats_object::category>,
+                                     member<category_stats_object, tag_name_type, &category_stats_object::tag>>,
+                       composite_key_compare<fc::strcmp_less,
+                                             std::less<tag_name_type>>>,
+        ordered_non_unique<tag<by_category>,
+                           member<category_stats_object, fc::shared_string, &category_stats_object::category>,
+                           fc::strcmp_less>>>
+    category_stats_index;
+
+// clanf-format on
+
+/**
  * Used to parse the metadata from the comment json_meta field.
  */
 struct comment_metadata
 {
     std::set<std::string> tags;
+
+    static comment_metadata parse(const fc::shared_string& json_metadata)
+    {
+        comment_metadata meta;
+
+        if (json_metadata.size())
+        {
+            try
+            {
+                meta = fc::json::from_string(fc::to_string(json_metadata)).as<comment_metadata>();
+            }
+            catch (const fc::exception&)
+            {
+                // Do nothing on malformed json_metadata
+            }
+        }
+
+        return meta;
+    }
 };
 
 } // namespace tags
@@ -471,6 +532,14 @@ FC_REFLECT(scorum::tags::author_tag_stats_object,
            (total_posts)
            (total_rewards))
 
-CHAINBASE_SET_INDEX_TYPE( scorum::tags::author_tag_stats_object, scorum::tags::author_tag_stats_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::tags::author_tag_stats_object, scorum::tags::author_tag_stats_index)
+
+FC_REFLECT(scorum::tags::category_stats_object,
+           (id)
+           (tag)
+           (category)
+           (tags_count))
+
+CHAINBASE_SET_INDEX_TYPE(scorum::tags::category_stats_object, scorum::tags::category_stats_index)
 
 // clang-format on
