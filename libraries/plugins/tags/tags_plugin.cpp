@@ -2,8 +2,6 @@
 #include <scorum/tags/tags_api.hpp>
 #include <scorum/tags/tags_objects.hpp>
 
-#include <scorum/app/impacted.hpp>
-
 #include <scorum/protocol/config.hpp>
 
 #include <scorum/chain/database/database.hpp>

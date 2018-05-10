@@ -4,6 +4,8 @@
 
 #include <scorum/chain/services/dbs_base.hpp>
 
+#include <limits>
+
 namespace scorum {
 namespace chain {
 
@@ -149,5 +151,8 @@ public:
         FC_CAPTURE_AND_RETHROW()
     }
 };
+
+#define ALL_IDS std::numeric_limits<int64_t>::max()
+
 } // namespace chain
 } // namespace scorum

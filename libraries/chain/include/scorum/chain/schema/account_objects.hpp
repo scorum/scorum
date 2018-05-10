@@ -62,7 +62,6 @@ public:
 
     time_point_sec last_post;
     time_point_sec last_root_post = fc::time_point_sec::min();
-    uint32_t post_bandwidth = 0;
 
     /// This function should be used only when the account votes for a witness directly
     share_type witness_vote_weight() const
@@ -180,6 +179,21 @@ public:
     account_name_type account_to_recover;
     account_name_type recovery_account;
     time_point_sec effective_on;
+};
+
+class account_registration_bonus_object
+    : public object<account_registration_bonus_object_type, account_registration_bonus_object>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(account_registration_bonus_object)
+
+    id_type id;
+
+    account_name_type account;
+
+    asset bonus = asset(0, SP_SYMBOL);
+
+    time_point_sec expires;
 };
 
 struct by_name;
@@ -414,8 +428,6 @@ typedef shared_multi_index_container<scorumpower_delegation_expiration_object,
                                                                                          less<scorumpower_delegation_expiration_id_type>>>>>
     scorumpower_delegation_expiration_index;
 
-struct by_expiration;
-
 typedef shared_multi_index_container<account_recovery_request_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<account_recovery_request_object,
@@ -483,6 +495,28 @@ typedef shared_multi_index_container<change_recovery_account_request_object,
                                                                                      std::
                                                                                          less<change_recovery_account_request_id_type>>>>>
     change_recovery_account_request_index;
+
+typedef shared_multi_index_container<account_registration_bonus_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<account_registration_bonus_object,
+                                                                      account_registration_bonus_id_type,
+                                                                      &account_registration_bonus_object::id>>,
+                                                ordered_unique<tag<by_account>,
+                                                               member<account_registration_bonus_object,
+                                                                      account_name_type,
+                                                                      &account_registration_bonus_object::account>>,
+                                                ordered_unique<tag<by_expiration>,
+                                                               composite_key<account_registration_bonus_object,
+                                                                             member<account_registration_bonus_object,
+                                                                                    time_point_sec,
+                                                                                    &account_registration_bonus_object::
+                                                                                        expires>,
+                                                                             member<account_registration_bonus_object,
+                                                                                    account_registration_bonus_id_type,
+                                                                                    &account_registration_bonus_object::
+                                                                                        id>>>>>
+    account_registration_bonus_index;
+
 } // namespace chain
 } // namespace scorum
 
@@ -495,7 +529,7 @@ FC_REFLECT( scorum::chain::account_object,
              (balance)
              (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (proxied_vsf_votes)(witnesses_voted_for)
-             (last_post)(last_root_post)(post_bandwidth)
+             (last_post)(last_root_post)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::account_object, scorum::chain::account_index )
 
@@ -534,5 +568,10 @@ FC_REFLECT( scorum::chain::change_recovery_account_request_object,
              (id)(account_to_recover)(recovery_account)(effective_on)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::change_recovery_account_request_object, scorum::chain::change_recovery_account_request_index )
+
+FC_REFLECT( scorum::chain::account_registration_bonus_object,
+             (id)(account)(bonus)(expires)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::account_registration_bonus_object, scorum::chain::account_registration_bonus_index )
 
 // clang-format on

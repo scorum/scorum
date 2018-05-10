@@ -1,44 +1,17 @@
-/*
- * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
- *
- * The MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+#include <scorum/account_identity/impacted.hpp>
 
 #include <scorum/protocol/authority.hpp>
-
-#include <scorum/app/impacted.hpp>
 
 #include <fc/utility.hpp>
 
 namespace scorum {
-namespace app {
+namespace account_identity {
 
-using namespace fc;
 using namespace scorum::protocol;
 
-// TODO:  Review all of these, especially no-ops
 struct get_impacted_account_visitor
 {
-    flat_set<account_name_type>& _impacted;
-    get_impacted_account_visitor(flat_set<account_name_type>& impact)
+    get_impacted_account_visitor(fc::flat_set<account_name_type>& impact)
         : _impacted(impact)
     {
     }
@@ -219,6 +192,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.curator);
     }
 
+    void operator()(const comment_reward_operation& op)
+    {
+        _impacted.insert(op.author);
+    }
+
     void operator()(const fill_vesting_withdraw_operation& op)
     {
         _impacted.insert(op.from_account);
@@ -233,6 +211,11 @@ struct get_impacted_account_visitor
     void operator()(const witness_miss_block_operation& op)
     {
         _impacted.insert(op.owner);
+    }
+
+    void operator()(const comment_payout_update_operation& op)
+    {
+        _impacted.insert(op.author);
     }
 
     void operator()(const return_scorumpower_delegation_operation& op)
@@ -250,15 +233,23 @@ struct get_impacted_account_visitor
     {
         _impacted.insert(op.producer);
     }
+
+    void operator()(const expired_contract_refund_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+private:
+    fc::flat_set<account_name_type>& _impacted;
 };
 
-void operation_get_impacted_accounts(const operation& op, flat_set<account_name_type>& result)
+void operation_get_impacted_accounts(const operation& op, fc::flat_set<account_name_type>& result)
 {
-    get_impacted_account_visitor vtor = get_impacted_account_visitor(result);
-    op.visit(vtor);
+    get_impacted_account_visitor v = get_impacted_account_visitor(result);
+    op.visit(v);
 }
 
-void transaction_get_impacted_accounts(const transaction& tx, flat_set<account_name_type>& result)
+void transaction_get_impacted_accounts(const transaction& tx, fc::flat_set<account_name_type>& result)
 {
     for (const auto& op : tx.operations)
         operation_get_impacted_accounts(op, result);

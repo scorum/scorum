@@ -3,7 +3,7 @@
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
 #include <scorum/blockchain_history/schema/account_history_object.hpp>
 
-#include <scorum/app/impacted.hpp>
+#include <scorum/account_identity/impacted.hpp>
 
 #include <scorum/protocol/config.hpp>
 
@@ -195,7 +195,7 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
     if (_filter_content && !note.op.visit(operation_visitor_filter(_op_list, _blacklist)))
         return;
 
-    app::operation_get_impacted_accounts(note.op, impacted);
+    account_identity::operation_get_impacted_accounts(note.op, impacted);
 
     const operation_object& new_obj = create_operation_obj(note);
     update_filtered_operation_index(new_obj, note.op);

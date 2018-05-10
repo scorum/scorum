@@ -6,6 +6,7 @@
 DATA_SERVICE_FACTORY_DECLARE(
         (account)
         (account_blogging_statistic)
+        (account_registration_bonus)
         (atomicswap)
         (budget)
         (comment)
