@@ -38,6 +38,11 @@ std::vector<std::pair<std::string, uint32_t>> tags_api::get_tags_used_by_author(
     return guard().with_read_lock([&]() { return _impl->get_tags_used_by_author(author); });
 }
 
+std::vector<std::pair<std::string, uint32_t>> tags_api::get_tags_by_category(const std::string& category) const
+{
+    return guard().with_read_lock([&]() { return _impl->get_tags_by_category(category); });
+}
+
 std::vector<discussion> tags_api::get_discussions_by_payout(const discussion_query& query) const
 {
     return guard().with_read_lock([&]() { return _impl->get_discussions_by_payout(query); });

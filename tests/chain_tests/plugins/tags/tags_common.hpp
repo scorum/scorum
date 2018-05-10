@@ -83,6 +83,17 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
             return Comment(operation, fixture);
         }
 
+        void remove(Actor& actor)
+        {
+            delete_comment_operation op;
+            op.author = author();
+            op.permlink = permlink();
+
+            fixture->push_operation<delete_comment_operation>(op, actor.private_key);
+
+            fixture->generate_block();
+        }
+
     private:
         comment_operation my;
         tags_fixture* fixture;

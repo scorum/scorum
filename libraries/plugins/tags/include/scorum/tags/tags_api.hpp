@@ -34,6 +34,14 @@ public:
 
     std::vector<std::pair<std::string, uint32_t>> get_tags_used_by_author(const std::string& author) const;
 
+    /**
+     * Returns all tags which where used sometime with specified category. The result is ordered by frequency of use.
+     * @return <tag_name, frequency> pairs where 'tag_name' it's a tag which was used sometime with specified category
+     * and
+     * 'frequency' shows how many times this tag was used with specified category.
+     */
+    std::vector<std::pair<std::string, uint32_t>> get_tags_by_category(const std::string& category) const;
+
     /// @{ tags API
     /// This API will return the top 1000 tags used by an author sorted by most frequently used
     std::vector<api::discussion> get_discussions_by_payout(const api::discussion_query& query) const;
@@ -96,6 +104,7 @@ public:
 FC_API(scorum::tags::tags_api,
        (get_trending_tags)
        (get_tags_used_by_author)
+       (get_tags_by_category)
        (get_discussions_by_payout)
        (get_post_discussions_by_payout)
        (get_comment_discussions_by_payout)

@@ -37,6 +37,7 @@ set( SOURCES
     plugins/statistic/account_statistic_tests.cpp
     plugins/tags/tags_tests.cpp
     plugins/tags/get_comments_tests.cpp
+    plugins/tags/get_tags_by_category.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     plugins/database_api/account_api_tests.cpp
