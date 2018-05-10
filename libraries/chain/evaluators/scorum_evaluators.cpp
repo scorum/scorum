@@ -74,7 +74,7 @@ struct strcmp_equal
 {
     bool operator()(const fc::shared_string& a, const std::string& b)
     {
-        return a.size() == b.size() || std::strcmp(a.c_str(), b.c_str()) == 0;
+        return a.size() == b.size() && std::strcmp(a.c_str(), b.c_str()) == 0;
     }
 };
 
