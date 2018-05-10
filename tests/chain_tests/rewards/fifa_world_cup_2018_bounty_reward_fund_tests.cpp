@@ -13,19 +13,21 @@ namespace database_fixture {
 struct fifa_world_cup_2018_bounty_reward_fund_fixture : public blogging_common_with_accounts_fixture
 {
     fifa_world_cup_2018_bounty_reward_fund_fixture()
-        : fifa_world_cup_2018_bounty_reward_fund_service(db.fifa_world_cup_2018_bounty_reward_fund_service())
-        , reward_fund_sp_service(db.reward_fund_sp_service())
+        : fifa_world_cup_2018_bounty_reward_fund_service(db.content_fifa_world_cup_2018_bounty_reward_fund_service())
+        , reward_fund_sp_service(db.content_reward_fund_sp_service())
         , budget_service(db.budget_service())
     {
         const auto& fund_budget = budget_service.get_fund_budget();
-        asset initial_per_block_reward = asset(fund_budget.per_block, SP_SYMBOL);
+        asset initial_per_block_reward = fund_budget.per_block;
 
         asset witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-        content_reward = initial_per_block_reward - witness_reward;
+        asset active_voters_reward
+            = initial_per_block_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+        content_reward = initial_per_block_reward - witness_reward - active_voters_reward;
     }
 
-    fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service;
-    reward_fund_sp_service_i& reward_fund_sp_service;
+    content_fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service;
+    content_reward_fund_sp_service_i& reward_fund_sp_service;
     budget_service_i& budget_service;
 
     asset content_reward = ASSET_NULL_SP;

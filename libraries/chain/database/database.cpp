@@ -35,7 +35,7 @@
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
@@ -1143,10 +1143,12 @@ void database::initialize_indexes()
     add_index<proposal_object_index>();
     add_index<registration_committee_member_index>();
     add_index<registration_pool_index>();
-    add_index<reward_fund_scr_index>();
-    add_index<reward_fund_sp_index>();
-    add_index<fifa_world_cup_2018_bounty_reward_fund_index>();
-    add_index<reward_pool_index>();
+    add_index<content_reward_fund_scr_index>();
+    add_index<content_reward_fund_sp_index>();
+    add_index<content_fifa_world_cup_2018_bounty_reward_fund_index>();
+    add_index<content_reward_balancer_scr_index>();
+    add_index<voters_reward_balancer_scr_index>();
+    add_index<voters_reward_balancer_sp_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
     add_index<scorumpower_delegation_index>();
@@ -1928,11 +1930,12 @@ void database::validate_invariants() const
             total_supply += itr->pending_fee;
         }
 
-        total_supply += obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
-        total_supply += asset(obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
+        total_supply += obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+        total_supply
+            += asset(obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
 
-        dbs_fifa_world_cup_2018_bounty_reward_fund& fifa_world_cup_2018_bounty_reward_fund_service
-            = obtain_service<dbs_fifa_world_cup_2018_bounty_reward_fund>();
+        auto& fifa_world_cup_2018_bounty_reward_fund_service
+            = obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
         if (fifa_world_cup_2018_bounty_reward_fund_service.is_exists())
         {
             total_supply += asset(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance.amount,
@@ -1940,7 +1943,9 @@ void database::validate_invariants() const
         }
 
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
-        total_supply += obtain_service<dbs_reward>().get().balance;
+        total_supply += obtain_service<dbs_content_reward_scr>().get().balance;
+        total_supply += obtain_service<dbs_voters_reward_scr>().get().balance;
+        total_supply += obtain_service<dbs_voters_reward_sp>().get().balance.amount;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {
@@ -1949,7 +1954,7 @@ void database::validate_invariants() const
 
         if (obtain_service<dbs_budget>().is_fund_budget_exists())
         {
-            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance;
+            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance.amount;
         }
 
         if (obtain_service<dbs_registration_pool>().is_exists())

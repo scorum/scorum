@@ -56,24 +56,24 @@ process_comments_cashout_impl::get_total_rshares(const comment_service_i::commen
 }
 
 process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment(
-    const comment_object& comment, const asset& publication_reward, const asset& children_comments_reward)
+    const comment_object& comment, const asset& fund_reward, const asset& children_comments_reward)
 {
     try
     {
-        auto reward_symbol = publication_reward.symbol();
+        auto reward_symbol = fund_reward.symbol();
         comment_payout_result payout_result{ asset(0, reward_symbol), asset(0, reward_symbol) };
-        if (publication_reward.amount < 1 && children_comments_reward.amount < 1)
+        if (fund_reward.amount < 1 && children_comments_reward.amount < 1)
             return payout_result;
 
         asset author_reward(0, reward_symbol);
         asset curators_reward(0, reward_symbol);
 
-        if (publication_reward.amount > 0)
+        if (fund_reward.amount > 0)
         {
-            curators_reward = asset(
-                rewards_math::calculate_curations_payout(publication_reward.amount, SCORUM_CURATION_REWARD_PERCENT),
-                reward_symbol);
-            author_reward = publication_reward - curators_reward;
+            curators_reward
+                = asset(rewards_math::calculate_curations_payout(fund_reward.amount, SCORUM_CURATION_REWARD_PERCENT),
+                        reward_symbol);
+            author_reward = fund_reward - curators_reward;
 
             author_reward
                 += pay_curators(comment, curators_reward); // curation_tokens can be changed inside pay_curators()
@@ -107,9 +107,10 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
         _ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink),
-                                                             payout_result.total_claimed_reward));
+                                                             payout_result.total_claimed_reward, fund_reward,
+                                                             children_comments_reward));
 
-        accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, publication_reward,
+        accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, fund_reward,
                              children_comments_reward, reward_symbol);
 
         return payout_result;

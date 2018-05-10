@@ -31,7 +31,7 @@ public:
     time_point_sec deadline = time_point_sec::maximum();
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    share_type per_block = 0;
+    asset per_block = asset(0, SCORUM_SYMBOL);
 
     uint32_t last_cashout_block = 0;
 };

@@ -13,7 +13,7 @@ struct rewards_initializator_impl : public initializator
 private:
     void create_scr_reward_fund(initializator_context&);
     void create_sp_reward_fund(initializator_context&);
-    void create_balancer(initializator_context&);
+    void create_balancers(initializator_context&);
     void create_fund_budget(initializator_context&);
 };
 }

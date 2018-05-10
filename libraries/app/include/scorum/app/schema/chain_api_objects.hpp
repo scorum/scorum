@@ -97,7 +97,7 @@ struct chain_capital_api_obj
     asset total_scorumpower = asset(0, SP_SYMBOL);
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
-    asset fund_budget_balance = asset(0, SCORUM_SYMBOL);
+    asset fund_budget_balance = asset(0, SP_SYMBOL);
     asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
     asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
     asset content_reward_sp_balance = asset(0, SP_SYMBOL);

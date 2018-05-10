@@ -45,7 +45,7 @@ SCORUM_TEST_CASE(fund_budget_initial_supply)
 {
     auto budget = budget_service.get_fund_budget();
 
-    BOOST_REQUIRE_EQUAL(budget.balance, TEST_REWARD_INITIAL_SUPPLY);
+    BOOST_REQUIRE_EQUAL(budget.balance.amount, TEST_REWARD_INITIAL_SUPPLY.amount);
 }
 
 SCORUM_TEST_CASE(fund_budget_initial_deadline)
@@ -76,8 +76,7 @@ SCORUM_TEST_CASE(fund_budget_payments_after_deadline_is_over_and_we_have_missing
 
     BOOST_REQUIRE(budget_service.is_fund_budget_exists());
 
-    BOOST_REQUIRE_EQUAL(budget.balance,
-                        original_balance - asset(budget.per_block, SCORUM_SYMBOL) * actually_generated_blocks);
+    BOOST_REQUIRE_EQUAL(budget.balance, original_balance - budget.per_block * actually_generated_blocks);
 
     // generate block after deadline
     generate_block();
@@ -85,8 +84,7 @@ SCORUM_TEST_CASE(fund_budget_payments_after_deadline_is_over_and_we_have_missing
 
     BOOST_REQUIRE(budget_service.is_fund_budget_exists());
 
-    BOOST_REQUIRE_EQUAL(budget.balance,
-                        original_balance - asset(budget.per_block, SCORUM_SYMBOL) * actually_generated_blocks);
+    BOOST_REQUIRE_EQUAL(budget.balance, original_balance - budget.per_block * actually_generated_blocks);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

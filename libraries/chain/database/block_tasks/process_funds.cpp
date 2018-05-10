@@ -1,4 +1,5 @@
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
+#include <scorum/chain/database/block_tasks/reward_balance_algorithm.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budget.hpp>
@@ -22,21 +23,22 @@ using scorum::protocol::producer_reward_operation;
 void process_funds::on_apply(block_task_context& ctx)
 {
     data_service_factory_i& services = ctx.services();
-    reward_service_i& reward_service = services.reward_service();
+    content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
     budget_service_i& budget_service = services.budget_service();
     dev_pool_service_i& dev_service = services.dev_pool_service();
 
     // We don't have inflation.
-    // We just get per block reward from original reward fund(0.48M SP)
+    // We just get per block reward from original reward fund(4.8M SP)
     // and expect that after initial supply is handed out(fund budget is over) reward budgets will be created by our
     // users(through the purchase of advertising). Advertising budgets are in SCR.
 
+    asset original_fund_reward = asset(0, SP_SYMBOL);
     if (budget_service.is_fund_budget_exists())
     {
         const budget_object& budget = budget_service.get_fund_budget();
-        asset original_fund_reward = budget_service.allocate_cash(budget);
-        distribute_reward(ctx, asset(original_fund_reward.amount, SP_SYMBOL));
+        original_fund_reward += budget_service.allocate_cash(budget);
     }
+    distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
     for (const budget_object& budget : budget_service.get_budgets())
@@ -45,33 +47,49 @@ void process_funds::on_apply(block_task_context& ctx)
     }
 
     // 50% of the revenue goes to support and develop the product, namely,
-    // towards the company’s R&D center.
+    // towards the company's R&D center.
     asset dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     dev_service.update([&](dev_committee_object& dco) { dco.scr_balance += dev_team_reward; });
 
     // 50% of revenue is distributed in SCR among users.
     // pass it through reward balancer
-    reward_service.increase_ballance(advertising_budgets_reward - dev_team_reward);
-    asset users_reward = reward_service.take_block_reward();
+    reward_balance_algorithm<content_reward_scr_service_i> balancer(content_reward_service);
+    balancer.increase_ballance(advertising_budgets_reward - dev_team_reward);
+    asset users_reward = balancer.take_block_reward();
 
-    distribute_reward(ctx, users_reward);
+    distribute_reward(ctx, users_reward); // distribute SCR
 }
 
 void process_funds::distribute_reward(block_task_context& ctx, const asset& users_reward)
 {
-    if (users_reward.amount <= 0)
-        return;
+    data_service_factory_i& services = ctx.services();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
+    // clang-format off
+    /// 5% of total per block reward(equal to 10% of users only reward) to witness and active sp holder pay
+    asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset active_sp_holder_reward = users_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset content_reward = users_reward - witness_reward - active_sp_holder_reward;
+    // clang-format on
+
+    FC_ASSERT(content_reward.amount >= 0, "content_reward(${r}) must not be less zero", ("r", content_reward));
+
+    distribute_witness_reward(ctx, witness_reward);
+
+    distribute_active_sp_holders_reward(ctx, active_sp_holder_reward);
+
+    charge_content_reward(ctx, content_reward);
+
+    dgp_service.update(
+        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(users_reward.amount, SCORUM_SYMBOL); });
+}
+
+void process_funds::distribute_witness_reward(block_task_context& ctx, const asset& witness_reward)
+{
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
     witness_service_i& witness_service = services.witness_service();
-
-    auto reward_symbol = users_reward.symbol();
-
-    // 5% of total per block reward(equal to 10% of users only reward) to witness pay
-    asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    asset content_reward = users_reward - witness_reward;
 
     const auto& cwit = witness_service.get(dgp_service.get().current_witness);
 
@@ -81,25 +99,129 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     }
 
     const auto& witness = account_service.get_account(cwit.owner);
-    if (SCORUM_SYMBOL == reward_symbol)
+
+    charge_account_reward(ctx, witness, witness_reward);
+
+    if (witness_reward.amount != 0)
+        ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
+}
+
+void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward)
+{
+    data_service_factory_i& services = ctx.services();
+    account_service_i& account_service = services.account_service();
+
+    asset total_reward = get_activity_reward(ctx, reward);
+
+    asset distributed_reward = asset(0, reward.symbol());
+
+    auto active_sp_holders_array = account_service.get_active_sp_holders();
+    if (!active_sp_holders_array.empty())
     {
-        account_service.increase_balance(witness, witness_reward);
+        // distribute
+        asset total_sp = std::accumulate(active_sp_holders_array.begin(), active_sp_holders_array.end(),
+                                         asset(0, SP_SYMBOL), [&](asset& accumulator, const account_object& account) {
+                                             return accumulator += account.vote_reward_competitive_sp;
+                                         });
 
-        reward_fund_scr_service_i& reward_fund_service = services.reward_fund_scr_service();
-        reward_fund_service.update([&](reward_fund_scr_object& rfo) { rfo.activity_reward_balance += content_reward; });
+        if (total_sp.amount > 0)
+        {
+            for (const account_object& account : active_sp_holders_array)
+            {
+                asset account_reward = total_reward * account.vote_reward_competitive_sp.amount / total_sp.amount;
+
+                charge_account_reward(ctx, account, account_reward);
+
+                distributed_reward += account_reward;
+
+                if (account_reward.amount != 0)
+                    ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, account_reward));
+            }
+        }
     }
-    else if (SP_SYMBOL == reward_symbol)
+
+    // put undistributed money in special fund
+    charge_activity_reward(ctx, total_reward - distributed_reward);
+}
+
+void process_funds::charge_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
+{
+    if (reward.amount <= 0)
+        return;
+
+    data_service_factory_i& services = ctx.services();
+    account_service_i& account_service = services.account_service();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
     {
-        account_service.create_scorumpower(witness, witness_reward);
-
-        reward_fund_sp_service_i& reward_fund_service = services.reward_fund_sp_service();
-        reward_fund_service.update([&](reward_fund_sp_object& rfo) { rfo.activity_reward_balance += content_reward; });
+        account_service.increase_balance(account, reward);
     }
+    else
+    {
+        account_service.create_scorumpower(account, reward);
+    }
+}
 
-    ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
+void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
+{
+    if (reward.amount <= 0)
+        return;
 
-    dgp_service.update(
-        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(users_reward.amount, SCORUM_SYMBOL); });
+    data_service_factory_i& services = ctx.services();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        content_reward_fund_scr_service_i& reward_fund_service = services.content_reward_fund_scr_service();
+        reward_fund_service.update([&](content_reward_fund_scr_object& rfo) { rfo.activity_reward_balance += reward; });
+    }
+    else
+    {
+        content_reward_fund_sp_service_i& reward_fund_service = services.content_reward_fund_sp_service();
+        reward_fund_service.update([&](content_reward_fund_sp_object& rfo) { rfo.activity_reward_balance += reward; });
+    }
+}
+
+void process_funds::charge_activity_reward(block_task_context& ctx, const asset& reward)
+{
+    if (reward.amount <= 0)
+        return;
+
+    data_service_factory_i& services = ctx.services();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        voters_reward_scr_service_i& reward_service = services.voters_reward_scr_service();
+
+        reward_balance_algorithm<voters_reward_scr_service_i> balancer(reward_service);
+        balancer.increase_ballance(reward);
+    }
+    else
+    {
+        voters_reward_sp_service_i& reward_service = services.voters_reward_sp_service();
+
+        reward_balance_algorithm<voters_reward_sp_service_i> balancer(reward_service);
+        balancer.increase_ballance(reward);
+    }
+}
+
+const asset process_funds::get_activity_reward(block_task_context& ctx, const asset& reward)
+{
+    data_service_factory_i& services = ctx.services();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        voters_reward_scr_service_i& reward_service = services.voters_reward_scr_service();
+
+        reward_balance_algorithm<voters_reward_scr_service_i> balancer(reward_service);
+        return reward + balancer.take_block_reward();
+    }
+    else
+    {
+        voters_reward_sp_service_i& reward_service = services.voters_reward_sp_service();
+
+        reward_balance_algorithm<voters_reward_sp_service_i> balancer(reward_service);
+        return reward + balancer.take_block_reward();
+    }
 }
 }
 }

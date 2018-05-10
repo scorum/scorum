@@ -7,7 +7,7 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 
 #include <scorum/chain/schema/budget_object.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 
 using namespace scorum::chain;
 
@@ -16,8 +16,8 @@ struct comment_cashout_from_scr_fund_fixture : public blogging_common_with_accou
 {
     comment_cashout_from_scr_fund_fixture()
         : budget_service(db.budget_service())
-        , reward_fund_scr_service(db.reward_fund_scr_service())
-        , reward_balancer(db.reward_service())
+        , reward_fund_scr_service(db.content_reward_fund_scr_service())
+        , reward_balancer(db.content_reward_scr_service())
     {
         generate_block();
 
@@ -35,14 +35,14 @@ struct comment_cashout_from_scr_fund_fixture : public blogging_common_with_accou
 
         BOOST_REQUIRE_GT(activity_reward_balance, ASSET_NULL_SCR);
 
-        const reward_balancer_object& rb = reward_balancer.get();
+        const content_reward_balancer_scr_object& rb = reward_balancer.get();
 
         BOOST_REQUIRE_EQUAL(rb.balance, ASSET_NULL_SCR);
     }
 
     budget_service_i& budget_service;
-    reward_fund_scr_service_i& reward_fund_scr_service;
-    reward_service_i& reward_balancer;
+    content_reward_fund_scr_service_i& reward_fund_scr_service;
+    content_reward_scr_service_i& reward_balancer;
 
     asset activity_reward_balance = ASSET_NULL_SP;
 };

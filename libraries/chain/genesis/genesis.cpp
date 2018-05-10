@@ -10,7 +10,7 @@
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 
 #include <scorum/chain/genesis/genesis.hpp>
 

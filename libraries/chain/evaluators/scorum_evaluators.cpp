@@ -923,7 +923,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = db().reward_fund_scr_service().get();
+                    const auto& reward_fund = db().content_reward_fund_scr_service().get();
                     max_vote_weight = rewards_math::calculate_max_vote_weight(comment.vote_rshares, old_vote_rshares,
                                                                               reward_fund.curation_reward_curve);
                     cv.weight = rewards_math::calculate_vote_weight(max_vote_weight, cv.last_update, comment.created,

@@ -51,7 +51,7 @@ struct dynamic_global_property_api_obj : public api_obj<scorum::chain::dynamic_g
     }
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
-    asset fund_budget_balance = asset(0, SCORUM_SYMBOL);
+    asset fund_budget_balance = asset(0, SP_SYMBOL);
     asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
     asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
     asset content_reward_sp_balance = asset(0, SP_SYMBOL);
@@ -286,7 +286,7 @@ struct budget_api_obj
     time_point_sec deadline;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    share_type per_block;
+    asset per_block;
 
     uint32_t last_cashout_block = 0;
 };

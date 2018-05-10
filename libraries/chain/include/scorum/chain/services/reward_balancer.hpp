@@ -1,35 +1,24 @@
 #pragma once
 
 #include <scorum/chain/services/service_base.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-struct reward_service_i : public base_service_i<reward_balancer_object>
+struct content_reward_scr_service_i : public base_service_i<content_reward_balancer_scr_object>
 {
-    virtual const reward_balancer_object& create_balancer(const asset& initial_supply) = 0;
-
-    virtual const asset& increase_ballance(const asset& delta) = 0;
-
-    virtual const asset take_block_reward() = 0;
+};
+struct voters_reward_scr_service_i : public base_service_i<voters_reward_balancer_scr_object>
+{
+};
+struct voters_reward_sp_service_i : public base_service_i<voters_reward_balancer_sp_object>
+{
 };
 
-class dbs_reward : public dbs_service_base<reward_service_i>
-{
-    friend class dbservice_dbs_factory;
-
-protected:
-    explicit dbs_reward(database& db);
-
-public:
-    const reward_balancer_object& create_balancer(const asset& initial_supply) override;
-
-    // return actual balance after increasing
-    const asset& increase_ballance(const asset& delta) override;
-
-    const asset take_block_reward() override;
-};
+using dbs_content_reward_scr = dbs_service_base<content_reward_scr_service_i>;
+using dbs_voters_reward_scr = dbs_service_base<voters_reward_scr_service_i>;
+using dbs_voters_reward_sp = dbs_service_base<voters_reward_sp_service_i>;
 
 } // namespace chain
 } // namespace scorum

@@ -9,7 +9,7 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/reward_balancer_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 
 namespace scorum {
 namespace app {
@@ -74,21 +74,21 @@ reward_fund_api_obj chain_api::get_reward_fund(reward_fund_type type_of_fund) co
     return _db.with_read_lock([&]() {
         switch (type_of_fund)
         {
-        case reward_fund_type::reward_fund_scr:
+        case reward_fund_type::content_reward_fund_scr:
         {
-            auto& rf_service = _db.obtain_service<dbs_reward_fund_scr>();
+            auto& rf_service = _db.obtain_service<dbs_content_reward_fund_scr>();
             FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
             return reward_fund_api_obj(rf_service.get());
         }
-        case reward_fund_type::reward_fund_sp:
+        case reward_fund_type::content_reward_fund_sp:
         {
-            auto& rf_service = _db.obtain_service<dbs_reward_fund_sp>();
+            auto& rf_service = _db.obtain_service<dbs_content_reward_fund_sp>();
             FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
             return reward_fund_api_obj(rf_service.get());
         }
-        case reward_fund_type::fifa_world_cup_2018_bounty_reward_fund:
+        case reward_fund_type::content_fifa_world_cup_2018_bounty_reward_fund:
         {
-            auto& rf_service = _db.obtain_service<dbs_fifa_world_cup_2018_bounty_reward_fund>();
+            auto& rf_service = _db.obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
             FC_ASSERT(rf_service.is_exists(), "${f} object does not exist", ("f", type_of_fund));
             return reward_fund_api_obj(rf_service.get());
         }
@@ -113,9 +113,11 @@ chain_capital_api_obj chain_api::get_chain_capital() const
 
         capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
         capital.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
-        capital.reward_pool_balance = _db.obtain_service<dbs_reward>().get().balance;
-        capital.content_reward_scr_balance = _db.obtain_service<dbs_reward_fund_scr>().get().activity_reward_balance;
-        capital.content_reward_sp_balance = _db.obtain_service<dbs_reward_fund_sp>().get().activity_reward_balance;
+        capital.reward_pool_balance = _db.obtain_service<dbs_content_reward_scr>().get().balance;
+        capital.content_reward_scr_balance
+            = _db.obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+        capital.content_reward_sp_balance
+            = _db.obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance;
 
         return capital;
     });

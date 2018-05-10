@@ -37,26 +37,27 @@ using reward_fund_index
                                                                     typename FundObjectType::id_type,
                                                                     &FundObjectType::id>>>>;
 
-using reward_fund_scr_object = reward_fund_object<reward_fund_scr_object_type, SCORUM_SYMBOL>;
-using reward_fund_sp_object = reward_fund_object<reward_fund_sp_object_type, SP_SYMBOL>;
-using fifa_world_cup_2018_bounty_reward_fund_object
-    = reward_fund_object<fifa_world_cup_2018_bounty_reward_fund_type, SP_SYMBOL>;
+using content_reward_fund_scr_object = reward_fund_object<content_reward_fund_scr_object_type, SCORUM_SYMBOL>;
+using content_reward_fund_sp_object = reward_fund_object<content_reward_fund_sp_object_type, SP_SYMBOL>;
+using content_fifa_world_cup_2018_bounty_reward_fund_object
+    = reward_fund_object<content_fifa_world_cup_2018_bounty_reward_fund_type, SP_SYMBOL>;
 
-using reward_fund_scr_index = reward_fund_index<reward_fund_scr_object>;
-using reward_fund_sp_index = reward_fund_index<reward_fund_sp_object>;
-using fifa_world_cup_2018_bounty_reward_fund_index = reward_fund_index<fifa_world_cup_2018_bounty_reward_fund_object>;
+using content_reward_fund_scr_index = reward_fund_index<content_reward_fund_scr_object>;
+using content_reward_fund_sp_index = reward_fund_index<content_reward_fund_sp_object>;
+using content_fifa_world_cup_2018_bounty_reward_fund_index
+    = reward_fund_index<content_fifa_world_cup_2018_bounty_reward_fund_object>;
 
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::reward_fund_scr_object,
+FC_REFLECT(scorum::chain::content_reward_fund_scr_object,
            (id)(activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
-FC_REFLECT(scorum::chain::reward_fund_sp_object,
+FC_REFLECT(scorum::chain::content_reward_fund_sp_object,
            (id)(activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
-FC_REFLECT(scorum::chain::fifa_world_cup_2018_bounty_reward_fund_object,
+FC_REFLECT(scorum::chain::content_fifa_world_cup_2018_bounty_reward_fund_object,
            (id)(activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
 
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::reward_fund_scr_object, scorum::chain::reward_fund_scr_index)
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::reward_fund_sp_object, scorum::chain::reward_fund_sp_index)
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::fifa_world_cup_2018_bounty_reward_fund_object,
-                         scorum::chain::fifa_world_cup_2018_bounty_reward_fund_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::content_reward_fund_scr_object, scorum::chain::content_reward_fund_scr_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::content_reward_fund_sp_object, scorum::chain::content_reward_fund_sp_index)
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::content_fifa_world_cup_2018_bounty_reward_fund_object,
+                         scorum::chain::content_fifa_world_cup_2018_bounty_reward_fund_index)
