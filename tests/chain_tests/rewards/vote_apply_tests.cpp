@@ -318,6 +318,8 @@ SCORUM_TEST_CASE(restore_power_check)
 
     auto old_abs_rshares = bob_comment.abs_rshares;
 
+    asset alice_effective_sp = alice_vested.effective_scorumpower();
+
     int64_t elapsed_seconds = SCORUM_VOTE_REGENERATION_SECONDS.to_seconds()
         * (SCORUM_100_PERCENT - alice_vested.voting_power) / SCORUM_100_PERCENT;
     generate_blocks(global_property_service.head_block_time() + elapsed_seconds, true);
@@ -331,8 +333,7 @@ SCORUM_TEST_CASE(restore_power_check)
 
     BOOST_REQUIRE_EQUAL(account_service.get_account("alice").voting_power, SCORUM_100_PERCENT - used_power);
 
-    share_type rshares
-        = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
+    share_type rshares = (uint128_t(alice_effective_sp.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
     BOOST_REQUIRE_EQUAL(bob_comment.abs_rshares, old_abs_rshares + rshares);
 
@@ -348,6 +349,8 @@ SCORUM_TEST_CASE(negative_vote_check)
 
     const account_object& sam_vested = account_service.get_account("sam");
 
+    asset sam_effective_sp = sam_vested.effective_scorumpower();
+
     vote("alice", "bob", 100); // make not zerro abs_rshares for bob_comment
 
     auto old_abs_rshares = bob_comment.abs_rshares;
@@ -356,8 +359,8 @@ SCORUM_TEST_CASE(negative_vote_check)
 
     vote("sam", "bob", -50);
 
-    share_type rshares = (uint128_t(sam_vested.scorumpower.amount.value)
-                          * (SCORUM_100_PERCENT - sam_vested.voting_power) / SCORUM_100_PERCENT)
+    share_type rshares = (uint128_t(sam_effective_sp.amount.value) * (SCORUM_100_PERCENT - sam_vested.voting_power)
+                          / SCORUM_100_PERCENT)
                              .to_uint64();
 
     BOOST_REQUIRE_EQUAL(sam_vested.voting_power,
