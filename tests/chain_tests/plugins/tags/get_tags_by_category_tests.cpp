@@ -4,11 +4,17 @@
 
 #include "tags_common.hpp"
 
-namespace boost {
+namespace std {
+
+std::ostream& operator<<(std::ostream& os, const std::pair<std::string, unsigned int>& p)
+{
+    os << '[' << p.first << ',' << p.second << ']';
+    return os;
+}
 
 std::ostringstream& operator<<(std::ostringstream& os, const std::pair<std::string, unsigned int>& p)
 {
-    os << '[' << p.first << ',' << p.second << ']';
+    static_cast<std::ostream&>(os) << p;
     return os;
 }
 }
