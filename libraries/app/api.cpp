@@ -256,7 +256,9 @@ class check_banned_operations_visitor
 public:
     explicit check_banned_operations_visitor(const fc::time_point_sec& now)
     {
+#ifndef FORCE_UNLOCK_BLOGGING_API
         allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
+#endif
     }
 
     using result_type = bool;
