@@ -6,6 +6,7 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/account_registration_bonus.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
@@ -27,6 +28,7 @@ public:
         , _registration_pool_service(services.registration_pool_service())
         , _registration_committee_service(services.registration_committee_service())
         , _dprops_service(services.dynamic_global_property_service())
+        , _account_registration_bonus_service(services.account_registration_bonus_service())
     {
     }
 
@@ -53,6 +55,19 @@ public:
         _registration_pool_service.increase_already_allocated_count();
 
         return per_reg;
+    }
+
+    void register_account_bonus(const account_name_type& new_account, const asset& bonus)
+    {
+        _account_service.check_account_existence(new_account);
+
+        FC_ASSERT(bonus.amount > 0, "No bonus to register.");
+
+        _account_registration_bonus_service.create([&](account_registration_bonus_object& a) {
+            a.account = new_account;
+            a.bonus += asset(bonus.amount, SP_SYMBOL);
+            a.expires = _dprops_service.head_block_time() + SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS.to_seconds();
+        });
     }
 
 private:
@@ -180,6 +195,7 @@ private:
     registration_pool_service_i& _registration_pool_service;
     registration_committee_service_i& _registration_committee_service;
     dynamic_global_property_service_i& _dprops_service;
+    account_registration_bonus_service_i& _account_registration_bonus_service;
 };
 
 //
@@ -219,6 +235,7 @@ void registration_pool_evaluator::do_apply(const registration_pool_evaluator::op
 
     _account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
                                                o.active, o.posting, bonus);
+    _impl->register_account_bonus(o.new_account_name, bonus);
 
     _dprops_service.update([&](dynamic_global_property_object& o) { o.circulating_capital += bonus; });
 }
@@ -251,6 +268,7 @@ void give_bonus_from_registration_pool_task::on_apply(give_bonus_from_registrati
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
     account_service.create_scorumpower(ctx.beneficiary(), bonus);
+    impl.register_account_bonus(ctx.beneficiary().name, bonus);
 
     dprops_service.update([&](dynamic_global_property_object& o) { o.circulating_capital += bonus; });
 }

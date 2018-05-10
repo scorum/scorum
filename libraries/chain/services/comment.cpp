@@ -5,14 +5,11 @@
 #include <boost/multi_index/detail/unbounded.hpp>
 
 #include <tuple>
-#include <limits>
 
 using namespace scorum::protocol;
 
 namespace scorum {
 namespace chain {
-
-#define ALL_IDS std::numeric_limits<int64_t>::max()
 
 dbs_comment::dbs_comment(database& db)
     : base_service_type(db)

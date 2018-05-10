@@ -44,6 +44,7 @@ enum object_type
     budget_object_type,
     chain_property_object_type,
     change_recovery_account_request_object_type,
+    account_registration_bonus_object_type,
     comment_object_type,
     comment_statistic_scr_object_type,
     comment_statistic_sp_object_type,
@@ -83,6 +84,7 @@ class block_summary_object;
 class budget_object;
 class chain_property_object;
 class change_recovery_account_request_object;
+class account_registration_bonus_object;
 class comment_object;
 class comments_bounty_fund_object;
 class comment_vote_object;
@@ -117,6 +119,7 @@ using block_summary_id_type = oid<block_summary_object>;
 using budget_id_type = oid<budget_object>;
 using chain_property_id_type = oid<chain_property_object>;
 using change_recovery_account_request_id_type = oid<change_recovery_account_request_object>;
+using account_registration_bonus_id_type = oid<account_registration_bonus_object>;
 using comment_id_type = oid<comment_object>;
 using comments_bounty_fund_id_type = oid<comments_bounty_fund_object>;
 using comment_vote_id_type = oid<comment_vote_object>;
@@ -165,6 +168,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (budget_object_type)
                 (chain_property_object_type)
                 (change_recovery_account_request_object_type)
+                (account_registration_bonus_object_type)
                 (comment_object_type)
                 (comment_statistic_scr_object_type)
                 (comment_statistic_sp_object_type)

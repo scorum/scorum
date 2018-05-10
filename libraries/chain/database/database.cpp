@@ -60,6 +60,8 @@
 #include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.hpp>
 #include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
+#include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
+#include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -87,6 +89,7 @@ public:
     database_ns::process_fifa_world_cup_2018_bounty_cashout _process_comments_bounty_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
     database_ns::process_contracts_expiration _process_contracts_expiration;
+    database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
 };
 
 database_impl::database_impl(database& self)
@@ -1121,6 +1124,7 @@ void database::initialize_indexes()
 {
     add_index<account_authority_index>();
     add_index<account_index>();
+    add_index<account_registration_bonus_index>();
     add_index<account_blogging_statistic_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
@@ -1333,6 +1337,10 @@ void database::_apply_block(const signed_block& next_block)
              * for transactions when validating broadcast transactions or
              * when building a block.
              */
+
+            database_ns::user_activity_context user_activity_ctx(static_cast<data_service_factory&>(*this), trx);
+            database_ns::process_user_activity_task().apply(user_activity_ctx);
+
             apply_transaction(trx, skip);
             ++_current_trx_in_block;
         }
@@ -1360,6 +1368,7 @@ void database::_apply_block(const signed_block& next_block)
             .before(_my->_process_comments_bounty_cashout)
             .before(_my->_process_vesting_withdrawals)
             .before(_my->_process_contracts_expiration)
+            .before(_my->_process_account_registration_bonus_expiration)
             .apply(ctx);
         // clang-format on
 
