@@ -20,11 +20,15 @@ namespace detail {
 
         const uint32_t cashout_window_seconds;
 
+        const fc::microseconds vote_regeneration_seconds;
+
         const fc::microseconds upvote_lockout;
 
         const fc::microseconds owner_auth_recovery_period;
         const fc::microseconds account_recovery_request_expiration_period;
         const fc::microseconds owner_update_limit;
+
+        const fc::microseconds recent_rshares_decay_rate;
 
         const uint32_t rewards_initial_supply_period_in_days;
         const uint32_t guaranted_reward_supply_period_in_days;
@@ -161,7 +165,7 @@ namespace detail {
 #define SCORUM_MAX_WITHDRAW_ROUTES             10
 #define SCORUM_SAVINGS_WITHDRAW_TIME           (fc::days(3))
 #define SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT  100
-#define SCORUM_VOTE_REGENERATION_SECONDS       (fc::days(5))
+#define SCORUM_VOTE_REGENERATION_SECONDS       (scorum::protocol::detail::get_config().vote_regeneration_seconds)
 #define SCORUM_MAX_VOTE_CHANGES                3
 #define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
 
@@ -190,7 +194,7 @@ namespace detail {
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
 
-#define SCORUM_RECENT_RSHARES_DECAY_RATE       (fc::days(15))
+#define SCORUM_RECENT_RSHARES_DECAY_RATE       (scorum::protocol::detail::get_config().recent_rshares_decay_rate)
 // note, if redefining these constants make sure calculate_claims doesn't overflow
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
@@ -220,12 +224,7 @@ namespace detail {
 #define SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT            (50u)
 #define SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT         (60u)
 
-/**
- * The number of votes regenerated per day.  Any user voting slower than this rate will be
- * "wasting" voting power through spillover; any user voting faster than this rate will have
- * their votes reduced.
- */
-#define SCORUM_MAX_VOTES_PER_DAY_VOTING_POWER_RATE 40
+#define SCORUM_VOTING_POWER_DECAY_PERCENT 5
 
 #define SCORUM_MIN_QUORUM_VALUE_PERCENT         (50u)
 #define SCORUM_MAX_QUORUM_VALUE_PERCENT         (100u)

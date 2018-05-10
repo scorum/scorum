@@ -15,7 +15,7 @@ namespace database_fixture {
 struct rewards_math_calculate_payout_fixture
 {
     const share_type any_typical_rshares = SCORUM_MIN_COMMENT_PAYOUT_SHARE * 100;
-    const share_type fund_balance = ASSET_SCR(100e+3).amount;
+    const share_type fund_balance = SCORUM_MIN_COMMENT_PAYOUT_SHARE;
     const uint128_t total_claims = any_typical_rshares.value;
     share_type max_payout = fund_balance / 2;
 };
@@ -31,11 +31,9 @@ BOOST_AUTO_TEST_CASE(predict_payout_check_max_payout_limit_payout)
                                      SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE),
                       max_payout);
 
-    max_payout = fund_balance * 2;
-
-    BOOST_CHECK_EQUAL(predict_payout(0, fund_balance, any_typical_rshares, curve_id::linear, max_payout,
-                                     SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE),
-                      fund_balance);
+    BOOST_CHECK_GT(predict_payout(0, fund_balance, any_typical_rshares, curve_id::linear, max_payout * 2,
+                                  SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE),
+                   max_payout);
 }
 
 BOOST_AUTO_TEST_CASE(predict_payout_check_recent_claims_limit_payout)

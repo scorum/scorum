@@ -60,5 +60,15 @@ bool dbs_comment::is_exists(const account_name_type& author, const std::string& 
     return find_by<by_permlink>(std::make_tuple(author, permlink)) != nullptr;
 }
 
+comment_service_i::comment_refs_type dbs_comment::get_children(const account_name_type& parent_author,
+                                                               const std::string& parent_permlink) const
+{
+    auto range = get_range_by<by_parent>(
+        boost::make_tuple(parent_author, parent_permlink.c_str(), 0) <= ::boost::lambda::_1,
+        ::boost::lambda::_1 <= std::make_tuple(parent_author, parent_permlink.c_str(), ALL_IDS));
+
+    return range;
+}
+
 } // namespace chain
 } // namespace scorum

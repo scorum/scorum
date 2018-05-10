@@ -22,11 +22,15 @@ config::config() /// production config
 
     , cashout_window_seconds(DAYS_TO_SECONDS(7))
 
+    , vote_regeneration_seconds(fc::days(5))
+
     , upvote_lockout(fc::hours(12))
 
     , owner_auth_recovery_period(fc::days(30))
     , account_recovery_request_expiration_period(fc::days(1))
     , owner_update_limit(fc::minutes(60))
+
+    , recent_rshares_decay_rate(fc::days(15))
 
     , rewards_initial_supply_period_in_days(2 * 365)
     , guaranted_reward_supply_period_in_days(30)
@@ -64,13 +68,17 @@ config::config() /// production config
 config::config(test_mode) /// test config
     : blockid_pool_size(0xfff)
 
-    , cashout_window_seconds(60 * 60) // 1 hr
+    , cashout_window_seconds(fc::hours(1).to_seconds())
+
+    , vote_regeneration_seconds(fc::minutes(30))
 
     , upvote_lockout(fc::minutes(5))
 
     , owner_auth_recovery_period(fc::seconds(60))
     , account_recovery_request_expiration_period(fc::seconds(12))
     , owner_update_limit(fc::seconds(0))
+
+    , recent_rshares_decay_rate(fc::hours(1))
 
     , rewards_initial_supply_period_in_days(5)
     , guaranted_reward_supply_period_in_days(2)
