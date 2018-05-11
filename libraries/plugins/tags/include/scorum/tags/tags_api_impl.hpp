@@ -383,26 +383,26 @@ public:
                                                                   time_point_sec before_date,
                                                                   uint32_t limit) const
     {
-
-        std::vector<discussion> result;
-
 #ifndef IS_LOW_MEM
-        FC_ASSERT(limit <= 100);
-        result.reserve(limit);
-        uint32_t count = 0;
-        const auto& didx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+        FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
 
         if (before_date == time_point_sec())
             before_date = time_point_sec::maximum();
 
-        auto itr = didx.lower_bound(boost::make_tuple(author, time_point_sec::maximum()));
-        if (start_permlink.size())
+        const auto& didx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+        auto itr = didx.lower_bound(boost::make_tuple(author, before_date));
+
+        if (!start_permlink.empty())
         {
-            const auto& comment = _db.obtain_service<dbs_comment>().get(author, start_permlink);
-            if (comment.created < before_date)
+            const auto& comment = _services.comment_service().get(author, start_permlink);
+            if (comment.last_update < before_date)
                 itr = didx.iterator_to(comment);
         }
 
+        std::vector<discussion> result;
+        result.reserve(limit);
+
+        uint32_t count = 0;
         while (itr != didx.end() && itr->author == author && count < limit)
         {
             if (itr->parent_author.size() == 0)
