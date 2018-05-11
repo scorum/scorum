@@ -128,7 +128,11 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
         {
             for (const account_object& account : active_sp_holders_array)
             {
-                asset account_reward = total_reward * account.vote_reward_competitive_sp.amount / total_sp.amount;
+                fc::uint128_t account_reward_value = total_reward.amount.value;
+                account_reward_value *= account.vote_reward_competitive_sp.amount.value;
+                account_reward_value /= total_sp.amount.value;
+
+                asset account_reward = asset(account_reward_value.to_uint64(), total_reward.symbol());
 
                 charge_account_reward(ctx, account, account_reward);
 
