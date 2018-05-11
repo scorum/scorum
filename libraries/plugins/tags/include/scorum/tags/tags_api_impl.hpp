@@ -341,78 +341,32 @@ public:
         return result;
     }
 
-    std::vector<discussion> get_replies_by_last_update(account_name_type start_parent_author,
-                                                       const std::string& start_permlink,
-                                                       uint32_t limit) const
+    std::vector<discussion>
+    get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const
     {
         std::vector<discussion> result;
 
 #ifndef IS_LOW_MEM
-        FC_ASSERT(limit <= 100);
-        const auto& last_update_idx = _db.get_index<comment_index>().indices().get<by_last_update>();
-        auto itr = last_update_idx.begin();
-        const account_name_type* parent_author = &start_parent_author;
 
-        if (start_permlink.size())
-        {
-            const auto& comment = _db.obtain_service<dbs_comment>().get(start_parent_author, start_permlink);
-            itr = last_update_idx.iterator_to(comment);
-            parent_author = &comment.parent_author;
-        }
-        else if (start_parent_author.size())
-        {
-            itr = last_update_idx.lower_bound(start_parent_author);
-        }
-
-        result.reserve(limit);
-
-        while (itr != last_update_idx.end() && result.size() < limit && itr->parent_author == *parent_author)
-        {
-            result.push_back(*itr);
-            set_pending_payout(result.back());
-            result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
-            ++itr;
-        }
-#endif
-
-        return result;
-    }
-
-    std::vector<discussion> get_discussions_by_author_before_date(const std::string& author,
-                                                                  const std::string& start_permlink,
-                                                                  time_point_sec before_date,
-                                                                  uint32_t limit) const
-    {
-#ifndef IS_LOW_MEM
         FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
 
-        if (before_date == time_point_sec())
-            before_date = time_point_sec::maximum();
-
-        const auto& didx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
-        auto itr = didx.lower_bound(boost::make_tuple(author, before_date));
-
-        if (!start_permlink.empty())
-        {
-            const auto& comment = _services.comment_service().get(author, start_permlink);
-            if (comment.last_update < before_date)
-                itr = didx.iterator_to(comment);
-        }
-
-        std::vector<discussion> result;
         result.reserve(limit);
 
-        uint32_t count = 0;
-        while (itr != didx.end() && itr->author == author && count < limit)
+        const auto& idx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+
+        auto it = idx.lower_bound(author);
+        if (!start_permlink.empty())
+            it = idx.iterator_to(_services.comment_service().get(author, start_permlink));
+
+        while (it != idx.end() && it->author == author && result.size() < limit)
         {
-            if (itr->parent_author.size() == 0)
+            if (it->parent_author.size() == 0)
             {
-                result.push_back(*itr);
+                result.push_back(*it);
                 set_pending_payout(result.back());
-                result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
-                ++count;
+                result.back().active_votes = get_active_votes(it->author, fc::to_string(it->permlink));
             }
-            ++itr;
+            ++it;
         }
 #endif
         return result;
@@ -493,18 +447,6 @@ public:
                     //        eacnt.other_history[item.first] = item.second;
                     //    }
                     //}
-                }
-                else if (part[1] == "recent-replies")
-                {
-                    auto replies = get_replies_by_last_update(acnt, "", 50);
-                    eacnt.recent_replies = std::vector<std::string>();
-                    for (const auto& reply : replies)
-                    {
-                        auto reply_ref = reply.author + "/" + reply.permlink;
-                        _state.content[reply_ref] = reply;
-
-                        eacnt.recent_replies->push_back(reply_ref);
-                    }
                 }
                 else if (part[1] == "posts" || part[1] == "comments")
                 {
