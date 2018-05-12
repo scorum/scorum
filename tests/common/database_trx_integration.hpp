@@ -3,6 +3,8 @@
 #include "database_integration.hpp"
 #include "actoractions.hpp"
 
+#include <scorum/chain/data_service_factory.hpp>
+
 namespace database_fixture {
 
 class database_trx_integration_fixture : public database_integration_fixture
@@ -55,6 +57,8 @@ protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 
     signed_transaction trx;
+
+    scorum::chain::data_service_factory_i& services;
 };
 
 } // database_fixture

@@ -254,7 +254,8 @@ public:
     id_type id;
 
     tag_name_type tag;
-    asset total_payout = asset(0, SCORUM_SYMBOL);
+    asset total_payout_scr = asset(0, SCORUM_SYMBOL);
+    asset total_payout_sp = asset(0, SP_SYMBOL);
     int32_t net_votes = 0;
     uint32_t top_posts = 0;
     uint32_t comments = 0;
@@ -503,7 +504,8 @@ CHAINBASE_SET_INDEX_TYPE(scorum::tags::tag_object, scorum::tags::tag_index)
 FC_REFLECT(scorum::tags::tag_stats_object,
            (id)
            (tag)
-           (total_payout)
+           (total_payout_scr)
+           (total_payout_sp)
            (net_votes)
            (top_posts)
            (comments)

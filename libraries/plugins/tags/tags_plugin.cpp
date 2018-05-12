@@ -575,7 +575,17 @@ struct post_operation_visitor
 
         for (const std::string& tag : meta.tags)
         {
-            _db.modify(get_stats(tag), [&](tag_stats_object& ts) { ts.total_payout += op.payout; });
+            _db.modify(get_stats(tag), [&](tag_stats_object& ts) {
+
+                if (op.payout.symbol() == SCORUM_SYMBOL)
+                {
+                    ts.total_payout_scr += op.payout;
+                }
+                else
+                {
+                    ts.total_payout_sp += op.payout;
+                }
+            });
         }
     }
 
