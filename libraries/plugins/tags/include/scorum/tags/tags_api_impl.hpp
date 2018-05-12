@@ -410,7 +410,6 @@ public:
                     = extended_account(_db.obtain_service<chain::dbs_account>().get_account(acnt), _db);
                 _state.accounts[acnt].tags_usage = get_tags_used_by_author(acnt);
 
-                auto& eacnt = _state.accounts[acnt];
                 if (part[1] == "transfers")
                 {
                     // TODO: rework this garbage method - split it into sensible parts
@@ -451,6 +450,7 @@ public:
                 else if (part[1] == "posts" || part[1] == "comments")
                 {
 #ifndef IS_LOW_MEM
+                    auto& eacnt = _state.accounts[acnt];
                     int count = 0;
                     const auto& pidx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
                     auto itr = pidx.lower_bound(acnt);
