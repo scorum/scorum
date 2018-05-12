@@ -8,6 +8,9 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+
 #include "database_trx_integration.hpp"
 
 namespace tags_tests {
@@ -65,6 +68,13 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
             return my.permlink;
         }
 
+        fc::time_point_sec cashout_time() const
+        {
+            const auto& comment = fixture->services.comment_service().get(author(), permlink());
+
+            return comment.cashout_time;
+        }
+
         template <typename Constructor> Comment create_comment(Actor& actor, Constructor&& c)
         {
             comment_operation operation;
@@ -101,8 +111,6 @@ struct tags_fixture : public database_fixture::database_trx_integration_fixture
 
     api_context _api_ctx;
     scorum::tags::tags_api _api;
-
-    Actor alice;
 
     tags_fixture()
         : _api_ctx(app, TAGS_API_NAME, std::make_shared<api_session_data>())

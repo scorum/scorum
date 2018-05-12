@@ -27,6 +27,26 @@ namespace tags {
 
 using namespace scorum::tags::api;
 
+template <typename Fund> asset calc_pending_payout(const discussion& d, const Fund& reward_fund_obj)
+{
+    share_type pending_payout_value;
+
+    if (d.cashout_time != fc::time_point_sec::maximum() && reward_fund_obj.recent_claims > 0 && d.net_rshares > 0)
+    {
+        // clang-format off
+        pending_payout_value = rewards_math::predict_payout(reward_fund_obj.recent_claims,
+                                                            reward_fund_obj.activity_reward_balance.amount,
+                                                            d.net_rshares,
+                                                            reward_fund_obj.author_reward_curve,
+                                                            d.max_accepted_payout.amount,
+                                                            SCORUM_RECENT_RSHARES_DECAY_RATE,
+                                                            SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+        // clang-format on
+    }
+
+    return asset(pending_payout_value, reward_fund_obj.symbol());
+}
+
 class tags_api_impl
 {
 public:
@@ -39,6 +59,11 @@ public:
 
     ~tags_api_impl()
     {
+    }
+
+    discussion create_discussion(const comment_object& comment) const
+    {
+        return discussion(comment, _services.comment_statistic_scr_service(), _services.comment_statistic_sp_service());
     }
 
     std::vector<api::tag_api_obj> get_trending_tags(const std::string& after_tag, uint32_t limit) const
@@ -296,7 +321,7 @@ public:
         auto itr = by_permlink_idx.find(boost::make_tuple(author, permlink));
         if (itr != by_permlink_idx.end())
         {
-            discussion result(*itr);
+            discussion result = create_discussion(*itr);
             set_pending_payout(result);
             result.active_votes = get_active_votes(author, permlink);
             return result;
@@ -313,7 +338,7 @@ public:
         while (itr != by_permlink_idx.end() && itr->parent_author == parent
                && fc::to_string(itr->parent_permlink) == parent_permlink)
         {
-            result.push_back(discussion(*itr));
+            result.push_back(create_discussion(*itr));
             set_pending_payout(result.back());
             ++itr;
         }
@@ -333,7 +358,7 @@ public:
         traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
             if (comment.depth <= depth)
             {
-                result.push_back(discussion(comment));
+                result.push_back(create_discussion(comment));
                 set_pending_payout(result.back());
             }
         });
@@ -341,78 +366,32 @@ public:
         return result;
     }
 
-    std::vector<discussion> get_replies_by_last_update(account_name_type start_parent_author,
-                                                       const std::string& start_permlink,
-                                                       uint32_t limit) const
+    std::vector<discussion>
+    get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const
     {
         std::vector<discussion> result;
 
 #ifndef IS_LOW_MEM
-        FC_ASSERT(limit <= 100);
-        const auto& last_update_idx = _db.get_index<comment_index>().indices().get<by_last_update>();
-        auto itr = last_update_idx.begin();
-        const account_name_type* parent_author = &start_parent_author;
 
-        if (start_permlink.size())
-        {
-            const auto& comment = _db.obtain_service<dbs_comment>().get(start_parent_author, start_permlink);
-            itr = last_update_idx.iterator_to(comment);
-            parent_author = &comment.parent_author;
-        }
-        else if (start_parent_author.size())
-        {
-            itr = last_update_idx.lower_bound(start_parent_author);
-        }
+        FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
 
         result.reserve(limit);
 
-        while (itr != last_update_idx.end() && result.size() < limit && itr->parent_author == *parent_author)
+        const auto& idx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+
+        auto it = idx.lower_bound(author);
+        if (!start_permlink.empty())
+            it = idx.iterator_to(_services.comment_service().get(author, start_permlink));
+
+        while (it != idx.end() && it->author == author && result.size() < limit)
         {
-            result.push_back(*itr);
-            set_pending_payout(result.back());
-            result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
-            ++itr;
-        }
-#endif
-
-        return result;
-    }
-
-    std::vector<discussion> get_discussions_by_author_before_date(const std::string& author,
-                                                                  const std::string& start_permlink,
-                                                                  time_point_sec before_date,
-                                                                  uint32_t limit) const
-    {
-
-        std::vector<discussion> result;
-
-#ifndef IS_LOW_MEM
-        FC_ASSERT(limit <= 100);
-        result.reserve(limit);
-        uint32_t count = 0;
-        const auto& didx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
-
-        if (before_date == time_point_sec())
-            before_date = time_point_sec::maximum();
-
-        auto itr = didx.lower_bound(boost::make_tuple(author, time_point_sec::maximum()));
-        if (start_permlink.size())
-        {
-            const auto& comment = _db.obtain_service<dbs_comment>().get(author, start_permlink);
-            if (comment.created < before_date)
-                itr = didx.iterator_to(comment);
-        }
-
-        while (itr != didx.end() && itr->author == author && count < limit)
-        {
-            if (itr->parent_author.size() == 0)
+            if (it->parent_author.size() == 0)
             {
-                result.push_back(*itr);
+                result.push_back(create_discussion(*it));
                 set_pending_payout(result.back());
-                result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
-                ++count;
+                result.back().active_votes = get_active_votes(it->author, fc::to_string(it->permlink));
             }
-            ++itr;
+            ++it;
         }
 #endif
         return result;
@@ -456,7 +435,6 @@ public:
                     = extended_account(_db.obtain_service<chain::dbs_account>().get_account(acnt), _db);
                 _state.accounts[acnt].tags_usage = get_tags_used_by_author(acnt);
 
-                auto& eacnt = _state.accounts[acnt];
                 if (part[1] == "transfers")
                 {
                     // TODO: rework this garbage method - split it into sensible parts
@@ -494,21 +472,10 @@ public:
                     //    }
                     //}
                 }
-                else if (part[1] == "recent-replies")
-                {
-                    auto replies = get_replies_by_last_update(acnt, "", 50);
-                    eacnt.recent_replies = std::vector<std::string>();
-                    for (const auto& reply : replies)
-                    {
-                        auto reply_ref = reply.author + "/" + reply.permlink;
-                        _state.content[reply_ref] = reply;
-
-                        eacnt.recent_replies->push_back(reply_ref);
-                    }
-                }
                 else if (part[1] == "posts" || part[1] == "comments")
                 {
 #ifndef IS_LOW_MEM
+                    auto& eacnt = _state.accounts[acnt];
                     int count = 0;
                     const auto& pidx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
                     auto itr = pidx.lower_bound(acnt);
@@ -520,7 +487,7 @@ public:
                         {
                             const auto link = acnt + "/" + fc::to_string(itr->permlink);
                             eacnt.comments->push_back(link);
-                            _state.content[link] = *itr;
+                            _state.content[link] = create_discussion(*itr);
                             set_pending_payout(_state.content[link]);
                             ++count;
                         }
@@ -850,7 +817,7 @@ private:
 
     discussion get_discussion(comment_id_type id, uint32_t truncate_body = 0) const
     {
-        discussion d = _services.comment_service().get(id);
+        discussion d = create_discussion(_services.comment_service().get(id));
 
         set_url(d);
         set_pending_payout(d);
@@ -881,40 +848,16 @@ private:
     {
         _tags_service.set_promoted_balance(d.id, d.promoted);
 
-        if (d.cashout_time != fc::time_point_sec::maximum())
-        {
-            {
-                const auto& reward_fund_obj = _services.content_reward_fund_scr_service().get();
-                share_type pending_payout_value;
-                if (reward_fund_obj.recent_claims > 0)
-                {
-                    pending_payout_value = rewards_math::predict_payout(
-                        reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance.amount, d.net_rshares,
-                        reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount,
-                        SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
-                }
-                d.pending_payout_scr_value = asset(pending_payout_value, SCORUM_SYMBOL);
-            }
+        d.pending_payout_scr_value = calc_pending_payout(d, _services.content_reward_fund_scr_service().get());
 
-            {
-                const auto& reward_fund_obj = _services.content_reward_fund_sp_service().get();
-                share_type pending_payout_value;
-                if (reward_fund_obj.recent_claims > 0)
-                {
-                    pending_payout_value = rewards_math::predict_payout(
-                        reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance.amount, d.net_rshares,
-                        reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount,
-                        SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
-                }
-                d.pending_payout_sp_value = asset(pending_payout_value, SP_SYMBOL);
-            }
-        }
+        d.pending_payout_sp_value = calc_pending_payout(d, _services.content_reward_fund_sp_service().get());
 
         if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             d.cashout_time = _tags_service.calculate_discussion_payout_time(_services.comment_service().get(d.id));
 
         if (d.body.size() > 1024 * 128)
             d.body = "body pruned due to size";
+
         if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
             d.body = "comment pruned due to size";
 

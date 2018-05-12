@@ -106,7 +106,8 @@ struct tag_api_obj
 {
     tag_api_obj(const tag_stats_object& o)
         : name(o.tag)
-        , total_payouts(o.total_payout)
+        , total_payouts_scr(o.total_payout_scr)
+        , total_payouts_sp(o.total_payout_sp)
         , net_votes(o.net_votes)
         , top_posts(o.top_posts)
         , comments(o.comments)
@@ -119,7 +120,8 @@ struct tag_api_obj
     }
 
     std::string name;
-    asset total_payouts = asset(0, SCORUM_SYMBOL);
+    asset total_payouts_scr = asset(0, SCORUM_SYMBOL);
+    asset total_payouts_sp = asset(0, SP_SYMBOL);
     int32_t net_votes = 0;
     uint32_t top_posts = 0;
     uint32_t comments = 0;
@@ -147,11 +149,6 @@ struct tag_index
 
 struct discussion : public comment_api_obj
 {
-    discussion(const comment_object& o)
-        : comment_api_obj(o)
-    {
-    }
-
     discussion(const chain::comment_object& o,
                const comment_statistic_scr_service_i& stat_scr,
                const comment_statistic_sp_service_i& stat_sp)
@@ -245,7 +242,8 @@ struct state
 // clang-format off
 FC_REFLECT(scorum::tags::api::tag_api_obj,
           (name)
-          (total_payouts)
+          (total_payouts_scr)
+          (total_payouts_sp)
           (net_votes)
           (top_posts)
           (comments)

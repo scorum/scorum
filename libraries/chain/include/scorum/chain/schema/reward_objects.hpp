@@ -27,6 +27,11 @@ public:
     time_point_sec last_update;
     curve_id author_reward_curve;
     curve_id curation_reward_curve;
+
+    asset_symbol_type symbol() const
+    {
+        return activity_reward_balance.symbol();
+    }
 };
 
 template <typename FundObjectType>
