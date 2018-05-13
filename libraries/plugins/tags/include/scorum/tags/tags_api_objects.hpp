@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/types.hpp>
+#include <scorum/common_api/config.hpp>
 
 #include <scorum/chain/services/comment_statistic.hpp>
 
@@ -39,6 +40,8 @@ struct comment_api_obj
     comment_api_obj(const chain::comment_object& o,
                     const comment_statistic_scr_service_i&,
                     const comment_statistic_sp_service_i&);
+
+    comment_id_type root_comment;
 
     comment_id_type id;
     std::string category;
@@ -80,9 +83,8 @@ struct comment_api_obj
     asset curator_payout_sp_value = asset(0, SP_SYMBOL);
     asset beneficiary_payout_sp_value = asset(0, SP_SYMBOL);
 
-    comment_id_type root_comment;
-
     asset max_accepted_payout = asset(0, SCORUM_SYMBOL);
+
     bool allow_replies = false;
     bool allow_votes = false;
     bool allow_curation_rewards = false;
@@ -134,27 +136,25 @@ struct discussion : public comment_api_obj
     {
     }
 
-    std::string url; /// /category/@rootauthor/root_permlink#author/permlink
+    // /category/@rootauthor/root_permlink#author/permlink
+    std::string url;
     std::string root_title;
+
     asset pending_payout_scr = asset(0, SCORUM_SYMBOL);
     asset pending_payout_sp = asset(0, SP_SYMBOL);
+    asset promoted = asset(0, SCORUM_SYMBOL);
+
     std::vector<vote_state> active_votes;
     std::vector<std::string> replies; ///< author/slug mapping
-    asset promoted = asset(0, SCORUM_SYMBOL);
+
     uint32_t body_length = 0;
-    std::vector<account_name_type> reblogged_by;
-    optional<account_name_type> first_reblogged_by;
-    optional<fc::time_point_sec> first_reblogged_on;
 };
 
-/**
- *  Defines the arguments to a query as a struct so it can be easily extended
- */
 struct discussion_query
 {
     void validate() const
     {
-        FC_ASSERT(limit <= 100);
+        FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
     }
 
     std::string tag;
@@ -229,10 +229,7 @@ FC_REFLECT_DERIVED(scorum::tags::api::discussion, (scorum::tags::api::comment_ap
                   (active_votes)
                   (replies)
                   (promoted)
-                  (body_length)
-                  (reblogged_by)
-                  (first_reblogged_by)
-                  (first_reblogged_on))
+                  (body_length))
 
 FC_REFLECT(scorum::tags::api::discussion_query,
           (tag)
