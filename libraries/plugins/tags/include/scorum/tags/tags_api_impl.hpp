@@ -95,7 +95,6 @@ public:
 
     std::vector<std::pair<std::string, uint32_t>> get_tags_used_by_author(const std::string& author) const
     {
-        
         const auto& acnt = _services.account_service().get_account(author);
 
         const auto& tidx = _db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
@@ -294,11 +293,10 @@ public:
 
         std::vector<discussion> result;
 
-        index_traverse traverse(_services.comment_service());
+        comments_traverse traverse(_services.comment_service());
 
-        traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
-            if (comment.depth <= depth)
-            {
+        traverse.find_children(parent_author, parent_permlink, [&](const comment_object &comment) {
+            if (comment.depth <= depth) {
                 result.push_back(create_discussion(comment));
                 set_pending_payout(result.back());
             }
@@ -536,20 +534,16 @@ private:
         return result;
     }
 
-    class index_traverse
+    class comments_traverse
     {
-        typedef comment_index::index_iterator<by_parent>::type search_iterator;
-
     public:
-        typedef comment_index::index<by_parent>::type Index;
-
-        index_traverse(scorum::chain::comment_service_i& s)
+        comments_traverse(scorum::chain::comment_service_i& s)
             : _comment_service(s)
         {
         }
 
         template <typename OnItem>
-        void find_comments(const std::string& parent_author, const std::string& parent_permlink, OnItem&& on_item)
+        void find_children(const std::string &parent_author, const std::string &parent_permlink, OnItem &&on_item)
         {
             account_name_type account_name = account_name_type(parent_author);
 
@@ -562,11 +556,16 @@ private:
 
                 on_item(comment.get());
 
-                scan_children(comment.get().author, fc::to_string(comment.get().permlink));
+                scan_children(comment.get().author, comment.get().permlink);
             }
         }
 
     private:
+        void scan_children(const account_name_type& parent_author, const fc::shared_string& parent_permlink)
+        {
+            scan_children(parent_author, fc::to_string(parent_permlink));
+        }
+
         void scan_children(const account_name_type& parent_author, const std::string& parent_permlink)
         {
             auto range = _comment_service.get_children(parent_author, parent_permlink);
