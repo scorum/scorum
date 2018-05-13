@@ -296,15 +296,15 @@ SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
 
     auto d = _api.get_content(post.author(), post.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000000 SCR"));
-    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000000 SP"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000000 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000000 SP"));
 
     generate_blocks(post.cashout_time());
 
     d = _api.get_content(post.author(), post.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000000 SCR"));
-    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000000 SP"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000000 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000000 SP"));
 }
 
 SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
@@ -335,8 +335,8 @@ SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 
     auto d = _api.get_content(post2.author(), post2.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000005 SCR"));
-    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000438 SP"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000005 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000438 SP"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
