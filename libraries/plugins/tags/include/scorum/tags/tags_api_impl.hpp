@@ -95,7 +95,8 @@ public:
 
     std::vector<std::pair<std::string, uint32_t>> get_tags_used_by_author(const std::string& author) const
     {
-        const auto& acnt = _db.obtain_service<dbs_account>().get_account(author);
+        
+        const auto& acnt = _services.account_service().get_account(author);
 
         const auto& tidx = _db.get_index<tags::author_tag_stats_index>().indices().get<tags::by_author_posts_tag>();
         auto itr = tidx.lower_bound(boost::make_tuple(acnt.id, 0));
@@ -293,7 +294,7 @@ public:
 
         std::vector<discussion> result;
 
-        index_traverse traverse(_db.obtain_service<dbs_comment>());
+        index_traverse traverse(_services.comment_service());
 
         traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
             if (comment.depth <= depth)
@@ -476,7 +477,7 @@ private:
 
         if (query.start_author && query.start_permlink)
         {
-            start = _db.obtain_service<dbs_comment>().get(*query.start_author, *query.start_permlink).id;
+            start = _services.comment_service().get(*query.start_author, *query.start_permlink).id;
             auto itr = cidx.find(start);
             while (itr != cidx.end() && itr->comment == start)
             {
