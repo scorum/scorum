@@ -27,6 +27,26 @@ namespace tags {
 
 using namespace scorum::tags::api;
 
+template <typename Fund> asset calc_pending_payout(const discussion& d, const Fund& reward_fund_obj)
+{
+    share_type pending_payout_value;
+
+    if (d.cashout_time != fc::time_point_sec::maximum() && reward_fund_obj.recent_claims > 0 && d.net_rshares > 0)
+    {
+        // clang-format off
+        pending_payout_value = rewards_math::predict_payout(reward_fund_obj.recent_claims,
+                                                            reward_fund_obj.activity_reward_balance.amount,
+                                                            d.net_rshares,
+                                                            reward_fund_obj.author_reward_curve,
+                                                            d.max_accepted_payout.amount,
+                                                            SCORUM_RECENT_RSHARES_DECAY_RATE,
+                                                            SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+        // clang-format on
+    }
+
+    return asset(pending_payout_value, reward_fund_obj.symbol());
+}
+
 class tags_api_impl
 {
 public:
@@ -39,6 +59,11 @@ public:
 
     ~tags_api_impl()
     {
+    }
+
+    discussion create_discussion(const comment_object& comment) const
+    {
+        return discussion(comment, _services.comment_statistic_scr_service(), _services.comment_statistic_sp_service());
     }
 
     std::vector<api::tag_api_obj> get_trending_tags(const std::string& after_tag, uint32_t limit) const
@@ -296,7 +321,7 @@ public:
         auto itr = by_permlink_idx.find(boost::make_tuple(author, permlink));
         if (itr != by_permlink_idx.end())
         {
-            discussion result(*itr);
+            discussion result = create_discussion(*itr);
             set_pending_payout(result);
             result.active_votes = get_active_votes(author, permlink);
             return result;
@@ -313,7 +338,7 @@ public:
         while (itr != by_permlink_idx.end() && itr->parent_author == parent
                && fc::to_string(itr->parent_permlink) == parent_permlink)
         {
-            result.push_back(discussion(*itr));
+            result.push_back(create_discussion(*itr));
             set_pending_payout(result.back());
             ++itr;
         }
@@ -333,7 +358,7 @@ public:
         traverse.find_comments(parent_author, parent_permlink, [&](const comment_object& comment) {
             if (comment.depth <= depth)
             {
-                result.push_back(discussion(comment));
+                result.push_back(create_discussion(comment));
                 set_pending_payout(result.back());
             }
         });
@@ -368,7 +393,7 @@ public:
 
         while (itr != last_update_idx.end() && result.size() < limit && itr->parent_author == *parent_author)
         {
-            result.push_back(*itr);
+            result.push_back(create_discussion(*itr));
             set_pending_payout(result.back());
             result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
             ++itr;
@@ -407,7 +432,7 @@ public:
         {
             if (itr->parent_author.size() == 0)
             {
-                result.push_back(*itr);
+                result.push_back(create_discussion(*itr));
                 set_pending_payout(result.back());
                 result.back().active_votes = get_active_votes(itr->author, fc::to_string(itr->permlink));
                 ++count;
@@ -520,7 +545,7 @@ public:
                         {
                             const auto link = acnt + "/" + fc::to_string(itr->permlink);
                             eacnt.comments->push_back(link);
-                            _state.content[link] = *itr;
+                            _state.content[link] = create_discussion(*itr);
                             set_pending_payout(_state.content[link]);
                             ++count;
                         }
@@ -850,7 +875,7 @@ private:
 
     discussion get_discussion(comment_id_type id, uint32_t truncate_body = 0) const
     {
-        discussion d = _services.comment_service().get(id);
+        discussion d = create_discussion(_services.comment_service().get(id));
 
         set_url(d);
         set_pending_payout(d);
@@ -881,40 +906,16 @@ private:
     {
         _tags_service.set_promoted_balance(d.id, d.promoted);
 
-        if (d.cashout_time != fc::time_point_sec::maximum())
-        {
-            {
-                const auto& reward_fund_obj = _services.content_reward_fund_scr_service().get();
-                share_type pending_payout_value;
-                if (reward_fund_obj.recent_claims > 0)
-                {
-                    pending_payout_value = rewards_math::predict_payout(
-                        reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance.amount, d.net_rshares,
-                        reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount,
-                        SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
-                }
-                d.pending_payout_scr_value = asset(pending_payout_value, SCORUM_SYMBOL);
-            }
+        d.pending_payout_scr_value = calc_pending_payout(d, _services.content_reward_fund_scr_service().get());
 
-            {
-                const auto& reward_fund_obj = _services.content_reward_fund_sp_service().get();
-                share_type pending_payout_value;
-                if (reward_fund_obj.recent_claims > 0)
-                {
-                    pending_payout_value = rewards_math::predict_payout(
-                        reward_fund_obj.recent_claims, reward_fund_obj.activity_reward_balance.amount, d.net_rshares,
-                        reward_fund_obj.author_reward_curve, d.max_accepted_payout.amount,
-                        SCORUM_RECENT_RSHARES_DECAY_RATE, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
-                }
-                d.pending_payout_sp_value = asset(pending_payout_value, SP_SYMBOL);
-            }
-        }
+        d.pending_payout_sp_value = calc_pending_payout(d, _services.content_reward_fund_sp_service().get());
 
         if (d.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             d.cashout_time = _tags_service.calculate_discussion_payout_time(_services.comment_service().get(d.id));
 
         if (d.body.size() > 1024 * 128)
             d.body = "body pruned due to size";
+
         if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
             d.body = "comment pruned due to size";
 

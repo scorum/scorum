@@ -22,6 +22,7 @@
 namespace database_fixture {
 
 database_trx_integration_fixture::database_trx_integration_fixture()
+    : services(db)
 {
 }
 

@@ -2,6 +2,10 @@
 
 #include "tags_common.hpp"
 
+#include <scorum/tags/tags_api_impl.hpp>
+
+#include <scorum/chain/services/budget.hpp>
+
 namespace tags_tests {
 
 BOOST_AUTO_TEST_SUITE(title_to_permlink_tests)
@@ -209,4 +213,131 @@ SCORUM_TEST_CASE(create_two_posts_with_same_tags)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(calc_pending_payout)
+
+template <asset_symbol_type SymbolType> struct stub_fund
+{
+    asset activity_reward_balance = asset(0, SymbolType);
+    fc::uint128_t recent_claims = 0;
+    curve_id author_reward_curve;
+
+    asset_symbol_type symbol() const
+    {
+        return activity_reward_balance.symbol();
+    }
+};
+
+using stub_fund_scr = stub_fund<SCORUM_SYMBOL>;
+using stub_fund_sp = stub_fund<SP_SYMBOL>;
+
+SCORUM_TEST_CASE(do_not_throw_and_return_zero_when_discussion_and_funds_are_empty)
+{
+    stub_fund_scr fund_scr;
+    stub_fund_sp fund_sp;
+
+    discussion d;
+
+    BOOST_REQUIRE_NO_THROW(scorum::tags::calc_pending_payout<stub_fund_scr>(d, fund_scr));
+    BOOST_REQUIRE_NO_THROW(scorum::tags::calc_pending_payout<stub_fund_sp>(d, fund_sp));
+
+    BOOST_CHECK_EQUAL(scorum::tags::calc_pending_payout(d, fund_scr), ASSET_NULL_SCR);
+    BOOST_CHECK_EQUAL(scorum::tags::calc_pending_payout(d, fund_sp), ASSET_NULL_SP);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+struct get_content_fixture : public tags_fixture
+{
+    get_content_fixture()
+        : alice("alice")
+    {
+        actor(initdelegate).create_account(alice);
+        actor(initdelegate).give_sp(alice, 1000000000);
+    }
+
+    Actor alice;
+};
+
+BOOST_FIXTURE_TEST_SUITE(get_content, get_content_fixture)
+
+SCORUM_TEST_CASE(check_total_payout)
+{
+    actor(initdelegate)
+        .create_budget("permlink", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
+
+    auto post = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "root post";
+        op.body = "body";
+    });
+
+    auto d = _api.get_content(post.author(), post.permlink());
+
+    BOOST_REQUIRE_EQUAL(d.total_payout_scr_value, ASSET_NULL_SCR);
+    BOOST_REQUIRE_EQUAL(d.total_payout_sp_value, ASSET_NULL_SP);
+
+    actor(alice).vote(post.author(), post.permlink());
+
+    generate_blocks(post.cashout_time());
+
+    d = _api.get_content(post.author(), post.permlink());
+
+    BOOST_CHECK_EQUAL(d.total_payout_scr_value, asset::from_string("0.000000007 SCR"));
+    BOOST_CHECK_EQUAL(d.total_payout_sp_value, asset::from_string("0.000001040 SP"));
+}
+
+SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
+{
+    auto post = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "one";
+        op.body = "body";
+    });
+
+    actor(alice).vote(post.author(), post.permlink());
+
+    auto d = _api.get_content(post.author(), post.permlink());
+
+    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000000 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000000 SP"));
+
+    generate_blocks(post.cashout_time());
+
+    d = _api.get_content(post.author(), post.permlink());
+
+    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000000 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000000 SP"));
+}
+
+SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
+{
+    actor(initdelegate)
+        .create_budget("permlink", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
+
+    // first payout
+    {
+        auto post = create_post(initdelegate, [](comment_operation& op) {
+            op.title = "one";
+            op.body = "body";
+        });
+
+        actor(alice).vote(post.author(), post.permlink());
+
+        generate_blocks(post.cashout_time());
+    }
+
+    auto post2 = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "two";
+        op.body = "body";
+    });
+
+    actor(alice).vote(post2.author(), post2.permlink());
+
+    generate_blocks(post2.cashout_time() - fc::minutes(1));
+
+    auto d = _api.get_content(post2.author(), post2.permlink());
+
+    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000005 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000438 SP"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 } // namespace tags_tests
