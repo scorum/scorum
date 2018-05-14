@@ -581,7 +581,7 @@ struct post_operation_visitor
                 {
                     ts.total_payout_scr += op.payout;
                 }
-                else
+                else if (op.payout.symbol() == SP_SYMBOL)
                 {
                     ts.total_payout_sp += op.payout;
                 }

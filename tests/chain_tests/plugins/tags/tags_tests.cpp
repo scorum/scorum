@@ -230,7 +230,7 @@ template <asset_symbol_type SymbolType> struct stub_fund
 using stub_fund_scr = stub_fund<SCORUM_SYMBOL>;
 using stub_fund_sp = stub_fund<SP_SYMBOL>;
 
-SCORUM_TEST_CASE(do_not_throw_and_return_zero_when_discussion_is_empty)
+SCORUM_TEST_CASE(do_not_throw_and_return_zero_when_discussion_and_funds_are_empty)
 {
     stub_fund_scr fund_scr;
     stub_fund_sp fund_sp;
