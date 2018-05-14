@@ -93,11 +93,6 @@ std::vector<discussion> tags_api::get_discussions_by_hot(const discussion_query&
     return guard().with_read_lock([&]() { return _impl->get_discussions_by_hot(query); });
 }
 
-std::vector<discussion> tags_api::get_discussions_by_comments(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_comments(query); });
-}
-
 std::vector<discussion> tags_api::get_discussions_by_promoted(const discussion_query& query) const
 {
     return guard().with_read_lock([&]() { return _impl->get_discussions_by_promoted(query); });
@@ -108,60 +103,24 @@ discussion tags_api::get_content(const std::string& author, const std::string& p
     return guard().with_read_lock([&]() { return _impl->get_content(author, permlink); });
 }
 
-std::vector<discussion> tags_api::get_content_replies(const std::string& parent,
-                                                      const std::string& parent_permlink) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_content_replies(parent, parent_permlink); });
-}
-
 std::vector<discussion>
 tags_api::get_comments(const std::string& parent_author, const std::string& parent_permlink, uint32_t depth) const
 {
     return guard().with_read_lock([&]() { return _impl->get_comments(parent_author, parent_permlink, depth); });
 }
 
-std::vector<discussion> tags_api::get_replies_by_last_update(account_name_type start_author,
-                                                             const std::string& start_permlink,
-                                                             uint32_t limit) const
+std::vector<discussion>
+tags_api::get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const
 {
     try
     {
         // clang-format off
         return guard().with_read_lock([&]() {
-            return _impl->get_replies_by_last_update(start_author, start_permlink, limit);
+            return _impl->get_discussions_by_author(author, start_permlink, limit);
         });
         // clang-format on
     }
-    FC_CAPTURE_AND_RETHROW((start_author)(start_permlink)(limit))
-}
-
-std::vector<discussion> tags_api::get_discussions_by_author_before_date(const std::string& author,
-                                                                        const std::string& start_permlink,
-                                                                        fc::time_point_sec before_date,
-                                                                        uint32_t limit) const
-{
-    try
-    {
-        // clang-format off
-        return guard().with_read_lock([&]() {
-            return _impl->get_discussions_by_author_before_date(author, start_permlink, before_date, limit);
-        });
-        // clang-format on
-    }
-    FC_CAPTURE_AND_RETHROW((author)(start_permlink)(before_date)(limit))
-}
-
-state tags_api::get_state(std::string path) const
-{
-    try
-    {
-        // clang-format off
-        return guard().with_read_lock([&]() {
-            return _impl->get_state(path);
-        });
-        // clang-format on
-    }
-    FC_CAPTURE_AND_RETHROW((path))
+    FC_CAPTURE_AND_RETHROW((author)(start_permlink)(limit))
 }
 
 } // namespace tags

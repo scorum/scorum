@@ -55,46 +55,23 @@ public:
     std::vector<api::discussion> get_discussions_by_cashout(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_votes(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_children(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_discussions_by_comments(const api::discussion_query& query) const;
     /// @}
 
     api::discussion get_content(const std::string& author, const std::string& permlink) const;
-    std::vector<api::discussion> get_content_replies(const std::string& parent,
-                                                     const std::string& parent_permlink) const;
 
     std::vector<api::discussion> get_comments(const std::string& parent_author,
                                               const std::string& parent_permlink,
                                               uint32_t depth = SCORUM_MAX_COMMENT_DEPTH) const;
 
     /**
-     *  Return the active discussions with the highest cumulative pending payouts without respect to category, total
-     *  pending payout means the pending payout of all children as well.
-     *  This method can be used to fetch replies to an account.
-     *
-     *  The first call should be (account_to_retrieve replies, "", limit)
-     *  Subsequent calls should be (last_author, last_permlink, limit)
-     */
-    std::vector<api::discussion>
-    get_replies_by_last_update(account_name_type start_author, const std::string& start_permlink, uint32_t limit) const;
-
-    /**
-     * This method is used to fetch all posts/comments by start_author that occur after before_date and start_permlink
+     * This method is used to fetch all posts by author that occur after start_permlink
      * with up to limit being returned.
      *
-     * If start_permlink is empty then only before_date will be considered. If both are specified the earlier to the
-     * two metrics will be used. This
+     * If start_permlink is empty then discussions are returned from the beginning. This
      * should allow easy pagination.
      */
-    std::vector<api::discussion> get_discussions_by_author_before_date(const std::string& author,
-                                                                       const std::string& start_permlink,
-                                                                       time_point_sec before_date,
-                                                                       uint32_t limit) const;
+    std::vector<api::discussion> get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const;
 
-    /**
-     *  This API is a short-cut for returning all of the state required for a particular URL
-     *  with a single query.
-     */
-    scorum::tags::api::state get_state(std::string path) const;
 };
 
 } // namespace tags
@@ -105,9 +82,11 @@ FC_API(scorum::tags::tags_api,
        (get_trending_tags)
        (get_tags_used_by_author)
        (get_tags_by_category)
+
        (get_discussions_by_payout)
        (get_post_discussions_by_payout)
        (get_comment_discussions_by_payout)
+
        (get_discussions_by_trending)
        (get_discussions_by_created)
        (get_discussions_by_hot)
@@ -116,14 +95,9 @@ FC_API(scorum::tags::tags_api,
        (get_discussions_by_cashout)
        (get_discussions_by_votes)
        (get_discussions_by_children)
-       (get_discussions_by_comments)
-
-       (get_state)
 
        // content
        (get_content)
-       (get_content_replies)
        (get_comments)
-       (get_discussions_by_author_before_date)
-       (get_replies_by_last_update))
+       (get_discussions_by_author))
 // clang-format on
