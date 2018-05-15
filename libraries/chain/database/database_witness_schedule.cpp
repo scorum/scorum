@@ -22,6 +22,8 @@ void database::update_witness_schedule()
     {
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
 
+        ilog("update_witness_schedule");
+
         const witness_schedule_object& wso = schedule_service.get();
 
         using active_witnesses_container = boost::container::flat_map<witness_id_type, account_name_type>;
@@ -48,6 +50,13 @@ void database::update_witness_schedule()
         auto sitr = schedule_idx.begin();
         std::vector<decltype(sitr)> processed_witnesses;
 
+        size_t ak = 0;
+
+        for (; ak < active_witnesses.size(); ak++)
+        {
+            std::cerr << "(" << ak + 1 << ", " << active_witnesses.nth(ak)->second << ")";
+        }
+
         for (; sitr != schedule_idx.end() && active_witnesses.size() < SCORUM_MAX_WITNESSES; ++sitr)
         {
             new_virtual_time = sitr->virtual_scheduled_time; /// everyone advances to at least this time
@@ -64,6 +73,13 @@ void database::update_witness_schedule()
                 _db.modify(*sitr, [&](witness_object& wo) { wo.schedule = witness_object::timeshare; });
             }
         }
+
+        for (; ak < active_witnesses.size(); ak++)
+        {
+            std::cerr << "(" << ak + 1 << ", " << active_witnesses.nth(ak)->second << ")";
+        }
+
+        std::cerr << '\n';
 
         dlog("number of active witnesses is (${active_witnesses}), max number is (${SCORUM_MAX_WITNESSES})",
              ("active_witnesses", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
@@ -119,6 +135,15 @@ void database::update_witness_schedule()
 
             _wso.current_virtual_time = new_virtual_time;
         });
+
+        {
+            std::cerr << ">> ";
+            for (ak = 0; ak < active_witnesses.size(); ak++)
+            {
+                std::cerr << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
+            }
+            std::cerr << '\n';
+        }
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();

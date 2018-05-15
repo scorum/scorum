@@ -1570,6 +1570,26 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
 
             std::string scheduled_witness = get_scheduled_witness(slot_num);
 
+            {
+                ilog("validate_block_header");
+
+                const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
+                const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
+
+                std::cerr << "dpo = (head_block_num = " << dpo.head_block_number
+                          << ", current_aslot = " << dpo.current_aslot << ", t = " << dpo.time.to_iso_string()
+                          << ", div = " << dpo.head_block_number % SCORUM_MAX_WITNESSES << '\n';
+                std::cerr << "checked block = (num = " << next_block.block_num() << ", witness = " << next_block.witness
+                          << ", t = " << next_block.timestamp.to_iso_string() << ")\n";
+                std::cerr << "requested = (slot_num = " << slot_num
+                          << ", div = " << (dpo.current_aslot + slot_num) % wso.num_scheduled_witnesses + 1 << "\n ? ";
+                for (int ak = 0; ak < wso.num_scheduled_witnesses; ak++)
+                {
+                    std::cerr << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
+                }
+                std::cerr << '\n';
+            }
+
             FC_ASSERT(witness.owner == scheduled_witness, "Witness produced block at wrong time",
                       ("block witness", next_block.witness)("scheduled", scheduled_witness)("slot_num", slot_num));
         }
@@ -1593,6 +1613,10 @@ void database::update_global_dynamic_data(const signed_block& b)
 {
     try
     {
+        ilog("update_global_dynamic_data");
+
+        std::cerr << "new block = (num = " << b.block_num() << ", t = " << b.timestamp.to_iso_string() << '\n';
+
         const dynamic_global_property_object& _dgp = obtain_service<dbs_dynamic_global_property>().get();
         auto& witness_service = obtain_service<dbs_witness>();
 
