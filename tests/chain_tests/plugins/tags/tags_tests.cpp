@@ -61,7 +61,7 @@ SCORUM_TEST_CASE(test_comments_depth_counter)
     auto get_comments_with_depth = [](scorum::chain::database& db) {
         std::map<std::string, uint16_t> result;
 
-        const auto& index = db.get_index<comment_index>().indices().get<by_parent>();
+        const auto& index = db.get_index<comment_index, by_parent>();
 
         for (auto itr = index.begin(); itr != index.end(); ++itr)
         {
@@ -148,7 +148,7 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
 
 SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
 {
-    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
 
     BOOST_REQUIRE_EQUAL(0u, index.size());
 
@@ -165,6 +165,41 @@ SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
 }
 
 #ifndef IS_LOW_MEM
+SCORUM_TEST_CASE(create_tag_object_for_comment)
+{
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
+
+    BOOST_REQUIRE_EQUAL(0u, index.size());
+
+    auto post = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post";
+        op.body = "body";
+    });
+
+    post.create_comment(initdelegate, [](comment_operation& op) {
+        op.title = "comment";
+        op.body = "body";
+        op.json_metadata = "{\"tags\" : [\"football\"]}";
+    });
+
+    BOOST_REQUIRE_EQUAL(3u, index.size());
+
+    auto itr = index.begin();
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+    BOOST_CHECK(itr->comment == 0u);
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+    BOOST_CHECK(itr->comment == 1u);
+
+    itr++;
+
+    BOOST_CHECK_EQUAL(itr->tag, "football");
+    BOOST_CHECK(itr->comment == 1u);
+}
+
 SCORUM_TEST_CASE(create_tags_from_json_metadata)
 {
     create_post(initdelegate, [](comment_operation& op) {
@@ -173,7 +208,7 @@ SCORUM_TEST_CASE(create_tags_from_json_metadata)
         op.json_metadata = "{\"tags\" : [\"football\", \"tenis\"]}";
     });
 
-    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
     BOOST_REQUIRE_EQUAL(3u, index.size());
 
     auto itr = index.begin();
@@ -203,7 +238,7 @@ SCORUM_TEST_CASE(create_two_posts_with_same_tags)
         op.json_metadata = "{\"tags\" : [\"football\"]}";
     });
 
-    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
     BOOST_REQUIRE_EQUAL(4u, index.size());
 
     auto itr = index.begin();
