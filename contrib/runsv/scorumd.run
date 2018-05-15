@@ -21,7 +21,12 @@ function setup_and_restart_nginx()
     service nginx restart
 }
 
-SCORUMD="/usr/local/scorumd-full/bin/scorumd"
+# Additional env variable for binary
+if [[ `echo $NODE | tr [:upper:] [:lower:]` =  "full" ]]; then
+    SCORUMD="/usr/local/scorumd-full/bin/scorumd"
+else
+    SCORUMD="/usr/local/scorumd-default/bin/scorumd"
+fi
 
 chown -R scorumd:scorumd $HOME
 
