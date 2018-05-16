@@ -100,6 +100,12 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     const auto& witness = account_service.get_account(cwit.owner);
 
+    std::stringstream output;
+
+    output << "witness take reward (" << cwit.owner << ", " << witness_reward;
+    ilog("${s}", ("s", output.str()));
+    std::cerr << output.str() << '\n';
+
     charge_account_reward(ctx, witness, witness_reward);
 
     if (witness_reward.amount != 0)

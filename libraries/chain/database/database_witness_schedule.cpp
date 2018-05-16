@@ -22,7 +22,9 @@ void database::update_witness_schedule()
     {
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
 
-        ilog("update_witness_schedule");
+        std::stringstream output;
+
+        output << "update_witness_schedule: " << _db.head_block_time().to_iso_string() << "\n";
 
         const witness_schedule_object& wso = schedule_service.get();
 
@@ -50,13 +52,6 @@ void database::update_witness_schedule()
         auto sitr = schedule_idx.begin();
         std::vector<decltype(sitr)> processed_witnesses;
 
-        size_t ak = 0;
-
-        for (; ak < active_witnesses.size(); ak++)
-        {
-            std::cerr << "(" << ak + 1 << ", " << active_witnesses.nth(ak)->second << ")";
-        }
-
         for (; sitr != schedule_idx.end() && active_witnesses.size() < SCORUM_MAX_WITNESSES; ++sitr)
         {
             new_virtual_time = sitr->virtual_scheduled_time; /// everyone advances to at least this time
@@ -71,15 +66,20 @@ void database::update_witness_schedule()
             {
                 FC_ASSERT(active_witnesses.insert(std::make_pair(sitr->id, sitr->owner)).second);
                 _db.modify(*sitr, [&](witness_object& wo) { wo.schedule = witness_object::timeshare; });
+
+                output << "runner: [" << sitr->id._id << ", " << sitr->owner << "]\n";
             }
         }
 
+        size_t ak = 0;
+
         for (; ak < active_witnesses.size(); ak++)
         {
-            std::cerr << "(" << ak + 1 << ", " << active_witnesses.nth(ak)->second << ")";
+            output << "(" << ak + 1 << ", [" << active_witnesses.nth(ak)->first._id << ", "
+                   << active_witnesses.nth(ak)->second << "])";
         }
 
-        std::cerr << '\n';
+        output << '\n';
 
         dlog("number of active witnesses is (${active_witnesses}), max number is (${SCORUM_MAX_WITNESSES})",
              ("active_witnesses", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
@@ -137,12 +137,14 @@ void database::update_witness_schedule()
         });
 
         {
-            std::cerr << ">> ";
-            for (ak = 0; ak < active_witnesses.size(); ak++)
+            output << _db.head_block_time().to_iso_string() << ": ";
+            for (ak = 0; ak < wso.num_scheduled_witnesses; ak++)
             {
-                std::cerr << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
+                output << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
             }
-            std::cerr << '\n';
+
+            ilog("${s}", ("s", output.str()));
+            std::cerr << output.str() << '\n';
         }
 
         _update_witness_majority_version();
