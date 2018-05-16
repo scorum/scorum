@@ -1,8 +1,17 @@
 #pragma once
 
 #include <boost/algorithm/string.hpp>
+#include <boost/range/numeric.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm/set_algorithm.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm/max_element.hpp>
+#include <boost/range/algorithm/lower_bound.hpp>
 
 #include <stack>
+#include <set>
 
 #include <scorum/protocol/types.hpp>
 
@@ -50,6 +59,8 @@ template <typename Fund> asset calc_pending_payout(const discussion& d, const Fu
 class tags_api_impl
 {
 public:
+    using posts_crefs = std::vector<std::reference_wrapper<const tag_object>>;
+
     tags_api_impl(scorum::chain::database& db)
         : _db(db)
         , _services(_db)
@@ -127,148 +138,33 @@ public:
         return ret;
     }
 
-    std::vector<discussion> get_discussions_by_payout(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_net_rshares>();
-        auto tidx_itr = tidx.lower_bound(tag);
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-                               [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default,
-                               tag_exit_default, true);
-    }
-
-    std::vector<discussion> get_post_discussions_by_payout(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = comment_id_type();
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_reward_fund_net_rshares>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, true));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-                               [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default,
-                               tag_exit_default, true);
-    }
-
-    std::vector<discussion> get_comment_discussions_by_payout(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = comment_id_type(1);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_reward_fund_net_rshares>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, false));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-                               [](const comment_api_obj& c) { return c.net_rshares <= 0; }, exit_default,
-                               tag_exit_default, true);
-    }
-
     std::vector<discussion> get_discussions_by_trending(const discussion_query& query) const
     {
         query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
 
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_trending>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, std::numeric_limits<double>::max()));
+        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.trending > rhs.trending; };
+        auto filter = [](const tag_object& t) { return t.net_rshares > 0; };
 
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-                               [](const comment_api_obj& c) { return c.net_rshares <= 0; });
+        return get_discussions(query, ordering, filter);
     }
 
     std::vector<discussion> get_discussions_by_created(const discussion_query& query) const
     {
         query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
 
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_created>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, fc::time_point_sec::maximum()));
+        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.created > rhs.created; };
 
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body);
+        return get_discussions(query, ordering);
     }
 
     std::vector<discussion> get_discussions_by_hot(const discussion_query& query) const
     {
         query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
 
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_hot>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, std::numeric_limits<double>::max()));
+        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.hot > rhs.hot; };
+        auto filter = [](const tag_object& t) { return t.net_rshares > 0; };
 
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-                               [](const comment_api_obj& c) { return c.net_rshares <= 0; });
-    }
-
-    std::vector<discussion> get_discussions_by_promoted(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_promoted>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, share_type(SCORUM_MAX_SHARE_SUPPLY)));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body, filter_default, exit_default,
-                               [](const tags::tag_object& t) { return t.promoted_balance == 0; });
-    }
-
-    std::vector<discussion> get_discussions_by_active(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_active>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, fc::time_point_sec::maximum()));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body);
-    }
-
-    std::vector<discussion> get_discussions_by_cashout(const discussion_query& query) const
-    {
-        query.validate();
-        std::vector<discussion> result;
-
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_cashout>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, fc::time_point::now() - fc::minutes(60)));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body,
-                               [](const comment_api_obj& c) { return c.net_rshares < 0; });
-    }
-
-    std::vector<discussion> get_discussions_by_votes(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_net_votes>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, std::numeric_limits<int32_t>::max()));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body);
-    }
-
-    std::vector<discussion> get_discussions_by_children(const discussion_query& query) const
-    {
-        query.validate();
-        auto tag = fc::to_lower(query.tag);
-        auto parent = get_parent(query);
-
-        const auto& tidx = _db.get_index<tags::tag_index>().indices().get<tags::by_parent_children>();
-        auto tidx_itr = tidx.lower_bound(boost::make_tuple(tag, parent, std::numeric_limits<int32_t>::max()));
-
-        return get_discussions(query, tag, parent, tidx, tidx_itr, query.truncate_body);
+        return get_discussions(query, ordering, filter);
     }
 
     discussion get_content(const std::string& author, const std::string& permlink) const
@@ -295,8 +191,9 @@ public:
 
         comments_traverse traverse(_services.comment_service());
 
-        traverse.find_children(parent_author, parent_permlink, [&](const comment_object &comment) {
-            if (comment.depth <= depth) {
+        traverse.find_children(parent_author, parent_permlink, [&](const comment_object& comment) {
+            if (comment.depth <= depth)
+            {
                 result.push_back(create_discussion(comment));
                 set_pending_payout(result.back());
             }
@@ -341,36 +238,9 @@ private:
     scorum::chain::data_service_factory_i& _services;
     tags_service _tags_service;
 
-    static bool filter_default(const comment_api_obj&)
+    static bool tag_filter_default(const tags::tag_object&)
     {
-        return false;
-    }
-
-    static bool exit_default(const comment_api_obj&)
-    {
-        return false;
-    }
-
-    static bool tag_exit_default(const tags::tag_object&)
-    {
-        return false;
-    }
-
-    comment_id_type get_parent(const discussion_query& query) const
-    {
-        comment_id_type parent;
-
-        if (query.parent_author && query.parent_permlink)
-        {
-            parent = get_parent(*query.parent_author, *query.parent_permlink);
-        }
-
-        return parent;
-    }
-
-    comment_id_type get_parent(const std::string& parent_author, const std::string& parent_permlink) const
-    {
-        return _services.comment_service().get(parent_author, parent_permlink).id;
+        return true;
     }
 
     void set_url(discussion& d) const
@@ -456,81 +326,113 @@ private:
         return result;
     }
 
-    template <typename Index, typename StartItr>
-    std::vector<discussion> get_discussions(const discussion_query& query,
-                                            const std::string& tag,
-                                            comment_id_type parent,
-                                            const Index& tidx,
-                                            StartItr tidx_itr,
-                                            uint32_t truncate_body = 0,
-                                            const std::function<bool(const comment_api_obj&)>& filter = &filter_default,
-                                            const std::function<bool(const comment_api_obj&)>& exit = &exit_default,
-                                            const std::function<bool(const tag_object&)>& tag_exit = &tag_exit_default,
-                                            bool ignore_parent = false) const
+    posts_crefs get_posts(const std::string& tag,
+                          const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
     {
-        std::vector<discussion> result;
+        const auto& tag_idx = _db.get_index<tags::tag_index, tags::by_tag>();
 
-        const auto& cidx = _db.get_index<tags::tag_index>().indices().get<tags::by_comment>();
-        comment_id_type start;
+        auto begin = tag_idx.lower_bound(tag);
+        auto end = tag_idx.upper_bound(tag);
 
+        auto rng = boost::make_iterator_range(begin, end) | boost::adaptors::filtered(tag_filter);
+
+        posts_crefs posts;
+        boost::copy(rng, std::back_inserter(posts));
+
+        return posts;
+    }
+
+    posts_crefs intersect(const std::vector<posts_crefs>& posts_by_tags) const
+    {
+        using post_cref = posts_crefs::value_type;
+
+        auto from = begin(posts_by_tags);
+        auto to = end(posts_by_tags);
+
+        posts_crefs start(begin(*from), end(*from));
+
+        // clang-format off
+        posts_crefs intersection = std::accumulate(next(from), to, start, [](posts_crefs& intersection, const posts_crefs& ps) {
+                //check if set_intersection removes duplicates
+            auto upper_bound = boost::set_intersection(intersection, ps, begin(intersection), [](post_cref lhs, post_cref rhs) {
+                return lhs.get().comment < rhs.get().comment;
+            });
+            intersection.erase(upper_bound, end(intersection));
+
+            return intersection;
+        });
+        // clang-format on
+
+        return intersection;
+    }
+
+    posts_crefs union_all(const std::vector<posts_crefs>& posts_by_tags) const
+    {
+        using post_cref = posts_crefs::value_type;
+
+        struct less_by_comment
+        {
+            bool operator()(post_cref lhs, post_cref rhs) const
+            {
+                return lhs.get().comment < rhs.get().comment;
+            }
+        };
+
+        std::set<post_cref, less_by_comment> set;
+        for (const auto& posts : posts_by_tags)
+            boost::copy(posts, std::inserter(set, end(set)));
+
+        posts_crefs result;
+        result.reserve(set.size());
+        result.assign(begin(set), end(set));
+
+        return result;
+    }
+
+    std::vector<discussion> get_discussions(const discussion_query& query,
+                                            const std::function<bool(const tag_object&, const tag_object&)>& ordering,
+                                            const std::function<bool(const tag_object&)>& tag_filter
+                                            = &tag_filter_default) const
+    {
+        std::vector<posts_crefs> posts_by_tags;
+        posts_by_tags.reserve(query.tags.size());
+
+        boost::transform(query.tags, std::back_inserter(posts_by_tags),
+                         [&](const std::string& t) { return get_posts(t, tag_filter); });
+
+        // clang-format off
+        posts_crefs posts = query.is_any_tag
+                ? union_all(posts_by_tags)
+                : intersect(posts_by_tags);
+        // clang-format on
+
+        // comments should be unique within posts collection
+        boost::sort(posts, ordering);
+
+        posts_crefs::value_type threshold = *(begin(posts));
         if (query.start_author && query.start_permlink)
         {
-            start = _services.comment_service().get(*query.start_author, *query.start_permlink).id;
-            auto itr = cidx.find(start);
-            while (itr != cidx.end() && itr->comment == start)
-            {
-                if (itr->tag == tag)
-                {
-                    tidx_itr = tidx.iterator_to(*itr);
-                    break;
-                }
-                ++itr;
-            }
+            auto id = _services.comment_service().get(*query.start_author, *query.start_permlink).id;
+            const auto& comment_idx = _db.get_index<tags::tag_index, tags::by_comment>();
+            threshold = *(comment_idx.find(id));
         }
 
-        uint32_t count = query.limit;
-        uint64_t itr_count = 0;
-        uint64_t filter_count = 0;
-        uint64_t exc_count = 0;
-        uint64_t max_itr_count = 10 * query.limit;
+        auto it = boost::lower_bound(posts, threshold.get(), ordering);
 
-        while (count > 0 && tidx_itr != tidx.end())
+        std::vector<discussion> result;
+        for (; it != end(posts) && result.size() < query.limit; ++it)
         {
-            ++itr_count;
-            if (itr_count > max_itr_count)
-            {
-                wlog("Maximum iteration count exceeded serving query: ${q}", ("q", query));
-                wlog("count=${count}   itr_count=${itr_count}   filter_count=${filter_count}   exc_count=${exc_count}",
-                     ("count", count)("itr_count", itr_count)("filter_count", filter_count)("exc_count", exc_count));
-                break;
-            }
-            if (tidx_itr->tag != tag || (!ignore_parent && tidx_itr->parent != parent))
-                break;
             try
             {
-                result.push_back(get_discussion(tidx_itr->comment, truncate_body));
-                result.back().promoted = asset(tidx_itr->promoted_balance, SCORUM_SYMBOL);
-
-                if (filter(result.back()))
-                {
-                    result.pop_back();
-                    ++filter_count;
-                }
-                else if (exit(result.back()) || tag_exit(*tidx_itr))
-                {
-                    result.pop_back();
-                    break;
-                }
-                else
-                    --count;
+                result.push_back(get_discussion(it->get().comment, query.truncate_body));
+                result.back().promoted = asset(it->get().promoted_balance, SCORUM_SYMBOL);
             }
             catch (const fc::exception& e)
             {
-                ++exc_count;
                 edump((e.to_detail_string()));
             }
-            ++tidx_itr;
         }
+
         return result;
     }
 
@@ -543,7 +445,7 @@ private:
         }
 
         template <typename OnItem>
-        void find_children(const std::string &parent_author, const std::string &parent_permlink, OnItem &&on_item)
+        void find_children(const std::string& parent_author, const std::string& parent_permlink, OnItem&& on_item)
         {
             account_name_type account_name = account_name_type(parent_author);
 

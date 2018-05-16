@@ -155,18 +155,18 @@ struct discussion_query
     void validate() const
     {
         FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
+        FC_ASSERT(!tags.empty());
     }
-
-    std::string tag;
-    uint32_t limit = 0;
 
     // the number of bytes of the post body to return, 0 for all
     uint32_t truncate_body = 0;
 
     optional<std::string> start_author;
     optional<std::string> start_permlink;
-    optional<std::string> parent_author;
-    optional<std::string> parent_permlink;
+    uint32_t limit = 0;
+
+    bool is_any_tag = false;
+    std::set<std::string> tags;
 };
 
 } // namespace api
@@ -232,11 +232,10 @@ FC_REFLECT_DERIVED(scorum::tags::api::discussion, (scorum::tags::api::comment_ap
                   (body_length))
 
 FC_REFLECT(scorum::tags::api::discussion_query,
-          (tag)
           (truncate_body)
           (start_author)
           (start_permlink)
-          (parent_author)
-          (parent_permlink)
-          (limit))
+          (limit)
+          (tags)
+          (is_any_tag))
 // clang-format on
