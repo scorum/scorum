@@ -18,6 +18,9 @@
 #include <fc/string.hpp>
 
 #include <boost/range/iterator_range.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace scorum {
@@ -236,30 +239,21 @@ struct post_operation_visitor
     {
         comment_metadata meta = comment_metadata::parse(c.json_metadata);
 
-        // We need to write the transformed tags into a temporary
-        // local container because we can't modify meta.tags concurrently
-        // as we iterate over it.
+        // clang-format off
+        auto rng = meta.tags
+                | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
+                | boost::adaptors::transformed(fc::to_lower);
+        // clang-format on
+
         std::set<std::string> lower_tags;
 
-        uint8_t tag_limit = 5;
-        uint8_t count = 0;
-        for (const std::string& tag : meta.tags)
-        {
-            ++count;
-            if (count > tag_limit || lower_tags.size() > tag_limit)
+        for (const auto& t : rng)
+            if (lower_tags.size() == TAGS_TO_ANALIZE_COUNT)
                 break;
-            if (tag == "")
-                continue;
-            lower_tags.insert(fc::to_lower(tag));
-        }
+            else
+                lower_tags.insert(t);
 
-        /// the universal tag applies to everything safe for work or nsfw with a non-negative payout
-        if (c.net_rshares >= 0)
-        {
-            lower_tags.insert(std::string()); /// add it to the universal tag
-        }
-
-        meta.tags = lower_tags; /// TODO: std::move???
+        meta.tags = std::move(lower_tags);
 
         return meta;
     }

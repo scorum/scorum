@@ -329,10 +329,12 @@ private:
     posts_crefs get_posts(const std::string& tag,
                           const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
     {
+        std::string tag_lower = fc::to_lower(tag);
+
         const auto& tag_idx = _db.get_index<tags::tag_index, tags::by_tag>();
 
-        auto begin = tag_idx.lower_bound(tag);
-        auto end = tag_idx.upper_bound(tag);
+        auto begin = tag_idx.lower_bound(tag_lower);
+        auto end = tag_idx.upper_bound(tag_lower);
 
         auto rng = boost::make_iterator_range(begin, end) | boost::adaptors::filtered(tag_filter);
 
@@ -353,7 +355,6 @@ private:
 
         // clang-format off
         posts_crefs intersection = std::accumulate(next(from), to, start, [](posts_crefs& intersection, const posts_crefs& ps) {
-                //check if set_intersection removes duplicates
             auto upper_bound = boost::set_intersection(intersection, ps, begin(intersection), [](post_cref lhs, post_cref rhs) {
                 return lhs.get().comment < rhs.get().comment;
             });
@@ -401,12 +402,15 @@ private:
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
 
         // clang-format off
-        posts_crefs posts = query.is_any_tag
-                ? union_all(posts_by_tags)
-                : intersect(posts_by_tags);
+        posts_crefs posts = query.tags_logical_and
+                ? intersect(posts_by_tags)
+                : union_all(posts_by_tags);
         // clang-format on
 
-        // comments should be unique within posts collection
+        std::vector<discussion> result;
+        if (posts.empty())
+            return result;
+
         boost::sort(posts, ordering);
 
         posts_crefs::value_type threshold = *(begin(posts));
@@ -419,7 +423,6 @@ private:
 
         auto it = boost::lower_bound(posts, threshold.get(), ordering);
 
-        std::vector<discussion> result;
         for (; it != end(posts) && result.size() < query.limit; ++it)
         {
             try

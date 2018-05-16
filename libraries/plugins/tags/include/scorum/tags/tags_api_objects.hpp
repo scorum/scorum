@@ -156,6 +156,7 @@ struct discussion_query
     {
         FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
         FC_ASSERT(!tags.empty());
+        FC_ASSERT(!(!start_author ^ !start_permlink));
     }
 
     // the number of bytes of the post body to return, 0 for all
@@ -165,7 +166,7 @@ struct discussion_query
     optional<std::string> start_permlink;
     uint32_t limit = 0;
 
-    bool is_any_tag = false;
+    bool tags_logical_and = true;
     std::set<std::string> tags;
 };
 
@@ -237,5 +238,5 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (start_permlink)
           (limit)
           (tags)
-          (is_any_tag))
+          (tags_logical_and))
 // clang-format on
