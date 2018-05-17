@@ -99,13 +99,11 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
     create_post(initdelegate, [](comment_operation& op) {
         op.title = "zero";
         op.body = "post";
-        op.json_metadata = R"({"tags":["A"]})";
     });
 
     auto root = create_post(initdelegate, [](comment_operation& op) {
         op.title = "one";
         op.body = "post";
-        op.json_metadata = R"({"tags":["A"]})";
     });
 
     auto comment_level_1 = root.create_comment(initdelegate, [](comment_operation& op) {
@@ -120,7 +118,6 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
 
     api::discussion_query query;
     query.limit = 100;
-    query.tags = { "A" };
 
     const auto discussions = _api.get_discussions_by_created(query);
 

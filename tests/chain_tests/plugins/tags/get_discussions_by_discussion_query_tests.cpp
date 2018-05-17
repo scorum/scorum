@@ -1,3 +1,5 @@
+#ifndef IS_LOW_MEM
+
 #include "get_discussions_by_common.hpp"
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/common_api/config.hpp>
@@ -512,3 +514,5 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
+
+#endif
