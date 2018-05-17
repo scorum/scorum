@@ -10,6 +10,38 @@
 namespace scorum {
 namespace chain {
 
+namespace witness_schedule {
+
+struct printable_schedule_item
+{
+    witness_id_type witness_id;
+    account_name_type witness_name;
+    share_type votes;
+    fc::uint128 virtual_scheduled_time;
+};
+
+using schedule_type = std::vector<printable_schedule_item>;
+
+struct printable_schedule
+{
+    schedule_type items;
+};
+
+printable_schedule get_witness_schedule(const witness_schedule_object& wso, witness_service_i& witness_service)
+{
+    printable_schedule ret;
+    ret.items.reserve(wso.num_scheduled_witnesses);
+
+    for (const account_name_type& witness : wso.current_shuffled_witnesses)
+    {
+        const auto& witness_obj = witness_service.get(witness);
+        ret.items.push_back({ witness_obj.id, witness, witness_obj.votes, witness_obj.virtual_scheduled_time });
+    }
+
+    return ret;
+}
+}
+
 /**
  *
  *  See @ref witness_object::virtual_last_update
@@ -22,10 +54,6 @@ void database::update_witness_schedule()
     {
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
         auto& witness_service = _db.obtain_service<dbs_witness>();
-
-        std::stringstream output;
-
-        output << "update_witness_schedule: " << _db.head_block_time().to_iso_string() << "\n";
 
         const witness_schedule_object& wso = schedule_service.get();
 
@@ -67,21 +95,8 @@ void database::update_witness_schedule()
             {
                 FC_ASSERT(active_witnesses.insert(std::make_pair(sitr->id, sitr->owner)).second);
                 _db.modify(*sitr, [&](witness_object& wo) { wo.schedule = witness_object::timeshare; });
-
-                output << "runner: [" << sitr->id._id << ", " << sitr->owner << "]\n";
             }
         }
-
-        for (size_t ak = 0; ak < active_witnesses.size(); ak++)
-        {
-            const auto& witness_obj = witness_service.get(active_witnesses.nth(ak)->second);
-            output << "(" << ak + 1 << ", [" << active_witnesses.nth(ak)->first._id << ", "
-                   << active_witnesses.nth(ak)->second << ", " << witness_obj.votes << ", "
-                   << witness_obj.virtual_scheduled_time.high_bits() << "."
-                   << witness_obj.virtual_scheduled_time.low_bits() << "])";
-        }
-
-        output << '\n';
 
         dlog("number of active witnesses is (${active_witnesses}), max number is (${SCORUM_MAX_WITNESSES})",
              ("active_witnesses", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
@@ -104,6 +119,9 @@ void database::update_witness_schedule()
                 wo.virtual_scheduled_time = new_virtual_scheduled_time;
             });
         }
+
+        witness_schedule::printable_schedule prev_schedule
+            = witness_schedule::get_witness_schedule(schedule_service.get(), witness_service);
 
         schedule_service.update([&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)
@@ -138,16 +156,9 @@ void database::update_witness_schedule()
             _wso.current_virtual_time = new_virtual_time;
         });
 
-        {
-            output << _db.head_block_time().to_iso_string() << ": [" << wso.num_scheduled_witnesses << "]";
-            for (size_t ak = 0; ak < wso.num_scheduled_witnesses; ak++)
-            {
-                output << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
-            }
-
-            ilog("${s}", ("s", output.str()));
-            std::cerr << output.str() << '\n';
-        }
+        dlog("Witness schedule is updated. Prev schedule '${prev_schedule}'. New schedule '${new_schedule}'",
+             ("prev_schedule", prev_schedule)(
+                 "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();
@@ -309,3 +320,8 @@ void database::_update_witness_hardfork_version_votes()
 
 } // namespace chain
 } // namespace scorum
+
+FC_REFLECT(scorum::chain::witness_schedule::printable_schedule_item,
+           (witness_id)(witness_name)(votes)(virtual_scheduled_time))
+
+FC_REFLECT(scorum::chain::witness_schedule::printable_schedule, (items))

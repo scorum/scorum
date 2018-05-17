@@ -1163,6 +1163,8 @@ void database::initialize_indexes()
     add_index<dev_committee_index>();
     add_index<dev_committee_member_index>();
 
+    add_index<witness_reward_in_sp_migration_index>();
+
     _plugin_index_signal();
 }
 
@@ -1570,31 +1572,9 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
 
             std::string scheduled_witness = get_scheduled_witness(slot_num);
 
-            {
-                const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
-                const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
-
-                std::stringstream output;
-
-                output << "validate_block_header: " << head_block_time().to_iso_string() << "\n";
-                output << "dpo = (head_block_num = " << dpo.head_block_number
-                       << ", current_aslot = " << dpo.current_aslot << ", t = " << dpo.time.to_iso_string()
-                       << ", div = " << dpo.head_block_number % SCORUM_MAX_WITNESSES << '\n';
-                output << "checked block = (num = " << next_block.block_num() << ", witness = " << next_block.witness
-                       << ", t = " << next_block.timestamp.to_iso_string() << ")\n";
-                output << "requested = (slot_num = " << slot_num
-                       << ", div = " << (dpo.current_aslot + slot_num) % wso.num_scheduled_witnesses + 1 << "\n ? ";
-                for (int ak = 0; ak < wso.num_scheduled_witnesses; ak++)
-                {
-                    output << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
-                }
-                ilog("${s}", ("s", output.str()));
-                std::cerr << output.str() << '\n';
-            }
-
             if (witness.owner != scheduled_witness)
             {
-                idump((obtain_service<dbs_dynamic_global_property>().get())(next_block)(next_block.block_num()));
+                wdump((obtain_service<dbs_dynamic_global_property>().get())(next_block.block_num())(next_block));
             }
 
             FC_ASSERT(witness.owner == scheduled_witness, "Witness produced block at wrong time",
@@ -1620,11 +1600,6 @@ void database::update_global_dynamic_data(const signed_block& b)
 {
     try
     {
-        //        std::stringstream output;
-
-        //        output << "update_global_dynamic_data: " << head_block_time().to_iso_string() << "\n";
-        //        output << "new block = (num = " << b.block_num() << ", t = " << b.timestamp.to_iso_string();
-
         const dynamic_global_property_object& _dgp = obtain_service<dbs_dynamic_global_property>().get();
         auto& witness_service = obtain_service<dbs_witness>();
 
@@ -1635,20 +1610,17 @@ void database::update_global_dynamic_data(const signed_block& b)
             assert(missed_blocks != 0);
             missed_blocks--;
 
-            //            if (missed_blocks > 0)
-            //            {
-            //                output << "\nmissed = " << missed_blocks << ", witness that missed = ";
-            //            }
+            if (missed_blocks > 0)
+            {
+                dlog("Missed blocks ${m} from block '${last_block}' to '${new_block}'",
+                     ("m", missed_blocks)("last_block", fetch_block_by_id(_dgp.head_block_id))("new_block", b));
+            }
 
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
                 const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
                 if (witness_missed.owner != b.witness)
                 {
-                    //                    output << "(" << witness_missed.owner << ", "
-                    //                           << (head_block_time() + (i + 1) *
-                    //                           SCORUM_BLOCK_INTERVAL).to_iso_string() << ")";
-
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
 
@@ -1663,9 +1635,9 @@ void database::update_global_dynamic_data(const signed_block& b)
                 }
                 else
                 {
-                    //                    output << "{(" << witness_missed.owner << ", "
-                    //                           << (head_block_time() + (i + 1) *
-                    //                           SCORUM_BLOCK_INTERVAL).to_iso_string() << ")}";
+                    wlog("Current witness '${w}' in missed list. Missed blocks ${m}."
+                         "Position in list is ${p}.",
+                         ("w", b.witness)("m", missed_blocks)("p", i + 1));
                 }
             }
         }
@@ -1696,9 +1668,6 @@ void database::update_global_dynamic_data(const signed_block& b)
                 ("last_irreversible_block_num", _dgp.last_irreversible_block_num)("head", _dgp.head_block_number)(
                     "max_undo", SCORUM_MAX_UNDO_HISTORY));
         }
-
-        //        ilog("${s}", ("s", output.str()));
-        //        std::cerr << output.str() << "\n";
     }
     FC_CAPTURE_AND_RETHROW()
 }

@@ -37,5 +37,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (witness_vote)
         (dev_pool)
         (genesis_state)
+        (witness_reward_in_sp_migration)
         )
 // clang-format on

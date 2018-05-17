@@ -14,6 +14,8 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 
+#include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+
 namespace scorum {
 namespace chain {
 namespace database_ns {
@@ -72,16 +74,7 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     asset content_reward = users_reward - witness_reward - active_sp_holder_reward;
     // clang-format on
 
-    if (users_reward.symbol() == SP_SYMBOL)
-    {
-        if (dgp_service.get().head_block_number > 24)
-        {
-            const share_value_type rest = 1141553;
-            FC_ASSERT(witness_reward.amount > rest);
-            witness_reward.amount -= rest;
-            content_reward.amount += rest;
-        }
-    }
+    process_witness_reward_in_sp_migration().adjust_witness_reward(ctx, witness_reward);
 
     FC_ASSERT(content_reward.amount >= 0, "content_reward(${r}) must not be less zero", ("r", content_reward));
 
@@ -110,12 +103,6 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
     }
 
     const auto& witness = account_service.get_account(cwit.owner);
-
-    std::stringstream output;
-
-    output << "witness take reward (" << cwit.owner << ", " << witness_reward;
-    ilog("${s}", ("s", output.str()));
-    std::cerr << output.str() << '\n';
 
     charge_account_reward(ctx, witness, witness_reward);
 
