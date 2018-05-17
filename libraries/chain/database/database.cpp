@@ -1620,10 +1620,10 @@ void database::update_global_dynamic_data(const signed_block& b)
 {
     try
     {
-        std::stringstream output;
+        //        std::stringstream output;
 
-        output << "update_global_dynamic_data: " << head_block_time().to_iso_string() << "\n";
-        output << "new block = (num = " << b.block_num() << ", t = " << b.timestamp.to_iso_string();
+        //        output << "update_global_dynamic_data: " << head_block_time().to_iso_string() << "\n";
+        //        output << "new block = (num = " << b.block_num() << ", t = " << b.timestamp.to_iso_string();
 
         const dynamic_global_property_object& _dgp = obtain_service<dbs_dynamic_global_property>().get();
         auto& witness_service = obtain_service<dbs_witness>();
@@ -1635,18 +1635,19 @@ void database::update_global_dynamic_data(const signed_block& b)
             assert(missed_blocks != 0);
             missed_blocks--;
 
-            if (missed_blocks > 0)
-            {
-                output << "\nmissed = " << missed_blocks << ", witness that missed = ";
-            }
+            //            if (missed_blocks > 0)
+            //            {
+            //                output << "\nmissed = " << missed_blocks << ", witness that missed = ";
+            //            }
 
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
                 const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
                 if (witness_missed.owner != b.witness)
                 {
-                    output << "(" << witness_missed.owner << ", "
-                           << (head_block_time() + (i + 1) * SCORUM_BLOCK_INTERVAL).to_iso_string() << ")";
+                    //                    output << "(" << witness_missed.owner << ", "
+                    //                           << (head_block_time() + (i + 1) *
+                    //                           SCORUM_BLOCK_INTERVAL).to_iso_string() << ")";
 
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
@@ -1662,8 +1663,9 @@ void database::update_global_dynamic_data(const signed_block& b)
                 }
                 else
                 {
-                    output << "{(" << witness_missed.owner << ", "
-                           << (head_block_time() + (i + 1) * SCORUM_BLOCK_INTERVAL).to_iso_string() << ")}";
+                    //                    output << "{(" << witness_missed.owner << ", "
+                    //                           << (head_block_time() + (i + 1) *
+                    //                           SCORUM_BLOCK_INTERVAL).to_iso_string() << ")}";
                 }
             }
         }
@@ -1695,8 +1697,8 @@ void database::update_global_dynamic_data(const signed_block& b)
                     "max_undo", SCORUM_MAX_UNDO_HISTORY));
         }
 
-        ilog("${s}", ("s", output.str()));
-        std::cerr << output.str() << "\n";
+        //        ilog("${s}", ("s", output.str()));
+        //        std::cerr << output.str() << "\n";
     }
     FC_CAPTURE_AND_RETHROW()
 }

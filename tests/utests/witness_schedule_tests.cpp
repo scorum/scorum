@@ -100,31 +100,31 @@ BOOST_FIXTURE_TEST_CASE(flat_map_nth_check, witness_schedule_fixture)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(psevdo_rnd_check, witness_schedule_fixture)
-{
-    insert_order_type insert_order_tmp(insert_order);
+// BOOST_FIXTURE_TEST_CASE(psevdo_rnd_check, witness_schedule_fixture)
+//{
+//    insert_order_type insert_order_tmp(insert_order);
 
-    auto now_hi = uint64_t(head_block_time.sec_since_epoch()) << 32;
-    for (uint32_t i = 0; i < data_sz; ++i)
-    {
-        uint64_t k = now_hi + uint64_t(i) * 2685821657736338717ULL;
-        k ^= (k >> 12);
-        k ^= (k << 25);
-        k ^= (k >> 27);
-        k *= 2685821657736338717ULL;
+//    auto now_hi = uint64_t(head_block_time.sec_since_epoch()) << 32;
+//    for (uint32_t i = 0; i < data_sz; ++i)
+//    {
+//        uint64_t k = now_hi + uint64_t(i) * 2685821657736338717ULL;
+//        k ^= (k >> 12);
+//        k ^= (k << 25);
+//        k ^= (k >> 27);
+//        k *= 2685821657736338717ULL;
 
-        uint32_t jmax = data_sz - i;
-        uint32_t j = i + k % jmax;
-        std::swap(insert_order_tmp[i], insert_order_tmp[j]);
-    }
+//        uint32_t jmax = data_sz - i;
+//        uint32_t j = i + k % jmax;
+//        std::swap(insert_order_tmp[i], insert_order_tmp[j]);
+//    }
 
-    std::cerr << head_block_time.to_iso_string() << ": ";
-    for (size_t ci = 0; ci < insert_order_tmp.size(); ++ci)
-    {
-        std::cerr << "(" << ci + 1 << ", [" << insert_order_tmp[ci] << ", " << std_data[insert_order_tmp[ci]] << "])";
-    }
+//    std::cerr << head_block_time.to_iso_string() << ": ";
+//    for (size_t ci = 0; ci < insert_order_tmp.size(); ++ci)
+//    {
+//        std::cerr << "(" << ci + 1 << ", [" << insert_order_tmp[ci] << ", " << std_data[insert_order_tmp[ci]] << "])";
+//    }
 
-    std::cerr << std::endl;
-}
+//    std::cerr << std::endl;
+//}
 
 BOOST_AUTO_TEST_SUITE_END()

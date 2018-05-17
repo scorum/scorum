@@ -21,6 +21,7 @@ void database::update_witness_schedule()
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
+        auto& witness_service = _db.obtain_service<dbs_witness>();
 
         std::stringstream output;
 
@@ -71,12 +72,13 @@ void database::update_witness_schedule()
             }
         }
 
-        size_t ak = 0;
-
-        for (; ak < active_witnesses.size(); ak++)
+        for (size_t ak = 0; ak < active_witnesses.size(); ak++)
         {
+            const auto& witness_obj = witness_service.get(active_witnesses.nth(ak)->second);
             output << "(" << ak + 1 << ", [" << active_witnesses.nth(ak)->first._id << ", "
-                   << active_witnesses.nth(ak)->second << "])";
+                   << active_witnesses.nth(ak)->second << ", " << witness_obj.votes << ", "
+                   << witness_obj.virtual_scheduled_time.high_bits() << "."
+                   << witness_obj.virtual_scheduled_time.low_bits() << "])";
         }
 
         output << '\n';
@@ -137,8 +139,8 @@ void database::update_witness_schedule()
         });
 
         {
-            output << _db.head_block_time().to_iso_string() << ": ";
-            for (ak = 0; ak < wso.num_scheduled_witnesses; ak++)
+            output << _db.head_block_time().to_iso_string() << ": [" << wso.num_scheduled_witnesses << "]";
+            for (size_t ak = 0; ak < wso.num_scheduled_witnesses; ak++)
             {
                 output << "(" << ak + 1 << ", " << wso.current_shuffled_witnesses[ak] << ")";
             }
