@@ -169,14 +169,11 @@ public:
 
     discussion get_content(const std::string& author, const std::string& permlink) const
     {
-        const auto& by_permlink_idx = _db.get_index<comment_index>().indices().get<by_permlink>();
+        const auto& by_permlink_idx = _db.get_index<comment_index, by_permlink>();
         auto itr = by_permlink_idx.find(boost::make_tuple(author, permlink));
         if (itr != by_permlink_idx.end())
         {
-            discussion result = create_discussion(*itr);
-            set_pending_payout(result);
-            result.active_votes = get_active_votes(author, permlink);
-            return result;
+            return get_discussion(*itr);
         }
         return discussion();
     }
@@ -194,8 +191,7 @@ public:
         traverse.find_children(parent_author, parent_permlink, [&](const comment_object& comment) {
             if (comment.depth <= depth)
             {
-                result.push_back(create_discussion(comment));
-                set_pending_payout(result.back());
+                result.push_back(get_discussion(comment));
             }
         });
 
@@ -223,9 +219,7 @@ public:
         {
             if (it->parent_author.size() == 0)
             {
-                result.push_back(create_discussion(*it));
-                set_pending_payout(result.back());
-                result.back().active_votes = get_active_votes(it->author, fc::to_string(it->permlink));
+                result.push_back(get_discussion(*it));
             }
             ++it;
         }
@@ -254,7 +248,12 @@ private:
 
     discussion get_discussion(comment_id_type id, uint32_t truncate_body = 0) const
     {
-        discussion d = create_discussion(_services.comment_service().get(id));
+        return get_discussion(_services.comment_service().get(id), truncate_body);
+    }
+
+    discussion get_discussion(const comment_object comment, uint32_t truncate_body = 0) const
+    {
+        discussion d = create_discussion(comment);
 
         set_url(d);
         set_pending_payout(d);
