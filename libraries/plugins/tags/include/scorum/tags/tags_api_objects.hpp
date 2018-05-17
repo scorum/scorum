@@ -104,8 +104,7 @@ struct tag_api_obj
         , total_payouts_scr(o.total_payout_scr)
         , total_payouts_sp(o.total_payout_sp)
         , net_votes(o.net_votes)
-        , top_posts(o.top_posts)
-        , comments(o.comments)
+        , posts(o.posts)
         , trending(o.total_trending)
     {
     }
@@ -118,8 +117,7 @@ struct tag_api_obj
     asset total_payouts_scr = asset(0, SCORUM_SYMBOL);
     asset total_payouts_sp = asset(0, SP_SYMBOL);
     int32_t net_votes = 0;
-    uint32_t top_posts = 0;
-    uint32_t comments = 0;
+    uint32_t posts = 0;
     fc::uint128 trending = 0;
 };
 
@@ -155,7 +153,6 @@ struct discussion_query
     void validate() const
     {
         FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
-        FC_ASSERT(!tags.empty());
         FC_ASSERT(!(!start_author ^ !start_permlink));
     }
 
@@ -180,8 +177,7 @@ FC_REFLECT(scorum::tags::api::tag_api_obj,
           (total_payouts_scr)
           (total_payouts_sp)
           (net_votes)
-          (top_posts)
-          (comments)
+          (posts)
           (trending))
 
 FC_REFLECT(scorum::tags::api::comment_api_obj,

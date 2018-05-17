@@ -58,7 +58,7 @@ enum
  *  3. active - last reply the post or any child of the post
  *  4. netvotes - individual accounts voting for post minus accounts voting against it
  *
- *  When ever a comment is modified, all tag_objects for that comment are updated to match.
+ *  When ever a post is modified, all tag_objects for that comment are updated to match.
  */
 class tag_object : public object<tag_object_type, tag_object>
 {
@@ -79,13 +79,7 @@ public:
     share_type promoted_balance = 0;
 
     account_id_type author;
-    comment_id_type parent;
     comment_id_type comment;
-
-    bool is_post() const
-    {
-        return parent == comment_id_type();
-    }
 };
 
 typedef oid<tag_object> tag_id_type;
@@ -138,8 +132,7 @@ public:
     asset total_payout_scr = asset(0, SCORUM_SYMBOL);
     asset total_payout_sp = asset(0, SP_SYMBOL);
     int32_t net_votes = 0;
-    uint32_t top_posts = 0;
-    uint32_t comments = 0;
+    uint32_t posts = 0;
     fc::uint128 total_trending = 0;
 };
 
@@ -377,7 +370,6 @@ FC_REFLECT(scorum::tags::tag_object,
            (promoted_balance)
            (children)
            (author)
-           (parent)
            (comment))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::tags::tag_object, scorum::tags::tag_index)
@@ -388,8 +380,7 @@ FC_REFLECT(scorum::tags::tag_stats_object,
            (total_payout_scr)
            (total_payout_sp)
            (net_votes)
-           (top_posts)
-           (comments)
+           (posts)
            (total_trending))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::tags::tag_stats_object, scorum::tags::tag_stats_index)

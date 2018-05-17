@@ -333,10 +333,7 @@ private:
 
         const auto& tag_idx = _db.get_index<tags::tag_index, tags::by_tag>();
 
-        auto begin = tag_idx.lower_bound(tag_lower);
-        auto end = tag_idx.upper_bound(tag_lower);
-
-        auto rng = boost::make_iterator_range(begin, end) | boost::adaptors::filtered(tag_filter);
+        auto rng = tag_idx.equal_range(tag_lower) | boost::adaptors::filtered(tag_filter);
 
         posts_crefs posts;
         boost::copy(rng, std::back_inserter(posts));
@@ -395,10 +392,15 @@ private:
                                             const std::function<bool(const tag_object&)>& tag_filter
                                             = &tag_filter_default) const
     {
-        std::vector<posts_crefs> posts_by_tags;
-        posts_by_tags.reserve(query.tags.size());
+        auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
+        std::set<std::string> tags(rng.begin(), rng.end());
+        if (tags.empty())
+            tags.insert("");
 
-        boost::transform(query.tags, std::back_inserter(posts_by_tags),
+        std::vector<posts_crefs> posts_by_tags;
+        posts_by_tags.reserve(tags.size());
+
+        boost::transform(tags, std::back_inserter(posts_by_tags),
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
 
         // clang-format off
