@@ -59,8 +59,6 @@ template <typename Fund> asset calc_pending_payout(const discussion& d, const Fu
 class tags_api_impl
 {
 public:
-    using posts_crefs = std::vector<std::reference_wrapper<const tag_object>>;
-
     tags_api_impl(scorum::chain::database& db)
         : _db(db)
         , _services(_db)
@@ -142,7 +140,8 @@ public:
     {
         query.validate();
 
-        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.trending > rhs.trending; };
+        auto ordering
+            = [](const tag_object_view& lhs, const tag_object_view& rhs) { return lhs.trending > rhs.trending; };
         auto filter = [](const tag_object& t) { return t.net_rshares > 0; };
 
         return get_discussions(query, ordering, filter);
@@ -152,7 +151,8 @@ public:
     {
         query.validate();
 
-        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.created > rhs.created; };
+        auto ordering
+            = [](const tag_object_view& lhs, const tag_object_view& rhs) { return lhs.created > rhs.created; };
 
         return get_discussions(query, ordering);
     }
@@ -161,7 +161,7 @@ public:
     {
         query.validate();
 
-        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.hot > rhs.hot; };
+        auto ordering = [](const tag_object_view& lhs, const tag_object_view& rhs) { return lhs.hot > rhs.hot; };
         auto filter = [](const tag_object& t) { return t.net_rshares > 0; };
 
         return get_discussions(query, ordering, filter);
@@ -228,6 +228,17 @@ public:
     }
 
 private:
+    // reducing memory consumption
+    struct tag_object_view
+    {
+        comment_id_type comment;
+        share_type promoted_balance;
+        double hot;
+        double trending;
+        time_point_sec created;
+    };
+    using posts_vec = std::vector<tag_object_view>;
+
     scorum::chain::database& _db;
     scorum::chain::data_service_factory_i& _services;
     tags_service _tags_service;
@@ -325,34 +336,41 @@ private:
         return result;
     }
 
-    posts_crefs get_posts(const std::string& tag,
-                          const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
+    posts_vec get_posts(const std::string& tag,
+                        const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
     {
         std::string tag_lower = fc::to_lower(tag);
 
         const auto& tag_idx = _db.get_index<tags::tag_index, tags::by_tag>();
 
-        auto rng = tag_idx.equal_range(tag_lower) | boost::adaptors::filtered(tag_filter);
+        // clang-format off
+        auto rng = tag_idx.equal_range(tag_lower)
+                | boost::adaptors::filtered(tag_filter)
+                | boost::adaptors::transformed([](const tag_object& t) {
+                    return tag_object_view { t.comment, t.promoted_balance, t.hot, t.trending, t.created };
+                });
+        // clang-format on
 
-        posts_crefs posts;
+        posts_vec posts;
+        posts.reserve(tag_idx.count(tag_lower)); // avoiding memory reallocations
         boost::copy(rng, std::back_inserter(posts));
 
         return posts;
     }
 
-    posts_crefs intersect(const std::vector<posts_crefs>& posts_by_tags) const
+    posts_vec intersect(const std::vector<posts_vec>& posts_by_tags) const
     {
-        using post_cref = posts_crefs::value_type;
+        using post_info = posts_vec::value_type;
 
         auto from = begin(posts_by_tags);
         auto to = end(posts_by_tags);
 
-        posts_crefs start(begin(*from), end(*from));
+        posts_vec start(begin(*from), end(*from));
 
         // clang-format off
-        posts_crefs intersection = std::accumulate(next(from), to, start, [](posts_crefs& intersection, const posts_crefs& ps) {
-            auto upper_bound = boost::set_intersection(intersection, ps, begin(intersection), [](post_cref lhs, post_cref rhs) {
-                return lhs.get().comment < rhs.get().comment;
+        posts_vec intersection = std::accumulate(next(from), to, start, [](posts_vec& intersection, const posts_vec& ps) {
+            auto upper_bound = boost::set_intersection(intersection, ps, begin(intersection), [](const post_info& lhs, const post_info& rhs) {
+                return lhs.comment < rhs.comment;
             });
             intersection.erase(upper_bound, end(intersection));
 
@@ -363,47 +381,47 @@ private:
         return intersection;
     }
 
-    posts_crefs union_all(const std::vector<posts_crefs>& posts_by_tags) const
+    posts_vec union_all(const std::vector<posts_vec>& posts_by_tags) const
     {
-        using post_cref = posts_crefs::value_type;
+        using post_info = posts_vec::value_type;
 
         struct less_by_comment
         {
-            bool operator()(post_cref lhs, post_cref rhs) const
+            bool operator()(const post_info& lhs, const post_info& rhs) const
             {
-                return lhs.get().comment < rhs.get().comment;
+                return lhs.comment < rhs.comment;
             }
         };
 
-        std::set<post_cref, less_by_comment> set;
+        std::set<post_info, less_by_comment> set;
         for (const auto& posts : posts_by_tags)
             boost::copy(posts, std::inserter(set, end(set)));
 
-        posts_crefs result;
+        posts_vec result;
         result.reserve(set.size());
         result.assign(begin(set), end(set));
 
         return result;
     }
 
-    std::vector<discussion> get_discussions(const discussion_query& query,
-                                            const std::function<bool(const tag_object&, const tag_object&)>& ordering,
-                                            const std::function<bool(const tag_object&)>& tag_filter
-                                            = &tag_filter_default) const
+    std::vector<discussion>
+    get_discussions(const discussion_query& query,
+                    const std::function<bool(const tag_object_view&, const tag_object_view&)>& ordering,
+                    const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
     {
         auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
         std::set<std::string> tags(rng.begin(), rng.end());
         if (tags.empty())
             tags.insert("");
 
-        std::vector<posts_crefs> posts_by_tags;
+        std::vector<posts_vec> posts_by_tags;
         posts_by_tags.reserve(tags.size());
 
         boost::transform(tags, std::back_inserter(posts_by_tags),
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
 
         // clang-format off
-        posts_crefs posts = query.tags_logical_and
+        posts_vec posts = query.tags_logical_and
                 ? intersect(posts_by_tags)
                 : union_all(posts_by_tags);
         // clang-format on
@@ -414,22 +432,23 @@ private:
 
         boost::sort(posts, ordering);
 
-        posts_crefs::value_type threshold = *(begin(posts));
+        posts_vec::value_type threshold = *(begin(posts));
         if (query.start_author && query.start_permlink)
         {
             auto id = _services.comment_service().get(*query.start_author, *query.start_permlink).id;
             const auto& comment_idx = _db.get_index<tags::tag_index, tags::by_comment>();
-            threshold = *(comment_idx.find(id));
+            auto it = comment_idx.find(id);
+            threshold = { it->comment, it->promoted_balance, it->hot, it->trending, it->created };
         }
 
-        auto it = boost::lower_bound(posts, threshold.get(), ordering);
+        auto it = boost::lower_bound(posts, threshold, ordering);
 
         for (; it != end(posts) && result.size() < query.limit; ++it)
         {
             try
             {
-                result.push_back(get_discussion(it->get().comment, query.truncate_body));
-                result.back().promoted = asset(it->get().promoted_balance, SCORUM_SYMBOL);
+                result.push_back(get_discussion(it->comment, query.truncate_body));
+                result.back().promoted = asset(it->promoted_balance, SCORUM_SYMBOL);
             }
             catch (const fc::exception& e)
             {
