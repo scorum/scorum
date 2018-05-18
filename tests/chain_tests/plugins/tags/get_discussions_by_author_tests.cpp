@@ -54,7 +54,7 @@ SCORUM_TEST_CASE(check_filtered_by_author_name)
 
     auto discussions = _api.get_discussions_by_author(alice.name, "", MAX_DISCUSSIONS_LIST_SIZE);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 3);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
 
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, a1.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
@@ -101,7 +101,7 @@ SCORUM_TEST_CASE(check_filtered_by_permlink)
 
     auto discussions = _api.get_discussions_by_author(alice.name, a2.permlink(), MAX_DISCUSSIONS_LIST_SIZE);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 3);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
 
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, a3.permlink());
@@ -145,7 +145,7 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
     {
         auto discussions = _api.get_discussions_by_author(alice.name, "", 2);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, a1.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
@@ -154,7 +154,7 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
     {
         auto discussions = _api.get_discussions_by_author(alice.name, "", 5);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 3);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
 
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, a1.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
@@ -164,7 +164,7 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
     {
         auto discussions = _api.get_discussions_by_author(alice.name, a2.permlink(), 5);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, a3.permlink());
@@ -208,14 +208,14 @@ SCORUM_TEST_CASE(check_filtered_by_permlink_and_limit)
     {
         auto discussions = _api.get_discussions_by_author(alice.name, a2.permlink(), 1);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 1);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
 
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
     }
     {
         auto discussions = _api.get_discussions_by_author(alice.name, a3.permlink(), 5);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 1);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
 
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, a3.permlink());
     }
@@ -258,13 +258,13 @@ SCORUM_TEST_CASE(check_return_nothing)
     {
         auto discussions = _api.get_discussions_by_author(sam.name, a2_s.permlink(), 10);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 0);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
     }
 
     {
         auto discussions = _api.get_discussions_by_author(sam.name, "", 10);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 0);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
     }
 }
 

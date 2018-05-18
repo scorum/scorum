@@ -18,6 +18,9 @@
 #include <fc/string.hpp>
 
 #include <boost/range/iterator_range.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace scorum {
@@ -180,14 +183,7 @@ struct post_operation_visitor
     void remove_stats(const tag_object& tag, const tag_stats_object& stats) const
     {
         _db.modify(stats, [&](tag_stats_object& s) {
-            if (tag.parent == comment_id_type())
-            {
-                s.top_posts--;
-            }
-            else
-            {
-                s.comments--;
-            }
+            s.posts--;
             s.total_trending -= static_cast<uint32_t>(tag.trending);
             s.net_votes -= tag.net_votes;
         });
@@ -196,14 +192,7 @@ struct post_operation_visitor
     void add_stats(const tag_object& tag, const tag_stats_object& stats) const
     {
         _db.modify(stats, [&](tag_stats_object& s) {
-            if (tag.parent == comment_id_type())
-            {
-                s.top_posts++;
-            }
-            else
-            {
-                s.comments++;
-            }
+            s.posts++;
             s.total_trending += static_cast<uint32_t>(tag.trending);
             s.net_votes += tag.net_votes;
         });
@@ -214,11 +203,12 @@ struct post_operation_visitor
         /// TODO: update tag stats object
         _db.remove(tag);
 
-        const auto& idx = _db.get_index<author_tag_stats_index>().indices().get<by_author_tag_posts>();
-        auto itr = idx.lower_bound(boost::make_tuple(tag.author, tag.tag));
-        if (itr != idx.end() && itr->author == tag.author && itr->tag == tag.tag)
+        const auto& idx = _db.get_index<author_tag_stats_index, by_author_tag_posts>();
+
+        auto it_pair = idx.equal_range(boost::make_tuple(tag.author, tag.tag));
+        for (const auto& stat : boost::make_iterator_range(it_pair))
         {
-            _db.modify(*itr, [&](author_tag_stats_object& stats) { stats.total_posts--; });
+            _db.modify(stat, [&](author_tag_stats_object& stats) { stats.total_posts--; });
         }
     }
 
@@ -236,30 +226,23 @@ struct post_operation_visitor
     {
         comment_metadata meta = comment_metadata::parse(c.json_metadata);
 
-        // We need to write the transformed tags into a temporary
-        // local container because we can't modify meta.tags concurrently
-        // as we iterate over it.
+        // clang-format off
+        auto rng = meta.tags
+                | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
+                | boost::adaptors::transformed(fc::to_lower);
+        // clang-format on
+
         std::set<std::string> lower_tags;
 
-        uint8_t tag_limit = 5;
-        uint8_t count = 0;
-        for (const std::string& tag : meta.tags)
-        {
-            ++count;
-            if (count > tag_limit || lower_tags.size() > tag_limit)
+        for (const auto& t : rng)
+            if (lower_tags.size() == TAGS_TO_ANALIZE_COUNT)
                 break;
-            if (tag == "")
-                continue;
-            lower_tags.insert(fc::to_lower(tag));
-        }
+            else
+                lower_tags.insert(t);
 
-        /// the universal tag applies to everything safe for work or nsfw with a non-negative payout
-        if (c.net_rshares >= 0)
-        {
-            lower_tags.insert(std::string()); /// add it to the universal tag
-        }
-
-        meta.tags = lower_tags; /// TODO: std::move???
+        meta.tags = std::move(lower_tags);
+        // if we need to return all then just return items with empty tag
+        meta.tags.insert("");
 
         return meta;
     }
@@ -269,41 +252,28 @@ struct post_operation_visitor
         const auto& stats = get_stats(current.tag);
         remove_stats(current, stats);
 
-        if (comment.cashout_time != fc::time_point_sec::maximum())
-        {
-            _db.modify(current, [&](tag_object& obj) {
-                obj.active = comment.active;
-                obj.cashout = _db.calculate_discussion_payout_time(comment);
-                obj.children = comment.children;
-                obj.net_rshares = comment.net_rshares.value;
-                obj.net_votes = comment.net_votes;
-                obj.hot = hot;
-                obj.trending = trending;
-                if (obj.cashout == fc::time_point_sec())
-                    obj.promoted_balance = 0;
-            });
-            add_stats(current, stats);
-        }
-        else
-        {
-            _db.remove(current);
-        }
+        _db.modify(current, [&](tag_object& obj) {
+            obj.active = comment.active;
+            obj.cashout = _db.calculate_discussion_payout_time(comment);
+            obj.children = comment.children;
+            obj.net_rshares = comment.net_rshares.value;
+            obj.net_votes = comment.net_votes;
+            obj.hot = hot;
+            obj.trending = trending;
+            if (obj.cashout == fc::time_point_sec())
+                obj.promoted_balance = 0;
+        });
+
+        add_stats(current, stats);
     }
 
     void create_tag(const std::string& tag, const comment_object& comment, double hot, double trending) const
     {
-        comment_id_type parent;
         account_id_type author = _db.obtain_service<dbs_account>().get_account(comment.author).id;
-
-        if (comment.parent_author.size())
-            parent = _db.obtain_service<dbs_comment>()
-                         .get(comment.parent_author, fc::to_string(comment.parent_permlink))
-                         .id;
 
         const auto& tag_obj = _db.create<tag_object>([&](tag_object& obj) {
             obj.tag = tag;
             obj.comment = comment.id;
-            obj.parent = parent;
             obj.created = comment.created;
             obj.active = comment.active;
             obj.cashout = comment.cashout_time;
@@ -316,7 +286,7 @@ struct post_operation_visitor
         });
         add_stats(tag_obj, get_stats(tag));
 
-        const auto& idx = _db.get_index<author_tag_stats_index>().indices().get<by_author_tag_posts>();
+        const auto& idx = _db.get_index<author_tag_stats_index, by_author_tag_posts>();
         auto itr = idx.lower_bound(boost::make_tuple(author, tag));
         if (itr != idx.end() && itr->author == author && itr->tag == tag)
         {
@@ -366,11 +336,10 @@ struct post_operation_visitor
     {
         try
         {
-
             auto hot = calculate_hot(c.net_rshares, c.created);
             auto trending = calculate_trending(c.net_rshares, c.created);
 
-            const auto& comment_idx = _db.get_index<scorum::tags::tag_index>().indices().get<by_comment>();
+            const auto& comment_idx = _db.get_index<scorum::tags::tag_index, by_comment>();
 
             if (parse_tags)
             {
@@ -421,11 +390,6 @@ struct post_operation_visitor
                     update_tag(*citr, c, hot, trending);
                     ++citr;
                 }
-            }
-
-            if (c.parent_author.size())
-            {
-                update_tags(_db.obtain_service<dbs_comment>().get(c.parent_author, fc::to_string(c.parent_permlink)));
             }
         }
         FC_CAPTURE_LOG_AND_RETHROW((c))
@@ -493,7 +457,8 @@ struct post_operation_visitor
     {
         const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        update_tags(comment, true);
+        if (comment.parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            update_tags(comment, true);
     }
 
     void operator()(const transfer_operation& op) const
@@ -539,39 +504,36 @@ struct post_operation_visitor
 
     void operator()(const vote_operation& op) const
     {
-        update_tags(_db.obtain_service<dbs_comment>().get(op.author, op.permlink));
-        /*
-        update_peer_stats( _db.obtain_service<dbs_account>().get_account(op.voter),
-                           _db.obtain_service<dbs_account>().get_account(op.author),
-                           _db.obtain_service<dbs_comment>().get(op.author, op.permlink),
-                           op.weight );
-                           */
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        if (comment.parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            update_tags(comment);
     }
 
     void operator()(const delete_comment_operation& op) const
     {
-        const auto& idx = _db.get_index<scorum::tags::tag_index>().indices().get<by_author_comment>();
+        const auto& idx = _db.get_index<scorum::tags::tag_index, by_author_comment>();
 
         const auto& auth = _db.obtain_service<dbs_account>().get_account(op.author);
-        auto itr = idx.lower_bound(boost::make_tuple(auth.id));
-        while (itr != idx.end() && itr->author == auth.id)
+
+        auto tags_rng = idx.equal_range(auth.id)
+            | boost::adaptors::filtered([&](const tag_object& t) { return !_db.find(t.comment); });
+
+        for (const tag_object& tag : tags_rng)
         {
-            const auto& tobj = *itr;
-            const auto* obj = _db.find<comment_object>(itr->comment);
-            ++itr;
-            if (!obj)
-            {
-                _db.remove(tobj);
-            }
+            remove_tag(tag);
         }
     }
 
     void operator()(const comment_reward_operation& op) const
     {
-        const auto& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
-        update_tags(c);
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+        if (comment.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            return;
 
-        comment_metadata meta = filter_tags(c);
+        update_tags(comment);
+
+        comment_metadata meta = filter_tags(comment);
 
         for (const std::string& tag : meta.tags)
         {
@@ -591,8 +553,10 @@ struct post_operation_visitor
 
     void operator()(const comment_payout_update_operation& op) const
     {
-        const auto& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
-        update_tags(c);
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        if (comment.parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            update_tags(comment);
     }
 
     template <typename Op> void operator()(Op&&) const

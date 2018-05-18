@@ -43,24 +43,9 @@ std::vector<std::pair<std::string, uint32_t>> tags_api::get_tags_by_category(con
     return guard().with_read_lock([&]() { return _impl->get_tags_by_category(category); });
 }
 
-std::vector<discussion> tags_api::get_discussions_by_payout(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_payout(query); });
-}
-
-std::vector<discussion> tags_api::get_post_discussions_by_payout(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_post_discussions_by_payout(query); });
-}
-
-std::vector<discussion> tags_api::get_comment_discussions_by_payout(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_comment_discussions_by_payout(query); });
-}
-
 std::vector<discussion> tags_api::get_discussions_by_trending(const discussion_query& query) const
 {
-    return guard().with_read_lock([&]() { return _impl->get_comment_discussions_by_payout(query); });
+    return guard().with_read_lock([&]() { return _impl->get_discussions_by_trending(query); });
 }
 
 std::vector<discussion> tags_api::get_discussions_by_created(const discussion_query& query) const
@@ -68,34 +53,9 @@ std::vector<discussion> tags_api::get_discussions_by_created(const discussion_qu
     return guard().with_read_lock([&]() { return _impl->get_discussions_by_created(query); });
 }
 
-std::vector<discussion> tags_api::get_discussions_by_active(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_active(query); });
-}
-
-std::vector<discussion> tags_api::get_discussions_by_cashout(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_cashout(query); });
-}
-
-std::vector<discussion> tags_api::get_discussions_by_votes(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_votes(query); });
-}
-
-std::vector<discussion> tags_api::get_discussions_by_children(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_children(query); });
-}
-
 std::vector<discussion> tags_api::get_discussions_by_hot(const discussion_query& query) const
 {
     return guard().with_read_lock([&]() { return _impl->get_discussions_by_hot(query); });
-}
-
-std::vector<discussion> tags_api::get_discussions_by_promoted(const discussion_query& query) const
-{
-    return guard().with_read_lock([&]() { return _impl->get_discussions_by_promoted(query); });
 }
 
 discussion tags_api::get_content(const std::string& author, const std::string& permlink) const

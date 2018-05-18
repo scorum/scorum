@@ -43,18 +43,9 @@ public:
     std::vector<std::pair<std::string, uint32_t>> get_tags_by_category(const std::string& category) const;
 
     /// @{ tags API
-    /// This API will return the top 1000 tags used by an author sorted by most frequently used
-    std::vector<api::discussion> get_discussions_by_payout(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_post_discussions_by_payout(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_comment_discussions_by_payout(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_trending(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_created(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_hot(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_discussions_by_promoted(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_discussions_by_active(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_discussions_by_cashout(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_discussions_by_votes(const api::discussion_query& query) const;
-    std::vector<api::discussion> get_discussions_by_children(const api::discussion_query& query) const;
     /// @}
 
     api::discussion get_content(const std::string& author, const std::string& permlink) const;
@@ -70,8 +61,8 @@ public:
      * If start_permlink is empty then discussions are returned from the beginning. This
      * should allow easy pagination.
      */
-    std::vector<api::discussion> get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const;
-
+    std::vector<api::discussion>
+    get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const;
 };
 
 } // namespace tags
@@ -83,18 +74,9 @@ FC_API(scorum::tags::tags_api,
        (get_tags_used_by_author)
        (get_tags_by_category)
 
-       (get_discussions_by_payout)
-       (get_post_discussions_by_payout)
-       (get_comment_discussions_by_payout)
-
        (get_discussions_by_trending)
        (get_discussions_by_created)
        (get_discussions_by_hot)
-       (get_discussions_by_promoted)
-       (get_discussions_by_active)
-       (get_discussions_by_cashout)
-       (get_discussions_by_votes)
-       (get_discussions_by_children)
 
        // content
        (get_content)
