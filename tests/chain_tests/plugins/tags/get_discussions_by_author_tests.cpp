@@ -12,9 +12,16 @@ BOOST_FIXTURE_TEST_SUITE(get_discussions_by_author_before_date_tests, get_discus
 
 SCORUM_TEST_CASE(limit_overflow_should_assert)
 {
-    BOOST_REQUIRE_NO_THROW(_api.get_discussions_by_author("alice", "", MAX_DISCUSSIONS_LIST_SIZE));
-    BOOST_REQUIRE_THROW(_api.get_discussions_by_author("alice", "", MAX_DISCUSSIONS_LIST_SIZE + 1),
-                        fc::assert_exception);
+    api::discussion_query q;
+    q.start_author = "alice";
+    q.start_permlink = "";
+    q.limit = MAX_DISCUSSIONS_LIST_SIZE;
+
+    BOOST_REQUIRE_NO_THROW(_api.get_discussions_by_author(q));
+
+    q.limit += 1;
+
+    BOOST_REQUIRE_THROW(_api.get_discussions_by_author(q), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(check_filtered_by_author_name)
@@ -52,7 +59,11 @@ SCORUM_TEST_CASE(check_filtered_by_author_name)
 
     ignore_unused_variable_warning({ a1_b, a1_s_a, b1_a, a2_s, b2, a3_a });
 
-    auto discussions = _api.get_discussions_by_author(alice.name, "", MAX_DISCUSSIONS_LIST_SIZE);
+    api::discussion_query q;
+    q.start_author = alice.name;
+    q.start_permlink = "";
+    q.limit = MAX_DISCUSSIONS_LIST_SIZE;
+    auto discussions = _api.get_discussions_by_author(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
 
@@ -99,7 +110,11 @@ SCORUM_TEST_CASE(check_filtered_by_permlink)
 
     ignore_unused_variable_warning({ a1_b, a1_s_a, b1_a, a2_s, b2, a3_a, a4 });
 
-    auto discussions = _api.get_discussions_by_author(alice.name, a2.permlink(), MAX_DISCUSSIONS_LIST_SIZE);
+    api::discussion_query q;
+    q.start_author = alice.name;
+    q.start_permlink = a2.permlink();
+    q.limit = MAX_DISCUSSIONS_LIST_SIZE;
+    auto discussions = _api.get_discussions_by_author(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
 
@@ -143,7 +158,11 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
     ignore_unused_variable_warning({ a1_b, a1_s_a, b1_a, a2_s, b2, a3_a });
 
     {
-        auto discussions = _api.get_discussions_by_author(alice.name, "", 2);
+        api::discussion_query q;
+        q.start_author = alice.name;
+        q.start_permlink = "";
+        q.limit = 2;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
@@ -152,7 +171,11 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
     }
 
     {
-        auto discussions = _api.get_discussions_by_author(alice.name, "", 5);
+        api::discussion_query q;
+        q.start_author = alice.name;
+        q.start_permlink = "";
+        q.limit = 5;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
 
@@ -162,7 +185,11 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
     }
 
     {
-        auto discussions = _api.get_discussions_by_author(alice.name, a2.permlink(), 5);
+        api::discussion_query q;
+        q.start_author = alice.name;
+        q.start_permlink = a2.permlink();
+        q.limit = 5;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
@@ -206,14 +233,22 @@ SCORUM_TEST_CASE(check_filtered_by_permlink_and_limit)
     ignore_unused_variable_warning({ a1_b, a1_s_a, b1_a, a2_s, b2, a3_a });
 
     {
-        auto discussions = _api.get_discussions_by_author(alice.name, a2.permlink(), 1);
+        api::discussion_query q;
+        q.start_author = alice.name;
+        q.start_permlink = a2.permlink();
+        q.limit = 1;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
 
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
     }
     {
-        auto discussions = _api.get_discussions_by_author(alice.name, a3.permlink(), 5);
+        api::discussion_query q;
+        q.start_author = alice.name;
+        q.start_permlink = a3.permlink();
+        q.limit = 5;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
 
@@ -256,13 +291,21 @@ SCORUM_TEST_CASE(check_return_nothing)
     ignore_unused_variable_warning({ a1_b, a1_s_a, b1_a, a2_s, b2, a3_a });
 
     {
-        auto discussions = _api.get_discussions_by_author(sam.name, a2_s.permlink(), 10);
+        api::discussion_query q;
+        q.start_author = sam.name;
+        q.start_permlink = a2_s.permlink();
+        q.limit = 10;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
     }
 
     {
-        auto discussions = _api.get_discussions_by_author(sam.name, "", 10);
+        api::discussion_query q;
+        q.start_author = sam.name;
+        q.start_permlink = "";
+        q.limit = 10;
+        auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
     }

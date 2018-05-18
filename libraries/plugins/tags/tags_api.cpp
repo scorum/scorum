@@ -69,18 +69,15 @@ tags_api::get_comments(const std::string& parent_author, const std::string& pare
     return guard().with_read_lock([&]() { return _impl->get_comments(parent_author, parent_permlink, depth); });
 }
 
-std::vector<discussion>
-tags_api::get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const
+std::vector<discussion> tags_api::get_discussions_by_author(const api::discussion_query& query) const
 {
     try
     {
-        // clang-format off
         return guard().with_read_lock([&]() {
-            return _impl->get_discussions_by_author(author, start_permlink, limit);
+            return _impl->get_discussions_by_author(*query.start_author, *query.start_permlink, query.limit);
         });
-        // clang-format on
     }
-    FC_CAPTURE_AND_RETHROW((author)(start_permlink)(limit))
+    FC_CAPTURE_AND_RETHROW((query))
 }
 
 } // namespace tags

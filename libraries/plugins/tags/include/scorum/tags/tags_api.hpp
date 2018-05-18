@@ -61,8 +61,7 @@ public:
      * If start_permlink is empty then discussions are returned from the beginning. This
      * should allow easy pagination.
      */
-    std::vector<api::discussion>
-    get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const;
+    std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
 };
 
 } // namespace tags
