@@ -251,7 +251,7 @@ private:
         return get_discussion(_services.comment_service().get(id), truncate_body);
     }
 
-    discussion get_discussion(const comment_object comment, uint32_t truncate_body = 0) const
+    discussion get_discussion(const comment_object& comment, uint32_t truncate_body = 0) const
     {
         discussion d = create_discussion(comment);
 
