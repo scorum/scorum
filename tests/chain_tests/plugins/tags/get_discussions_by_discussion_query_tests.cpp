@@ -27,7 +27,7 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
     q.tags = { "B", "C" };
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 0);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
 }
 
 SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
@@ -48,7 +48,7 @@ SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
     q.tags = { "D" };
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 0);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
 }
 
 SCORUM_TEST_CASE(should_return_voted_tags_intersection)
@@ -85,7 +85,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 1);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p1.permlink());
     }
 
@@ -96,7 +96,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p3.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
     }
@@ -141,7 +141,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
 }
@@ -199,7 +199,7 @@ SCORUM_TEST_CASE(check_pagination)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p3.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p4.permlink());
 
@@ -210,7 +210,7 @@ SCORUM_TEST_CASE(check_pagination)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p4.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
     }
@@ -245,14 +245,14 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 1);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
     }
     {
         q.tags = { "H" };
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
     }
 }
 
@@ -275,7 +275,7 @@ SCORUM_TEST_CASE(check_truncate_body)
     q.truncate_body = 5;
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 1);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
     BOOST_REQUIRE_EQUAL(discussions[0].body.size(), q.truncate_body);
 }
 
@@ -304,7 +304,7 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
     q.tags = { "A", "B", "C" };
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
 }
@@ -348,7 +348,7 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
     q.tags = { "A", "B", "C", "D" };
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
-    BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
 }
@@ -382,7 +382,7 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 3);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 3u);
     }
 
     delete_comment_operation op;
@@ -393,7 +393,7 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p3.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
     }
@@ -437,7 +437,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_hot(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 1);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p1.permlink());
     }
 
@@ -448,7 +448,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
-        BOOST_REQUIRE_EQUAL(discussions.size(), 2);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p3.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
     }
@@ -488,7 +488,7 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
     q.limit = 100;
     q.tags_logical_and = true;
 
-    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 3);
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 3u);
 }
 
 SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
@@ -509,7 +509,7 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
     q.limit = 100;
     q.tags_logical_and = true;
 
-    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 1);
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

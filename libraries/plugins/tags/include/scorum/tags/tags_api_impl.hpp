@@ -344,17 +344,24 @@ private:
     {
         using post_cref = posts_crefs::value_type;
 
-        auto from = begin(posts_by_tags);
-        auto to = end(posts_by_tags);
+        auto from = posts_by_tags.begin();
+        auto to = posts_by_tags.end();
 
-        posts_crefs start(begin(*from), end(*from));
+        posts_crefs start(from->begin(), from->end());
+        auto tail = boost::make_iterator_range(std::next(from), to);
 
+        /// Each collection in 'posts_by_tags' is already sorted by comment id (see 'tag_index/by_comment').
+        /// Intersect collections in 'posts_by_tags' each with other.
+        /// [[a,b,c],[b,c,d],[c,d,e]] => start: [a,b,c]; tail: [[b,c,d], [c,d,e]]
+        /// 1. [a,b,c] /\ [b,c,d] = [b,c] (i.e. 'intersection' = [b,c])
+        /// 2. [b,c] /\ [c,d,e] = [c] (i.e 'intersection' = [c])
         // clang-format off
-        posts_crefs intersection = std::accumulate(next(from), to, start, [](posts_crefs& intersection, const posts_crefs& ps) {
-            auto upper_bound = boost::set_intersection(intersection, ps, begin(intersection), [](post_cref lhs, post_cref rhs) {
+        posts_crefs intersection = boost::accumulate(tail, start, [](posts_crefs& intersection, const posts_crefs& posts) {
+            /// intersect 'intersection' with 'posts' and put result back into 'intersection'
+            auto upper_bound = boost::set_intersection(intersection, posts, intersection.begin(), [](post_cref lhs, post_cref rhs) {
                 return lhs.get().comment < rhs.get().comment;
             });
-            intersection.erase(upper_bound, end(intersection));
+            intersection.erase(upper_bound, intersection.end());
 
             return intersection;
         });
@@ -381,7 +388,7 @@ private:
 
         posts_crefs result;
         result.reserve(set.size());
-        result.assign(begin(set), end(set));
+        result.assign(set.begin(), set.end());
 
         return result;
     }
@@ -414,7 +421,7 @@ private:
 
         boost::sort(posts, ordering);
 
-        posts_crefs::value_type threshold = *(begin(posts));
+        posts_crefs::value_type threshold = *(posts.begin());
         if (query.start_author && query.start_permlink)
         {
             auto id = _services.comment_service().get(*query.start_author, *query.start_permlink).id;
@@ -424,7 +431,7 @@ private:
 
         auto it = boost::lower_bound(posts, threshold.get(), ordering);
 
-        for (; it != end(posts) && result.size() < query.limit; ++it)
+        for (; it != posts.end() && result.size() < query.limit; ++it)
         {
             try
             {
