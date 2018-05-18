@@ -21,6 +21,7 @@ public:
 private:
     void charge_witness_reward(block_task_context& ctx, const account_name_type& witness, const share_type& reward);
 
+public:
     static const uint32_t old_reward_alg_switch_reward_block_num;
     static const share_type new_reward_to_migrate;
     static const share_type old_reward_to_migrate;

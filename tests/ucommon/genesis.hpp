@@ -199,7 +199,7 @@ public:
         return *this;
     }
 
-    genesis_state_type generate();
+    genesis_state_type generate(const fc::time_point_sec& = fc::time_point_sec(TEST_GENESIS_TIMESTAMP));
 
     Actors _accounts;
 
