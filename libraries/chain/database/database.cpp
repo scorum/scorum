@@ -1616,8 +1616,10 @@ void database::update_global_dynamic_data(const signed_block& b)
 
             if (missed_blocks > 0)
             {
-                dlog("Missed blocks ${m} from block '${last_block}' to '${new_block}'",
-                     ("m", missed_blocks)("last_block", fetch_block_by_id(_dgp.head_block_id))("new_block", b));
+                dlog(
+                    "{\"missed_blocks\": ${missed_blocks}, \"last_block\": ${last_block}, \"new_block\": ${new_block}}",
+                    ("missed_blocks", missed_blocks)("last_block", fetch_block_by_id(_dgp.head_block_id))("new_block",
+                                                                                                          b));
             }
 
             for (uint32_t i = 0; i < missed_blocks; ++i)

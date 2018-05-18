@@ -126,8 +126,11 @@ void database::update_witness_schedule()
             });
         }
 
-        witness_schedule::printable_schedule prev_schedule
-            = witness_schedule::get_witness_schedule(schedule_service.get(), witness_service);
+        witness_schedule::printable_schedule prev_schedule;
+        if (fc::logger::get(DEFAULT_LOGGER).is_enabled(fc::log_level::debug))
+        {
+            prev_schedule = witness_schedule::get_witness_schedule(schedule_service.get(), witness_service);
+        }
 
         schedule_service.update([&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)
@@ -162,9 +165,12 @@ void database::update_witness_schedule()
             _wso.current_virtual_time = new_virtual_time;
         });
 
-        dlog("Witness schedule is updated. Prev schedule '${prev_schedule}'. New schedule '${new_schedule}'",
-             ("prev_schedule", prev_schedule)(
-                 "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
+        if (fc::logger::get(DEFAULT_LOGGER).is_enabled(fc::log_level::debug))
+        {
+            dlog("{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
+                 ("prev_schedule", prev_schedule)(
+                     "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
+        }
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();

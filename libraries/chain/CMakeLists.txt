@@ -56,6 +56,7 @@ add_library( scorum_chain
              services/witness_vote.cpp
              services/genesis_state.cpp
              services/account_registration_bonus.cpp
+             services/blocks_story.cpp
 
              data_service_factory.cpp
 
