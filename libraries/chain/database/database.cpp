@@ -1616,10 +1616,12 @@ void database::update_global_dynamic_data(const signed_block& b)
 
             if (missed_blocks > 0)
             {
-                dlog(
-                    "{\"missed_blocks\": ${missed_blocks}, \"last_block\": ${last_block}, \"new_block\": ${new_block}}",
-                    ("missed_blocks", missed_blocks)("last_block", fetch_block_by_id(_dgp.head_block_id))("new_block",
-                                                                                                          b));
+                dlog("{\"missed_blocks\": ${missed_blocks}, \"last_block\": {\"last_block_num\": ${last_block_num}, "
+                     "\"info\": ${last_block}}, \"new_block\": {\"new_block_num\": ${new_block_num}, \"info\": "
+                     "${new_block}}}",
+                     ("missed_blocks", missed_blocks)("last_block_num", _dgp.head_block_number)(
+                         "last_block", fetch_block_by_id(_dgp.head_block_id))("new_block_num",
+                                                                              b.block_num())("new_block", b));
             }
 
             for (uint32_t i = 0; i < missed_blocks; ++i)
