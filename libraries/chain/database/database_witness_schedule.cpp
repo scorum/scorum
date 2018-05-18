@@ -24,16 +24,22 @@ using schedule_type = std::vector<printable_schedule_item>;
 
 struct printable_schedule
 {
+    fc::uint128 current_virtual_time;
+    uint8_t num_scheduled_witnesses = 1;
     schedule_type items;
 };
 
 printable_schedule get_witness_schedule(const witness_schedule_object& wso, witness_service_i& witness_service)
 {
     printable_schedule ret;
+
+    ret.current_virtual_time = wso.current_virtual_time;
+    ret.num_scheduled_witnesses = wso.num_scheduled_witnesses;
     ret.items.reserve(wso.num_scheduled_witnesses);
 
-    for (const account_name_type& witness : wso.current_shuffled_witnesses)
+    for (int ci = 0; ci < wso.num_scheduled_witnesses; ++ci)
     {
+        const account_name_type& witness = wso.current_shuffled_witnesses[ci];
         const auto& witness_obj = witness_service.get(witness);
         ret.items.push_back({ witness_obj.id, witness, witness_obj.votes, witness_obj.virtual_scheduled_time });
     }
@@ -324,4 +330,4 @@ void database::_update_witness_hardfork_version_votes()
 FC_REFLECT(scorum::chain::witness_schedule::printable_schedule_item,
            (witness_id)(witness_name)(votes)(virtual_scheduled_time))
 
-FC_REFLECT(scorum::chain::witness_schedule::printable_schedule, (items))
+FC_REFLECT(scorum::chain::witness_schedule::printable_schedule, (current_virtual_time)(num_scheduled_witnesses)(items))

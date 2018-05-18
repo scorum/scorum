@@ -53,6 +53,7 @@
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
@@ -61,6 +62,7 @@
 #include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
+#include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -90,6 +92,7 @@ public:
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
     database_ns::process_contracts_expiration _process_contracts_expiration;
     database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
+    database_ns::process_witness_reward_in_sp_migration _process_witness_reward_in_sp_migration;
 };
 
 database_impl::database_impl(database& self)
@@ -1373,6 +1376,7 @@ void database::_apply_block(const signed_block& next_block)
             .before(_my->_process_vesting_withdrawals)
             .before(_my->_process_contracts_expiration)
             .before(_my->_process_account_registration_bonus_expiration)
+            .before(_my->_process_witness_reward_in_sp_migration)
             .apply(ctx);
         // clang-format on
 
@@ -1984,6 +1988,11 @@ void database::validate_invariants() const
 
         total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
+
+        if (obtain_service<dbs_witness_reward_in_sp_migration>().is_exists())
+        {
+            total_supply += asset(obtain_service<dbs_witness_reward_in_sp_migration>().get().balance, SCORUM_SYMBOL);
+        }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
