@@ -39,7 +39,7 @@ SCORUM_TEST_CASE(get_discussions_by_created)
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
 }
 
-SCORUM_TEST_CASE(get_discussions_by_created_dont_return_post_after_cashout_time)
+SCORUM_TEST_CASE(get_discussions_by_created_return_post_after_cashout_time)
 {
     api::discussion_query query;
     query.limit = 1;
@@ -53,7 +53,7 @@ SCORUM_TEST_CASE(get_discussions_by_created_dont_return_post_after_cashout_time)
 
     generate_blocks(post.cashout_time());
 
-    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 0u);
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
 }
 
 SCORUM_TEST_CASE(test_comments_depth_counter)
@@ -163,7 +163,7 @@ SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
 }
 
 #ifndef IS_LOW_MEM
-SCORUM_TEST_CASE(create_tag_object_for_comment)
+SCORUM_TEST_CASE(do_not_create_tag_object_for_comment)
 {
     auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
 
@@ -180,22 +180,12 @@ SCORUM_TEST_CASE(create_tag_object_for_comment)
         op.json_metadata = "{\"tags\" : [\"football\"]}";
     });
 
-    BOOST_REQUIRE_EQUAL(3u, index.size());
+    BOOST_REQUIRE_EQUAL(1u, index.size());
 
     auto itr = index.begin();
 
     BOOST_CHECK_EQUAL(itr->tag, "");
     BOOST_CHECK(itr->comment == 0u);
-
-    itr++;
-
-    BOOST_CHECK_EQUAL(itr->tag, "");
-    BOOST_CHECK(itr->comment == 1u);
-
-    itr++;
-
-    BOOST_CHECK_EQUAL(itr->tag, "football");
-    BOOST_CHECK(itr->comment == 1u);
 }
 
 SCORUM_TEST_CASE(create_tags_from_json_metadata)
@@ -260,7 +250,7 @@ SCORUM_TEST_CASE(create_two_posts_with_same_tags)
     BOOST_CHECK(itr->comment == 1u);
 }
 
-SCORUM_TEST_CASE(remove_tag_after_cachout_time)
+SCORUM_TEST_CASE(do_not_remove_tag_after_cachout_time)
 {
     auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
 
@@ -272,11 +262,13 @@ SCORUM_TEST_CASE(remove_tag_after_cachout_time)
         op.json_metadata = "{\"tags\" : [\"football\"]}";
     });
 
+    // first one is a 'football' tag; the second one is an empty one (whicn is used to track 'get_discussions_by'
+    // request with empty tags
     BOOST_REQUIRE_EQUAL(2u, index.size());
 
     generate_blocks(post.cashout_time());
 
-    BOOST_REQUIRE_EQUAL(0u, index.size());
+    BOOST_REQUIRE_EQUAL(2u, index.size());
 }
 #endif
 
