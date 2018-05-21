@@ -39,12 +39,29 @@ SCORUM_TEST_CASE(get_discussions_by_created)
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
 }
 
+SCORUM_TEST_CASE(get_discussions_by_created_return_post_after_cashout_time)
+{
+    api::discussion_query query;
+    query.limit = 1;
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 0u);
+
+    auto post = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "root post";
+        op.body = "body";
+    });
+
+    generate_blocks(post.cashout_time());
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
+}
+
 SCORUM_TEST_CASE(test_comments_depth_counter)
 {
     auto get_comments_with_depth = [](scorum::chain::database& db) {
         std::map<std::string, uint16_t> result;
 
-        const auto& index = db.get_index<comment_index>().indices().get<by_parent>();
+        const auto& index = db.get_index<comment_index, by_parent>();
 
         for (auto itr = index.begin(); itr != index.end(); ++itr)
         {
@@ -76,9 +93,7 @@ SCORUM_TEST_CASE(test_comments_depth_counter)
     BOOST_REQUIRE_EQUAL(2u, check_list[root_child_child.permlink()]);
 }
 
-/// TODO: this is wrong behaviour, `get_discussions_by_created` should return only posts when
-/// parent_author & parent_permlink is not set.
-SCORUM_TEST_CASE(get_discussions_by_created_return_post_and_it_comments_if_its_id_0)
+SCORUM_TEST_CASE(get_discussions_by_created_return_post_without_it_comments_if_its_id_0)
 {
     auto root = create_post(initdelegate, [](comment_operation& op) {
         op.title = "root";
@@ -93,7 +108,7 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_post_and_it_comments_if_its_i
     api::discussion_query query;
     query.limit = 100;
 
-    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 2u);
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
 }
 
 SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
@@ -131,7 +146,7 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
 
 SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
 {
-    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
 
     BOOST_REQUIRE_EQUAL(0u, index.size());
 
@@ -148,6 +163,31 @@ SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
 }
 
 #ifndef IS_LOW_MEM
+SCORUM_TEST_CASE(do_not_create_tag_object_for_comment)
+{
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
+
+    BOOST_REQUIRE_EQUAL(0u, index.size());
+
+    auto post = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "post";
+        op.body = "body";
+    });
+
+    post.create_comment(initdelegate, [](comment_operation& op) {
+        op.title = "comment";
+        op.body = "body";
+        op.json_metadata = "{\"tags\" : [\"football\"]}";
+    });
+
+    BOOST_REQUIRE_EQUAL(1u, index.size());
+
+    auto itr = index.begin();
+
+    BOOST_CHECK_EQUAL(itr->tag, "");
+    BOOST_CHECK(itr->comment == 0u);
+}
+
 SCORUM_TEST_CASE(create_tags_from_json_metadata)
 {
     create_post(initdelegate, [](comment_operation& op) {
@@ -156,7 +196,7 @@ SCORUM_TEST_CASE(create_tags_from_json_metadata)
         op.json_metadata = "{\"tags\" : [\"football\", \"tenis\"]}";
     });
 
-    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
     BOOST_REQUIRE_EQUAL(3u, index.size());
 
     auto itr = index.begin();
@@ -186,7 +226,7 @@ SCORUM_TEST_CASE(create_two_posts_with_same_tags)
         op.json_metadata = "{\"tags\" : [\"football\"]}";
     });
 
-    auto& index = db.get_index<scorum::tags::tag_index>().indices().get<scorum::tags::by_comment>();
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
     BOOST_REQUIRE_EQUAL(4u, index.size());
 
     auto itr = index.begin();
@@ -208,6 +248,27 @@ SCORUM_TEST_CASE(create_two_posts_with_same_tags)
 
     BOOST_CHECK_EQUAL(itr->tag, "football");
     BOOST_CHECK(itr->comment == 1u);
+}
+
+SCORUM_TEST_CASE(do_not_remove_tag_after_cachout_time)
+{
+    auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
+
+    BOOST_REQUIRE_EQUAL(0u, index.size());
+
+    auto post = create_post(initdelegate, [](comment_operation& op) {
+        op.title = "zero";
+        op.body = "post";
+        op.json_metadata = "{\"tags\" : [\"football\"]}";
+    });
+
+    // first one is a 'football' tag; the second one is an empty one (whicn is used to track 'get_discussions_by'
+    // request with empty tags
+    BOOST_REQUIRE_EQUAL(2u, index.size());
+
+    generate_blocks(post.cashout_time());
+
+    BOOST_REQUIRE_EQUAL(2u, index.size());
 }
 #endif
 
@@ -296,15 +357,15 @@ SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
 
     auto d = _api.get_content(post.author(), post.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000000 SCR"));
-    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000000 SP"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000000 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000000 SP"));
 
     generate_blocks(post.cashout_time());
 
     d = _api.get_content(post.author(), post.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000000 SCR"));
-    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000000 SP"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000000 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000000 SP"));
 }
 
 SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
@@ -335,8 +396,8 @@ SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 
     auto d = _api.get_content(post2.author(), post2.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr_value, asset::from_string("0.000000005 SCR"));
-    BOOST_CHECK_EQUAL(d.pending_payout_sp_value, asset::from_string("0.000000438 SP"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000005 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000438 SP"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
