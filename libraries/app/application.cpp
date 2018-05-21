@@ -1120,27 +1120,42 @@ application::~application()
     }
 }
 
+std::vector<std::string> application::get_default_apis() const
+{
+    std::vector<std::string> result;
+
+    result.push_back("database_api");
+    result.push_back("login_api");
+    result.push_back(API_CHAIN);
+    result.push_back("account_by_key_api");
+    result.push_back(API_ACCOUNT_HISTORY);
+    result.push_back(API_BLOCKCHAIN_HISTORY);
+    result.push_back(API_ACCOUNT_STATISTICS);
+    result.push_back(API_BLOCKCHAIN_STATISTICS);
+
+    return result;
+}
+
+std::vector<std::string> application::get_default_plugins() const
+{
+    std::vector<std::string> result;
+
+    result.push_back(BLOCKCHAIN_HISTORY_PLUGIN_NAME);
+    result.push_back("account_by_key");
+    result.push_back(ACCOUNT_STATISTICS_PLUGIN_NAME);
+    result.push_back(BLOCKCHAIN_MONITORING_PLUGIN_NAME);
+
+    return result;
+}
+
 void application::set_program_options(boost::program_options::options_description& command_line_options,
                                       boost::program_options::options_description& configuration_file_options) const
 {
-    std::vector<std::string> default_apis;
-    default_apis.push_back("database_api");
-    default_apis.push_back("login_api");
-    default_apis.push_back(API_CHAIN);
-    default_apis.push_back("account_by_key_api");
-    default_apis.push_back(API_ACCOUNT_HISTORY);
-    default_apis.push_back(API_BLOCKCHAIN_HISTORY);
-    default_apis.push_back(API_ACCOUNT_STATISTICS);
-    default_apis.push_back(API_BLOCKCHAIN_STATISTICS);
-    std::string str_default_apis = boost::algorithm::join(default_apis, " ");
+    const auto default_apis = get_default_apis();
+    const auto default_plugins = get_default_plugins();
 
-    std::vector<std::string> default_plugins;
-    default_plugins.push_back(BLOCKCHAIN_HISTORY_PLUGIN_NAME);
-    default_plugins.push_back("account_by_key");
-    default_plugins.push_back(ACCOUNT_STATISTICS_PLUGIN_NAME);
-    default_plugins.push_back(BLOCKCHAIN_MONITORING_PLUGIN_NAME);
-
-    std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
+    const std::string str_default_apis = boost::algorithm::join(default_apis, " ");
+    const std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
 
     // clang-format off
     configuration_file_options.add_options()
@@ -1168,10 +1183,12 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("read-only", "Node will not connect to p2p network and can only read from the chain state")
     ("check-locks", "Check correctness of chainbase locking")
     ("disable-get-block", "Disable get_block API call");
-    command_line_options.add(configuration_file_options);
-    command_line_options.add_options()
-    ("version,v", "Print version number and exit.");
+
     // clang-format on
+
+    command_line_options.add(configuration_file_options);
+    command_line_options.add_options()("version,v", "Print version number and exit.");
+
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
 }
@@ -1379,6 +1396,7 @@ void application::shutdown_plugins()
     }
     return;
 }
+
 void application::shutdown()
 {
     my->shutdown();
@@ -1386,13 +1404,16 @@ void application::shutdown()
 
 void application::register_abstract_plugin(std::shared_ptr<abstract_plugin> plug)
 {
-    boost::program_options::options_description plugin_cli_options("Options for plugin " + plug->plugin_name()),
-        plugin_cfg_options;
+    using boost::program_options::options_description;
+
+    options_description plugin_cli_options("Options for plugin " + plug->plugin_name()), plugin_cfg_options;
     plug->plugin_set_program_options(plugin_cli_options, plugin_cfg_options);
+
     if (!plugin_cli_options.options().empty())
     {
         _cli_options.add(plugin_cli_options);
     }
+
     if (!plugin_cfg_options.options().empty())
     {
         _cfg_options.add(plugin_cfg_options);
@@ -1461,6 +1482,39 @@ void print_application_version()
     std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
     std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
     std::cout << "embeded_chain_id           " << egenesis::get_egenesis_chain_id().str() << "\n";
+}
+
+void print_program_options(std::ostream& stream, const boost::program_options::options_description& options)
+{
+    for (const boost::shared_ptr<bpo::option_description> od : options.options())
+    {
+        if (!od->description().empty())
+            stream << "# " << od->description() << "\n";
+
+        boost::any store;
+        if (!od->semantic()->apply_default(store))
+        {
+            stream << "# " << od->long_name() << " = \n";
+        }
+        else
+        {
+            auto example = od->format_parameter();
+            if (example.empty())
+            {
+                // This is a boolean switch
+                stream << od->long_name() << " = "
+                       << "false\n";
+            }
+            else
+            {
+                // The string is formatted "arg (=<interesting part>)"
+                example.erase(0, 6);
+                example.erase(example.length() - 1);
+                stream << od->long_name() << " = " << example << "\n";
+            }
+        }
+        stream << "\n";
+    }
 }
 
 } // namespace app

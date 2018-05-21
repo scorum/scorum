@@ -42,8 +42,6 @@ int main(int argc, char** argv)
                  "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
         // clang-format on
 
-        logger::set_logging_program_options(cfg_options);
-
         bpo::variables_map options;
 
         for (const std::string& plugin_name : scorum::plugin::get_available_plugins())
@@ -53,8 +51,12 @@ int main(int argc, char** argv)
         {
             bpo::options_description cli, cfg;
             node->set_program_options(cli, cfg);
+
             app_options.add(cli);
             cfg_options.add(cfg);
+
+            logger::set_logging_program_options(cfg_options);
+
             bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
         }
         catch (const boost::program_options::error& e)
@@ -96,31 +98,9 @@ int main(int argc, char** argv)
                 fc::create_directories(data_dir);
 
             std::ofstream out_cfg(config_ini_path.preferred_string());
-            for (const boost::shared_ptr<bpo::option_description> od : cfg_options.options())
-            {
-                if (!od->description().empty())
-                    out_cfg << "# " << od->description() << "\n";
-                boost::any store;
-                if (!od->semantic()->apply_default(store))
-                    out_cfg << "# " << od->long_name() << " = \n";
-                else
-                {
-                    auto example = od->format_parameter();
-                    if (example.empty())
-                        // This is a boolean switch
-                        out_cfg << od->long_name() << " = "
-                                << "false\n";
-                    else
-                    {
-                        // The string is formatted "arg (=<interesting part>)"
-                        example.erase(0, 6);
-                        example.erase(example.length() - 1);
-                        out_cfg << od->long_name() << " = " << example << "\n";
-                    }
-                }
-                out_cfg << "\n";
-            }
-            logger::write_default_logging_config_to_stream(out_cfg);
+
+            scorum::app::print_program_options(out_cfg, cfg_options);
+
             out_cfg.close();
         }
 
@@ -133,7 +113,9 @@ int main(int argc, char** argv)
         // try to get logging options from the config file.
         try
         {
-            fc::optional<fc::logging_config> logging_config = logger::load_logging_config_from_options(options);
+            fc::optional<fc::logging_config> logging_config
+                = logger::load_logging_config_from_options(options, data_dir);
+
             if (logging_config)
                 fc::configure_logging(*logging_config);
         }

@@ -58,6 +58,8 @@ class database_api;
 
 void print_application_version();
 
+void print_program_options(std::ostream& stream, const boost::program_options::options_description& options);
+
 class application
 {
 public:
@@ -73,6 +75,9 @@ public:
     void shutdown();
     void startup_plugins();
     void shutdown_plugins();
+
+    std::vector<std::string> get_default_apis() const;
+    std::vector<std::string> get_default_plugins() const;
 
     bool is_read_only() const
     {
