@@ -18,8 +18,6 @@
 #include <vector>
 #include <math.h>
 
-#include <boost/range/numeric.hpp>
-
 #include "actor.hpp"
 #include "genesis.hpp"
 
