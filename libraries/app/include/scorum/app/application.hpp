@@ -74,6 +74,9 @@ public:
     void startup_plugins();
     void shutdown_plugins();
 
+    std::vector<std::string> get_defualt_apis() const;
+    std::vector<std::string> get_defualt_plugins() const;
+
     bool is_read_only() const
     {
         return _read_only;
