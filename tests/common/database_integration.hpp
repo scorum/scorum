@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scorum/app/application.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <fc/io/json.hpp>
@@ -54,6 +55,8 @@ public:
         using expander = int[];
         (void)expander{ 0, (void(tx.operations.push_back(std::forward<Ts>(ops))), 0)... };
 
+        const auto& dyn_props = db.obtain_service<dbs_dynamic_global_property>().get();
+        tx.set_reference_block(dyn_props.head_block_id);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         if (key != fc::ecc::private_key())
         {

@@ -104,7 +104,7 @@ config::config(test_mode) /// test config
     , blogging_start_date(initial_date + cashout_window_seconds * 10)
 
     , fifa_world_cup_2018_bounty_cashout_date(blogging_start_date + cashout_window_seconds * 11)
-    
+
     , expiraton_for_registration_bonus(fc::minutes(30))
 {
     // do nothing
