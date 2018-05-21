@@ -150,12 +150,6 @@ struct discussion : public comment_api_obj
 
 struct discussion_query
 {
-    void validate() const
-    {
-        FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
-        FC_ASSERT(!(!start_author ^ !start_permlink));
-    }
-
     // the number of bytes of the post body to return, 0 for all
     uint32_t truncate_body = 0;
 
