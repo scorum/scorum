@@ -98,35 +98,9 @@ int main(int argc, char** argv)
                 fc::create_directories(data_dir);
 
             std::ofstream out_cfg(config_ini_path.preferred_string());
-            for (const boost::shared_ptr<bpo::option_description> od : cfg_options.options())
-            {
-                if (!od->description().empty())
-                    out_cfg << "# " << od->description() << "\n";
 
-                boost::any store;
-                if (!od->semantic()->apply_default(store))
-                {
-                    out_cfg << "# " << od->long_name() << " = \n";
-                }
-                else
-                {
-                    auto example = od->format_parameter();
-                    if (example.empty())
-                    {
-                        // This is a boolean switch
-                        out_cfg << od->long_name() << " = "
-                                << "false\n";
-                    }
-                    else
-                    {
-                        // The string is formatted "arg (=<interesting part>)"
-                        example.erase(0, 6);
-                        example.erase(example.length() - 1);
-                        out_cfg << od->long_name() << " = " << example << "\n";
-                    }
-                }
-                out_cfg << "\n";
-            }
+            scorum::app::print_program_options(out_cfg, cfg_options);
+
             out_cfg.close();
         }
 
@@ -139,7 +113,9 @@ int main(int argc, char** argv)
         // try to get logging options from the config file.
         try
         {
-            fc::optional<fc::logging_config> logging_config = logger::load_logging_config_from_options(options);
+            fc::optional<fc::logging_config> logging_config
+                = logger::load_logging_config_from_options(options, data_dir);
+
             if (logging_config)
                 fc::configure_logging(*logging_config);
         }

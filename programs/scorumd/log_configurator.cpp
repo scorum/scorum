@@ -47,7 +47,8 @@ FC_REFLECT(logger_args, (name)(level)(appender))
 
 namespace logger {
 
-fc::optional<fc::logging_config> load_logging_config_from_options(const boost::program_options::variables_map& args)
+fc::optional<fc::logging_config> load_logging_config_from_options(const boost::program_options::variables_map& args,
+                                                                  const boost::filesystem::path& pwd)
 {
     try
     {
@@ -88,8 +89,13 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 auto file_appender = fc::json::from_string(s).as<file_appender_args>();
 
                 fc::path file_name = file_appender.file;
+
                 if (file_name.is_relative())
-                    file_name = fc::absolute(fc::current_path()) / file_name;
+                {
+                    file_name = fc::absolute(pwd) / file_name;
+                }
+
+                ilog(file_name.generic_string());
 
                 // construct a default file appender config here
                 // filename will be taken from ini file, everything else hard-coded here
@@ -99,6 +105,7 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 file_appender_config.rotate = true;
                 file_appender_config.rotation_interval = fc::minutes(file_appender.rotation_interval_minutes);
                 file_appender_config.rotation_limit = fc::hours(file_appender.rotation_limit_hours);
+
                 logging_config.appenders.push_back(
                     fc::appender_config(file_appender.appender, "file", fc::variant(file_appender_config)));
                 found_logging_config = true;
@@ -135,22 +142,27 @@ void set_logging_program_options(boost::program_options::options_description& op
     std::vector<std::string> default_console_appender({ "{\"appender\":\"stderr\",\"stream\":\"std_error\"}" });
     std::string str_default_console_appender = boost::algorithm::join(default_console_appender, " ");
 
-    std::vector<std::string> default_file_appender({ "{\"appender\":\"p2p\",\"file\":\"logs/p2p/p2p.log\"}" });
-    std::string str_default_file_appender = boost::algorithm::join(default_file_appender, " ");
+    std::vector<std::string> default_file_appender(
+        { "{\"appender\":\"p2p\",\"file\":\"logs/p2p.log\"}\n",
+          "log-file-appender = {\"appender\":\"node\",\"file\":\"logs/node.log\"}" });
+    std::string str_default_file_appender = boost::algorithm::join(default_file_appender, "");
 
     // clang-format off
     std::vector< std::string > default_logger(
         { "{\"name\":\"default\",\"level\":\"info\",\"appender\":\"stderr\"}\n",
-        "log-logger = {\"name\":\"p2p\",\"level\":\"info\",\"appender\":\"p2p\",\"rotation_interval_minutes\":\"120\", \"rotation_limit_hours\":\"720\"}" });
+        "log-logger = {\"name\":\"p2p\",\"level\":\"info\",\"appender\":\"p2p\",\"rotation_interval_minutes\":\"120\", \"rotation_limit_hours\":\"720\"}\n",
+        "log-logger = {\"name\":\"default\",\"level\":\"info\",\"appender\":\"node\",\"rotation_interval_minutes\":\"120\", \"rotation_limit_hours\":\"720\"}" });
     std::string str_default_logger = boost::algorithm::join(default_logger, "");
 
+    auto default_value = [](const std::vector<std::string>& args, const std::string& str)
+    {
+        return boost::program_options::value<std::vector<std::string>>()->composing()->default_value(args, str);
+    };
+
     options.add_options()
-        ("log-console-appender", boost::program_options::value< std::vector< std::string > >()->composing()->default_value(default_console_appender, str_default_console_appender),
-        "Console appender definition json: {\"appender\", \"stream\"}")
-        ("log-file-appender", boost::program_options::value< std::vector< std::string > >()->composing()->default_value(default_file_appender, str_default_file_appender),
-        "File appender definition json:  {\"appender\", \"file\"}")
-        ("log-logger", boost::program_options::value< std::vector< std::string > >()->composing()->default_value(default_logger, str_default_logger),
-        "Logger definition json: {\"name\", \"level\", \"appender\"}");
+        ("log-console-appender", default_value(default_console_appender, str_default_console_appender), "Console appender definition json: {\"appender\", \"stream\"}")
+        ("log-file-appender", default_value(default_file_appender, str_default_file_appender), "File appender definition json:  {\"appender\", \"file\"}")
+        ("log-logger", default_value(default_logger, str_default_logger), "Logger definition json: {\"name\", \"level\", \"appender\"}");
     // clang-format on
 }
 }

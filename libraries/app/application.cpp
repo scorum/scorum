@@ -1120,7 +1120,7 @@ application::~application()
     }
 }
 
-std::vector<std::string> application::get_defualt_apis() const
+std::vector<std::string> application::get_default_apis() const
 {
     std::vector<std::string> result;
 
@@ -1136,7 +1136,7 @@ std::vector<std::string> application::get_defualt_apis() const
     return result;
 }
 
-std::vector<std::string> application::get_defualt_plugins() const
+std::vector<std::string> application::get_default_plugins() const
 {
     std::vector<std::string> result;
 
@@ -1151,8 +1151,8 @@ std::vector<std::string> application::get_defualt_plugins() const
 void application::set_program_options(boost::program_options::options_description& command_line_options,
                                       boost::program_options::options_description& configuration_file_options) const
 {
-    const auto default_apis = get_defualt_apis();
-    const auto default_plugins = get_defualt_plugins();
+    const auto default_apis = get_default_apis();
+    const auto default_plugins = get_default_plugins();
 
     const std::string str_default_apis = boost::algorithm::join(default_apis, " ");
     const std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
@@ -1482,6 +1482,39 @@ void print_application_version()
     std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
     std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
     std::cout << "embeded_chain_id           " << egenesis::get_egenesis_chain_id().str() << "\n";
+}
+
+void print_program_options(std::ostream& stream, const boost::program_options::options_description& options)
+{
+    for (const boost::shared_ptr<bpo::option_description> od : options.options())
+    {
+        if (!od->description().empty())
+            stream << "# " << od->description() << "\n";
+
+        boost::any store;
+        if (!od->semantic()->apply_default(store))
+        {
+            stream << "# " << od->long_name() << " = \n";
+        }
+        else
+        {
+            auto example = od->format_parameter();
+            if (example.empty())
+            {
+                // This is a boolean switch
+                stream << od->long_name() << " = "
+                       << "false\n";
+            }
+            else
+            {
+                // The string is formatted "arg (=<interesting part>)"
+                example.erase(0, 6);
+                example.erase(example.length() - 1);
+                stream << od->long_name() << " = " << example << "\n";
+            }
+        }
+        stream << "\n";
+    }
 }
 
 } // namespace app
