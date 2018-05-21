@@ -41,35 +41,19 @@ void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
 
     using recipients_type = std::map<account_name_type, share_type>;
     uint32_t block_num = dpo.head_block_number;
-    optional<signed_block> b;
     share_type total_payment = witness_reward_in_sp_migration_service.get().balance;
     recipients_type witnesses;
-    while (block_num > old_reward_alg_switch_reward_block_num)
+    while (block_num > old_reward_alg_switch_reward_block_num && total_payment > share_type())
     {
-        b = blocks_story_service.fetch_block_by_number(block_num--);
+        optional<signed_block> b = blocks_story_service.fetch_block_by_number(block_num--);
         if (b.valid())
         {
             signed_block block = *b;
 
-            share_type payment;
-
-            if (total_payment >= migrate_deferred_payment)
-            {
-                payment = migrate_deferred_payment;
-                total_payment -= migrate_deferred_payment;
-            }
-            else
-            {
-                payment = std::max(total_payment, share_type());
-                total_payment = 0;
-            }
+            share_type payment = std::min(migrate_deferred_payment, total_payment);
+            total_payment -= payment;
 
             witnesses[block.witness] += payment;
-
-            if (total_payment == share_type())
-            {
-                break;
-            }
         }
     }
 

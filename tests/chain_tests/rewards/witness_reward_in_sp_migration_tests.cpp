@@ -87,6 +87,7 @@ struct witness_reward_in_sp_migration_fixture : public database_fixture::databas
               database_ns::process_witness_reward_in_sp_migration::old_reward_alg_switch_reward_block_num)
         , new_reward_to_migrate(database_ns::process_witness_reward_in_sp_migration::new_reward_to_migrate)
         , old_reward_to_migrate(database_ns::process_witness_reward_in_sp_migration::old_reward_to_migrate)
+        , migrate_deferred_payment(database_ns::process_witness_reward_in_sp_migration::migrate_deferred_payment)
     {
         genesis_state_type genesis;
 
@@ -105,13 +106,6 @@ struct witness_reward_in_sp_migration_fixture : public database_fixture::databas
         scorum::protocol::detail::override_config(
             boost::make_unique<scorum::protocol::detail::config>(scorum::protocol::detail::config::test));
 
-        const auto& fund_budget = budget_service.get_fund_budget();
-        asset initial_per_block_reward = fund_budget.per_block;
-
-        asset witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-
-        BOOST_REQUIRE_EQUAL(witness_reward.amount, new_reward_to_migrate);
-
         db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(reward_visitor); });
     }
 
@@ -124,11 +118,23 @@ struct witness_reward_in_sp_migration_fixture : public database_fixture::databas
     const uint32_t old_reward_alg_switch_reward_block_num;
     const share_type new_reward_to_migrate;
     const share_type old_reward_to_migrate;
+    const share_type migrate_deferred_payment;
 
     //    actors_vector_type witnesses;
 };
 
 BOOST_FIXTURE_TEST_SUITE(witness_reward_in_sp_migration_tests, witness_reward_in_sp_migration_fixture)
+
+BOOST_AUTO_TEST_CASE(migration_constants_check)
+{
+    const auto& fund_budget = budget_service.get_fund_budget();
+    asset initial_per_block_reward = fund_budget.per_block;
+
+    asset witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+
+    BOOST_REQUIRE_EQUAL(witness_reward.amount, new_reward_to_migrate);
+    BOOST_REQUIRE_GT(migrate_deferred_payment, share_type());
+}
 
 BOOST_AUTO_TEST_CASE(rest_of_reward_hold_check)
 {
@@ -156,7 +162,6 @@ BOOST_AUTO_TEST_CASE(rest_of_reward_distribution_check)
 
     generate_blocks((uint32_t)(SCORUM_MAX_WITNESSES * SCORUM_MAX_WITNESSES));
 
-    // do not miss blocks
     generate_blocks(SCORUM_WITNESS_REWARD_MIGRATION_DATE - SCORUM_BLOCK_INTERVAL);
 
     BOOST_REQUIRE_EQUAL(reward_visitor.get_last_reward(), asset(old_reward_to_migrate, SP_SYMBOL));
@@ -200,8 +205,12 @@ BOOST_AUTO_TEST_CASE(rest_of_reward_distribution_check)
         share_type new_reward = reward_info.second;
         share_type old_reward = old_total_reward_map[reward_info.first];
         BOOST_REQUIRE_GT(new_reward, old_reward);
-        // check if the difference does not exceed the precision of integer rounding (for 1e+9 it is 100)
-        BOOST_CHECK_LE((new_reward - old_reward).value - new_reward.value * 5 / 100, 100);
+        // Witnesses should receive compensation 5% from new_reward
+        auto expected_compensation = new_reward.value * 5 / 100;
+        auto actual_compensation = (new_reward - old_reward).value;
+        // If compensation is correct the difference does not exceed the precision of integer rounding (for 1e+9 it is
+        // 100)
+        BOOST_CHECK_LE(std::abs(actual_compensation - expected_compensation), 100);
     }
 
     generate_block();
