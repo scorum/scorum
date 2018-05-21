@@ -4,6 +4,7 @@
 
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -13,6 +14,12 @@
 #include <scorum/protocol/config.hpp>
 #include <boost/make_unique.hpp>
 
+#include <map>
+#include <vector>
+#include <math.h>
+
+#include <boost/range/numeric.hpp>
+
 #include "actor.hpp"
 #include "genesis.hpp"
 
@@ -20,11 +27,28 @@ using namespace scorum::chain;
 
 namespace witness_reward_in_sp_migration_tests {
 
-using reward_map_type = std::map<account_name_type, asset>;
+struct witness_reward_info
+{
+    witness_reward_info(uint32_t reward_block_num_, const asset& reward_)
+        : reward_block_num(reward_block_num_)
+        , reward(reward_)
+    {
+    }
+    uint32_t reward_block_num = 0u;
+    asset reward;
+};
+
+using witness_reward_infos_type = std::vector<witness_reward_info>;
+using reward_map_type = std::map<account_name_type, witness_reward_infos_type>;
 
 struct witness_reward_visitor
 {
     typedef void result_type;
+
+    witness_reward_visitor(database& db)
+        : _db(db)
+    {
+    }
 
     account_name_type last_producer;
     reward_map_type reward_map;
@@ -36,18 +60,22 @@ struct witness_reward_visitor
             return asset();
         }
 
-        return reward_map[last_producer];
+        return (*reward_map[last_producer].rbegin()).reward;
     }
 
     void operator()(const producer_reward_operation& op)
     {
         last_producer = op.producer;
-        reward_map.insert(std::make_pair(last_producer, op.reward));
+        witness_reward_infos_type& vec = reward_map[last_producer];
+        vec.push_back({ _db.head_block_num(), op.reward });
     }
 
     template <typename Op> void operator()(Op&&) const
     {
     }
+
+private:
+    database& _db;
 };
 
 struct witness_reward_in_sp_migration_fixture : public database_fixture::database_trx_integration_fixture
@@ -55,6 +83,8 @@ struct witness_reward_in_sp_migration_fixture : public database_fixture::databas
     witness_reward_in_sp_migration_fixture()
         : budget_service(db.budget_service())
         , dynamic_global_property_service(db.dynamic_global_property_service())
+        , witness_reward_in_sp_migration_service(db.witness_reward_in_sp_migration_service())
+        , reward_visitor(db)
         , old_reward_alg_switch_reward_block_num(
               database_ns::process_witness_reward_in_sp_migration::old_reward_alg_switch_reward_block_num)
         , new_reward_to_migrate(database_ns::process_witness_reward_in_sp_migration::new_reward_to_migrate)
@@ -89,6 +119,7 @@ struct witness_reward_in_sp_migration_fixture : public database_fixture::databas
 
     budget_service_i& budget_service;
     dynamic_global_property_service_i& dynamic_global_property_service;
+    witness_reward_in_sp_migration_service_i& witness_reward_in_sp_migration_service;
 
     witness_reward_visitor reward_visitor;
 
@@ -116,30 +147,69 @@ BOOST_AUTO_TEST_CASE(rest_of_reward_hold_check)
 
 BOOST_AUTO_TEST_CASE(rest_of_reward_distribution_check)
 {
+    generate_blocks(old_reward_alg_switch_reward_block_num);
+
+    uint32_t block_till_migration
+        = ((SCORUM_WITNESS_REWARD_MIGRATION_DATE - SCORUM_BLOCK_INTERVAL) - db.head_block_time()).to_seconds()
+        / SCORUM_BLOCK_INTERVAL;
+
+    // we must walk through more than one round to increase reward more then one per block for each witness
+    BOOST_REQUIRE_GE(block_till_migration, (uint32_t)(SCORUM_MAX_WITNESSES * SCORUM_MAX_WITNESSES));
+
+    generate_blocks((uint32_t)(SCORUM_MAX_WITNESSES * SCORUM_MAX_WITNESSES));
+
+    // do not miss blocks
     generate_blocks(SCORUM_WITNESS_REWARD_MIGRATION_DATE - SCORUM_BLOCK_INTERVAL);
 
     BOOST_REQUIRE_EQUAL(reward_visitor.get_last_reward(), asset(old_reward_to_migrate, SP_SYMBOL));
 
-    reward_map_type old_reward_map = reward_visitor.reward_map;
+    using total_reward_map_type = std::map<account_name_type, share_type>;
+    total_reward_map_type old_total_reward_map;
+    total_reward_map_type new_total_reward_map;
 
+    auto lbcalc_total_reward = [&](total_reward_map_type& total_reward_map, const reward_map_type::value_type& it) {
+        for (const witness_reward_info& info : it.second)
+        {
+            if (info.reward_block_num > old_reward_alg_switch_reward_block_num)
+            {
+                total_reward_map[it.first] += info.reward.amount;
+            }
+        }
+        return total_reward_map;
+    };
+
+    old_total_reward_map = std::accumulate(reward_visitor.reward_map.begin(), reward_visitor.reward_map.end(),
+                                           old_total_reward_map, lbcalc_total_reward);
+
+    BOOST_CHECK_EQUAL(witness_reward_in_sp_migration_service.is_exists(), true);
+
+    // migration cashout for witnesses
     generate_block();
+
+    BOOST_CHECK_EQUAL(witness_reward_in_sp_migration_service.is_exists(), false);
 
     auto current_witness = dynamic_global_property_service.get().current_witness;
 
     BOOST_REQUIRE(reward_visitor.reward_map.find(current_witness) != reward_visitor.reward_map.end());
 
-    if (old_reward_map.find(current_witness) == old_reward_map.end())
+    old_total_reward_map[current_witness] += old_reward_to_migrate;
+
+    new_total_reward_map = std::accumulate(reward_visitor.reward_map.begin(), reward_visitor.reward_map.end(),
+                                           new_total_reward_map, lbcalc_total_reward);
+
+    for (const auto& reward_info : new_total_reward_map)
     {
-        old_reward_map[current_witness] = asset(old_reward_to_migrate, SP_SYMBOL);
+        share_type new_reward = reward_info.second;
+        share_type old_reward = old_total_reward_map[reward_info.first];
+        BOOST_REQUIRE_GT(new_reward, old_reward);
+        // check if the difference does not exceed the precision of integer rounding (for 1e+9 it is 100)
+        BOOST_CHECK_LE((new_reward - old_reward).value - new_reward.value * 5 / 100, 100);
     }
 
-    for (const auto& reward_info : reward_visitor.reward_map)
-    {
-        asset new_reward = reward_info.second;
-        asset old_reward = old_reward_map[reward_info.first];
-        BOOST_REQUIRE_GT(new_reward, old_reward);
-        BOOST_REQUIRE_EQUAL(new_reward - old_reward, old_reward * 5 / 100);
-    }
+    generate_block();
+
+    // new alg. is starting
+    BOOST_REQUIRE_EQUAL(reward_visitor.get_last_reward(), asset(new_reward_to_migrate, SP_SYMBOL));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

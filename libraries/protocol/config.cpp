@@ -105,7 +105,7 @@ config::config(test_mode) /// test config
 
     , min_vote_interval_sec(0)
 
-    , db_free_memory_threshold_mb(5)
+    , db_free_memory_threshold_mb(1)
 
     , initial_date(fc::time_point_sec::from_iso_string("2018-04-01T00:00:00"))
 

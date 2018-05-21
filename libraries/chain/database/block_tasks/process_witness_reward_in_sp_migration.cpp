@@ -46,7 +46,7 @@ void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
     recipients_type witnesses;
     while (block_num > old_reward_alg_switch_reward_block_num)
     {
-        b = blocks_story_service.fetch_block_by_number(block_num);
+        b = blocks_story_service.fetch_block_by_number(block_num--);
         if (b.valid())
         {
             signed_block block = *b;
@@ -67,9 +67,10 @@ void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
             witnesses[block.witness] += payment;
 
             if (total_payment == share_type())
+            {
                 break;
+            }
         }
-        --block_num;
     }
 
     if (block_num > old_reward_alg_switch_reward_block_num)
@@ -100,7 +101,7 @@ void process_witness_reward_in_sp_migration::adjust_witness_reward(block_task_co
 {
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
-    if (dprops_service.head_block_time() >= SCORUM_WITNESS_REWARD_MIGRATION_DATE)
+    if (dprops_service.head_block_time() > SCORUM_WITNESS_REWARD_MIGRATION_DATE)
     {
         return;
     }
