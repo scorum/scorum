@@ -2,11 +2,13 @@
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_api.hpp>
 #include <scorum/app/api_context.hpp>
+#include <scorum/chain/services/account.hpp>
 #include <scorum/common_api/config.hpp>
 #include <boost/test/unit_test.hpp>
 #include <fc/filesystem.hpp>
 #include <graphene/utilities/tempdir.hpp>
 #include <chrono>
+#include <random>
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -39,7 +41,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
     {
         if (!data_dir)
         {
-            auto shared_file_size_4gb = 1024ul * 1024ul * 1024ul * 4ul;
+            auto shared_file_size_4gb = 1024 * 1024 * 1024 * 4ul;
 
             data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
             db.open(data_dir->path(), data_dir->path(), shared_file_size_4gb, chainbase::database::read_write, genesis);
@@ -54,50 +56,76 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
 
         return boost::lexical_cast<std::string>(permlink_no);
     }
+
+    void check_N_posts_under_M_ms(uint32_t posts_count, uint32_t expected_ms)
+    {
+        auto acc_name = "alice";
+        auto tags = { "a", "b", "c", "d", "e", "f", "g", "h", "" };
+
+        auto& acc_service = db.obtain_service<dbs_account>();
+        auto alice_id = acc_service.get_account(acc_name).id;
+
+        std::random_device device;
+        std::mt19937 generator(device());
+        std::uniform_int_distribution<> distr(3000, posts_count + 3000);
+
+        for (uint32_t i = 0; i < posts_count; i++)
+        {
+            const auto& comment = db.create<comment_object>([&](comment_object& c) {
+                c.author = acc_name;
+                fc::from_string(c.permlink, next_permlink());
+            });
+            db.create<comment_statistic_scr_object>([&](comment_statistic_scr_object& o) { o.comment = comment.id; });
+            db.create<comment_statistic_sp_object>([&](comment_statistic_sp_object& o) { o.comment = comment.id; });
+
+            for (auto& t : tags)
+            {
+                db.create<tag_object>([&](tag_object& obj) {
+                    obj.tag = t;
+                    obj.comment = comment.id;
+                    obj.created = fc::time_point_sec(distr(generator));
+                    obj.author = alice_id;
+                });
+            }
+        }
+
+        auto size = db.get_index<tag_index, by_comment>().size();
+        BOOST_REQUIRE_EQUAL(size, posts_count * tags.size());
+
+        auto t1 = std::chrono::steady_clock::now();
+
+        api::discussion_query q;
+        q.tags = { "A", "B", "C", "D" };
+        q.tags_logical_and = true;
+        q.limit = 100;
+        auto posts = _api.get_discussions_by_created(q);
+
+        auto t2 = std::chrono::steady_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        BOOST_TEST_MESSAGE("get_discussions_by_created' time: " << ms << "ms");
+
+        BOOST_CHECK(
+            std::is_sorted(posts.begin(), posts.end(), [](const api::discussion& lhs, const api::discussion& rhs) {
+                return lhs.created > rhs.created;
+            }));
+        BOOST_CHECK_LE(ms, expected_ms);
+    }
 };
 
 BOOST_FIXTURE_TEST_SUITE(get_discussions_performance_tests, tag_perf_fixture)
 
-SCORUM_TEST_CASE(check_100000_posts_under_60ms)
+SCORUM_TEST_CASE(check_100000_posts_under_100ms)
 {
-    comment_operation op;
-    op.author = alice.name;
-    op.body = "body";
-    op.parent_permlink = "category";
-    op.json_metadata = R"({"tags":["A","B","C","D","E"]})";
+    BOOST_TEST_MESSAGE("Checking 100'000 posts should be under 100ms");
 
-    BOOST_TEST_MESSAGE("Preparing 100000 posts. It will take about 6 min...");
+    check_N_posts_under_M_ms(100000, 100);
+}
 
-    uint32_t tags_count = 5 + 1; // A,B,C,D,E + <empty tag>
-    uint32_t it_count = 100000;
-    for (uint32_t j = 0; j < it_count; j++)
-    {
-        op.permlink = next_permlink();
+SCORUM_TEST_CASE(check_1000000_posts_under_1000ms)
+{
+    BOOST_TEST_MESSAGE("Checking 1'000'000 posts should be under 1000ms");
 
-        push_operation(op, alice.private_key, false);
-        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL + fc::seconds(SCORUM_BLOCK_INTERVAL),
-                        true);
-    }
-
-    auto size = db.get_index<tag_index, by_comment>().size();
-    BOOST_REQUIRE_EQUAL(size, it_count * tags_count);
-
-    auto t1 = std::chrono::steady_clock::now();
-
-    api::discussion_query q;
-    q.tags = { "A", "B", "C", "D" };
-    q.tags_logical_and = true;
-    q.limit = 100;
-    auto posts = _api.get_discussions_by_created(q);
-
-    auto t2 = std::chrono::steady_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    BOOST_TEST_MESSAGE("get_discussions_by_created' time: " << ms << "ms");
-
-    BOOST_CHECK(std::is_sorted(posts.begin(), posts.end(), [](const api::discussion& lhs, const api::discussion& rhs) {
-        return lhs.created > rhs.created;
-    }));
-    BOOST_CHECK_LE(ms, 60);
+    check_N_posts_under_M_ms(1000000, 1000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
