@@ -65,7 +65,10 @@
 
 #include <iostream>
 #include <set>
+#include <chrono>
+#include <limits>
 
+#include <boost/container/flat_map.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
@@ -99,6 +102,15 @@ namespace detail {
 
 using plugins_type = std::map<std::string, std::shared_ptr<abstract_plugin>>;
 using plugin_names_type = std::set<std::string>;
+
+struct sync_stat
+{
+    using interval_sec_type = boost::container::flat_map<uint32_t, uint>;
+
+    std::chrono::steady_clock::time_point sync_start_time;
+    std::chrono::steady_clock::time_point sync_interval_start_time;
+    interval_sec_type sync_interval_sec_sq;
+};
 
 class application_impl : public graphene::net::node_delegate
 {
@@ -282,6 +294,7 @@ public:
 
     ~application_impl()
     {
+        calc_sync_stat(0, false);
     }
 
     void register_builtin_apis()
@@ -542,6 +555,107 @@ public:
         FC_CAPTURE_AND_RETHROW((id))
     }
 
+    void calc_sync_stat(const uint32_t& block_num, bool sync_mode)
+    {
+        static sync_stat stat;
+        static const uint32_t interval = 10000;
+
+        if (stat.sync_start_time.time_since_epoch() == std::chrono::steady_clock::time_point::duration::zero()
+            && sync_mode)
+        {
+            stat.sync_start_time = std::chrono::steady_clock::now();
+            ilog("Synchronization is starting.");
+        }
+        else if (stat.sync_start_time.time_since_epoch() != std::chrono::steady_clock::time_point::duration::zero()
+                 && !sync_mode)
+        {
+            auto sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
+                                                                        - stat.sync_start_time)
+                           .count();
+
+            uint sync_interval_min_sec = std::numeric_limits<uint>::max();
+            uint sync_interval_max_sec = 0;
+            uint sync_interval_med_sec = 0;
+            uint sync_interval_mid_sec = 0;
+
+            auto sq_sz = stat.sync_interval_sec_sq.size();
+            if (sq_sz > 0)
+            {
+                sync_interval_min_sec = std::accumulate(
+                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(), sync_interval_min_sec,
+                    [](uint& min_sec, const sync_stat::interval_sec_type::value_type& val) {
+                        if (val.second < min_sec)
+                        {
+                            return val.second;
+                        }
+                        return min_sec;
+                    });
+
+                sync_interval_max_sec = std::accumulate(
+                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(), sync_interval_max_sec,
+                    [](uint& max_sec, const sync_stat::interval_sec_type::value_type& val) {
+                        if (val.second > max_sec)
+                        {
+                            return val.second;
+                        }
+                        return max_sec;
+                    });
+
+                if (sq_sz % 2 == 0)
+                {
+                    sync_interval_med_sec = stat.sync_interval_sec_sq.nth(sq_sz / 2 - 1)->second;
+                    sync_interval_med_sec += stat.sync_interval_sec_sq.nth(sq_sz / 2)->second;
+                    sync_interval_med_sec /= 2;
+                }
+                else
+                {
+                    sync_interval_med_sec = stat.sync_interval_sec_sq.nth(sq_sz / 2)->second;
+                }
+
+                sync_interval_mid_sec = std::accumulate(
+                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(), sync_interval_mid_sec,
+                    [](uint& sum_sec, const sync_stat::interval_sec_type::value_type& val) {
+                        return sum_sec + val.second;
+                    });
+                sync_interval_mid_sec /= sq_sz;
+            }
+
+            int d = sec / 3600 / 24;
+            int h = sec / 3600;
+            int m = sec % 3600 / 60;
+            int s = sec % 60;
+            // clang-format off
+            ilog("Synchronization is ${ff}. Duration ${d} ${dd} ${h}:${m}:${s}.",
+                 ("ff", (block_num > 0)? "finished":"stopped")
+                 ("d", d)("dd", (d == 1) ? "day" : "days")("h", h)("m", m)("s", s));
+            ilog("Interval ${i} blocks duration (s) min = ${imin}, max = ${imax}, med = ${imed}, mid = ${imid}.",
+                 ("i", interval)
+                 ("imin", sync_interval_min_sec)
+                 ("imax", sync_interval_max_sec)
+                 ("imed", sync_interval_med_sec)
+                 ("imid", sync_interval_mid_sec));
+            // clang-format on
+
+            stat = sync_stat();
+        }
+
+        if (sync_mode)
+        {
+            if (block_num == 1 || block_num % interval == 0)
+            {
+                if (stat.sync_interval_start_time.time_since_epoch()
+                    != std::chrono::steady_clock::time_point::duration::zero())
+                {
+                    auto interval_sec = (uint)std::chrono::duration_cast<std::chrono::seconds>(
+                                            std::chrono::steady_clock::now() - stat.sync_interval_start_time)
+                                            .count();
+                    stat.sync_interval_sec_sq.insert(std::make_pair(block_num, interval_sec));
+                }
+                stat.sync_interval_start_time = std::chrono::steady_clock::now();
+            }
+        }
+    }
+
     /**
      * @brief allows the application to validate an item prior to broadcasting to peers.
      *
@@ -558,6 +672,8 @@ public:
         {
             if (_running)
             {
+                calc_sync_stat(blk_msg.block.block_num(), sync_mode);
+
                 uint32_t head_block_num;
 
                 _chain_db->with_read_lock([&]() { head_block_num = _chain_db->head_block_num(); });
@@ -590,10 +706,14 @@ public:
                     // you can help the network code out by throwing a block_older_than_undo_history exception.
                     // when the net code sees that, it will stop trying to push blocks from that chain, but
                     // leave that peer connected so that they can get sync blocks from us
-                    bool result = _chain_db->push_block(blk_msg.block,
-                                                        (_is_block_producer | _force_validate)
-                                                            ? database::skip_nothing
-                                                            : database::skip_transaction_signatures);
+                    uint32_t skip_flags = (_is_block_producer | _force_validate)
+                        ? database::skip_nothing
+                        : database::skip_transaction_signatures;
+                    if (sync_mode)
+                    {
+                        skip_flags |= database::skip_validate_invariants;
+                    }
+                    bool result = _chain_db->push_block(blk_msg.block, skip_flags);
 
                     if (!sync_mode)
                     {
