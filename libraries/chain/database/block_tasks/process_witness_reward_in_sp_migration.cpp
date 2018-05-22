@@ -37,10 +37,8 @@ void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
 
     blocks_story_service_i& blocks_story_service = ctx.services().blocks_story_service();
 
-    const auto& dpo = dprops_service.get();
-
     using recipients_type = std::map<account_name_type, share_type>;
-    uint32_t block_num = dpo.head_block_number;
+    uint32_t block_num = dprops_service.get().head_block_number;
     share_type total_payment = witness_reward_in_sp_migration_service.get().balance;
     recipients_type witnesses;
     while (block_num > old_reward_alg_switch_reward_block_num && total_payment > share_type())
@@ -67,9 +65,9 @@ void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
         wlog("Migration rest is too large. Left ${r}", ("r", asset(total_payment, SP_SYMBOL)));
     }
 
-    for (const auto& witness_p : witnesses)
+    for (const auto& witness_reward : witnesses)
     {
-        charge_witness_reward(ctx, witness_p.first, witness_p.second);
+        charge_witness_reward(ctx, witness_reward.first, witness_reward.second);
     }
 
     witness_reward_in_sp_migration_service.update(
