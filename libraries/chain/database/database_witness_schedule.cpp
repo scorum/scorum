@@ -165,12 +165,9 @@ void database::update_witness_schedule()
             _wso.current_virtual_time = new_virtual_time;
         });
 
-        if (fc::logger::get(DEFAULT_LOGGER).is_enabled(fc::log_level::debug))
-        {
-            dlog("{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
-                 ("prev_schedule", prev_schedule)(
-                     "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
-        }
+        dlog("{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
+             ("prev_schedule", prev_schedule)(
+                 "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();

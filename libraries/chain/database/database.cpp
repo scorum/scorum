@@ -1614,7 +1614,7 @@ void database::update_global_dynamic_data(const signed_block& b)
             assert(missed_blocks != 0);
             missed_blocks--;
 
-            if (missed_blocks > 0 && fc::logger::get(DEFAULT_LOGGER).is_enabled(fc::log_level::debug))
+            if (missed_blocks > 0)
             {
                 dlog("{\"missed_blocks\": ${missed_blocks}, \"last_block\": {\"last_block_num\": ${last_block_num}, "
                      "\"info\": ${last_block}}, \"new_block\": {\"new_block_num\": ${new_block_num}, \"info\": "
