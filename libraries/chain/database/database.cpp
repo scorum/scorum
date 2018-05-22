@@ -53,6 +53,7 @@
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
@@ -61,6 +62,7 @@
 #include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
+#include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -90,6 +92,7 @@ public:
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
     database_ns::process_contracts_expiration _process_contracts_expiration;
     database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
+    database_ns::process_witness_reward_in_sp_migration _process_witness_reward_in_sp_migration;
 };
 
 database_impl::database_impl(database& self)
@@ -1163,6 +1166,8 @@ void database::initialize_indexes()
     add_index<dev_committee_index>();
     add_index<dev_committee_member_index>();
 
+    add_index<witness_reward_in_sp_migration_index>();
+
     _plugin_index_signal();
 }
 
@@ -1371,6 +1376,7 @@ void database::_apply_block(const signed_block& next_block)
             .before(_my->_process_vesting_withdrawals)
             .before(_my->_process_contracts_expiration)
             .before(_my->_process_account_registration_bonus_expiration)
+            .before(_my->_process_witness_reward_in_sp_migration)
             .apply(ctx);
         // clang-format on
 
@@ -1570,6 +1576,11 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
 
             std::string scheduled_witness = get_scheduled_witness(slot_num);
 
+            if (witness.owner != scheduled_witness)
+            {
+                wdump((obtain_service<dbs_dynamic_global_property>().get())(next_block.block_num())(next_block));
+            }
+
             FC_ASSERT(witness.owner == scheduled_witness, "Witness produced block at wrong time",
                       ("block witness", next_block.witness)("scheduled", scheduled_witness)("slot_num", slot_num));
         }
@@ -1602,6 +1613,17 @@ void database::update_global_dynamic_data(const signed_block& b)
             missed_blocks = get_slot_at_time(b.timestamp);
             assert(missed_blocks != 0);
             missed_blocks--;
+
+            if (missed_blocks > 0)
+            {
+                dlog("{\"missed_blocks\": ${missed_blocks}, \"last_block\": {\"last_block_num\": ${last_block_num}, "
+                     "\"info\": ${last_block}}, \"new_block\": {\"new_block_num\": ${new_block_num}, \"info\": "
+                     "${new_block}}}",
+                     ("missed_blocks", missed_blocks)("last_block_num", _dgp.head_block_number)(
+                         "last_block", fetch_block_by_id(_dgp.head_block_id))("new_block_num",
+                                                                              b.block_num())("new_block", b));
+            }
+
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
                 const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
@@ -1618,6 +1640,12 @@ void database::update_global_dynamic_data(const signed_block& b)
                             push_virtual_operation(shutdown_witness_operation(w.owner));
                         }
                     });
+                }
+                else
+                {
+                    dlog("Current witness '${w}' in missed list. Missed blocks ${m}."
+                         "Position in list is ${p}.",
+                         ("w", b.witness)("m", missed_blocks)("p", i + 1));
                 }
             }
         }
@@ -1964,6 +1992,11 @@ void database::validate_invariants() const
 
         total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
+
+        if (obtain_service<dbs_witness_reward_in_sp_migration>().is_exists())
+        {
+            total_supply += asset(obtain_service<dbs_witness_reward_in_sp_migration>().get().balance, SCORUM_SYMBOL);
+        }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)

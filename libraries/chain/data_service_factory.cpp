@@ -30,6 +30,8 @@
 #include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/services/genesis_state.hpp>
 #include <scorum/chain/services/account_registration_bonus.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/services/blocks_story.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -66,5 +68,7 @@ DATA_SERVICE_FACTORY_IMPL(
         (witness_vote)
         (dev_pool)
         (genesis_state)
+        (witness_reward_in_sp_migration)
+        (blocks_story)
         )
 // clang-format on

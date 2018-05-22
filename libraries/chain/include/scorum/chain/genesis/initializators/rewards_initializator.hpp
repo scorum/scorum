@@ -15,6 +15,7 @@ private:
     void create_sp_reward_fund(initializator_context&);
     void create_balancers(initializator_context&);
     void create_fund_budget(initializator_context&);
+    void create_witness_reward_in_sp_migration(initializator_context&);
 };
 }
 }

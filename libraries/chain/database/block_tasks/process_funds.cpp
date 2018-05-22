@@ -14,6 +14,8 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 
+#include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+
 namespace scorum {
 namespace chain {
 namespace database_ns {
@@ -71,6 +73,8 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     asset active_sp_holder_reward = users_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     asset content_reward = users_reward - witness_reward - active_sp_holder_reward;
     // clang-format on
+
+    process_witness_reward_in_sp_migration().adjust_witness_reward(ctx, witness_reward);
 
     FC_ASSERT(content_reward.amount >= 0, "content_reward(${r}) must not be less zero", ("r", content_reward));
 

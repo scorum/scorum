@@ -17,6 +17,10 @@ static_assert(false, "Macro BLOGGING_START_DATE required.");
 static_assert(false, "Macro FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE required.");
 #endif
 
+#ifndef WITNESS_REWARD_MIGRATION_DATE
+static_assert(false, "Macro WITNESS_REWARD_MIGRATION_DATE required.");
+#endif
+
 config::config() /// production config
     : blockid_pool_size(0xffff)
 
@@ -52,14 +56,16 @@ config::config() /// production config
     , db_free_memory_threshold_mb(100)
 
     , initial_date(fc::time_point_sec::min())
-#ifdef BLOGGING_START_DATE
+
     , blogging_start_date(fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_START_DATE)))
-#endif
-#ifdef FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE
+
     , fifa_world_cup_2018_bounty_cashout_date(
           fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)))
-#endif
+
     , expiraton_for_registration_bonus(fc::days(182))
+
+    , witness_reward_migration_date(
+          fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(WITNESS_REWARD_MIGRATION_DATE)))
 {
     FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
               "Required: fifa_world_cup_2018_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
@@ -97,15 +103,17 @@ config::config(test_mode) /// test config
 
     , min_vote_interval_sec(0)
 
-    , db_free_memory_threshold_mb(5)
+    , db_free_memory_threshold_mb(1)
 
     , initial_date(fc::time_point_sec::from_iso_string("2018-04-01T00:00:00"))
 
     , blogging_start_date(initial_date + cashout_window_seconds * 10)
 
     , fifa_world_cup_2018_bounty_cashout_date(blogging_start_date + cashout_window_seconds * 11)
-    
+
     , expiraton_for_registration_bonus(fc::minutes(30))
+
+    , witness_reward_migration_date(initial_date + cashout_window_seconds * 10)
 {
     // do nothing
 }

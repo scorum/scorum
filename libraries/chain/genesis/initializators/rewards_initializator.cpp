@@ -5,9 +5,11 @@
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/witness_objects.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
 
@@ -23,6 +25,7 @@ void rewards_initializator_impl::on_apply(initializator_context& ctx)
     create_sp_reward_fund(ctx);
     create_balancers(ctx);
     create_fund_budget(ctx);
+    create_witness_reward_in_sp_migration(ctx);
 }
 
 void rewards_initializator_impl::create_scr_reward_fund(initializator_context& ctx)
@@ -78,6 +81,16 @@ void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)
     fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     budget_service.create_fund_budget(asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL), deadline);
+}
+
+void rewards_initializator_impl::create_witness_reward_in_sp_migration(initializator_context& ctx)
+{
+    witness_reward_in_sp_migration_service_i& witness_reward_in_sp_migration_service
+        = ctx.services().witness_reward_in_sp_migration_service();
+
+    FC_ASSERT(!witness_reward_in_sp_migration_service.is_exists());
+
+    witness_reward_in_sp_migration_service.create([&](witness_reward_in_sp_migration_object&) {});
 }
 }
 }

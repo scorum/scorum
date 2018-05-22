@@ -10,6 +10,44 @@
 namespace scorum {
 namespace chain {
 
+namespace witness_schedule {
+
+struct printable_schedule_item
+{
+    witness_id_type witness_id;
+    account_name_type witness_name;
+    share_type votes;
+    fc::uint128 virtual_scheduled_time;
+};
+
+using schedule_type = std::vector<printable_schedule_item>;
+
+struct printable_schedule
+{
+    fc::uint128 current_virtual_time;
+    uint8_t num_scheduled_witnesses = 1;
+    schedule_type items;
+};
+
+printable_schedule get_witness_schedule(const witness_schedule_object& wso, witness_service_i& witness_service)
+{
+    printable_schedule ret;
+
+    ret.current_virtual_time = wso.current_virtual_time;
+    ret.num_scheduled_witnesses = wso.num_scheduled_witnesses;
+    ret.items.reserve(wso.num_scheduled_witnesses);
+
+    for (int ci = 0; ci < wso.num_scheduled_witnesses; ++ci)
+    {
+        const account_name_type& witness = wso.current_shuffled_witnesses[ci];
+        const auto& witness_obj = witness_service.get(witness);
+        ret.items.push_back({ witness_obj.id, witness, witness_obj.votes, witness_obj.virtual_scheduled_time });
+    }
+
+    return ret;
+}
+}
+
 /**
  *
  *  See @ref witness_object::virtual_last_update
@@ -21,6 +59,7 @@ void database::update_witness_schedule()
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
+        auto& witness_service = _db.obtain_service<dbs_witness>();
 
         const witness_schedule_object& wso = schedule_service.get();
 
@@ -87,6 +126,12 @@ void database::update_witness_schedule()
             });
         }
 
+        witness_schedule::printable_schedule prev_schedule;
+        if (fc::logger::get(DEFAULT_LOGGER).is_enabled(fc::log_level::debug))
+        {
+            prev_schedule = witness_schedule::get_witness_schedule(schedule_service.get(), witness_service);
+        }
+
         schedule_service.update([&](witness_schedule_object& _wso) {
             for (size_t i = 0; i < active_witnesses.size(); i++)
             {
@@ -119,6 +164,10 @@ void database::update_witness_schedule()
 
             _wso.current_virtual_time = new_virtual_time;
         });
+
+        dlog("{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
+             ("prev_schedule", prev_schedule)(
+                 "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();
@@ -280,3 +329,8 @@ void database::_update_witness_hardfork_version_votes()
 
 } // namespace chain
 } // namespace scorum
+
+FC_REFLECT(scorum::chain::witness_schedule::printable_schedule_item,
+           (witness_id)(witness_name)(votes)(virtual_scheduled_time))
+
+FC_REFLECT(scorum::chain::witness_schedule::printable_schedule, (current_virtual_time)(num_scheduled_witnesses)(items))
