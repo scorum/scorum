@@ -7,7 +7,7 @@
 
 #define TEST_CHAIN_ID fc::sha256::hash("testnet")
 
-#define TEST_SHARED_MEM_SIZE_10MB (1024 * 1024 * 10)
+#define TEST_SHARED_MEM_SIZE_10MB (1024ul * 1024ul * 10ul)
 
 #define TEST_ACCOUNTS_INITIAL_SUPPLY asset(10000000000ll, SCORUM_SYMBOL)
 #define TEST_REWARD_INITIAL_SUPPLY                                                                                     \

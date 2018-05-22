@@ -26,7 +26,7 @@ database_integration_fixture::database_integration_fixture()
     : app(std::make_shared<database>(database::opt_notify_virtual_op_applying))
     , db(*app.chain_database())
     , debug_key(graphene::utilities::key_to_wif(initdelegate.private_key))
-    , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check)
+    , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check | database::skip_tapos_check)
 {
     genesis_state = create_default_genesis_state();
 }
