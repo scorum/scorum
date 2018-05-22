@@ -140,8 +140,6 @@ public:
 
     std::vector<discussion> get_discussions_by_trending(const discussion_query& query) const
     {
-        query.validate();
-
         auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.trending > rhs.trending; };
         auto filter = [](const tag_object& t) { return t.net_rshares > 0; };
 
@@ -150,8 +148,6 @@ public:
 
     std::vector<discussion> get_discussions_by_created(const discussion_query& query) const
     {
-        query.validate();
-
         auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.created > rhs.created; };
 
         return get_discussions(query, ordering);
@@ -159,12 +155,20 @@ public:
 
     std::vector<discussion> get_discussions_by_hot(const discussion_query& query) const
     {
-        query.validate();
-
         auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.hot > rhs.hot; };
         auto filter = [](const tag_object& t) { return t.net_rshares > 0; };
 
         return get_discussions(query, ordering, filter);
+    }
+
+    std::vector<discussion> get_discussions_by_author(const discussion_query& query) const
+    {
+        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(query.start_author && !query.start_author->empty(),
+                  "start_author should be specified and cannot be empty");
+
+        return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit);
     }
 
     discussion get_content(const std::string& author, const std::string& permlink) const
@@ -195,35 +199,6 @@ public:
             }
         });
 
-        return result;
-    }
-
-    std::vector<discussion>
-    get_discussions_by_author(const std::string& author, const std::string& start_permlink, uint32_t limit) const
-    {
-        std::vector<discussion> result;
-
-#ifndef IS_LOW_MEM
-
-        FC_ASSERT(limit <= MAX_DISCUSSIONS_LIST_SIZE);
-
-        result.reserve(limit);
-
-        const auto& idx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
-
-        auto it = idx.lower_bound(author);
-        if (!start_permlink.empty())
-            it = idx.iterator_to(_services.comment_service().get(author, start_permlink));
-
-        while (it != idx.end() && it->author == author && result.size() < limit)
-        {
-            if (it->parent_author.size() == 0)
-            {
-                result.push_back(get_discussion(*it));
-            }
-            ++it;
-        }
-#endif
         return result;
     }
 
@@ -398,6 +373,13 @@ private:
                                             const std::function<bool(const tag_object&)>& tag_filter
                                             = &tag_filter_default) const
     {
+        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(
+            !(!query.start_author ^ !query.start_permlink)
+                && !(query.start_author->empty() ^ query.start_permlink->empty()),
+            "start_author and start_permlink should be either both specified and not empty or both not specified");
+
         auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
         std::set<std::string> tags(rng.begin(), rng.end());
         if (tags.empty())
@@ -444,6 +426,33 @@ private:
             }
         }
 
+        return result;
+    }
+
+    std::vector<discussion>
+    get_discussions_by_author(const std::string& author, fc::optional<std::string> start_permlink, uint32_t limit) const
+    {
+        std::vector<discussion> result;
+
+#ifndef IS_LOW_MEM
+
+        result.reserve(limit);
+
+        const auto& idx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+
+        auto it = idx.lower_bound(author);
+        if (start_permlink && !start_permlink->empty())
+            it = idx.iterator_to(_services.comment_service().get(author, *start_permlink));
+
+        while (it != idx.end() && it->author == author && result.size() < limit)
+        {
+            if (it->parent_author.size() == 0)
+            {
+                result.push_back(get_discussion(*it));
+            }
+            ++it;
+        }
+#endif
         return result;
     }
 
