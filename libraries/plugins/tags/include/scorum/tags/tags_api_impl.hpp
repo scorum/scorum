@@ -375,10 +375,11 @@ private:
     {
         FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
                   "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
-        FC_ASSERT(
-            !(!query.start_author ^ !query.start_permlink)
-                && !(query.start_author->empty() ^ query.start_permlink->empty()),
-            "start_author and start_permlink should be either both specified and not empty or both not specified");
+        // clang-format off
+        FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
+                  (!query.start_author && !query.start_permlink),
+                  "start_author and start_permlink should be either both specified and not empty or both not specified");
+        // clang-format on
 
         auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
         std::set<std::string> tags(rng.begin(), rng.end());
