@@ -163,8 +163,10 @@ public:
 
     std::vector<discussion> get_discussions_by_author(const discussion_query& query) const
     {
-        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE);
-        FC_ASSERT(query.start_author && !query.start_author->empty());
+        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(query.start_author && !query.start_author->empty(),
+                  "start_author should be specified and cannot be empty");
 
         return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit);
     }
@@ -371,9 +373,12 @@ private:
                                             const std::function<bool(const tag_object&)>& tag_filter
                                             = &tag_filter_default) const
     {
-        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE);
-        FC_ASSERT(!(!query.start_author ^ !query.start_permlink)
-                  && !(query.start_author->empty() ^ query.start_permlink->empty()));
+        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(
+            !(!query.start_author ^ !query.start_permlink)
+                && !(query.start_author->empty() ^ query.start_permlink->empty()),
+            "start_author and start_permlink should be either both specified and not empty or both not specified");
 
         auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
         std::set<std::string> tags(rng.begin(), rng.end());
