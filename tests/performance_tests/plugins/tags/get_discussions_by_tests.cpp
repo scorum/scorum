@@ -49,14 +49,6 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         }
     }
 
-    std::string next_permlink()
-    {
-        static int permlink_no = 0;
-        permlink_no++;
-
-        return boost::lexical_cast<std::string>(permlink_no);
-    }
-
     void check_N_posts_under_M_ms(uint32_t posts_count, uint32_t expected_ms)
     {
         auto acc_name = "alice";
@@ -73,7 +65,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         {
             const auto& comment = db.create<comment_object>([&](comment_object& c) {
                 c.author = acc_name;
-                fc::from_string(c.permlink, next_permlink());
+                fc::from_string(c.permlink, boost::lexical_cast<std::string>(i));
             });
             db.create<comment_statistic_scr_object>([&](comment_statistic_scr_object& o) { o.comment = comment.id; });
             db.create<comment_statistic_sp_object>([&](comment_statistic_sp_object& o) { o.comment = comment.id; });
