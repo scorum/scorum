@@ -110,6 +110,8 @@ struct sync_stat
     std::chrono::steady_clock::time_point sync_start_time;
     std::chrono::steady_clock::time_point sync_interval_start_time;
     interval_sec_type sync_interval_sec_sq;
+    uint32_t sync_start_block_num = 0u;
+    uint32_t sync_current_block_num = 0u;
 };
 
 class application_impl : public graphene::net::node_delegate
@@ -564,6 +566,8 @@ public:
             && sync_mode)
         {
             stat.sync_start_time = std::chrono::steady_clock::now();
+            stat.sync_start_block_num = block_num;
+            stat.sync_interval_sec_sq.reserve(interval); // for 'interval * interval' blocks
             ilog("Synchronization is starting.");
         }
         else if (stat.sync_start_time.time_since_epoch() != std::chrono::steady_clock::time_point::duration::zero()
@@ -619,17 +623,22 @@ public:
                     });
                 sync_interval_mid_sec /= sq_sz;
             }
+            else
+            {
+                sync_interval_min_sec = 0;
+            }
 
+            uint32_t sync_interval = std::max(stat.sync_current_block_num - stat.sync_start_block_num, 0u);
             int d = sec / 3600 / 24;
             int h = sec / 3600;
             int m = sec % 3600 / 60;
             int s = sec % 60;
             // clang-format off
-            ilog("Synchronization is ${ff}. Duration ${d} ${dd} ${h}:${m}:${s}.",
-                 ("ff", (block_num > 0)? "finished":"stopped")
+            ilog("Synchronization is ${ff}. For ${si} blocks duration: ${d} ${dd} ${h}:${m}:${s}.",
+                 ("ff", (block_num > 0)? "finished":"stopped")("si", sync_interval)
                  ("d", d)("dd", (d == 1) ? "day" : "days")("h", h)("m", m)("s", s));
-            ilog("Interval ${i} blocks duration (s) min = ${imin}, max = ${imax}, med = ${imed}, mid = ${imid}.",
-                 ("i", interval)
+            ilog("Interval ${i} blocks duration (s) for ${ni} intervals: min = ${imin}, max = ${imax}, med = ${imed}, mid = ${imid}.",
+                 ("i", interval)("ni", sq_sz)
                  ("imin", sync_interval_min_sec)
                  ("imax", sync_interval_max_sec)
                  ("imed", sync_interval_med_sec)
@@ -641,6 +650,7 @@ public:
 
         if (sync_mode)
         {
+            stat.sync_current_block_num = block_num;
             if (block_num == 1 || block_num % interval == 0)
             {
                 if (stat.sync_interval_start_time.time_since_epoch()
