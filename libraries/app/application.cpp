@@ -67,6 +67,7 @@
 #include <set>
 #include <chrono>
 #include <limits>
+#include <algorithm>
 
 #include <boost/container/flat_map.hpp>
 #include <fc/log/file_appender.hpp>
@@ -577,33 +578,21 @@ public:
                                                                         - stat.sync_start_time)
                            .count();
 
-            uint sync_interval_min_sec = std::numeric_limits<uint>::max();
-            uint sync_interval_max_sec = 0;
-            uint sync_interval_med_sec = 0;
-            uint sync_interval_mid_sec = 0;
+            uint sync_interval_min_sec = 0u;
+            uint sync_interval_max_sec = 0u;
+            uint sync_interval_med_sec = 0u;
+            uint sync_interval_mid_sec = 0u;
 
             auto sq_sz = stat.sync_interval_sec_sq.size();
             if (sq_sz > 0)
             {
-                sync_interval_min_sec = std::accumulate(
-                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(), sync_interval_min_sec,
-                    [](uint& min_sec, const sync_stat::interval_sec_type::value_type& val) {
-                        if (val.second < min_sec)
-                        {
-                            return val.second;
-                        }
-                        return min_sec;
-                    });
+                auto result = std::minmax_element(
+                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(),
+                    [](const sync_stat::interval_sec_type::value_type& lval,
+                       const sync_stat::interval_sec_type::value_type& rval) { return lval.second < rval.second; });
 
-                sync_interval_max_sec = std::accumulate(
-                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(), sync_interval_max_sec,
-                    [](uint& max_sec, const sync_stat::interval_sec_type::value_type& val) {
-                        if (val.second > max_sec)
-                        {
-                            return val.second;
-                        }
-                        return max_sec;
-                    });
+                sync_interval_min_sec = result.first->second;
+                sync_interval_max_sec = result.second->second;
 
                 if (sq_sz % 2 == 0)
                 {
@@ -623,20 +612,17 @@ public:
                     });
                 sync_interval_mid_sec /= sq_sz;
             }
-            else
-            {
-                sync_interval_min_sec = 0;
-            }
 
             uint32_t sync_interval = std::max(stat.sync_current_block_num - stat.sync_start_block_num, 0u);
             int d = sec / 3600 / 24;
-            int h = sec / 3600;
-            int m = sec % 3600 / 60;
-            int s = sec % 60;
+            int sec_in_day = sec % (3600 * 24);
+            std::stringstream time_fmt;
+            time_fmt << d << ((d == 1) ? " day " : " days ");
+            time_fmt << std::put_time(gmtime((time_t*)&sec_in_day), "%T");
             // clang-format off
-            ilog("Synchronization is ${ff}. For ${si} blocks duration: ${d} ${dd} ${h}:${m}:${s}.",
+            ilog("Synchronization is ${ff}. For ${si} blocks duration: ${time_fmt}.",
                  ("ff", (block_num > 0)? "finished":"stopped")("si", sync_interval)
-                 ("d", d)("dd", (d == 1) ? "day" : "days")("h", h)("m", m)("s", s));
+                 ("time_fmt", time_fmt.str()));
             ilog("Interval ${i} blocks duration (s) for ${ni} intervals: min = ${imin}, max = ${imax}, med = ${imed}, mid = ${imid}.",
                  ("i", interval)("ni", sq_sz)
                  ("imin", sync_interval_min_sec)
