@@ -65,11 +65,7 @@
 
 #include <iostream>
 #include <set>
-#include <chrono>
-#include <limits>
-#include <algorithm>
 
-#include <boost/container/flat_map.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
@@ -103,17 +99,6 @@ namespace detail {
 
 using plugins_type = std::map<std::string, std::shared_ptr<abstract_plugin>>;
 using plugin_names_type = std::set<std::string>;
-
-struct sync_stat
-{
-    using interval_sec_type = boost::container::flat_map<uint32_t, uint>;
-
-    std::chrono::steady_clock::time_point sync_start_time;
-    std::chrono::steady_clock::time_point sync_interval_start_time;
-    interval_sec_type sync_interval_sec_sq;
-    uint32_t sync_start_block_num = 0u;
-    uint32_t sync_current_block_num = 0u;
-};
 
 class application_impl : public graphene::net::node_delegate
 {
@@ -297,7 +282,6 @@ public:
 
     ~application_impl()
     {
-        calc_sync_stat(0, false);
     }
 
     void register_builtin_apis()
@@ -558,100 +542,6 @@ public:
         FC_CAPTURE_AND_RETHROW((id))
     }
 
-    void calc_sync_stat(const uint32_t& block_num, bool sync_mode)
-    {
-        static sync_stat stat;
-        static const uint32_t interval = 10000;
-
-        if (stat.sync_start_time.time_since_epoch() == std::chrono::steady_clock::time_point::duration::zero()
-            && sync_mode)
-        {
-            stat.sync_start_time = std::chrono::steady_clock::now();
-            stat.sync_start_block_num = block_num;
-            stat.sync_interval_sec_sq.reserve(interval); // for 'interval * interval' blocks
-            ilog("Synchronization is starting.");
-        }
-        else if (stat.sync_start_time.time_since_epoch() != std::chrono::steady_clock::time_point::duration::zero()
-                 && !sync_mode)
-        {
-            auto sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
-                                                                        - stat.sync_start_time)
-                           .count();
-
-            uint sync_interval_min_sec = 0u;
-            uint sync_interval_max_sec = 0u;
-            uint sync_interval_med_sec = 0u;
-            uint sync_interval_mid_sec = 0u;
-
-            auto sq_sz = stat.sync_interval_sec_sq.size();
-            if (sq_sz > 0)
-            {
-                auto result = std::minmax_element(
-                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(),
-                    [](const sync_stat::interval_sec_type::value_type& lval,
-                       const sync_stat::interval_sec_type::value_type& rval) { return lval.second < rval.second; });
-
-                sync_interval_min_sec = result.first->second;
-                sync_interval_max_sec = result.second->second;
-
-                if (sq_sz % 2 == 0)
-                {
-                    sync_interval_med_sec = stat.sync_interval_sec_sq.nth(sq_sz / 2 - 1)->second;
-                    sync_interval_med_sec += stat.sync_interval_sec_sq.nth(sq_sz / 2)->second;
-                    sync_interval_med_sec /= 2;
-                }
-                else
-                {
-                    sync_interval_med_sec = stat.sync_interval_sec_sq.nth(sq_sz / 2)->second;
-                }
-
-                sync_interval_mid_sec = std::accumulate(
-                    stat.sync_interval_sec_sq.cbegin(), stat.sync_interval_sec_sq.cend(), sync_interval_mid_sec,
-                    [](uint& sum_sec, const sync_stat::interval_sec_type::value_type& val) {
-                        return sum_sec + val.second;
-                    });
-                sync_interval_mid_sec /= sq_sz;
-            }
-
-            uint32_t sync_interval = std::max(stat.sync_current_block_num - stat.sync_start_block_num, 0u);
-            int d = sec / 3600 / 24;
-            int sec_in_day = sec % (3600 * 24);
-            std::stringstream time_fmt;
-            time_fmt << d << ((d == 1) ? " day " : " days ");
-            time_fmt << std::put_time(gmtime((time_t*)&sec_in_day), "%T");
-            // clang-format off
-            ilog("Synchronization is ${ff}. For ${si} blocks duration: ${time_fmt}.",
-                 ("ff", (block_num > 0)? "finished":"stopped")("si", sync_interval)
-                 ("time_fmt", time_fmt.str()));
-            ilog("Interval ${i} blocks duration (s) for ${ni} intervals: min = ${imin}, max = ${imax}, med = ${imed}, mid = ${imid}.",
-                 ("i", interval)("ni", sq_sz)
-                 ("imin", sync_interval_min_sec)
-                 ("imax", sync_interval_max_sec)
-                 ("imed", sync_interval_med_sec)
-                 ("imid", sync_interval_mid_sec));
-            // clang-format on
-
-            stat = sync_stat();
-        }
-
-        if (sync_mode)
-        {
-            stat.sync_current_block_num = block_num;
-            if (block_num == 1 || block_num % interval == 0)
-            {
-                if (stat.sync_interval_start_time.time_since_epoch()
-                    != std::chrono::steady_clock::time_point::duration::zero())
-                {
-                    auto interval_sec = (uint)std::chrono::duration_cast<std::chrono::seconds>(
-                                            std::chrono::steady_clock::now() - stat.sync_interval_start_time)
-                                            .count();
-                    stat.sync_interval_sec_sq.insert(std::make_pair(block_num, interval_sec));
-                }
-                stat.sync_interval_start_time = std::chrono::steady_clock::now();
-            }
-        }
-    }
-
     /**
      * @brief allows the application to validate an item prior to broadcasting to peers.
      *
@@ -668,8 +558,6 @@ public:
         {
             if (_running)
             {
-                calc_sync_stat(blk_msg.block.block_num(), sync_mode);
-
                 uint32_t head_block_num;
 
                 _chain_db->with_read_lock([&]() { head_block_num = _chain_db->head_block_num(); });
