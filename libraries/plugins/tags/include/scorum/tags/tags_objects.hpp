@@ -288,23 +288,24 @@ typedef shared_multi_index_container<
 
 /**
  * @brief The category_stats_object class
- * This class is used to maintain stats about which tags are used within particular category and how often.
+ * This class is used to maintain stats about which tags are used within particular category and domain and how often.
  */
 class category_stats_object : public object<category_stats_object_type, category_stats_object>
 {
 public:
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(category_stats_object, (category))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(category_stats_object, (category)(domain))
 
     id_type id;
     tag_name_type tag;
     fc::shared_string category;
+    fc::shared_string domain;
     uint32_t tags_count = 0;
 };
 
 typedef oid<category_stats_object> category_stats_id_type;
 
 struct by_category;
-struct by_tag_category;
+struct by_category_tag;
 
 // clang-format off
 typedef shared_multi_index_container<
@@ -312,17 +313,26 @@ typedef shared_multi_index_container<
     indexed_by<
         ordered_unique<tag<by_id>,
                        member<category_stats_object, category_stats_id_type, &category_stats_object::id>>,
-        ordered_unique<tag<by_tag_category>,
+        ordered_unique<tag<by_category_tag>,
                        composite_key<category_stats_object,
+                                     member<category_stats_object, fc::shared_string, &category_stats_object::domain>,
                                      member<category_stats_object, fc::shared_string, &category_stats_object::category>,
                                      member<category_stats_object, tag_name_type, &category_stats_object::tag>>,
                        composite_key_compare<fc::strcmp_less,
+                                             fc::strcmp_less,
                                              std::less<tag_name_type>>>,
         ordered_non_unique<tag<by_category>,
-                           member<category_stats_object, fc::shared_string, &category_stats_object::category>,
-                           fc::strcmp_less>>>
+                           composite_key<category_stats_object,
+                                         member<category_stats_object, fc::shared_string, &category_stats_object::domain>,
+                                         member<category_stats_object, fc::shared_string, &category_stats_object::category>,
+                                         member<category_stats_object, uint32_t, &category_stats_object::tags_count>,
+                                         member<category_stats_object, tag_name_type, &category_stats_object::tag>>,
+                       composite_key_compare<fc::strcmp_less,
+                                             fc::strcmp_less,
+                                             std::greater<uint32_t>,
+                                             std::greater<tag_name_type>>>>
+    >
     category_stats_index;
-
 // clanf-format on
 
 /**
@@ -331,6 +341,8 @@ typedef shared_multi_index_container<
 struct comment_metadata
 {
     std::set<std::string> tags;
+    std::string category;
+    std::string domain;
 
     static comment_metadata parse(const fc::shared_string& json_metadata)
     {
@@ -397,7 +409,7 @@ FC_REFLECT(scorum::tags::peer_stats_object,
 
 CHAINBASE_SET_INDEX_TYPE(scorum::tags::peer_stats_object, scorum::tags::peer_stats_index)
 
-FC_REFLECT(scorum::tags::comment_metadata, (tags))
+FC_REFLECT(scorum::tags::comment_metadata, (tags)(category)(domain))
 
 FC_REFLECT(scorum::tags::author_tag_stats_object,
            (id)
@@ -411,6 +423,7 @@ CHAINBASE_SET_INDEX_TYPE(scorum::tags::author_tag_stats_object, scorum::tags::au
 FC_REFLECT(scorum::tags::category_stats_object,
            (id)
            (tag)
+           (domain)
            (category)
            (tags_count))
 
