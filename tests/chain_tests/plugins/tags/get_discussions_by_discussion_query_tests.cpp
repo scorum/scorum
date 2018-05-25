@@ -399,6 +399,28 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
     }
 }
 
+SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
+{
+    actor(initdelegate).give_sp(sam, 1e9);
+
+    auto p1 = create_post(alice, [](comment_operation& op) {
+        op.permlink = "pl1";
+        op.body = "body1";
+        op.json_metadata = R"({"tags":["A"]})";
+    });
+
+    actor(sam).vote(p1.author(), p1.permlink(), -100);
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+
+    auto discussions = _api.get_discussions_by_created(q);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
+    BOOST_REQUIRE_EQUAL(discussions[0].active_votes.size(), 1u);
+    BOOST_REQUIRE_EQUAL(discussions[0].active_votes[0].percent, -100 * SCORUM_1_PERCENT);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(get_discussions_by_hot_tests, get_discussions_by_common)

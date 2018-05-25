@@ -8,14 +8,14 @@
 namespace scorum {
 namespace app {
 
-using scorum::protocol::percent_type;
+using scorum::protocol::vote_weight_type;
 
 struct vote_state
 {
     std::string voter;
     uint64_t weight = 0;
     int64_t rshares = 0;
-    percent_type percent = 0;
+    vote_weight_type percent = 0;
     time_point_sec time;
 };
 
@@ -24,7 +24,7 @@ struct account_vote
     std::string authorperm;
     uint64_t weight = 0;
     int64_t rshares = 0;
-    percent_type percent = 0;
+    vote_weight_type percent = 0;
     time_point_sec time;
 };
 
