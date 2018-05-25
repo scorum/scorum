@@ -65,10 +65,13 @@ public:
     {
     }
 
-    void exclude_from_category_stats(const fc::shared_string& category, const comment_metadata& meta)
+    void exclude_from_category_stats(const comment_metadata& meta)
     {
-        const auto& idx = db_impl().get_index<scorum::tags::category_stats_index>().indices().get<by_category>();
-        auto it_pair = idx.equal_range(category);
+        if (meta.category.empty() || meta.domain.empty())
+            return;
+
+        const auto& idx = db_impl().get_index<category_stats_index, by_category>();
+        auto it_pair = idx.equal_range(std::make_tuple(meta.domain, meta.category));
 
         std::vector<std::reference_wrapper<const category_stats_object>> stats;
         std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
@@ -86,18 +89,23 @@ public:
         }
     }
 
-    void include_into_category_stats(const fc::shared_string& category, const comment_metadata& meta)
+    void include_into_category_stats(const comment_metadata& meta)
     {
-        for (const std::string& tag : meta.tags)
-        {
-            const auto& idx
-                = db_impl().get_index<scorum::tags::category_stats_index>().indices().get<by_tag_category>();
+        if (meta.category.empty() || meta.domain.empty())
+            return;
 
-            auto found_it = idx.find(std::make_tuple(category, tag_name_type(tag)));
+        auto rng = meta.tags
+            | boost::adaptors::filtered([&](const std::string& t) { return t != meta.category && t != meta.domain; });
+        for (const std::string& tag : rng)
+        {
+            const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
+
+            auto found_it = idx.find(std::make_tuple(meta.domain, meta.category, tag_name_type(tag)));
             if (found_it == idx.end())
             {
                 db_impl().create<category_stats_object>([&](category_stats_object& s) {
-                    s.category = category;
+                    fc::from_string(s.domain, meta.domain);
+                    fc::from_string(s.category, meta.category);
                     s.tag = tag;
                     s.tags_count = 1;
                 });
@@ -129,14 +137,14 @@ struct category_stats_pre_operation_visitor
             = _db.obtain_service<dbs_comment>().find_by<by_permlink>(std::make_tuple(op.author, op.permlink));
 
         if (c != nullptr)
-            _category_stats_service.exclude_from_category_stats(c->category, comment_metadata::parse(c->json_metadata));
+            _category_stats_service.exclude_from_category_stats(comment_metadata::parse(c->json_metadata));
     }
 
     void operator()(const delete_comment_operation& op) const
     {
         const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        _category_stats_service.exclude_from_category_stats(c.category, comment_metadata::parse(c.json_metadata));
+        _category_stats_service.exclude_from_category_stats(comment_metadata::parse(c.json_metadata));
     }
 
     template <typename Op> void operator()(Op&&) const
@@ -161,7 +169,7 @@ struct category_stats_post_operation_visitor
     {
         const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        _category_stats_service.include_into_category_stats(c.category, comment_metadata::parse(c.json_metadata));
+        _category_stats_service.include_into_category_stats(comment_metadata::parse(c.json_metadata));
     }
 
     template <typename Op> void operator()(Op&&) const
