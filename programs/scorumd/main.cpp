@@ -26,6 +26,43 @@ using namespace scorum;
 using scorum::protocol::version;
 namespace bpo = boost::program_options;
 
+void wait_stop()
+{
+    fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
+
+    int return_signal = 0;
+    fc::set_signal_handler(
+        [&exit_promise, &return_signal](int signal) {
+            return_signal = signal;
+            exit_promise->set_value(signal);
+        },
+        SIGINT);
+
+    fc::set_signal_handler(
+        [&exit_promise, &return_signal](int signal) {
+            return_signal = signal;
+            exit_promise->set_value(signal);
+        },
+        SIGTERM);
+
+    std::cout << std::flush;
+    std::cerr << std::flush;
+
+    exit_promise->wait(); // wait signal
+
+    switch (return_signal)
+    {
+    case SIGINT:
+        elog("Caught SIGINT attempting to exit cleanly");
+        break;
+    case SIGTERM:
+        elog("Caught SIGTERM attempting to exit cleanly");
+        break;
+    default:
+        elog("Unexpected interruption");
+    }
+}
+
 int main(int argc, char** argv)
 {
     scorum::plugin::initialize_plugin_factories();
@@ -162,38 +199,7 @@ int main(int argc, char** argv)
 
         std::cout << "Scorum network started.\n\n";
 
-        fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-
-        int return_signal = 0;
-        fc::set_signal_handler(
-            [&exit_promise, &return_signal](int signal) {
-                return_signal = signal;
-                exit_promise->set_value(signal);
-            },
-            SIGINT);
-
-        fc::set_signal_handler(
-            [&exit_promise, &return_signal](int signal) {
-                return_signal = signal;
-                exit_promise->set_value(signal);
-            },
-            SIGTERM);
-
-        std::cout << std::flush;
-        std::cerr << std::flush;
-
-        exit_promise->wait();
-        switch (return_signal)
-        {
-        case SIGINT:
-            elog("Caught SIGINT attempting to exit cleanly");
-            break;
-        case SIGTERM:
-            elog("Caught SIGTERM attempting to exit cleanly");
-            break;
-        default:
-            elog("Unexpected interruption");
-        }
+        wait_stop();
 
         node->shutdown_plugins();
         node->shutdown();
