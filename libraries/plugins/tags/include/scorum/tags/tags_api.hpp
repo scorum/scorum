@@ -35,12 +35,13 @@ public:
     std::vector<std::pair<std::string, uint32_t>> get_tags_used_by_author(const std::string& author) const;
 
     /**
-     * Returns all tags which where used sometime with specified category. The result is ordered by frequency of use.
+     * Returns all tags which where used sometime with specified category and domain. The result is ordered by frequency
+     * of use.
      * @return <tag_name, frequency> pairs where 'tag_name' it's a tag which was used sometime with specified category
-     * and
-     * 'frequency' shows how many times this tag was used with specified category.
+     * and domain and 'frequency' shows how many times this tag was used with specified category.
      */
-    std::vector<std::pair<std::string, uint32_t>> get_tags_by_category(const std::string& category) const;
+    std::vector<std::pair<std::string, uint32_t>> get_tags_by_category(const std::string& domain,
+                                                                       const std::string& category) const;
 
     /// @{ tags API
     std::vector<api::discussion> get_discussions_by_trending(const api::discussion_query& query) const;

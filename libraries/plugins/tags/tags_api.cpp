@@ -46,11 +46,12 @@ std::vector<std::pair<std::string, uint32_t>> tags_api::get_tags_used_by_author(
     FC_CAPTURE_AND_RETHROW((author))
 }
 
-std::vector<std::pair<std::string, uint32_t>> tags_api::get_tags_by_category(const std::string& category) const
+std::vector<std::pair<std::string, uint32_t>> tags_api::get_tags_by_category(const std::string& domain,
+                                                                             const std::string& category) const
 {
     try
     {
-        return guard().with_read_lock([&]() { return _impl->get_tags_by_category(category); });
+        return guard().with_read_lock([&]() { return _impl->get_tags_by_category(domain, category); });
     }
     FC_CAPTURE_AND_RETHROW((category))
 }
