@@ -212,13 +212,16 @@ void database::reindex(const fc::path& data_dir,
             auto itr = _block_log.read_block(0);
             auto last_block_num = _block_log.head()->block_num();
 
+            uint log_interval_sz = 1000u;
             while (itr.first.block_num() != last_block_num)
             {
                 auto cur_block_num = itr.first.block_num();
-                if (cur_block_num % 100000 == 0)
-                    std::cerr << "   " << double(cur_block_num * 100) / last_block_num << "%   " << cur_block_num
-                              << " of " << last_block_num << "   (" << (get_free_memory() / (1024 * 1024))
-                              << "M free)\n";
+                if (cur_block_num % log_interval_sz == 0)
+                {
+                    ilog("${p}% of ${l} blocks applied. ${m} M free.",
+                         ("p", double(cur_block_num * 100) / last_block_num)("l", last_block_num)(
+                             "m", get_free_memory() / (1024 * 1024)));
+                }
                 apply_block(itr.first, skip_flags);
                 itr = _block_log.read_block(itr.second);
             }
@@ -242,7 +245,7 @@ void database::reindex(const fc::path& data_dir,
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
 {
     close();
-    chainbase::database::wipe();
+    chainbase::database::wipe(shared_mem_dir);
     if (include_blocks)
     {
         fc::remove_all(data_dir / "block_log");

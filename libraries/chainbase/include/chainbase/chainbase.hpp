@@ -31,7 +31,7 @@ public:
     void open(const boost::filesystem::path& dir, uint32_t write = read_only, uint64_t shared_file_size = 0);
     void close();
     void flush();
-    void wipe();
+    void wipe(const boost::filesystem::path& dir);
 };
 
 } // namespace chainbase
