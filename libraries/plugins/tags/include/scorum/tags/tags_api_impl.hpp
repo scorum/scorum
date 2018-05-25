@@ -124,6 +124,9 @@ public:
     std::vector<std::pair<std::string, uint32_t>> get_tags_by_category(const std::string& domain,
                                                                        const std::string& category) const
     {
+        FC_ASSERT(!domain.empty(), "domain cannot be empty");
+        FC_ASSERT(!category.empty(), "category cannot be empty");
+
         const auto& idx = _db.get_index<tags::category_stats_index, tags::by_category>();
 
         auto rng = idx.equal_range(boost::make_tuple(domain, category));

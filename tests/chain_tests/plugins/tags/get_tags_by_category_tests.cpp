@@ -39,6 +39,13 @@ struct get_tags_by_category_fixture : public tags_fixture
 
 BOOST_FIXTURE_TEST_SUITE(get_tags_by_category_tests, get_tags_by_category_fixture)
 
+SCORUM_TEST_CASE(check_empty_input_should_assert)
+{
+    BOOST_REQUIRE_THROW(_api.get_tags_by_category("", "c1"), fc::assert_exception);
+    BOOST_REQUIRE_THROW(_api.get_tags_by_category("d1", ""), fc::assert_exception);
+    BOOST_REQUIRE_THROW(_api.get_tags_by_category("", ""), fc::assert_exception);
+}
+
 SCORUM_TEST_CASE(check_couple_categories_several_tags)
 {
     // d1/c1
