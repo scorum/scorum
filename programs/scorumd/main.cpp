@@ -81,6 +81,7 @@ int main(int argc, char** argv)
         if (options.count("data-dir"))
         {
             data_dir = options["data-dir"].as<boost::filesystem::path>();
+
             if (data_dir.is_relative())
                 data_dir = fc::current_path() / data_dir;
         }

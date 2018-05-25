@@ -73,6 +73,8 @@
 #include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
+#define BLOCK_LOG_FILE "block_log"
+
 namespace scorum {
 namespace chain {
 
@@ -141,7 +143,7 @@ void database::open(const fc::path& data_dir,
                 fc::create_directories(data_dir);
             }
 
-            _block_log.open(data_dir / "block_log");
+            _block_log.open(data_dir / BLOCK_LOG_FILE);
 
             auto log_head = _block_log.head();
 
@@ -194,6 +196,7 @@ void database::reindex(const fc::path& data_dir,
     try
     {
         ilog("Reindexing Blockchain");
+
         wipe(data_dir, shared_mem_dir, false);
         open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write, genesis_state);
         _fork_db.reset(); // override effect of _fork_db.start_block() call in open()
@@ -248,8 +251,9 @@ void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bo
     chainbase::database::wipe(shared_mem_dir);
     if (include_blocks)
     {
-        fc::remove_all(data_dir / "block_log");
-        fc::remove_all(data_dir / "block_log.index");
+        fc::path block_log_file = data_dir / BLOCK_LOG_FILE;
+        fc::remove_all(block_log_file);
+        fc::remove_all(block_log::block_index_path(block_log_file));
     }
 }
 

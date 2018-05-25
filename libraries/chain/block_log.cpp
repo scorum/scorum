@@ -99,7 +99,7 @@ void block_log::open(const fc::path& file)
         my->index_stream.close();
 
     my->block_file = file;
-    my->index_file = fc::path(file.generic_string() + ".index");
+    my->index_file = block_index_path(file);
 
     my->block_stream.open(my->block_file.generic_string().c_str(), LOG_WRITE);
     my->index_stream.open(my->index_file.generic_string().c_str(), LOG_WRITE);
@@ -182,6 +182,11 @@ void block_log::close()
 bool block_log::is_open() const
 {
     return my->block_stream.is_open();
+}
+
+fc::path block_log::block_index_path(const fc::path& file)
+{
+    return fc::path(file.generic_string() + ".index");
 }
 
 uint64_t block_log::append(const signed_block& b)

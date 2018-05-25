@@ -11,8 +11,6 @@ class database : public undo_db_state
 {
     boost::interprocess::file_lock _flock;
 
-    boost::filesystem::path _data_dir;
-
     std::unique_ptr<boost::interprocess::managed_mapped_file> _meta;
 
 private:

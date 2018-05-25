@@ -318,6 +318,8 @@ public:
     {
         try
         {
+            static const char* default_data_subdir = "blockchain";
+
             genesis_state_type genesis_state;
             compute_genesis_state(genesis_state);
 
@@ -326,6 +328,8 @@ public:
             if (_options->count("data-dir"))
             {
                 _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
+                // use lexically_normal for boost version >= 1.60
+                _data_dir = boost::filesystem::absolute(_data_dir);
             }
 
             _shared_file_size = fc::parse_size(_options->at("shared-file-size").as<std::string>());
@@ -339,11 +343,11 @@ public:
 
             if (_options->count("shared-file-dir"))
             {
-                _shared_dir = fc::path(_options->at("shared-file-dir").as<std::string>());
+                _shared_dir = _data_dir / fc::path(_options->at("shared-file-dir").as<boost::filesystem::path>());
             }
             else
             {
-                _shared_dir = _data_dir / "blockchain";
+                _shared_dir = _data_dir / default_data_subdir;
             }
 
             if (!_self->is_read_only())
@@ -353,7 +357,7 @@ public:
 
                 if (_options->count("resync-blockchain"))
                 {
-                    _chain_db->wipe(_data_dir / "blockchain", _shared_dir, true);
+                    _chain_db->wipe(_data_dir / default_data_subdir, _shared_dir, true);
                 }
 
                 _chain_db->set_flush_interval(_options->at("flush").as<uint32_t>());
@@ -371,16 +375,16 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
-                if (_options->count("replay-blockchain"))
+                if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
+                    _chain_db->reindex(_data_dir / default_data_subdir, _shared_dir, _shared_file_size, genesis_state);
                 }
                 else
                 {
                     try
                     {
-                        _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
+                        _chain_db->open(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
                                         chainbase::database::read_write, genesis_state);
                     }
                     catch (fc::assert_exception&)
@@ -389,12 +393,13 @@ public:
 
                         try
                         {
-                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
+                            _chain_db->reindex(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
+                                               genesis_state);
                         }
                         catch (chain::block_log_exception&)
                         {
                             wlog("Error opening block log. Having to resync from network...");
-                            _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
+                            _chain_db->open(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
                                             chainbase::database::read_write, genesis_state);
                         }
                     }
@@ -409,7 +414,7 @@ public:
             else
             {
                 ilog("Starting Scorum node in read mode.");
-                _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
+                _chain_db->open(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
                                 chainbase::database::read_only, genesis_state);
 
                 if (_options->count("read-forward-rpc"))
@@ -1168,7 +1173,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("seed-node,s", bpo::value<std::vector<std::string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
     ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
     ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
-    ("shared-file-dir", bpo::value<std::string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
+    ("shared-file-dir", bpo::value<boost::filesystem::path>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
     ("shared-file-size", bpo::value<std::string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
     ("rpc-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
     ("rpc-tls-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")

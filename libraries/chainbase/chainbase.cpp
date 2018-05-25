@@ -45,17 +45,11 @@ void database::open(const boost::filesystem::path& dir, uint32_t flags, uint64_t
 
     check_dir_existance(dir, read_only);
 
-    if (_data_dir != dir)
-        close();
+    close();
 
-    _data_dir = dir;
+    create_segment_file(dir / SHARED_MEMORY_FILE, read_only, shared_file_size);
 
-    std::cerr << boost::filesystem::absolute(dir / SHARED_MEMORY_FILE).c_str() << std::endl;
-    std::cerr << boost::filesystem::absolute(dir / SHARED_MEMORY_META_FILE).c_str() << std::endl;
-
-    create_segment_file(boost::filesystem::absolute(dir / SHARED_MEMORY_FILE), read_only, shared_file_size);
-
-    create_meta_file(boost::filesystem::absolute(dir / SHARED_MEMORY_META_FILE));
+    create_meta_file(dir / SHARED_MEMORY_META_FILE);
 
     // create lock on meta file
     if (!read_only)
@@ -79,18 +73,14 @@ void database::close()
     close_segment_file();
 
     _meta.reset();
-    _data_dir = boost::filesystem::path();
 }
 
 void database::wipe(const boost::filesystem::path& dir)
 {
     close();
 
-    std::cerr << boost::filesystem::absolute(dir / SHARED_MEMORY_FILE).c_str() << std::endl;
-    std::cerr << boost::filesystem::absolute(dir / SHARED_MEMORY_META_FILE).c_str() << std::endl;
-
-    boost::filesystem::remove_all(boost::filesystem::absolute(dir / SHARED_MEMORY_FILE));
-    boost::filesystem::remove_all(boost::filesystem::absolute(dir / SHARED_MEMORY_META_FILE));
+    boost::filesystem::remove_all(dir / SHARED_MEMORY_FILE);
+    boost::filesystem::remove_all(dir / SHARED_MEMORY_META_FILE);
     _index_map.clear();
 }
 
