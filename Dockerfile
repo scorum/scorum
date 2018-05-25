@@ -1,7 +1,5 @@
 FROM phusion/baseimage:0.9.19
 
-#ARG SCORUMD_BLOCKCHAIN=https://example.com/scorumd-blockchain.tbz2
-
 ARG BRANCH_NAME
 ARG GIT_COMMIT
 ARG AZURE_UPLOAD
@@ -119,7 +117,7 @@ RUN \
     rm -rf /usr/local/src/scorum
 
 RUN \
-    ( /usr/local/scorumd-full/bin/scorumd --version \
+    ( /usr/local/scorumd-default/bin/scorumd --version \
       | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
       && echo '_' \
       && git rev-parse --short HEAD ) \
@@ -180,9 +178,6 @@ RUN useradd -s /bin/bash -m -d /var/lib/scorumd scorumd
 RUN mkdir /var/cache/scorumd && \
           chown scorumd:scorumd -R /var/cache/scorumd
 
-# add blockchain cache to image
-#ADD $SCORUMD_BLOCKCHAIN /var/cache/scorumd/blocks.tbz2
-
 ENV HOME /var/lib/scorumd
 RUN chown scorumd:scorumd -R /var/lib/scorumd
 
@@ -199,22 +194,6 @@ ADD doc/seednodes.txt /etc/scorumd/seednodes.txt
 # the following adds lots of logging info to stdout
 ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini
 
-# add normal startup script that start via runsv
-RUN mkdir /etc/sv/scorumd
-RUN mkdir /etc/sv/scorumd/log
-ADD contrib/runsv/scorumd.run /etc/sv/scorumd/run
-ADD contrib/runsv/scorumd-log.run /etc/sv/scorumd/log/run
-ADD contrib/runsv/scorumd-log.config /etc/sv/scorumd/log/config
-RUN chmod +x /etc/sv/scorumd/run /etc/sv/scorumd/log/run
-
-# add nginx templates
-ADD contrib/scorumd.nginx.conf /etc/nginx/scorumd.nginx.conf
-ADD contrib/healthcheck.conf.template /etc/nginx/healthcheck.conf.template
-
-# add healthcheck script
-ADD contrib/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/healthcheck.sh
-
 # upload archive to azure
 ADD contrib/azure_upload.sh /usr/local/bin/azure_upload.sh
 RUN chmod +x /usr/local/bin/azure_upload.sh
@@ -226,4 +205,4 @@ RUN /usr/local/bin/azure_upload.sh
 # AWS EB Docker requires a non-daemonized entrypoint
 ADD contrib/scorumdentrypoint.sh /usr/local/bin/scorumdentrypoint.sh
 RUN chmod +x /usr/local/bin/scorumdentrypoint.sh
-CMD /usr/local/bin/scorumdentrypoint.sh
+CMD ["/bin/bash", "/usr/local/bin/scorumdentrypoint.sh"]
