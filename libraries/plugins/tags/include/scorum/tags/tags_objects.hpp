@@ -293,6 +293,7 @@ typedef shared_multi_index_container<
 class category_stats_object : public object<category_stats_object_type, category_stats_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(category_stats_object, (category)(domain))
 
     id_type id;
