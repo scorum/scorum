@@ -9,6 +9,7 @@
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm/max_element.hpp>
 #include <boost/range/algorithm/lower_bound.hpp>
+#include <boost/range/join.hpp>
 
 #include <stack>
 #include <set>
@@ -129,7 +130,7 @@ public:
 
         const auto& idx = _db.get_index<tags::category_stats_index, tags::by_category>();
 
-        auto rng = idx.equal_range(boost::make_tuple(domain, category));
+        auto rng = idx.equal_range(boost::make_tuple(boost::to_lower_copy(domain), boost::to_lower_copy(category)));
 
         std::vector<std::pair<std::string, uint32_t>> ret;
         boost::transform(rng, std::back_inserter(ret),
@@ -372,15 +373,18 @@ private:
                                             const std::function<bool(const tag_object&)>& tag_filter
                                             = &tag_filter_default) const
     {
+        // clang-format off
         FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
                   "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
-        // clang-format off
+        FC_ASSERT((query.domain && query.category && !query.domain->empty() && !query.category->empty()),
+                  "category and domain should be specified and cannot be empty");
         FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
                   (!query.start_author && !query.start_permlink),
                   "start_author and start_permlink should be either both specified and not empty or both not specified");
         // clang-format on
 
-        auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
+        auto top_level_tags = { *query.domain, *query.category };
+        auto rng = boost::range::join(query.tags, top_level_tags) | boost::adaptors::transformed(fc::to_lower);
         std::set<std::string> tags(rng.begin(), rng.end());
         if (tags.empty())
             tags.insert("");

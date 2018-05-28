@@ -46,6 +46,54 @@ SCORUM_TEST_CASE(check_empty_input_should_assert)
     BOOST_REQUIRE_THROW(_api.get_tags_by_category("", ""), fc::assert_exception);
 }
 
+SCORUM_TEST_CASE(check_empty_tag)
+{
+    create_post(alice, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "c1";
+        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "","tag2",""]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("d1", "c1");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), 1u);
+}
+
+SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
+{
+    create_post(alice, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "c1";
+        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("D1", "C1");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), 3u);
+}
+
+SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
+{
+    create_post(alice, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "c1";
+        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "TAG1","TAG2"]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("d1", "c1");
+
+    std::vector<std::pair<std::string, uint32_t>> cat1_expected = { { "tag2", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), cat1_expected.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags.begin(), cat1_tags.end(), cat1_expected.begin(), cat1_expected.end());
+}
+
 SCORUM_TEST_CASE(check_couple_categories_several_tags)
 {
     // d1/c1
