@@ -1654,12 +1654,6 @@ void database::update_global_dynamic_data(const signed_block& b)
                         }
                     });
                 }
-                else
-                {
-                    dlog("Current witness '${w}' in missed list. Missed blocks ${m}."
-                         "Position in list is ${p}.",
-                         ("w", b.witness)("m", missed_blocks)("p", i + 1));
-                }
             }
         }
 

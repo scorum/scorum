@@ -26,6 +26,43 @@ using namespace scorum;
 using scorum::protocol::version;
 namespace bpo = boost::program_options;
 
+void wait_stop()
+{
+    fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
+
+    int return_signal = 0;
+    fc::set_signal_handler(
+        [&exit_promise, &return_signal](int signal) {
+            return_signal = signal;
+            exit_promise->set_value(signal);
+        },
+        SIGINT);
+
+    fc::set_signal_handler(
+        [&exit_promise, &return_signal](int signal) {
+            return_signal = signal;
+            exit_promise->set_value(signal);
+        },
+        SIGTERM);
+
+    std::cout << std::flush;
+    std::cerr << std::flush;
+
+    exit_promise->wait(); // wait signal
+
+    switch (return_signal)
+    {
+    case SIGINT:
+        elog("Caught SIGINT attempting to exit cleanly");
+        break;
+    case SIGTERM:
+        elog("Caught SIGTERM attempting to exit cleanly");
+        break;
+    default:
+        elog("Unexpected interruption");
+    }
+}
+
 int main(int argc, char** argv)
 {
     scorum::plugin::initialize_plugin_factories();
@@ -122,11 +159,12 @@ int main(int argc, char** argv)
         }
         catch (const fc::exception&)
         {
-            wlog("Error parsing logging config from config file ${config}, using default config",
-                 ("config", config_ini_path.preferred_string()));
+            std::cerr << "Error parsing logging config from config file \"" << config_ini_path.preferred_string()
+                      << "\". Using default config\n";
         }
 
         std::cerr << "------------------------------------------------------\n\n";
+
         if (!options.count("read-only"))
         {
             std::cerr << "            STARTING SCORUM NETWORK\n\n";
@@ -156,31 +194,17 @@ int main(int argc, char** argv)
         ilog("starting plugins");
         node->startup_plugins();
 
-        fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-
-        fc::set_signal_handler(
-            [&exit_promise](int signal) {
-                elog("Caught SIGINT attempting to exit cleanly");
-                exit_promise->set_value(signal);
-            },
-            SIGINT);
-
-        fc::set_signal_handler(
-            [&exit_promise](int signal) {
-                elog("Caught SIGTERM attempting to exit cleanly");
-                exit_promise->set_value(signal);
-            },
-            SIGTERM);
-
         node->chain_database()->with_read_lock([&]() {
             ilog("Started node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
         });
 
         std::cout << "Scorum network started.\n\n";
 
-        exit_promise->wait();
+        wait_stop();
+
         node->shutdown_plugins();
         node->shutdown();
+
         delete node;
         return 0;
     }
