@@ -157,9 +157,6 @@ struct discussion_query
     optional<std::string> start_permlink;
     uint32_t limit = 0;
 
-    optional<std::string> domain;
-    optional<std::string> category;
-
     bool tags_logical_and = true;
     std::set<std::string> tags;
 };
@@ -230,8 +227,6 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (start_author)
           (start_permlink)
           (limit)
-          (domain)
-          (category)
           (tags)
           (tags_logical_and))
 // clang-format on

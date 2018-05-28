@@ -109,11 +109,6 @@ typedef shared_multi_index_container<
                        composite_key<tag_object,
                                      member<tag_object, tag_name_type, &tag_object::tag>,
                                      member<tag_object, comment_id_type, &tag_object::comment>,
-                                     member<tag_object, tag_id_type, &tag_object::id>>>,
-        ordered_unique<tag<by_cashout>,
-                       composite_key<tag_object,
-                                     member<tag_object, tag_name_type, &tag_object::tag>,
-                                     member<tag_object, time_point_sec, &tag_object::cashout>,
                                      member<tag_object, tag_id_type, &tag_object::id>>>>
     >
     tag_index;

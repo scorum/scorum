@@ -25,8 +25,6 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "B", "C" };
-    q.domain = "com";
-    q.category = "cat";
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
@@ -48,11 +46,29 @@ SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "D" };
-    q.domain = "com";
-    q.category = "cat";
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
+}
+
+SCORUM_TEST_CASE(no_category_and_domain_should_return_post)
+{
+    actor(initdelegate).give_sp(alice, 1e9);
+
+    auto p1 = create_post(alice, [](comment_operation& op) {
+        op.permlink = "pl1";
+        op.body = "body1";
+        op.json_metadata = R"({"tags":["A"]})";
+    });
+
+    actor(alice).vote(p1.author(), p1.permlink());
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "A" };
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
 }
 
 SCORUM_TEST_CASE(should_return_voted_tags_intersection)
@@ -86,8 +102,6 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "B", "C" };
-    q.domain = "com";
-    q.category = "cat";
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -144,8 +158,6 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
     q.limit = 100;
     q.tags_logical_and = false;
     q.tags = { "A", "D" };
-    q.domain = "com";
-    q.category = "cat";
 
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -204,8 +216,6 @@ SCORUM_TEST_CASE(check_pagination)
     q.limit = 2;
     q.tags_logical_and = true;
     q.tags = { "C", "B" };
-    q.domain = "com";
-    q.category = "cat";
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -252,8 +262,6 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "G" };
-    q.domain = "com";
-    q.category = "cat";
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -284,8 +292,6 @@ SCORUM_TEST_CASE(check_truncate_body)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "I" };
-    q.domain = "com";
-    q.category = "cat";
     q.truncate_body = 5;
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -316,8 +322,6 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
     q.limit = 100;
     q.tags_logical_and = false;
     q.tags = { "A", "B", "C" };
-    q.domain = "com";
-    q.category = "cat";
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
@@ -362,8 +366,6 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
     q.limit = 100;
     q.tags_logical_and = false;
     q.tags = { "A", "B", "C", "D" };
-    q.domain = "com";
-    q.category = "cat";
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
@@ -397,8 +399,6 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "B", "C" };
-    q.domain = "com";
-    q.category = "cat";
     {
         std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
@@ -434,8 +434,6 @@ SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
     discussion_query q;
     q.limit = 100;
     q.tags_logical_and = true;
-    q.domain = "com";
-    q.category = "cat";
 
     auto discussions = _api.get_discussions_by_created(q);
     BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
@@ -478,8 +476,6 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
     q.limit = 100;
     q.tags_logical_and = true;
     q.tags = { "B", "C" };
-    q.domain = "com";
-    q.category = "cat";
     {
         std::vector<discussion> discussions = _api.get_discussions_by_hot(q);
 
@@ -514,6 +510,7 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
+        op.json_metadata = R"({"domain": "com", "category": "cat"})";
     });
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
@@ -533,8 +530,6 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
     discussion_query q;
     q.limit = 100;
     q.tags_logical_and = true;
-    q.domain = "com";
-    q.category = "cat";
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 3u);
 }
@@ -556,8 +551,6 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
     discussion_query q;
     q.limit = 100;
     q.tags_logical_and = true;
-    q.domain = "com";
-    q.category = "cat";
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 1u);
 }

@@ -239,8 +239,8 @@ struct post_operation_visitor
     std::set<std::string> collect_tags(const comment_metadata& meta) const
     {
         // clang-format off
-        auto top_level_tags = { meta.domain, meta.category };
-        auto rng = boost::range::join(meta.tags, top_level_tags)
+        auto top_level_tags = { meta.category, meta.domain };
+        auto rng = boost::range::join(top_level_tags, meta.tags)
                 | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
                 | boost::adaptors::transformed(fc::to_lower);
         // clang-format on
