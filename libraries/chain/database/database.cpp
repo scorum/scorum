@@ -73,7 +73,7 @@
 #include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
-#define BLOCK_LOG_FILE "block_log"
+#include <cmath>
 
 namespace scorum {
 namespace chain {
@@ -117,6 +117,11 @@ database::~database()
     clear_pending();
 }
 
+fc::path database::block_log_path(const fc::path& data_dir)
+{
+    return data_dir / "block_log";
+}
+
 void database::open(const fc::path& data_dir,
                     const fc::path& shared_mem_dir,
                     uint64_t shared_file_size,
@@ -143,7 +148,7 @@ void database::open(const fc::path& data_dir,
                 fc::create_directories(data_dir);
             }
 
-            _block_log.open(data_dir / BLOCK_LOG_FILE);
+            _block_log.open(block_log_path(data_dir));
 
             auto log_head = _block_log.head();
 
@@ -204,7 +209,10 @@ void database::reindex(const fc::path& data_dir,
         auto start = fc::time_point::now();
         SCORUM_ASSERT(_block_log.head(), block_log_exception, "No blocks in block log. Cannot reindex an empty chain.");
 
-        ilog("Replaying blocks...");
+        auto last_block_num = _block_log.head()->block_num();
+        uint log_interval_sz = std::max(last_block_num / 100u, 1000u);
+
+        ilog("Replaying ${n} blocks...", ("n", last_block_num));
 
         uint64_t skip_flags = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check
             | skip_tapos_check | skip_merkle_check | skip_witness_schedule_check | skip_authority_check | skip_validate
@@ -213,17 +221,14 @@ void database::reindex(const fc::path& data_dir,
 
         with_write_lock([&]() {
             auto itr = _block_log.read_block(0);
-            auto last_block_num = _block_log.head()->block_num();
-
-            uint log_interval_sz = 1000u;
             while (itr.first.block_num() != last_block_num)
             {
                 auto cur_block_num = itr.first.block_num();
                 if (cur_block_num % log_interval_sz == 0)
                 {
-                    ilog("${p}% of ${l} blocks applied. ${m} M free.",
-                         ("p", double(cur_block_num * 100) / last_block_num)("l", last_block_num)(
-                             "m", get_free_memory() / (1024 * 1024)));
+                    float percent = (cur_block_num * 100.f) / last_block_num;
+                    ilog("${p}% applied. ${m}M free.",
+                         ("p", (boost::format("%5.2f") % percent).str())("m", get_free_memory() / (1024 * 1024)));
                 }
                 apply_block(itr.first, skip_flags);
                 itr = _block_log.read_block(itr.second);
@@ -251,10 +256,50 @@ void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bo
     chainbase::database::wipe(shared_mem_dir);
     if (include_blocks)
     {
-        fc::path block_log_file = data_dir / BLOCK_LOG_FILE;
+        fc::path block_log_file = block_log_path(data_dir);
         fc::remove_all(block_log_file);
-        fc::remove_all(block_log::block_index_path(block_log_file));
+        fc::remove_all(block_log::block_log_index_path(block_log_file));
     }
+}
+
+bool database::check_block_log_integrity(const fc::path& data_dir)
+{
+    fc::path block_log_file = block_log_path(data_dir);
+    fc::path block_log_index_file = block_log::block_log_index_path(block_log_file);
+
+    if (!fc::exists(block_log_file) || !fc::exists(block_log_index_file))
+    {
+        return false;
+    }
+
+    if (!fc::file_size(block_log_file) || !fc::file_size(block_log_index_file))
+    {
+        return false;
+    }
+
+    // TODO: add detection of files damage here
+
+    return true;
+}
+
+bool database::check_shared_mem_integrity(const fc::path& shared_mem_dir)
+{
+    fc::path shared_memory_file = chainbase::database::shared_memory_path(shared_mem_dir);
+    fc::path shared_memory_meta_file = chainbase::database::shared_memory_meta_path(shared_mem_dir);
+
+    if (!fc::exists(shared_memory_file) || !fc::exists(shared_memory_meta_file))
+    {
+        return false;
+    }
+
+    if (!fc::file_size(shared_memory_file) || !fc::file_size(shared_memory_meta_file))
+    {
+        return false;
+    }
+
+    // TODO: add detection of files damage here
+
+    return true;
 }
 
 void database::close()

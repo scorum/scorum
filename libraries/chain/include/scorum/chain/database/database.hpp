@@ -89,6 +89,8 @@ public:
         skip_block_log = 1 << 13 ///< used to skip block logging on reindex
     };
 
+    static fc::path block_log_path(const fc::path& data_dir);
+
     /**
      * @brief Open a database, creating a new one if necessary
      *
@@ -121,6 +123,10 @@ public:
      * Will close the database before wiping. Database will be closed when this function returns.
      */
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
+
+    bool check_block_log_integrity(const fc::path& data_dir);
+    bool check_shared_mem_integrity(const fc::path& shared_mem_dir);
+
     void close();
 
     time_point_sec get_genesis_time() const;

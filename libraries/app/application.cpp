@@ -350,14 +350,27 @@ public:
                 _shared_dir = _data_dir / default_data_subdir;
             }
 
+            fc::path block_log_dir = _data_dir / default_data_subdir;
+
             if (!_self->is_read_only())
             {
+                bool is_resync_blockchain = _options->count("resync-blockchain");
+                bool is_replay_blockchain = _options->count("replay-blockchain");
+
+                if (!is_resync_blockchain && !is_replay_blockchain)
+                {
+                    if (!_chain_db->check_block_log_integrity(block_log_dir))
+                        is_resync_blockchain = true;
+                    else if (!_chain_db->check_shared_mem_integrity(_shared_dir))
+                        is_replay_blockchain = true;
+                }
+
                 ilog("Starting Scorum node in write mode.");
                 _max_block_age = _options->at("max-block-age").as<int32_t>();
 
-                if (_options->count("resync-blockchain"))
+                if (is_resync_blockchain)
                 {
-                    _chain_db->wipe(_data_dir / default_data_subdir, _shared_dir, true);
+                    _chain_db->wipe(block_log_dir, _shared_dir, true);
                 }
 
                 _chain_db->set_flush_interval(_options->at("flush").as<uint32_t>());
@@ -375,17 +388,17 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
-                if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
+                if (is_replay_blockchain && !is_resync_blockchain)
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(_data_dir / default_data_subdir, _shared_dir, _shared_file_size, genesis_state);
+                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, genesis_state);
                 }
                 else
                 {
                     try
                     {
-                        _chain_db->open(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
-                                        chainbase::database::read_write, genesis_state);
+                        _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_write,
+                                        genesis_state);
                     }
                     catch (fc::assert_exception&)
                     {
@@ -393,13 +406,12 @@ public:
 
                         try
                         {
-                            _chain_db->reindex(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
-                                               genesis_state);
+                            _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, genesis_state);
                         }
                         catch (chain::block_log_exception&)
                         {
                             wlog("Error opening block log. Having to resync from network...");
-                            _chain_db->open(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
+                            _chain_db->open(block_log_dir, _shared_dir, _shared_file_size,
                                             chainbase::database::read_write, genesis_state);
                         }
                     }
@@ -414,8 +426,8 @@ public:
             else
             {
                 ilog("Starting Scorum node in read mode.");
-                _chain_db->open(_data_dir / default_data_subdir, _shared_dir, _shared_file_size,
-                                chainbase::database::read_only, genesis_state);
+                _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_only,
+                                genesis_state);
 
                 if (_options->count("read-forward-rpc"))
                 {

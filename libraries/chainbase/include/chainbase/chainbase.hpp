@@ -26,6 +26,9 @@ public:
         read_write = 1
     };
 
+    static boost::filesystem::path shared_memory_path(const boost::filesystem::path& data_dir);
+    static boost::filesystem::path shared_memory_meta_path(const boost::filesystem::path& data_dir);
+
     void open(const boost::filesystem::path& dir, uint32_t write = read_only, uint64_t shared_file_size = 0);
     void close();
     void flush();

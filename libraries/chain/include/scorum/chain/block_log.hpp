@@ -46,7 +46,7 @@ public:
     void close();
     bool is_open() const;
 
-    static fc::path block_index_path(const fc::path& file);
+    static fc::path block_log_index_path(const fc::path& block_log_file);
 
     uint64_t append(const signed_block& b);
     void flush();
