@@ -338,17 +338,18 @@ typedef shared_multi_index_container<
  */
 struct comment_metadata
 {
+    std::set<std::string> domains;
+    std::set<std::string> categories;
+    std::set<std::string> locales;
     std::set<std::string> tags;
-    std::string category;
-    std::string domain;
 
     comment_metadata to_lower_copy() const
     {
         comment_metadata meta_in_lower;
 
-        meta_in_lower.category = boost::to_lower_copy(category);
-        meta_in_lower.domain = boost::to_lower_copy(domain);
-
+        boost::transform(domains, std::inserter(meta_in_lower.domains, meta_in_lower.domains.begin()), fc::to_lower);
+        boost::transform(categories, std::inserter(meta_in_lower.categories, meta_in_lower.categories.begin()), fc::to_lower);
+        boost::transform(locales, std::inserter(meta_in_lower.locales, meta_in_lower.locales.begin()), fc::to_lower);
         boost::transform(tags, std::inserter(meta_in_lower.tags, meta_in_lower.tags.begin()), fc::to_lower);
 
         return meta_in_lower;
@@ -419,7 +420,7 @@ FC_REFLECT(scorum::tags::peer_stats_object,
 
 CHAINBASE_SET_INDEX_TYPE(scorum::tags::peer_stats_object, scorum::tags::peer_stats_index)
 
-FC_REFLECT(scorum::tags::comment_metadata, (tags)(category)(domain))
+FC_REFLECT(scorum::tags::comment_metadata, (tags)(categories)(domains)(locales))
 
 FC_REFLECT(scorum::tags::author_tag_stats_object,
            (id)

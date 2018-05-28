@@ -18,7 +18,7 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
 
     discussion_query q;
@@ -37,7 +37,7 @@ SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
 
     actor(alice).vote(p1.author(), p1.permlink());
@@ -80,17 +80,17 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["C","D","E"]})";
     });
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
         op.body = "body3";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B","C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -131,18 +131,18 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["C","D","E"]})";
     });
     // this post will be skipped (despite it has max trending) cuz it doesn't have neither "B" or "D" tag
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
         op.body = "body3";
-        op.json_metadata = R"({"domain": "com2", "category": "cat2", "tags":["C","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["C","E"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -175,23 +175,23 @@ SCORUM_TEST_CASE(check_pagination)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
     // this post (p2) will be skipped cuz it doesn't have "C" tag
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["D","E"]})";
     });
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
         op.body = "body3";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B","C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})";
     });
     auto p4 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl4";
         op.body = "body4";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["C","B","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["C","B","E"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -245,12 +245,12 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
         op.permlink = "pl1";
         op.body = "body1";
         // I-K are ignored (see ::scorum::TAGS_TO_ANALIZE_COUNT)
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C","D","E","F","G"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C","D","E","F","G"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["F","G"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["F","G"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -283,7 +283,7 @@ SCORUM_TEST_CASE(check_truncate_body)
     auto p1 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "1234567890";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["I"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["I"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -310,12 +310,12 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B"]})";
     });
 
     discussion_query q;
@@ -336,18 +336,18 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A", "D"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A", "D"]})";
     });
     // comments creation shouldn't be monitored by tags_plugin
     auto c1 = p1.create_comment(bob, [](comment_operation& op) {
         op.permlink = "cpl";
         op.body = "cbody";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C"]})";
     });
 
     // comments changing shoudn't be monitored by tags_plugin
@@ -355,7 +355,7 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
         op.permlink = "cpl";
         op.title = "new-title";
         op.body = "new-body";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})";
     });
     // comments voting shoudn't be monitored by tags_plugin
     actor(alice).vote(c1.author(), c1.permlink());
@@ -382,17 +382,17 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B","C","D"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D"]})";
     });
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
         op.body = "body3";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B","C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})";
     });
 
     discussion_query q;
@@ -426,7 +426,7 @@ SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink(), -100);
@@ -454,17 +454,17 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A","B","C"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["C","D","E"]})";
     });
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
         op.body = "body3";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B","C","D","E"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -505,17 +505,17 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})";
     });
     auto p2 = create_post(bob, [](comment_operation& op) {
         op.permlink = "pl2";
         op.body = "body2";
-        op.json_metadata = R"({"domain": "com", "category": "cat"})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"]})";
     });
     auto p3 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl3";
         op.body = "body3";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["B"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["B"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());
@@ -541,7 +541,7 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
     auto p1 = create_post(alice, [](comment_operation& op) {
         op.permlink = "pl1";
         op.body = "body1";
-        op.json_metadata = R"({"domain": "com", "category": "cat", "tags":["A"]})";
+        op.json_metadata = R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})";
     });
 
     actor(sam).vote(p1.author(), p1.permlink());

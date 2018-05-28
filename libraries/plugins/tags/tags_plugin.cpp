@@ -68,13 +68,17 @@ public:
 
     void exclude_from_category_stats(const comment_metadata& meta)
     {
-        if (meta.category.empty() || meta.domain.empty())
+        if (meta.categories.empty() || meta.domains.empty())
+            return;
+        if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
         comment_metadata meta_in_lower = meta.to_lower_copy();
 
         const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
-        auto it_pair = idx.equal_range(std::make_tuple(meta_in_lower.domain, meta_in_lower.category));
+        // TODO: add support for multiple domains and categories
+        auto it_pair
+            = idx.equal_range(std::make_tuple(*meta_in_lower.domains.begin(), *meta_in_lower.categories.begin()));
 
         std::vector<std::reference_wrapper<const category_stats_object>> stats;
         std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
@@ -94,24 +98,28 @@ public:
 
     void include_into_category_stats(const comment_metadata& meta)
     {
-        if (meta.category.empty() || meta.domain.empty())
+        if (meta.categories.empty() || meta.domains.empty())
+            return;
+        if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
         comment_metadata meta_in_lower = meta.to_lower_copy();
+        const auto& domain = *meta_in_lower.domains.begin();
+        const auto& category = *meta_in_lower.categories.begin();
 
         auto rng = meta_in_lower.tags | boost::adaptors::filtered([&](const std::string& t) {
-                       return !t.empty() && t != meta_in_lower.category && t != meta_in_lower.domain;
+                       return !t.empty() && t != category && t != domain;
                    });
         for (const std::string& tag : rng)
         {
             const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
 
-            auto found_it = idx.find(std::make_tuple(meta_in_lower.domain, meta_in_lower.category, tag_name_type(tag)));
+            auto found_it = idx.find(std::make_tuple(domain, category, tag_name_type(tag)));
             if (found_it == idx.end())
             {
                 db_impl().create<category_stats_object>([&](category_stats_object& s) {
-                    fc::from_string(s.domain, meta_in_lower.domain);
-                    fc::from_string(s.category, meta_in_lower.category);
+                    fc::from_string(s.domain, domain);
+                    fc::from_string(s.category, category);
                     s.tag = tag;
                     s.tags_count = 1;
                 });
@@ -238,9 +246,11 @@ struct post_operation_visitor
 
     std::set<std::string> collect_tags(const comment_metadata& meta) const
     {
+        using namespace boost::range;
         // clang-format off
-        auto top_level_tags = { meta.category, meta.domain };
-        auto rng = boost::range::join(top_level_tags, meta.tags)
+        auto lhs = join(meta.domains, meta.categories);
+        auto rhs = join(meta.locales, meta.tags);
+        auto rng = join(lhs, rhs)
                 | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
                 | boost::adaptors::transformed(fc::to_lower);
         // clang-format on
