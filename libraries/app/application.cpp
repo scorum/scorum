@@ -354,21 +354,10 @@ public:
 
             if (!_self->is_read_only())
             {
-                bool is_resync_blockchain = _options->count("resync-blockchain");
-                bool is_replay_blockchain = _options->count("replay-blockchain");
-
-                if (!is_resync_blockchain && !is_replay_blockchain)
-                {
-                    if (!_chain_db->check_block_log_integrity(block_log_dir))
-                        is_resync_blockchain = true;
-                    else if (!_chain_db->check_shared_mem_integrity(_shared_dir))
-                        is_replay_blockchain = true;
-                }
-
                 ilog("Starting Scorum node in write mode.");
                 _max_block_age = _options->at("max-block-age").as<int32_t>();
 
-                if (is_resync_blockchain)
+                if (_options->count("resync-blockchain"))
                 {
                     _chain_db->wipe(block_log_dir, _shared_dir, true);
                 }
@@ -388,7 +377,7 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
-                if (is_replay_blockchain && !is_resync_blockchain)
+                if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
                     _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, genesis_state);

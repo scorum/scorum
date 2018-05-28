@@ -221,20 +221,21 @@ void database::reindex(const fc::path& data_dir,
 
         with_write_lock([&]() {
             auto itr = _block_log.read_block(0);
-            while (itr.first.block_num() != last_block_num)
+            while (itr.first.block_num() <= last_block_num)
             {
                 auto cur_block_num = itr.first.block_num();
-                if (cur_block_num % log_interval_sz == 0)
+                if (cur_block_num % log_interval_sz == 0 || cur_block_num == last_block_num)
                 {
-                    float percent = (cur_block_num * 100.f) / last_block_num;
+                    double percent = (cur_block_num * double(100)) / last_block_num;
                     ilog("${p}% applied. ${m}M free.",
                          ("p", (boost::format("%5.2f") % percent).str())("m", get_free_memory() / (1024 * 1024)));
                 }
                 apply_block(itr.first, skip_flags);
-                itr = _block_log.read_block(itr.second);
+                if (cur_block_num != last_block_num)
+                    itr = _block_log.read_block(itr.second);
+                else
+                    break;
             }
-
-            apply_block(itr.first, skip_flags);
 
             for_each_index([&](chainbase::abstract_generic_index_i& item) { item.set_revision(head_block_num()); });
         });
@@ -260,46 +261,6 @@ void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bo
         fc::remove_all(block_log_file);
         fc::remove_all(block_log::block_log_index_path(block_log_file));
     }
-}
-
-bool database::check_block_log_integrity(const fc::path& data_dir)
-{
-    fc::path block_log_file = block_log_path(data_dir);
-    fc::path block_log_index_file = block_log::block_log_index_path(block_log_file);
-
-    if (!fc::exists(block_log_file) || !fc::exists(block_log_index_file))
-    {
-        return false;
-    }
-
-    if (!fc::file_size(block_log_file) || !fc::file_size(block_log_index_file))
-    {
-        return false;
-    }
-
-    // TODO: add detection of files damage here
-
-    return true;
-}
-
-bool database::check_shared_mem_integrity(const fc::path& shared_mem_dir)
-{
-    fc::path shared_memory_file = chainbase::database::shared_memory_path(shared_mem_dir);
-    fc::path shared_memory_meta_file = chainbase::database::shared_memory_meta_path(shared_mem_dir);
-
-    if (!fc::exists(shared_memory_file) || !fc::exists(shared_memory_meta_file))
-    {
-        return false;
-    }
-
-    if (!fc::file_size(shared_memory_file) || !fc::file_size(shared_memory_meta_file))
-    {
-        return false;
-    }
-
-    // TODO: add detection of files damage here
-
-    return true;
 }
 
 void database::close()

@@ -124,9 +124,6 @@ public:
      */
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
 
-    bool check_block_log_integrity(const fc::path& data_dir);
-    bool check_shared_mem_integrity(const fc::path& shared_mem_dir);
-
     void close();
 
     time_point_sec get_genesis_time() const;
