@@ -120,16 +120,21 @@ void database_integration_fixture::generate_block(uint32_t skip, const fc::ecc::
     db_plugin->debug_generate_blocks(graphene::utilities::key_to_wif(key), 1, skip, miss_blocks);
 }
 
-void database_integration_fixture::generate_blocks(uint32_t block_count)
+uint32_t database_integration_fixture::generate_blocks(uint32_t block_count)
 {
     auto produced = db_plugin->debug_generate_blocks(debug_key, block_count, default_skip, 0);
     BOOST_REQUIRE(produced == block_count);
+
+    return produced;
 }
 
-void database_integration_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks)
+uint32_t database_integration_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks)
 {
-    db_plugin->debug_generate_blocks_until(debug_key, timestamp, miss_intermediate_blocks, default_skip);
+    auto produced
+        = db_plugin->debug_generate_blocks_until(debug_key, timestamp, miss_intermediate_blocks, default_skip);
     BOOST_REQUIRE((db.head_block_time() - timestamp).to_seconds() < SCORUM_BLOCK_INTERVAL);
+
+    return produced;
 }
 
 private_key_type database_integration_fixture::generate_private_key(const std::string& seed)

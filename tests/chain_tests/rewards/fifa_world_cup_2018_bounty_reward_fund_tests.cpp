@@ -1,22 +1,46 @@
 #include <boost/test/unit_test.hpp>
 
-#include "blogging_common.hpp"
+#include "database_blog_integration.hpp"
 
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/schema/budget_object.hpp>
 
 using namespace scorum::chain;
 
 namespace database_fixture {
-struct fifa_world_cup_2018_bounty_reward_fund_fixture : public blogging_common_with_accounts_fixture
+struct fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blog_integration_fixture
 {
     fifa_world_cup_2018_bounty_reward_fund_fixture()
         : fifa_world_cup_2018_bounty_reward_fund_service(db.content_fifa_world_cup_2018_bounty_reward_fund_service())
         , reward_fund_sp_service(db.content_reward_fund_sp_service())
         , budget_service(db.budget_service())
+        , account_service(db.account_service())
+        , dgp_service(db.dynamic_global_property_service())
     {
+        open_database();
+
+        const int feed_amount = 99000;
+
+        actor(initdelegate).create_account(alice);
+        actor(initdelegate).give_scr(alice, feed_amount);
+        actor(initdelegate).give_sp(alice, feed_amount);
+
+        actor(initdelegate).create_account(bob);
+        actor(initdelegate).give_scr(bob, feed_amount);
+        actor(initdelegate).give_sp(bob, feed_amount);
+
+        actor(initdelegate).create_account(sam);
+        actor(initdelegate).give_scr(sam, feed_amount / 2);
+        actor(initdelegate).give_sp(sam, feed_amount / 2);
+
+        actor(initdelegate).create_account(simon);
+        actor(initdelegate).give_scr(simon, feed_amount / 2);
+        actor(initdelegate).give_sp(simon, feed_amount / 2);
+
         const auto& fund_budget = budget_service.get_fund_budget();
         asset initial_per_block_reward = fund_budget.per_block;
 
@@ -29,8 +53,14 @@ struct fifa_world_cup_2018_bounty_reward_fund_fixture : public blogging_common_w
     content_fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service;
     content_reward_fund_sp_service_i& reward_fund_sp_service;
     budget_service_i& budget_service;
+    account_service_i& account_service;
+    dynamic_global_property_service_i& dgp_service;
 
     asset content_reward = ASSET_NULL_SP;
+    Actor alice = "alice";
+    Actor bob = "bob";
+    Actor sam = "sam";
+    Actor simon = "simon";
 };
 }
 
@@ -67,25 +97,21 @@ BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
 
     BOOST_REQUIRE_GT(bounty_fund, ASSET_NULL_SP);
 
-    auto post_permlink = create_next_post_permlink();
-
-    post(alice, post_permlink); // alice post
+    auto alice_post = create_post(alice).push();
 
     auto start_t = dgp_service.head_block_time();
 
     generate_blocks(start_t + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS.to_seconds());
 
-    vote(alice, post_permlink, sam); // sam upvote alice post
-
-    comment(alice, post_permlink, bob); // bob comment
+    alice_post.vote(sam).push(); // sam upvote alice post
+    auto bob_comm = alice_post.create_comment(bob).push(); // bob comment
 
     start_t = dgp_service.head_block_time();
 
     generate_blocks(start_t + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS.to_seconds());
 
-    vote(bob, get_comment_permlink(post_permlink), simon); // simon upvote bob comment
-
-    comment(alice, post_permlink, sam); // sam comment
+    bob_comm.vote(simon).push(); // simon upvote bob comment
+    alice_post.create_comment(sam).push();
 
     start_t = dgp_service.head_block_time();
 

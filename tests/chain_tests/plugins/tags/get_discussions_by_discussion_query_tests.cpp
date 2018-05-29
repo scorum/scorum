@@ -1,25 +1,37 @@
 #ifndef IS_LOW_MEM
 
-#include "get_discussions_by_common.hpp"
+#include "tags_common.hpp"
 #include <scorum/tags/tags_api_objects.hpp>
+#include <scorum/tags/tags_api.hpp>
 #include <scorum/common_api/config.hpp>
 #include <boost/test/unit_test.hpp>
 
-namespace tags_tests {
+using namespace scorum;
+using namespace scorum::tags::api;
+using namespace scorum::app;
+using namespace scorum::tags;
 
-using namespace tags::api;
+namespace database_fixture {
 
-BOOST_FIXTURE_TEST_SUITE(get_discussions_by_trending_tests, get_discussions_by_common)
+struct get_discussions_by_query_fixture : public tags_fixture
+{
+    using discussion = scorum::tags::api::discussion;
+
+    get_discussions_by_query_fixture()
+    {
+        actor(initdelegate).give_sp(alice, 1e9);
+        actor(initdelegate).give_sp(bob, 1e9);
+        actor(initdelegate).give_sp(sam, 1e9);
+        actor(initdelegate).give_sp(dave, 1e9);
+    }
+};
+}
+
+BOOST_FIXTURE_TEST_SUITE(get_discussions_by_trending_tests, database_fixture::get_discussions_by_query_fixture)
 
 SCORUM_TEST_CASE(no_votes_should_return_nothing)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
+    create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -32,15 +44,8 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
 
 SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
-
-    actor(alice).vote(p1.author(), p1.permlink());
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
+    p1.vote(alice).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -53,30 +58,14 @@ SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
 
 SCORUM_TEST_CASE(should_return_voted_tags_intersection)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"tags":["C","D","E"]})").in_block();
+    auto p3 = create_post(sam).set_json(R"({"tags":["B","C","D","E"]})").in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["C","D","E"]})";
-    });
-    auto p3 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl3";
-        op.body = "body3";
-        op.json_metadata = R"({"tags":["B","C","D","E"]})";
-    });
+    p1.vote(sam).in_block();
 
-    actor(sam).vote(p1.author(), p1.permlink());
-
-    actor(sam).vote(p2.author(), p2.permlink());
-    actor(bob).vote(p2.author(), p2.permlink());
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -89,9 +78,9 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p1.permlink());
     }
 
-    actor(sam).vote(p3.author(), p3.permlink());
-    actor(bob).vote(p3.author(), p3.permlink());
-    actor(alice).vote(p3.author(), p3.permlink());
+    p3.vote(sam).in_block();
+    p3.vote(bob).in_block();
+    p3.vote(alice).in_block();
 
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -104,35 +93,19 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
 
 SCORUM_TEST_CASE(should_return_voted_tags_union)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"tags":["C","D","E"]})").in_block();
+    // this post (p3) will be skipped (despite it has max trending) cuz it doesn't have neither "B" or "D" tag
+    auto p3 = create_post(sam).set_json(R"({"tags":["C","E"]})").in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["C","D","E"]})";
-    });
-    // this post will be skipped (despite it has max trending) cuz it doesn't have neither "B" or "D" tag
-    auto p3 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl3";
-        op.body = "body3";
-        op.json_metadata = R"({"tags":["C","E"]})";
-    });
+    p1.vote(sam).in_block();
 
-    actor(sam).vote(p1.author(), p1.permlink());
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
 
-    actor(sam).vote(p2.author(), p2.permlink());
-    actor(bob).vote(p2.author(), p2.permlink());
-
-    actor(sam).vote(p3.author(), p3.permlink());
-    actor(bob).vote(p3.author(), p3.permlink());
-    actor(alice).vote(p3.author(), p3.permlink());
+    p3.vote(sam).in_block();
+    p3.vote(bob).in_block();
+    p3.vote(alice).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -148,43 +121,23 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
 SCORUM_TEST_CASE(check_pagination)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
-
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block_with_delay();
     // this post (p2) will be skipped cuz it doesn't have "C" tag
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["D","E"]})";
-    });
-    auto p3 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl3";
-        op.body = "body3";
-        op.json_metadata = R"({"tags":["B","C","D","E"]})";
-    });
-    auto p4 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl4";
-        op.body = "body4";
-        op.json_metadata = R"({"tags":["C","B","E"]})";
-    });
+    auto p2 = create_post(bob).set_json(R"({"tags":["D","E"]})").in_block_with_delay();
+    auto p3 = create_post(alice).set_json(R"({"tags":["B","C","D","E"]})").in_block();
+    auto p4 = create_post(bob).set_json(R"({"tags":["C","B","E"]})").in_block();
 
-    actor(sam).vote(p1.author(), p1.permlink());
+    p1.vote(sam).in_block();
 
-    actor(sam).vote(p2.author(), p2.permlink());
-    actor(bob).vote(p2.author(), p2.permlink());
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
 
-    actor(sam).vote(p3.author(), p3.permlink());
-    actor(bob).vote(p3.author(), p3.permlink());
-    actor(alice).vote(p3.author(), p3.permlink());
+    p3.vote(sam).in_block();
+    p3.vote(bob).in_block();
+    p3.vote(alice).in_block();
 
-    actor(bob).vote(p4.author(), p4.permlink());
-    actor(sam).vote(p4.author(), p4.permlink());
+    p4.vote(bob).in_block();
+    p4.vote(sam).in_block();
 
     /*
      * [post3; post4]
@@ -218,25 +171,14 @@ SCORUM_TEST_CASE(check_pagination)
 
 SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
 {
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
+    // I-K are ignored (see ::scorum::TAGS_TO_ANALIZE_COUNT)
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C","D","E","F","G","H","I","J","K"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"tags":["H","I"]})").in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        // I-K are ignored (see ::scorum::TAGS_TO_ANALIZE_COUNT)
-        op.json_metadata = R"({"tags":["A","B","C","D","E","F","G","H","I","J","K"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["H","I"]})";
-    });
+    p1.vote(sam).in_block();
 
-    actor(sam).vote(p1.author(), p1.permlink());
-
-    actor(sam).vote(p2.author(), p2.permlink());
-    actor(bob).vote(p2.author(), p2.permlink());
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -258,15 +200,9 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
 
 SCORUM_TEST_CASE(check_truncate_body)
 {
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(bob).set_body("1234567890").set_json(R"({"tags":["I"]})").in_block();
 
-    auto p1 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "1234567890";
-        op.json_metadata = R"({"tags":["I"]})";
-    });
-
-    actor(sam).vote(p1.author(), p1.permlink());
+    p1.vote(sam).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -281,22 +217,12 @@ SCORUM_TEST_CASE(check_truncate_body)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(get_discussions_by_created_tests, get_discussions_by_common)
+BOOST_FIXTURE_TEST_SUITE(get_discussions_by_created_tests, database_fixture::get_discussions_by_query_fixture)
 
 SCORUM_TEST_CASE(no_votes_should_return_union)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["B"]})";
-    });
+    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"tags":["B"]})").in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -311,34 +237,15 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
 
 SCORUM_TEST_CASE(check_comments_should_not_be_returned)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A", "D"]})";
-    });
+    auto p1 = create_post(alice).set_json(R"({"tags":["A", "D"]})").in_block();
     // comments creation shouldn't be monitored by tags_plugin
-    auto c1 = p1.create_comment(bob, [](comment_operation& op) {
-        op.permlink = "cpl";
-        op.body = "cbody";
-        op.json_metadata = R"({"tags":["A"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["B","C"]})";
-    });
+    auto c1 = p1.create_comment(bob).set_json(R"({"tags":["A"]})").in_block();
+    auto p2 = create_post(sam).set_json(R"({"tags":["B","C"]})").in_block_with_delay();
 
     // comments changing shoudn't be monitored by tags_plugin
-    p1.create_comment(bob, [](comment_operation& op) {
-        op.permlink = "cpl";
-        op.title = "new-title";
-        op.body = "new-body";
-        op.json_metadata = R"({"tags":["A"]})";
-    });
+    p1.create_comment(bob).set_permlink(c1.permlink()).set_body("new-body").set_json(R"({"tags":["A"]})").in_block();
     // comments voting shoudn't be monitored by tags_plugin
-    actor(alice).vote(c1.author(), c1.permlink());
+    c1.vote(alice).in_block();
     // comments payouts shoudn't be monitored by tags_plugin
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
@@ -355,25 +262,9 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
 
 SCORUM_TEST_CASE(check_discussions_after_post_deleting)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
-
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["B","C","D"]})";
-    });
-    auto p3 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl3";
-        op.body = "body3";
-        op.json_metadata = R"({"tags":["B","C","D","E"]})";
-    });
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block_with_delay();
+    auto p2 = create_post(bob).set_json(R"({"tags":["B","C","D"]})").in_block();
+    auto p3 = create_post(alice).set_json(R"({"tags":["B","C","D","E"]})").in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -401,15 +292,9 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
 
 SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
 {
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A"]})";
-    });
-
-    actor(sam).vote(p1.author(), p1.permlink(), -100);
+    p1.vote(sam, -100).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -423,34 +308,18 @@ SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(get_discussions_by_hot_tests, get_discussions_by_common)
+BOOST_FIXTURE_TEST_SUITE(get_discussions_by_hot_tests, database_fixture::get_discussions_by_query_fixture)
 
 SCORUM_TEST_CASE(should_return_voted_tags_union)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block_with_delay();
+    auto p2 = create_post(bob).set_json(R"({"tags":["C","D","E"]})").in_block();
+    auto p3 = create_post(alice).set_json(R"({"tags":["B","C","D","E"]})").in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A","B","C"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-        op.json_metadata = R"({"tags":["C","D","E"]})";
-    });
-    auto p3 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl3";
-        op.body = "body3";
-        op.json_metadata = R"({"tags":["B","C","D","E"]})";
-    });
+    p1.vote(sam).in_block();
 
-    actor(sam).vote(p1.author(), p1.permlink());
-
-    actor(sam).vote(p2.author(), p2.permlink());
-    actor(bob).vote(p2.author(), p2.permlink());
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -463,9 +332,9 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p1.permlink());
     }
 
-    actor(sam).vote(p3.author(), p3.permlink());
-    actor(bob).vote(p3.author(), p3.permlink());
-    actor(alice).vote(p3.author(), p3.permlink());
+    p3.vote(sam).in_block();
+    p3.vote(bob).in_block();
+    p3.vote(alice).in_block();
 
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -478,33 +347,18 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
 SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
 {
-    actor(initdelegate).give_sp(alice, 1e9);
-    actor(initdelegate).give_sp(bob, 1e9);
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block_with_delay();
+    auto p2 = create_post(bob).in_block();
+    auto p3 = create_post(alice).set_json(R"({"tags":["B"]})").in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A"]})";
-    });
-    auto p2 = create_post(bob, [](comment_operation& op) {
-        op.permlink = "pl2";
-        op.body = "body2";
-    });
-    auto p3 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl3";
-        op.body = "body3";
-        op.json_metadata = R"({"tags":["B"]})";
-    });
+    p1.vote(sam).in_block();
 
-    actor(sam).vote(p1.author(), p1.permlink());
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
 
-    actor(sam).vote(p2.author(), p2.permlink());
-    actor(bob).vote(p2.author(), p2.permlink());
-
-    actor(sam).vote(p3.author(), p3.permlink());
-    actor(bob).vote(p3.author(), p3.permlink());
-    actor(alice).vote(p3.author(), p3.permlink());
+    p3.vote(sam).in_block();
+    p3.vote(bob).in_block();
+    p3.vote(alice).in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -515,15 +369,9 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
 
 SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
 {
-    actor(initdelegate).give_sp(sam, 1e9);
+    auto p1 = create_post(alice).in_block();
 
-    auto p1 = create_post(alice, [](comment_operation& op) {
-        op.permlink = "pl1";
-        op.body = "body1";
-        op.json_metadata = R"({"tags":["A"]})";
-    });
-
-    actor(sam).vote(p1.author(), p1.permlink());
+    p1.vote(sam).push();
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
@@ -535,6 +383,5 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}
 
 #endif

@@ -8,12 +8,12 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/rewards_math/formulas.hpp>
 
-#include "database_integration.hpp"
+#include "database_blog_integration.hpp"
 #include "actor.hpp"
 
 namespace database_fixture {
 
-class sp_holders_reward_fixture : public database_integration_fixture
+class sp_holders_reward_fixture : public database_blog_integration_fixture
 {
 public:
     sp_holders_reward_fixture()
@@ -37,6 +37,11 @@ public:
                                          .generate();
 
         open_database(genesis);
+    }
+
+    virtual void open_database_impl(const genesis_state_type& genesis) override
+    {
+        database_integration_fixture::open_database_impl(genesis);
     }
 
     inline asset get_active_voters_reward(const asset& total)
@@ -80,22 +85,10 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
 {
     try
     {
-        comment_operation comment;
-        comment.author = "alice";
-        comment.permlink = "test";
-        comment.parent_permlink = "test";
-        comment.title = "test";
-        comment.body = "foobar";
-
-        vote_operation vote;
-        vote.author = "alice";
-        vote.permlink = "test";
-        vote.voter = "bob";
-        vote.weight = (int16_t)100;
-
         asset bob_sp_before = account_service.get_account(bob.name).scorumpower;
 
-        push_operations(fc::ecc::private_key(), true, comment, vote);
+        auto post = create_post(alice).push();
+        post.vote(bob).in_block();
 
         auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
 
@@ -111,20 +104,8 @@ SCORUM_TEST_CASE(per_block_scr_payment_from_budget)
     {
         auto advertising_budget = create_advertising_budget();
 
-        comment_operation comment;
-        comment.author = "alice";
-        comment.permlink = "test";
-        comment.parent_permlink = "test";
-        comment.title = "test";
-        comment.body = "foobar";
-
-        vote_operation vote;
-        vote.author = "alice";
-        vote.permlink = "test";
-        vote.voter = "bob";
-        vote.weight = (int16_t)100;
-
-        push_operations(fc::ecc::private_key(), true, comment, vote);
+        auto post = create_post(alice).push();
+        post.vote(bob).in_block();
 
         auto dev_team_reward_scr = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
         auto user_reward_scr = advertising_budget - dev_team_reward_scr;
@@ -175,29 +156,12 @@ SCORUM_TEST_CASE(per_block_sp_payment_division_from_fund_budget)
 {
     try
     {
-        comment_operation comment;
-        comment.author = "alice";
-        comment.permlink = "test";
-        comment.parent_permlink = "test";
-        comment.title = "test";
-        comment.body = "foobar";
-
-        vote_operation vote;
-        vote.author = "alice";
-        vote.permlink = "test";
-        vote.voter = "bob";
-        vote.weight = (int16_t)100;
-
-        vote_operation vote2;
-        vote2.author = "alice";
-        vote2.permlink = "test";
-        vote2.voter = "alice";
-        vote2.weight = (int16_t)100;
-
         asset alice_sp_before = account_service.get_account(alice.name).scorumpower;
         asset bob_sp_before = account_service.get_account(bob.name).scorumpower;
 
-        push_operations(fc::ecc::private_key(), true, comment, vote, vote2);
+        auto post = create_post(alice).push();
+        post.vote(bob).push();
+        post.vote(alice).in_block();
 
         auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
 
@@ -215,37 +179,25 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
 {
     try
     {
-        comment_operation comment;
-        comment.author = "alice";
-        comment.permlink = "test";
-        comment.parent_permlink = "test";
-        comment.title = "test";
-        comment.body = "foobar";
-
-        vote_operation vote;
-        vote.author = "alice";
-        vote.permlink = "test";
-        vote.voter = "bob";
-        vote.weight = (int16_t)10;
-
         const auto& voter = account_service.get_account(bob.name);
         asset bob_sp_before = voter.scorumpower;
+
+        auto vote_weight = 100;
 
         uint16_t current_power
             = scorum::rewards_math::calculate_restoring_power(voter.voting_power, dprops_service.head_block_time(),
                                                               voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
 
-        uint16_t used_power = scorum::rewards_math::calculate_used_power(current_power, vote.weight * SCORUM_1_PERCENT,
+        uint16_t used_power = scorum::rewards_math::calculate_used_power(current_power, vote_weight * SCORUM_1_PERCENT,
                                                                          SCORUM_VOTING_POWER_DECAY_PERCENT);
 
         auto last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
             current_power - used_power, dprops_service.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
 
-        push_operations(fc::ecc::private_key(), true, comment, vote);
+        auto post = create_post(alice).push();
+        post.vote(bob, vote_weight).in_block();
 
-        auto generated_blocks = 1
-            + db_plugin->debug_generate_blocks_until(debug_key, last_vote_cashout_time - SCORUM_BLOCK_INTERVAL, false,
-                                                     default_skip);
+        auto generated_blocks = 1 + generate_blocks(last_vote_cashout_time - SCORUM_BLOCK_INTERVAL, false);
 
         auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
 
@@ -277,23 +229,11 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
 
         generate_blocks(fund_budget_period_in_blocks);
 
-        comment_operation comment;
-        comment.author = "alice";
-        comment.permlink = "test";
-        comment.parent_permlink = "test";
-        comment.title = "test";
-        comment.body = "foobar";
-
-        vote_operation vote;
-        vote.author = "alice";
-        vote.permlink = "test";
-        vote.voter = "bob";
-        vote.weight = (int16_t)100;
-
         const auto& voter = account_service.get_account(bob.name);
         asset bob_sp_before = voter.scorumpower;
 
-        push_operations(fc::ecc::private_key(), true, comment, vote);
+        auto post = create_post(alice).push();
+        post.vote(bob).in_block();
 
         auto& balancer = voters_reward_sp_service.get();
 

@@ -1,10 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
-#include "blogging_common.hpp"
+#include "database_blog_integration.hpp"
 
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
+#include <scorum/chain/services/account.hpp>
 
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
@@ -12,13 +13,28 @@
 using namespace scorum::chain;
 
 namespace database_fixture {
-struct comment_cashout_from_scr_fund_fixture : public blogging_common_with_accounts_fixture
+struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_fixture
 {
     comment_cashout_from_scr_fund_fixture()
         : budget_service(db.budget_service())
         , reward_fund_scr_service(db.content_reward_fund_scr_service())
         , reward_balancer(db.content_reward_scr_service())
+        , account_service(db.obtain_service<dbs_account>())
+        , alice("alice")
+        , sam("sam")
     {
+        open_database();
+
+        const int feed_amount = 99000;
+
+        actor(initdelegate).create_account(alice);
+        actor(initdelegate).give_scr(alice, feed_amount);
+        actor(initdelegate).give_sp(alice, feed_amount);
+
+        actor(initdelegate).create_account(sam);
+        actor(initdelegate).give_scr(sam, feed_amount / 2);
+        actor(initdelegate).give_sp(sam, feed_amount / 2);
+
         generate_block();
 
         const int deadline_block_count = 10;
@@ -43,8 +59,11 @@ struct comment_cashout_from_scr_fund_fixture : public blogging_common_with_accou
     budget_service_i& budget_service;
     content_reward_fund_scr_service_i& reward_fund_scr_service;
     content_reward_scr_service_i& reward_balancer;
+    account_service_i& account_service;
 
     asset activity_reward_balance = ASSET_NULL_SP;
+    Actor alice;
+    Actor sam;
 };
 }
 
@@ -57,15 +76,12 @@ BOOST_AUTO_TEST_CASE(cashout_check)
     auto alice_old_balance = account_service.get_account(alice.name).balance;
     auto sam_old_balance = account_service.get_account(sam.name).balance;
 
-    auto post_permlink = create_next_post_permlink();
-
-    post(alice, post_permlink); // alice post
+    auto alice_post = create_post(alice).push();
 
     const int vote_interval = SCORUM_CASHOUT_WINDOW_SECONDS / 2;
-
     generate_blocks(db.head_block_time() + vote_interval);
 
-    vote(alice, post_permlink, sam); // sam upvote alice post
+    alice_post.vote(sam).push(); // sam upvote alice post
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS - vote_interval);
 
@@ -86,15 +102,13 @@ BOOST_AUTO_TEST_CASE(no_double_cashout_check)
     auto alice_old_balance = account_service.get_account(alice.name).balance;
     auto sam_old_balance = account_service.get_account(sam.name).balance;
 
-    auto post_permlink = create_next_post_permlink();
-
-    post(alice, post_permlink); // alice post
+    auto alice_post = create_post(alice).push();
 
     const int vote_interval = SCORUM_CASHOUT_WINDOW_SECONDS / 2;
 
     generate_blocks(db.head_block_time() + vote_interval);
 
-    vote(alice, post_permlink, sam); // sam upvote alice post
+    alice_post.vote(sam).push(); // sam upvote alice post
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS - vote_interval);
 

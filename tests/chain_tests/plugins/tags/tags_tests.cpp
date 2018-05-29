@@ -1,28 +1,13 @@
 #include <boost/test/unit_test.hpp>
-
-#include "tags_common.hpp"
+#include <scorum/chain/services/budget.hpp>
 
 #include <scorum/tags/tags_api_impl.hpp>
 
-#include <scorum/chain/services/budget.hpp>
+#include "tags_common.hpp"
 
-namespace tags_tests {
+using namespace scorum::tags;
 
-BOOST_AUTO_TEST_SUITE(title_to_permlink_tests)
-
-SCORUM_TEST_CASE(replace_spaces_with_minus)
-{
-    BOOST_CHECK_EQUAL("one-two-three", tags_fixture::title_to_permlink("one two three"));
-}
-
-SCORUM_TEST_CASE(replace_dot_and_coma_with_minus)
-{
-    BOOST_CHECK_EQUAL("one-two-three", tags_fixture::title_to_permlink("one.two,three"));
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_FIXTURE_TEST_SUITE(tags_tests, tags_fixture)
+BOOST_FIXTURE_TEST_SUITE(tags_tests, database_fixture::tags_fixture)
 
 SCORUM_TEST_CASE(get_discussions_by_created)
 {
@@ -31,10 +16,7 @@ SCORUM_TEST_CASE(get_discussions_by_created)
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 0u);
 
-    create_post(initdelegate, [](comment_operation& op) {
-        op.title = "root post";
-        op.body = "body";
-    });
+    create_post(initdelegate).in_block();
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
 }
@@ -46,12 +28,7 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_post_after_cashout_time)
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 0u);
 
-    auto post = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "root post";
-        op.body = "body";
-    });
-
-    generate_blocks(post.cashout_time());
+    create_post(initdelegate).in_block(SCORUM_CASHOUT_WINDOW_SECONDS);
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_created(query).size(), 1u);
 }
@@ -71,20 +48,9 @@ SCORUM_TEST_CASE(test_comments_depth_counter)
         return result;
     };
 
-    auto root = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "root post";
-        op.body = "body";
-    });
-
-    auto root_child = root.create_comment(initdelegate, [](comment_operation& op) {
-        op.title = "child one";
-        op.body = "body";
-    });
-
-    auto root_child_child = root_child.create_comment(initdelegate, [](comment_operation& op) {
-        op.title = "child two";
-        op.body = "body";
-    });
+    auto root = create_post(initdelegate).in_block_with_delay();
+    auto root_child = root.create_comment(initdelegate).in_block_with_delay();
+    auto root_child_child = root_child.create_comment(initdelegate).in_block_with_delay();
 
     auto check_list = get_comments_with_depth(this->db);
 
@@ -95,15 +61,8 @@ SCORUM_TEST_CASE(test_comments_depth_counter)
 
 SCORUM_TEST_CASE(get_discussions_by_created_return_post_without_it_comments_if_its_id_0)
 {
-    auto root = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "root";
-        op.body = "body";
-    });
-
-    auto comment_level_1 = root.create_comment(initdelegate, [](comment_operation& op) {
-        op.title = "level 1";
-        op.body = "body";
-    });
+    auto root = create_post(initdelegate).in_block_with_delay();
+    root.create_comment(initdelegate).in_block_with_delay();
 
     api::discussion_query query;
     query.limit = 100;
@@ -113,25 +72,11 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_post_without_it_comments_if_i
 
 SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
 {
-    create_post(initdelegate, [](comment_operation& op) {
-        op.title = "zero";
-        op.body = "post";
-    });
-
-    auto root = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "one";
-        op.body = "post";
-    });
-
-    auto comment_level_1 = root.create_comment(initdelegate, [](comment_operation& op) {
-        op.title = "level 1";
-        op.body = "body";
-    });
-
-    auto comment_level_2 = comment_level_1.create_comment(initdelegate, [](comment_operation& op) {
-        op.title = "level 2";
-        op.body = "body";
-    });
+    auto post1 = create_post(initdelegate).in_block_with_delay();
+    generate_block();
+    auto post2 = create_post(initdelegate).in_block_with_delay();
+    auto comment_level_1 = post2.create_comment(initdelegate).in_block_with_delay();
+    comment_level_1.create_comment(initdelegate).in_block_with_delay();
 
     api::discussion_query query;
     query.limit = 100;
@@ -140,8 +85,8 @@ SCORUM_TEST_CASE(get_discussions_by_created_return_two_posts)
 
     BOOST_CHECK_EQUAL(discussions.size(), 2u);
 
-    BOOST_CHECK_EQUAL(discussions[0].permlink, "one");
-    BOOST_CHECK_EQUAL(discussions[1].permlink, "zero");
+    BOOST_CHECK_EQUAL(discussions[0].permlink, post2.permlink());
+    BOOST_CHECK_EQUAL(discussions[1].permlink, post1.permlink());
 }
 
 SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
@@ -150,10 +95,7 @@ SCORUM_TEST_CASE(post_without_tags_creates_one_empty_tag)
 
     BOOST_REQUIRE_EQUAL(0u, index.size());
 
-    create_post(initdelegate, [](comment_operation& op) {
-        op.title = "zero";
-        op.body = "post";
-    });
+    create_post(initdelegate).in_block_with_delay();
 
     BOOST_REQUIRE_EQUAL(1u, index.size());
 
@@ -169,16 +111,8 @@ SCORUM_TEST_CASE(do_not_create_tag_object_for_comment)
 
     BOOST_REQUIRE_EQUAL(0u, index.size());
 
-    auto post = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "post";
-        op.body = "body";
-    });
-
-    post.create_comment(initdelegate, [](comment_operation& op) {
-        op.title = "comment";
-        op.body = "body";
-        op.json_metadata = "{\"tags\" : [\"football\"]}";
-    });
+    auto post = create_post(initdelegate).in_block_with_delay();
+    post.create_comment(initdelegate).set_json(R"({"tags" : ["football"]})").in_block_with_delay();
 
     BOOST_REQUIRE_EQUAL(1u, index.size());
 
@@ -190,11 +124,7 @@ SCORUM_TEST_CASE(do_not_create_tag_object_for_comment)
 
 SCORUM_TEST_CASE(create_tags_from_json_metadata)
 {
-    create_post(initdelegate, [](comment_operation& op) {
-        op.title = "zero";
-        op.body = "post";
-        op.json_metadata = "{\"tags\" : [\"football\", \"tenis\"]}";
-    });
+    create_post(initdelegate).set_json(R"({"tags" : ["football", "tenis"]})").in_block_with_delay();
 
     auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
     BOOST_REQUIRE_EQUAL(3u, index.size());
@@ -214,17 +144,9 @@ SCORUM_TEST_CASE(create_tags_from_json_metadata)
 
 SCORUM_TEST_CASE(create_two_posts_with_same_tags)
 {
-    create_post(initdelegate, [](comment_operation& op) {
-        op.title = "zero";
-        op.body = "post";
-        op.json_metadata = "{\"tags\" : [\"football\"]}";
-    });
-
-    create_post(initdelegate, [](comment_operation& op) {
-        op.title = "one";
-        op.body = "post";
-        op.json_metadata = "{\"tags\" : [\"football\"]}";
-    });
+    create_post(initdelegate).set_json(R"({"tags" : ["football"]})").in_block_with_delay();
+    generate_block();
+    create_post(initdelegate).set_json(R"({"tags" : ["football"]})").in_block_with_delay();
 
     auto& index = db.get_index<scorum::tags::tag_index, scorum::tags::by_comment>();
     BOOST_REQUIRE_EQUAL(4u, index.size());
@@ -256,18 +178,10 @@ SCORUM_TEST_CASE(do_not_remove_tag_after_cachout_time)
 
     BOOST_REQUIRE_EQUAL(0u, index.size());
 
-    auto post = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "zero";
-        op.body = "post";
-        op.json_metadata = "{\"tags\" : [\"football\"]}";
-    });
+    create_post(initdelegate).set_json(R"({"tags" : ["football"]})").in_block(SCORUM_CASHOUT_WINDOW_SECONDS);
 
     // first one is a 'football' tag; the second one is an empty one (whicn is used to track 'get_discussions_by'
     // request with empty tags
-    BOOST_REQUIRE_EQUAL(2u, index.size());
-
-    generate_blocks(post.cashout_time());
-
     BOOST_REQUIRE_EQUAL(2u, index.size());
 }
 #endif
@@ -296,7 +210,7 @@ SCORUM_TEST_CASE(do_not_throw_and_return_zero_when_discussion_and_funds_are_empt
     stub_fund_scr fund_scr;
     stub_fund_sp fund_sp;
 
-    discussion d;
+    api::discussion d;
 
     BOOST_REQUIRE_NO_THROW(scorum::tags::calc_pending_payout<stub_fund_scr>(d, fund_scr));
     BOOST_REQUIRE_NO_THROW(scorum::tags::calc_pending_payout<stub_fund_sp>(d, fund_sp));
@@ -307,16 +221,12 @@ SCORUM_TEST_CASE(do_not_throw_and_return_zero_when_discussion_and_funds_are_empt
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct get_content_fixture : public tags_fixture
+struct get_content_fixture : public database_fixture::tags_fixture
 {
     get_content_fixture()
-        : alice("alice")
     {
-        actor(initdelegate).create_account(alice);
-        actor(initdelegate).give_sp(alice, 1000000000);
+        actor(initdelegate).give_sp(alice, 1e9);
     }
-
-    Actor alice;
 };
 
 BOOST_FIXTURE_TEST_SUITE(get_content, get_content_fixture)
@@ -326,17 +236,15 @@ SCORUM_TEST_CASE(check_total_payout)
     actor(initdelegate)
         .create_budget("permlink", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
 
-    auto post = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "root post";
-        op.body = "body";
-    });
+    auto post = create_post(initdelegate).in_block();
+    generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL);
 
     auto d = _api.get_content(post.author(), post.permlink());
 
     BOOST_REQUIRE_EQUAL(d.total_payout_scr_value, ASSET_NULL_SCR);
     BOOST_REQUIRE_EQUAL(d.total_payout_sp_value, ASSET_NULL_SP);
 
-    actor(alice).vote(post.author(), post.permlink());
+    post.vote(alice).in_block();
 
     generate_blocks(post.cashout_time());
 
@@ -348,12 +256,8 @@ SCORUM_TEST_CASE(check_total_payout)
 
 SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
 {
-    auto post = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "one";
-        op.body = "body";
-    });
-
-    actor(alice).vote(post.author(), post.permlink());
+    auto post = create_post(initdelegate).in_block();
+    post.vote(alice).in_block();
 
     auto d = _api.get_content(post.author(), post.permlink());
 
@@ -375,22 +279,18 @@ SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 
     // first payout
     {
-        auto post = create_post(initdelegate, [](comment_operation& op) {
-            op.title = "one";
-            op.body = "body";
-        });
+        auto post = create_post(initdelegate).in_block();
 
-        actor(alice).vote(post.author(), post.permlink());
+        generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL);
+        post.vote(alice).in_block();
 
         generate_blocks(post.cashout_time());
     }
 
-    auto post2 = create_post(initdelegate, [](comment_operation& op) {
-        op.title = "two";
-        op.body = "body";
-    });
+    auto post2 = create_post(initdelegate).in_block();
 
-    actor(alice).vote(post2.author(), post2.permlink());
+    generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL);
+    post2.vote(alice).in_block();
 
     generate_blocks(post2.cashout_time() - fc::minutes(1));
 
@@ -399,6 +299,4 @@ SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
     BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000005 SCR"));
     BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000438 SP"));
 }
-
 BOOST_AUTO_TEST_SUITE_END()
-} // namespace tags_tests

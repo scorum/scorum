@@ -37,9 +37,9 @@ public:
 
     void generate_block(uint32_t skip = 0, const private_key_type& key = initdelegate.private_key, int miss_blocks = 0);
 
-    void generate_blocks(uint32_t block_count);
+    uint32_t generate_blocks(uint32_t block_count);
 
-    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true);
+    uint32_t generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true);
 
     template <typename T>
     void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key(), bool put_in_block = true)
