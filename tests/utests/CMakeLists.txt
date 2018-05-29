@@ -31,6 +31,7 @@ set(SOURCES
     rewards_math/calculate_voting_power_tests.cpp
     tasks_base_tests.cpp
     block_tasks_tests.cpp
+    app_tests.cpp
 )
 
 add_executable(utests

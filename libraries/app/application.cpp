@@ -1520,11 +1520,11 @@ fc::path get_data_dir_path(const boost::program_options::variables_map& options)
 {
     FC_ASSERT(options.count("data-dir"), "Default value for 'data-dir' should be set.");
 
-    fc::path data_dir = options["data-dir"].as<boost::filesystem::path>();
+    boost::filesystem::path data_dir = options["data-dir"].as<boost::filesystem::path>();
 
     if (data_dir.is_relative())
     {
-        data_dir = fc::current_path() / data_dir;
+        data_dir = boost::filesystem::current_path() / data_dir;
     }
 
     return data_dir;
@@ -1532,7 +1532,7 @@ fc::path get_data_dir_path(const boost::program_options::variables_map& options)
 
 fc::path get_config_file_path(const boost::program_options::variables_map& options)
 {
-    fc::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
+    boost::filesystem::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
 
     if (options.count("config-file"))
     {
@@ -1540,7 +1540,7 @@ fc::path get_config_file_path(const boost::program_options::variables_map& optio
 
         if (config_ini_path.is_relative())
         {
-            config_ini_path = fc::current_path() / config_ini_path;
+            config_ini_path = boost::filesystem::current_path() / config_ini_path;
         }
     }
 
