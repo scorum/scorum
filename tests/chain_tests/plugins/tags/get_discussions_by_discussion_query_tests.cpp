@@ -71,6 +71,43 @@ SCORUM_TEST_CASE(no_category_and_domain_should_return_post)
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
 }
 
+SCORUM_TEST_CASE(no_json_metadata_should_return_post)
+{
+    actor(initdelegate).give_sp(alice, 1e9);
+
+    auto p1 = create_post(alice, [](comment_operation& op) {
+        op.permlink = "pl1";
+        op.body = "body1";
+    });
+
+    actor(alice).vote(p1.author(), p1.permlink());
+
+    discussion_query q;
+    q.limit = 100;
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
+}
+
+SCORUM_TEST_CASE(should_return_post_by_converting_all_to_lowercase)
+{
+    actor(initdelegate).give_sp(alice, 1e9);
+
+    auto p1 = create_post(alice, [](comment_operation& op) {
+        op.permlink = "pl1";
+        op.body = "body1";
+        op.json_metadata = R"({"categories":["A"], "domains": ["b"]})";
+    });
+
+    actor(alice).vote(p1.author(), p1.permlink());
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "a", "B" };
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
+}
+
 SCORUM_TEST_CASE(should_return_voted_tags_intersection)
 {
     actor(initdelegate).give_sp(alice, 1e9);
