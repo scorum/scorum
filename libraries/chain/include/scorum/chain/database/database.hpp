@@ -89,6 +89,10 @@ public:
         skip_block_log = 1 << 13 ///< used to skip block logging on reindex
     };
 
+    static fc::path block_log_path(const fc::path& data_dir);
+
+    uint32_t get_reindex_skip_flags() const;
+
     /**
      * @brief Open a database, creating a new one if necessary
      *
@@ -112,6 +116,7 @@ public:
     void reindex(const fc::path& data_dir,
                  const fc::path& shared_mem_dir,
                  uint64_t shared_file_size,
+                 uint32_t skip_flags,
                  const genesis_state_type& genesis_state);
 
     /**
@@ -121,6 +126,7 @@ public:
      * Will close the database before wiping. Database will be closed when this function returns.
      */
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
+
     void close();
 
     time_point_sec get_genesis_time() const;

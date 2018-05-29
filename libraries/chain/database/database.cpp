@@ -73,6 +73,8 @@
 #include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
+#include <cmath>
+
 namespace scorum {
 namespace chain {
 
@@ -115,6 +117,26 @@ database::~database()
     clear_pending();
 }
 
+fc::path database::block_log_path(const fc::path& data_dir)
+{
+    return data_dir / "block_log";
+}
+
+uint32_t database::get_reindex_skip_flags() const
+{
+    uint32_t skip_flags = database::skip_witness_signature;
+    skip_flags |= database::skip_transaction_signatures;
+    skip_flags |= database::skip_transaction_dupe_check;
+    skip_flags |= database::skip_tapos_check;
+    skip_flags |= database::skip_merkle_check;
+    skip_flags |= database::skip_authority_check;
+    skip_flags |= database::skip_validate;
+    skip_flags |= database::skip_validate_invariants;
+    skip_flags |= database::skip_block_log;
+    skip_flags |= database::skip_witness_schedule_check;
+    return skip_flags;
+}
+
 void database::open(const fc::path& data_dir,
                     const fc::path& shared_mem_dir,
                     uint64_t shared_file_size,
@@ -141,7 +163,7 @@ void database::open(const fc::path& data_dir,
                 fc::create_directories(data_dir);
             }
 
-            _block_log.open(data_dir / "block_log");
+            _block_log.open(block_log_path(data_dir));
 
             auto log_head = _block_log.head();
 
@@ -150,7 +172,8 @@ void database::open(const fc::path& data_dir,
                 for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo_all(); });
 
                 for_each_index([&](chainbase::abstract_generic_index_i& item) {
-                    FC_ASSERT(item.revision() == head_block_num(), "Chainbase revision does not match head block num",
+                    FC_ASSERT(item.revision() == head_block_num(),
+                              "Chainbase revision does not match head block num. Reindex blockchain.",
                               ("rev", item.revision())("head_block", head_block_num()));
                 });
 
@@ -162,7 +185,7 @@ void database::open(const fc::path& data_dir,
                 auto head_block = _block_log.read_block_by_num(head_block_num());
                 // This assertion should be caught and a reindex should occur
                 FC_ASSERT(head_block.valid() && head_block->id() == head_block_id(),
-                          "Chain state does not match block log. Please reindex blockchain.");
+                          "Chain state does not match block log. Reindex blockchain.");
 
                 _fork_db.start_block(*head_block);
             }
@@ -183,17 +206,23 @@ void database::open(const fc::path& data_dir,
             init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
     }
+    catch (fc::assert_exception&)
+    {
+        reindex(data_dir, shared_mem_dir, shared_file_size, get_reindex_skip_flags(), genesis_state);
+    }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
 
 void database::reindex(const fc::path& data_dir,
                        const fc::path& shared_mem_dir,
                        uint64_t shared_file_size,
+                       uint32_t skip_flags,
                        const genesis_state_type& genesis_state)
 {
     try
     {
         ilog("Reindexing Blockchain");
+
         wipe(data_dir, shared_mem_dir, false);
         open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write, genesis_state);
         _fork_db.reset(); // override effect of _fork_db.start_block() call in open()
@@ -201,29 +230,28 @@ void database::reindex(const fc::path& data_dir,
         auto start = fc::time_point::now();
         SCORUM_ASSERT(_block_log.head(), block_log_exception, "No blocks in block log. Cannot reindex an empty chain.");
 
-        ilog("Replaying blocks...");
+        auto last_block_num = _block_log.head()->block_num();
+        uint log_interval_sz = std::max(last_block_num / 100u, 1000u);
 
-        uint64_t skip_flags = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check
-            | skip_tapos_check | skip_merkle_check | skip_witness_schedule_check | skip_authority_check | skip_validate
-            | /// no need to validate operations
-            skip_validate_invariants | skip_block_log;
+        ilog("Replaying ${n} blocks...", ("n", last_block_num));
 
         with_write_lock([&]() {
             auto itr = _block_log.read_block(0);
-            auto last_block_num = _block_log.head()->block_num();
-
-            while (itr.first.block_num() != last_block_num)
+            while (itr.first.block_num() <= last_block_num)
             {
                 auto cur_block_num = itr.first.block_num();
-                if (cur_block_num % 100000 == 0)
-                    std::cerr << "   " << double(cur_block_num * 100) / last_block_num << "%   " << cur_block_num
-                              << " of " << last_block_num << "   (" << (get_free_memory() / (1024 * 1024))
-                              << "M free)\n";
+                if (cur_block_num % log_interval_sz == 0 || cur_block_num == last_block_num)
+                {
+                    double percent = (cur_block_num * double(100)) / last_block_num;
+                    ilog("${p}% applied. ${m}M free.",
+                         ("p", (boost::format("%5.2f") % percent).str())("m", get_free_memory() / (1024 * 1024)));
+                }
                 apply_block(itr.first, skip_flags);
-                itr = _block_log.read_block(itr.second);
+                if (cur_block_num != last_block_num)
+                    itr = _block_log.read_block(itr.second);
+                else
+                    break;
             }
-
-            apply_block(itr.first, skip_flags);
 
             for_each_index([&](chainbase::abstract_generic_index_i& item) { item.set_revision(head_block_num()); });
         });
@@ -236,17 +264,18 @@ void database::reindex(const fc::path& data_dir,
         auto end = fc::time_point::now();
         ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
     }
-    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir))
+    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size)(skip_flags)(genesis_state))
 }
 
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
 {
     close();
-    chainbase::database::wipe();
+    chainbase::database::wipe(shared_mem_dir);
     if (include_blocks)
     {
-        fc::remove_all(data_dir / "block_log");
-        fc::remove_all(data_dir / "block_log.index");
+        fc::path block_log_file = block_log_path(data_dir);
+        fc::remove_all(block_log_file);
+        fc::remove_all(block_log::block_log_index_path(block_log_file));
     }
 }
 
