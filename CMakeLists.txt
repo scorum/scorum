@@ -248,6 +248,13 @@ if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
 
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    if( UNIX AND NOT APPLE )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -march=nocona -mfpmath=sse -fomit-frame-pointer -funroll-loops" )
+        message(STATUS "\n\n================Release optimization mode is On.\n\n")
+    endif( Linux )
+endif(CMAKE_BUILD_TYPE MATCHES Release)
+
 # external_plugins needs to be compiled first because libraries/app depends on SCORUM_EXTERNAL_PLUGINS being fully populated
 add_subdirectory( external_plugins )
 add_subdirectory( libraries )
