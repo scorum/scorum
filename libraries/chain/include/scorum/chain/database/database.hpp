@@ -114,6 +114,7 @@ public:
     void reindex(const fc::path& data_dir,
                  const fc::path& shared_mem_dir,
                  uint64_t shared_file_size,
+                 uint32_t skip_flags,
                  const genesis_state_type& genesis_state);
 
     /**

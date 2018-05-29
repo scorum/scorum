@@ -380,30 +380,25 @@ public:
                 if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, genesis_state);
+
+                    uint32_t skip_flags = database::skip_witness_signature;
+                    skip_flags |= database::skip_transaction_signatures;
+                    skip_flags |= database::skip_transaction_dupe_check;
+                    skip_flags |= database::skip_tapos_check;
+                    skip_flags |= database::skip_merkle_check;
+                    skip_flags |= database::skip_authority_check;
+                    skip_flags |= database::skip_validate;
+                    skip_flags |= database::skip_validate_invariants;
+                    skip_flags |= database::skip_block_log;
+                    if (_options->at("replay-skip-witness-schedule-check").as<bool>())
+                        skip_flags |= database::skip_witness_schedule_check;
+
+                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, skip_flags, genesis_state);
                 }
                 else
                 {
-                    try
-                    {
-                        _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_write,
-                                        genesis_state);
-                    }
-                    catch (fc::assert_exception&)
-                    {
-                        wlog("Error when opening database. Attempting reindex...");
-
-                        try
-                        {
-                            _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, genesis_state);
-                        }
-                        catch (chain::block_log_exception&)
-                        {
-                            wlog("Error opening block log. Having to resync from network...");
-                            _chain_db->open(block_log_dir, _shared_dir, _shared_file_size,
-                                            chainbase::database::read_write, genesis_state);
-                        }
-                    }
+                    _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_write,
+                                    genesis_state);
                 }
 
                 if (_options->count("force-validate"))
@@ -1188,6 +1183,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
     ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")
     ("replay-blockchain", "Rebuild object graph by replaying all blocks")
+    ("replay-skip-witness-schedule-check", bpo::value<bool>()->default_value(true), "Skip witness schedule check wile block replaying")
     ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
     ("force-validate", "Force validation of all transactions")
     ("read-only", "Node will not connect to p2p network and can only read from the chain state")

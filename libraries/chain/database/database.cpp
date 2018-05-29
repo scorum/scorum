@@ -157,7 +157,8 @@ void database::open(const fc::path& data_dir,
                 for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo_all(); });
 
                 for_each_index([&](chainbase::abstract_generic_index_i& item) {
-                    FC_ASSERT(item.revision() == head_block_num(), "Chainbase revision does not match head block num",
+                    FC_ASSERT(item.revision() == head_block_num(),
+                              "Chainbase revision does not match head block num. Reindex blockchain.",
                               ("rev", item.revision())("head_block", head_block_num()));
                 });
 
@@ -169,7 +170,7 @@ void database::open(const fc::path& data_dir,
                 auto head_block = _block_log.read_block_by_num(head_block_num());
                 // This assertion should be caught and a reindex should occur
                 FC_ASSERT(head_block.valid() && head_block->id() == head_block_id(),
-                          "Chain state does not match block log. Please reindex blockchain.");
+                          "Chain state does not match block log. Reindex blockchain.");
 
                 _fork_db.start_block(*head_block);
             }
@@ -190,12 +191,27 @@ void database::open(const fc::path& data_dir,
             init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
     }
+    catch (fc::assert_exception&)
+    {
+        uint32_t skip_flags = database::skip_witness_signature;
+        skip_flags |= database::skip_transaction_signatures;
+        skip_flags |= database::skip_transaction_dupe_check;
+        skip_flags |= database::skip_tapos_check;
+        skip_flags |= database::skip_merkle_check;
+        skip_flags |= database::skip_authority_check;
+        skip_flags |= database::skip_validate;
+        skip_flags |= database::skip_validate_invariants;
+        skip_flags |= database::skip_block_log;
+        skip_flags |= database::skip_witness_schedule_check;
+        reindex(data_dir, shared_mem_dir, shared_file_size, skip_flags, genesis_state);
+    }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
 
 void database::reindex(const fc::path& data_dir,
                        const fc::path& shared_mem_dir,
                        uint64_t shared_file_size,
+                       uint32_t skip_flags,
                        const genesis_state_type& genesis_state)
 {
     try
@@ -213,11 +229,6 @@ void database::reindex(const fc::path& data_dir,
         uint log_interval_sz = std::max(last_block_num / 100u, 1000u);
 
         ilog("Replaying ${n} blocks...", ("n", last_block_num));
-
-        uint64_t skip_flags = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check
-            | skip_tapos_check | skip_merkle_check | skip_witness_schedule_check | skip_authority_check | skip_validate
-            | /// no need to validate operations
-            skip_validate_invariants | skip_block_log;
 
         with_write_lock([&]() {
             auto itr = _block_log.read_block(0);
@@ -248,7 +259,7 @@ void database::reindex(const fc::path& data_dir,
         auto end = fc::time_point::now();
         ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
     }
-    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir))
+    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size)(skip_flags)(genesis_state))
 }
 
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
