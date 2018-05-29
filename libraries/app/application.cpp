@@ -1518,30 +1518,22 @@ void print_program_options(std::ostream& stream, const boost::program_options::o
 
 fc::path get_data_dir_path(const boost::program_options::variables_map& options)
 {
+    namespace bfs = boost::filesystem;
+
     FC_ASSERT(options.count("data-dir"), "Default value for 'data-dir' should be set.");
 
-    boost::filesystem::path data_dir = options["data-dir"].as<boost::filesystem::path>();
-
-    if (data_dir.is_relative())
-    {
-        data_dir = boost::filesystem::current_path() / data_dir;
-    }
-
-    return data_dir;
+    return bfs::absolute(options["data-dir"].as<bfs::path>());
 }
 
 fc::path get_config_file_path(const boost::program_options::variables_map& options)
 {
-    boost::filesystem::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
+    namespace bfs = boost::filesystem;
+
+    bfs::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
 
     if (options.count("config-file"))
     {
-        config_ini_path = options["config-file"].as<boost::filesystem::path>();
-
-        if (config_ini_path.is_relative())
-        {
-            config_ini_path = boost::filesystem::current_path() / config_ini_path;
-        }
+        config_ini_path = bfs::absolute(options["config-file"].as<bfs::path>());
     }
 
     return config_ini_path;

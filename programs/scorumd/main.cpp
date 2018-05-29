@@ -147,6 +147,7 @@ int main(int argc, char** argv)
         {
             std::cerr << "            READONLY NODE\n\n";
         }
+
         std::cerr << "------------------------------------------------------\n";
         std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
         std::cerr << "------------------------------------------------------\n";
