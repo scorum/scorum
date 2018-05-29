@@ -64,6 +64,7 @@
 #include <boost/range/algorithm/reverse.hpp>
 
 #include <iostream>
+#include <fstream>
 #include <set>
 
 #include <fc/log/file_appender.hpp>
@@ -1512,6 +1513,58 @@ void print_program_options(std::ostream& stream, const boost::program_options::o
             }
         }
         stream << "\n";
+    }
+}
+
+fc::path get_data_dir_path(const boost::program_options::variables_map& options)
+{
+    FC_ASSERT(options.count("data-dir"), "Default value for 'data-dir' should be set.");
+
+    fc::path data_dir = options["data-dir"].as<boost::filesystem::path>();
+
+    if (data_dir.is_relative())
+    {
+        data_dir = fc::current_path() / data_dir;
+    }
+
+    return data_dir;
+}
+
+fc::path get_config_file_path(const boost::program_options::variables_map& options)
+{
+    fc::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
+
+    if (options.count("config-file"))
+    {
+        config_ini_path = options["config-file"].as<boost::filesystem::path>();
+
+        if (config_ini_path.is_relative())
+        {
+            config_ini_path = fc::current_path() / config_ini_path;
+        }
+    }
+
+    return config_ini_path;
+}
+
+void create_config_file_if_not_exist(const fc::path& config_ini_path,
+                                     const boost::program_options::options_description& cfg_options)
+{
+    FC_ASSERT(config_ini_path.is_absolute(), "config-file path should be absolute");
+
+    if (!fc::exists(config_ini_path))
+    {
+        ilog("Writing new config file at ${path}", ("path", config_ini_path));
+        if (!fc::exists(config_ini_path.parent_path()))
+        {
+            fc::create_directories(config_ini_path.parent_path());
+        }
+
+        std::ofstream out_cfg(config_ini_path.preferred_string());
+
+        print_program_options(out_cfg, cfg_options);
+
+        out_cfg.close();
     }
 }
 
