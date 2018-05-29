@@ -381,17 +381,9 @@ public:
                 {
                     ilog("Replaying blockchain on user request.");
 
-                    uint32_t skip_flags = database::skip_witness_signature;
-                    skip_flags |= database::skip_transaction_signatures;
-                    skip_flags |= database::skip_transaction_dupe_check;
-                    skip_flags |= database::skip_tapos_check;
-                    skip_flags |= database::skip_merkle_check;
-                    skip_flags |= database::skip_authority_check;
-                    skip_flags |= database::skip_validate;
-                    skip_flags |= database::skip_validate_invariants;
-                    skip_flags |= database::skip_block_log;
-                    if (_options->at("replay-skip-witness-schedule-check").as<bool>())
-                        skip_flags |= database::skip_witness_schedule_check;
+                    uint32_t skip_flags = _chain_db->get_reindex_skip_flags();
+                    if (!_options->at("replay-skip-witness-schedule-check").as<bool>())
+                        skip_flags &= ~database::skip_witness_schedule_check;
 
                     _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, skip_flags, genesis_state);
                 }

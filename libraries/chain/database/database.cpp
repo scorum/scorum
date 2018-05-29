@@ -122,6 +122,21 @@ fc::path database::block_log_path(const fc::path& data_dir)
     return data_dir / "block_log";
 }
 
+uint32_t database::get_reindex_skip_flags() const
+{
+    uint32_t skip_flags = database::skip_witness_signature;
+    skip_flags |= database::skip_transaction_signatures;
+    skip_flags |= database::skip_transaction_dupe_check;
+    skip_flags |= database::skip_tapos_check;
+    skip_flags |= database::skip_merkle_check;
+    skip_flags |= database::skip_authority_check;
+    skip_flags |= database::skip_validate;
+    skip_flags |= database::skip_validate_invariants;
+    skip_flags |= database::skip_block_log;
+    skip_flags |= database::skip_witness_schedule_check;
+    return skip_flags;
+}
+
 void database::open(const fc::path& data_dir,
                     const fc::path& shared_mem_dir,
                     uint64_t shared_file_size,
@@ -193,17 +208,7 @@ void database::open(const fc::path& data_dir,
     }
     catch (fc::assert_exception&)
     {
-        uint32_t skip_flags = database::skip_witness_signature;
-        skip_flags |= database::skip_transaction_signatures;
-        skip_flags |= database::skip_transaction_dupe_check;
-        skip_flags |= database::skip_tapos_check;
-        skip_flags |= database::skip_merkle_check;
-        skip_flags |= database::skip_authority_check;
-        skip_flags |= database::skip_validate;
-        skip_flags |= database::skip_validate_invariants;
-        skip_flags |= database::skip_block_log;
-        skip_flags |= database::skip_witness_schedule_check;
-        reindex(data_dir, shared_mem_dir, shared_file_size, skip_flags, genesis_state);
+        reindex(data_dir, shared_mem_dir, shared_file_size, get_reindex_skip_flags(), genesis_state);
     }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }

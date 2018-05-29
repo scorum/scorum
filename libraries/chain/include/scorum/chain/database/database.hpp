@@ -91,6 +91,8 @@ public:
 
     static fc::path block_log_path(const fc::path& data_dir);
 
+    uint32_t get_reindex_skip_flags() const;
+
     /**
      * @brief Open a database, creating a new one if necessary
      *
