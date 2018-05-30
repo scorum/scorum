@@ -46,6 +46,54 @@ SCORUM_TEST_CASE(check_empty_input_should_assert)
     BOOST_REQUIRE_THROW(_api.get_tags_by_category("", ""), fc::assert_exception);
 }
 
+SCORUM_TEST_CASE(check_empty_tag)
+{
+    create_post(alice, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "c1";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "","tag2",""]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("d1", "c1");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), 1u);
+}
+
+SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
+{
+    create_post(alice, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "c1";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("D1", "C1");
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), 3u);
+}
+
+SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
+{
+    create_post(alice, [](comment_operation& op) {
+        op.title = "post1";
+        op.body = "body";
+        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+        op.parent_permlink = "c1";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "TAG1","TAG2"]})";
+    });
+
+    auto cat1_tags = _api.get_tags_by_category("d1", "c1");
+
+    std::vector<std::pair<std::string, uint32_t>> cat1_expected = { { "tag2", 1 }, { "tag1", 1 } };
+
+    BOOST_REQUIRE_EQUAL(cat1_tags.size(), cat1_expected.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(cat1_tags.begin(), cat1_tags.end(), cat1_expected.begin(), cat1_expected.end());
+}
+
 SCORUM_TEST_CASE(check_couple_categories_several_tags)
 {
     // d1/c1
@@ -54,7 +102,7 @@ SCORUM_TEST_CASE(check_couple_categories_several_tags)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
     });
 
     // d1/c1
@@ -63,7 +111,7 @@ SCORUM_TEST_CASE(check_couple_categories_several_tags)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
     });
 
     // d1/c2
@@ -72,7 +120,7 @@ SCORUM_TEST_CASE(check_couple_categories_several_tags)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c2";
-        op.json_metadata = R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag1","tag2","tag3"]})";
     });
 
     // d1/c2
@@ -81,7 +129,7 @@ SCORUM_TEST_CASE(check_couple_categories_several_tags)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c2";
-        op.json_metadata = R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag3","tag4","tag5"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag3","tag4","tag5"]})";
     });
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
@@ -111,7 +159,7 @@ SCORUM_TEST_CASE(check_different_domain_same_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
     });
 
     // d2/c1
@@ -120,7 +168,7 @@ SCORUM_TEST_CASE(check_different_domain_same_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d2", "category": "c1", "tags": ["c1", "d2", "tag2","tag3","tag4"]})";
+        op.json_metadata = R"({"domains": ["d2"], "categories": ["c1"], "tags": ["c1", "d2", "tag2","tag3","tag4"]})";
     });
 
     // d2/c1
@@ -129,7 +177,7 @@ SCORUM_TEST_CASE(check_different_domain_same_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d2", "category": "c1", "tags": ["c1", "d2", "tag4","tag5"]})";
+        op.json_metadata = R"({"domains": ["d2"], "categories": ["c1"], "tags": ["c1", "d2", "tag4","tag5"]})";
     });
 
     auto cat1_domain1_tags = _api.get_tags_by_category("d1", "c1");
@@ -157,7 +205,7 @@ SCORUM_TEST_CASE(check_same_domain_different_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
     });
 
     // d2/c1
@@ -166,7 +214,7 @@ SCORUM_TEST_CASE(check_same_domain_different_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c2";
-        op.json_metadata = R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag2","tag3","tag4"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag2","tag3","tag4"]})";
     });
 
     // d2/c1
@@ -175,7 +223,7 @@ SCORUM_TEST_CASE(check_same_domain_different_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c2";
-        op.json_metadata = R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag4","tag5"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag4","tag5"]})";
     });
 
     auto cat1_domain1_tags = _api.get_tags_by_category("d1", "c1");
@@ -208,7 +256,7 @@ SCORUM_TEST_CASE(check_tags_doesnt_contain_category_and_domain)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})";
     });
 
     auto tags = _api.get_tags_by_category("d1", "c1");
@@ -226,7 +274,7 @@ SCORUM_TEST_CASE(check_json_metadata_doesnt_contain_domain)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"category": "c1", "tags": ["tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"categories": ["c1"], "tags": ["tag1","tag2","tag3"]})";
     });
 
     BOOST_REQUIRE_EQUAL((db.get_index<category_stats_index, by_category>().size()), 0u);
@@ -239,7 +287,7 @@ SCORUM_TEST_CASE(check_json_metadata_doesnt_contain_category)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "tags": ["tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "tags": ["tag1","tag2","tag3"]})";
     });
 
     BOOST_REQUIRE_EQUAL((db.get_index<category_stats_index, by_category>().size()), 0u);
@@ -253,7 +301,7 @@ SCORUM_TEST_CASE(check_post_removed)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
     });
 
     // d1/c1
@@ -262,7 +310,7 @@ SCORUM_TEST_CASE(check_post_removed)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
     });
 
     auto cat_tags_before = _api.get_tags_by_category("d1", "c1");
@@ -294,7 +342,7 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
     });
 
     // d1/c1
@@ -303,7 +351,7 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
     });
 
     auto cat_tags_before = _api.get_tags_by_category("d1", "c1");
@@ -321,7 +369,7 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
         op.body = "body";
         op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
         op.parent_permlink = "c1";
-        op.json_metadata = R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag4"]})";
+        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag4"]})";
     });
 
     auto cat_tags_after = _api.get_tags_by_category("d1", "c1");

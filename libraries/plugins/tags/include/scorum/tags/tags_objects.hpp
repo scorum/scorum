@@ -1,6 +1,8 @@
 #pragma once
 
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/range/algorithm/transform.hpp>
 
 #include <scorum/protocol/types.hpp>
 
@@ -107,11 +109,6 @@ typedef shared_multi_index_container<
                        composite_key<tag_object,
                                      member<tag_object, tag_name_type, &tag_object::tag>,
                                      member<tag_object, comment_id_type, &tag_object::comment>,
-                                     member<tag_object, tag_id_type, &tag_object::id>>>,
-        ordered_unique<tag<by_cashout>,
-                       composite_key<tag_object,
-                                     member<tag_object, tag_name_type, &tag_object::tag>,
-                                     member<tag_object, time_point_sec, &tag_object::cashout>,
                                      member<tag_object, tag_id_type, &tag_object::id>>>>
     >
     tag_index;
@@ -341,9 +338,22 @@ typedef shared_multi_index_container<
  */
 struct comment_metadata
 {
+    std::set<std::string> domains;
+    std::set<std::string> categories;
+    std::set<std::string> locales;
     std::set<std::string> tags;
-    std::string category;
-    std::string domain;
+
+    comment_metadata to_lower_copy() const
+    {
+        comment_metadata meta_in_lower;
+
+        boost::transform(domains, std::inserter(meta_in_lower.domains, meta_in_lower.domains.begin()), fc::to_lower);
+        boost::transform(categories, std::inserter(meta_in_lower.categories, meta_in_lower.categories.begin()), fc::to_lower);
+        boost::transform(locales, std::inserter(meta_in_lower.locales, meta_in_lower.locales.begin()), fc::to_lower);
+        boost::transform(tags, std::inserter(meta_in_lower.tags, meta_in_lower.tags.begin()), fc::to_lower);
+
+        return meta_in_lower;
+    }
 
     static comment_metadata parse(const fc::shared_string& json_metadata)
     {
@@ -410,7 +420,7 @@ FC_REFLECT(scorum::tags::peer_stats_object,
 
 CHAINBASE_SET_INDEX_TYPE(scorum::tags::peer_stats_object, scorum::tags::peer_stats_index)
 
-FC_REFLECT(scorum::tags::comment_metadata, (tags)(category)(domain))
+FC_REFLECT(scorum::tags::comment_metadata, (tags)(categories)(domains)(locales))
 
 FC_REFLECT(scorum::tags::author_tag_stats_object,
            (id)
