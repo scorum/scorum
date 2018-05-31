@@ -10,6 +10,7 @@ set( SOURCES
     account_data_service_tests.cpp
     witness_data_service_tests.cpp
     operation_time_tests.cpp
+    merkle_root_tests.cpp
     rewards/active_sp_holders_reward_tests.cpp
     rewards/reward_service_tests.cpp
     rewards/blogging_common.cpp
