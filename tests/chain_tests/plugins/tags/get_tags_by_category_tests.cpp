@@ -19,25 +19,9 @@ std::ostringstream& operator<<(std::ostringstream& os, const std::pair<std::stri
 }
 }
 
-namespace tags_tests {
+using namespace scorum::tags;
 
-struct get_tags_by_category_fixture : public tags_fixture
-{
-    Actor alice = Actor("alice");
-    Actor bob = Actor("bob");
-    Actor sam = Actor("sam");
-    Actor dave = Actor("dave");
-
-    get_tags_by_category_fixture()
-    {
-        actor(initdelegate).create_account(alice);
-        actor(initdelegate).create_account(bob);
-        actor(initdelegate).create_account(sam);
-        actor(initdelegate).create_account(dave);
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(get_tags_by_category_tests, get_tags_by_category_fixture)
+BOOST_FIXTURE_TEST_SUITE(get_tags_by_category_tests, database_fixture::tags_fixture)
 
 SCORUM_TEST_CASE(check_empty_input_should_assert)
 {
@@ -48,13 +32,9 @@ SCORUM_TEST_CASE(check_empty_input_should_assert)
 
 SCORUM_TEST_CASE(check_empty_tag)
 {
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "","tag2",""]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["","tag2",""]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
 
@@ -63,13 +43,9 @@ SCORUM_TEST_CASE(check_empty_tag)
 
 SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
 {
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("D1", "C1");
 
@@ -78,13 +54,9 @@ SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
 
 SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
 {
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "TAG1","TAG2"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["TAG1","TAG2"]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
 
@@ -97,40 +69,24 @@ SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
 SCORUM_TEST_CASE(check_couple_categories_several_tags)
 {
     // d1/c1
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     // d1/c1
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
-    });
+    create_post(bob, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
+        .in_block();
 
     // d1/c2
-    create_post(sam, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c2";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(sam, "c2")
+        .set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     // d1/c2
-    create_post(dave, [](comment_operation& op) {
-        op.title = "post3";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c2";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag3","tag4","tag5"]})";
-    });
+    create_post(dave, "c2")
+        .set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag3","tag4","tag5"]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
     auto cat2_tags = _api.get_tags_by_category("d1", "c2");
@@ -154,31 +110,17 @@ SCORUM_TEST_CASE(check_couple_categories_several_tags)
 SCORUM_TEST_CASE(check_different_domain_same_category)
 {
     // d1/c1
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     // d2/c1
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d2"], "categories": ["c1"], "tags": ["c1", "d2", "tag2","tag3","tag4"]})";
-    });
+    create_post(bob, "c1")
+        .set_json(R"({"domains": ["d2"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
+        .in_block();
 
     // d2/c1
-    create_post(sam, [](comment_operation& op) {
-        op.title = "post3";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d2"], "categories": ["c1"], "tags": ["c1", "d2", "tag4","tag5"]})";
-    });
+    create_post(sam, "c1").set_json(R"({"domains": ["d2"], "categories": ["c1"], "tags": ["tag4","tag5"]})").in_block();
 
     auto cat1_domain1_tags = _api.get_tags_by_category("d1", "c1");
     auto cat1_domain2_tags = _api.get_tags_by_category("d2", "c1");
@@ -200,31 +142,17 @@ SCORUM_TEST_CASE(check_different_domain_same_category)
 SCORUM_TEST_CASE(check_same_domain_different_category)
 {
     // d1/c1
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     // d2/c1
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c2";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag2","tag3","tag4"]})";
-    });
+    create_post(bob, "c2")
+        .set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag2","tag3","tag4"]})")
+        .in_block();
 
     // d2/c1
-    create_post(sam, [](comment_operation& op) {
-        op.title = "post3";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c2";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c2"], "tags": ["c2", "d1", "tag4","tag5"]})";
-    });
+    create_post(sam, "c2").set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag4","tag5"]})").in_block();
 
     auto cat1_domain1_tags = _api.get_tags_by_category("d1", "c1");
     auto cat1_domain2_tags = _api.get_tags_by_category("d1", "c2");
@@ -251,13 +179,9 @@ SCORUM_TEST_CASE(check_no_posts)
 
 SCORUM_TEST_CASE(check_tags_doesnt_contain_category_and_domain)
 {
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     auto tags = _api.get_tags_by_category("d1", "c1");
 
@@ -269,26 +193,14 @@ SCORUM_TEST_CASE(check_tags_doesnt_contain_category_and_domain)
 
 SCORUM_TEST_CASE(check_json_metadata_doesnt_contain_domain)
 {
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"categories": ["c1"], "tags": ["tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1").set_json(R"({"category": "c1", "tags": ["tag1","tag2","tag3"]})").in_block();
 
-    BOOST_REQUIRE_EQUAL((db.get_index<category_stats_index, by_category>().size()), 0u);
+    BOOST_REQUIRE_EQUAL((db.get_index<scorum::tags::category_stats_index, scorum::tags::by_category>().size()), 0u);
 }
 
 SCORUM_TEST_CASE(check_json_metadata_doesnt_contain_category)
 {
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "tags": ["tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1").set_json(R"({"domain": "d1", "tags": ["tag1","tag2","tag3"]})").in_block();
 
     BOOST_REQUIRE_EQUAL((db.get_index<category_stats_index, by_category>().size()), 0u);
 }
@@ -296,22 +208,14 @@ SCORUM_TEST_CASE(check_json_metadata_doesnt_contain_category)
 SCORUM_TEST_CASE(check_post_removed)
 {
     // d1/c1
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     // d1/c1
-    auto post2 = create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
-    });
+    auto post2 = create_post(bob, "c1")
+                     .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
+                     .in_block();
 
     auto cat_tags_before = _api.get_tags_by_category("d1", "c1");
 
@@ -322,7 +226,7 @@ SCORUM_TEST_CASE(check_post_removed)
     BOOST_REQUIRE_EQUAL_COLLECTIONS(cat_tags_before.begin(), cat_tags_before.end(), cat_tags_before_expected.begin(),
                                     cat_tags_before_expected.end());
 
-    post2.remove(initdelegate);
+    post2.remove();
 
     auto cat_tags_after = _api.get_tags_by_category("d1", "c1");
 
@@ -337,22 +241,14 @@ SCORUM_TEST_CASE(check_post_removed)
 SCORUM_TEST_CASE(check_posts_tags_changed)
 {
     // d1/c1
-    create_post(alice, [](comment_operation& op) {
-        op.title = "post1";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag3"]})";
-    });
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     // d1/c1
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag2","tag3","tag4"]})";
-    });
+    auto post2 = create_post(bob, "c1")
+                     .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
+                     .in_block_with_delay();
 
     auto cat_tags_before = _api.get_tags_by_category("d1", "c1");
 
@@ -364,13 +260,10 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
                                     cat_tags_before_expected.end());
 
     // changing post2's tags
-    create_post(bob, [](comment_operation& op) {
-        op.title = "post2";
-        op.body = "body";
-        op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
-        op.parent_permlink = "c1";
-        op.json_metadata = R"({"domains": ["d1"], "categories": ["c1"], "tags": ["c1", "d1", "tag1","tag2","tag4"]})";
-    });
+    create_post(bob, "c1")
+        .set_permlink(post2.permlink())
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag4"]})")
+        .in_block();
 
     auto cat_tags_after = _api.get_tags_by_category("d1", "c1");
 
@@ -383,6 +276,5 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}
 
 #endif

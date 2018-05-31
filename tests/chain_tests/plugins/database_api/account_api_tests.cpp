@@ -11,8 +11,7 @@
 #include <scorum/rewards_math/formulas.hpp>
 
 #include "database_trx_integration.hpp"
-
-#include <rewards/blogging_common.hpp>
+#include "database_blog_integration.hpp"
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -25,33 +24,38 @@ namespace account_api_tests {
 
 using namespace database_fixture;
 
-struct account_api_test_fixture : public blogging_common_with_accounts_fixture
+struct account_api_test_fixture : public database_blog_integration_fixture
 {
     account_api_test_fixture()
         : _database_api_ctx(app, "database_api", std::make_shared<api_session_data>())
         , database_api_call(_database_api_ctx)
+        , account_service(db.account_service())
     {
+        open_database();
+
+        actor(initdelegate).create_account(alice);
+        actor(initdelegate).create_account(sam);
+
+        actor(initdelegate).give_sp(alice, 1e9);
+        actor(initdelegate).give_sp(sam, 1e9);
     }
 
     api_context _database_api_ctx;
     database_api database_api_call;
+    account_service_i& account_service;
+
+    Actor alice = "alice";
+    Actor sam = "sam";
 };
 
 BOOST_FIXTURE_TEST_SUITE(database_api_account_tests, account_api_test_fixture)
 
 SCORUM_TEST_CASE(check_voting_power)
 {
-    auto post_permlink = create_next_post_permlink();
+    auto vote_interval = SCORUM_CASHOUT_WINDOW_SECONDS / 2;
 
-    post(alice, post_permlink); // alice post
-
-    const int vote_interval = SCORUM_CASHOUT_WINDOW_SECONDS / 2;
-
-    generate_blocks(db.head_block_time() + vote_interval);
-
-    vote(alice, post_permlink, sam); // sam upvote alice post
-
-    generate_block();
+    auto alice_post = create_post(alice).in_block(vote_interval);
+    alice_post.vote(sam).in_block();
 
     auto sam_voting_power = account_service.get_account(sam.name).voting_power;
 

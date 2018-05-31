@@ -10,6 +10,7 @@ set( SOURCES
   database_integration.cpp
   database_trx_integration.cpp
   database_default_integration.cpp
+  database_blog_integration.cpp
   actoractions.cpp
 )
 

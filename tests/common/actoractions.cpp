@@ -39,26 +39,6 @@ void ActorActions::give_sp(const Actor& a, int amount)
     transfer_to_scorumpower(a, ASSET_SCR(amount));
 }
 
-void ActorActions::vote(const std::string& author, const std::string& permlink, int16_t weight)
-{
-    auto& comment_service = _chain.db.obtain_service<dbs_comment>();
-
-    const comment_object* comment = comment_service.find_by<by_permlink>(boost::make_tuple(author, permlink));
-
-    if (comment == nullptr)
-    {
-        FC_THROW("no such comment in db");
-    }
-
-    vote_operation op;
-    op.voter = _actor.name;
-    op.author = author;
-    op.permlink = permlink;
-    op.weight = weight;
-
-    _chain.push_operation(op);
-}
-
 void ActorActions::create_budget(const std::string& permlink, asset balance, fc::time_point_sec deadline)
 {
     create_budget_operation op;

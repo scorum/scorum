@@ -11,7 +11,7 @@
 #include <scorum/chain/services/comment_statistic.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 
-#include "blogging_common.hpp"
+#include "database_blog_integration.hpp"
 #include "actoractions.hpp"
 
 #include <map>
@@ -71,14 +71,38 @@ struct comments_hierarchy_reward_visitor
     } /// ignore all other ops
 };
 
-struct comments_hierarchy_reward_fixture : public blogging_common_fixture
+struct comments_hierarchy_reward_fixture : public database_blog_integration_fixture
 {
     comment_statistic_sp_service_i& comment_statistic_sp_service;
+    account_service_i& account_service;
+
+    Actor user00;
+    Actor user10;
+    Actor user11;
+    Actor user20;
+    Actor user21;
+    Actor voter00;
+    Actor voter10;
+    Actor voter11;
+    Actor voter20;
+    Actor voter21;
 
     comments_hierarchy_reward_fixture()
         : comment_statistic_sp_service(db.obtain_service<dbs_comment_statistic_sp>())
+        , account_service(db.obtain_service<dbs_account>())
     {
         open_database();
+
+        user00 = create_actor("user00");
+        user10 = create_actor("user10");
+        user11 = create_actor("user11");
+        user20 = create_actor("user20");
+        user21 = create_actor("user21");
+        voter00 = create_actor("voter00");
+        voter10 = create_actor("voter10");
+        voter11 = create_actor("voter11");
+        voter20 = create_actor("voter20");
+        voter21 = create_actor("voter21");
     }
 
     Actor create_actor(const char* name)
@@ -90,11 +114,6 @@ struct comments_hierarchy_reward_fixture : public blogging_common_fixture
         actor(initdelegate).give_sp(acc, 1e5);
 
         return acc;
-    }
-
-    std::string re(const std::string& permlink)
-    {
-        return get_comment_permlink(permlink);
     }
 
     share_type check_comment_rewards(const Actor& acc, const comment_stats& stat, share_type payout_from_children)
@@ -143,26 +162,13 @@ BOOST_AUTO_TEST_CASE(check_all_comments_on_same_block)
                 user20 -> block1
     */
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user20 = create_actor("user20");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter20 = create_actor("voter20");
+    auto p = create_post(user00).push();
+    auto c10 = p.create_comment(user10).push();
+    auto c20 = c10.create_comment(user20).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    generate_block();
-
-    auto lnk = "post-link";
-
-    post(user00, lnk);
-    comment(user00, lnk, user10);
-    comment(user10, re(lnk), user20);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user20, re(re(lnk)), voter20);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
+    c20.vote(voter20).push();
 
     comments_hierarchy_reward_visitor v(db);
 
@@ -185,30 +191,13 @@ BOOST_AUTO_TEST_CASE(check_each_comment_on_diff_block)
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
     uint32_t blocks_after_post = 2;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user20 = create_actor("user20");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter20 = create_actor("voter20");
+    auto p = create_post(user00).in_block(delay);
+    auto c10 = p.create_comment(user10).in_block(delay);
+    auto c20 = c10.create_comment(user20).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    generate_block();
-
-    auto lnk = "post-link";
-
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user20);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user20, re(re(lnk)), voter20);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
+    c20.vote(voter20).push();
 
     BOOST_TEST_MESSAGE("User00 cashout");
     {
@@ -253,42 +242,17 @@ BOOST_AUTO_TEST_CASE(check_multiple_children_on_diff_block)
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
     uint32_t blocks_after_post = 4;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user11 = create_actor("user11");
-    Actor user20 = create_actor("user20");
-    Actor user21 = create_actor("user21");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter11 = create_actor("voter11");
-    Actor voter20 = create_actor("voter20");
-    Actor voter21 = create_actor("voter21");
+    auto p = create_post(user00).in_block(delay);
+    auto c10 = p.create_comment(user10).in_block(delay);
+    auto c20 = c10.create_comment(user20).in_block(delay);
+    auto c21 = c10.create_comment(user21).in_block(delay);
+    auto c11 = p.create_comment(user11).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    generate_block();
-
-    auto lnk = "post-link";
-
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user20);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user21);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user11);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user11, re(lnk), voter11);
-    vote(user20, re(re(lnk)), voter20);
-    vote(user21, re(re(lnk)), voter21);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
+    c11.vote(voter11).push();
+    c20.vote(voter20).push();
+    c21.vote(voter21).push();
 
     BOOST_TEST_MESSAGE("User00 cashout");
     {
@@ -352,38 +316,19 @@ BOOST_AUTO_TEST_CASE(check_multiple_children_each_level_on_same_block)
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
     uint32_t blocks_after_post = 2;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user11 = create_actor("user11");
-    Actor user20 = create_actor("user20");
-    Actor user21 = create_actor("user21");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter11 = create_actor("voter11");
-    Actor voter20 = create_actor("voter20");
-    Actor voter21 = create_actor("voter21");
+    auto p = create_post(user00).in_block(delay);
 
-    generate_block();
+    auto c10 = p.create_comment(user10).push();
+    auto c11 = p.create_comment(user11).in_block(delay);
 
-    auto lnk = "post-link";
+    auto c20 = c10.create_comment(user20).push();
+    auto c21 = c10.create_comment(user21).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-    comment(user00, lnk, user11);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user20);
-    comment(user10, re(lnk), user21);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user11, re(lnk), voter11);
-    vote(user20, re(re(lnk)), voter20);
-    vote(user21, re(re(lnk)), voter21);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
+    c11.vote(voter11).push();
+    c20.vote(voter20).push();
+    c21.vote(voter21).push();
 
     BOOST_TEST_MESSAGE("User00 cashout");
     {
@@ -431,38 +376,19 @@ BOOST_AUTO_TEST_CASE(check_children_parents_mixing_blocks)
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
     uint32_t blocks_after_post = 2;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user11 = create_actor("user11");
-    Actor user20 = create_actor("user20");
-    Actor user21 = create_actor("user21");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter11 = create_actor("voter11");
-    Actor voter20 = create_actor("voter20");
-    Actor voter21 = create_actor("voter21");
+    auto p = create_post(user00).in_block(delay);
 
-    generate_block();
+    auto c10 = p.create_comment(user10).push();
+    auto c20 = c10.create_comment(user20).in_block(delay);
 
-    auto lnk = "post-link";
+    auto c21 = c10.create_comment(user21).push();
+    auto c11 = p.create_comment(user11).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-    comment(user10, re(lnk), user20);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user21);
-    comment(user00, lnk, user11);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user11, re(lnk), voter11);
-    vote(user20, re(re(lnk)), voter20);
-    vote(user21, re(re(lnk)), voter21);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
+    c11.vote(voter11).push();
+    c20.vote(voter20).push();
+    c21.vote(voter21).push();
 
     BOOST_TEST_MESSAGE("User00 cashout");
     {
@@ -507,31 +433,15 @@ BOOST_AUTO_TEST_CASE(check_beneficiares_rewards)
     uint32_t benef_percent = 50;
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user20 = create_actor("user20");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter20 = create_actor("voter20");
     Actor user10_benef = create_actor("user10benef");
 
-    generate_block();
-
-    auto lnk = "post-link";
-
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user20);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
+    auto p = create_post(user00).in_block(delay);
+    auto c10 = p.create_comment(user10).in_block(delay);
+    auto c20 = c10.create_comment(user20).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
     comment_options_operation op;
-    op.author = user10.name;
-    op.permlink = re(lnk);
+    op.author = c10.author();
+    op.permlink = c10.permlink();
     op.allow_curation_rewards = true;
     comment_payout_beneficiaries b;
     b.beneficiaries.push_back(beneficiary_route_type(user10_benef.name, benef_percent * SCORUM_1_PERCENT));
@@ -542,9 +452,9 @@ BOOST_AUTO_TEST_CASE(check_beneficiares_rewards)
     tx.sign(initdelegate.private_key, db.get_chain_id());
     db.push_transaction(tx, default_skip);
 
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user20, re(re(lnk)), voter20);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
+    c20.vote(voter20).push();
 
     comments_hierarchy_reward_visitor v(db);
 
@@ -563,24 +473,11 @@ BOOST_AUTO_TEST_CASE(check_comment_double_cashouts)
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
     uint32_t blocks_after_post = 1;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
+    auto p = create_post(user00).in_block(delay);
+    auto c10 = p.create_comment(user10).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    generate_block();
-
-    auto lnk = "post-link";
-
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
+    p.vote(voter00).push();
+    c10.vote(voter10).push();
 
     BOOST_TEST_MESSAGE("User00 cashout");
     {
@@ -617,34 +514,17 @@ BOOST_AUTO_TEST_CASE(check_accounts_balance)
     uint32_t delay = 10 * SCORUM_BLOCK_INTERVAL;
     uint32_t blocks_after_post = 2;
 
-    Actor user00 = create_actor("user00");
-    Actor user10 = create_actor("user10");
-    Actor user20 = create_actor("user20");
-    Actor voter00 = create_actor("voter00");
-    Actor voter10 = create_actor("voter10");
-    Actor voter20 = create_actor("voter20");
-
-    generate_block();
-
     auto user00_sp_before = account_service.get_account(user00.name).scorumpower.amount;
     auto user10_sp_before = account_service.get_account(user10.name).scorumpower.amount;
     auto user20_sp_before = account_service.get_account(user20.name).scorumpower.amount;
 
-    auto lnk = "post-link";
+    auto p = create_post(user00).in_block(delay);
+    auto c10 = p.create_comment(user10).in_block();
+    auto c20 = c10.create_comment(user20).in_block(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
 
-    post(user00, lnk);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user00, lnk, user10);
-    generate_blocks(db.head_block_time() + delay);
-
-    comment(user10, re(lnk), user20);
-
-    generate_blocks(db.head_block_time() + SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
-
-    vote(user00, lnk, voter00);
-    vote(user10, re(lnk), voter10);
-    vote(user20, re(re(lnk)), voter20);
+    p.vote(voter00).in_block();
+    c10.vote(voter10).in_block();
+    c20.vote(voter20).in_block();
 
     comments_hierarchy_reward_visitor v(db);
 

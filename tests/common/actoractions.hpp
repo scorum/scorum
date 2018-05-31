@@ -20,8 +20,6 @@ public:
     void give_scr(const Actor& a, int amount);
     void give_sp(const Actor& a, int amount);
 
-    void vote(const std::string& author, const std::string& permlink, int16_t weight = 100);
-
     void create_budget(const std::string& permlink, asset balance, fc::time_point_sec deadline);
 
 private:
