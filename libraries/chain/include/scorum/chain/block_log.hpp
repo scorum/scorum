@@ -46,6 +46,8 @@ public:
     void close();
     bool is_open() const;
 
+    static fc::path block_log_index_path(const fc::path& block_log_file);
+
     uint64_t append(const signed_block& b);
     void flush();
     std::pair<signed_block, uint64_t> read_block(uint64_t file_pos) const;

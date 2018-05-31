@@ -35,6 +35,8 @@
 
 #include <boost/program_options.hpp>
 
+#define SCORUMD_CONFIG_FILE_NAME "config.ini"
+
 namespace scorum {
 namespace chain {
 struct genesis_state_type;
@@ -174,6 +176,13 @@ connect_signal(boost::signals2::signal<void(Args...)>& sig, C& c, void (C::*f)(A
         ((*shared_c).*f)(args...);
     });
 }
+
+fc::path get_data_dir_path(const boost::program_options::variables_map& options);
+
+fc::path get_config_file_path(const boost::program_options::variables_map& options);
+
+void create_config_file_if_not_exist(const fc::path& config_ini_path,
+                                     const boost::program_options::options_description& cfg_options);
 
 } // namespace app
 } // namespace scorum

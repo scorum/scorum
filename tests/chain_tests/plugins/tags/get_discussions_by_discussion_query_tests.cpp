@@ -31,7 +31,7 @@ BOOST_FIXTURE_TEST_SUITE(get_discussions_by_trending_tests, database_fixture::ge
 
 SCORUM_TEST_CASE(no_votes_should_return_nothing)
 {
-    create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
+    create_post(alice).set_json(R"({domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -44,7 +44,7 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
 
 SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block();
     p1.vote(alice).in_block();
 
     discussion_query q;
@@ -56,11 +56,48 @@ SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
     BOOST_REQUIRE_EQUAL(discussions.size(), 0u);
 }
 
+SCORUM_TEST_CASE(no_category_and_domain_should_return_post)
+{
+    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block();
+    p1.vote(alice).in_block().in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "A" };
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
+}
+
+SCORUM_TEST_CASE(no_json_metadata_should_return_post)
+{
+    auto p1 = create_post(alice).in_block();
+    p1.vote(alice).in_block().in_block();
+
+    discussion_query q;
+    q.limit = 100;
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
+}
+
+SCORUM_TEST_CASE(should_return_post_by_converting_all_to_lowercase)
+{
+    auto p1 = create_post(alice).set_json(R"({"categories":["A"], "domains": ["b"]})").in_block();
+    p1.vote(alice).in_block().in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "a", "B" };
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
+}
+
 SCORUM_TEST_CASE(should_return_voted_tags_intersection)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
-    auto p2 = create_post(bob).set_json(R"({"tags":["C","D","E"]})").in_block();
-    auto p3 = create_post(sam).set_json(R"({"tags":["B","C","D","E"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["C","D","E"]})").in_block();
+    auto p3 = create_post(sam).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -93,10 +130,10 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
 
 SCORUM_TEST_CASE(should_return_voted_tags_union)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block();
-    auto p2 = create_post(bob).set_json(R"({"tags":["C","D","E"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["C","D","E"]})").in_block();
     // this post (p3) will be skipped (despite it has max trending) cuz it doesn't have neither "B" or "D" tag
-    auto p3 = create_post(sam).set_json(R"({"tags":["C","E"]})").in_block();
+    auto p3 = create_post(sam).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["C","E"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -121,11 +158,11 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
 SCORUM_TEST_CASE(check_pagination)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block_with_delay();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block_with_delay();
     // this post (p2) will be skipped cuz it doesn't have "C" tag
-    auto p2 = create_post(bob).set_json(R"({"tags":["D","E"]})").in_block_with_delay();
-    auto p3 = create_post(alice).set_json(R"({"tags":["B","C","D","E"]})").in_block();
-    auto p4 = create_post(bob).set_json(R"({"tags":["C","B","E"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["D","E"]})").in_block_with_delay();
+    auto p3 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})").in_block();
+    auto p4 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["C","B","E"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -172,8 +209,8 @@ SCORUM_TEST_CASE(check_pagination)
 SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
 {
     // I-K are ignored (see ::scorum::TAGS_TO_ANALIZE_COUNT)
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C","D","E","F","G","H","I","J","K"]})").in_block();
-    auto p2 = create_post(bob).set_json(R"({"tags":["H","I"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C","D","E","F","G","H","I","J","K"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["H","I"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -183,7 +220,7 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
     discussion_query q;
     q.limit = 100;
     q.tags_logical_and = true;
-    q.tags = { "I" };
+    q.tags = { "G" };
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -191,7 +228,7 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
     }
     {
-        q.tags = { "H" };
+        q.tags = { "F" };
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
@@ -200,7 +237,7 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
 
 SCORUM_TEST_CASE(check_truncate_body)
 {
-    auto p1 = create_post(bob).set_body("1234567890").set_json(R"({"tags":["I"]})").in_block();
+    auto p1 = create_post(bob).set_body("1234567890").set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["I"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -221,8 +258,8 @@ BOOST_FIXTURE_TEST_SUITE(get_discussions_by_created_tests, database_fixture::get
 
 SCORUM_TEST_CASE(no_votes_should_return_union)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block();
-    auto p2 = create_post(bob).set_json(R"({"tags":["B"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B"]})").in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -237,13 +274,13 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
 
 SCORUM_TEST_CASE(check_comments_should_not_be_returned)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A", "D"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A", "D"]})").in_block();
     // comments creation shouldn't be monitored by tags_plugin
-    auto c1 = p1.create_comment(bob).set_json(R"({"tags":["A"]})").in_block();
-    auto p2 = create_post(sam).set_json(R"({"tags":["B","C"]})").in_block_with_delay();
+    auto c1 = p1.create_comment(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
+    auto p2 = create_post(sam).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C"]})").in_block_with_delay();
 
     // comments changing shoudn't be monitored by tags_plugin
-    p1.create_comment(bob).set_permlink(c1.permlink()).set_body("new-body").set_json(R"({"tags":["A"]})").in_block();
+    p1.create_comment(bob).set_permlink(c1.permlink()).set_body("new-body").set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
     // comments voting shoudn't be monitored by tags_plugin
     c1.vote(alice).in_block();
     // comments payouts shoudn't be monitored by tags_plugin
@@ -262,9 +299,9 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
 
 SCORUM_TEST_CASE(check_discussions_after_post_deleting)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block_with_delay();
-    auto p2 = create_post(bob).set_json(R"({"tags":["B","C","D"]})").in_block();
-    auto p3 = create_post(alice).set_json(R"({"tags":["B","C","D","E"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block_with_delay();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D"]})").in_block();
+    auto p3 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})").in_block();
 
     discussion_query q;
     q.limit = 100;
@@ -292,7 +329,7 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
 
 SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
 
     p1.vote(sam, -100).in_block();
 
@@ -312,9 +349,9 @@ BOOST_FIXTURE_TEST_SUITE(get_discussions_by_hot_tests, database_fixture::get_dis
 
 SCORUM_TEST_CASE(should_return_voted_tags_union)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A","B","C"]})").in_block_with_delay();
-    auto p2 = create_post(bob).set_json(R"({"tags":["C","D","E"]})").in_block();
-    auto p3 = create_post(alice).set_json(R"({"tags":["B","C","D","E"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block_with_delay();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["C","D","E"]})").in_block();
+    auto p3 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B","C","D","E"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -347,9 +384,9 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
 SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
 {
-    auto p1 = create_post(alice).set_json(R"({"tags":["A"]})").in_block_with_delay();
-    auto p2 = create_post(bob).in_block();
-    auto p3 = create_post(alice).set_json(R"({"tags":["B"]})").in_block();
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block_with_delay();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"]})").in_block();
+    auto p3 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B"]})").in_block();
 
     p1.vote(sam).in_block();
 
@@ -369,7 +406,7 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
 
 SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
 {
-    auto p1 = create_post(alice).in_block();
+    auto p1 = create_post(alice).set_json(R"("domains": ["com"], "categories": ["cat"])").in_block();
 
     p1.vote(sam).push();
 

@@ -64,6 +64,7 @@
 #include <boost/range/algorithm/reverse.hpp>
 
 #include <iostream>
+#include <fstream>
 #include <set>
 
 #include <fc/log/file_appender.hpp>
@@ -318,6 +319,8 @@ public:
     {
         try
         {
+            static const char* default_data_subdir = "blockchain";
+
             genesis_state_type genesis_state;
             compute_genesis_state(genesis_state);
 
@@ -326,6 +329,8 @@ public:
             if (_options->count("data-dir"))
             {
                 _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
+                // use lexically_normal for boost version >= 1.60
+                _data_dir = boost::filesystem::absolute(_data_dir);
             }
 
             _shared_file_size = fc::parse_size(_options->at("shared-file-size").as<std::string>());
@@ -339,12 +344,14 @@ public:
 
             if (_options->count("shared-file-dir"))
             {
-                _shared_dir = fc::path(_options->at("shared-file-dir").as<std::string>());
+                _shared_dir = _data_dir / fc::path(_options->at("shared-file-dir").as<boost::filesystem::path>());
             }
             else
             {
-                _shared_dir = _data_dir / "blockchain";
+                _shared_dir = _data_dir / default_data_subdir;
             }
+
+            fc::path block_log_dir = _data_dir / default_data_subdir;
 
             if (!_self->is_read_only())
             {
@@ -353,7 +360,7 @@ public:
 
                 if (_options->count("resync-blockchain"))
                 {
-                    _chain_db->wipe(_data_dir / "blockchain", _shared_dir, true);
+                    _chain_db->wipe(block_log_dir, _shared_dir, true);
                 }
 
                 _chain_db->set_flush_interval(_options->at("flush").as<uint32_t>());
@@ -371,33 +378,20 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
-                if (_options->count("replay-blockchain"))
+                if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
+
+                    uint32_t skip_flags = _chain_db->get_reindex_skip_flags();
+                    if (!_options->at("replay-skip-witness-schedule-check").as<bool>())
+                        skip_flags &= ~database::skip_witness_schedule_check;
+
+                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, skip_flags, genesis_state);
                 }
                 else
                 {
-                    try
-                    {
-                        _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                        chainbase::database::read_write, genesis_state);
-                    }
-                    catch (fc::assert_exception&)
-                    {
-                        wlog("Error when opening database. Attempting reindex...");
-
-                        try
-                        {
-                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
-                        }
-                        catch (chain::block_log_exception&)
-                        {
-                            wlog("Error opening block log. Having to resync from network...");
-                            _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                            chainbase::database::read_write, genesis_state);
-                        }
-                    }
+                    _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_write,
+                                    genesis_state);
                 }
 
                 if (_options->count("force-validate"))
@@ -409,8 +403,8 @@ public:
             else
             {
                 ilog("Starting Scorum node in read mode.");
-                _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                chainbase::database::read_only, genesis_state);
+                _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_only,
+                                genesis_state);
 
                 if (_options->count("read-forward-rpc"))
                 {
@@ -1168,7 +1162,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("seed-node,s", bpo::value<std::vector<std::string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
     ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
     ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
-    ("shared-file-dir", bpo::value<std::string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
+    ("shared-file-dir", bpo::value<boost::filesystem::path>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
     ("shared-file-size", bpo::value<std::string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
     ("rpc-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
     ("rpc-tls-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
@@ -1182,6 +1176,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
     ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")
     ("replay-blockchain", "Rebuild object graph by replaying all blocks")
+    ("replay-skip-witness-schedule-check", bpo::value<bool>()->default_value(true), "Skip witness schedule check wile block replaying")
     ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
     ("force-validate", "Force validation of all transactions")
     ("read-only", "Node will not connect to p2p network and can only read from the chain state")
@@ -1518,6 +1513,50 @@ void print_program_options(std::ostream& stream, const boost::program_options::o
             }
         }
         stream << "\n";
+    }
+}
+
+fc::path get_data_dir_path(const boost::program_options::variables_map& options)
+{
+    namespace bfs = boost::filesystem;
+
+    FC_ASSERT(options.count("data-dir"), "Default value for 'data-dir' should be set.");
+
+    return bfs::absolute(options["data-dir"].as<bfs::path>());
+}
+
+fc::path get_config_file_path(const boost::program_options::variables_map& options)
+{
+    namespace bfs = boost::filesystem;
+
+    bfs::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
+
+    if (options.count("config-file"))
+    {
+        config_ini_path = bfs::absolute(options["config-file"].as<bfs::path>());
+    }
+
+    return config_ini_path;
+}
+
+void create_config_file_if_not_exist(const fc::path& config_ini_path,
+                                     const boost::program_options::options_description& cfg_options)
+{
+    FC_ASSERT(config_ini_path.is_absolute(), "config-file path should be absolute");
+
+    if (!fc::exists(config_ini_path))
+    {
+        ilog("Writing new config file at ${path}", ("path", config_ini_path));
+        if (!fc::exists(config_ini_path.parent_path()))
+        {
+            fc::create_directories(config_ini_path.parent_path());
+        }
+
+        std::ofstream out_cfg(config_ini_path.preferred_string());
+
+        print_program_options(out_cfg, cfg_options);
+
+        out_cfg.close();
     }
 }
 

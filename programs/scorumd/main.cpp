@@ -20,8 +20,6 @@
 
 #include "log_configurator.hpp"
 
-#define SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME "config.ini"
-
 using namespace scorum;
 using scorum::protocol::version;
 namespace bpo = boost::program_options;
@@ -76,7 +74,7 @@ int main(int argc, char** argv)
         app_options.add_options()
                 ("help,h", "Print this help message and exit.")
                 ("config-file", bpo::value<boost::filesystem::path>(),
-                 "Path to config file. Defaults to data_dir/" SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME);
+                 "Path to config file. Defaults to data_dir/" SCORUMD_CONFIG_FILE_NAME);
         // clang-format on
 
         bpo::variables_map options;
@@ -114,51 +112,28 @@ int main(int argc, char** argv)
             return 0;
         }
 
-        fc::path data_dir;
-        if (options.count("data-dir"))
-        {
-            data_dir = options["data-dir"].as<boost::filesystem::path>();
-            if (data_dir.is_relative())
-                data_dir = fc::current_path() / data_dir;
-        }
+        const fc::path config_file_path = app::get_config_file_path(options);
 
-        fc::path config_ini_path = data_dir / SCORUM_DAEMON_DEFAULT_CONFIG_FILE_NAME;
-        if (options.count("config-file"))
-        {
-            config_ini_path = options["config-file"].as<boost::filesystem::path>();
-        }
+        app::create_config_file_if_not_exist(config_file_path, cfg_options);
 
-        if (!fc::exists(config_ini_path))
-        {
-            ilog("Writing new config file at ${path}", ("path", config_ini_path));
-            if (!fc::exists(data_dir))
-                fc::create_directories(data_dir);
-
-            std::ofstream out_cfg(config_ini_path.preferred_string());
-
-            scorum::app::print_program_options(out_cfg, cfg_options);
-
-            out_cfg.close();
-        }
-
-        ilog("Using config file ${path}", ("path", config_ini_path));
+        ilog("Using config file ${path}", ("path", config_file_path));
 
         // get the basic options
-        bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true),
+        bpo::store(bpo::parse_config_file<char>(config_file_path.preferred_string().c_str(), cfg_options, true),
                    options);
 
         // try to get logging options from the config file.
         try
         {
             fc::optional<fc::logging_config> logging_config
-                = logger::load_logging_config_from_options(options, data_dir);
+                = logger::load_logging_config_from_options(options, app::get_data_dir_path(options));
 
             if (logging_config)
                 fc::configure_logging(*logging_config);
         }
         catch (const fc::exception&)
         {
-            std::cerr << "Error parsing logging config from config file \"" << config_ini_path.preferred_string()
+            std::cerr << "Error parsing logging config from config file \"" << config_file_path.preferred_string()
                       << "\". Using default config\n";
         }
 
@@ -172,6 +147,7 @@ int main(int argc, char** argv)
         {
             std::cerr << "            READONLY NODE\n\n";
         }
+
         std::cerr << "------------------------------------------------------\n";
         std::cerr << "blockchain version: " << fc::string(SCORUM_BLOCKCHAIN_VERSION) << "\n";
         std::cerr << "------------------------------------------------------\n";

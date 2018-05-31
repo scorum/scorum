@@ -21,6 +21,7 @@
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/range/join.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace scorum {
@@ -67,19 +68,25 @@ public:
 
     void exclude_from_category_stats(const comment_metadata& meta)
     {
-        if (meta.category.empty() || meta.domain.empty())
+        if (meta.categories.empty() || meta.domains.empty())
+            return;
+        if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
-        const auto& idx = db_impl().get_index<category_stats_index, by_category>();
-        auto it_pair = idx.equal_range(std::make_tuple(meta.domain, meta.category));
+        comment_metadata meta_in_lower = meta.to_lower_copy();
+
+        const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
+        // TODO: add support for multiple domains and categories
+        auto it_pair
+            = idx.equal_range(std::make_tuple(*meta_in_lower.domains.begin(), *meta_in_lower.categories.begin()));
 
         std::vector<std::reference_wrapper<const category_stats_object>> stats;
         std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
 
         for (const category_stats_object& s : stats)
         {
-            auto found_it = std::find(meta.tags.begin(), meta.tags.end(), s.tag);
-            if (found_it == meta.tags.end())
+            auto found_it = std::find(meta_in_lower.tags.begin(), meta_in_lower.tags.end(), s.tag);
+            if (found_it == meta_in_lower.tags.end())
                 continue;
 
             if (s.tags_count == 1)
@@ -91,21 +98,28 @@ public:
 
     void include_into_category_stats(const comment_metadata& meta)
     {
-        if (meta.category.empty() || meta.domain.empty())
+        if (meta.categories.empty() || meta.domains.empty())
+            return;
+        if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
-        auto rng = meta.tags
-            | boost::adaptors::filtered([&](const std::string& t) { return t != meta.category && t != meta.domain; });
+        comment_metadata meta_in_lower = meta.to_lower_copy();
+        const auto& domain = *meta_in_lower.domains.begin();
+        const auto& category = *meta_in_lower.categories.begin();
+
+        auto rng = meta_in_lower.tags | boost::adaptors::filtered([&](const std::string& t) {
+                       return !t.empty() && t != category && t != domain;
+                   });
         for (const std::string& tag : rng)
         {
             const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
 
-            auto found_it = idx.find(std::make_tuple(meta.domain, meta.category, tag_name_type(tag)));
+            auto found_it = idx.find(std::make_tuple(domain, category, tag_name_type(tag)));
             if (found_it == idx.end())
             {
                 db_impl().create<category_stats_object>([&](category_stats_object& s) {
-                    fc::from_string(s.domain, meta.domain);
-                    fc::from_string(s.category, meta.category);
+                    fc::from_string(s.domain, domain);
+                    fc::from_string(s.category, category);
                     s.tag = tag;
                     s.tags_count = 1;
                 });
@@ -230,29 +244,29 @@ struct post_operation_visitor
         return _db.create<tag_stats_object>([&](tag_stats_object& stats) { stats.tag = tag; });
     }
 
-    comment_metadata filter_tags(const comment_object& c) const
+    std::set<std::string> collect_tags(const comment_metadata& meta) const
     {
-        comment_metadata meta = comment_metadata::parse(c.json_metadata);
-
+        using namespace boost::range;
         // clang-format off
-        auto rng = meta.tags
+        auto lhs = join(meta.domains, meta.categories);
+        auto rhs = join(meta.locales, meta.tags);
+        auto rng = join(lhs, rhs)
                 | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
                 | boost::adaptors::transformed(fc::to_lower);
         // clang-format on
 
-        std::set<std::string> lower_tags;
+        std::set<std::string> tags_in_lower;
 
         for (const auto& t : rng)
-            if (lower_tags.size() == TAGS_TO_ANALIZE_COUNT)
+            if (tags_in_lower.size() == TAGS_TO_ANALIZE_COUNT)
                 break;
             else
-                lower_tags.insert(t);
+                tags_in_lower.insert(t);
 
-        meta.tags = std::move(lower_tags);
         // if we need to return all then just return items with empty tag
-        meta.tags.insert("");
+        tags_in_lower.insert("");
 
-        return meta;
+        return tags_in_lower;
     }
 
     void update_tag(const tag_object& current, const comment_object& comment, double hot, double trending) const
@@ -351,7 +365,7 @@ struct post_operation_visitor
 
             if (parse_tags)
             {
-                auto meta = filter_tags(c);
+                auto tags = collect_tags(comment_metadata::parse(c.json_metadata));
                 auto citr = comment_idx.lower_bound(c.id);
 
                 std::map<std::string, const tag_object*> existing_tags;
@@ -362,7 +376,7 @@ struct post_operation_visitor
                     const tag_object* tag = &*citr;
                     ++citr;
 
-                    if (meta.tags.find(tag->tag) == meta.tags.end())
+                    if (tags.find(tag->tag) == tags.end())
                     {
                         remove_queue.push_back(tag);
                     }
@@ -372,7 +386,7 @@ struct post_operation_visitor
                     }
                 }
 
-                for (const auto& tag : meta.tags)
+                for (const auto& tag : tags)
                 {
                     auto existing = existing_tags.find(tag);
 
@@ -541,9 +555,9 @@ struct post_operation_visitor
 
         update_tags(comment);
 
-        comment_metadata meta = filter_tags(comment);
+        auto tags = collect_tags(comment_metadata::parse(comment.json_metadata));
 
-        for (const std::string& tag : meta.tags)
+        for (const std::string& tag : tags)
         {
             _db.modify(get_stats(tag), [&](tag_stats_object& ts) {
 
