@@ -33,8 +33,8 @@ SCORUM_TEST_CASE(check_empty_input_should_assert)
 SCORUM_TEST_CASE(check_empty_tag)
 {
     create_post(alice, "c1")
-            .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "","tag2",""]})")
-            .in_block();
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["","tag2",""]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
 
@@ -44,8 +44,8 @@ SCORUM_TEST_CASE(check_empty_tag)
 SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
 {
     create_post(alice, "c1")
-            .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})")
-            .in_block();
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("D1", "C1");
 
@@ -55,8 +55,8 @@ SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
 SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
 {
     create_post(alice, "c1")
-            .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "TAG1","TAG2"]})")
-            .in_block();
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["TAG1","TAG2"]})")
+        .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
 
@@ -70,22 +70,22 @@ SCORUM_TEST_CASE(check_couple_categories_several_tags)
 {
     // d1/c1
     create_post(alice, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     // d1/c1
     create_post(bob, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag2","tag3","tag4"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
         .in_block();
 
     // d1/c2
     create_post(sam, "c2")
-        .set_json(R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     // d1/c2
     create_post(dave, "c2")
-        .set_json(R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag3","tag4","tag5"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag3","tag4","tag5"]})")
         .in_block();
 
     auto cat1_tags = _api.get_tags_by_category("d1", "c1");
@@ -111,18 +111,16 @@ SCORUM_TEST_CASE(check_different_domain_same_category)
 {
     // d1/c1
     create_post(alice, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     // d2/c1
     create_post(bob, "c1")
-        .set_json(R"({"domain": "d2", "category": "c1", "tags": ["c1", "d2", "tag2","tag3","tag4"]})")
+        .set_json(R"({"domains": ["d2"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
         .in_block();
 
     // d2/c1
-    create_post(sam, "c1")
-        .set_json(R"({"domain": "d2", "category": "c1", "tags": ["c1", "d2", "tag4","tag5"]})")
-        .in_block();
+    create_post(sam, "c1").set_json(R"({"domains": ["d2"], "categories": ["c1"], "tags": ["tag4","tag5"]})").in_block();
 
     auto cat1_domain1_tags = _api.get_tags_by_category("d1", "c1");
     auto cat1_domain2_tags = _api.get_tags_by_category("d2", "c1");
@@ -145,18 +143,16 @@ SCORUM_TEST_CASE(check_same_domain_different_category)
 {
     // d1/c1
     create_post(alice, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     // d2/c1
     create_post(bob, "c2")
-        .set_json(R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag2","tag3","tag4"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag2","tag3","tag4"]})")
         .in_block();
 
     // d2/c1
-    create_post(sam, "c2")
-        .set_json(R"({"domain": "d1", "category": "c2", "tags": ["c2", "d1", "tag4","tag5"]})")
-        .in_block();
+    create_post(sam, "c2").set_json(R"({"domains": ["d1"], "categories": ["c2"], "tags": ["tag4","tag5"]})").in_block();
 
     auto cat1_domain1_tags = _api.get_tags_by_category("d1", "c1");
     auto cat1_domain2_tags = _api.get_tags_by_category("d1", "c2");
@@ -184,7 +180,7 @@ SCORUM_TEST_CASE(check_no_posts)
 SCORUM_TEST_CASE(check_tags_doesnt_contain_category_and_domain)
 {
     create_post(alice, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     auto tags = _api.get_tags_by_category("d1", "c1");
@@ -213,12 +209,12 @@ SCORUM_TEST_CASE(check_post_removed)
 {
     // d1/c1
     create_post(alice, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     // d1/c1
     auto post2 = create_post(bob, "c1")
-                     .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag2","tag3","tag4"]})")
+                     .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
                      .in_block();
 
     auto cat_tags_before = _api.get_tags_by_category("d1", "c1");
@@ -246,12 +242,12 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
 {
     // d1/c1
     create_post(alice, "c1")
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag3"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag3"]})")
         .in_block();
 
     // d1/c1
     auto post2 = create_post(bob, "c1")
-                     .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag2","tag3","tag4"]})")
+                     .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag2","tag3","tag4"]})")
                      .in_block_with_delay();
 
     auto cat_tags_before = _api.get_tags_by_category("d1", "c1");
@@ -266,7 +262,7 @@ SCORUM_TEST_CASE(check_posts_tags_changed)
     // changing post2's tags
     create_post(bob, "c1")
         .set_permlink(post2.permlink())
-        .set_json(R"({"domain": "d1", "category": "c1", "tags": ["c1", "d1", "tag1","tag2","tag4"]})")
+        .set_json(R"({"domains": ["d1"], "categories": ["c1"], "tags": ["tag1","tag2","tag4"]})")
         .in_block();
 
     auto cat_tags_after = _api.get_tags_by_category("d1", "c1");
