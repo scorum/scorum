@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
         SCORUM_CHECK_THROW(PUSH_TX(db1, trx, skip_sigs), fc::exception);
         SCORUM_CHECK_THROW(PUSH_TX(db2, trx, skip_sigs), fc::exception);
         BOOST_CHECK_EQUAL(db1.obtain_service<dbs_account>().get_account("alice").balance.amount, 500);
-        BOOST_CHECK_EQUAL(db1.obtain_service<dbs_account>().get_account("alice").balance.amount, 500);
+        BOOST_CHECK_EQUAL(db2.obtain_service<dbs_account>().get_account("alice").balance.amount, 500);
     }
     catch (fc::exception& e)
     {
