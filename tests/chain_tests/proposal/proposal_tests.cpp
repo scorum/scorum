@@ -450,4 +450,64 @@ SCORUM_TEST_CASE(development_committee_operations_test)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+class dev_committee_fixture : public database_fixture::database_trx_integration_fixture
+{
+public:
+    dev_committee_fixture()
+    {
+        initdelegate.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+        alice.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+        bob.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+
+        auto genesis = Genesis::create()
+                           .accounts_supply(TEST_ACCOUNTS_INITIAL_SUPPLY * 3)
+                           .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+                           .witnesses(initdelegate)
+                           .accounts(alice, bob)
+                           .dev_committee(alice)
+                           .development_scr_supply(asset(1e5, SCORUM_SYMBOL))
+                           .generate();
+        open_database(genesis);
+
+        actor(initdelegate).give_sp(alice, 1e5);
+        actor(initdelegate).give_sp(bob, 1e5);
+    }
+
+    Actor alice = "alice";
+    Actor bob = "bob";
+};
+
+BOOST_FIXTURE_TEST_SUITE(dev_committee_tests, dev_committee_fixture)
+
+SCORUM_TEST_CASE(dev_committee_transfer_operation_circulating_capital_should_increase)
+{
+    unsigned transfer_amount = 1e5;
+
+    development_committee_transfer_operation proposal_inner_op;
+    proposal_inner_op.amount = asset(transfer_amount, SCORUM_SYMBOL);
+    proposal_inner_op.to_account = bob.name;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    const auto& dpo = db.dynamic_global_property_service().get();
+    auto circulating_capital_before = dpo.circulating_capital;
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_vote_op, initdelegate.private_key);
+
+    auto circulating_capital_after = dpo.circulating_capital;
+
+    BOOST_REQUIRE_EQUAL(circulating_capital_before + transfer_amount + 100, circulating_capital_after);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 } // namespace proposal_tests
