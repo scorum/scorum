@@ -58,6 +58,8 @@ void database::update_witness_schedule()
 
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
+        block_info ctx = std::move(_db.head_block_context());
+
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
         auto& witness_service = _db.obtain_service<dbs_witness>();
 
@@ -104,8 +106,8 @@ void database::update_witness_schedule()
             }
         }
 
-        dlog("number of active witnesses is (${active_witnesses}), max number is (${SCORUM_MAX_WITNESSES})",
-             ("active_witnesses", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
+        ctx_dlog(ctx, "number of active witnesses is (${active_witnesses}), max number is (${SCORUM_MAX_WITNESSES})",
+                 ("active_witnesses", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
 
         /// Update virtual schedule of processed witnesses
         for (auto itr = processed_witnesses.begin(); itr != processed_witnesses.end(); ++itr)
@@ -165,9 +167,9 @@ void database::update_witness_schedule()
             _wso.current_virtual_time = new_virtual_time;
         });
 
-        dlog("{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
-             ("prev_schedule", prev_schedule)(
-                 "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
+        ctx_dlog(ctx, "{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
+                 ("prev_schedule", prev_schedule)(
+                     "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();
@@ -178,6 +180,10 @@ void database::update_witness_schedule()
 void database::_reset_witness_virtual_schedule_time()
 {
     database& _db = (*this);
+
+    block_info ctx = std::move(_db.head_block_context());
+
+    ctx_dlog(ctx, "Reset virtual schedule for witnesses");
 
     auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
 

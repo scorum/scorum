@@ -2,6 +2,7 @@
 #include <fc/io/raw.hpp>
 #include <fc/bitutil.hpp>
 #include <algorithm>
+#include <sstream>
 
 namespace scorum {
 namespace protocol {
@@ -67,5 +68,27 @@ checksum_type signed_block::calculate_merkle_root() const
     }
     return checksum_type::hash(ids[0]);
 }
+}
+
+block_info::block_info(const scorum::protocol::signed_block& block)
+    : _block_num(block.block_num())
+    , _block_id(block.id().str())
+    , _when(block.timestamp)
+    , _block_witness(block.witness)
+{
+}
+
+block_info::block_info(const fc::time_point_sec& when, const std::string& witness_owner)
+    : _when(when)
+    , _block_witness(witness_owner)
+{
+}
+
+block_info::operator std::string() const
+{
+    std::stringstream store;
+    store << _block_num << ":" << _block_id << "|";
+    store << _when.to_iso_string() << "~" << _block_witness;
+    return store.str();
 }
 } // scorum::protocol

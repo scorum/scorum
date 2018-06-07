@@ -506,6 +506,10 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
 {
     // fc::time_point begin_time = fc::time_point::now();
 
+    block_info ctx(new_block);
+
+    ctx_dlog(ctx, "Block pushing. Skip flags = ${s}", ("s", skip));
+
     bool result;
     detail::with_skip_flags(*this, skip, [&]() {
         with_write_lock([&]() {
@@ -513,8 +517,9 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
                 try
                 {
                     result = _push_block(new_block);
+                    ctx_dlog(ctx, "Block pushed");
                 }
-                FC_CAPTURE_AND_RETHROW((new_block))
+                FC_CAPTURE_AND_RETHROW(((std::string)ctx))
             });
         });
     });
@@ -534,6 +539,9 @@ void database::_maybe_warn_multiple_production(uint32_t height) const
         std::vector<std::pair<account_name_type, fc::time_point_sec>> witness_time_pairs;
         for (const auto& b : blocks)
         {
+            ctx_dlog(block_info(b->data),
+                     "Encountered block num collision at block ${n} due to a fork, witnesses are: ${w}",
+                     ("n", height)("w", witness_time_pairs));
             witness_time_pairs.push_back(std::make_pair(b->data.witness, b->data.timestamp));
         }
 
@@ -545,6 +553,10 @@ void database::_maybe_warn_multiple_production(uint32_t height) const
 
 bool database::_push_block(const signed_block& new_block)
 {
+    block_info ctx(new_block);
+
+    ctx_dlog(ctx, "Block pushing");
+
     try
     {
         uint32_t skip = get_node_properties().skip_flags;
@@ -553,34 +565,46 @@ bool database::_push_block(const signed_block& new_block)
         if (!(skip & skip_fork_db))
         {
             std::shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
+
+            ctx_dlog(ctx, "New head block = ${b}", ("b", (std::string)block_info(new_head->data)));
+
             _maybe_warn_multiple_production(new_head->num);
 
             // If the head block from the longest chain does not build off of the current head, we need to switch forks.
             if (new_head->data.previous != head_block_id())
             {
+                ctx_dlog(ctx, "Previous head block-id = ${priv_id} != ${h_id}",
+                         ("priv_id", new_head->data.previous)("h_id", head_block_id()));
+
                 // If the newly pushed block is the same height as head, we get head back in new_head
                 // Only switch forks if new_head is actually higher than head
                 if (new_head->data.block_num() > head_block_num())
                 {
-                    // wlog( "Switching to fork: ${id}", ("id",new_head->data.id()) );
+                    ctx_dlog(ctx, "New head block-number = ${f_num} > current = ${h_num}",
+                             ("f_num", new_head->data.block_num())("h_num", head_block_num()));
+                    ctx_dlog(ctx, "Switching to fork with block = ${b}",
+                             ("b", (std::string)block_info(new_head->data)));
+
                     auto branches = _fork_db.fetch_branch_from(new_head->data.id(), head_block_id());
 
                     // pop blocks until we hit the forked block
                     while (head_block_id() != branches.second.back()->data.previous)
                     {
+                        ctx_dlog(ctx, "Popping block-id = ${id}", ("id", head_block_id()));
                         pop_block();
                     }
 
                     // push all blocks on the new fork
                     for (auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr)
                     {
-                        // ilog( "pushing blocks from fork ${n} ${id}",
-                        // ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
+                        ctx_dlog(ctx, "Pushing blocks from fork block = ${b}",
+                                 ("b", (std::string)block_info((*ritr)->data)));
                         optional<fc::exception> except;
                         try
                         {
                             auto session = start_undo_session();
                             apply_block((*ritr)->data, skip);
+                            ctx_dlog(ctx, "Applied block = ${b}", ("b", (std::string)block_info((*ritr)->data)));
                             session->push();
                         }
                         catch (const fc::exception& e)
@@ -589,10 +613,13 @@ bool database::_push_block(const signed_block& new_block)
                         }
                         if (except)
                         {
-                            // wlog( "exception thrown while switching forks ${e}", ("e",except->to_detail_string() ) );
+                            ctx_dlog(ctx, "Exception thrown while switching forks ${e}",
+                                     ("e", except->to_detail_string()));
                             // remove the rest of branches.first from the fork_db, those blocks are invalid
                             while (ritr != branches.first.rend())
                             {
+                                ctx_dlog(ctx, "Removing block = ${b} from fork",
+                                         ("b", (std::string)block_info((*ritr)->data)));
                                 _fork_db.remove((*ritr)->data.id());
                                 ++ritr;
                             }
@@ -601,6 +628,7 @@ bool database::_push_block(const signed_block& new_block)
                             // pop all blocks from the bad fork
                             while (head_block_id() != branches.second.back()->data.previous)
                             {
+                                ctx_dlog(ctx, "Popping block-id = ${id}", ("id", head_block_id()));
                                 pop_block();
                             }
 
@@ -609,15 +637,19 @@ bool database::_push_block(const signed_block& new_block)
                             {
                                 auto session = start_undo_session();
                                 apply_block((*ritr)->data, skip);
+                                ctx_dlog(ctx, "Applied block = ${b}", ("b", (std::string)block_info((*ritr)->data)));
                                 session->push();
                             }
                             throw * except;
                         }
                     }
+
+                    ctx_dlog(ctx, "Block pushed. Result = true");
                     return true;
                 }
                 else
                 {
+                    ctx_dlog(ctx, "Block pushed. Result = false");
                     return false;
                 }
             }
@@ -627,18 +659,20 @@ bool database::_push_block(const signed_block& new_block)
         {
             auto session = start_undo_session();
             apply_block(new_block, skip);
+            ctx_dlog(ctx, "Applied block = ${b}", ("b", (std::string)block_info(new_block)));
             session->push();
         }
         catch (const fc::exception& e)
         {
-            elog("Failed to push new block:\n${e}", ("e", e.to_detail_string()));
+            ctx_elog(ctx, "Failed to push new block:\n${e}", ("e", e.to_detail_string()));
             _fork_db.remove(new_block.id());
             throw;
         }
 
+        ctx_dlog(ctx, "Block pushed. Result = false");
         return false;
     }
-    FC_CAPTURE_AND_RETHROW()
+    FC_CAPTURE_AND_RETHROW(((std::string)ctx))
 }
 
 /**
@@ -705,13 +739,18 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       uint32_t skip /* = 0 */
                                       )
 {
+    block_info ctx(when, witness_owner);
+
+    ctx_dlog(ctx, "Block generating. Skip flags = ${s}", ("s", skip));
+
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
         try
         {
             result = _generate_block(when, witness_owner, block_signing_private_key);
+            ctx_dlog(ctx, "Block = ${b} generated", ("b", (std::string)block_info(result)));
         }
-        FC_CAPTURE_AND_RETHROW((witness_owner))
+        FC_CAPTURE_AND_RETHROW(((std::string)ctx))
     });
     return result;
 }
@@ -720,6 +759,10 @@ signed_block database::_generate_block(fc::time_point_sec when,
                                        const account_name_type& witness_owner,
                                        const fc::ecc::private_key& block_signing_private_key)
 {
+    block_info ctx(when, witness_owner);
+
+    ctx_dlog(ctx, "Block generating");
+
     auto& witness_service = obtain_service<dbs_witness>();
 
     uint32_t skip = get_node_properties().skip_flags;
@@ -857,6 +900,8 @@ signed_block database::_generate_block(fc::time_point_sec when,
 
     push_block(pending_block, skip);
 
+    ctx_dlog(ctx, "Block = ${b} generated", ("b", (std::string)block_info(pending_block)));
+
     return pending_block;
 }
 
@@ -866,6 +911,15 @@ signed_block database::_generate_block(fc::time_point_sec when,
  */
 void database::pop_block()
 {
+    block_info ctx;
+
+    if (_fork_db.head())
+    {
+        ctx = std::move(block_info(_fork_db.head()->data));
+    }
+
+    ctx_dlog(ctx, "Block popping");
+
     try
     {
         _pending_tx_session.reset();
@@ -880,8 +934,10 @@ void database::pop_block()
         for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo(); });
 
         _popped_tx.insert(_popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end());
+
+        ctx_dlog(ctx, "Block popped");
     }
-    FC_CAPTURE_AND_RETHROW()
+    FC_CAPTURE_AND_RETHROW(((std::string)ctx))
 }
 
 void database::clear_pending()
@@ -1104,6 +1160,22 @@ block_id_type database::head_block_id() const
     return obtain_service<dbs_dynamic_global_property>().get().head_block_id;
 }
 
+block_info database::head_block_context() const
+{
+    block_info ret;
+    auto b = fetch_block_by_id(head_block_id());
+    if (b.valid())
+    {
+        ret = std::move(block_info(*b));
+    }
+    else
+    {
+        ret = std::move(
+            block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness));
+    }
+    return ret;
+}
+
 node_property_object& database::node_properties()
 {
     return _node_property_object;
@@ -1218,6 +1290,10 @@ void database::set_flush_interval(uint32_t flush_blocks)
 
 void database::apply_block(const signed_block& next_block, uint32_t skip)
 {
+    block_info ctx(next_block);
+
+    ctx_dlog(ctx, "Block applying. Skip flags = ${s}", ("s", skip));
+
     try
     {
         // fc::time_point begin_time = fc::time_point::now();
@@ -1248,9 +1324,9 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
                 validate_invariants();
             }
 #ifdef DEBUG
-            FC_CAPTURE_AND_RETHROW((next_block));
+            FC_CAPTURE_AND_RETHROW(((std::string)ctx));
 #else
-            FC_CAPTURE_AND_LOG((next_block));
+            FC_CAPTURE_AND_LOG((ctx));
 #endif
         }
 
@@ -1284,8 +1360,10 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         }
 
         show_free_memory(false);
+
+        ctx_dlog(ctx, "Block applied");
     }
-    FC_CAPTURE_AND_RETHROW((next_block))
+    FC_CAPTURE_AND_RETHROW(((std::string)ctx))
 }
 
 void database::show_free_memory(bool force)
@@ -1310,6 +1388,10 @@ void database::show_free_memory(bool force)
 
 void database::_apply_block(const signed_block& next_block)
 {
+    block_info ctx(next_block);
+
+    ctx_dlog(ctx, "Block applying");
+
     try
     {
         notify_pre_applied_block(next_block);
@@ -1331,11 +1413,15 @@ void database::_apply_block(const signed_block& next_block)
             }
             catch (fc::assert_exception& e)
             {
+                ctx_dlog(ctx, "Merkle check failed");
+
                 const auto& merkle_map = get_shared_db_merkle();
                 auto itr = merkle_map.find(next_block_num);
 
                 if (itr == merkle_map.end() || itr->second != merkle_root)
                 {
+                    ctx_dlog(ctx, "Merkle check failed. Rethrow");
+
                     throw e;
                 }
             }
@@ -1393,9 +1479,9 @@ void database::_apply_block(const signed_block& next_block)
         // in dbs_database_witness_schedule.cpp
         update_witness_schedule();
 
-        database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
-                                            static_cast<database_virtual_operations_emmiter_i&>(*this),
-                                            _current_block_num);
+        database_ns::block_task_context task_ctx(static_cast<data_service_factory&>(*this),
+                                                 static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                                 _current_block_num);
 
         // clang-format off
         _my->_process_funds
@@ -1406,7 +1492,7 @@ void database::_apply_block(const signed_block& next_block)
             .before(_my->_process_contracts_expiration)
             .before(_my->_process_account_registration_bonus_expiration)
             .before(_my->_process_witness_reward_in_sp_migration)
-            .apply(ctx);
+            .apply(task_ctx);
         // clang-format on
 
         account_recovery_processing();
@@ -1419,8 +1505,10 @@ void database::_apply_block(const signed_block& next_block)
 
         // notify observers that the block has been applied
         notify_applied_block(next_block);
+
+        ctx_dlog(ctx, "Block applied");
     }
-    FC_CAPTURE_LOG_AND_RETHROW((next_block.block_num()))
+    FC_CAPTURE_LOG_AND_RETHROW(((std::string)ctx))
 }
 
 void database::process_header_extensions(const signed_block& next_block)
