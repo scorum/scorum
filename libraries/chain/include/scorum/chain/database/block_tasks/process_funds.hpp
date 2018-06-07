@@ -25,6 +25,7 @@ private:
     void charge_content_reward(block_task_context& ctx, const asset& reward);
     void charge_activity_reward(block_task_context& ctx, const asset& reward);
     const asset get_activity_reward(block_task_context& ctx, const asset& reward);
+    bool apply_mainnet_schedule_crutches(block_task_context&);
 };
 }
 }

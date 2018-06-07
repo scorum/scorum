@@ -24,6 +24,9 @@ using scorum::protocol::producer_reward_operation;
 
 void process_funds::on_apply(block_task_context& ctx)
 {
+    if (apply_mainnet_schedule_crutches(ctx))
+        return;
+
     data_service_factory_i& services = ctx.services();
     content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
     budget_service_i& budget_service = services.budget_service();
@@ -230,6 +233,20 @@ const asset process_funds::get_activity_reward(block_task_context& ctx, const as
         reward_balance_algorithm<voters_reward_sp_service_i> balancer(reward_service);
         return reward + balancer.take_block_reward();
     }
+}
+
+bool process_funds::apply_mainnet_schedule_crutches(block_task_context& ctx)
+{
+    // We have bug on mainnet: signed_block was applied, but undo_session wasn't pushed, therefore DB state roll backed
+    // and witnesses were not rewarded. It leads us to mismatching of schedule for working and newly synced nodes. Next
+    // code fixes it.
+    if (ctx.block_num() == 1650380 || // fix reward for headshot witness
+        ctx.block_num() == 1808664) // fix reward for addit-yury witness
+    {
+        return true;
+    }
+
+    return false;
 }
 }
 }
