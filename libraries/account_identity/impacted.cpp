@@ -218,6 +218,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.author);
     }
 
+    void operator()(const active_sp_holders_reward_operation& op)
+    {
+        _impacted.insert(op.sp_holder);
+    }
+
     void operator()(const return_scorumpower_delegation_operation& op)
     {
         _impacted.insert(op.account);
