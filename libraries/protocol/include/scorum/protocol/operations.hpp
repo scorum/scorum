@@ -67,7 +67,8 @@ using operation = fc::static_variant<vote_operation,
                                      return_scorumpower_delegation_operation,
                                      shutdown_witness_operation,
                                      witness_miss_block_operation,
-                                     expired_contract_refund_operation>;
+                                     expired_contract_refund_operation,
+                                     dev_committee_transfer_complete_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

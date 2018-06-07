@@ -64,6 +64,7 @@
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
+#include <scorum/chain/database/operation_observer.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -860,6 +861,11 @@ signed_block database::_generate_block(fc::time_point_sec when,
     return pending_block;
 }
 
+void database::_notify_dev_committee_transfer_complete(const development_committee_transfer_operation& op)
+{
+    push_virtual_operation(dev_committee_transfer_complete_operation(op.to_account, op.amount));
+}
+
 /**
  * Removes the most recent block from the database and
  * undoes any changes it made.
@@ -908,6 +914,16 @@ void database::notify_pre_apply_operation(operation_notification& note)
 void database::notify_post_apply_operation(const operation_notification& note)
 {
     SCORUM_TRY_NOTIFY(post_apply_operation, note)
+}
+
+void database::notify_pre_apply_proposal_operation(const protocol::proposal_operation& op)
+{
+    SCORUM_TRY_NOTIFY(pre_apply_proposal_operation, op);
+}
+
+void database::notify_post_apply_proposal_operation(const protocol::proposal_operation& op)
+{
+    SCORUM_TRY_NOTIFY(post_apply_proposal_operation, op);
 }
 
 inline void database::push_virtual_operation(const operation& op)
@@ -1364,6 +1380,10 @@ void database::_apply_block(const signed_block& next_block)
         FC_ASSERT(witness.running_version >= hardfork_state.current_hardfork_version,
                   "Block produced by witness that is not running current hardfork",
                   ("witness", witness)("next_block.witness", next_block.witness)("hardfork_state", hardfork_state));
+
+        database_ns::operation_observer<development_committee_transfer_operation> observer(
+            post_apply_proposal_operation,
+            [&](const development_committee_transfer_operation& op) { _notify_dev_committee_transfer_complete(op); });
 
         for (const auto& trx : next_block.transactions)
         {

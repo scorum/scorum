@@ -239,6 +239,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const dev_committee_transfer_complete_operation& op)
+    {
+        _impacted.insert(op.to_account);
+    }
+
 private:
     fc::flat_set<account_name_type>& _impacted;
 };

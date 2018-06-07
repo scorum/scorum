@@ -189,6 +189,9 @@ public:
     void notify_pre_apply_operation(operation_notification& note);
     void notify_post_apply_operation(const operation_notification& note);
 
+    void notify_pre_apply_proposal_operation(const protocol::proposal_operation& op);
+    void notify_post_apply_proposal_operation(const protocol::proposal_operation& op);
+
     // vops are not needed for low mem. Force will push them on low mem.
     inline void push_virtual_operation(const operation& op);
     inline void push_hf_operation(const operation& op);
@@ -205,6 +208,12 @@ public:
     fc::signal<void(const operation_notification&)> pre_apply_operation;
     fc::signal<void(const operation_notification&)> post_apply_operation;
     fc::signal<void(const signed_block&)> pre_applied_block;
+
+    /**
+     *  This signals are emitted to process every proposal operation before and after it has been fully applied.
+     */
+    fc::signal<void(const protocol::proposal_operation&)> pre_apply_proposal_operation;
+    fc::signal<void(const protocol::proposal_operation&)> post_apply_proposal_operation;
 
     /**
      *  This signal is emitted after all operations and virtual operation for a
@@ -338,6 +347,7 @@ private:
     signed_block _generate_block(const fc::time_point_sec when,
                                  const account_name_type& witness_owner,
                                  const fc::ecc::private_key& block_signing_private_key);
+    void _notify_dev_committee_transfer_complete(const development_committee_transfer_operation& op);
 
 protected:
     void set_producing(bool p)

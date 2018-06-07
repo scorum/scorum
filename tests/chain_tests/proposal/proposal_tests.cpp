@@ -477,6 +477,22 @@ public:
     Actor bob = "bob";
 };
 
+struct dev_committee_transfer_complete_operation_visitor
+{
+    using result_type = void;
+
+    void operator()(const dev_committee_transfer_complete_operation& op)
+    {
+        ops_data.emplace_back(op.to_account, op.amount);
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+
+    std::vector<std::tuple<account_name_type, asset>> ops_data;
+};
+
 BOOST_FIXTURE_TEST_SUITE(dev_committee_tests, dev_committee_fixture)
 
 SCORUM_TEST_CASE(dev_committee_transfer_operation_circulating_capital_should_increase)
@@ -506,6 +522,40 @@ SCORUM_TEST_CASE(dev_committee_transfer_operation_circulating_capital_should_inc
     auto circulating_capital_after = dpo.circulating_capital;
 
     BOOST_REQUIRE_EQUAL(circulating_capital_before + transfer_amount + 100, circulating_capital_after);
+}
+
+SCORUM_TEST_CASE(dev_committee_transfer_virtual_op_should_be_raised)
+{
+    dev_committee_transfer_complete_operation_visitor visitor;
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
+
+    unsigned transfer_amount = 1e5;
+
+    development_committee_transfer_operation proposal_inner_op;
+    proposal_inner_op.amount = asset(transfer_amount, SCORUM_SYMBOL);
+    proposal_inner_op.to_account = bob.name;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    BOOST_REQUIRE_EQUAL(visitor.ops_data.size(), 0u);
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    BOOST_REQUIRE_EQUAL(visitor.ops_data.size(), 0u);
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_vote_op, initdelegate.private_key);
+
+    BOOST_REQUIRE_EQUAL(visitor.ops_data.size(), 1u);
+    BOOST_REQUIRE_EQUAL(std::get<0>(visitor.ops_data[0]), bob.name);
+    BOOST_REQUIRE_EQUAL(std::get<1>(visitor.ops_data[0]).amount, transfer_amount);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
