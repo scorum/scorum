@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(return_absolute_path_if_data_dir_is_relative)
 
     auto current_path = bfs::current_path();
 
-    BOOST_REQUIRE_EQUAL(0u, chdir("/tmp"));
+    BOOST_REQUIRE_EQUAL(0, chdir("/tmp"));
 
     BOOST_CHECK_EQUAL(get_data_dir_path(options).generic_string(), "/tmp/data_dir");
 
-    BOOST_REQUIRE_EQUAL(0u, chdir(current_path.generic_string().c_str()));
+    BOOST_REQUIRE_EQUAL(0, chdir(current_path.generic_string().c_str()));
 }
 
 BOOST_AUTO_TEST_CASE(do_not_modify_absolute_path)
@@ -73,11 +73,11 @@ BOOST_AUTO_TEST_CASE(get_config_file_path_based_on_relative_data_dir_path)
 
     auto current_path = bfs::current_path();
 
-    BOOST_REQUIRE_EQUAL(0u, chdir("/tmp"));
+    BOOST_REQUIRE_EQUAL(0, chdir("/tmp"));
 
     BOOST_CHECK_EQUAL(get_config_file_path(options).generic_string(), "/tmp/data_dir/config.ini");
 
-    BOOST_REQUIRE_EQUAL(0u, chdir(current_path.generic_string().c_str()));
+    BOOST_REQUIRE_EQUAL(0, chdir(current_path.generic_string().c_str()));
 }
 
 BOOST_AUTO_TEST_CASE(create_config_file)
