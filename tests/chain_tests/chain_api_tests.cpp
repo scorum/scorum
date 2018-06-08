@@ -10,9 +10,12 @@
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/schema/budget_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/services/development_committee.hpp>
 
 #include "database_trx_integration.hpp"
 
@@ -99,18 +102,40 @@ SCORUM_TEST_CASE(get_chain_capital_test)
 
     const auto& dpo = db.obtain_service<chain::dbs_dynamic_global_property>().get();
 
+    BOOST_REQUIRE_EQUAL(capital.head_block_number, dpo.head_block_number);
+    BOOST_REQUIRE_EQUAL(capital.head_block_id, dpo.head_block_id);
+    BOOST_REQUIRE(capital.head_block_time == dpo.time);
+    BOOST_REQUIRE_EQUAL(capital.current_witness, dpo.current_witness);
+
     BOOST_REQUIRE_EQUAL(capital.total_supply, dpo.total_supply);
     BOOST_REQUIRE_EQUAL(capital.circulating_capital, dpo.circulating_capital);
     BOOST_REQUIRE_EQUAL(capital.total_scorumpower, dpo.total_scorumpower);
+    BOOST_REQUIRE_EQUAL(capital.total_witness_reward_scr, dpo.total_witness_reward_scr);
+    BOOST_REQUIRE_EQUAL(capital.total_witness_reward_sp, dpo.total_witness_reward_sp);
 
     BOOST_REQUIRE_EQUAL(capital.registration_pool_balance,
                         db.obtain_service<chain::dbs_registration_pool>().get().balance);
     BOOST_REQUIRE_EQUAL(capital.fund_budget_balance, db.obtain_service<chain::dbs_budget>().get_fund_budget().balance);
-    BOOST_REQUIRE_EQUAL(capital.reward_pool_balance, db.obtain_service<chain::dbs_content_reward_scr>().get().balance);
-    BOOST_REQUIRE_EQUAL(capital.content_reward_scr_balance,
+
+    BOOST_REQUIRE_EQUAL(capital.dev_pool_scr_balance,
+                        db.obtain_service<chain::dbs_development_committee>().get().scr_balance);
+    BOOST_REQUIRE_EQUAL(capital.dev_pool_sp_balance,
+                        db.obtain_service<chain::dbs_development_committee>().get().sp_balance);
+
+    BOOST_REQUIRE_EQUAL(capital.content_balancer_scr, db.obtain_service<chain::dbs_content_reward_scr>().get().balance);
+    BOOST_REQUIRE_EQUAL(capital.active_voters_balancer_scr,
+                        db.obtain_service<chain::dbs_voters_reward_scr>().get().balance);
+    BOOST_REQUIRE_EQUAL(capital.active_voters_balancer_sp,
+                        db.obtain_service<chain::dbs_voters_reward_sp>().get().balance);
+
+    BOOST_REQUIRE_EQUAL(capital.content_reward_fund_scr_balance,
                         db.obtain_service<chain::dbs_content_reward_fund_scr>().get().activity_reward_balance);
-    BOOST_REQUIRE_EQUAL(capital.content_reward_sp_balance,
+    BOOST_REQUIRE_EQUAL(capital.content_reward_fund_sp_balance,
                         db.obtain_service<chain::dbs_content_reward_fund_sp>().get().activity_reward_balance);
+    BOOST_REQUIRE_EQUAL(capital.content_reward_fifa_world_cup_2018_bounty_fund_sp_balance, asset(0, SP_SYMBOL));
+
+    BOOST_REQUIRE_EQUAL(capital.witness_reward_in_sp_migration_fund.amount,
+                        db.obtain_service<chain::dbs_witness_reward_in_sp_migration>().get().balance);
 }
 
 SCORUM_TEST_CASE(get_reward_fund_test)

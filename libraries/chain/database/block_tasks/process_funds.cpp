@@ -107,7 +107,7 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     const auto& witness = account_service.get_account(cwit.owner);
 
-    charge_account_reward(ctx, witness, witness_reward);
+    charge_witness_reward(ctx, witness, witness_reward);
 
     if (witness_reward.amount != 0)
         ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
@@ -171,6 +171,23 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
     {
         account_service.create_scorumpower(account, reward);
     }
+}
+
+void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
+{
+    data_service_factory_i& services = ctx.services();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        dgp_service.update([&](dynamic_global_property_object& p) { p.total_witness_reward_scr += reward; });
+    }
+    else
+    {
+        dgp_service.update([&](dynamic_global_property_object& p) { p.total_witness_reward_sp += reward; });
+    }
+
+    charge_account_reward(ctx, witness, reward);
 }
 
 void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
