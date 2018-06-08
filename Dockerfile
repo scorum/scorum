@@ -54,6 +54,7 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
+        -FORCE_REBUILD_GENESIS=ON \
         -DCMAKE_BUILD_TYPE=Debug \
         -DENABLE_COVERAGE_TESTING=ON \
         -DLOW_MEMORY_NODE=OFF \
@@ -80,6 +81,7 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
+        -FORCE_REBUILD_GENESIS=ON \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=ON \
@@ -100,6 +102,7 @@ RUN \
 	mkdir build && \
     cd build && \
     cmake \
+        -FORCE_REBUILD_GENESIS=ON \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=OFF \
