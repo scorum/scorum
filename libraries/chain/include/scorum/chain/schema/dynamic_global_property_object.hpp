@@ -42,6 +42,9 @@ public:
         SCORUM_SYMBOL); ///< total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
     asset total_scorumpower = asset(0, SP_SYMBOL); ///< total SP on accounts scorumpower
 
+    asset total_witness_reward_scr = asset(0, SCORUM_SYMBOL);
+    asset total_witness_reward_sp = asset(0, SP_SYMBOL);
+
     /**
      *  Chain properties are decided by the set of active witnesses which change every round.
      *  Each witness posts what they think the chain properties should be as part of their witness
@@ -90,6 +93,8 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (total_supply)
           (circulating_capital)
           (total_scorumpower)
+          (total_witness_reward_scr)
+          (total_witness_reward_sp)
           (median_chain_props)
           (majority_version)
           (current_aslot)

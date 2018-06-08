@@ -112,10 +112,15 @@ chain_capital_api_obj chain_api::get_chain_capital() const
         const dynamic_global_property_object& dpo = _db.obtain_service<dbs_dynamic_global_property>().get();
 
         capital.head_block_number = dpo.head_block_number;
+        capital.head_block_id = dpo.head_block_id;
+        capital.head_block_time = dpo.time;
+        capital.current_witness = dpo.current_witness;
 
         capital.total_supply = dpo.total_supply;
         capital.circulating_capital = dpo.circulating_capital;
         capital.total_scorumpower = dpo.total_scorumpower;
+        capital.total_witness_reward_scr = dpo.total_witness_reward_scr;
+        capital.total_witness_reward_sp = dpo.total_witness_reward_sp;
 
         capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
         capital.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
