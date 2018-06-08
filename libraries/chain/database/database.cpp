@@ -1323,7 +1323,7 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 #ifdef DEBUG
             FC_CAPTURE_AND_RETHROW(((std::string)ctx));
 #else
-            FC_CAPTURE_AND_LOG((ctx));
+            FC_CAPTURE_AND_LOG(((std::string)ctx));
 #endif
         }
 
