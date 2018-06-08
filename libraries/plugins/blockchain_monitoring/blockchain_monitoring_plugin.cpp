@@ -10,6 +10,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <scorum/chain/services/dev_pool.hpp>
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
@@ -85,6 +86,12 @@ private:
     virtual void process_pre_operation(const bucket_object& bucket, const operation_notification& o) override;
 
     virtual void process_post_operation(const bucket_object& bucket, const operation_notification& o) override;
+
+    virtual void process_pre_proposal_operation(const bucket_object& bucket,
+                                                const proposal_operation_notification& o) override;
+
+    template <typename TSourceId>
+    void collect_withdraw_stats(const bucket_object& bucket, const asset& vesting_shares, const TSourceId& source_id);
 };
 
 class operation_process
@@ -217,19 +224,63 @@ public:
         });
     }
 
-    void operator()(const fill_vesting_withdraw_operation& op) const
+    void operator()(const vesting_withdraw_operation<route::from_acc_to_acc>& op) const
     {
-        const auto& account = _db.obtain_service<chain::dbs_account>().get_account(op.from_account);
+        const auto& account = _db.account_service().get_account(op.from_account);
+
+        collect_withdraw_stats(account.id, account.scorumpower, op.withdrawn);
+    }
+
+    void operator()(const vesting_withdraw_operation<route::from_acc_to_devpool>& op) const
+    {
+        const auto& account = _db.account_service().get_account(op.from_account);
+
+        collect_withdraw_stats(account.id, account.scorumpower, op.withdrawn);
+    }
+
+    void operator()(const vesting_withdraw_operation<route::from_devpool_to_acc>& op) const
+    {
+        const auto& dev_pool = _db.dev_pool_service().get();
+
+        collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance, op.withdrawn);
+    }
+
+    void operator()(const vesting_withdraw_operation<route::from_devpool_to_devpool>& op) const
+    {
+        const auto& dev_pool = _db.dev_pool_service().get();
+
+        collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance, op.withdrawn);
+    }
+
+    void operator()(const dev_committee_transfer_complete_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) {
+            b.transfers++;
+
+            if (op.amount.symbol() == SCORUM_SYMBOL)
+                b.scorum_transferred += op.amount.amount;
+        });
+    }
+
+    void operator()(const witness_miss_block_operation& op) const
+    {
+        _db.modify(_bucket, [&](bucket_object& b) { b.missed_blocks[op.block_num] = op.owner; });
+    }
+
+private:
+    template <typename TSourceId>
+    void collect_withdraw_stats(const TSourceId& source_id, const asset& source_sp, const asset& withdrawn) const
+    {
         const auto& withdraw_scorumpower_service = _db.obtain_service<chain::dbs_withdraw_scorumpower>();
 
-        asset withdrawn = asset(0, SP_SYMBOL);
+        asset withdrawn_total = asset(0, SP_SYMBOL);
         asset to_withdraw = asset(0, SP_SYMBOL);
         asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
 
-        if (withdraw_scorumpower_service.is_exists(account.id))
+        if (withdraw_scorumpower_service.is_exists(source_id))
         {
-            const auto& wvo = withdraw_scorumpower_service.get(account.id);
-            withdrawn = wvo.withdrawn;
+            const auto& wvo = withdraw_scorumpower_service.get(source_id);
+            withdrawn_total = wvo.withdrawn;
             to_withdraw = wvo.to_withdraw;
             vesting_withdraw_rate = wvo.vesting_withdraw_rate;
         }
@@ -238,24 +289,19 @@ public:
 
             b.vesting_withdrawals_processed++;
 
-            if (op.withdrawn.symbol() == SCORUM_SYMBOL)
-                b.scorumpower_withdrawn += op.withdrawn.amount;
+            if (withdrawn.symbol() == SCORUM_SYMBOL)
+                b.scorumpower_withdrawn += withdrawn.amount;
             else
-                b.scorumpower_transferred += op.withdrawn.amount;
+                b.scorumpower_transferred += withdrawn.amount;
 
-            if (withdrawn.amount + op.withdrawn.amount >= to_withdraw.amount
-                || account.scorumpower.amount - op.withdrawn.amount == 0)
+            if (withdrawn_total.amount + withdrawn.amount >= to_withdraw.amount
+                || source_sp.amount - withdrawn.amount == 0)
             {
                 b.finished_vesting_withdrawals++;
 
                 b.vesting_withdraw_rate_delta -= vesting_withdraw_rate.amount;
             }
         });
-    }
-
-    void operator()(const witness_miss_block_operation& op) const
-    {
-        _db.modify(_bucket, [&](bucket_object& b) { b.missed_blocks[op.block_num] = op.owner; });
     }
 };
 
@@ -297,31 +343,10 @@ void blockchain_monitoring_plugin_impl::process_pre_operation(const bucket_objec
     }
     else if (o.op.which() == operation::tag<withdraw_scorumpower_operation>::value)
     {
-        withdraw_scorumpower_operation op = o.op.get<withdraw_scorumpower_operation>();
+        const auto& op = o.op.get<withdraw_scorumpower_operation>();
         const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
 
-        auto new_vesting_withdrawal_rate = op.scorumpower.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
-        if (op.scorumpower.amount > 0 && new_vesting_withdrawal_rate == 0)
-            new_vesting_withdrawal_rate = 1;
-
-        const auto& withdraw_scorumpower_service = db.obtain_service<chain::dbs_withdraw_scorumpower>();
-
-        asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
-
-        if (withdraw_scorumpower_service.is_exists(account.id))
-        {
-            const auto& wvo = withdraw_scorumpower_service.get(account.id);
-            vesting_withdraw_rate = wvo.vesting_withdraw_rate;
-        }
-
-        db.modify(bucket, [&](bucket_object& b) {
-            if (vesting_withdraw_rate.amount > 0)
-                b.modified_vesting_withdrawal_requests++;
-            else
-                b.new_vesting_withdrawal_requests++;
-
-            b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - vesting_withdraw_rate.amount;
-        });
+        collect_withdraw_stats(bucket, op.scorumpower, account.id);
     }
 }
 
@@ -335,6 +360,51 @@ void blockchain_monitoring_plugin_impl::process_post_operation(const bucket_obje
         db.modify(bucket, [&](bucket_object& b) { b.operations++; });
     }
     o.op.visit(operation_process(db, bucket));
+}
+
+void blockchain_monitoring_plugin_impl::process_pre_proposal_operation(const bucket_object& bucket,
+                                                                       const proposal_operation_notification& o)
+{
+    auto& db = _self.database();
+
+    if (o.op.which() == proposal_operation::tag<development_committee_withdraw_vesting_operation>::value)
+    {
+        const auto& op = o.op.get<development_committee_withdraw_vesting_operation>();
+        const auto& dev_committee = db.dev_pool_service().get();
+
+        collect_withdraw_stats(bucket, op.vesting_shares, dev_committee.id);
+    }
+}
+
+template <typename TSourceId>
+void blockchain_monitoring_plugin_impl::collect_withdraw_stats(const bucket_object& bucket,
+                                                               const asset& vesting_shares,
+                                                               const TSourceId& source_id)
+{
+    auto& db = _self.database();
+
+    auto new_vesting_withdrawal_rate = vesting_shares.amount / SCORUM_VESTING_WITHDRAW_INTERVALS;
+    if (vesting_shares.amount > 0 && new_vesting_withdrawal_rate == 0)
+        new_vesting_withdrawal_rate = 1;
+
+    const auto& withdraw_scorumpower_service = db.obtain_service<chain::dbs_withdraw_scorumpower>();
+
+    asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
+
+    if (withdraw_scorumpower_service.is_exists(source_id))
+    {
+        const auto& wvo = withdraw_scorumpower_service.get(source_id);
+        vesting_withdraw_rate = wvo.vesting_withdraw_rate;
+    }
+
+    db.modify(bucket, [&](bucket_object& b) {
+        if (vesting_withdraw_rate.amount > 0)
+            b.modified_vesting_withdrawal_requests++;
+        else
+            b.new_vesting_withdrawal_requests++;
+
+        b.vesting_withdraw_rate_delta += new_vesting_withdrawal_rate - vesting_withdraw_rate.amount;
+    });
 }
 
 } // detail

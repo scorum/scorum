@@ -54,9 +54,9 @@ void dbs_proposal_executor::execute_proposal(const proposal_object& proposal)
     {
         auto& evaluator = evaluators.get_evaluator(proposal.operation);
 
-        db_impl().notify_pre_apply_proposal_operation(proposal.operation);
+        db_impl().try_notify_pre_apply_proposal_operation(proposal.operation);
         evaluator.apply(proposal.operation);
-        db_impl().notify_post_apply_proposal_operation(proposal.operation);
+        db_impl().try_notify_post_apply_proposal_operation(proposal.operation);
 
         proposal_service.remove(proposal);
     }

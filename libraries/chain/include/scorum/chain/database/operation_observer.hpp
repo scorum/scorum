@@ -27,10 +27,6 @@ public:
     {
         _conn = op_signal.connect([&](const protocol::proposal_operation& op) { op.visit(*this); });
     }
-    ~operation_observer()
-    {
-        _conn.disconnect();
-    }
 
     void operator()(const TOp& op)
     {

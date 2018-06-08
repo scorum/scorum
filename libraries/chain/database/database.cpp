@@ -861,6 +861,28 @@ signed_block database::_generate_block(fc::time_point_sec when,
     return pending_block;
 }
 
+void database::_notify_pre_apply_proposal_operation(const protocol::proposal_operation& op)
+{
+    proposal_operation_notification note(op);
+    note.trx_id = _current_trx_id;
+    note.block = _current_block_num;
+    note.trx_in_block = _current_trx_in_block;
+    note.op_in_trx = _current_op_in_trx;
+
+    SCORUM_TRY_NOTIFY(pre_apply_proposal_operation, note)
+}
+
+void database::_notify_post_apply_proposal_operation(const protocol::proposal_operation& op)
+{
+    proposal_operation_notification note(op);
+    note.trx_id = _current_trx_id;
+    note.block = _current_block_num;
+    note.trx_in_block = _current_trx_in_block;
+    note.op_in_trx = _current_op_in_trx;
+
+    SCORUM_TRY_NOTIFY(post_apply_proposal_operation, note)
+}
+
 void database::_notify_dev_committee_transfer_complete(const development_committee_transfer_operation& op)
 {
     push_virtual_operation(dev_committee_transfer_complete_operation(op.to_account, op.amount));
@@ -916,14 +938,14 @@ void database::notify_post_apply_operation(const operation_notification& note)
     SCORUM_TRY_NOTIFY(post_apply_operation, note)
 }
 
-void database::notify_pre_apply_proposal_operation(const protocol::proposal_operation& op)
+void database::try_notify_pre_apply_proposal_operation(const protocol::proposal_operation& op)
 {
-    SCORUM_TRY_NOTIFY(pre_apply_proposal_operation, op);
+    SCORUM_TRY_NOTIFY(_pre_apply_proposal_operation, op);
 }
 
-void database::notify_post_apply_proposal_operation(const protocol::proposal_operation& op)
+void database::try_notify_post_apply_proposal_operation(const protocol::proposal_operation& op)
 {
-    SCORUM_TRY_NOTIFY(post_apply_proposal_operation, op);
+    SCORUM_TRY_NOTIFY(_post_apply_proposal_operation, op);
 }
 
 inline void database::push_virtual_operation(const operation& op)
@@ -1381,9 +1403,15 @@ void database::_apply_block(const signed_block& next_block)
                   "Block produced by witness that is not running current hardfork",
                   ("witness", witness)("next_block.witness", next_block.witness)("hardfork_state", hardfork_state));
 
-        database_ns::operation_observer<development_committee_transfer_operation> observer(
-            post_apply_proposal_operation,
-            [&](const development_committee_transfer_operation& op) { _notify_dev_committee_transfer_complete(op); });
+        fc::scoped_connection conn_pre(_pre_apply_proposal_operation.connect(
+            [this](const protocol::proposal_operation& op) { _notify_pre_apply_proposal_operation(op); }));
+        fc::scoped_connection conn_post(_post_apply_proposal_operation.connect(
+            [this](const protocol::proposal_operation& op) { _notify_post_apply_proposal_operation(op); }));
+
+        database_ns::operation_observer<development_committee_transfer_operation> proposal_op_observer(
+            _post_apply_proposal_operation, [this](const development_committee_transfer_operation& op) {
+                _notify_dev_committee_transfer_complete(op);
+            });
 
         for (const auto& trx : next_block.transactions)
         {

@@ -3,13 +3,14 @@
 #include <scorum/protocol/operations.hpp>
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
+#include <scorum/protocol/proposal_operations.hpp>
 
 namespace scorum {
 namespace chain {
 
-struct operation_notification
+template <class Op> struct basic_operation_notification
 {
-    operation_notification(const protocol::operation& o)
+    basic_operation_notification(const Op& o)
         : op(o)
     {
     }
@@ -18,7 +19,10 @@ struct operation_notification
     uint32_t block = 0;
     uint32_t trx_in_block = 0;
     uint16_t op_in_trx = 0;
-    const protocol::operation& op;
+    const Op& op;
 };
+
+using operation_notification = basic_operation_notification<protocol::operation>;
+using proposal_operation_notification = basic_operation_notification<protocol::proposal_operation>;
 }
 }
