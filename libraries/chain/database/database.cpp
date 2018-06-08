@@ -656,7 +656,6 @@ bool database::_push_block(const signed_block& new_block)
         {
             auto session = start_undo_session();
             apply_block(new_block, skip);
-            debug_log(ctx, "applied block=${b}", ("b", (std::string)block_info(new_block)));
             session->push();
         }
         catch (const fc::exception& e)
