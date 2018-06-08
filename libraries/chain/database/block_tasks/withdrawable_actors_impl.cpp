@@ -350,15 +350,14 @@ class update_statistic_visitor : public void_return_visitor
             const account_object& to_account = _account_service.get(to);
 
             _emmiter.push_virtual_operation(
-                vesting_withdraw_operation<route::from_acc_to_acc>(from_account.name, to_account.name, _amount));
+                acc_to_acc_vesting_withdraw_operation(from_account.name, to_account.name, _amount));
         }
 
         void operator()(const dev_committee_id_type& to) const
         {
             const account_object& from_account = _account_service.get(_from);
 
-            _emmiter.push_virtual_operation(
-                vesting_withdraw_operation<route::from_acc_to_devpool>(from_account.name, _amount));
+            _emmiter.push_virtual_operation(acc_to_devpool_vesting_withdraw_operation(from_account.name, _amount));
         }
 
     private:
@@ -386,13 +385,12 @@ class update_statistic_visitor : public void_return_visitor
         {
             const account_object& to_account = _account_service.get(to);
 
-            _emmiter.push_virtual_operation(
-                vesting_withdraw_operation<route::from_devpool_to_acc>(to_account.name, _amount));
+            _emmiter.push_virtual_operation(devpool_to_acc_vesting_withdraw_operation(to_account.name, _amount));
         }
 
         void operator()(const dev_committee_id_type& to) const
         {
-            _emmiter.push_virtual_operation(vesting_withdraw_operation<route::from_devpool_to_devpool>(_amount));
+            _emmiter.push_virtual_operation(devpool_to_devpool_vesting_withdraw_operation(_amount));
         }
 
     private:

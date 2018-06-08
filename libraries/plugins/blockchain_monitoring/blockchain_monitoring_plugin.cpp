@@ -224,28 +224,28 @@ public:
         });
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_acc_to_acc>& op) const
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op) const
     {
         const auto& account = _db.account_service().get_account(op.from_account);
 
         collect_withdraw_stats(account.id, account.scorumpower, op.withdrawn);
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_acc_to_devpool>& op) const
+    void operator()(const acc_to_devpool_vesting_withdraw_operation& op) const
     {
         const auto& account = _db.account_service().get_account(op.from_account);
 
         collect_withdraw_stats(account.id, account.scorumpower, op.withdrawn);
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_devpool_to_acc>& op) const
+    void operator()(const devpool_to_acc_vesting_withdraw_operation& op) const
     {
         const auto& dev_pool = _db.dev_pool_service().get();
 
         collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance, op.withdrawn);
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_devpool_to_devpool>& op) const
+    void operator()(const devpool_to_devpool_vesting_withdraw_operation& op) const
     {
         const auto& dev_pool = _db.dev_pool_service().get();
 

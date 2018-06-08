@@ -197,18 +197,18 @@ struct get_impacted_account_visitor
         _impacted.insert(op.author);
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_acc_to_acc>& op)
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op)
     {
         _impacted.insert(op.from_account);
         _impacted.insert(op.to_account);
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_acc_to_devpool>& op)
+    void operator()(const acc_to_devpool_vesting_withdraw_operation& op)
     {
         _impacted.insert(op.from_account);
     }
 
-    void operator()(const vesting_withdraw_operation<route::from_devpool_to_acc>& op)
+    void operator()(const devpool_to_acc_vesting_withdraw_operation& op)
     {
         _impacted.insert(op.to_account);
     }

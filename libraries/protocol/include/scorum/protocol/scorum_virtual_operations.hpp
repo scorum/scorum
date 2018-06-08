@@ -69,22 +69,10 @@ struct comment_reward_operation : public virtual_operation
     asset commenting_reward; // reward accrued from children comments (in SCR or SP)
 };
 
-namespace route {
-enum withdraw_route
+struct acc_to_acc_vesting_withdraw_operation : public virtual_operation
 {
-    from_acc_to_acc,
-    from_devpool_to_acc,
-    from_acc_to_devpool,
-    from_devpool_to_devpool
-};
-}
-
-template <int Route> struct vesting_withdraw_operation;
-
-template <> struct vesting_withdraw_operation<route::from_acc_to_acc> : public virtual_operation
-{
-    vesting_withdraw_operation() = default;
-    vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w)
+    acc_to_acc_vesting_withdraw_operation() = default;
+    acc_to_acc_vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w)
         : from_account(f)
         , to_account(t)
         , withdrawn(w)
@@ -96,10 +84,10 @@ template <> struct vesting_withdraw_operation<route::from_acc_to_acc> : public v
     asset withdrawn = asset(0, SP_SYMBOL);
 };
 
-template <> struct vesting_withdraw_operation<route::from_devpool_to_acc> : public virtual_operation
+struct devpool_to_acc_vesting_withdraw_operation : public virtual_operation
 {
-    vesting_withdraw_operation() = default;
-    vesting_withdraw_operation(const std::string& t, const asset& w)
+    devpool_to_acc_vesting_withdraw_operation() = default;
+    devpool_to_acc_vesting_withdraw_operation(const std::string& t, const asset& w)
         : to_account(t)
         , withdrawn(w)
     {
@@ -109,10 +97,10 @@ template <> struct vesting_withdraw_operation<route::from_devpool_to_acc> : publ
     asset withdrawn = asset(0, SP_SYMBOL);
 };
 
-template <> struct vesting_withdraw_operation<route::from_acc_to_devpool> : public virtual_operation
+struct acc_to_devpool_vesting_withdraw_operation : public virtual_operation
 {
-    vesting_withdraw_operation() = default;
-    vesting_withdraw_operation(const std::string& f, const asset& w)
+    acc_to_devpool_vesting_withdraw_operation() = default;
+    acc_to_devpool_vesting_withdraw_operation(const std::string& f, const asset& w)
         : from_account(f)
         , withdrawn(w)
     {
@@ -122,10 +110,10 @@ template <> struct vesting_withdraw_operation<route::from_acc_to_devpool> : publ
     asset withdrawn = asset(0, SP_SYMBOL);
 };
 
-template <> struct vesting_withdraw_operation<route::from_devpool_to_devpool> : public virtual_operation
+struct devpool_to_devpool_vesting_withdraw_operation : public virtual_operation
 {
-    vesting_withdraw_operation() = default;
-    explicit vesting_withdraw_operation(const asset& w)
+    devpool_to_devpool_vesting_withdraw_operation() = default;
+    explicit devpool_to_devpool_vesting_withdraw_operation(const asset& w)
         : withdrawn(w)
     {
     }
@@ -301,10 +289,7 @@ FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(reward))
 FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation, (sp_holder)(reward))
 FC_REFLECT(scorum::protocol::expired_contract_refund_operation, (owner)(refund))
 FC_REFLECT(scorum::protocol::dev_committee_transfer_complete_operation, (to_account)(amount))
-FC_REFLECT(scorum::protocol::vesting_withdraw_operation<scorum::protocol::route::from_acc_to_acc>,
-           (from_account)(to_account)(withdrawn))
-FC_REFLECT(scorum::protocol::vesting_withdraw_operation<scorum::protocol::route::from_devpool_to_acc>,
-           (to_account)(withdrawn))
-FC_REFLECT(scorum::protocol::vesting_withdraw_operation<scorum::protocol::route::from_acc_to_devpool>,
-           (from_account)(withdrawn))
-FC_REFLECT(scorum::protocol::vesting_withdraw_operation<scorum::protocol::route::from_devpool_to_devpool>, (withdrawn))
+FC_REFLECT(scorum::protocol::acc_to_acc_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
+FC_REFLECT(scorum::protocol::devpool_to_acc_vesting_withdraw_operation, (to_account)(withdrawn))
+FC_REFLECT(scorum::protocol::acc_to_devpool_vesting_withdraw_operation, (from_account)(withdrawn))
+FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation, (withdrawn))
