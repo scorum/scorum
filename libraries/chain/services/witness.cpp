@@ -108,12 +108,14 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
 
     const witness_schedule_object& wso = db_impl().obtain_service<dbs_witness_schedule>().get();
     update(witness, [&](witness_object& w) {
+        debug_log(ctx, "updating votes for witness=${w}", ("w", w.owner));
+
         auto delta_pos = w.votes.value * (wso.current_virtual_time - w.virtual_last_update);
         w.virtual_position += delta_pos;
 
         w.virtual_last_update = wso.current_virtual_time;
 
-        auto old_votes = w.votes;
+        debug_log(ctx, "old_votes=${v}", ("v", w.votes));
 
         w.votes += delta;
         FC_ASSERT(w.votes <= props.total_scorumpower.amount, "",
@@ -127,8 +129,7 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
         if (w.virtual_scheduled_time < wso.current_virtual_time)
             w.virtual_scheduled_time = fc::uint128::max_value();
 
-        ctx_dlog(ctx, "Updated votes for witness '${w}'. Old votes = ${old_v}, new votes = ${new_v}",
-                 ("w", w.owner)("old_v", old_votes)("new_v", w.votes));
+        debug_log(ctx, "new_votes=${v}", ("v", w.votes));
     });
 }
 } // namespace chain

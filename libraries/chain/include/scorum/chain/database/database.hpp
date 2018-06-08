@@ -404,5 +404,38 @@ private:
 
     fc::time_point_sec _const_genesis_time; // should be const
 };
+
+template <typename Stream> struct keep_skip_flags_visitor
+{
+    store(database::validation_steps& _c, Stream& _s)
+        : c(_c)
+        , s(_s)
+    {
+    }
+
+    template <typename T, typename C, T(C::*p)> inline void operator()(const char* name) const
+    {
+        try
+        {
+            fc::raw::unpack(s, c.*p);
+        }
+        FC_RETHROW_EXCEPTIONS(warn, "Error unpacking field ${field}", ("field", name))
+    }
+
+private:
+    database::validation_steps& c;
+    Stream& s;
+};
+
+std::string get_fromatted_skip_flags(uint32_t skip)
+{
+    std::stringstream store;
+    scorum::chain::database::validation_steps skip_ = skip;
+    fc::reflector<decltype(skip_)>::visit(store<decltype(store)>(skip_, store));
+    format_string(my->format, my->args)
+}
+
 } // namespace chain
 } // namespace scorum
+
+#define debug_log(CTX, FORMAT, ...) fc_ctx_dlog(fc::logger::get("debug"), CTX, FORMAT, __VA_ARGS__)
