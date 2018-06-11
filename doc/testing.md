@@ -1,7 +1,7 @@
 # Testing
 
 The unit test target is `make chain_test utests`
-This creates an executable `./tests/chain_test` that will run unit tests.
+This creates executables in `tests` folders that will run unit tests.
 
 Tests are broken in several categories:
 ```
@@ -12,10 +12,11 @@ operation_tests      // Unit Tests of Scorum operations
 operation_time_tests // Tests of Scorum operations that include a time based component (ex. vesting withdrawals)
 serialization_tests  // Tests related of serialization
 ```
+and so on...
 
 # Code Coverage Testing
 
-If you have not done so, install lcov `brew install lcov`
+If you have not done so, install lcov `apt install lcov`
 
 ```
 cmake -D BUILD_SCORUM_TESTNET=ON -D ENABLE_COVERAGE_TESTING=true -D CMAKE_BUILD_TYPE=Debug .
