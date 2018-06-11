@@ -32,6 +32,7 @@ add_library( scorum_chain
              database/database_witness_schedule.cpp
 
              services/account.cpp
+             services/account_blogging_statistic.cpp
              services/atomicswap.cpp
              services/budget.cpp
              services/comment.cpp
@@ -40,24 +41,22 @@ add_library( scorum_chain
              services/dbservice_dbs_factory.cpp
              services/decline_voting_rights_request.cpp
              services/dev_pool.cpp
-			 services/development_committee.cpp
+             services/development_committee.cpp
              services/dynamic_global_property.cpp
              services/escrow.cpp
-             services/hardfork_property.cpp
              services/proposal.cpp
-			 services/proposal_executor.cpp
+             services/proposal_executor.cpp
              services/registration_committee.cpp
              services/registration_pool.cpp
-             services/reward.cpp
-             services/reward_fund.cpp
              services/scorumpower_delegation.cpp
              services/withdraw_scorumpower.cpp
              services/withdraw_scorumpower_route.cpp
              services/withdraw_scorumpower_route_statistic.cpp
              services/witness.cpp
-             services/witness_schedule.cpp
              services/witness_vote.cpp
              services/genesis_state.cpp
+             services/account_registration_bonus.cpp
+             services/blocks_story.cpp
 
              data_service_factory.cpp
 
@@ -89,12 +88,18 @@ add_library( scorum_chain
              genesis/initializators/dev_committee_initialiazator.cpp
 
              database/block_tasks/block_tasks.cpp
+             database/block_tasks/process_contracts_expiration.cpp
              database/block_tasks/process_funds.cpp
              database/block_tasks/process_comments_cashout.cpp
              database/block_tasks/process_vesting_withdrawals.cpp
              database/block_tasks/withdrawable_actors_impl.cpp
+             database/block_tasks/comments_cashout_impl.cpp
+             database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.cpp
+             database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.cpp
+             database/block_tasks/process_account_registration_bonus_expiration.cpp
+             database/block_tasks/process_witness_reward_in_sp_migration.cpp
 
-             util/reward.cpp
+             database/process_user_activity.cpp
 
              ${HEADERS}
              ${hardfork_hpp_file}
@@ -104,6 +109,8 @@ add_library( scorum_chain
 add_dependencies( scorum_chain scorum_protocol build_hardfork_hpp )
 target_link_libraries( scorum_chain
                        scorum_protocol
+                       scorum_rewards_math
+                       scorum_account_identity
                        fc
                        chainbase
                        graphene_schema

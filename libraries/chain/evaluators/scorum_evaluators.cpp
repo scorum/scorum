@@ -1,6 +1,6 @@
 #include <scorum/chain/evaluators/scorum_evaluators.hpp>
 
-#include <scorum/chain/util/reward.hpp>
+#include <scorum/rewards_math/curve.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/witness.hpp>
@@ -15,10 +15,14 @@
 #include <scorum/chain/services/escrow.hpp>
 #include <scorum/chain/services/decline_voting_rights_request.hpp>
 #include <scorum/chain/services/scorumpower_delegation.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
+#include <scorum/chain/services/account_blogging_statistic.hpp>
+#include <scorum/chain/services/comment_statistic.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
+
+#include <scorum/rewards_math/formulas.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
@@ -70,7 +74,7 @@ struct strcmp_equal
 {
     bool operator()(const fc::shared_string& a, const std::string& b)
     {
-        return a.size() == b.size() || std::strcmp(a.c_str(), b.c_str()) == 0;
+        return a.size() == b.size() && std::strcmp(a.c_str(), b.c_str()) == 0;
     }
 };
 
@@ -189,12 +193,11 @@ void account_update_evaluator::do_apply(const account_update_operation& o)
 
     if (o.owner)
     {
-#ifndef IS_TEST_NET
         dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
         FC_ASSERT(dprops_service.head_block_time() - account_auth.last_owner_update > SCORUM_OWNER_UPDATE_LIMIT,
                   "Owner authority can only be updated once an hour.");
-#endif
+
         account_service.check_account_existence(o.owner->account_auths);
 
         account_service.update_owner_authority(account, *o.owner);
@@ -237,7 +240,7 @@ void delete_comment_evaluator::do_apply(const delete_comment_operation& o)
     if (comment.net_rshares > 0)
         return;
 
-    comment_vote_service.remove(comment_id_type(comment.id));
+    comment_vote_service.remove_by_comment(comment_id_type(comment.id));
 
     account_name_type parent_author = comment.parent_author;
     std::string parent_permlink = fc::to_string(comment.parent_permlink);
@@ -311,11 +314,9 @@ void comment_options_evaluator::do_apply(const comment_options_operation& o)
     FC_ASSERT(comment.allow_curation_rewards >= o.allow_curation_rewards, "Curation rewards cannot be re-enabled.");
     FC_ASSERT(comment.allow_votes >= o.allow_votes, "Voting cannot be re-enabled.");
     FC_ASSERT(comment.max_accepted_payout >= o.max_accepted_payout, "A comment cannot accept a greater payout.");
-    FC_ASSERT(comment.percent_scrs >= o.percent_scrs, "A comment cannot accept a greater percent.");
 
     comment_service.update(comment, [&](comment_object& c) {
         c.max_accepted_payout = o.max_accepted_payout;
-        c.percent_scrs = o.percent_scrs;
         c.allow_votes = o.allow_votes;
         c.allow_curation_rewards = o.allow_curation_rewards;
     });
@@ -330,6 +331,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
 {
     account_service_i& account_service = db().account_service();
     comment_service_i& comment_service = db().comment_service();
+    comment_statistic_scr_service_i& comment_statistic_scr_service = db().comment_statistic_scr_service();
+    comment_statistic_sp_service_i& comment_statistic_sp_service = db().comment_statistic_sp_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     try
@@ -376,8 +379,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                           "You may only comment once every 20 seconds.",
                           ("now", now)("auth.last_post", auth.last_post));
 
-            uint16_t reward_weight = SCORUM_100_PERCENT;
-
             account_service.add_post(auth, parent_author);
 
             validate_permlink_0_1(parent_permlink);
@@ -393,21 +394,19 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 const comment_object& parent = comment_service.get(parent_author, parent_permlink);
                 pr_parent_author = parent.author;
                 pr_parent_permlink = fc::to_string(parent.permlink);
-                pr_depth = parent.depth + 1;
+                pr_depth = parent.depth;
                 pr_category = fc::to_string(parent.category);
                 pr_root_comment = parent.root_comment;
             }
 
-            comment_service.create([&](comment_object& com) {
+            const comment_object& new_comment = comment_service.create([&](comment_object& com) {
 
                 com.author = o.author;
                 fc::from_string(com.permlink, o.permlink);
                 com.last_update = now;
                 com.created = com.last_update;
                 com.active = com.last_update;
-                com.last_payout = fc::time_point_sec::min();
-                com.max_cashout_time = fc::time_point_sec::maximum();
-                com.reward_weight = reward_weight;
+                com.last_payout = fc::time_point_sec();
 
                 if (parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
                 {
@@ -440,6 +439,24 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #endif
             });
 
+            comment_statistic_scr_service.create(
+                [&](comment_statistic_scr_object& stat) { stat.comment = new_comment.id; });
+            comment_statistic_sp_service.create(
+                [&](comment_statistic_sp_object& stat) { stat.comment = new_comment.id; });
+
+#ifndef IS_LOW_MEM
+            {
+                account_blogging_statistic_service_i& account_blogging_statistic_service
+                    = db().account_blogging_statistic_service();
+
+                const auto& author_stat = account_blogging_statistic_service.obtain(auth.id);
+                account_blogging_statistic_service.add_post(author_stat);
+                if (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+                {
+                    account_blogging_statistic_service.add_comment(author_stat);
+                }
+            }
+#endif
             /// this loop can be skiped for validate-only nodes as it is merely gathering stats for indices
             while (parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
             {
@@ -554,8 +571,8 @@ void escrow_transfer_evaluator::do_apply(const escrow_transfer_operation& o)
 
         account_service.decrease_balance(from_account, scorum_spent);
 
-        escrow_service.create(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
-                              o.scorum_amount, o.fee);
+        escrow_service.create_escrow(o.escrow_id, o.from, o.to, o.agent, o.ratification_deadline, o.escrow_expiration,
+                                     o.scorum_amount, o.fee);
     }
     FC_CAPTURE_AND_RETHROW((o))
 }
@@ -770,7 +787,10 @@ void account_witness_vote_evaluator::do_apply(const account_witness_vote_operati
         FC_ASSERT(voter.witnesses_voted_for < SCORUM_MAX_ACCOUNT_WITNESS_VOTES,
                   "Account has voted for too many witnesses."); // TODO: Remove after hardfork 2
 
-        witness_vote_service.create(witness.id, voter.id);
+        witness_vote_service.create([&](witness_vote_object& v) {
+            v.witness = witness.id;
+            v.account = voter.id;
+        });
 
         witness_service.adjust_witness_vote(witness, voter.witness_vote_weight());
 
@@ -806,7 +826,7 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
         FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
-        const int16_t weight = o.weight * SCORUM_1_PERCENT;
+        const vote_weight_type weight = o.weight * SCORUM_1_PERCENT;
         if (weight > 0)
             FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 
@@ -834,41 +854,33 @@ void vote_evaluator::do_apply(const vote_operation& o)
             return;
         }
 
-        int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
+        {
+            int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
+            FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
+        }
 
-#ifndef IS_TEST_NET
-        FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
-#endif
-
-        int64_t regenerated_power = (SCORUM_100_PERCENT * elapsed_seconds) / SCORUM_VOTE_REGENERATION_SECONDS;
-        int64_t current_power = std::min(int64_t(voter.voting_power + regenerated_power), int64_t(SCORUM_100_PERCENT));
+        uint16_t current_power
+            = rewards_math::calculate_restoring_power(voter.voting_power, dprops_service.head_block_time(),
+                                                      voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
         FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
-        int64_t abs_weight = std::abs(weight);
-        int64_t used_power = (current_power * abs_weight) / SCORUM_100_PERCENT;
-
-        const auto& props = dprops_service.get();
-
-        // used_power = (current_power * abs_weight / SCORUM_100_PERCENT) * (reserve / max_vote_denom)
-        // The second multiplication is rounded up as of HF 259
-        int64_t max_vote_denom = props.vote_power_reserve_rate * SCORUM_VOTE_REGENERATION_SECONDS / (60 * 60 * 24);
-        FC_ASSERT(max_vote_denom > 0);
-
-        used_power = (used_power + max_vote_denom - 1) / max_vote_denom;
+        uint16_t used_power
+            = rewards_math::calculate_used_power(current_power, weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
 
         FC_ASSERT(used_power <= current_power, "Account does not have enough power to vote.");
 
-        int64_t abs_rshares
-            = ((uint128_t(voter.effective_scorumpower().amount.value) * used_power) / (SCORUM_100_PERCENT)).to_uint64();
+        share_type abs_rshares
+            = rewards_math::calculate_abs_reward_shares(used_power, voter.effective_scorumpower().amount);
 
         FC_ASSERT(abs_rshares > SCORUM_VOTE_DUST_THRESHOLD || weight == 0,
                   "Voting weight is too small, please accumulate more voting power or scorum power.");
 
+        /// this is the rshares voting for or against the post
+        share_type rshares = weight < 0 ? -abs_rshares : abs_rshares;
+
         if (!comment_vote_service.is_exists(comment.id, voter.id))
         {
             FC_ASSERT(weight != 0, "Vote weight cannot be 0.");
-            /// this is the rshares voting for or against the post
-            int64_t rshares = weight < 0 ? -abs_rshares : abs_rshares;
 
             if (rshares > 0)
             {
@@ -899,25 +911,6 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
             uint64_t max_vote_weight = 0;
 
-            /** this verifies uniqueness of voter
-             *
-             *  cv.weight / c.total_vote_weight ==> % of rshares increase that is accounted for by the vote
-             *
-             *  W(R) = B * R / ( R + 2S )
-             *  W(R) is bounded above by B. B is fixed at 2^64 - 1, so all weights fit in a 64 bit integer.
-             *
-             *  The equation for an individual vote is:
-             *    W(R_N) - W(R_N-1), which is the delta increase of proportional weight
-             *
-             *  c.total_vote_weight =
-             *    W(R_1) - W(R_0) +
-             *    W(R_2) - W(R_1) + ...
-             *    W(R_N) - W(R_N-1) = W(R_N) - W(R_0)
-             *
-             *  Since W(R_0) = 0, c.total_vote_weight is also bounded above by B and will always fit in a 64 bit
-             *integer.
-             *
-             **/
             comment_vote_service.create([&](comment_vote_object& cv) {
                 cv.voter = voter.id;
                 cv.comment = comment.id;
@@ -930,28 +923,27 @@ void vote_evaluator::do_apply(const vote_operation& o)
 
                 if (curation_reward_eligible)
                 {
-                    const auto& reward_fund = db().reward_fund_service().get();
-                    auto curve = reward_fund.curation_reward_curve;
-                    uint64_t old_weight = util::evaluate_reward_curve(old_vote_rshares.value, curve).to_uint64();
-                    uint64_t new_weight = util::evaluate_reward_curve(comment.vote_rshares.value, curve).to_uint64();
-                    cv.weight = new_weight - old_weight;
-
-                    max_vote_weight = cv.weight;
-
-                    /// discount weight by time
-                    uint128_t w(max_vote_weight);
-                    uint64_t delta_t = std::min(uint64_t((cv.last_update - comment.created).to_seconds()),
-                                                uint64_t(SCORUM_REVERSE_AUCTION_WINDOW_SECONDS));
-
-                    w *= delta_t;
-                    w /= SCORUM_REVERSE_AUCTION_WINDOW_SECONDS;
-                    cv.weight = w.to_uint64();
+                    const auto& reward_fund = db().content_reward_fund_scr_service().get();
+                    max_vote_weight = rewards_math::calculate_max_vote_weight(comment.vote_rshares, old_vote_rshares,
+                                                                              reward_fund.curation_reward_curve);
+                    cv.weight = rewards_math::calculate_vote_weight(max_vote_weight, cv.last_update, comment.created,
+                                                                    SCORUM_REVERSE_AUCTION_WINDOW_SECONDS);
                 }
                 else
                 {
                     cv.weight = 0;
                 }
             });
+
+#ifndef IS_LOW_MEM
+            {
+                account_blogging_statistic_service_i& account_blogging_statistic_service
+                    = db().account_blogging_statistic_service();
+
+                const auto& voter_stat = account_blogging_statistic_service.obtain(voter.id);
+                account_blogging_statistic_service.add_vote(voter_stat);
+            }
+#endif
 
             if (max_vote_weight) // Optimization
             {
@@ -968,9 +960,6 @@ void vote_evaluator::do_apply(const vote_operation& o)
                       "Voter has used the maximum number of vote changes on this comment.");
 
             FC_ASSERT(comment_vote.vote_percent != weight, "You have already voted in a similar way.");
-
-            /// this is the rshares voting for or against the post
-            int64_t rshares = weight < 0 ? -abs_rshares : abs_rshares;
 
             if (comment_vote.rshares < rshares)
             {
@@ -1080,7 +1069,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
     {
         FC_ASSERT(!dvrr_service.is_exists(account.id), "Cannot create new request because one already exists.");
 
-        dvrr_service.create(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
+        dvrr_service.create_rights(account.id, SCORUM_OWNER_AUTH_RECOVERY_PERIOD);
     }
     else
     {
@@ -1093,7 +1082,7 @@ void decline_voting_rights_evaluator::do_apply(const decline_voting_rights_opera
 void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operation& op)
 {
     account_service_i& account_service = db().account_service();
-    scorumpower_delegation_service_i& vd_service = db().scorumpower_delegation_service();
+    scorumpower_delegation_service_i& sp_delegation_service = db().scorumpower_delegation_service();
     dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
     withdraw_scorumpower_service_i& withdraw_scorumpower_service = db().withdraw_scorumpower_service();
 
@@ -1103,25 +1092,30 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
     auto available_shares = delegator.scorumpower - delegator.delegated_scorumpower
         - withdraw_scorumpower_service.get_withdraw_rest(delegator.id);
 
-    const auto dprops = dprops_service.get();
+    const auto& dprops = dprops_service.get();
     auto min_delegation = asset(
         dprops.median_chain_props.account_creation_fee.amount * SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER, SP_SYMBOL);
     auto min_update = asset(dprops.median_chain_props.account_creation_fee.amount, SP_SYMBOL);
 
     // If delegation doesn't exist, create it
-    if (!vd_service.is_exists(op.delegator, op.delegatee))
+    if (!sp_delegation_service.is_exists(op.delegator, op.delegatee))
     {
         FC_ASSERT(available_shares >= op.scorumpower, "Account does not have enough scorumpower to delegate.");
         FC_ASSERT(op.scorumpower >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation));
 
-        vd_service.create(op.delegator, op.delegatee, op.scorumpower);
+        sp_delegation_service.create([&](scorumpower_delegation_object& spdo) {
+            spdo.delegator = op.delegator;
+            spdo.delegatee = op.delegatee;
+            spdo.scorumpower = op.scorumpower;
+            spdo.min_delegation_time = dprops.time;
+        });
 
         account_service.increase_delegated_scorumpower(delegator, op.scorumpower);
         account_service.increase_received_scorumpower(delegatee, op.scorumpower);
     }
     else
     {
-        const auto& delegation = vd_service.get(op.delegator, op.delegatee);
+        const auto& delegation = sp_delegation_service.get(op.delegator, op.delegatee);
 
         // Else if the delegation is increasing
         if (op.scorumpower >= delegation.scorumpower)
@@ -1136,7 +1130,8 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
             account_service.increase_delegated_scorumpower(delegator, delta);
             account_service.increase_received_scorumpower(delegatee, delta);
 
-            vd_service.update(delegation, op.scorumpower);
+            sp_delegation_service.update(delegation,
+                                         [&](scorumpower_delegation_object& obj) { obj.scorumpower = op.scorumpower; });
         }
         // Else the delegation is decreasing
         else /* delegation.scorumpower > op.scorumpower */
@@ -1158,19 +1153,20 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
                           "Delegation would set scorumpower to zero, but it is already zero");
             }
 
-            vd_service.create_expiration(op.delegator, delta,
-                                         std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
-                                                  delegation.min_delegation_time));
+            sp_delegation_service.create_expiration(
+                op.delegator, delta, std::max(dprops_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS,
+                                              delegation.min_delegation_time));
 
             account_service.decrease_received_scorumpower(delegatee, delta);
 
             if (op.scorumpower.amount > 0)
             {
-                vd_service.update(delegation, op.scorumpower);
+                sp_delegation_service.update(
+                    delegation, [&](scorumpower_delegation_object& obj) { obj.scorumpower = op.scorumpower; });
             }
             else
             {
-                vd_service.remove(delegation);
+                sp_delegation_service.remove(delegation);
             }
         }
     }

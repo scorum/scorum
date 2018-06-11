@@ -2,6 +2,7 @@
 
 #include <scorum/app/api.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
+#include <scorum/app/chain_api.hpp>
 
 #include <scorum/wallet/utils.hpp>
 
@@ -11,6 +12,7 @@
 #include <functional>
 
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
+#include <scorum/blockchain_history/api_objects.hpp>
 
 using namespace scorum::app;
 using namespace scorum::chain;
@@ -20,6 +22,8 @@ namespace wallet {
 
 using scorum::blockchain_history::applied_operation;
 using scorum::blockchain_history::applied_operation_type;
+using scorum::blockchain_history::signed_block_api_obj;
+using scorum::app::chain_capital_api_obj;
 
 using transaction_handle_type = uint16_t;
 
@@ -133,7 +137,7 @@ public:
     /** Returns information about the block headers in range [from-limit, from]
      *
      * @param num Block num, -1 means most recent, limit is the number of blocks before from.
-     * @param limit the maximum number of items that can be queried (0 to 500], must be less than from
+     * @param limit the maximum number of items that can be queried (0 to 100], must be less than from
      *
      */
     std::map<uint32_t, block_header> get_block_headers_history(uint32_t num, uint32_t limit) const;
@@ -141,7 +145,7 @@ public:
     /** Returns information about the blocks in range [from-limit, from]
      *
      * @param num Block num, -1 means most recent, limit is the number of blocks before from.
-     * @param limit the maximum number of items that can be queried (0 to 500], must be less than from
+     * @param limit the maximum number of items that can be queried (0 to 100], must be less than from
      *
      */
     std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t num, uint32_t limit) const;
@@ -168,11 +172,6 @@ public:
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)
      */
     std::vector<account_name_type> get_active_witnesses() const;
-
-    /**
-     * Returns the state info associated with the URL
-     */
-    app::state get_state(const std::string& url);
 
     /**
      * Returns vesting withdraw routes for an account.
@@ -526,7 +525,7 @@ public:
     annotated_signed_transaction update_account_auth_key(const std::string& account_name,
                                                          const authority_type& type,
                                                          const public_key_type& key,
-                                                         weight_type weight,
+                                                         authority_weight_type weight,
                                                          bool broadcast);
 
     /**
@@ -545,7 +544,7 @@ public:
     annotated_signed_transaction update_account_auth_account(const std::string& account_name,
                                                              authority_type type,
                                                              const std::string& auth_account,
-                                                             weight_type weight,
+                                                             authority_weight_type weight,
                                                              bool broadcast);
 
     /**
@@ -1272,6 +1271,11 @@ public:
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
+    /** Gets all money circulating between funds and users.
+    *
+    */
+    chain_capital_api_obj get_chain_capital() const;
+
     /**
      * Close wallet application
      */
@@ -1339,11 +1343,11 @@ FC_API( scorum::wallet::wallet_api,
         (get_account_history)
         (get_account_scr_to_scr_transfers)
         (get_account_scr_to_sp_transfers)
-        (get_state)
         (get_withdraw_routes)
         (list_my_budgets)
         (list_budget_owners)
         (get_budgets)
+        (get_chain_capital)
 
         /// transaction api
         (create_account)
@@ -1407,7 +1411,7 @@ FC_API( scorum::wallet::wallet_api,
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
 
-        //Atomic Swap API
+        // Atomic Swap API
         (atomicswap_initiate)
         (atomicswap_participate)
         (atomicswap_redeem)

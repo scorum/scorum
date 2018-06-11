@@ -20,6 +20,8 @@ public:
     void give_scr(const Actor& a, int amount);
     void give_sp(const Actor& a, int amount);
 
+    void create_budget(const std::string& permlink, asset balance, fc::time_point_sec deadline);
+
 private:
     chain_type& _chain;
     const Actor& _actor;

@@ -5,7 +5,7 @@
 namespace scorum {
 namespace protocol {
 
-typedef flat_map<account_name_type, weight_type> account_authority_map;
+typedef flat_map<account_name_type, authority_weight_type> account_authority_map;
 
 struct authority
 {
@@ -28,15 +28,15 @@ struct authority
         add_authorities(auths...);
     }
 
-    void add_authority(const public_key_type& k, weight_type w);
-    void add_authority(const account_name_type& k, weight_type w);
+    void add_authority(const public_key_type& k, authority_weight_type w);
+    void add_authority(const account_name_type& k, authority_weight_type w);
 
-    template <typename AuthType> void add_authorities(AuthType k, weight_type w)
+    template <typename AuthType> void add_authorities(AuthType k, authority_weight_type w)
     {
         add_authority(k, w);
     }
 
-    template <typename AuthType, class... Args> void add_authorities(AuthType k, weight_type w, Args... auths)
+    template <typename AuthType, class... Args> void add_authorities(AuthType k, authority_weight_type w, Args... auths)
     {
         add_authority(k, w);
         add_authorities(auths...);
@@ -49,7 +49,7 @@ struct authority
     void clear();
     void validate() const;
 
-    typedef flat_map<public_key_type, weight_type> key_authority_map;
+    typedef flat_map<public_key_type, authority_weight_type> key_authority_map;
 
     uint32_t weight_threshold = 0;
     account_authority_map account_auths;

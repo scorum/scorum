@@ -23,9 +23,17 @@
  */
 #include <scorum/app/api.hpp>
 #include <scorum/app/database_api.hpp>
+#include <scorum/app/chain_api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
+#include <scorum/account_statistics/account_statistics_api.hpp>
+#include <scorum/account_statistics/account_statistics_plugin.hpp>
+#include <scorum/blockchain_history/account_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/blockchain_history_plugin.hpp>
+#include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
+#include <scorum/blockchain_monitoring/blockchain_statistics_api.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
@@ -56,6 +64,7 @@
 #include <boost/range/algorithm/reverse.hpp>
 
 #include <iostream>
+#include <fstream>
 #include <set>
 
 #include <fc/log/file_appender.hpp>
@@ -266,9 +275,9 @@ public:
         c->set_session_data(session);
     }
 
-    application_impl(application* self)
+    application_impl(application* self, std::shared_ptr<chain::database> chain_db)
         : _self(self)
-        , _chain_db(std::make_shared<chain::database>())
+        , _chain_db(std::move(chain_db))
     {
     }
 
@@ -280,6 +289,7 @@ public:
     {
         _self->register_api_factory<login_api>("login_api");
         _self->register_api_factory<database_api>("database_api");
+        _self->register_api_factory<chain_api>(API_CHAIN);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }
@@ -309,6 +319,8 @@ public:
     {
         try
         {
+            static const char* default_data_subdir = "blockchain";
+
             genesis_state_type genesis_state;
             compute_genesis_state(genesis_state);
 
@@ -317,6 +329,8 @@ public:
             if (_options->count("data-dir"))
             {
                 _data_dir = fc::path(_options->at("data-dir").as<boost::filesystem::path>());
+                // use lexically_normal for boost version >= 1.60
+                _data_dir = boost::filesystem::absolute(_data_dir);
             }
 
             _shared_file_size = fc::parse_size(_options->at("shared-file-size").as<std::string>());
@@ -330,17 +344,14 @@ public:
 
             if (_options->count("shared-file-dir"))
             {
-                _shared_dir = fc::path(_options->at("shared-file-dir").as<std::string>());
+                _shared_dir = _data_dir / fc::path(_options->at("shared-file-dir").as<boost::filesystem::path>());
             }
             else
             {
-                _shared_dir = _data_dir / "blockchain";
+                _shared_dir = _data_dir / default_data_subdir;
             }
 
-            if (_options->count("disable_get_block"))
-            {
-                _self->_disable_get_block = true;
-            }
+            fc::path block_log_dir = _data_dir / default_data_subdir;
 
             if (!_self->is_read_only())
             {
@@ -349,7 +360,7 @@ public:
 
                 if (_options->count("resync-blockchain"))
                 {
-                    _chain_db->wipe(_data_dir / "blockchain", _shared_dir, true);
+                    _chain_db->wipe(block_log_dir, _shared_dir, true);
                 }
 
                 _chain_db->set_flush_interval(_options->at("flush").as<uint32_t>());
@@ -367,33 +378,20 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
-                if (_options->count("replay-blockchain"))
+                if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
-                    _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
+
+                    uint32_t skip_flags = _chain_db->get_reindex_skip_flags();
+                    if (!_options->at("replay-skip-witness-schedule-check").as<bool>())
+                        skip_flags &= ~database::skip_witness_schedule_check;
+
+                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, skip_flags, genesis_state);
                 }
                 else
                 {
-                    try
-                    {
-                        _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                        chainbase::database::read_write, genesis_state);
-                    }
-                    catch (fc::assert_exception&)
-                    {
-                        wlog("Error when opening database. Attempting reindex...");
-
-                        try
-                        {
-                            _chain_db->reindex(_data_dir / "blockchain", _shared_dir, _shared_file_size, genesis_state);
-                        }
-                        catch (chain::block_log_exception&)
-                        {
-                            wlog("Error opening block log. Having to resync from network...");
-                            _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                            chainbase::database::read_write, genesis_state);
-                        }
-                    }
+                    _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_write,
+                                    genesis_state);
                 }
 
                 if (_options->count("force-validate"))
@@ -405,8 +403,8 @@ public:
             else
             {
                 ilog("Starting Scorum node in read mode.");
-                _chain_db->open(_data_dir / "blockchain", _shared_dir, _shared_file_size,
-                                chainbase::database::read_only, genesis_state);
+                _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_only,
+                                genesis_state);
 
                 if (_options->count("read-forward-rpc"))
                 {
@@ -442,12 +440,13 @@ public:
                 wild_access.password_hash_b64 = "*";
                 wild_access.password_salt_b64 = "*";
                 wild_access.allowed_apis.push_back("database_api");
+                wild_access.allowed_apis.push_back(API_CHAIN);
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
-                wild_access.allowed_apis.push_back("account_history_api");
-                wild_access.allowed_apis.push_back("blockchain_history_api");
-                wild_access.allowed_apis.push_back("account_stats_api");
-                wild_access.allowed_apis.push_back("chain_stats_api");
+                wild_access.allowed_apis.push_back(API_ACCOUNT_HISTORY);
+                wild_access.allowed_apis.push_back(API_BLOCKCHAIN_HISTORY);
+                wild_access.allowed_apis.push_back(API_ACCOUNT_STATISTICS);
+                wild_access.allowed_apis.push_back(API_BLOCKCHAIN_STATISTICS);
                 _apiaccess.permission_map["*"] = wild_access;
             }
 
@@ -585,10 +584,14 @@ public:
                     // you can help the network code out by throwing a block_older_than_undo_history exception.
                     // when the net code sees that, it will stop trying to push blocks from that chain, but
                     // leave that peer connected so that they can get sync blocks from us
-                    bool result = _chain_db->push_block(blk_msg.block,
-                                                        (_is_block_producer | _force_validate)
-                                                            ? database::skip_nothing
-                                                            : database::skip_transaction_signatures);
+                    uint32_t skip_flags = (_is_block_producer | _force_validate)
+                        ? database::skip_nothing
+                        : database::skip_transaction_signatures;
+                    if (sync_mode)
+                    {
+                        skip_flags |= database::skip_validate_invariants;
+                    }
+                    bool result = _chain_db->push_block(blk_msg.block, skip_flags);
 
                     if (!sync_mode)
                     {
@@ -1093,7 +1096,12 @@ public:
 }
 
 application::application()
-    : my(new detail::application_impl(this))
+    : application(std::make_shared<chain::database>(chain::database::opt_default))
+{
+}
+
+application::application(std::shared_ptr<chain::database> db)
+    : my(new detail::application_impl(this, db))
 {
 }
 
@@ -1110,26 +1118,42 @@ application::~application()
     }
 }
 
+std::vector<std::string> application::get_default_apis() const
+{
+    std::vector<std::string> result;
+
+    result.push_back("database_api");
+    result.push_back("login_api");
+    result.push_back(API_CHAIN);
+    result.push_back("account_by_key_api");
+    result.push_back(API_ACCOUNT_HISTORY);
+    result.push_back(API_BLOCKCHAIN_HISTORY);
+    result.push_back(API_ACCOUNT_STATISTICS);
+    result.push_back(API_BLOCKCHAIN_STATISTICS);
+
+    return result;
+}
+
+std::vector<std::string> application::get_default_plugins() const
+{
+    std::vector<std::string> result;
+
+    result.push_back(BLOCKCHAIN_HISTORY_PLUGIN_NAME);
+    result.push_back("account_by_key");
+    result.push_back(ACCOUNT_STATISTICS_PLUGIN_NAME);
+    result.push_back(BLOCKCHAIN_MONITORING_PLUGIN_NAME);
+
+    return result;
+}
+
 void application::set_program_options(boost::program_options::options_description& command_line_options,
                                       boost::program_options::options_description& configuration_file_options) const
 {
-    std::vector<std::string> default_apis;
-    default_apis.push_back("database_api");
-    default_apis.push_back("login_api");
-    default_apis.push_back("account_by_key_api");
-    default_apis.push_back("account_history_api");
-    default_apis.push_back("blockchain_history_api");
-    default_apis.push_back("account_stats_api");
-    default_apis.push_back("chain_stats_api");
-    std::string str_default_apis = boost::algorithm::join(default_apis, " ");
+    const auto default_apis = get_default_apis();
+    const auto default_plugins = get_default_plugins();
 
-    std::vector<std::string> default_plugins;
-    default_plugins.push_back("blockchain_history");
-    default_plugins.push_back("account_by_key");
-    default_plugins.push_back("account_stats");
-    default_plugins.push_back("chain_stats");
-
-    std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
+    const std::string str_default_apis = boost::algorithm::join(default_apis, " ");
+    const std::string str_default_plugins = boost::algorithm::join(default_plugins, " ");
 
     // clang-format off
     configuration_file_options.add_options()
@@ -1138,7 +1162,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("seed-node,s", bpo::value<std::vector<std::string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
     ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
     ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
-    ("shared-file-dir", bpo::value<std::string>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
+    ("shared-file-dir", bpo::value<boost::filesystem::path>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
     ("shared-file-size", bpo::value<std::string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")
     ("rpc-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
     ("rpc-tls-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
@@ -1152,15 +1176,18 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("flush", bpo::value< uint32_t >()->default_value(100000), "Flush shared memory file to disk this many blocks")
     ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")
     ("replay-blockchain", "Rebuild object graph by replaying all blocks")
+    ("replay-skip-witness-schedule-check", bpo::value<bool>()->default_value(true), "Skip witness schedule check wile block replaying")
     ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
     ("force-validate", "Force validation of all transactions")
     ("read-only", "Node will not connect to p2p network and can only read from the chain state")
     ("check-locks", "Check correctness of chainbase locking")
     ("disable-get-block", "Disable get_block API call");
-    command_line_options.add(configuration_file_options);
-    command_line_options.add_options()
-    ("version,v", "Print version number and exit.");
+
     // clang-format on
+
+    command_line_options.add(configuration_file_options);
+    command_line_options.add_options()("version,v", "Print version number and exit.");
+
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
 }
@@ -1359,14 +1386,6 @@ fc::api<network_broadcast_api>& application::get_write_node_net_api()
     _remote_net_api = my->create_write_node_api<network_broadcast_api>(BOOST_PP_STRINGIZE(network_broadcast_api));
     return *_remote_net_api;
 }
-fc::api<database_api>& application::get_write_node_database_api()
-{
-    if (_remote_database_api)
-        return *_remote_database_api;
-
-    _remote_database_api = my->create_write_node_api<database_api>(BOOST_PP_STRINGIZE(database_api));
-    return *_remote_database_api;
-}
 
 void application::shutdown_plugins()
 {
@@ -1376,6 +1395,7 @@ void application::shutdown_plugins()
     }
     return;
 }
+
 void application::shutdown()
 {
     my->shutdown();
@@ -1383,13 +1403,16 @@ void application::shutdown()
 
 void application::register_abstract_plugin(std::shared_ptr<abstract_plugin> plug)
 {
-    boost::program_options::options_description plugin_cli_options("Options for plugin " + plug->plugin_name()),
-        plugin_cfg_options;
+    using boost::program_options::options_description;
+
+    options_description plugin_cli_options("Options for plugin " + plug->plugin_name()), plugin_cfg_options;
     plug->plugin_set_program_options(plugin_cli_options, plugin_cfg_options);
+
     if (!plugin_cli_options.options().empty())
     {
         _cli_options.add(plugin_cli_options);
     }
+
     if (!plugin_cfg_options.options().empty())
     {
         _cfg_options.add(plugin_cfg_options);
@@ -1458,6 +1481,83 @@ void print_application_version()
     std::cout << "scorum_git_revision:       " << fc::string(graphene::utilities::git_revision_sha) << "\n";
     std::cout << "fc_git_revision:           " << fc::string(fc::git_revision_sha) << "\n";
     std::cout << "embeded_chain_id           " << egenesis::get_egenesis_chain_id().str() << "\n";
+}
+
+void print_program_options(std::ostream& stream, const boost::program_options::options_description& options)
+{
+    for (const boost::shared_ptr<bpo::option_description> od : options.options())
+    {
+        if (!od->description().empty())
+            stream << "# " << od->description() << "\n";
+
+        boost::any store;
+        if (!od->semantic()->apply_default(store))
+        {
+            stream << "# " << od->long_name() << " = \n";
+        }
+        else
+        {
+            auto example = od->format_parameter();
+            if (example.empty())
+            {
+                // This is a boolean switch
+                stream << od->long_name() << " = "
+                       << "false\n";
+            }
+            else
+            {
+                // The string is formatted "arg (=<interesting part>)"
+                example.erase(0, 6);
+                example.erase(example.length() - 1);
+                stream << od->long_name() << " = " << example << "\n";
+            }
+        }
+        stream << "\n";
+    }
+}
+
+fc::path get_data_dir_path(const boost::program_options::variables_map& options)
+{
+    namespace bfs = boost::filesystem;
+
+    FC_ASSERT(options.count("data-dir"), "Default value for 'data-dir' should be set.");
+
+    return bfs::absolute(options["data-dir"].as<bfs::path>());
+}
+
+fc::path get_config_file_path(const boost::program_options::variables_map& options)
+{
+    namespace bfs = boost::filesystem;
+
+    bfs::path config_ini_path = get_data_dir_path(options) / SCORUMD_CONFIG_FILE_NAME;
+
+    if (options.count("config-file"))
+    {
+        config_ini_path = bfs::absolute(options["config-file"].as<bfs::path>());
+    }
+
+    return config_ini_path;
+}
+
+void create_config_file_if_not_exist(const fc::path& config_ini_path,
+                                     const boost::program_options::options_description& cfg_options)
+{
+    FC_ASSERT(config_ini_path.is_absolute(), "config-file path should be absolute");
+
+    if (!fc::exists(config_ini_path))
+    {
+        ilog("Writing new config file at ${path}", ("path", config_ini_path));
+        if (!fc::exists(config_ini_path.parent_path()))
+        {
+            fc::create_directories(config_ini_path.parent_path());
+        }
+
+        std::ofstream out_cfg(config_ini_path.preferred_string());
+
+        print_program_options(out_cfg, cfg_options);
+
+        out_cfg.close();
+    }
 }
 
 } // namespace app

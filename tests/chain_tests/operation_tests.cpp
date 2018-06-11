@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/protocol/exceptions.hpp>
@@ -7,8 +6,6 @@
 #include <scorum/chain/database_exceptions.hpp>
 #include <scorum/chain/hardfork.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-
-#include <scorum/chain/util/reward.hpp>
 
 #include <scorum/witness/witness_objects.hpp>
 
@@ -23,12 +20,15 @@
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
+#include <scorum/rewards_math/formulas.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 
 using namespace scorum;
 using namespace database_fixture;
+using namespace scorum::rewards_math;
 
 BOOST_AUTO_TEST_SUITE(test_account_create_operation_get_authorities)
 
@@ -602,6 +602,28 @@ BOOST_AUTO_TEST_CASE(comment_apply)
         validate_database();
     }
     FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_CASE(comment_operation_category_changed_should_throw)
+{
+    BOOST_TEST_MESSAGE("Testing: comment_operation category changing");
+
+    ACTORS((alice))
+
+    comment_operation op;
+    op.author = "alice";
+    op.permlink = "alice-permlink";
+    op.parent_author = SCORUM_ROOT_POST_PARENT_ACCOUNT;
+    op.parent_permlink = "alice-category-1";
+    op.title = "alice-title";
+    op.body = "alice-body";
+    op.json_metadata = "{\"foo\":\"bar\"}";
+
+    BOOST_REQUIRE_NO_THROW(push_operation(op, initdelegate.private_key));
+
+    op.parent_permlink = "alice-category-2";
+
+    BOOST_REQUIRE_THROW(push_operation(op, initdelegate.private_key), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_CASE(comment_delete_apply)
@@ -3754,18 +3776,20 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
         auto old_voting_power = bob_acc.voting_power;
 
         db.push_transaction(tx, 0);
-        generate_blocks(1);
 
-        const auto& vote_idx = db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
+        asset bob_effective_sp = bob_acc.effective_scorumpower();
 
-        auto& alice_comment = db.obtain_service<dbs_comment>().get("alice", std::string("foo"));
-        auto itr = vote_idx.find(std::make_tuple(alice_comment.id, bob_acc.id));
-        BOOST_REQUIRE_EQUAL(alice_comment.net_rshares.value,
-                            bob_acc.effective_scorumpower().amount.value * (old_voting_power - bob_acc.voting_power)
-                                / SCORUM_100_PERCENT);
-        BOOST_REQUIRE_EQUAL(itr->rshares,
-                            bob_acc.effective_scorumpower().amount.value * (old_voting_power - bob_acc.voting_power)
-                                / SCORUM_100_PERCENT);
+        generate_block();
+
+        const auto& alice_comment = db.obtain_service<dbs_comment>().get("alice", std::string("foo"));
+        const auto& bob_comment_vote = db.obtain_service<dbs_comment_vote>().get(alice_comment.id, bob_acc.id);
+
+        BOOST_CHECK_EQUAL(
+            alice_comment.net_rshares.value,
+            calculate_abs_reward_shares(old_voting_power - bob_acc.voting_power, bob_effective_sp.amount).value);
+        BOOST_CHECK_EQUAL(
+            bob_comment_vote.rshares,
+            calculate_abs_reward_shares(old_voting_power - bob_acc.voting_power, bob_effective_sp.amount).value);
 
         generate_block();
         ACTORS((sam)(dave))
@@ -3996,5 +4020,3 @@ BOOST_AUTO_TEST_CASE(comment_beneficiaries_validate)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

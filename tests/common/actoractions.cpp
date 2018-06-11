@@ -1,6 +1,12 @@
 #include "actoractions.hpp"
 #include "database_trx_integration.hpp"
 
+#include <scorum/chain/services/comment.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
+
+using namespace scorum::chain;
+
 ActorActions::ActorActions(chain_type& chain, const Actor& a)
     : _chain(chain)
     , _actor(a)
@@ -31,4 +37,15 @@ void ActorActions::give_scr(const Actor& a, int amount)
 void ActorActions::give_sp(const Actor& a, int amount)
 {
     transfer_to_scorumpower(a, ASSET_SCR(amount));
+}
+
+void ActorActions::create_budget(const std::string& permlink, asset balance, fc::time_point_sec deadline)
+{
+    create_budget_operation op;
+    op.owner = _actor.name;
+    op.content_permlink = permlink;
+    op.balance = balance;
+    op.deadline = deadline;
+
+    _chain.push_operation(op);
 }

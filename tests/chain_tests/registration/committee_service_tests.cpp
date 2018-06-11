@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include "registration_check_common.hpp"
@@ -60,5 +59,3 @@ SCORUM_TEST_CASE(create_double_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

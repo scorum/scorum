@@ -1,6 +1,6 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/services/budget.hpp>
-#include <scorum/chain/services/reward.hpp>
+#include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
@@ -10,8 +10,7 @@
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
-
-#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 
 #include <scorum/chain/genesis/genesis.hpp>
 
@@ -73,7 +72,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
         db_genesis genesis(*this, genesis_state);
 
         // Nothing to do
-        for (int i = 0; i <= SCORUM_BLOCKID_POOL_SIZE; ++i)
+        for (uint32_t i = 0; i <= SCORUM_BLOCKID_POOL_SIZE; ++i)
             create<block_summary_object>([&](block_summary_object&) {});
 
         create<hardfork_property_object>(

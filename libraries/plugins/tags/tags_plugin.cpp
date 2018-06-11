@@ -1,6 +1,6 @@
 #include <scorum/tags/tags_plugin.hpp>
-
-#include <scorum/app/impacted.hpp>
+#include <scorum/tags/tags_api.hpp>
+#include <scorum/tags/tags_objects.hpp>
 
 #include <scorum/protocol/config.hpp>
 
@@ -18,6 +18,10 @@
 #include <fc/string.hpp>
 
 #include <boost/range/iterator_range.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/range/join.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace scorum {
@@ -41,7 +45,8 @@ public:
         return _self.database();
     }
 
-    void on_operation(const operation_notification& note);
+    void pre_operation(const operation_notification& note);
+    void post_operation(const operation_notification& note);
 
     tags_plugin& _self;
 };
@@ -51,28 +56,156 @@ tags_plugin_impl::~tags_plugin_impl()
     return;
 }
 
-struct operation_visitor
+class category_stats_service : public scorum::chain::dbs_base
 {
-    operation_visitor(database& db)
-        : _db(db)
+    friend class chain::dbservice_dbs_factory;
+
+public:
+    explicit category_stats_service(database& db)
+        : _base_type(db)
     {
     }
 
+    void exclude_from_category_stats(const comment_metadata& meta)
+    {
+        if (meta.categories.empty() || meta.domains.empty())
+            return;
+        if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
+            return;
+
+        comment_metadata meta_in_lower = meta.to_lower_copy();
+
+        const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
+        // TODO: add support for multiple domains and categories
+        auto it_pair
+            = idx.equal_range(std::make_tuple(*meta_in_lower.domains.begin(), *meta_in_lower.categories.begin()));
+
+        std::vector<std::reference_wrapper<const category_stats_object>> stats;
+        std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
+
+        for (const category_stats_object& s : stats)
+        {
+            auto found_it = std::find(meta_in_lower.tags.begin(), meta_in_lower.tags.end(), s.tag);
+            if (found_it == meta_in_lower.tags.end())
+                continue;
+
+            if (s.tags_count == 1)
+                db_impl().remove(s);
+            else if (s.tags_count > 1)
+                db_impl().modify(s, [&](category_stats_object& s) { --s.tags_count; });
+        }
+    }
+
+    void include_into_category_stats(const comment_metadata& meta)
+    {
+        if (meta.categories.empty() || meta.domains.empty())
+            return;
+        if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
+            return;
+
+        comment_metadata meta_in_lower = meta.to_lower_copy();
+        const auto& domain = *meta_in_lower.domains.begin();
+        const auto& category = *meta_in_lower.categories.begin();
+
+        auto rng = meta_in_lower.tags | boost::adaptors::filtered([&](const std::string& t) {
+                       return !t.empty() && t != category && t != domain;
+                   });
+        for (const std::string& tag : rng)
+        {
+            const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
+
+            auto found_it = idx.find(std::make_tuple(domain, category, tag_name_type(tag)));
+            if (found_it == idx.end())
+            {
+                db_impl().create<category_stats_object>([&](category_stats_object& s) {
+                    fc::from_string(s.domain, domain);
+                    fc::from_string(s.category, category);
+                    s.tag = tag;
+                    s.tags_count = 1;
+                });
+            }
+            else
+            {
+                db_impl().modify(*found_it, [&](category_stats_object& s) { ++s.tags_count; });
+            }
+        }
+    }
+};
+
+struct category_stats_pre_operation_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+    category_stats_service& _category_stats_service;
+
+    category_stats_pre_operation_visitor(database& db)
+        : _db(db)
+        , _category_stats_service(_db.obtain_service<category_stats_service>())
+    {
+    }
+
+    void operator()(const comment_operation& op) const
+    {
+        const comment_object* c
+            = _db.obtain_service<dbs_comment>().find_by<by_permlink>(std::make_tuple(op.author, op.permlink));
+
+        if (c != nullptr)
+            _category_stats_service.exclude_from_category_stats(comment_metadata::parse(c->json_metadata));
+    }
+
+    void operator()(const delete_comment_operation& op) const
+    {
+        const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        _category_stats_service.exclude_from_category_stats(comment_metadata::parse(c.json_metadata));
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
+struct category_stats_post_operation_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+    category_stats_service& _category_stats_service;
+
+    category_stats_post_operation_visitor(database& db)
+        : _db(db)
+        , _category_stats_service(_db.obtain_service<category_stats_service>())
+    {
+    }
+
+    void operator()(const comment_operation& op) const
+    {
+        const comment_object& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        _category_stats_service.include_into_category_stats(comment_metadata::parse(c.json_metadata));
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
+struct post_operation_visitor
+{
     typedef void result_type;
 
     database& _db;
 
+    post_operation_visitor(database& db)
+        : _db(db)
+    {
+    }
+
     void remove_stats(const tag_object& tag, const tag_stats_object& stats) const
     {
         _db.modify(stats, [&](tag_stats_object& s) {
-            if (tag.parent == comment_id_type())
-            {
-                s.top_posts--;
-            }
-            else
-            {
-                s.comments--;
-            }
+            s.posts--;
             s.total_trending -= static_cast<uint32_t>(tag.trending);
             s.net_votes -= tag.net_votes;
         });
@@ -81,14 +214,7 @@ struct operation_visitor
     void add_stats(const tag_object& tag, const tag_stats_object& stats) const
     {
         _db.modify(stats, [&](tag_stats_object& s) {
-            if (tag.parent == comment_id_type())
-            {
-                s.top_posts++;
-            }
-            else
-            {
-                s.comments++;
-            }
+            s.posts++;
             s.total_trending += static_cast<uint32_t>(tag.trending);
             s.net_votes += tag.net_votes;
         });
@@ -99,11 +225,12 @@ struct operation_visitor
         /// TODO: update tag stats object
         _db.remove(tag);
 
-        const auto& idx = _db.get_index<author_tag_stats_index>().indices().get<by_author_tag_posts>();
-        auto itr = idx.lower_bound(boost::make_tuple(tag.author, tag.tag));
-        if (itr != idx.end() && itr->author == tag.author && itr->tag == tag.tag)
+        const auto& idx = _db.get_index<author_tag_stats_index, by_author_tag_posts>();
+
+        auto it_pair = idx.equal_range(boost::make_tuple(tag.author, tag.tag));
+        for (const auto& stat : boost::make_iterator_range(it_pair))
         {
-            _db.modify(*itr, [&](author_tag_stats_object& stats) { stats.total_posts--; });
+            _db.modify(stat, [&](author_tag_stats_object& stats) { stats.total_posts--; });
         }
     }
 
@@ -117,48 +244,29 @@ struct operation_visitor
         return _db.create<tag_stats_object>([&](tag_stats_object& stats) { stats.tag = tag; });
     }
 
-    comment_metadata filter_tags(const comment_object& c) const
+    std::set<std::string> collect_tags(const comment_metadata& meta) const
     {
-        comment_metadata meta;
+        using namespace boost::range;
+        // clang-format off
+        auto lhs = join(meta.domains, meta.categories);
+        auto rhs = join(meta.locales, meta.tags);
+        auto rng = join(lhs, rhs)
+                | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
+                | boost::adaptors::transformed(fc::to_lower);
+        // clang-format on
 
-        if (c.json_metadata.size())
-        {
-            try
-            {
-                meta = fc::json::from_string(fc::to_string(c.json_metadata)).as<comment_metadata>();
-            }
-            catch (const fc::exception&)
-            {
-                // Do nothing on malformed json_metadata
-            }
-        }
+        std::set<std::string> tags_in_lower;
 
-        // We need to write the transformed tags into a temporary
-        // local container because we can't modify meta.tags concurrently
-        // as we iterate over it.
-        std::set<std::string> lower_tags;
-
-        uint8_t tag_limit = 5;
-        uint8_t count = 0;
-        for (const std::string& tag : meta.tags)
-        {
-            ++count;
-            if (count > tag_limit || lower_tags.size() > tag_limit)
+        for (const auto& t : rng)
+            if (tags_in_lower.size() == TAGS_TO_ANALIZE_COUNT)
                 break;
-            if (tag == "")
-                continue;
-            lower_tags.insert(fc::to_lower(tag));
-        }
+            else
+                tags_in_lower.insert(t);
 
-        /// the universal tag applies to everything safe for work or nsfw with a non-negative payout
-        if (c.net_rshares >= 0)
-        {
-            lower_tags.insert(std::string()); /// add it to the universal tag
-        }
+        // if we need to return all then just return items with empty tag
+        tags_in_lower.insert("");
 
-        meta.tags = lower_tags; /// TODO: std::move???
-
-        return meta;
+        return tags_in_lower;
     }
 
     void update_tag(const tag_object& current, const comment_object& comment, double hot, double trending) const
@@ -166,41 +274,28 @@ struct operation_visitor
         const auto& stats = get_stats(current.tag);
         remove_stats(current, stats);
 
-        if (comment.cashout_time != fc::time_point_sec::maximum())
-        {
-            _db.modify(current, [&](tag_object& obj) {
-                obj.active = comment.active;
-                obj.cashout = _db.calculate_discussion_payout_time(comment);
-                obj.children = comment.children;
-                obj.net_rshares = comment.net_rshares.value;
-                obj.net_votes = comment.net_votes;
-                obj.hot = hot;
-                obj.trending = trending;
-                if (obj.cashout == fc::time_point_sec())
-                    obj.promoted_balance = 0;
-            });
-            add_stats(current, stats);
-        }
-        else
-        {
-            _db.remove(current);
-        }
+        _db.modify(current, [&](tag_object& obj) {
+            obj.active = comment.active;
+            obj.cashout = _db.calculate_discussion_payout_time(comment);
+            obj.children = comment.children;
+            obj.net_rshares = comment.net_rshares.value;
+            obj.net_votes = comment.net_votes;
+            obj.hot = hot;
+            obj.trending = trending;
+            if (obj.cashout == fc::time_point_sec())
+                obj.promoted_balance = 0;
+        });
+
+        add_stats(current, stats);
     }
 
     void create_tag(const std::string& tag, const comment_object& comment, double hot, double trending) const
     {
-        comment_id_type parent;
         account_id_type author = _db.obtain_service<dbs_account>().get_account(comment.author).id;
-
-        if (comment.parent_author.size())
-            parent = _db.obtain_service<dbs_comment>()
-                         .get(comment.parent_author, fc::to_string(comment.parent_permlink))
-                         .id;
 
         const auto& tag_obj = _db.create<tag_object>([&](tag_object& obj) {
             obj.tag = tag;
             obj.comment = comment.id;
-            obj.parent = parent;
             obj.created = comment.created;
             obj.active = comment.active;
             obj.cashout = comment.cashout_time;
@@ -213,7 +308,7 @@ struct operation_visitor
         });
         add_stats(tag_obj, get_stats(tag));
 
-        const auto& idx = _db.get_index<author_tag_stats_index>().indices().get<by_author_tag_posts>();
+        const auto& idx = _db.get_index<author_tag_stats_index, by_author_tag_posts>();
         auto itr = idx.lower_bound(boost::make_tuple(author, tag));
         if (itr != idx.end() && itr->author == author && itr->tag == tag)
         {
@@ -263,15 +358,14 @@ struct operation_visitor
     {
         try
         {
-
             auto hot = calculate_hot(c.net_rshares, c.created);
             auto trending = calculate_trending(c.net_rshares, c.created);
 
-            const auto& comment_idx = _db.get_index<tag_index>().indices().get<by_comment>();
+            const auto& comment_idx = _db.get_index<scorum::tags::tag_index, by_comment>();
 
             if (parse_tags)
             {
-                auto meta = filter_tags(c);
+                auto tags = collect_tags(comment_metadata::parse(c.json_metadata));
                 auto citr = comment_idx.lower_bound(c.id);
 
                 std::map<std::string, const tag_object*> existing_tags;
@@ -282,7 +376,7 @@ struct operation_visitor
                     const tag_object* tag = &*citr;
                     ++citr;
 
-                    if (meta.tags.find(tag->tag) == meta.tags.end())
+                    if (tags.find(tag->tag) == tags.end())
                     {
                         remove_queue.push_back(tag);
                     }
@@ -292,7 +386,7 @@ struct operation_visitor
                     }
                 }
 
-                for (const auto& tag : meta.tags)
+                for (const auto& tag : tags)
                 {
                     auto existing = existing_tags.find(tag);
 
@@ -318,11 +412,6 @@ struct operation_visitor
                     update_tag(*citr, c, hot, trending);
                     ++citr;
                 }
-            }
-
-            if (c.parent_author.size())
-            {
-                update_tags(_db.obtain_service<dbs_comment>().get(c.parent_author, fc::to_string(c.parent_permlink)));
             }
         }
         FC_CAPTURE_LOG_AND_RETHROW((c))
@@ -388,7 +477,10 @@ struct operation_visitor
 
     void operator()(const comment_operation& op) const
     {
-        update_tags(_db.obtain_service<dbs_comment>().get(op.author, op.permlink), true);
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        if (comment.parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            update_tags(comment, true);
     }
 
     void operator()(const transfer_operation& op) const
@@ -412,7 +504,7 @@ struct operation_visitor
                     const auto& c = comment_service.get(acnt, perm);
                     if (c.parent_author.size() == 0)
                     {
-                        const auto& comment_idx = _db.get_index<tag_index>().indices().get<by_comment>();
+                        const auto& comment_idx = _db.get_index<scorum::tags::tag_index>().indices().get<by_comment>();
                         auto citr = comment_idx.lower_bound(c.id);
                         while (citr != comment_idx.end() && citr->comment == c.id)
                         {
@@ -434,50 +526,59 @@ struct operation_visitor
 
     void operator()(const vote_operation& op) const
     {
-        update_tags(_db.obtain_service<dbs_comment>().get(op.author, op.permlink));
-        /*
-        update_peer_stats( _db.obtain_service<dbs_account>().get_account(op.voter),
-                           _db.obtain_service<dbs_account>().get_account(op.author),
-                           _db.obtain_service<dbs_comment>().get(op.author, op.permlink),
-                           op.weight );
-                           */
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        if (comment.parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            update_tags(comment);
     }
 
     void operator()(const delete_comment_operation& op) const
     {
-        const auto& idx = _db.get_index<tag_index>().indices().get<by_author_comment>();
+        const auto& idx = _db.get_index<scorum::tags::tag_index, by_author_comment>();
 
         const auto& auth = _db.obtain_service<dbs_account>().get_account(op.author);
-        auto itr = idx.lower_bound(boost::make_tuple(auth.id));
-        while (itr != idx.end() && itr->author == auth.id)
+
+        auto tags_rng = idx.equal_range(auth.id)
+            | boost::adaptors::filtered([&](const tag_object& t) { return !_db.find(t.comment); });
+
+        for (const tag_object& tag : tags_rng)
         {
-            const auto& tobj = *itr;
-            const auto* obj = _db.find<comment_object>(itr->comment);
-            ++itr;
-            if (!obj)
-            {
-                _db.remove(tobj);
-            }
+            remove_tag(tag);
         }
     }
 
     void operator()(const comment_reward_operation& op) const
     {
-        const auto& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
-        update_tags(c);
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+        if (comment.parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            return;
 
-        comment_metadata meta = filter_tags(c);
+        update_tags(comment);
 
-        for (const std::string& tag : meta.tags)
+        auto tags = collect_tags(comment_metadata::parse(comment.json_metadata));
+
+        for (const std::string& tag : tags)
         {
-            _db.modify(get_stats(tag), [&](tag_stats_object& ts) { ts.total_payout += op.payout; });
+            _db.modify(get_stats(tag), [&](tag_stats_object& ts) {
+
+                if (op.payout.symbol() == SCORUM_SYMBOL)
+                {
+                    ts.total_payout_scr += op.payout;
+                }
+                else if (op.payout.symbol() == SP_SYMBOL)
+                {
+                    ts.total_payout_sp += op.payout;
+                }
+            });
         }
     }
 
     void operator()(const comment_payout_update_operation& op) const
     {
-        const auto& c = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
-        update_tags(c);
+        const comment_object& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+
+        if (comment.parent_author == SCORUM_ROOT_POST_PARENT_ACCOUNT)
+            update_tags(comment);
     }
 
     template <typename Op> void operator()(Op&&) const
@@ -485,12 +586,30 @@ struct operation_visitor
     } /// ignore all other ops
 };
 
-void tags_plugin_impl::on_operation(const operation_notification& note)
+void tags_plugin_impl::pre_operation(const operation_notification& note)
 {
     try
     {
         /// plugins shouldn't ever throw
-        note.op.visit(operation_visitor(database()));
+        note.op.visit(category_stats_pre_operation_visitor(database()));
+    }
+    catch (const fc::exception& e)
+    {
+        edump((e.to_detail_string()));
+    }
+    catch (...)
+    {
+        elog("unhandled exception");
+    }
+}
+
+void tags_plugin_impl::post_operation(const operation_notification& note)
+{
+    try
+    {
+        /// plugins shouldn't ever throw
+        note.op.visit(post_operation_visitor(database()));
+        note.op.visit(category_stats_post_operation_visitor(database()));
     }
     catch (const fc::exception& e)
     {
@@ -504,20 +623,19 @@ void tags_plugin_impl::on_operation(const operation_notification& note)
 
 } // namespace detail
 
-tags_plugin::tags_plugin(application* app)
+tags_plugin::tags_plugin(scorum::app::application* app)
     : plugin(app)
     , my(new detail::tags_plugin_impl(*this))
 {
-    chain::database& db = database();
-
-    db.add_plugin_index<tag_index>();
-    db.add_plugin_index<tag_stats_index>();
-    db.add_plugin_index<peer_stats_index>();
-    db.add_plugin_index<author_tag_stats_index>();
 }
 
 tags_plugin::~tags_plugin()
 {
+}
+
+std::string tags_plugin::plugin_name() const
+{
+    return TAGS_PLUGIN_NAME;
 }
 
 void tags_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
@@ -527,16 +645,29 @@ void tags_plugin::plugin_set_program_options(boost::program_options::options_des
 
 void tags_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    database().post_apply_operation.connect([&](const operation_notification& note) { my->on_operation(note); });
+    try
+    {
+        chain::database& db = database();
 
-    app().register_api_factory<tag_api>("tag_api");
+        db.pre_apply_operation.connect([&](const operation_notification& note) { my->pre_operation(note); });
+        db.post_apply_operation.connect([&](const operation_notification& note) { my->post_operation(note); });
+
+        db.add_plugin_index<tags::tag_index>();
+        db.add_plugin_index<tag_stats_index>();
+        db.add_plugin_index<peer_stats_index>();
+        db.add_plugin_index<author_tag_stats_index>();
+        db.add_plugin_index<category_stats_index>();
+    }
+    FC_LOG_AND_RETHROW()
 
     print_greeting();
 }
 
 void tags_plugin::plugin_startup()
 {
+    app().register_api_factory<tags_api>("tags_api");
 }
+
 } // namespace tags
 } // namespace scorum
 

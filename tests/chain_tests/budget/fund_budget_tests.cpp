@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
@@ -20,12 +19,6 @@ public:
     }
 
     dbs_budget& budget_service;
-
-    const asset FUND_BUDGET_INITIAL_SUPPLY
-        = asset(TEST_REWARD_INITIAL_SUPPLY.amount
-                    * (SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS - SCORUM_GUARANTED_REWARD_SUPPLY_PERIOD_IN_DAYS)
-                    / SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS,
-                SCORUM_SYMBOL);
 };
 
 //
@@ -52,7 +45,7 @@ SCORUM_TEST_CASE(fund_budget_initial_supply)
 {
     auto budget = budget_service.get_fund_budget();
 
-    BOOST_REQUIRE_EQUAL(budget.balance, FUND_BUDGET_INITIAL_SUPPLY);
+    BOOST_REQUIRE_EQUAL(budget.balance.amount, TEST_REWARD_INITIAL_SUPPLY.amount);
 }
 
 SCORUM_TEST_CASE(fund_budget_initial_deadline)
@@ -69,6 +62,29 @@ SCORUM_TEST_CASE(try_close_fund_budget)
     BOOST_REQUIRE_THROW(budget_service.close_budget(budget), fc::assert_exception);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+SCORUM_TEST_CASE(fund_budget_payments_after_deadline_is_over_and_we_have_missing_blocks)
+{
+    auto& budget = budget_service.get_fund_budget();
 
-#endif
+    auto original_balance = budget.balance;
+
+    auto miss_intermediate_blocks = true;
+
+    auto actually_generated_blocks
+        = db_plugin->debug_generate_blocks_until(debug_key, budget.deadline, miss_intermediate_blocks, default_skip);
+    BOOST_REQUIRE((db.head_block_time() - budget.deadline).to_seconds() < SCORUM_BLOCK_INTERVAL);
+
+    BOOST_REQUIRE(budget_service.is_fund_budget_exists());
+
+    BOOST_REQUIRE_EQUAL(budget.balance, original_balance - budget.per_block * actually_generated_blocks);
+
+    // generate block after deadline
+    generate_block();
+    ++actually_generated_blocks;
+
+    BOOST_REQUIRE(budget_service.is_fund_budget_exists());
+
+    BOOST_REQUIRE_EQUAL(budget.balance, original_balance - budget.per_block * actually_generated_blocks);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

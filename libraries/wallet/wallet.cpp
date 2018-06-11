@@ -2,6 +2,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 
 #include <scorum/app/api.hpp>
+#include <scorum/app/chain_api.hpp>
 #include <scorum/protocol/base.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/wallet/api_documentation.hpp>
@@ -143,6 +144,7 @@ public:
         , _chain_id(initial_data.chain_id)
         , _remote_api(rapi)
         , _remote_db(rapi->get_api_by_name("database_api")->as<database_api>())
+        , _chain_api(rapi->get_api_by_name(API_CHAIN)->as<chain_api>())
         , _remote_net_broadcast(rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>())
     {
         init_prototype_ops();
@@ -219,7 +221,7 @@ public:
         fc::mutable_variant_object result = fc::variant(dynamic_props).get_object();
 
         result["witness_majority_version"] = fc::string(dynamic_props.majority_version);
-        result["hardfork_version"] = fc::string(_remote_db->get_hardfork_version());
+        result["hardfork_version"] = fc::string(_chain_api->get_chain_properties().hf_version);
 
         result["chain_properties"] = fc::variant(dynamic_props.median_chain_props).get_object();
 
@@ -442,7 +444,7 @@ public:
 
             account_create_op.creator = creator_account_name;
             account_create_op.new_account_name = account_name;
-            account_create_op.fee = _remote_db->get_chain_properties().account_creation_fee;
+            account_create_op.fee = _chain_api->get_chain_properties().median_chain_props.account_creation_fee;
             account_create_op.owner = authority(1, owner_pubkey, 1);
             account_create_op.active = authority(1, active_pubkey, 1);
             account_create_op.memo_key = memo_pubkey;
@@ -915,7 +917,7 @@ public:
         try
         {
             _remote_account_history_api
-                = _remote_api->get_api_by_name("account_history_api")->as<blockchain_history::account_history_api>();
+                = _remote_api->get_api_by_name(API_ACCOUNT_HISTORY)->as<blockchain_history::account_history_api>();
         }
         catch (const fc::exception& e)
         {
@@ -931,7 +933,7 @@ public:
 
         try
         {
-            _remote_blockchain_history_api = _remote_api->get_api_by_name("blockchain_history_api")
+            _remote_blockchain_history_api = _remote_api->get_api_by_name(API_BLOCKCHAIN_HISTORY)
                                                  ->as<blockchain_history::blockchain_history_api>();
         }
         catch (const fc::exception& e)
@@ -983,6 +985,7 @@ public:
 
     fc::api<login_api> _remote_api;
     fc::api<database_api> _remote_db;
+    fc::api<chain_api> _chain_api;
     fc::api<network_broadcast_api> _remote_net_broadcast;
     optional<fc::api<network_node_api>> _remote_net_node;
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
@@ -1025,22 +1028,30 @@ bool wallet_api::copy_wallet_file(const std::string& destination_filename)
 
 optional<block_header> wallet_api::get_block_header(uint32_t num) const
 {
-    return my->_remote_db->get_block_header(num);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_block_header(num);
 }
 
 optional<signed_block_api_obj> wallet_api::get_block(uint32_t num) const
 {
-    return my->_remote_db->get_block(num);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_block(num);
 }
 
 std::map<uint32_t, block_header> wallet_api::get_block_headers_history(uint32_t num, uint32_t limit) const
 {
-    return my->_remote_db->get_block_headers_history(num, limit);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_block_headers_history(num, limit);
 }
 
 std::map<uint32_t, signed_block_api_obj> wallet_api::get_blocks_history(uint32_t num, uint32_t limit) const
 {
-    return my->_remote_db->get_blocks_history(num, limit);
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_blocks_history(num, limit);
 }
 
 std::map<uint32_t, applied_operation> wallet_api::get_ops_in_block(uint32_t block_num,
@@ -1349,8 +1360,8 @@ annotated_signed_transaction wallet_api::create_account_with_keys(const std::str
         op.posting = authority(1, posting, 1);
         op.memo_key = memo;
         op.json_metadata = json_meta;
-        op.fee
-            = my->_remote_db->get_chain_properties().account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
+        op.fee = my->_chain_api->get_chain_properties().median_chain_props.account_creation_fee
+            * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -1520,7 +1531,7 @@ annotated_signed_transaction wallet_api::update_account(const std::string& accou
 annotated_signed_transaction wallet_api::update_account_auth_key(const std::string& account_name,
                                                                  const authority_type& type,
                                                                  const public_key_type& key,
-                                                                 weight_type weight,
+                                                                 authority_weight_type weight,
                                                                  bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -1591,7 +1602,7 @@ annotated_signed_transaction wallet_api::update_account_auth_key(const std::stri
 annotated_signed_transaction wallet_api::update_account_auth_account(const std::string& account_name,
                                                                      authority_type type,
                                                                      const std::string& auth_account,
-                                                                     weight_type weight,
+                                                                     authority_weight_type weight,
                                                                      bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -2294,11 +2305,6 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
     return result;
 }
 
-app::state wallet_api::get_state(const std::string& url)
-{
-    return my->_remote_db->get_state(url);
-}
-
 std::vector<withdraw_route> wallet_api::get_withdraw_routes(const std::string& account, withdraw_route_type type) const
 {
     return my->_remote_db->get_withdraw_routes(account, type);
@@ -2896,6 +2902,11 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
 void wallet_api::exit()
 {
     exit_func();
+}
+
+chain_capital_api_obj wallet_api::get_chain_capital() const
+{
+    return my->_chain_api->get_chain_capital();
 }
 
 } // namespace wallet

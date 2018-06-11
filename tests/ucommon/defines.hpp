@@ -11,8 +11,8 @@
 
 #define TEST_ACCOUNTS_INITIAL_SUPPLY asset(10000000000ll, SCORUM_SYMBOL)
 #define TEST_REWARD_INITIAL_SUPPLY                                                                                     \
-    asset(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS* SCORUM_BLOCKS_PER_DAY * 10, SCORUM_SYMBOL)
-#define TEST_GENESIS_TIMESTAMP (1431700000)
+    asset(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS* SCORUM_BLOCKS_PER_DAY * 100, SCORUM_SYMBOL)
+#define TEST_GENESIS_TIMESTAMP (scorum::protocol::detail::get_config().initial_date.sec_since_epoch())
 
 #define TEST_INIT_DELEGATE_NAME "initdelegate"
 #define TEST_INIT_KEY TEST_INIT_DELEGATE_NAME

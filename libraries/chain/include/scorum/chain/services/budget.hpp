@@ -1,17 +1,11 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
-
-#include <functional>
-#include <vector>
-#include <set>
-
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/budget_object.hpp>
 namespace scorum {
 namespace chain {
 
-class budget_object;
-
-struct budget_service_i
+struct budget_service_i : public base_service_i<budget_object>
 {
     using budget_refs_type = std::vector<std::reference_wrapper<const budget_object>>;
 
@@ -37,7 +31,7 @@ struct budget_service_i
 /**
  * DB service for operations with budget_object
  */
-class dbs_budget : public dbs_base, public budget_service_i
+class dbs_budget : public dbs_service_base<budget_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -113,10 +107,9 @@ public:
     virtual asset allocate_cash(const budget_object& budget) override;
 
 private:
-    share_type
-    _calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, share_type balance_amount);
+    asset
+    _calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance_amount);
     asset _decrease_balance(const budget_object&, const asset& balance);
-    bool _check_autoclose(const budget_object&);
     bool _is_fund_budget(const budget_object&) const;
     void _close_budget(const budget_object&);
     void _close_owned_budget(const budget_object&);

@@ -65,11 +65,7 @@ public:
 
         auto impl = boost::typeindex::type_id_runtime(*this).pretty_name();
 
-        dlog("Task ${impl} is processing.", ("impl", impl));
-
         on_apply(ctx);
-
-        dlog("Task ${impl} is done.", ("impl", impl));
 
         for (task& r : _before)
         {

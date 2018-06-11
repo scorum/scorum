@@ -99,4 +99,13 @@ size_t segment_manager::get_free_memory() const
     FC_ASSERT(_segment);
     return _segment->get_segment_manager()->get_free_memory();
 }
+
+size_t segment_manager::get_size() const
+{
+    FC_ASSERT(_segment);
+
+    // Add internal alignment of managed_mapped_file, because it's not taken into accounted in get_size()
+    return _segment->get_segment_manager()->get_size()
+        + boost::interprocess::rbtree_best_fit<boost::interprocess::mutex_family>::Alignment;
+}
 }

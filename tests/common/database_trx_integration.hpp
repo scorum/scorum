@@ -3,6 +3,8 @@
 #include "database_integration.hpp"
 #include "actoractions.hpp"
 
+#include <scorum/chain/data_service_factory.hpp>
+
 namespace database_fixture {
 
 class database_trx_integration_fixture : public database_integration_fixture
@@ -45,30 +47,18 @@ public:
     const asset& get_balance(const std::string& account_name) const;
     void sign(signed_transaction& trx, const fc::ecc::private_key& key);
 
-    std::vector<operation> get_last_operations(uint32_t ops);
-
     template <typename T>
-    void push_operation(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key(), bool put_in_block = true)
+    void push_operation_only(const T& op, const fc::ecc::private_key& key = fc::ecc::private_key())
     {
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
-        if (key != fc::ecc::private_key())
-        {
-            tx.sign(key, db.get_chain_id());
-        }
-        db.push_transaction(tx, default_skip);
-
-        if (put_in_block)
-        {
-            generate_block();
-        }
+        push_operation(op, key, false);
     }
 
 protected:
     virtual void open_database_impl(const genesis_state_type& genesis);
 
     signed_transaction trx;
+
+    scorum::chain::data_service_factory_i& services;
 };
 
 } // database_fixture

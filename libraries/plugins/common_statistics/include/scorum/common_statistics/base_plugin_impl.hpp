@@ -31,13 +31,6 @@ public:
     common_statistics_plugin_impl(Plugin& plugin)
         : _self(plugin)
     {
-        auto& db = _self.database();
-
-        db.applied_block.connect([&](const signed_block& b) { this->on_block(b); });
-        db.pre_apply_operation.connect([&](const operation_notification& o) { this->pre_operation(o); });
-        db.post_apply_operation.connect([&](const operation_notification& o) { this->post_operation(o); });
-
-        db.template add_plugin_index<bucket_index>();
     }
     virtual ~common_statistics_plugin_impl()
     {
@@ -54,6 +47,17 @@ public:
     }
     virtual void process_post_operation(const Bucket& bucket, const operation_notification& o)
     {
+    }
+
+    void initialize()
+    {
+        auto& db = _self.database();
+
+        db.applied_block.connect([&](const signed_block& b) { this->on_block(b); });
+        db.pre_apply_operation.connect([&](const operation_notification& o) { this->pre_operation(o); });
+        db.post_apply_operation.connect([&](const operation_notification& o) { this->post_operation(o); });
+
+        db.template add_plugin_index<bucket_index>();
     }
 
     void pre_operation(const operation_notification& o)

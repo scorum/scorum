@@ -1,14 +1,12 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 
 namespace scorum {
 namespace chain {
 
-class account_object;
-class account_authority_object;
-
-struct account_service_i
+struct account_service_i : public base_service_i<account_object>
 {
     virtual const account_object& get(const account_id_type&) const = 0;
 
@@ -82,10 +80,6 @@ struct account_service_i
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) = 0;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual void increase_posting_rewards(const account_object& account, const asset& amount) = 0;
-
-    virtual void increase_curation_rewards(const account_object& account, const asset& amount) = 0;
-
     virtual void drop_challenged(const account_object& account) = 0;
 
     virtual void prove_authority(const account_object& account, bool require_owner) = 0;
@@ -126,14 +120,13 @@ struct account_service_i
     virtual void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0)
         = 0;
 
-    using modifier_type = std::function<void(account_object&)>;
-
-    virtual void update(const account_object& obj, const modifier_type&) = 0;
+    using cref_type = std::reference_wrapper<const account_object>;
+    virtual std::vector<cref_type> get_active_sp_holders() const = 0;
 };
 
 // DB operations with account_*** objects
 //
-class dbs_account : public dbs_base, public account_service_i
+class dbs_account : public dbs_service_base<account_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -208,10 +201,6 @@ public:
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) override;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual void increase_posting_rewards(const account_object& account, const asset& amount) override;
-
-    virtual void increase_curation_rewards(const account_object& account, const asset& amount) override;
-
     virtual void drop_challenged(const account_object& account) override;
 
     virtual void prove_authority(const account_object& account, bool require_owner) override;
@@ -261,7 +250,7 @@ public:
     virtual void
     adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0) override;
 
-    virtual void update(const account_object& obj, const modifier_type&) override;
+    virtual std::vector<cref_type> get_active_sp_holders() const override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,
@@ -272,5 +261,6 @@ private:
                                                   const authority& active,
                                                   const authority& posting);
 };
+
 } // namespace chain
 } // namespace scorum

@@ -3,10 +3,11 @@ file(GLOB EGENESIS_HEADERS "../egenesis/include/scorum/app/*.hpp")
 
 add_library( scorum_app
              database_api.cpp
+             chain_api.cpp
              api.cpp
              application.cpp
-             impacted.cpp
              plugin.cpp
+             scorum_api_objects.cpp
              ${HEADERS}
              ${EGENESIS_HEADERS}
            )
@@ -14,6 +15,7 @@ add_library( scorum_app
 target_link_libraries( scorum_app
                        scorum_chain
                        scorum_protocol
+                       scorum_rewards_math
                        scorum_tags
                        scorum_witness
                        scorum_mf_plugins
@@ -25,7 +27,11 @@ target_include_directories( scorum_app
                             PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
-                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_api/include")
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_api/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_statistics/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/blockchain_history/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/account_statistics/include"
+                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/blockchain_monitoring/include")
 
 if(MSVC)
   set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

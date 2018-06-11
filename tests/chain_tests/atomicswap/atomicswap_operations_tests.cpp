@@ -1,4 +1,3 @@
-#ifdef IS_TEST_NET
 #include <boost/test/unit_test.hpp>
 
 #include "database_default_integration.hpp"
@@ -324,4 +323,90 @@ SCORUM_TEST_CASE(redeem_by_participant_check)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#endif
+struct expired_contract_refund_visitor
+{
+    typedef void result_type;
+
+    database& _db;
+
+    std::map<account_name_type, asset> refund_map;
+
+    expired_contract_refund_visitor(database& db)
+        : _db(db)
+    {
+    }
+
+    void operator()(const expired_contract_refund_operation& op)
+    {
+        refund_map.insert(std::make_pair(op.owner, op.refund));
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
+struct atomicswap_expired_contract_fixture : public atomicswap_operation_create_contract_fixture
+{
+};
+
+BOOST_FIXTURE_TEST_SUITE(atomicswap_expired_contract_check, atomicswap_expired_contract_fixture)
+
+SCORUM_TEST_CASE(check_expired_contracts_refund)
+{
+    const account_object& alice = account_service.get_account("alice");
+    const account_object& bob = account_service.get_account("bob");
+
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash), fc::exception);
+
+    BOOST_REQUIRE_NO_THROW(push_operations(m_alice_private_key, false, initiate_op, participate_op));
+
+    expired_contract_refund_visitor visitor(db);
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
+
+    auto alice_balance_before_refund = db.obtain_service<dbs_account>().get_account("alice").balance;
+    auto bob_balance_before_refund = db.obtain_service<dbs_account>().get_account("bob").balance;
+
+    generate_blocks(db.head_block_time() + std::max(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS,
+                                                    SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS));
+
+    BOOST_REQUIRE_EQUAL(visitor.refund_map.size(), std::size_t(2));
+    BOOST_REQUIRE(visitor.refund_map.find("alice") != visitor.refund_map.end());
+    BOOST_REQUIRE(visitor.refund_map.find("bob") != visitor.refund_map.end());
+
+    BOOST_REQUIRE_EQUAL(visitor.refund_map["alice"], ALICE_BALANCE - alice_balance_before_refund);
+    BOOST_REQUIRE_EQUAL(visitor.refund_map["bob"], BOB_BALANCE - bob_balance_before_refund);
+
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash), fc::exception);
+}
+
+SCORUM_TEST_CASE(check_redeemed_expired_contracts)
+{
+    const account_object& alice = account_service.get_account("alice");
+    const account_object& bob = account_service.get_account("bob");
+
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash), fc::exception);
+
+    BOOST_REQUIRE_NO_THROW(push_operations(m_alice_private_key, true, initiate_op, participate_op));
+
+    expired_contract_refund_visitor visitor(db);
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
+
+    BOOST_REQUIRE_NO_THROW(
+        push_operations(m_alice_private_key, true, redeem_by_initiator_op, redeem_by_participant_op));
+
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(alice, bob, alice_secret_hash), fc::exception);
+    BOOST_REQUIRE_NO_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash));
+
+    generate_blocks(db.head_block_time() + std::max(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS,
+                                                    SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS));
+
+    BOOST_REQUIRE_EQUAL(visitor.refund_map.size(), std::size_t(0));
+
+    BOOST_REQUIRE_THROW(atomicswap_service.get_contract(bob, alice, alice_secret_hash), fc::exception);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

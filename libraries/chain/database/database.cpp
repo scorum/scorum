@@ -17,8 +17,6 @@
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/util/asset.hpp>
-#include <scorum/chain/util/reward.hpp>
-#include <scorum/chain/util/uint256.hpp>
 
 #include <scorum/chain/shared_db_merkle.hpp>
 #include <scorum/chain/operation_notification.hpp>
@@ -37,10 +35,11 @@
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/reward_pool_object.hpp>
+#include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -50,14 +49,21 @@
 #include <scorum/chain/services/hardfork_property.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
-#include <scorum/chain/services/reward.hpp>
-#include <scorum/chain/services/reward_fund.hpp>
+#include <scorum/chain/services/reward_balancer.hpp>
+#include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
+#include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
-#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
 #include <scorum/chain/database/block_tasks/process_funds.hpp>
 #include <scorum/chain/database/block_tasks/process_vesting_withdrawals.hpp>
+#include <scorum/chain/database/block_tasks/process_comments_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.hpp>
+#include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
+#include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
+#include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
 #include <scorum/chain/evaluators/proposal_create_evaluator.hpp>
@@ -67,10 +73,10 @@
 #include <scorum/chain/evaluators/set_withdraw_scorumpower_route_evaluators.hpp>
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
+#include <cmath>
+
 namespace scorum {
 namespace chain {
-
-using boost::container::flat_set;
 
 class database_impl
 {
@@ -83,7 +89,12 @@ public:
 
     database_ns::process_funds _process_funds;
     database_ns::process_comments_cashout _process_comments_cashout;
+    database_ns::process_fifa_world_cup_2018_bounty_initialize _process_comments_bounty_initialize;
+    database_ns::process_fifa_world_cup_2018_bounty_cashout _process_comments_bounty_cashout;
     database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
+    database_ns::process_contracts_expiration _process_contracts_expiration;
+    database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
+    database_ns::process_witness_reward_in_sp_migration _process_witness_reward_in_sp_migration;
 };
 
 database_impl::database_impl(database& self)
@@ -92,17 +103,38 @@ database_impl::database_impl(database& self)
 {
 }
 
-database::database()
+database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
     , _my(new database_impl(*this))
+    , _options(options)
 {
 }
 
 database::~database()
 {
     clear_pending();
+}
+
+fc::path database::block_log_path(const fc::path& data_dir)
+{
+    return data_dir / "block_log";
+}
+
+uint32_t database::get_reindex_skip_flags() const
+{
+    uint32_t skip_flags = database::skip_witness_signature;
+    skip_flags |= database::skip_transaction_signatures;
+    skip_flags |= database::skip_transaction_dupe_check;
+    skip_flags |= database::skip_tapos_check;
+    skip_flags |= database::skip_merkle_check;
+    skip_flags |= database::skip_authority_check;
+    skip_flags |= database::skip_validate;
+    skip_flags |= database::skip_validate_invariants;
+    skip_flags |= database::skip_block_log;
+    skip_flags |= database::skip_witness_schedule_check;
+    return skip_flags;
 }
 
 void database::open(const fc::path& data_dir,
@@ -131,7 +163,7 @@ void database::open(const fc::path& data_dir,
                 fc::create_directories(data_dir);
             }
 
-            _block_log.open(data_dir / "block_log");
+            _block_log.open(block_log_path(data_dir));
 
             auto log_head = _block_log.head();
 
@@ -140,7 +172,8 @@ void database::open(const fc::path& data_dir,
                 for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo_all(); });
 
                 for_each_index([&](chainbase::abstract_generic_index_i& item) {
-                    FC_ASSERT(item.revision() == head_block_num(), "Chainbase revision does not match head block num",
+                    FC_ASSERT(item.revision() == head_block_num(),
+                              "Chainbase revision does not match head block num. Reindex blockchain.",
                               ("rev", item.revision())("head_block", head_block_num()));
                 });
 
@@ -152,7 +185,7 @@ void database::open(const fc::path& data_dir,
                 auto head_block = _block_log.read_block_by_num(head_block_num());
                 // This assertion should be caught and a reindex should occur
                 FC_ASSERT(head_block.valid() && head_block->id() == head_block_id(),
-                          "Chain state does not match block log. Please reindex blockchain.");
+                          "Chain state does not match block log. Reindex blockchain.");
 
                 _fork_db.start_block(*head_block);
             }
@@ -173,17 +206,23 @@ void database::open(const fc::path& data_dir,
             init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
         });
     }
+    catch (fc::assert_exception&)
+    {
+        reindex(data_dir, shared_mem_dir, shared_file_size, get_reindex_skip_flags(), genesis_state);
+    }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
 
 void database::reindex(const fc::path& data_dir,
                        const fc::path& shared_mem_dir,
                        uint64_t shared_file_size,
+                       uint32_t skip_flags,
                        const genesis_state_type& genesis_state)
 {
     try
     {
         ilog("Reindexing Blockchain");
+
         wipe(data_dir, shared_mem_dir, false);
         open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write, genesis_state);
         _fork_db.reset(); // override effect of _fork_db.start_block() call in open()
@@ -191,29 +230,28 @@ void database::reindex(const fc::path& data_dir,
         auto start = fc::time_point::now();
         SCORUM_ASSERT(_block_log.head(), block_log_exception, "No blocks in block log. Cannot reindex an empty chain.");
 
-        ilog("Replaying blocks...");
+        auto last_block_num = _block_log.head()->block_num();
+        uint log_interval_sz = std::max(last_block_num / 100u, 1000u);
 
-        uint64_t skip_flags = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check
-            | skip_tapos_check | skip_merkle_check | skip_witness_schedule_check | skip_authority_check | skip_validate
-            | /// no need to validate operations
-            skip_validate_invariants | skip_block_log;
+        ilog("Replaying ${n} blocks...", ("n", last_block_num));
 
         with_write_lock([&]() {
             auto itr = _block_log.read_block(0);
-            auto last_block_num = _block_log.head()->block_num();
-
-            while (itr.first.block_num() != last_block_num)
+            while (itr.first.block_num() <= last_block_num)
             {
                 auto cur_block_num = itr.first.block_num();
-                if (cur_block_num % 100000 == 0)
-                    std::cerr << "   " << double(cur_block_num * 100) / last_block_num << "%   " << cur_block_num
-                              << " of " << last_block_num << "   (" << (get_free_memory() / (1024 * 1024))
-                              << "M free)\n";
+                if (cur_block_num % log_interval_sz == 0 || cur_block_num == last_block_num)
+                {
+                    double percent = (cur_block_num * double(100)) / last_block_num;
+                    ilog("${p}% applied. ${m}M free.",
+                         ("p", (boost::format("%5.2f") % percent).str())("m", get_free_memory() / (1024 * 1024)));
+                }
                 apply_block(itr.first, skip_flags);
-                itr = _block_log.read_block(itr.second);
+                if (cur_block_num != last_block_num)
+                    itr = _block_log.read_block(itr.second);
+                else
+                    break;
             }
-
-            apply_block(itr.first, skip_flags);
 
             for_each_index([&](chainbase::abstract_generic_index_i& item) { item.set_revision(head_block_num()); });
         });
@@ -226,17 +264,18 @@ void database::reindex(const fc::path& data_dir,
         auto end = fc::time_point::now();
         ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
     }
-    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir))
+    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size)(skip_flags)(genesis_state))
 }
 
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
 {
     close();
-    chainbase::database::wipe();
+    chainbase::database::wipe(shared_mem_dir);
     if (include_blocks)
     {
-        fc::remove_all(data_dir / "block_log");
-        fc::remove_all(data_dir / "block_log.index");
+        fc::path block_log_file = block_log_path(data_dir);
+        fc::remove_all(block_log_file);
+        fc::remove_all(block_log::block_log_index_path(block_log_file));
     }
 }
 
@@ -301,7 +340,7 @@ block_id_type database::find_block_id_for_num(uint32_t block_num) const
 
         // Reversible blocks are *usually* in the TAPOS buffer.  Since this
         // is the fastest check, we do it first.
-        block_summary_id_type bsid = block_num & SCORUM_BLOCKID_POOL_SIZE;
+        block_summary_id_type bsid = block_num & (uint32_t)SCORUM_BLOCKID_POOL_SIZE;
         const block_summary_object* bs = find<block_summary_object, by_id>(bsid);
         if (bs != nullptr)
         {
@@ -379,6 +418,11 @@ optional<signed_block> database::fetch_block_by_number(uint32_t block_num) const
         return b;
     }
     FC_LOG_AND_RETHROW()
+}
+
+optional<signed_block> database::read_block_by_number(uint32_t block_num) const
+{
+    return _block_log.read_block_by_num(block_num);
 }
 
 const signed_transaction database::get_recent_transaction(const transaction_id_type& trx_id) const
@@ -462,6 +506,10 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
 {
     // fc::time_point begin_time = fc::time_point::now();
 
+    block_info ctx(new_block);
+
+    debug_log(ctx, "push_block skip=${s}", ("s", skip));
+
     bool result;
     detail::with_skip_flags(*this, skip, [&]() {
         with_write_lock([&]() {
@@ -469,8 +517,9 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
                 try
                 {
                     result = _push_block(new_block);
+                    debug_log(ctx, "push_block resut=${r}", ("r", result));
                 }
-                FC_CAPTURE_AND_RETHROW((new_block))
+                FC_CAPTURE_AND_RETHROW(((std::string)ctx))
             });
         });
     });
@@ -490,6 +539,7 @@ void database::_maybe_warn_multiple_production(uint32_t height) const
         std::vector<std::pair<account_name_type, fc::time_point_sec>> witness_time_pairs;
         for (const auto& b : blocks)
         {
+            debug_log(block_info(b->data), "block_num_collision=${n}", ("n", height));
             witness_time_pairs.push_back(std::make_pair(b->data.witness, b->data.timestamp));
         }
 
@@ -501,6 +551,10 @@ void database::_maybe_warn_multiple_production(uint32_t height) const
 
 bool database::_push_block(const signed_block& new_block)
 {
+    block_info ctx(new_block);
+
+    debug_log(ctx, "_push_block");
+
     try
     {
         uint32_t skip = get_node_properties().skip_flags;
@@ -509,34 +563,45 @@ bool database::_push_block(const signed_block& new_block)
         if (!(skip & skip_fork_db))
         {
             std::shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
+
+            debug_log(ctx, "new_head_block=${b}", ("b", (std::string)block_info(new_head->data)));
+
             _maybe_warn_multiple_production(new_head->num);
 
             // If the head block from the longest chain does not build off of the current head, we need to switch forks.
             if (new_head->data.previous != head_block_id())
             {
+                debug_log(ctx, "current head block_id=${h_id}", ("h_id", head_block_id()));
+                debug_log(ctx, "previous head block_id=${priv_id}", ("priv_id", new_head->data.previous));
+
                 // If the newly pushed block is the same height as head, we get head back in new_head
                 // Only switch forks if new_head is actually higher than head
                 if (new_head->data.block_num() > head_block_num())
                 {
-                    // wlog( "Switching to fork: ${id}", ("id",new_head->data.id()) );
+                    debug_log(ctx, "current nead block_num=${h_num}", ("h_num", head_block_num()));
+                    debug_log(ctx, "new head block number=${f_num}", ("f_num", new_head->data.block_num()));
+                    debug_log(ctx, "switching to fork with block=${b}", ("b", (std::string)block_info(new_head->data)));
+
                     auto branches = _fork_db.fetch_branch_from(new_head->data.id(), head_block_id());
 
                     // pop blocks until we hit the forked block
                     while (head_block_id() != branches.second.back()->data.previous)
                     {
+                        debug_log(ctx, "popping block_id=${id}", ("id", head_block_id()));
                         pop_block();
                     }
 
                     // push all blocks on the new fork
                     for (auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr)
                     {
-                        // ilog( "pushing blocks from fork ${n} ${id}",
-                        // ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
+                        debug_log(ctx, "pushing blocks from fork block=${b}",
+                                  ("b", (std::string)block_info((*ritr)->data)));
                         optional<fc::exception> except;
                         try
                         {
                             auto session = start_undo_session();
                             apply_block((*ritr)->data, skip);
+                            debug_log(ctx, "applied block=${b}", ("b", (std::string)block_info((*ritr)->data)));
                             session->push();
                         }
                         catch (const fc::exception& e)
@@ -545,10 +610,13 @@ bool database::_push_block(const signed_block& new_block)
                         }
                         if (except)
                         {
-                            // wlog( "exception thrown while switching forks ${e}", ("e",except->to_detail_string() ) );
+                            debug_log(ctx, "failed to push fork block exception=${e}",
+                                      ("e", except->to_detail_string()));
                             // remove the rest of branches.first from the fork_db, those blocks are invalid
                             while (ritr != branches.first.rend())
                             {
+                                debug_log(ctx, "removing_block=${b} from fork",
+                                          ("b", (std::string)block_info((*ritr)->data)));
                                 _fork_db.remove((*ritr)->data.id());
                                 ++ritr;
                             }
@@ -557,6 +625,7 @@ bool database::_push_block(const signed_block& new_block)
                             // pop all blocks from the bad fork
                             while (head_block_id() != branches.second.back()->data.previous)
                             {
+                                debug_log(ctx, "popping block_id=${id}", ("id", head_block_id()));
                                 pop_block();
                             }
 
@@ -565,15 +634,19 @@ bool database::_push_block(const signed_block& new_block)
                             {
                                 auto session = start_undo_session();
                                 apply_block((*ritr)->data, skip);
+                                debug_log(ctx, "applied block=${b}", ("b", (std::string)block_info((*ritr)->data)));
                                 session->push();
                             }
                             throw * except;
                         }
                     }
+
+                    debug_log(ctx, "_push_block result=true");
                     return true;
                 }
                 else
                 {
+                    debug_log(ctx, "_push_block result=false");
                     return false;
                 }
             }
@@ -587,21 +660,15 @@ bool database::_push_block(const signed_block& new_block)
         }
         catch (const fc::exception& e)
         {
-            elog("Failed to push new block:\n${e}", ("e", e.to_detail_string()));
+            ctx_elog(ctx, "failed to push new block exception=${e}", ("e", e.to_detail_string()));
             _fork_db.remove(new_block.id());
             throw;
         }
 
+        debug_log(ctx, "_push_block result=false");
         return false;
     }
-    FC_CAPTURE_AND_RETHROW()
-}
-
-uint32_t database::get_last_irreversible_block_num() const
-{
-    const dynamic_global_property_object& dpo = obtain_service<dbs_dynamic_global_property>().get();
-
-    return dpo.last_irreversible_block_num;
+    FC_CAPTURE_AND_RETHROW(((std::string)ctx))
 }
 
 /**
@@ -668,14 +735,20 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       uint32_t skip /* = 0 */
                                       )
 {
+    block_info ctx(when, witness_owner);
+
+    debug_log(ctx, "generate_block skip=${s}", ("s", skip));
+
     signed_block result;
     detail::with_skip_flags(*this, skip, [&]() {
         try
         {
             result = _generate_block(when, witness_owner, block_signing_private_key);
+            debug_log(ctx, "generate_block result=${b}", ("b", (std::string)block_info(result)));
         }
-        FC_CAPTURE_AND_RETHROW((witness_owner))
+        FC_CAPTURE_AND_RETHROW(((std::string)ctx))
     });
+
     return result;
 }
 
@@ -683,6 +756,10 @@ signed_block database::_generate_block(fc::time_point_sec when,
                                        const account_name_type& witness_owner,
                                        const fc::ecc::private_key& block_signing_private_key)
 {
+    block_info ctx(when, witness_owner);
+
+    debug_log(ctx, "_generate_block");
+
     auto& witness_service = obtain_service<dbs_witness>();
 
     uint32_t skip = get_node_properties().skip_flags;
@@ -820,6 +897,8 @@ signed_block database::_generate_block(fc::time_point_sec when,
 
     push_block(pending_block, skip);
 
+    debug_log(ctx, "_generate_block result=${b}", ("b", (std::string)block_info(pending_block)));
+
     return pending_block;
 }
 
@@ -829,6 +908,15 @@ signed_block database::_generate_block(fc::time_point_sec when,
  */
 void database::pop_block()
 {
+    block_info ctx;
+
+    if (_fork_db.head())
+    {
+        ctx = std::move(block_info(_fork_db.head()->data));
+    }
+
+    debug_log(ctx, "pop_block");
+
     try
     {
         _pending_tx_session.reset();
@@ -843,8 +931,10 @@ void database::pop_block()
         for_each_index([&](chainbase::abstract_generic_index_i& item) { item.undo(); });
 
         _popped_tx.insert(_popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end());
+
+        debug_log(ctx, "pop_block result");
     }
-    FC_CAPTURE_AND_RETHROW()
+    FC_CAPTURE_AND_RETHROW(((std::string)ctx))
 }
 
 void database::clear_pending()
@@ -875,14 +965,13 @@ void database::notify_post_apply_operation(const operation_notification& note)
 
 inline void database::push_virtual_operation(const operation& op)
 {
-#if defined(IS_LOW_MEM) && !defined(IS_TEST_NET)
-    return;
-#endif
-
-    FC_ASSERT(is_virtual_operation(op));
-    operation_notification note(op);
-    notify_pre_apply_operation(note);
-    notify_post_apply_operation(note);
+    if (_options & opt_notify_virtual_op_applying)
+    {
+        FC_ASSERT(is_virtual_operation(op));
+        operation_notification note(op);
+        notify_pre_apply_operation(note);
+        notify_post_apply_operation(note);
+    }
 }
 
 inline void database::push_hf_operation(const operation& op)
@@ -891,6 +980,11 @@ inline void database::push_hf_operation(const operation& op)
     operation_notification note(op);
     notify_pre_apply_operation(note);
     notify_post_apply_operation(note);
+}
+
+void database::notify_pre_applied_block(const signed_block& block)
+{
+    SCORUM_TRY_NOTIFY(pre_applied_block, block)
 }
 
 void database::notify_applied_block(const signed_block& block)
@@ -1063,6 +1157,22 @@ block_id_type database::head_block_id() const
     return obtain_service<dbs_dynamic_global_property>().get().head_block_id;
 }
 
+block_info database::head_block_context() const
+{
+    block_info ret;
+    auto b = fetch_block_by_id(head_block_id());
+    if (b.valid())
+    {
+        ret = std::move(block_info(*b));
+    }
+    else
+    {
+        ret = std::move(
+            block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness));
+    }
+    return ret;
+}
+
 node_property_object& database::node_properties()
 {
     return _node_property_object;
@@ -1115,12 +1225,16 @@ void database::initialize_indexes()
 {
     add_index<account_authority_index>();
     add_index<account_index>();
+    add_index<account_registration_bonus_index>();
+    add_index<account_blogging_statistic_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
     add_index<budget_index>();
     add_index<chain_property_index>();
     add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
+    add_index<comment_statistic_scr_index>();
+    add_index<comment_statistic_sp_index>();
     add_index<comment_vote_index>();
     add_index<decline_voting_rights_request_index>();
     add_index<dynamic_global_property_index>();
@@ -1130,8 +1244,12 @@ void database::initialize_indexes()
     add_index<proposal_object_index>();
     add_index<registration_committee_member_index>();
     add_index<registration_pool_index>();
-    add_index<reward_fund_index>();
-    add_index<reward_pool_index>();
+    add_index<content_reward_fund_scr_index>();
+    add_index<content_reward_fund_sp_index>();
+    add_index<content_fifa_world_cup_2018_bounty_reward_fund_index>();
+    add_index<content_reward_balancer_scr_index>();
+    add_index<voters_reward_balancer_scr_index>();
+    add_index<voters_reward_balancer_sp_index>();
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
     add_index<scorumpower_delegation_index>();
@@ -1145,6 +1263,8 @@ void database::initialize_indexes()
 
     add_index<dev_committee_index>();
     add_index<dev_committee_member_index>();
+
+    add_index<witness_reward_in_sp_migration_index>();
 
     _plugin_index_signal();
 }
@@ -1167,6 +1287,10 @@ void database::set_flush_interval(uint32_t flush_blocks)
 
 void database::apply_block(const signed_block& next_block, uint32_t skip)
 {
+    block_info ctx(next_block);
+
+    debug_log(ctx, "apply_block skip=${s}", ("s", skip));
+
     try
     {
         // fc::time_point begin_time = fc::time_point::now();
@@ -1197,9 +1321,9 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
                 validate_invariants();
             }
 #ifdef DEBUG
-            FC_CAPTURE_AND_RETHROW((next_block));
+            FC_CAPTURE_AND_RETHROW(((std::string)ctx));
 #else
-            FC_CAPTURE_AND_LOG((next_block));
+            FC_CAPTURE_AND_LOG(((std::string)ctx));
 #endif
         }
 
@@ -1233,15 +1357,14 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         }
 
         show_free_memory(false);
+
+        debug_log(ctx, "apply_block result");
     }
-    FC_CAPTURE_AND_RETHROW((next_block))
+    FC_CAPTURE_AND_RETHROW(((std::string)ctx))
 }
 
 void database::show_free_memory(bool force)
 {
-#ifdef IS_TEST_NET
-    boost::ignore_unused(force);
-#else
     uint32_t free_gb = uint32_t(get_free_memory() / (1024 * 1024 * 1024));
     if (force || (free_gb < _last_free_gb_printed) || (free_gb > _last_free_gb_printed + 1))
     {
@@ -1253,18 +1376,23 @@ void database::show_free_memory(bool force)
     {
         uint32_t free_mb = uint32_t(get_free_memory() / (1024 * 1024));
 
-        if (free_mb <= 100 && head_block_num() % 10 == 0)
+        if (free_mb <= SCORUM_DB_FREE_MEMORY_THRESHOLD_MB && head_block_num() % 10 == 0)
         {
             elog("Free memory is now ${n}M. Increase shared file size immediately!", ("n", free_mb));
         }
     }
-#endif
 }
 
 void database::_apply_block(const signed_block& next_block)
 {
+    block_info ctx(next_block);
+
+    debug_log(ctx, "_apply_block");
+
     try
     {
+        notify_pre_applied_block(next_block);
+
         uint32_t next_block_num = next_block.block_num();
         // block_id_type next_block_id = next_block.id();
 
@@ -1282,11 +1410,15 @@ void database::_apply_block(const signed_block& next_block)
             }
             catch (fc::assert_exception& e)
             {
+                debug_log(ctx, "merkle check failed");
+
                 const auto& merkle_map = get_shared_db_merkle();
                 auto itr = merkle_map.find(next_block_num);
 
                 if (itr == merkle_map.end() || itr->second != merkle_root)
                 {
+                    debug_log(ctx, "rethrow merkle check fail");
+
                     throw e;
                 }
             }
@@ -1324,6 +1456,10 @@ void database::_apply_block(const signed_block& next_block)
              * for transactions when validating broadcast transactions or
              * when building a block.
              */
+
+            database_ns::user_activity_context user_activity_ctx(static_cast<data_service_factory&>(*this), trx);
+            database_ns::process_user_activity_task().apply(user_activity_ctx);
+
             apply_transaction(trx, skip);
             ++_current_trx_in_block;
         }
@@ -1340,13 +1476,21 @@ void database::_apply_block(const signed_block& next_block)
         // in dbs_database_witness_schedule.cpp
         update_witness_schedule();
 
-        database_ns::block_task_context ctx(static_cast<data_service_factory&>(*this),
-                                            static_cast<database_virtual_operations_emmiter_i&>(*this),
-                                            _current_block_num);
+        database_ns::block_task_context task_ctx(static_cast<data_service_factory&>(*this),
+                                                 static_cast<database_virtual_operations_emmiter_i&>(*this),
+                                                 _current_block_num);
 
-        _my->_process_funds.before(_my->_process_comments_cashout).before(_my->_process_vesting_withdrawals).apply(ctx);
-
-        obtain_service<dbs_atomicswap>().check_contracts_expiration();
+        // clang-format off
+        _my->_process_funds
+            .before(_my->_process_comments_bounty_initialize)
+            .before(_my->_process_comments_cashout)
+            .before(_my->_process_comments_bounty_cashout)
+            .before(_my->_process_vesting_withdrawals)
+            .before(_my->_process_contracts_expiration)
+            .before(_my->_process_account_registration_bonus_expiration)
+            .before(_my->_process_witness_reward_in_sp_migration)
+            .apply(task_ctx);
+        // clang-format on
 
         account_recovery_processing();
         expire_escrow_ratification();
@@ -1358,8 +1502,10 @@ void database::_apply_block(const signed_block& next_block)
 
         // notify observers that the block has been applied
         notify_applied_block(next_block);
+
+        debug_log(ctx, "_apply_block result");
     }
-    FC_CAPTURE_LOG_AND_RETHROW((next_block.block_num()))
+    FC_CAPTURE_LOG_AND_RETHROW(((std::string)ctx))
 }
 
 void database::process_header_extensions(const signed_block& next_block)
@@ -1544,6 +1690,11 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
 
             std::string scheduled_witness = get_scheduled_witness(slot_num);
 
+            if (witness.owner != scheduled_witness)
+            {
+                wdump((obtain_service<dbs_dynamic_global_property>().get())(next_block.block_num())(next_block));
+            }
+
             FC_ASSERT(witness.owner == scheduled_witness, "Witness produced block at wrong time",
                       ("block witness", next_block.witness)("scheduled", scheduled_witness)("slot_num", slot_num));
         }
@@ -1557,7 +1708,7 @@ void database::create_block_summary(const signed_block& next_block)
 {
     try
     {
-        block_summary_id_type sid(next_block.block_num() & SCORUM_BLOCKID_POOL_SIZE);
+        block_summary_id_type sid(next_block.block_num() & (uint32_t)SCORUM_BLOCKID_POOL_SIZE);
         modify(get<block_summary_object>(sid), [&](block_summary_object& p) { p.block_id = next_block.id(); });
     }
     FC_CAPTURE_AND_RETHROW()
@@ -1576,6 +1727,17 @@ void database::update_global_dynamic_data(const signed_block& b)
             missed_blocks = get_slot_at_time(b.timestamp);
             assert(missed_blocks != 0);
             missed_blocks--;
+
+            if (missed_blocks > 0)
+            {
+                dlog("{\"missed_blocks\": ${missed_blocks}, \"last_block\": {\"last_block_num\": ${last_block_num}, "
+                     "\"info\": ${last_block}}, \"new_block\": {\"new_block_num\": ${new_block_num}, \"info\": "
+                     "${new_block}}}",
+                     ("missed_blocks", missed_blocks)("last_block_num", _dgp.head_block_number)(
+                         "last_block", fetch_block_by_id(_dgp.head_block_id))("new_block_num",
+                                                                              b.block_num())("new_block", b));
+            }
+
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
                 const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
@@ -1583,6 +1745,8 @@ void database::update_global_dynamic_data(const signed_block& b)
                 {
                     modify(witness_missed, [&](witness_object& w) {
                         w.total_missed++;
+
+                        push_virtual_operation(witness_miss_block_operation(w.owner, b.block_num()));
 
                         if (head_block_num() - w.last_confirmed_block_num > SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD)
                         {
@@ -1837,7 +2001,7 @@ void database::set_hardfork(uint32_t hardfork, bool apply_now)
 
 void database::apply_hardfork(uint32_t hardfork)
 {
-    if (_log_hardforks)
+    if (_options & opt_log_hardforks)
     {
         elog("HARDFORK ${hf} at block ${b}", ("hf", hardfork)("b", head_block_num()));
     }
@@ -1902,21 +2066,22 @@ void database::validate_invariants() const
             total_supply += itr->pending_fee;
         }
 
-        fc::uint128_t total_rshares2;
+        total_supply += obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+        total_supply
+            += asset(obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
 
-        const auto& comment_idx = get_index<comment_index>().indices();
-        for (auto itr = comment_idx.begin(); itr != comment_idx.end(); ++itr)
+        auto& fifa_world_cup_2018_bounty_reward_fund_service
+            = obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
+        if (fifa_world_cup_2018_bounty_reward_fund_service.is_exists())
         {
-            if (itr->net_rshares.value > 0)
-            {
-                auto delta = util::evaluate_reward_curve(itr->net_rshares.value);
-                total_rshares2 += delta;
-            }
+            total_supply += asset(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance.amount,
+                                  SCORUM_SYMBOL);
         }
 
-        total_supply += obtain_service<dbs_reward_fund>().get().reward_balance;
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
-        total_supply += obtain_service<dbs_reward>().get_pool().balance;
+        total_supply += obtain_service<dbs_content_reward_scr>().get().balance;
+        total_supply += obtain_service<dbs_voters_reward_scr>().get().balance;
+        total_supply += obtain_service<dbs_voters_reward_sp>().get().balance.amount;
 
         for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
         {
@@ -1925,7 +2090,7 @@ void database::validate_invariants() const
 
         if (obtain_service<dbs_budget>().is_fund_budget_exists())
         {
-            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance;
+            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance.amount;
         }
 
         if (obtain_service<dbs_registration_pool>().is_exists())
@@ -1935,6 +2100,11 @@ void database::validate_invariants() const
 
         total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
         total_supply += obtain_service<dbs_dev_pool>().get().scr_balance;
+
+        if (obtain_service<dbs_witness_reward_in_sp_migration>().is_exists())
+        {
+            total_supply += asset(obtain_service<dbs_witness_reward_in_sp_migration>().get().balance, SCORUM_SYMBOL);
+        }
 
         const auto& atomicswap_contract_idx = get_index<atomicswap_contract_index, by_id>();
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)

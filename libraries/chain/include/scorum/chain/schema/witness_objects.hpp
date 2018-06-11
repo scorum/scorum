@@ -16,6 +16,7 @@ using scorum::protocol::digest_type;
 using scorum::protocol::hardfork_version;
 using scorum::protocol::public_key_type;
 using scorum::protocol::version;
+using scorum::protocol::share_type;
 
 /**
  *  All witnesses with at least 1% net positive approval and
@@ -118,6 +119,17 @@ public:
     uint8_t num_scheduled_witnesses = 1;
 };
 
+class witness_reward_in_sp_migration_object
+    : public object<witness_reward_in_sp_migration_object_type, witness_reward_in_sp_migration_object>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(witness_reward_in_sp_migration_object)
+
+    id_type id;
+
+    share_type balance;
+};
+
 struct by_vote_name;
 struct by_name;
 struct by_pow;
@@ -192,6 +204,14 @@ typedef shared_multi_index_container<witness_schedule_object,
                                                                       witness_schedule_id_type,
                                                                       &witness_schedule_object::id>>>>
     witness_schedule_index;
+
+typedef shared_multi_index_container<witness_reward_in_sp_migration_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<witness_reward_in_sp_migration_object,
+                                                                      witness_reward_in_sp_migration_id_type,
+                                                                      &witness_reward_in_sp_migration_object::id>>>>
+    witness_reward_in_sp_migration_index;
+
 } // namespace chain
 } // namespace scorum
 
@@ -218,5 +238,10 @@ FC_REFLECT( scorum::chain::witness_schedule_object,
              (id)(current_virtual_time)(current_shuffled_witnesses)(num_scheduled_witnesses)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_schedule_object, scorum::chain::witness_schedule_index )
+
+FC_REFLECT( scorum::chain::witness_reward_in_sp_migration_object,
+             (id)(balance)
+          )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::witness_reward_in_sp_migration_object, scorum::chain::witness_reward_in_sp_migration_index )
 
 // clang-format on

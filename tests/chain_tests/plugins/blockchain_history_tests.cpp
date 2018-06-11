@@ -34,21 +34,16 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     using operation_map_type = std::map<uint32_t, blockchain_history::applied_operation>;
     using saved_operation_vector_type = std::vector<operation_map_type::value_type>;
 
-    std::shared_ptr<scorum::blockchain_history::blockchain_history_plugin> _plugin;
-
     history_database_fixture()
         : buratino("buratino")
         , maugli("maugli")
         , alice("alice")
         , bob("bob")
         , sam("sam")
-        , _account_history_api_ctx(app, "account_history_api", std::make_shared<api_session_data>())
+        , _account_history_api_ctx(app, API_ACCOUNT_HISTORY, std::make_shared<api_session_data>())
         , account_history_api_call(_account_history_api_ctx)
     {
-        boost::program_options::variables_map options;
-
-        _plugin = app.register_plugin<scorum::blockchain_history::blockchain_history_plugin>();
-        _plugin->plugin_initialize(options);
+        init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
 
         open_database();
         generate_block();
@@ -252,7 +247,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
 
-    const int over_limit = 10;
+    const size_t over_limit = 10;
 
     // sam has not been feeded yet
 
@@ -342,7 +337,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops;
 
-    const int over_limit = 10;
+    const size_t over_limit = 10;
 
     // sam has not been feeded yet
 
@@ -564,7 +559,7 @@ namespace blockchain_history_tests {
 struct blokchain_not_virtual_history_database_fixture : public history_database_fixture
 {
     blokchain_not_virtual_history_database_fixture()
-        : _blockchain_history_api_ctx(app, "blockchain_history_api", std::make_shared<api_session_data>())
+        : _blockchain_history_api_ctx(app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>())
         , blockchain_history_api_call(_blockchain_history_api_ctx)
     {
     }

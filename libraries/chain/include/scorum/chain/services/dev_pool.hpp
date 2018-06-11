@@ -1,28 +1,19 @@
 #pragma once
 
-#include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/services/service_base.hpp>
+#include <scorum/chain/schema/dev_committee_object.hpp>
 
 namespace scorum {
 namespace chain {
 
-class dev_committee_object;
-
-struct dev_pool_service_i
+struct dev_pool_service_i : public base_service_i<dev_committee_object>
 {
-    virtual const dev_committee_object& get() const = 0;
-
-    using modifier_type = std::function<void(dev_committee_object&)>;
-
-    virtual const dev_committee_object& create(const modifier_type&) = 0;
-
-    virtual void update(const modifier_type&) = 0;
-
     virtual asset get_scr_balace() const = 0;
 
     virtual void decrease_scr_balance(const asset& amount) = 0;
 };
 
-class dbs_dev_pool : public dbs_base, public dev_pool_service_i
+class dbs_dev_pool : public dbs_service_base<dev_pool_service_i>
 {
     friend class dbservice_dbs_factory;
 
@@ -30,12 +21,6 @@ protected:
     explicit dbs_dev_pool(database& db);
 
 public:
-    virtual const dev_committee_object& get() const override;
-
-    virtual const dev_committee_object& create(const modifier_type&) override;
-
-    virtual void update(const modifier_type&) override;
-
     asset get_scr_balace() const override;
 
     void decrease_scr_balance(const asset& amount) override;

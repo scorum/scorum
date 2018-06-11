@@ -399,17 +399,22 @@ void witness_plugin::plugin_set_program_options(boost::program_options::options_
                                                 boost::program_options::options_description& config_file_options)
 {
     std::string witness_id_example = "initwitness";
-    command_line_options.add_options()("enable-stale-production",
-                                       bpo::bool_switch()->notifier([this](bool e) { _production_enabled = e; }),
-                                       "Enable block production, even if the chain is stale.")(
-        "required-participation", bpo::bool_switch()->notifier([this](int e) {
-            _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT);
-        }),
-        "Percent of witnesses (0-99) that must be participating in order to produce blocks")(
-        "witness,w", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
-        ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())(
-        "private-key", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
+    // clang-format off
+    command_line_options.add_options()
+    ("enable-stale-production",
+        bpo::bool_switch()->notifier([this](bool e) { _production_enabled = e; }),
+        "Enable block production, even if the chain is stale.")
+    ("required-participation",
+        bpo::bool_switch()->notifier([this](int e) { _required_witness_participation = uint32_t(e * SCORUM_1_PERCENT); }),
+        "Percent of witnesses (0-99) that must be participating in order to produce blocks")
+    ("witness,w",
+        bpo::value<std::vector<std::string>>()->composing()->multitoken(),
+        ("name of witness controlled by this node (e.g. " + witness_id_example + " )").c_str())
+    ("private-key",
+        bpo::value<std::vector<std::string>>()->composing()->multitoken(),
         "WIF PRIVATE KEY to be used by one or more witnesses or miners");
+
+    // clang-format on
     config_file_options.add(command_line_options);
 }
 

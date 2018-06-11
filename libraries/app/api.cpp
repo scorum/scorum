@@ -26,7 +26,6 @@
 #include <scorum/app/api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
-#include <scorum/app/impacted.hpp>
 
 #include <scorum/protocol/get_config.hpp>
 
@@ -82,7 +81,7 @@ bool login_api::login(const std::string& user, const std::string& password)
     std::shared_ptr<api_session_data> session = _ctx.session.lock();
     FC_ASSERT(session);
 
-    std::map<std::string, api_ptr>& _api_map = session->api_map;
+    std::map<std::string, fc::api_ptr>& _api_map = session->api_map;
 
     for (const std::string& api_name : acc->allowed_apis)
     {
@@ -104,7 +103,7 @@ fc::api_ptr login_api::get_api_by_name(const std::string& api_name) const
     std::shared_ptr<api_session_data> session = _ctx.session.lock();
     FC_ASSERT(session);
 
-    const std::map<std::string, api_ptr>& _api_map = session->api_map;
+    const std::map<std::string, fc::api_ptr>& _api_map = session->api_map;
     auto it = _api_map.find(api_name);
     if (it == _api_map.end())
     {
@@ -231,9 +230,9 @@ fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signe
     }
     else
     {
-        promise<fc::variant>::ptr prom(new fc::promise<fc::variant>());
+        fc::promise<fc::variant>::ptr prom(new fc::promise<fc::variant>());
         broadcast_transaction_with_callback([=](const fc::variant& v) { prom->set_value(v); }, trx);
-        return future<fc::variant>(prom).wait();
+        return fc::future<fc::variant>(prom).wait();
     }
 }
 
@@ -252,7 +251,16 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
 
 class check_banned_operations_visitor
 {
+    bool allow_blogging_api = true;
+
 public:
+    explicit check_banned_operations_visitor(const fc::time_point_sec& now)
+    {
+#ifndef FORCE_UNLOCK_BLOGGING_API
+        allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
+#endif
+    }
+
     using result_type = bool;
 
     // available by default
@@ -261,24 +269,22 @@ public:
         return true;
     }
 
-#ifdef LOCK_BLOGGING_API
     bool operator()(const scorum::protocol::comment_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::comment_options_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::delete_comment_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::vote_operation&) const
     {
-        return false;
+        return allow_blogging_api;
     }
-#endif // LOCK_BLOGGING_API
 
 #ifdef LOCK_BUDGETS_API
     bool operator()(const scorum::protocol::create_budget_operation&) const
@@ -301,9 +307,10 @@ void network_broadcast_api::broadcast_transaction_with_callback(confirmation_cal
     else
     {
         FC_ASSERT(!check_max_block_age(_max_block_age));
+        auto now = _app.chain_database()->head_block_time();
         for (const auto& op : trx.operations)
         {
-            FC_ASSERT(op.visit(check_banned_operations_visitor()), "Operation ${op} is locked.", ("op", op));
+            FC_ASSERT(op.visit(check_banned_operations_visitor(now)), "Operation ${op} is locked.", ("op", op));
         }
         trx.validate();
         _callbacks[trx.id()] = cb;

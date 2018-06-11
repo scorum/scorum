@@ -23,8 +23,15 @@ set(SOURCES
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
+    rewards_math/calculate_payout_tests.cpp
+    rewards_math/calculate_total_claims_tests.cpp
+    rewards_math/calculate_curations_payout_tests.cpp
+    rewards_math/calculate_weight_tests.cpp
+    rewards_math/calculate_abs_reward_shares_tests.cpp
+    rewards_math/calculate_voting_power_tests.cpp
     tasks_base_tests.cpp
     block_tasks_tests.cpp
+    app_tests.cpp
 )
 
 add_executable(utests
@@ -34,6 +41,7 @@ add_executable(utests
 target_link_libraries(utests
                       ucommon_test
                       scorum_app
+                      scorum_rewards_math
                       scorum_egenesis_none)
 
 target_include_directories(utests PUBLIC

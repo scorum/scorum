@@ -1,7 +1,8 @@
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#include <scorum/chain/schema/comment_objects.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/multi_index/detail/unbounded.hpp>
 
 #include <tuple>
 
@@ -11,7 +12,7 @@ namespace scorum {
 namespace chain {
 
 dbs_comment::dbs_comment(database& db)
-    : _base_type(db)
+    : base_service_type(db)
 {
 }
 
@@ -19,7 +20,7 @@ const comment_object& dbs_comment::get(const comment_id_type& comment_id) const
 {
     try
     {
-        return db_impl().get(comment_id);
+        return get_by(comment_id);
     }
     FC_CAPTURE_AND_RETHROW((comment_id))
 }
@@ -28,47 +29,45 @@ const comment_object& dbs_comment::get(const account_name_type& author, const st
 {
     try
     {
-        return db_impl().get<comment_object, by_permlink>(boost::make_tuple(author, permlink));
+        return get_by<by_permlink>(boost::make_tuple(author, permlink));
     }
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
-dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time() const
+dbs_comment::comment_refs_type dbs_comment::get_by_cashout_time(const fc::time_point_sec& until) const
 {
-    comment_refs_type ret;
-
-    const auto& idx = db_impl().get_index<comment_index>().indices().get<by_cashout_time>();
-    auto it = idx.cbegin();
-    const auto it_end = idx.cend();
-    while (it != it_end)
+    try
     {
-        ret.push_back(std::cref(*it));
-        ++it;
+        return get_range_by<by_cashout_time>(::boost::multi_index::unbounded,
+                                             ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
     }
+    FC_CAPTURE_AND_RETHROW((until))
+}
 
-    return ret;
+dbs_comment::comment_refs_type dbs_comment::get_by_create_time(const fc::time_point_sec& until,
+                                                               const checker_type& filter) const
+{
+    try
+    {
+        return get_filtered_range_by<by_created>(::boost::multi_index::unbounded,
+                                                 ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS), filter);
+    }
+    FC_CAPTURE_AND_RETHROW((until))
 }
 
 bool dbs_comment::is_exists(const account_name_type& author, const std::string& permlink) const
 {
-    return nullptr != db_impl().find<comment_object, by_permlink>(std::make_tuple(author, permlink));
+    return find_by<by_permlink>(std::make_tuple(author, permlink)) != nullptr;
 }
 
-const comment_object& dbs_comment::create(const modifier_type& modifier)
+comment_service_i::comment_refs_type dbs_comment::get_children(const account_name_type& parent_author,
+                                                               const std::string& parent_permlink) const
 {
-    const auto& new_comment = db_impl().create<comment_object>([&](comment_object& c) { modifier(c); });
+    auto range = get_range_by<by_parent>(
+        boost::make_tuple(parent_author, parent_permlink.c_str(), 0) <= ::boost::lambda::_1,
+        ::boost::lambda::_1 <= std::make_tuple(parent_author, parent_permlink.c_str(), ALL_IDS));
 
-    return new_comment;
-}
-
-void dbs_comment::update(const comment_object& comment, const modifier_type& modifier)
-{
-    db_impl().modify(comment, [&](comment_object& c) { modifier(c); });
-}
-
-void dbs_comment::remove(const comment_object& comment)
-{
-    db_impl().remove(comment);
+    return range;
 }
 
 } // namespace chain
