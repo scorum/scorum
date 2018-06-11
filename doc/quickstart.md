@@ -2,29 +2,27 @@ Quickstart
 ----------
 
 ### Get current scorumd
-Use docker:
-```
-docker run \
-    -d -p 2001:2001 -p 8090:8090 --name scorumd-default \
-    scorum/scorum
-```
+Use docker to build from Dockerfile or download from scorum dockerhub (for instance scorum/release).
+Default docker image has scorumd-default and scorumd-full executables for low memory and full memory
+nodes respectively.
+
 #### Low memory node?
 Above runs low memory node, which is suitable for:
 - seed nodes
 - witness nodes
 - exchanges, etc.
-For full api node use:
 
-```
-docker run \
-    --env USE_WAY_TOO_MUCH_RAM=1 --env USE_FULL_WEB_NODE=1 \
-    -d -p 2001:2001 -p 8090:8090 --name scorumd-full \
-    scorum/scorum
-```
 ### Configure for your use case
 #### Full API node
-You need to use `USE_WAY_TOO_MUCH_RAM=1` and `USE_FULL_WEB_NODE=1` as stated above.
-You can Use `contrib/fullnode.config.ini` as a base for your `config.ini` file.
+You can Use `contrib/fullnode.config.ini` as a base for your `config.ini` file. 
+Do not forget to set seed-node options. For instance:
+
+```ini
+seed-node = seed1-testnet.scorum.com:2001
+seed-node = seed1-testnet.scorum.com:2002
+seed-node = seed1-testnet.scorum.com:2003
+seed-node = seed1-testnet.scorum.com:2004
+```
 
 #### Exchanges
 Use low memory node.
@@ -36,12 +34,6 @@ public-api = database_api login_api
 track-account-range = ["yourexchangeid", "yourexchangeid"]
 ```
 Do not add other APIs or plugins unless you know what you are doing.
-
-This configuration exists in Docker with the following command
-
-```
-docker run -d --env TRACK_ACCOUNT="yourexchangeid" scorum/scorum
-```
 
 ### Resources usage
 
