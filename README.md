@@ -37,16 +37,28 @@ dockerized container.
 
 ## Dockerized Node
 
-    mkdir /opt/scorumd
-    # put your config file in /opt/scorumd/config.ini otherwise default config will be used.
+Create you folder (for example /opt/my_node)
+
+    mkdir /opt/my_node
+
+Put your config file in /opt/my_node/config.ini (otherwise default config will be used). Run node.
 
     docker run \
-        -v /opt/scorumd:/var/lib/scorumd \
-        -d -p 2001:2001 -p 8090:8090 --name scorumd \
+        -v /opt/my_node:/var/lib/scorumd \
+        -d -p 2001:2001 -p 8090:8090 --name my_node \
         scorum/release:0.0.1.680af90
 
-    cd /opt/scorumd/logs
-    tail -f current
+To see node logs
+
+    docker logs my_node
+
+For detail logs go to /opt/my_node/logs (or other folder that set in config.ini)
+
+To stop/start/restart node use
+
+    docker stop my_node
+    docker start my_node
+    docker restart my_node    
 
 # Seed Nodes
 
@@ -60,7 +72,7 @@ compile-time options, and specific commands for Linux (Ubuntu LTS) or macOS X.
 
 # System Requirements
 
-For a full node, you need at least 30GB of space available. Scorumd uses a memory mapped file which currently holds 2GB of data and by default is set to use up to 20GB. It's highly recommended to run scorumd on a fast disk such as an SSD or by placing the shared memory files in a ramdisk and using the `--shard-file-dir=/path` command line option to specify where. Any CPU with decent single core performance should be sufficient.
+For a full node, you need at least 30GB of space available. Scorumd uses a memory mapped file which currently holds 2GB of data and by default is set to use up to 20GB. It's highly recommended to run scorumd on a fast disk such as an SSD or by placing the shared memory files in a ramdisk and using the `shared-file-dir` config (or command line) option to specify where. Any CPU with decent single core performance should be sufficient.
 
 # Main net chain_id
 
