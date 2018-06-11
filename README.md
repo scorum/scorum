@@ -46,7 +46,7 @@ Put your config file in /opt/my_node/config.ini (otherwise default config will b
     docker run \
         -v /opt/my_node:/var/lib/scorumd \
         -d -p 2001:2001 -p 8090:8090 --name my_node \
-        scorum/release:0.0.1.680af90
+        scorum/release:0.0.2.c656149
 
 To see node logs
 
