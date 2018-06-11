@@ -482,7 +482,7 @@ struct dev_committee_operation_visitor
 {
     using result_type = void;
 
-    void operator()(const dev_committee_transfer_complete_operation& op)
+    void operator()(const development_committee_transfer_operation& op)
     {
         transfer_ops.emplace_back(op.to_account, op.amount);
     }
@@ -590,7 +590,7 @@ SCORUM_TEST_CASE(dev_committee_transfer_virtual_op_should_be_raised)
 
     push_operation(proposal_vote_op, initdelegate.private_key);
 
-    BOOST_REQUIRE_EQUAL(visitor.transfer_ops.size(), 1u);
+    BOOST_REQUIRE_EQUAL(visitor.transfer_ops.size(), 3u); // 1-push_tx; 2-gen_block(check for except); 3-apply_block
     BOOST_REQUIRE_EQUAL(std::get<0>(visitor.transfer_ops[0]), bob.name);
     BOOST_REQUIRE_EQUAL(std::get<1>(visitor.transfer_ops[0]).amount, transfer_amount);
 }

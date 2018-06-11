@@ -48,9 +48,6 @@ public:
     virtual void process_post_operation(const Bucket& bucket, const operation_notification& o)
     {
     }
-    virtual void process_pre_proposal_operation(const Bucket& bucket, const proposal_operation_notification& o)
-    {
-    }
 
     void initialize()
     {
@@ -59,7 +56,6 @@ public:
         db.applied_block.connect([&](const signed_block& b) { this->on_block(b); });
         db.pre_apply_operation.connect([&](const operation_notification& o) { this->pre_operation(o); });
         db.post_apply_operation.connect([&](const operation_notification& o) { this->post_operation(o); });
-        db.pre_apply_proposal_operation.connect([&](const proposal_operation_notification& o) { this->pre_proposal_operation(o); });
 
         db.template add_plugin_index<bucket_index>();
     }
@@ -90,18 +86,6 @@ public:
             }
         }
         FC_CAPTURE_AND_RETHROW()
-    }
-
-    void pre_proposal_operation(const proposal_operation_notification& o)
-    {
-        auto& db = _self.database();
-
-        for (auto bucket_id : _current_buckets)
-        {
-            const auto& bucket = db.get(bucket_id);
-
-            process_pre_proposal_operation(bucket, o);
-        }
     }
 
     void on_block(const signed_block& block)

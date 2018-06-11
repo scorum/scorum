@@ -87,9 +87,6 @@ private:
 
     virtual void process_post_operation(const bucket_object& bucket, const operation_notification& o) override;
 
-    virtual void process_pre_proposal_operation(const bucket_object& bucket,
-                                                const proposal_operation_notification& o) override;
-
     template <typename TSourceId>
     void collect_withdraw_stats(const bucket_object& bucket, const asset& vesting_shares, const TSourceId& source_id);
 };
@@ -252,7 +249,7 @@ public:
         collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance, op.withdrawn);
     }
 
-    void operator()(const dev_committee_transfer_complete_operation& op) const
+    void operator()(const development_committee_transfer_operation& op) const
     {
         _db.modify(_bucket, [&](bucket_object& b) {
             b.transfers++;
@@ -329,7 +326,7 @@ void blockchain_monitoring_plugin_impl::process_pre_operation(const bucket_objec
 {
     auto& db = _self.database();
 
-    if (o.op.which() == operation::tag<delete_comment_operation>::value)
+    if (o.op.which() == unified_operation::tag<delete_comment_operation>::value)
     {
         delete_comment_operation op = o.op.get<delete_comment_operation>();
         auto comment = db.obtain_service<dbs_comment>().get(op.author, op.permlink);
@@ -341,12 +338,19 @@ void blockchain_monitoring_plugin_impl::process_pre_operation(const bucket_objec
                 b.root_comments_deleted++;
         });
     }
-    else if (o.op.which() == operation::tag<withdraw_scorumpower_operation>::value)
+    else if (o.op.which() == unified_operation::tag<withdraw_scorumpower_operation>::value)
     {
         const auto& op = o.op.get<withdraw_scorumpower_operation>();
         const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
 
         collect_withdraw_stats(bucket, op.scorumpower, account.id);
+    }
+    else if (o.op.which() == unified_operation::tag<development_committee_withdraw_vesting_operation>::value)
+    {
+        const auto& op = o.op.get<development_committee_withdraw_vesting_operation>();
+        const auto& dev_committee = db.dev_pool_service().get();
+
+        collect_withdraw_stats(bucket, op.vesting_shares, dev_committee.id);
     }
 }
 
@@ -360,20 +364,6 @@ void blockchain_monitoring_plugin_impl::process_post_operation(const bucket_obje
         db.modify(bucket, [&](bucket_object& b) { b.operations++; });
     }
     o.op.visit(operation_process(db, bucket));
-}
-
-void blockchain_monitoring_plugin_impl::process_pre_proposal_operation(const bucket_object& bucket,
-                                                                       const proposal_operation_notification& o)
-{
-    auto& db = _self.database();
-
-    if (o.op.which() == proposal_operation::tag<development_committee_withdraw_vesting_operation>::value)
-    {
-        const auto& op = o.op.get<development_committee_withdraw_vesting_operation>();
-        const auto& dev_committee = db.dev_pool_service().get();
-
-        collect_withdraw_stats(bucket, op.vesting_shares, dev_committee.id);
-    }
 }
 
 template <typename TSourceId>

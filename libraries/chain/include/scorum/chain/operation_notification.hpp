@@ -1,9 +1,7 @@
 #pragma once
 
-#include <scorum/protocol/operations.hpp>
-
 #include <scorum/chain/schema/scorum_object_types.hpp>
-#include <scorum/protocol/proposal_operations.hpp>
+#include <scorum/protocol/unified_operations.hpp>
 
 namespace scorum {
 namespace chain {
@@ -22,7 +20,6 @@ template <class Op> struct basic_operation_notification
     const Op& op;
 };
 
-using operation_notification = basic_operation_notification<protocol::operation>;
-using proposal_operation_notification = basic_operation_notification<protocol::proposal_operation>;
+using operation_notification = basic_operation_notification<protocol::unified_operation>;
 }
 }

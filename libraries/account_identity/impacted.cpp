@@ -254,7 +254,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
-    void operator()(const dev_committee_transfer_complete_operation& op)
+    void operator()(const development_committee_transfer_operation& op)
     {
         _impacted.insert(op.to_account);
     }

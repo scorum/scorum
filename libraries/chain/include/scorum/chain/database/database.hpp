@@ -186,14 +186,8 @@ public:
      *  as any implied/virtual operations that resulted, such as filling an order.
      *  The applied operations are cleared after post_apply_operation.
      */
-    void notify_pre_apply_operation(operation_notification& note);
-    void notify_post_apply_operation(const operation_notification& note);
-
-    /**
-     * Note: corresponding signals will be fired iff block is being applying
-     */
-    void try_notify_pre_apply_proposal_operation(const protocol::proposal_operation &op);
-    void try_notify_post_apply_proposal_operation(const protocol::proposal_operation &op);
+    void notify_pre_apply_operation(const unified_operation& op);
+    void notify_post_apply_operation(const unified_operation& op);
 
     // vops are not needed for low mem. Force will push them on low mem.
     inline void push_virtual_operation(const operation& op);
@@ -211,12 +205,6 @@ public:
     fc::signal<void(const operation_notification&)> pre_apply_operation;
     fc::signal<void(const operation_notification&)> post_apply_operation;
     fc::signal<void(const signed_block&)> pre_applied_block;
-
-    /**
-    *  This signal is emitted for plugins to process every proposal operation before/after it has been fully applied.
-    */
-    fc::signal<void(const proposal_operation_notification&)> pre_apply_proposal_operation;
-    fc::signal<void(const proposal_operation_notification&)> post_apply_proposal_operation;
 
     /**
      *  This signal is emitted after all operations and virtual operation for a
@@ -351,10 +339,7 @@ private:
                                  const account_name_type& witness_owner,
                                  const fc::ecc::private_key& block_signing_private_key);
 
-    void _notify_pre_apply_proposal_operation(const protocol::proposal_operation& op);
-    void _notify_post_apply_proposal_operation(const protocol::proposal_operation& op);
-
-    void _notify_dev_committee_transfer_complete(const development_committee_transfer_operation& op);
+    operation_notification create_notification(const unified_operation& op) const;
 
 protected:
     void set_producing(bool p)
@@ -388,12 +373,6 @@ protected:
 
 private:
     std::unique_ptr<database_impl> _my;
-
-    /**
-     * These are used to subscribe on proposal_operation execution ONLY during apply_block
-     */
-    fc::signal<void(const protocol::proposal_operation&)> _pre_apply_proposal_operation;
-    fc::signal<void(const protocol::proposal_operation&)> _post_apply_proposal_operation;
 
     bool _is_producing = false;
     uint32_t _options;
