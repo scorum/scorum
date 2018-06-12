@@ -86,15 +86,6 @@ public:
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
-
-    database_ns::process_funds _process_funds;
-    database_ns::process_comments_cashout _process_comments_cashout;
-    database_ns::process_fifa_world_cup_2018_bounty_initialize _process_comments_bounty_initialize;
-    database_ns::process_fifa_world_cup_2018_bounty_cashout _process_comments_bounty_cashout;
-    database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
-    database_ns::process_contracts_expiration _process_contracts_expiration;
-    database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
-    database_ns::process_witness_reward_in_sp_migration _process_witness_reward_in_sp_migration;
 };
 
 database_impl::database_impl(database& self)
@@ -1480,14 +1471,14 @@ void database::_apply_block(const signed_block& next_block)
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
                                                  _current_block_num);
 
-        _my->_process_funds.apply(task_ctx);
-        _my->_process_comments_bounty_initialize.apply(task_ctx);
-        _my->_process_comments_cashout.apply(task_ctx);
-        _my->_process_comments_bounty_cashout.apply(task_ctx);
-        _my->_process_vesting_withdrawals.apply(task_ctx);
-        _my->_process_contracts_expiration.apply(task_ctx);
-        _my->_process_account_registration_bonus_expiration.apply(task_ctx);
-        _my->_process_witness_reward_in_sp_migration.apply(task_ctx);
+        database_ns::process_funds().apply(task_ctx);
+        database_ns::process_fifa_world_cup_2018_bounty_initialize().apply(task_ctx);
+        database_ns::process_comments_cashout().apply(task_ctx);
+        database_ns::process_fifa_world_cup_2018_bounty_cashout().apply(task_ctx);
+        database_ns::process_vesting_withdrawals().apply(task_ctx);
+        database_ns::process_contracts_expiration().apply(task_ctx);
+        database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
+        database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
 
         account_recovery_processing();
         expire_escrow_ratification();
