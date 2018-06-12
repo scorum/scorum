@@ -1480,17 +1480,14 @@ void database::_apply_block(const signed_block& next_block)
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
                                                  _current_block_num);
 
-        // clang-format off
-        _my->_process_funds
-            .before(_my->_process_comments_bounty_initialize)
-            .before(_my->_process_comments_cashout)
-            .before(_my->_process_comments_bounty_cashout)
-            .before(_my->_process_vesting_withdrawals)
-            .before(_my->_process_contracts_expiration)
-            .before(_my->_process_account_registration_bonus_expiration)
-            .before(_my->_process_witness_reward_in_sp_migration)
-            .apply(task_ctx);
-        // clang-format on
+        _my->_process_funds.apply(task_ctx);
+        _my->_process_comments_bounty_initialize.apply(task_ctx);
+        _my->_process_comments_cashout.apply(task_ctx);
+        _my->_process_comments_bounty_cashout.apply(task_ctx);
+        _my->_process_vesting_withdrawals.apply(task_ctx);
+        _my->_process_contracts_expiration.apply(task_ctx);
+        _my->_process_account_registration_bonus_expiration.apply(task_ctx);
+        _my->_process_witness_reward_in_sp_migration.apply(task_ctx);
 
         account_recovery_processing();
         expire_escrow_ratification();
