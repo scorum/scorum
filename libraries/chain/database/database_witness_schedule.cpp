@@ -58,6 +58,10 @@ void database::update_witness_schedule()
 
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
+        block_info ctx = std::move(_db.head_block_context());
+
+        debug_log(ctx, "update_witness_schedule");
+
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
         auto& witness_service = _db.obtain_service<dbs_witness>();
 
@@ -69,12 +73,20 @@ void database::update_witness_schedule()
         active_witnesses.reserve(SCORUM_MAX_WITNESSES);
 
         const auto& widx = _db.get_index<witness_index>().indices().get<by_vote_name>();
+
+        for (auto itr = widx.begin(); itr != widx.end(); ++itr)
+        {
+            debug_log(ctx, "witness=${w}", ("w", *itr));
+        }
+
         for (auto itr = widx.begin(); itr != widx.end() && active_witnesses.size() < SCORUM_MAX_VOTED_WITNESSES; ++itr)
         {
             if (itr->signing_key == public_key_type())
             {
                 continue;
             }
+
+            debug_log(ctx, "active=${active}", ("active", itr->owner));
 
             FC_ASSERT(active_witnesses.insert(std::make_pair(itr->id, itr->owner)).second);
             _db.modify(*itr, [&](witness_object& wo) { wo.schedule = witness_object::top20; });
@@ -101,11 +113,13 @@ void database::update_witness_schedule()
             {
                 FC_ASSERT(active_witnesses.insert(std::make_pair(sitr->id, sitr->owner)).second);
                 _db.modify(*sitr, [&](witness_object& wo) { wo.schedule = witness_object::timeshare; });
+
+                debug_log(ctx, "runner=${runner}", ("runner", *sitr));
             }
         }
 
-        dlog("number of active witnesses is (${active_witnesses}), max number is (${SCORUM_MAX_WITNESSES})",
-             ("active_witnesses", active_witnesses.size())("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
+        debug_log(ctx, "number_of_active_witnesses=${active_witnesses}", ("active_witnesses", active_witnesses.size()));
+        debug_log(ctx, "max_number=${SCORUM_MAX_WITNESSES}", ("SCORUM_MAX_WITNESSES", SCORUM_MAX_WITNESSES));
 
         /// Update virtual schedule of processed witnesses
         for (auto itr = processed_witnesses.begin(); itr != processed_witnesses.end(); ++itr)
@@ -123,13 +137,9 @@ void database::update_witness_schedule()
                 wo.virtual_position = fc::uint128();
                 wo.virtual_last_update = new_virtual_time;
                 wo.virtual_scheduled_time = new_virtual_scheduled_time;
-            });
-        }
 
-        witness_schedule::printable_schedule prev_schedule;
-        if (fc::logger::get(DEFAULT_LOGGER).is_enabled(fc::log_level::debug))
-        {
-            prev_schedule = witness_schedule::get_witness_schedule(schedule_service.get(), witness_service);
+                debug_log(ctx, "update_wo=${wo}", ("wo", wo));
+            });
         }
 
         schedule_service.update([&](witness_schedule_object& _wso) {
@@ -147,6 +157,13 @@ void database::update_witness_schedule()
 
             /// shuffle current shuffled witnesses
             auto now_hi = uint64_t(_db.head_block_time().sec_since_epoch()) << 32;
+
+            debug_log(ctx, "head_block_time=${t}", ("t", _db.head_block_time().to_iso_string()));
+            debug_log(ctx, "now_hi=${now_hi}", ("now_hi", now_hi));
+
+            debug_log(ctx, "before_shufle=${schedule}",
+                      ("schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
+
             for (uint32_t i = 0; i < _wso.num_scheduled_witnesses; ++i)
             {
                 /// High performance random generator
@@ -165,9 +182,8 @@ void database::update_witness_schedule()
             _wso.current_virtual_time = new_virtual_time;
         });
 
-        dlog("{\"prev_schedule\": ${prev_schedule}, \"new_schedule\": ${new_schedule}}",
-             ("prev_schedule", prev_schedule)(
-                 "new_schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
+        debug_log(ctx, "new_schedule=${schedule}",
+                  ("schedule", witness_schedule::get_witness_schedule(schedule_service.get(), witness_service)));
 
         _update_witness_majority_version();
         _update_witness_hardfork_version_votes();
@@ -178,6 +194,10 @@ void database::update_witness_schedule()
 void database::_reset_witness_virtual_schedule_time()
 {
     database& _db = (*this);
+
+    block_info ctx = std::move(_db.head_block_context());
+
+    debug_log(ctx, "_reset_witness_virtual_schedule_time");
 
     auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
 

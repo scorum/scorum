@@ -280,6 +280,8 @@ public:
     uint32_t head_block_num() const;
     block_id_type head_block_id() const;
 
+    block_info head_block_context() const;
+
     node_property_object& node_properties();
 
     uint32_t last_non_undoable_block_num() const;
@@ -406,3 +408,5 @@ private:
 };
 } // namespace chain
 } // namespace scorum
+
+#define debug_log(CTX, FORMAT, ...) fc_ctx_dlog(fc::logger::get("debug"), CTX, FORMAT, __VA_ARGS__)

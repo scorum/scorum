@@ -2896,5 +2896,10 @@ void wallet_api::exit()
     exit_func();
 }
 
+chain_capital_api_obj wallet_api::get_chain_capital() const
+{
+    return my->_chain_api->get_chain_capital();
+}
+
 } // namespace wallet
 } // namespace scorum

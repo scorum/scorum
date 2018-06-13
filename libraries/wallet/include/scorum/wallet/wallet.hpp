@@ -2,6 +2,7 @@
 
 #include <scorum/app/api.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
+#include <scorum/app/chain_api.hpp>
 
 #include <scorum/wallet/utils.hpp>
 
@@ -22,6 +23,7 @@ namespace wallet {
 using scorum::blockchain_history::applied_operation;
 using scorum::blockchain_history::applied_operation_type;
 using scorum::blockchain_history::signed_block_api_obj;
+using scorum::app::chain_capital_api_obj;
 
 using transaction_handle_type = uint16_t;
 
@@ -1269,6 +1271,11 @@ public:
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
+    /** Gets all money circulating between funds and users.
+    *
+    */
+    chain_capital_api_obj get_chain_capital() const;
+
     /**
      * Close wallet application
      */
@@ -1340,6 +1347,7 @@ FC_API( scorum::wallet::wallet_api,
         (list_my_budgets)
         (list_budget_owners)
         (get_budgets)
+        (get_chain_capital)
 
         /// transaction api
         (create_account)

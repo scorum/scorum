@@ -6,6 +6,7 @@ set( SOURCES
     block_tests.cpp
     chain_api_tests.cpp
     operation_tests.cpp
+    fork_tests.cpp
     escrow_transfer_operation_tests.cpp
     account_data_service_tests.cpp
     witness_data_service_tests.cpp

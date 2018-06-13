@@ -87,6 +87,11 @@ struct chain_properties_api_obj : public api_obj<scorum::witness::reserve_ratio_
 
 struct chain_capital_api_obj
 {
+    uint32_t head_block_number = 0;
+    block_id_type head_block_id;
+    time_point_sec head_block_time;
+    account_name_type current_witness;
+
     // total SCR and SP (circulating_capital + pools supply)
     asset total_supply = asset(0, SCORUM_SYMBOL);
 
@@ -98,9 +103,20 @@ struct chain_capital_api_obj
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
     asset fund_budget_balance = asset(0, SP_SYMBOL);
-    asset reward_pool_balance = asset(0, SCORUM_SYMBOL);
-    asset content_reward_scr_balance = asset(0, SCORUM_SYMBOL);
-    asset content_reward_sp_balance = asset(0, SP_SYMBOL);
+    asset dev_pool_scr_balance = asset(0, SCORUM_SYMBOL);
+    asset dev_pool_sp_balance = asset(0, SP_SYMBOL);
+
+    asset content_balancer_scr = asset(0, SCORUM_SYMBOL);
+    asset active_voters_balancer_scr = asset(0, SCORUM_SYMBOL);
+    asset active_voters_balancer_sp = asset(0, SP_SYMBOL);
+
+    asset content_reward_fund_scr_balance = asset(0, SCORUM_SYMBOL);
+    asset content_reward_fund_sp_balance = asset(0, SP_SYMBOL);
+    asset content_reward_fifa_world_cup_2018_bounty_fund_sp_balance = asset(0, SP_SYMBOL);
+
+    asset total_witness_reward_scr = asset(0, SCORUM_SYMBOL);
+    asset total_witness_reward_sp = asset(0, SP_SYMBOL);
+    asset witness_reward_in_sp_migration_fund = asset(0, SP_SYMBOL);
 };
 }
 }
@@ -115,6 +131,10 @@ FC_REFLECT_DERIVED(scorum::app::chain_properties_api_obj,
                    (chain_id)(head_block_id)(head_block_number)(last_irreversible_block_number)(current_aslot)(time)(
                        current_witness)(median_chain_props)(majority_version)(hf_version))
 
-FC_REFLECT(scorum::app::chain_capital_api_obj,
-           (total_supply)(circulating_capital)(total_scorumpower)(registration_pool_balance)(fund_budget_balance)(
-               reward_pool_balance)(content_reward_scr_balance)(content_reward_sp_balance))
+FC_REFLECT(
+    scorum::app::chain_capital_api_obj,
+    (head_block_number)(head_block_id)(head_block_time)(current_witness)(total_supply)(circulating_capital)(
+        total_scorumpower)(registration_pool_balance)(fund_budget_balance)(dev_pool_scr_balance)(dev_pool_sp_balance)(
+        content_balancer_scr)(active_voters_balancer_scr)(active_voters_balancer_sp)(content_reward_fund_scr_balance)(
+        content_reward_fund_sp_balance)(content_reward_fifa_world_cup_2018_bounty_fund_sp_balance)(
+        total_witness_reward_scr)(total_witness_reward_sp)(witness_reward_in_sp_migration_fund))

@@ -24,6 +24,9 @@ using scorum::protocol::producer_reward_operation;
 
 void process_funds::on_apply(block_task_context& ctx)
 {
+    if (apply_mainnet_schedule_crutches(ctx))
+        return;
+
     data_service_factory_i& services = ctx.services();
     content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
     budget_service_i& budget_service = services.budget_service();
@@ -104,7 +107,7 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     const auto& witness = account_service.get_account(cwit.owner);
 
-    charge_account_reward(ctx, witness, witness_reward);
+    charge_witness_reward(ctx, witness, witness_reward);
 
     if (witness_reward.amount != 0)
         ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
@@ -170,6 +173,23 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
     }
 }
 
+void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
+{
+    data_service_factory_i& services = ctx.services();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        dgp_service.update([&](dynamic_global_property_object& p) { p.total_witness_reward_scr += reward; });
+    }
+    else
+    {
+        dgp_service.update([&](dynamic_global_property_object& p) { p.total_witness_reward_sp += reward; });
+    }
+
+    charge_account_reward(ctx, witness, reward);
+}
+
 void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
 {
     if (reward.amount <= 0)
@@ -230,6 +250,20 @@ const asset process_funds::get_activity_reward(block_task_context& ctx, const as
         reward_balance_algorithm<voters_reward_sp_service_i> balancer(reward_service);
         return reward + balancer.take_block_reward();
     }
+}
+
+bool process_funds::apply_mainnet_schedule_crutches(block_task_context& ctx)
+{
+    // We have bug on mainnet: signed_block was applied, but undo_session wasn't pushed, therefore DB state roll backed
+    // and witnesses were not rewarded. It leads us to mismatching of schedule for working and newly synced nodes. Next
+    // code fixes it.
+    if (ctx.block_num() == 1650380 || // fix reward for headshot witness
+        ctx.block_num() == 1808664) // fix reward for addit-yury witness
+    {
+        return true;
+    }
+
+    return false;
 }
 }
 }
