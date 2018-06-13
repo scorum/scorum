@@ -1,14 +1,14 @@
 #pragma once
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
-#include <scorum/protocol/unified_operations.hpp>
+#include <scorum/protocol/operations.hpp>
 
 namespace scorum {
 namespace chain {
 
-template <class Op> struct basic_operation_notification
+struct operation_notification
 {
-    basic_operation_notification(const Op& o)
+    operation_notification(const protocol::operation& o)
         : op(o)
     {
     }
@@ -17,9 +17,7 @@ template <class Op> struct basic_operation_notification
     uint32_t block = 0;
     uint32_t trx_in_block = 0;
     uint16_t op_in_trx = 0;
-    const Op& op;
+    const protocol::operation& op;
 };
-
-using operation_notification = basic_operation_notification<protocol::unified_operation>;
 }
 }

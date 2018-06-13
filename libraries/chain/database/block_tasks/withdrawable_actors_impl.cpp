@@ -455,6 +455,21 @@ void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from
     }
 }
 
+void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from, const asset& withdrawn)
+{
+    if (withdrawn.amount <= 0)
+        return;
+
+    from.strict_visit(
+        [&](const account_id_type& from) {
+            _ctx.push_virtual_operation(
+                acc_total_vesting_withdraw_operation(_account_service.get(from).name, withdrawn));
+        },
+        [&](const dev_committee_id_type& from) {
+            _ctx.push_virtual_operation(devpool_total_vesting_withdraw_operation(withdrawn));
+        });
+}
+
 void withdrawable_actors_impl::update_global_scr_properties(const withdrawable_id_type& from,
                                                             const withdrawable_id_type& to,
                                                             const asset& amount)

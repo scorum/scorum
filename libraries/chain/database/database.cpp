@@ -896,17 +896,17 @@ void database::clear_pending()
     FC_CAPTURE_AND_RETHROW()
 }
 
-void database::notify_pre_apply_operation(const unified_operation& op)
+void database::notify_pre_apply_operation(const operation& op)
 {
     SCORUM_TRY_NOTIFY(pre_apply_operation, create_notification(op));
 }
 
-void database::notify_post_apply_operation(const unified_operation& op)
+void database::notify_post_apply_operation(const operation& op)
 {
     SCORUM_TRY_NOTIFY(post_apply_operation, create_notification(op));
 }
 
-operation_notification database::create_notification(const unified_operation& op) const
+operation_notification database::create_notification(const operation& op) const
 {
     operation_notification note(op);
     note.trx_id = _current_trx_id;

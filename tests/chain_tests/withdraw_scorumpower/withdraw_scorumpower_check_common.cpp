@@ -17,7 +17,11 @@ withdraw_scorumpower_check_fixture::withdraw_scorumpower_check_fixture()
     , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
     , withdraw_scorumpower_route_service(db.withdraw_scorumpower_route_service())
     , dynamic_global_property_service(db.dynamic_global_property_service())
+    , api_ctx(app, API_BLOCKCHAIN_STATISTICS, std::make_shared<api_session_data>())
+    , api(api_ctx)
 {
+    init_plugin<blockchain_monitoring_plugin>();
+
     open_database();
 }
 

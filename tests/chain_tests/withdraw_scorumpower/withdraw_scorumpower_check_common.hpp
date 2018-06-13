@@ -1,6 +1,9 @@
 #pragma once
 
 #include "database_trx_integration.hpp"
+#include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
+#include <scorum/blockchain_monitoring/blockchain_statistics_api.hpp>
+#include <scorum/app/api_context.hpp>
 
 namespace scorum {
 namespace chain {
@@ -17,6 +20,8 @@ class dynamic_global_property_service_i;
 namespace database_fixture {
 
 using namespace scorum::chain;
+using namespace scorum::app;
+using namespace scorum::blockchain_monitoring;
 
 class withdraw_scorumpower_check_fixture : public database_trx_integration_fixture
 {
@@ -31,6 +36,9 @@ public:
 
 protected:
     void set_dev_pool_balance(const asset& sp_balance = ASSET_NULL_SP, const asset& scr_balance = ASSET_NULL_SCR);
+
+    api_context api_ctx;
+    blockchain_statistics_api api;
 };
 
 } // namespace database_fixture

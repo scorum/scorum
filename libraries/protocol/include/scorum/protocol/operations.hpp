@@ -67,10 +67,13 @@ using operation = fc::static_variant<vote_operation,
                                      shutdown_witness_operation,
                                      witness_miss_block_operation,
                                      expired_contract_refund_operation,
+                                     acc_total_vesting_withdraw_operation,
+                                     devpool_total_vesting_withdraw_operation,
                                      acc_to_acc_vesting_withdraw_operation,
                                      devpool_to_acc_vesting_withdraw_operation,
                                      acc_to_devpool_vesting_withdraw_operation,
-                                     devpool_to_devpool_vesting_withdraw_operation>;
+                                     devpool_to_devpool_vesting_withdraw_operation,
+                                     proposal_virtual_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

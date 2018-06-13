@@ -69,6 +69,30 @@ struct comment_reward_operation : public virtual_operation
     asset commenting_reward; // reward accrued from children comments (in SCR or SP)
 };
 
+struct acc_total_vesting_withdraw_operation : public virtual_operation
+{
+    acc_total_vesting_withdraw_operation() = default;
+    acc_total_vesting_withdraw_operation(const std::string& f, const asset& w)
+        : from_account(f)
+        , withdrawn(w)
+    {
+    }
+
+    account_name_type from_account;
+    asset withdrawn = asset(0, SP_SYMBOL);
+};
+
+struct devpool_total_vesting_withdraw_operation : public virtual_operation
+{
+    devpool_total_vesting_withdraw_operation() = default;
+    devpool_total_vesting_withdraw_operation(const asset& w)
+        : withdrawn(w)
+    {
+    }
+
+    asset withdrawn = asset(0, SP_SYMBOL);
+};
+
 struct acc_to_acc_vesting_withdraw_operation : public virtual_operation
 {
     acc_to_acc_vesting_withdraw_operation() = default;
@@ -258,6 +282,17 @@ struct expired_contract_refund_operation : public virtual_operation
     account_name_type owner;
     asset refund = asset(0, SCORUM_SYMBOL);
 };
+
+struct proposal_virtual_operation : public virtual_operation
+{
+    proposal_virtual_operation() = default;
+    proposal_virtual_operation(const protocol::proposal_operation& op)
+        : op(op)
+    {
+    }
+
+    protocol::proposal_operation op;
+};
 }
 } // scorum::protocol
 
@@ -273,7 +308,10 @@ FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(a
 FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(reward))
 FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation, (sp_holder)(reward))
 FC_REFLECT(scorum::protocol::expired_contract_refund_operation, (owner)(refund))
+FC_REFLECT(scorum::protocol::acc_total_vesting_withdraw_operation, (from_account)(withdrawn))
+FC_REFLECT(scorum::protocol::devpool_total_vesting_withdraw_operation, (withdrawn))
 FC_REFLECT(scorum::protocol::acc_to_acc_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::devpool_to_acc_vesting_withdraw_operation, (to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::acc_to_devpool_vesting_withdraw_operation, (from_account)(withdrawn))
 FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation, (withdrawn))
+FC_REFLECT(scorum::protocol::proposal_virtual_operation, (op))

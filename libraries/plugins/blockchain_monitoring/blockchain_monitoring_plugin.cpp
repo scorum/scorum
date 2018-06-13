@@ -221,41 +221,49 @@ public:
         });
     }
 
-    void operator()(const acc_to_acc_vesting_withdraw_operation& op) const
+    void operator()(const acc_total_vesting_withdraw_operation& op) const
     {
         const auto& account = _db.account_service().get_account(op.from_account);
 
-        collect_withdraw_stats(account.id, account.scorumpower, op.withdrawn);
+        collect_withdraw_stats(account.id, account.scorumpower);
+    }
+
+    void operator()(const devpool_total_vesting_withdraw_operation& op) const
+    {
+        const auto& dev_pool = _db.dev_pool_service().get();
+
+        collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance);
+    }
+
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op) const
+    {
+        collect_withdraw_stats(op.withdrawn);
     }
 
     void operator()(const acc_to_devpool_vesting_withdraw_operation& op) const
     {
-        const auto& account = _db.account_service().get_account(op.from_account);
-
-        collect_withdraw_stats(account.id, account.scorumpower, op.withdrawn);
+        collect_withdraw_stats(op.withdrawn);
     }
 
     void operator()(const devpool_to_acc_vesting_withdraw_operation& op) const
     {
-        const auto& dev_pool = _db.dev_pool_service().get();
-
-        collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance, op.withdrawn);
+        collect_withdraw_stats(op.withdrawn);
     }
 
     void operator()(const devpool_to_devpool_vesting_withdraw_operation& op) const
     {
-        const auto& dev_pool = _db.dev_pool_service().get();
-
-        collect_withdraw_stats(dev_pool.id, dev_pool.sp_balance, op.withdrawn);
+        collect_withdraw_stats(op.withdrawn);
     }
 
-    void operator()(const development_committee_transfer_operation& op) const
+    void operator()(const proposal_virtual_operation& op) const
     {
-        _db.modify(_bucket, [&](bucket_object& b) {
-            b.transfers++;
+        op.op.weak_visit([&](const development_committee_transfer_operation& op) {
+            _db.modify(_bucket, [&](bucket_object& b) {
+                b.transfers++;
 
-            if (op.amount.symbol() == SCORUM_SYMBOL)
-                b.scorum_transferred += op.amount.amount;
+                if (op.amount.symbol() == SCORUM_SYMBOL)
+                    b.scorum_transferred += op.amount.amount;
+            });
         });
     }
 
@@ -264,9 +272,7 @@ public:
         _db.modify(_bucket, [&](bucket_object& b) { b.missed_blocks[op.block_num] = op.owner; });
     }
 
-private:
-    template <typename TSourceId>
-    void collect_withdraw_stats(const TSourceId& source_id, const asset& source_sp, const asset& withdrawn) const
+    template <typename TSourceId> void collect_withdraw_stats(const TSourceId& source_id, const asset& source_sp) const
     {
         const auto& withdraw_scorumpower_service = _db.obtain_service<chain::dbs_withdraw_scorumpower>();
 
@@ -282,6 +288,18 @@ private:
             vesting_withdraw_rate = wvo.vesting_withdraw_rate;
         }
 
+        if (withdrawn_total.amount >= to_withdraw.amount || source_sp.amount == 0)
+        {
+            _db.modify(_bucket, [&](bucket_object& b) {
+                b.finished_vesting_withdrawals++;
+
+                b.vesting_withdraw_rate_delta -= vesting_withdraw_rate.amount;
+            });
+        }
+    }
+
+    void collect_withdraw_stats(const asset& withdrawn) const
+    {
         _db.modify(_bucket, [&](bucket_object& b) {
 
             b.vesting_withdrawals_processed++;
@@ -290,14 +308,6 @@ private:
                 b.scorumpower_withdrawn += withdrawn.amount;
             else
                 b.scorumpower_transferred += withdrawn.amount;
-
-            if (withdrawn_total.amount + withdrawn.amount >= to_withdraw.amount
-                || source_sp.amount - withdrawn.amount == 0)
-            {
-                b.finished_vesting_withdrawals++;
-
-                b.vesting_withdraw_rate_delta -= vesting_withdraw_rate.amount;
-            }
         });
     }
 };
@@ -322,36 +332,29 @@ void blockchain_monitoring_plugin_impl::process_block(const bucket_object& bucke
 }
 
 void blockchain_monitoring_plugin_impl::process_pre_operation(const bucket_object& bucket,
-                                                              const operation_notification& o)
+                                                              const operation_notification& note)
 {
     auto& db = _self.database();
 
-    if (o.op.which() == unified_operation::tag<delete_comment_operation>::value)
-    {
-        delete_comment_operation op = o.op.get<delete_comment_operation>();
-        auto comment = db.obtain_service<dbs_comment>().get(op.author, op.permlink);
+    note.op.weak_visit(
+        [&](const delete_comment_operation& op) {
+            auto comment = db.obtain_service<dbs_comment>().get(op.author, op.permlink);
 
-        db.modify(bucket, [&](bucket_object& b) {
-            if (comment.parent_author.length())
-                b.replies_deleted++;
-            else
-                b.root_comments_deleted++;
+            db.modify(bucket, [&](bucket_object& b) {
+                if (comment.parent_author.length())
+                    b.replies_deleted++;
+                else
+                    b.root_comments_deleted++;
+            });
+        },
+        [&](const withdraw_scorumpower_operation& op) {
+            collect_withdraw_stats(bucket, op.scorumpower, db.account_service().get_account(op.account).id);
+        },
+        [&](const proposal_virtual_operation& op) {
+            op.op.weak_visit([&](const development_committee_withdraw_vesting_operation& proposal_op) {
+                collect_withdraw_stats(bucket, proposal_op.vesting_shares, db.dev_pool_service().get().id);
+            });
         });
-    }
-    else if (o.op.which() == unified_operation::tag<withdraw_scorumpower_operation>::value)
-    {
-        const auto& op = o.op.get<withdraw_scorumpower_operation>();
-        const auto& account = db.obtain_service<chain::dbs_account>().get_account(op.account);
-
-        collect_withdraw_stats(bucket, op.scorumpower, account.id);
-    }
-    else if (o.op.which() == unified_operation::tag<development_committee_withdraw_vesting_operation>::value)
-    {
-        const auto& op = o.op.get<development_committee_withdraw_vesting_operation>();
-        const auto& dev_committee = db.dev_pool_service().get();
-
-        collect_withdraw_stats(bucket, op.vesting_shares, dev_committee.id);
-    }
 }
 
 void blockchain_monitoring_plugin_impl::process_post_operation(const bucket_object& bucket,

@@ -254,9 +254,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
-    void operator()(const development_committee_transfer_operation& op)
+    void operator()(const proposal_virtual_operation& op)
     {
-        _impacted.insert(op.to_account);
+        op.op.weak_visit([&](const development_committee_transfer_operation& op){
+            _impacted.insert(op.to_account);
+        });
     }
 
 private:

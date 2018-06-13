@@ -186,8 +186,8 @@ public:
      *  as any implied/virtual operations that resulted, such as filling an order.
      *  The applied operations are cleared after post_apply_operation.
      */
-    void notify_pre_apply_operation(const unified_operation& op);
-    void notify_post_apply_operation(const unified_operation& op);
+    void notify_pre_apply_operation(const operation& op);
+    void notify_post_apply_operation(const operation& op);
 
     // vops are not needed for low mem. Force will push them on low mem.
     inline void push_virtual_operation(const operation& op);
@@ -339,7 +339,7 @@ private:
                                  const account_name_type& witness_owner,
                                  const fc::ecc::private_key& block_signing_private_key);
 
-    operation_notification create_notification(const unified_operation& op) const;
+    operation_notification create_notification(const operation& op) const;
 
 protected:
     void set_producing(bool p)

@@ -95,6 +95,11 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_route_scr_check, withdraw_scorumpower_route_f
 
     BOOST_CHECK_EQUAL((end_time - start_time).to_seconds(),
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().finished_vesting_withdrawals, 1u);
+    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().scorumpower_withdrawn, alice_to_withdraw_sp.amount);
+    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().vesting_withdraw_rate_delta, 0);
+    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().vesting_withdrawals_processed, SCORUM_VESTING_WITHDRAW_INTERVALS * 2);
 }
 
 BOOST_FIXTURE_TEST_CASE(withdrawal_route_sp_check, withdraw_scorumpower_route_from_account_to_dev_pool_tests_fixture)
