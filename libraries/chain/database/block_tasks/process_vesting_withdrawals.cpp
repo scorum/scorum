@@ -80,8 +80,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
         asset converted_scorum = asset(to_convert.amount, SCORUM_SYMBOL);
 
-        actors_impl.update_statistic(wvo.from_id, to_withdraw);
-
         actors_impl.update_statistic(wvo.from_id, wvo.from_id, converted_scorum);
         actors_impl.increase_scr(wvo.from_id, converted_scorum);
         actors_impl.update_global_scr_properties(wvo.from_id, wvo.from_id, converted_scorum);
@@ -92,6 +90,8 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
             o.withdrawn += to_withdraw;
             o.next_vesting_withdrawal += fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
         });
+
+        actors_impl.update_statistic(wvo.from_id, to_withdraw);
 
         if (wvo.withdrawn >= wvo.to_withdraw || scorumpower.amount == 0)
         {
