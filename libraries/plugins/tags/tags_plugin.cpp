@@ -11,6 +11,7 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/utils/string_conv.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -252,7 +253,7 @@ struct post_operation_visitor
         auto rhs = join(meta.locales, meta.tags);
         auto rng = join(lhs, rhs)
                 | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
-                | boost::adaptors::transformed(fc::to_lower);
+                | boost::adaptors::transformed(utils::to_lower_copy);
         // clang-format on
 
         std::set<std::string> tags_in_lower;

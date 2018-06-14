@@ -1,8 +1,8 @@
 #pragma once
 
 #include <boost/multi_index/composite_key.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/range/algorithm/transform.hpp>
+#include <scorum/utils/string_conv.hpp>
 
 #include <scorum/protocol/types.hpp>
 
@@ -347,10 +347,10 @@ struct comment_metadata
     {
         comment_metadata meta_in_lower;
 
-        boost::transform(domains, std::inserter(meta_in_lower.domains, meta_in_lower.domains.begin()), fc::to_lower);
-        boost::transform(categories, std::inserter(meta_in_lower.categories, meta_in_lower.categories.begin()), fc::to_lower);
-        boost::transform(locales, std::inserter(meta_in_lower.locales, meta_in_lower.locales.begin()), fc::to_lower);
-        boost::transform(tags, std::inserter(meta_in_lower.tags, meta_in_lower.tags.begin()), fc::to_lower);
+        boost::transform(domains, std::inserter(meta_in_lower.domains, meta_in_lower.domains.begin()), utils::to_lower_copy);
+        boost::transform(categories, std::inserter(meta_in_lower.categories, meta_in_lower.categories.begin()), utils::to_lower_copy);
+        boost::transform(locales, std::inserter(meta_in_lower.locales, meta_in_lower.locales.begin()), utils::to_lower_copy);
+        boost::transform(tags, std::inserter(meta_in_lower.tags, meta_in_lower.tags.begin()), utils::to_lower_copy);
 
         return meta_in_lower;
     }

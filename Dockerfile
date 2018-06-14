@@ -23,6 +23,7 @@ RUN \
             doxygen \
             git \
             libboost-all-dev \
+            libicu-dev \
             libreadline-dev \
             libssl-dev \
             libtool \
@@ -135,6 +136,7 @@ RUN \
             doxygen \
             dpkg-dev \
             git \
+            libicu-dev \
             libboost-all-dev \
             libc6-dev \
             libexpat1-dev \

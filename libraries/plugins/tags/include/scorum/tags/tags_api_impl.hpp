@@ -32,6 +32,8 @@
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_service.hpp>
 
+#include <scorum/utils/string_conv.hpp>
+
 namespace scorum {
 namespace tags {
 
@@ -130,7 +132,7 @@ public:
 
         const auto& idx = _db.get_index<tags::category_stats_index, tags::by_category>();
 
-        auto rng = idx.equal_range(boost::make_tuple(boost::to_lower_copy(domain), boost::to_lower_copy(category)));
+        auto rng = idx.equal_range(boost::make_tuple(utils::to_lower_copy(domain), utils::to_lower_copy(category)));
 
         std::vector<std::pair<std::string, uint32_t>> ret;
         boost::transform(rng, std::back_inserter(ret),
@@ -303,7 +305,7 @@ private:
     posts_crefs get_posts(const std::string& tag,
                           const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
     {
-        std::string tag_lower = fc::to_lower(tag);
+        std::string tag_lower = utils::to_lower_copy(tag);
 
         const auto& tag_idx = _db.get_index<tags::tag_index, tags::by_tag>();
 
@@ -381,7 +383,7 @@ private:
                   "start_author and start_permlink should be either both specified and not empty or both not specified");
         // clang-format on
 
-        auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
+        auto rng = query.tags | boost::adaptors::transformed(utils::to_lower_copy);
         std::set<std::string> tags(rng.begin(), rng.end());
         if (tags.empty())
             tags.insert("");

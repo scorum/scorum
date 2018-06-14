@@ -52,6 +52,36 @@ SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
     BOOST_REQUIRE_EQUAL(cat1_tags.size(), 3u);
 }
 
+SCORUM_TEST_CASE(check_comment_with_russian_in_tags)
+{
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["Домен1"], "categories": ["Категория1"], "tags": ["Тег1","Тег2"]})")
+        .in_block();
+
+    auto tags_lowercase = _api.get_tags_by_category("домен1", "категория1");
+    auto tags_uppercase = _api.get_tags_by_category("ДОМЕН1", "КАТЕГОРИЯ1");
+
+    std::vector<std::pair<std::string, uint32_t>> expected = { { "теГ2", 1 }, { "ТЕг1", 1 } };
+
+    BOOST_REQUIRE_EQUAL(tags_lowercase.size(), 2u);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(tags_lowercase.begin(), tags_lowercase.end(), expected.begin(), expected.end());
+
+    BOOST_REQUIRE_EQUAL(tags_uppercase.size(), 2u);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(tags_uppercase.begin(), tags_uppercase.end(), expected.begin(), expected.end());
+}
+
+SCORUM_TEST_CASE(check_comment_with_chinese_in_tags)
+{
+    create_post(alice, "c1").set_json(R"({"domains": ["水"], "categories": ["田"], "tags": ["手手"]})").in_block();
+
+    auto tags = _api.get_tags_by_category("水", "田");
+
+    std::vector<std::pair<std::string, uint32_t>> expected = { { "手手", 1 } };
+
+    BOOST_REQUIRE_EQUAL(tags.size(), 1u);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(tags.begin(), tags.end(), expected.begin(), expected.end());
+}
+
 SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
 {
     create_post(alice, "c1")
