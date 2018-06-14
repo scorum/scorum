@@ -91,10 +91,9 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
             o.next_vesting_withdrawal += fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS);
         });
 
-        actors_impl.update_statistic(wvo.from_id, to_withdraw);
-
         if (wvo.withdrawn >= wvo.to_withdraw || scorumpower.amount == 0)
         {
+            actors_impl.update_statistic(wvo.from_id);
             withdraw_scorumpower_service.remove(wvo);
         }
     }

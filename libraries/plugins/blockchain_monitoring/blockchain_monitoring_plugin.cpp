@@ -221,14 +221,14 @@ public:
         });
     }
 
-    void operator()(const acc_total_vesting_withdraw_operation& op) const
+    void operator()(const acc_finished_vesting_withdraw_operation& op) const
     {
         const auto& account = _db.account_service().get_account(op.from_account);
 
         collect_withdraw_stats(account.id, account.scorumpower);
     }
 
-    void operator()(const devpool_total_vesting_withdraw_operation& op) const
+    void operator()(const devpool_finished_vesting_withdraw_operation&) const
     {
         const auto& dev_pool = _db.dev_pool_service().get();
 
@@ -276,26 +276,19 @@ public:
     {
         const auto& withdraw_scorumpower_service = _db.obtain_service<chain::dbs_withdraw_scorumpower>();
 
-        asset withdrawn_total = asset(0, SP_SYMBOL);
-        asset to_withdraw = asset(0, SP_SYMBOL);
         asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
 
         if (withdraw_scorumpower_service.is_exists(source_id))
         {
             const auto& wvo = withdraw_scorumpower_service.get(source_id);
-            withdrawn_total = wvo.withdrawn;
-            to_withdraw = wvo.to_withdraw;
             vesting_withdraw_rate = wvo.vesting_withdraw_rate;
         }
 
-        if (withdrawn_total.amount >= to_withdraw.amount || source_sp.amount == 0)
-        {
-            _db.modify(_bucket, [&](bucket_object& b) {
-                b.finished_vesting_withdrawals++;
+        _db.modify(_bucket, [&](bucket_object& b) {
+            b.finished_vesting_withdrawals++;
 
-                b.vesting_withdraw_rate_delta -= vesting_withdraw_rate.amount;
-            });
-        }
+            b.vesting_withdraw_rate_delta -= vesting_withdraw_rate.amount;
+        });
     }
 
     void collect_withdraw_stats(const asset& withdrawn) const

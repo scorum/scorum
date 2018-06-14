@@ -414,13 +414,14 @@ SCORUM_TEST_CASE(check_withdraw_stats_with_route_from_dev_pool_to_acc)
     // apply 'devcommittee_vesting_withdraw_operation'
     db_plugin->debug_update(
         [&](database&) {
-            db.notify_pre_apply_operation(op);
+            auto note = db.create_notification(op);
+            db.notify_pre_apply_operation(note);
 
             withdraw_scorumpower_dev_pool_task create_withdraw;
             withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
             create_withdraw.apply(ctx);
 
-            db.notify_post_apply_operation(op);
+            db.notify_post_apply_operation(note);
         },
         default_skip);
 

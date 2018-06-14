@@ -940,25 +940,19 @@ void database::clear_pending()
     FC_CAPTURE_AND_RETHROW()
 }
 
-void database::notify_pre_apply_operation(const operation& op)
+void database::notify_pre_apply_operation(const operation_notification& note)
 {
-    SCORUM_TRY_NOTIFY(pre_apply_operation, create_notification(op));
+    SCORUM_TRY_NOTIFY(pre_apply_operation, note);
 }
 
-void database::notify_post_apply_operation(const operation& op)
+void database::notify_post_apply_operation(const operation_notification& note)
 {
-    SCORUM_TRY_NOTIFY(post_apply_operation, create_notification(op));
+    SCORUM_TRY_NOTIFY(post_apply_operation, note);
 }
 
 operation_notification database::create_notification(const operation& op) const
 {
-    operation_notification note(op);
-    note.trx_id = _current_trx_id;
-    note.block = _current_block_num;
-    note.trx_in_block = _current_trx_in_block;
-    note.op_in_trx = _current_op_in_trx;
-
-    return note;
+    return operation_notification(_current_trx_id, _current_block_num, _current_trx_in_block, _current_op_in_trx, op);
 }
 
 inline void database::push_virtual_operation(const operation& op)
@@ -966,16 +960,20 @@ inline void database::push_virtual_operation(const operation& op)
     if (_options & opt_notify_virtual_op_applying)
     {
         FC_ASSERT(is_virtual_operation(op));
-        notify_pre_apply_operation(op);
-        notify_post_apply_operation(op);
+
+        auto note = create_notification(op);
+        notify_pre_apply_operation(note);
+        notify_post_apply_operation(note);
     }
 }
 
 inline void database::push_hf_operation(const operation& op)
 {
     FC_ASSERT(is_virtual_operation(op));
-    notify_pre_apply_operation(op);
-    notify_post_apply_operation(op);
+
+    auto note = create_notification(op);
+    notify_pre_apply_operation(note);
+    notify_post_apply_operation(note);
 }
 
 void database::notify_pre_applied_block(const signed_block& block)
@@ -1653,9 +1651,11 @@ void database::_apply_transaction(const signed_transaction& trx)
 
 void database::apply_operation(const operation& op)
 {
-    notify_pre_apply_operation(op);
+    auto note = create_notification(op);
+
+    notify_pre_apply_operation(note);
     _my->_evaluator_registry.get_evaluator(op).apply(op);
-    notify_post_apply_operation(op);
+    notify_post_apply_operation(note);
 }
 
 const witness_object& database::validate_block_header(uint32_t skip, const signed_block& next_block) const
