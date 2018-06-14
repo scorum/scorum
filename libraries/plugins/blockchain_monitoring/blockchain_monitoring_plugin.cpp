@@ -257,7 +257,7 @@ public:
 
     void operator()(const proposal_virtual_operation& op) const
     {
-        op.op.weak_visit([&](const development_committee_transfer_operation& op) {
+        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op) {
             _db.modify(_bucket, [&](bucket_object& b) {
                 b.transfers++;
 
@@ -351,7 +351,7 @@ void blockchain_monitoring_plugin_impl::process_pre_operation(const bucket_objec
             collect_withdraw_stats(bucket, op.scorumpower, db.account_service().get_account(op.account).id);
         },
         [&](const proposal_virtual_operation& op) {
-            op.op.weak_visit([&](const development_committee_withdraw_vesting_operation& proposal_op) {
+            op.proposal_op.weak_visit([&](const development_committee_withdraw_vesting_operation& proposal_op) {
                 collect_withdraw_stats(bucket, proposal_op.vesting_shares, db.dev_pool_service().get().id);
             });
         });

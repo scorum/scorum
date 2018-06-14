@@ -287,11 +287,11 @@ struct proposal_virtual_operation : public virtual_operation
 {
     proposal_virtual_operation() = default;
     proposal_virtual_operation(const protocol::proposal_operation& op)
-        : op(op)
+        : proposal_op(op)
     {
     }
 
-    protocol::proposal_operation op;
+    protocol::proposal_operation proposal_op;
 };
 }
 } // scorum::protocol
@@ -314,4 +314,4 @@ FC_REFLECT(scorum::protocol::acc_to_acc_vesting_withdraw_operation, (from_accoun
 FC_REFLECT(scorum::protocol::devpool_to_acc_vesting_withdraw_operation, (to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::acc_to_devpool_vesting_withdraw_operation, (from_account)(withdrawn))
 FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation, (withdrawn))
-FC_REFLECT(scorum::protocol::proposal_virtual_operation, (op))
+FC_REFLECT(scorum::protocol::proposal_virtual_operation, (proposal_op))

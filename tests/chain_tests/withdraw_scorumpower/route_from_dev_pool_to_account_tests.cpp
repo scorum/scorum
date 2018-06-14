@@ -48,21 +48,11 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
     asset old_bob_balance_scr = bob.balance;
     asset old_sam_balance_sp = sam.scorumpower;
 
-    // manually trigger 'blockchain_monitoring_plugin' with 'proposal_virtual_operation' operation
-    proposal_virtual_operation op;
-    development_committee_withdraw_vesting_operation inner_op;
-    inner_op.vesting_shares = pool_to_withdraw_sp;
-    op.op = inner_op;
-
     db_plugin->debug_update(
         [&](database&) {
-            db.notify_pre_apply_operation(op);
-
             withdraw_scorumpower_dev_pool_task create_withdraw;
             withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
             create_withdraw.apply(ctx);
-
-            db.notify_post_apply_operation(op);
         },
         default_skip);
 
@@ -114,14 +104,6 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
 
     BOOST_CHECK_EQUAL((end_time - start_time).to_seconds(),
                       SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS * SCORUM_VESTING_WITHDRAW_INTERVALS);
-
-    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().finished_vesting_withdrawals, 1u);
-    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().scorumpower_withdrawn,
-                        pool_to_withdraw_sp.amount * (100 - sam_pie_percent) / 100);
-    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().scorumpower_transferred,
-                        pool_to_withdraw_sp.amount * sam_pie_percent / 100);
-    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().vesting_withdraw_rate_delta, 0);
-    BOOST_REQUIRE_EQUAL(api.get_lifetime_stats().vesting_withdrawals_processed, SCORUM_VESTING_WITHDRAW_INTERVALS * 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

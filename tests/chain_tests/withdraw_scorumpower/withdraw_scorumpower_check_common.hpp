@@ -36,9 +36,6 @@ public:
 
 protected:
     void set_dev_pool_balance(const asset& sp_balance = ASSET_NULL_SP, const asset& scr_balance = ASSET_NULL_SCR);
-
-    api_context api_ctx;
-    blockchain_statistics_api api;
 };
 
 } // namespace database_fixture

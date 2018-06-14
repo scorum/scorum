@@ -256,7 +256,7 @@ struct get_impacted_account_visitor
 
     void operator()(const proposal_virtual_operation& op)
     {
-        op.op.weak_visit([&](const development_committee_transfer_operation& op){
+        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op){
             _impacted.insert(op.to_account);
         });
     }

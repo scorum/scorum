@@ -484,7 +484,7 @@ struct dev_committee_operation_visitor
 
     void operator()(const proposal_virtual_operation& op)
     {
-        op.op.weak_visit([&](const development_committee_transfer_operation& op){
+        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op){
             transfer_ops.emplace_back(op.to_account, op.amount);
         });
     }
