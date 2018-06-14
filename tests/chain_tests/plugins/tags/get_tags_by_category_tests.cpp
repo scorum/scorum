@@ -61,7 +61,7 @@ SCORUM_TEST_CASE(check_comment_with_russian_in_tags)
     auto tags_lowercase = _api.get_tags_by_category("домен1", "категория1");
     auto tags_uppercase = _api.get_tags_by_category("ДОМЕН1", "КАТЕГОРИЯ1");
 
-    std::vector<std::pair<std::string, uint32_t>> expected = { { "теГ2", 1 }, { "ТЕг1", 1 } };
+    std::vector<std::pair<std::string, uint32_t>> expected = { { "тег2", 1 }, { "тег1", 1 } };
 
     BOOST_REQUIRE_EQUAL(tags_lowercase.size(), 2u);
     BOOST_REQUIRE_EQUAL_COLLECTIONS(tags_lowercase.begin(), tags_lowercase.end(), expected.begin(), expected.end());
