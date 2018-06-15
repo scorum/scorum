@@ -484,7 +484,7 @@ struct dev_committee_operation_visitor
 
     void operator()(const proposal_virtual_operation& op)
     {
-        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op){
+        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op) {
             transfer_ops.emplace_back(op.to_account, op.amount);
         });
     }
@@ -530,7 +530,9 @@ SCORUM_TEST_CASE(dev_committee_transfer_operation_circulating_capital_should_inc
 
     auto circulating_capital_after = dpo.circulating_capital;
 
-    BOOST_REQUIRE_EQUAL(circulating_capital_before + transfer_amount + 100, circulating_capital_after);
+    auto active_sp_holder_reward = 100;
+    BOOST_REQUIRE_EQUAL(circulating_capital_before + transfer_amount + active_sp_holder_reward,
+                        circulating_capital_after);
 }
 
 SCORUM_TEST_CASE(dev_committee_withdraw_operation_circulating_capital_should_not_increase)
@@ -559,8 +561,9 @@ SCORUM_TEST_CASE(dev_committee_withdraw_operation_circulating_capital_should_not
 
     auto circulating_capital_after = dpo.circulating_capital;
 
+    auto active_sp_holder_reward = 100;
     // circulating capital do not increate on 'transfer_amount' cuz withdraw was from devpool to devpool
-    BOOST_REQUIRE_EQUAL(circulating_capital_before + 2 * 100, circulating_capital_after);
+    BOOST_REQUIRE_EQUAL(circulating_capital_before + 2 * active_sp_holder_reward, circulating_capital_after);
 }
 
 SCORUM_TEST_CASE(dev_committee_transfer_virtual_op_should_be_raised)
