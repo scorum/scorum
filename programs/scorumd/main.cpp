@@ -129,7 +129,7 @@ int main(int argc, char** argv)
                 = logger::load_logging_config_from_options(options, app::get_data_dir_path(options));
 
             if (logging_config)
-                fc::configure_logging(*logging_config);
+                fc::logging_config::configure_logging(*logging_config);
         }
         catch (const fc::exception&)
         {
