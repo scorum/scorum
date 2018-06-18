@@ -51,7 +51,7 @@ LIST(APPEND BOOST_COMPONENTS thread
                              coroutine)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-OPTION( FORCE_REBUILD_GENESIS "Always rebuild genesis (ON OR OFF)" ON )
+OPTION( FORCE_REBUILD_GENESIS "Always rebuild genesis (ON OR OFF)" OFF )
 if( FORCE_REBUILD_GENESIS  )
     execute_process(COMMAND rm -f genesis.json
                     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
