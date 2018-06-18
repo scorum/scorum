@@ -186,8 +186,9 @@ public:
      *  as any implied/virtual operations that resulted, such as filling an order.
      *  The applied operations are cleared after post_apply_operation.
      */
-    void notify_pre_apply_operation(operation_notification& note);
+    void notify_pre_apply_operation(const operation_notification& note);
     void notify_post_apply_operation(const operation_notification& note);
+    operation_notification create_notification(const operation& op) const;
 
     // vops are not needed for low mem. Force will push them on low mem.
     inline void push_virtual_operation(const operation& op);
@@ -200,7 +201,7 @@ public:
     void notify_on_applied_transaction(const signed_transaction& tx);
 
     /**
-     *  This signal is emitted for plugins to process every operation after it has been fully applied.
+     *  This signal is emitted for plugins to process every operation before/after it has been fully applied.
      */
     fc::signal<void(const operation_notification&)> pre_apply_operation;
     fc::signal<void(const operation_notification&)> post_apply_operation;
