@@ -86,15 +86,6 @@ public:
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
-
-    database_ns::process_funds _process_funds;
-    database_ns::process_comments_cashout _process_comments_cashout;
-    database_ns::process_fifa_world_cup_2018_bounty_initialize _process_comments_bounty_initialize;
-    database_ns::process_fifa_world_cup_2018_bounty_cashout _process_comments_bounty_cashout;
-    database_ns::process_vesting_withdrawals _process_vesting_withdrawals;
-    database_ns::process_contracts_expiration _process_contracts_expiration;
-    database_ns::process_account_registration_bonus_expiration _process_account_registration_bonus_expiration;
-    database_ns::process_witness_reward_in_sp_migration _process_witness_reward_in_sp_migration;
 };
 
 database_impl::database_impl(database& self)
@@ -948,19 +939,19 @@ void database::clear_pending()
     FC_CAPTURE_AND_RETHROW()
 }
 
-void database::notify_pre_apply_operation(operation_notification& note)
+void database::notify_pre_apply_operation(const operation_notification& note)
 {
-    note.trx_id = _current_trx_id;
-    note.block = _current_block_num;
-    note.trx_in_block = _current_trx_in_block;
-    note.op_in_trx = _current_op_in_trx;
-
-    SCORUM_TRY_NOTIFY(pre_apply_operation, note)
+    SCORUM_TRY_NOTIFY(pre_apply_operation, note);
 }
 
 void database::notify_post_apply_operation(const operation_notification& note)
 {
-    SCORUM_TRY_NOTIFY(post_apply_operation, note)
+    SCORUM_TRY_NOTIFY(post_apply_operation, note);
+}
+
+operation_notification database::create_notification(const operation& op) const
+{
+    return operation_notification(_current_trx_id, _current_block_num, _current_trx_in_block, _current_op_in_trx, op);
 }
 
 inline void database::push_virtual_operation(const operation& op)
@@ -968,7 +959,8 @@ inline void database::push_virtual_operation(const operation& op)
     if (_options & opt_notify_virtual_op_applying)
     {
         FC_ASSERT(is_virtual_operation(op));
-        operation_notification note(op);
+
+        auto note = create_notification(op);
         notify_pre_apply_operation(note);
         notify_post_apply_operation(note);
     }
@@ -977,7 +969,8 @@ inline void database::push_virtual_operation(const operation& op)
 inline void database::push_hf_operation(const operation& op)
 {
     FC_ASSERT(is_virtual_operation(op));
-    operation_notification note(op);
+
+    auto note = create_notification(op);
     notify_pre_apply_operation(note);
     notify_post_apply_operation(note);
 }
@@ -1480,14 +1473,14 @@ void database::_apply_block(const signed_block& next_block)
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
                                                  _current_block_num);
 
-        _my->_process_funds.apply(task_ctx);
-        _my->_process_comments_bounty_initialize.apply(task_ctx);
-        _my->_process_comments_cashout.apply(task_ctx);
-        _my->_process_comments_bounty_cashout.apply(task_ctx);
-        _my->_process_vesting_withdrawals.apply(task_ctx);
-        _my->_process_contracts_expiration.apply(task_ctx);
-        _my->_process_account_registration_bonus_expiration.apply(task_ctx);
-        _my->_process_witness_reward_in_sp_migration.apply(task_ctx);
+        database_ns::process_funds().apply(task_ctx);
+        database_ns::process_fifa_world_cup_2018_bounty_initialize().apply(task_ctx);
+        database_ns::process_comments_cashout().apply(task_ctx);
+        database_ns::process_fifa_world_cup_2018_bounty_cashout().apply(task_ctx);
+        database_ns::process_vesting_withdrawals().apply(task_ctx);
+        database_ns::process_contracts_expiration().apply(task_ctx);
+        database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
+        database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
 
         account_recovery_processing();
         expire_escrow_ratification();
@@ -1657,7 +1650,8 @@ void database::_apply_transaction(const signed_transaction& trx)
 
 void database::apply_operation(const operation& op)
 {
-    operation_notification note(op);
+    auto note = create_notification(op);
+
     notify_pre_apply_operation(note);
     _my->_evaluator_registry.get_evaluator(op).apply(op);
     notify_post_apply_operation(note);

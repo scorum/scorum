@@ -2,6 +2,7 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
@@ -18,6 +19,7 @@ void development_committee_transfer_evaluator::do_apply(
 {
     auto& account_service = this->db().account_service();
     auto& dev_pool = this->db().dev_pool_service();
+    auto& dyn_props_service = this->db().dynamic_global_property_service();
 
     FC_ASSERT(o.amount <= dev_pool.get_scr_balace(), "Not enough SCR in dev pool.");
 
@@ -26,6 +28,8 @@ void development_committee_transfer_evaluator::do_apply(
     const auto& account = account_service.get_account(o.to_account);
 
     account_service.increase_balance(account, o.amount);
+
+    dyn_props_service.update([&](dynamic_global_property_object& dpo) { dpo.circulating_capital += o.amount; });
 }
 
 development_committee_withdraw_vesting_evaluator::development_committee_withdraw_vesting_evaluator(

@@ -2272,11 +2272,7 @@ wallet_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_
 
     for (auto& item : result)
     {
-        if (item.second.op.which() == operation::tag<transfer_operation>::value)
-        {
-            auto& top = item.second.op.get<transfer_operation>();
-            top.memo = decrypt_memo(top.memo);
-        }
+        item.second.op.weak_visit([&](transfer_operation& top) { top.memo = decrypt_memo(top.memo); });
     }
 
     return result;
@@ -2295,11 +2291,7 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
 
     for (auto& item : result)
     {
-        if (item.second.op.which() == operation::tag<transfer_operation>::value)
-        {
-            auto& top = item.second.op.get<transfer_operation>();
-            top.memo = decrypt_memo(top.memo);
-        }
+        item.second.op.weak_visit([&](transfer_operation& top) { top.memo = decrypt_memo(top.memo); });
     }
 
     return result;

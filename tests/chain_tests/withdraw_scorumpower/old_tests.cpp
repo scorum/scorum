@@ -188,17 +188,17 @@ struct withdraw_operation_hook
     {
     }
 
-    void operator()(const fill_vesting_withdraw_operation& op)
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op)
     {
         _op = op;
     }
 
-    const fill_vesting_withdraw_operation& get_last_withdraw_operation() const
+    const acc_to_acc_vesting_withdraw_operation& get_last_withdraw_operation() const
     {
         return _op;
     }
 
-    fill_vesting_withdraw_operation _op;
+    acc_to_acc_vesting_withdraw_operation _op;
 };
 
 SCORUM_TEST_CASE(vesting_withdrawals)

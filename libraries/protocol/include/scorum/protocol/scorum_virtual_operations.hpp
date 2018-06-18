@@ -69,12 +69,26 @@ struct comment_reward_operation : public virtual_operation
     asset commenting_reward; // reward accrued from children comments (in SCR or SP)
 };
 
-struct fill_vesting_withdraw_operation : public virtual_operation
+struct acc_finished_vesting_withdraw_operation : public virtual_operation
 {
-    fill_vesting_withdraw_operation()
+    acc_finished_vesting_withdraw_operation() = default;
+    acc_finished_vesting_withdraw_operation(const std::string& f)
+        : from_account(f)
     {
     }
-    fill_vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w)
+
+    account_name_type from_account;
+};
+
+struct devpool_finished_vesting_withdraw_operation : public virtual_operation
+{
+    devpool_finished_vesting_withdraw_operation() = default;
+};
+
+struct acc_to_acc_vesting_withdraw_operation : public virtual_operation
+{
+    acc_to_acc_vesting_withdraw_operation() = default;
+    acc_to_acc_vesting_withdraw_operation(const std::string& f, const std::string& t, const asset& w)
         : from_account(f)
         , to_account(t)
         , withdrawn(w)
@@ -83,6 +97,43 @@ struct fill_vesting_withdraw_operation : public virtual_operation
 
     account_name_type from_account;
     account_name_type to_account;
+    asset withdrawn = asset(0, SP_SYMBOL);
+};
+
+struct devpool_to_acc_vesting_withdraw_operation : public virtual_operation
+{
+    devpool_to_acc_vesting_withdraw_operation() = default;
+    devpool_to_acc_vesting_withdraw_operation(const std::string& t, const asset& w)
+        : to_account(t)
+        , withdrawn(w)
+    {
+    }
+
+    account_name_type to_account;
+    asset withdrawn = asset(0, SP_SYMBOL);
+};
+
+struct acc_to_devpool_vesting_withdraw_operation : public virtual_operation
+{
+    acc_to_devpool_vesting_withdraw_operation() = default;
+    acc_to_devpool_vesting_withdraw_operation(const std::string& f, const asset& w)
+        : from_account(f)
+        , withdrawn(w)
+    {
+    }
+
+    account_name_type from_account;
+    asset withdrawn = asset(0, SP_SYMBOL);
+};
+
+struct devpool_to_devpool_vesting_withdraw_operation : public virtual_operation
+{
+    devpool_to_devpool_vesting_withdraw_operation() = default;
+    explicit devpool_to_devpool_vesting_withdraw_operation(const asset& w)
+        : withdrawn(w)
+    {
+    }
+
     asset withdrawn = asset(0, SP_SYMBOL);
 };
 
@@ -223,13 +274,23 @@ struct expired_contract_refund_operation : public virtual_operation
     account_name_type owner;
     asset refund = asset(0, SCORUM_SYMBOL);
 };
+
+struct proposal_virtual_operation : public virtual_operation
+{
+    proposal_virtual_operation() = default;
+    proposal_virtual_operation(const protocol::proposal_operation& op)
+        : proposal_op(op)
+    {
+    }
+
+    protocol::proposal_operation proposal_op;
+};
 }
 } // scorum::protocol
 
 FC_REFLECT(scorum::protocol::author_reward_operation, (author)(permlink)(reward))
 FC_REFLECT(scorum::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink))
 FC_REFLECT(scorum::protocol::comment_reward_operation, (author)(permlink)(payout)(fund_reward)(commenting_reward))
-FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
 FC_REFLECT(scorum::protocol::witness_miss_block_operation, (owner)(block_num))
 FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
@@ -239,3 +300,10 @@ FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(a
 FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(reward))
 FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation, (sp_holder)(reward))
 FC_REFLECT(scorum::protocol::expired_contract_refund_operation, (owner)(refund))
+FC_REFLECT(scorum::protocol::acc_finished_vesting_withdraw_operation, (from_account))
+FC_REFLECT_EMPTY(scorum::protocol::devpool_finished_vesting_withdraw_operation)
+FC_REFLECT(scorum::protocol::acc_to_acc_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
+FC_REFLECT(scorum::protocol::devpool_to_acc_vesting_withdraw_operation, (to_account)(withdrawn))
+FC_REFLECT(scorum::protocol::acc_to_devpool_vesting_withdraw_operation, (from_account)(withdrawn))
+FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation, (withdrawn))
+FC_REFLECT(scorum::protocol::proposal_virtual_operation, (proposal_op))

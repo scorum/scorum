@@ -46,6 +46,7 @@ will build out of the box without further effort:
         g++ \
         git \
         libssl-dev \
+        libicu-dev \
         libtool \
         make \
         pkg-config \
@@ -99,6 +100,7 @@ Here are the required packages:
         g++ \
         git \
         libssl-dev \
+        libicu-dev \
         libtool \
         make \
         pkg-config \
