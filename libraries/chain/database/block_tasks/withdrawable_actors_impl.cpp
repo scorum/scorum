@@ -7,6 +7,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/protocol/operations.hpp>
 
 namespace scorum {
 namespace chain {
@@ -457,14 +458,15 @@ void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from
 
 void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from)
 {
-    from.strict_visit(
+    auto op = from.visit(
         [&](const account_id_type& from) {
-            _ctx.push_virtual_operation(
-                acc_finished_vesting_withdraw_operation(_account_service.get(from).name));
+            return protocol::operation(acc_finished_vesting_withdraw_operation(_account_service.get(from).name));
         },
         [&](const dev_committee_id_type& from) {
-            _ctx.push_virtual_operation(devpool_finished_vesting_withdraw_operation());
+            return protocol::operation(devpool_finished_vesting_withdraw_operation());
         });
+
+    _ctx.push_virtual_operation(op);
 }
 
 void withdrawable_actors_impl::update_global_scr_properties(const withdrawable_id_type& from,
