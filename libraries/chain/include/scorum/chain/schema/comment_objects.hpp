@@ -224,7 +224,10 @@ typedef shared_multi_index_container<comment_object,
                                                                              &comment_object::last_update>,
                                                                       member<comment_object,
                                                                              comment_id_type,
-                                                                             &comment_object::id>>>
+                                                                             &comment_object::id>>,
+                                                        composite_key_compare<std::less<account_name_type>,
+                                                                              std::greater<time_point_sec>,
+                                                                              std::less<comment_id_type>>>
 #endif
                                          >>
     comment_index;
