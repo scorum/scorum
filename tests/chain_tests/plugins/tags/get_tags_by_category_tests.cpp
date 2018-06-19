@@ -70,6 +70,29 @@ SCORUM_TEST_CASE(check_comment_with_russian_in_tags)
     BOOST_REQUIRE_EQUAL_COLLECTIONS(tags_uppercase.begin(), tags_uppercase.end(), expected.begin(), expected.end());
 }
 
+SCORUM_TEST_CASE(check_more_than_24_symbols_utf8_tags_the_tail_ignored)
+{
+    create_post(alice, "c1")
+        .set_json(
+            R"({"domains": ["домЕндОмендоМендомендомендомен"], "categories": ["катЕгкатегкатеГкатегкатегкатег"], "tags": ["ТеГ12ТеГ12ТеГ12ТеГ12ТеГ12ТеГ12","Тег23Тег23Тег23Тег23Тег23Тег23"]})")
+        .in_block();
+
+    auto tags_25symb = _api.get_tags_by_category("домЕндОмендоМендомендомен", "категКатегкатегкатегкатег");
+    auto tags_24symb = _api.get_tags_by_category("домЕндОмендоМендомендоме", "категкатегкатЕгкатегкате");
+    auto tags_23symb = _api.get_tags_by_category("домЕндОмендоМендомендом", "категкатеГкатегкатегкат");
+
+    // expected tags have length <=24 symbols
+    std::vector<std::pair<std::string, uint32_t>> expected_25_and_24 = { { "тег23тег23тег23тег23тег2", 1 }, { "тег12тег12тег12тег12тег1", 1 } };
+
+    BOOST_REQUIRE_EQUAL(tags_25symb.size(), 2u);
+    BOOST_CHECK_EQUAL_COLLECTIONS(tags_25symb.begin(), tags_25symb.end(), expected_25_and_24.begin(), expected_25_and_24.end());
+
+    BOOST_REQUIRE_EQUAL(tags_24symb.size(), 2u);
+    BOOST_CHECK_EQUAL_COLLECTIONS(tags_24symb.begin(), tags_24symb.end(), expected_25_and_24.begin(), expected_25_and_24.end());
+
+    BOOST_REQUIRE_EQUAL(tags_23symb.size(), 0u);
+}
+
 SCORUM_TEST_CASE(check_comment_with_chinese_in_tags)
 {
     create_post(alice, "c1").set_json(R"({"domains": ["水"], "categories": ["田"], "tags": ["手手"]})").in_block();

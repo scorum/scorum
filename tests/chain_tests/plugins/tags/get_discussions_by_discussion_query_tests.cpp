@@ -320,6 +320,54 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
 }
 
+SCORUM_TEST_CASE(check_more_than_24_symbols_utf8_tags_the_tail_ignored)
+{
+    // mixed russian and english which means that size of strings in bytes is not a multiple of theirs length in symbols
+    auto json = R"({"domains": ["domaiдоменdomaidomaiдомен"], "categories": ["categcategcategcategcateg"], "tags":["tag12tag12tag12tag12tag12"]})";
+    auto p1 = create_post(alice).set_json(json).in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = false;
+
+    {
+        q.tags = {"tag12tag12tag12tag12tag12tag12tag12tag12"}; // 40 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
+        BOOST_CHECK_EQUAL(discussions[0].json_metadata, json);
+    }
+    {
+        q.tags = {"tag12tag12tag12tag12tag1"}; //24 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_CHECK_EQUAL(discussions.size(), 1u);
+    }
+    {
+        q.tags = {"tag12tag12tag12tag12tag"}; //23 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_CHECK_EQUAL(discussions.size(), 0u);
+    }
+    {
+        q.tags = {"domaiдоменdomaidomaiдоме"}; //24 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_CHECK_EQUAL(discussions.size(), 1u);
+    }
+    {
+        q.tags = {"domaiдоменdomaidomaiдом"}; //23 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_CHECK_EQUAL(discussions.size(), 0u);
+    }
+    {
+        q.tags = {"categcategcategcategcate"}; //24 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_CHECK_EQUAL(discussions.size(), 1u);
+    }
+    {
+        q.tags = {"categcategcategcategcat"}; //23 symbols
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+        BOOST_CHECK_EQUAL(discussions.size(), 0u);
+    }
+}
+
 SCORUM_TEST_CASE(check_comments_should_not_be_returned)
 {
     auto p1
