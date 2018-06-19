@@ -74,20 +74,20 @@ public:
         if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
-        auto mod_meta = meta.to_lower_copy().truncate_copy();
+        auto normalized_meta = meta.to_lower_copy().truncate_copy();
 
         const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
         // TODO: add support for multiple domains and categories
         auto it_pair
-            = idx.equal_range(std::make_tuple(*mod_meta.domains.begin(), *mod_meta.categories.begin()));
+            = idx.equal_range(std::make_tuple(*normalized_meta.domains.begin(), *normalized_meta.categories.begin()));
 
         std::vector<std::reference_wrapper<const category_stats_object>> stats;
         std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
 
         for (const category_stats_object& s : stats)
         {
-            auto found_it = std::find(mod_meta.tags.begin(), mod_meta.tags.end(), s.tag);
-            if (found_it == mod_meta.tags.end())
+            auto found_it = std::find(normalized_meta.tags.begin(), normalized_meta.tags.end(), s.tag);
+            if (found_it == normalized_meta.tags.end())
                 continue;
 
             if (s.tags_count == 1)
@@ -104,11 +104,11 @@ public:
         if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
-        auto mod_meta = meta.to_lower_copy().truncate_copy();
-        const auto& domain = *mod_meta.domains.begin();
-        const auto& category = *mod_meta.categories.begin();
+        auto normalized_meta = meta.to_lower_copy().truncate_copy();
+        const auto& domain = *normalized_meta.domains.begin();
+        const auto& category = *normalized_meta.categories.begin();
 
-        auto rng = mod_meta.tags | boost::adaptors::filtered([&](const std::string& t) {
+        auto rng = normalized_meta.tags | boost::adaptors::filtered([&](const std::string& t) {
                        return !t.empty() && t != category && t != domain;
                    });
         for (const std::string& tag : rng)

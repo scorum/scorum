@@ -132,10 +132,10 @@ public:
 
         const auto& idx = _db.get_index<tags::category_stats_index, tags::by_category>();
 
-        auto mod_domain = utils::substring(utils::to_lower_copy(domain), 0, TAG_LENGTH_MAX);
-        auto mod_category = utils::substring(utils::to_lower_copy(category), 0, TAG_LENGTH_MAX);
+        auto normalized_domain = utils::substring(utils::to_lower_copy(domain), 0, TAG_LENGTH_MAX);
+        auto normalized_category = utils::substring(utils::to_lower_copy(category), 0, TAG_LENGTH_MAX);
 
-        auto rng = idx.equal_range(boost::make_tuple(mod_domain, mod_category));
+        auto rng = idx.equal_range(boost::make_tuple(normalized_domain, normalized_category));
 
         std::vector<std::pair<std::string, uint32_t>> ret;
         boost::transform(rng, std::back_inserter(ret),
