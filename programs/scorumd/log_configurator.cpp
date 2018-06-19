@@ -18,12 +18,16 @@
 #include <fc/exception/exception.hpp>
 
 #include <scorum/app/application.hpp>
+#include <scorum/protocol/config.hpp>
 #include "log_configurator.hpp"
 
 #define LOG_APPENDER "log-appender"
 #define LOGGER "log-logger"
+#define DEFAULT_GELF_APPENDER_PORT 12201
 
 namespace bpo = boost::program_options;
+
+using scorum::protocol::version;
 
 struct appender_args
 {
@@ -79,14 +83,14 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 {
                     auto stream = fc::variant(appender.stream).as<fc::console_appender::stream::type>();
 
-                    fc::console_appender::config console_appender_config;
-                    console_appender_config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::debug, fc::console_appender::color::white));
-                    console_appender_config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::info, fc::console_appender::color::green));
-                    console_appender_config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::warn, fc::console_appender::color::brown));
-                    console_appender_config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::error, fc::console_appender::color::red));
-                    console_appender_config.stream = stream;
+                    fc::console_appender::config config;
+                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::debug, fc::console_appender::color::white));
+                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::info, fc::console_appender::color::green));
+                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::warn, fc::console_appender::color::brown));
+                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::error, fc::console_appender::color::red));
+                    config.stream = stream;
 
-                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::console_appender>(appender.appender, fc::variant(console_appender_config)));
+                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::console_appender>(appender.appender, fc::variant(config)));
 
                     found_logging_config = true;
                     continue;
@@ -98,21 +102,54 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 //check if appender is a gelf appender
                 try
                 {
-                    fc::ip::endpoint::from_string(appender.stream); //if stream is not a network endpoint it will throw
+                    //check if stream can be network endpoint
+                    std::string endpoint = appender.stream;
+                    if (endpoint.find(':') == std::string::npos)
+                    {
+                        endpoint += ":"; //add default port
+                        endpoint += boost::lexical_cast<std::string>(DEFAULT_GELF_APPENDER_PORT);
+                    }
+                    fc::ip::endpoint::from_string(endpoint); //if stream is not a network endpoint it will throw
 
                     auto gelf_appender = fc::json::from_string(s).as<gelf_appender_args>();
 
-                    fc::gelf_appender::config gelf_appender_config;
-                    gelf_appender_config.endpoint = gelf_appender.stream;
-                    gelf_appender_config.host_name = gelf_appender.host_name;
-                    gelf_appender_config.additional_info = gelf_appender.additional_info;
+                    fc::gelf_appender::config config;
+                    config.endpoint = endpoint;
+                    config.host_name = gelf_appender.host_name;
+                    config.version = (fc::string)SCORUM_BLOCKCHAIN_VERSION;
 
-                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::gelf_appender>(gelf_appender.appender, fc::variant(gelf_appender_config)));
+                    if (args.count("witness"))
+                    {
+                        try
+                        {
+                            const std::vector<std::string>& witnesses = args["witness"].as<std::vector<std::string>>();
+                            if (!witnesses.empty())
+                            {
+                                std::stringstream stream;
+                                stream << "witness";
+                                for (const std::string& s : witnesses)
+                                {
+                                    stream <<" "<< fc::json::from_string(s).as<std::string>();
+                                }
+                                config.additional_info = stream.str();
+                            }
+                        }
+                        FC_CAPTURE_AND_LOG(())
+                    }
+
+                    if (!gelf_appender.additional_info.empty())
+                    {
+                        if (!config.additional_info.empty())
+                            config.additional_info += ": ";
+                        config.additional_info += gelf_appender.additional_info;
+                    }
+
+                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::gelf_appender>(gelf_appender.appender, fc::variant(config)));
 
                     found_logging_config = true;
                     continue;
                 }
-                catch (fc::exception&)
+                catch (fc::exception& e)
                 {
                 }
 
@@ -132,14 +169,14 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
 
                     // construct a default file appender config here
                     // filename will be taken from ini file, everything else hard-coded here
-                    fc::file_appender::config file_appender_config;
-                    file_appender_config.filename = file_name;
-                    file_appender_config.flush = true;
-                    file_appender_config.rotate = true;
-                    file_appender_config.rotation_interval = fc::minutes(file_appender.rotation_interval_minutes);
-                    file_appender_config.rotation_limit = fc::hours(file_appender.rotation_limit_hours);
+                    fc::file_appender::config config;
+                    config.filename = file_name;
+                    config.flush = true;
+                    config.rotate = true;
+                    config.rotation_interval = fc::minutes(file_appender.rotation_interval_minutes);
+                    config.rotation_limit = fc::hours(file_appender.rotation_limit_hours);
 
-                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::file_appender>(file_appender.appender, fc::variant(file_appender_config)));
+                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::file_appender>(file_appender.appender, fc::variant(config)));
 
                     found_logging_config = true;
                     continue;
