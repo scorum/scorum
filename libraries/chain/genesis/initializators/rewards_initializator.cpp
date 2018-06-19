@@ -4,14 +4,16 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
+
+#include <scorum/chain/database/budget_management_algorithms.hpp>
 
 namespace scorum {
 namespace chain {
@@ -73,14 +75,21 @@ void rewards_initializator_impl::create_balancers(initializator_context& ctx)
 
 void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)
 {
-    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
-    budget_service_i& budget_service = ctx.services().budget_service();
+    dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
+    fund_budget_service_i& budget_service = ctx.services().fund_budget_service();
 
-    FC_ASSERT(!budget_service.is_fund_budget_exists());
+    FC_ASSERT(!budget_service.is_exists());
 
-    fc::time_point deadline = dgp_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+    auto balance = asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL);
+    FC_ASSERT(balance.symbol() == SP_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
-    budget_service.create_fund_budget(asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL), deadline);
+    time_point_sec start_date = dprops_service.get_genesis_time();
+    fc::time_point deadline
+        = dprops_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+
+    fund_budget_management_algorithm creator(budget_service, dprops_service);
+    creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, balance, start_date, deadline, "");
 }
 
 void rewards_initializator_impl::create_witness_reward_in_sp_migration(initializator_context& ctx)

@@ -34,7 +34,6 @@ add_library( scorum_chain
              services/account.cpp
              services/account_blogging_statistic.cpp
              services/atomicswap.cpp
-             services/budget.cpp
              services/comment.cpp
              services/comment_vote.cpp
              services/dbs_base.cpp

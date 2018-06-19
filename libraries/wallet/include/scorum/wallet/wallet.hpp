@@ -1012,39 +1012,73 @@ public:
     /**
      *  Gets the budget information for all my budgets (list_my_accounts)
      */
-    std::vector<budget_api_obj> list_my_budgets();
+    sorted_budgets_type list_my_budgets();
 
     /**
-     *  Gets the list of all budget owners (look list_accounts to understand input parameters)
+     *  Gets the list of all budget (for POST type) owners (look list_accounts to understand input parameters)
      */
-    std::set<std::string> list_budget_owners(const std::string& lowerbound, uint32_t limit);
+    std::set<std::string> list_post_budget_owners(const std::string& lowerbound, uint32_t limit);
 
     /**
-     *  Gets the budget information for certain account
+     *  Gets the list of all budget (for BANNER type) owners (look list_accounts to understand input parameters)
      */
-    std::vector<budget_api_obj> get_budgets(const std::string& account_name);
+    std::set<std::string> list_banner_budget_owners(const std::string& lowerbound, uint32_t limit);
 
     /**
-     *  This method will create new budget linked to owner account.
+     *  Gets the budget (for POST type) information for certain account
+     */
+    sorted_budgets_type get_post_budgets(const std::string& account_name);
+
+    /**
+     *  Gets the budget (for BANNER type) information for certain account
+     */
+    sorted_budgets_type get_banner_budgets(const std::string& account_name);
+
+    /**
+     *  This method will create new budget (for POST type) linked to owner account.
      *
      *  @warning The owner account must have sufficient balance for budget
      *
-     *  @param budget_owner the future owner of creating budget
-     *  @param content_permlink the budget target identity (post or other)
+     *  @param owner the future owner of creating budget
+     *  @param permlink the budget target identity (post or other)
      *  @param balance
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
-    annotated_signed_transaction create_budget(const std::string& budget_owner,
-                                               const std::string& content_permlink,
-                                               const asset& balance,
-                                               const time_point_sec deadline,
-                                               const bool broadcast);
+    annotated_signed_transaction create_budget_for_post(const std::string& owner,
+                                                        const std::string& permlink,
+                                                        const asset& balance,
+                                                        const time_point_sec deadline,
+                                                        const bool broadcast);
 
     /**
-     *  Closing the budget. The budget rest is returned to the owner's account
+     *  This method will create new budget (for BANNER type) linked to owner account.
+     *
+     *  @warning The owner account must have sufficient balance for budget
+     *
+     *  @param owner the future owner of creating budget
+     *  @param permlink the budget target identity (post or other)
+     *  @param balance
+     *  @param deadline the deadline time to close budget (even if there is rest of balance)
+     *  @param broadcast
      */
-    annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
+    annotated_signed_transaction create_budget_for_banner(const std::string& owner,
+                                                          const std::string& permlink,
+                                                          const asset& balance,
+                                                          const time_point_sec deadline,
+                                                          const bool broadcast);
+
+    /**
+     *  Closing the budget (for POST type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_post(const std::string& owner, const std::string& permlink, const bool broadcast);
+
+    /**
+     *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_banner(const std::string& owner, const std::string& permlink, const bool broadcast);
 
     /**
      * Vote for committee proposal
@@ -1345,8 +1379,10 @@ FC_API( scorum::wallet::wallet_api,
         (get_account_scr_to_sp_transfers)
         (get_withdraw_routes)
         (list_my_budgets)
-        (list_budget_owners)
-        (get_budgets)
+        (list_post_budget_owners)
+        (list_banner_budget_owners)
+        (get_post_budgets)
+        (get_banner_budgets)
         (get_chain_capital)
 
         /// transaction api
@@ -1385,8 +1421,10 @@ FC_API( scorum::wallet::wallet_api,
         (get_encrypted_memo)
         (decrypt_memo)
         (decline_voting_rights)
-        (create_budget)
-        (close_budget)
+        (create_budget_for_post)
+        (create_budget_for_banner)
+        (close_budget_for_post)
+        (close_budget_for_banner)
 
         // Registration committee api
         (vote_for_committee_proposal)

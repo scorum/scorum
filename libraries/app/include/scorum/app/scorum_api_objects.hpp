@@ -5,7 +5,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
@@ -258,12 +258,27 @@ struct witness_api_obj
     time_point_sec hardfork_time_vote;
 };
 
-struct budget_api_obj
+class budget_api_obj
 {
-    budget_api_obj(const chain::budget_object& b)
+public:
+    budget_api_obj(const chain::post_budget_object& b)
         : id(b.id._id)
+        , type(budget_type::post)
         , owner(b.owner)
-        , content_permlink(fc::to_string(b.content_permlink))
+        , permlink(fc::to_string(b.permlink))
+        , created(b.created)
+        , deadline(b.deadline)
+        , balance(b.balance)
+        , per_block(b.per_block)
+        , last_cashout_block(b.last_cashout_block)
+    {
+    }
+
+    budget_api_obj(const chain::banner_budget_object& b)
+        : id(b.id._id)
+        , type(budget_type::banner)
+        , owner(b.owner)
+        , permlink(fc::to_string(b.permlink))
         , created(b.created)
         , deadline(b.deadline)
         , balance(b.balance)
@@ -279,8 +294,10 @@ struct budget_api_obj
 
     int64_t id;
 
+    budget_type type;
+
     account_name_type owner;
-    std::string content_permlink;
+    std::string permlink;
 
     time_point_sec created;
     time_point_sec deadline;
@@ -485,8 +502,9 @@ FC_REFLECT( scorum::app::proposal_api_obj,
 
 FC_REFLECT( scorum::app::budget_api_obj,
             (id)
+            (type)
             (owner)
-            (content_permlink)
+            (permlink)
             (created)
             (deadline)
             (balance)

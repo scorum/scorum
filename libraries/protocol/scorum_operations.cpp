@@ -288,7 +288,7 @@ void delegate_scorumpower_operation::validate() const
 void create_budget_operation::validate() const
 {
     validate_account_name(owner);
-    validate_permlink(content_permlink);
+    validate_permlink(permlink);
     FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCR");
     FC_ASSERT(balance > asset(0, SCORUM_SYMBOL), "Balance must be positive");
 }
@@ -296,6 +296,7 @@ void create_budget_operation::validate() const
 void close_budget_operation::validate() const
 {
     validate_account_name(owner);
+    validate_permlink(permlink);
 }
 
 void atomicswap_initiate_operation::validate() const

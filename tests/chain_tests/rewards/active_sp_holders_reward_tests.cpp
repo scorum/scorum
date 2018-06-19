@@ -1,9 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/rewards_math/formulas.hpp>
@@ -11,6 +11,7 @@
 #include "database_blog_integration.hpp"
 #include "actor.hpp"
 
+#if 0
 namespace database_fixture {
 
 class sp_holders_reward_fixture : public database_blog_integration_fixture
@@ -245,3 +246,4 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#endif

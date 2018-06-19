@@ -1,14 +1,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 #include "database_default_integration.hpp"
 
 using namespace database_fixture;
 
+#if 0
 class fund_budget_fixture : public database_integration_fixture
 {
 public:
@@ -88,3 +89,4 @@ SCORUM_TEST_CASE(fund_budget_payments_after_deadline_is_over_and_we_have_missing
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#endif

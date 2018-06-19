@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -10,7 +10,7 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -21,6 +21,7 @@
 
 using namespace database_fixture;
 
+#if 0
 namespace reward_distribution {
 
 class dbs_reward_fixture : public database_integration_fixture
@@ -111,3 +112,5 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_advertising_budget)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif

@@ -1,10 +1,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 #include <scorum/common_api/config.hpp>
 
@@ -14,6 +14,8 @@
 
 using namespace scorum;
 using namespace database_fixture;
+
+#if 0
 
 class budget_service_check_fixture : public budget_check_fixture
 {
@@ -306,3 +308,5 @@ SCORUM_TEST_CASE(allocate_cash_per_block)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif

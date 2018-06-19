@@ -8,10 +8,10 @@
 #include <scorum/chain/services/hardfork_property.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
@@ -115,7 +115,7 @@ SCORUM_TEST_CASE(get_chain_capital_test)
 
     BOOST_REQUIRE_EQUAL(capital.registration_pool_balance,
                         db.obtain_service<chain::dbs_registration_pool>().get().balance);
-    BOOST_REQUIRE_EQUAL(capital.fund_budget_balance, db.obtain_service<chain::dbs_budget>().get_fund_budget().balance);
+    BOOST_REQUIRE_EQUAL(capital.fund_budget_balance, db.obtain_service<chain::dbs_fund_budget>().get().balance);
 
     BOOST_REQUIRE_EQUAL(capital.dev_pool_scr_balance,
                         db.obtain_service<chain::dbs_development_committee>().get().scr_balance);

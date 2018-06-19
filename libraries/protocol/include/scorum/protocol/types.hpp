@@ -149,6 +149,11 @@ enum class curve_id
     power1dot5
 };
 
+enum class budget_type
+{
+    post,
+    banner
+};
 } // namespace protocol
 } // namespace scorum
 
@@ -169,5 +174,6 @@ FC_REFLECT(scorum::protocol::extended_private_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_private_key_type::binary_key, (check)(data))
 
 FC_REFLECT_ENUM(scorum::protocol::curve_id, (quadratic)(linear)(square_root)(power1dot5))
+FC_REFLECT_ENUM(scorum::protocol::budget_type, (post)(banner))
 
 FC_REFLECT(scorum::void_t, )

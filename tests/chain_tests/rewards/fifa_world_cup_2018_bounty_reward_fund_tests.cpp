@@ -3,13 +3,15 @@
 #include "database_blog_integration.hpp"
 
 #include <scorum/chain/services/reward_funds.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 using namespace scorum::chain;
+
+#if 0
 
 namespace database_fixture {
 struct fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blog_integration_fixture
@@ -160,3 +162,5 @@ BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif

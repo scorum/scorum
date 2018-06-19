@@ -3,15 +3,17 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 #include "budget_check_common.hpp"
 
 #include <limits>
 
 using namespace database_fixture;
+
+#if 0
 
 class budget_operation_check_fixture : public budget_check_fixture
 {
@@ -245,3 +247,5 @@ SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_miss
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif

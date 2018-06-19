@@ -30,7 +30,7 @@
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/block_summary_object.hpp>
 #include <scorum/chain/schema/block_summary_object.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -43,7 +43,7 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
@@ -1222,7 +1222,9 @@ void database::initialize_indexes()
     add_index<account_blogging_statistic_index>();
     add_index<account_recovery_request_index>();
     add_index<block_summary_index>();
-    add_index<budget_index>();
+    add_index<fund_budget_index>();
+    add_index<post_budget_index>();
+    add_index<banner_budget_index>();
     add_index<chain_property_index>();
     add_index<change_recovery_account_request_index>();
     add_index<comment_index>();
@@ -2074,14 +2076,19 @@ void database::validate_invariants() const
         total_supply += obtain_service<dbs_voters_reward_scr>().get().balance;
         total_supply += obtain_service<dbs_voters_reward_sp>().get().balance.amount;
 
-        for (const budget_object& budget : obtain_service<dbs_budget>().get_budgets())
+        for (const post_budget_object& budget : obtain_service<dbs_post_budget>().get_budgets())
         {
             total_supply += budget.balance;
         }
 
-        if (obtain_service<dbs_budget>().is_fund_budget_exists())
+        for (const banner_budget_object& budget : obtain_service<dbs_banner_budget>().get_budgets())
         {
-            total_supply += obtain_service<dbs_budget>().get_fund_budget().balance.amount;
+            total_supply += budget.balance;
+        }
+
+        if (obtain_service<dbs_fund_budget>().is_exists())
+        {
+            total_supply += obtain_service<dbs_fund_budget>().get().balance.amount;
         }
 
         if (obtain_service<dbs_registration_pool>().is_exists())

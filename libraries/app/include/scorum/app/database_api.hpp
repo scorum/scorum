@@ -49,6 +49,20 @@ enum withdraw_route_type
 
 class database_api_impl;
 
+struct less_for_budgets_creation : public std::binary_function<budget_api_obj, budget_api_obj, bool>
+{
+    bool operator()(const budget_api_obj& a, const budget_api_obj& b) const
+    {
+        if (a.created == b.created)
+        {
+            return a.id < b.id;
+        }
+        return a.created < b.created;
+    }
+};
+
+using sorted_budgets_type = fc::flat_set<budget_api_obj, less_for_budgets_creation>;
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -129,9 +143,10 @@ public:
      */
     uint64_t get_account_count() const;
 
-    std::vector<budget_api_obj> get_budgets(const std::set<std::string>& account_names) const;
+    sorted_budgets_type get_budgets(const budget_type, const std::set<std::string>& account_names) const;
 
-    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<std::string>
+    lookup_budget_owners(const budget_type, const std::string& lower_bound_name, uint32_t limit) const;
 
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 
@@ -279,6 +294,8 @@ private:
 } // namespace scorum
 
 // clang-format off
+
+FC_REFLECT( scorum::app::sorted_budgets_type, BOOST_PP_SEQ_NIL)
 
 FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 

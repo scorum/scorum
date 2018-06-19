@@ -22,5 +22,10 @@ fc::time_point_sec dbs_dynamic_global_property::head_block_time() const
     return get().time;
 }
 
+uint32_t dbs_dynamic_global_property::head_block_num() const
+{
+    return get().head_block_number;
+}
+
 } // namespace scorum
 } // namespace chain

@@ -7,7 +7,7 @@
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -19,6 +19,8 @@
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
+
+#include <scorum/chain/database/budget_management_algorithms.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -1174,29 +1176,82 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
 
 void create_budget_evaluator::do_apply(const create_budget_operation& op)
 {
-    budget_service_i& budget_service = db().budget_service();
     account_service_i& account_service = db().account_service();
+    post_budget_service_i& post_budget_service = db().post_budget_service();
+    banner_budget_service_i& banner_budget_service = db().banner_budget_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
     account_service.check_account_existence(op.owner);
 
-    optional<std::string> content_permlink;
-    if (!op.content_permlink.empty())
-    {
-        content_permlink = op.content_permlink;
-    }
-
     const auto& owner = account_service.get_account(op.owner);
 
-    budget_service.create_budget(owner, op.balance, op.deadline, content_permlink);
+    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT_ACCOUNT, "'${1}' name is not allowed for ordinary budget.",
+              ("1", SCORUM_ROOT_POST_PARENT_ACCOUNT));
+    FC_ASSERT(op.balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+    FC_ASSERT(op.balance.amount > 0, "Invalid balance.");
+    FC_ASSERT(owner.balance >= op.balance, "Insufficient funds.",
+              ("owner.balance", owner.balance)("balance", op.balance));
+
+    const auto& dprops = dprops_service.get();
+    time_point_sec start_date = dprops.time;
+    FC_ASSERT(dprops.circulating_capital > op.balance, "Invalid balance. Must ${1} > ${2}.",
+              ("1", dprops.circulating_capital)("2", op.balance));
+
+    FC_ASSERT(start_date < op.deadline, "Invalid deadline.");
+
+    FC_ASSERT(post_budget_service.get_budgets(owner.name).size() + banner_budget_service.get_budgets(owner.name).size()
+                  < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER,
+              "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
+
+    switch (op.type)
+    {
+    case budget_type::post:
+    {
+        post_budget_management_algorithm(post_budget_service, dprops_service, account_service)
+            .create_budget(owner.name, op.balance, start_date, op.deadline, op.permlink);
+    }
+    break;
+    case budget_type::banner:
+    {
+        banner_budget_management_algorithm(banner_budget_service, dprops_service, account_service)
+            .create_budget(owner.name, op.balance, start_date, op.deadline, op.permlink);
+    }
+    break;
+    default:
+        FC_ASSERT("Unknown budget type");
+    }
+
+    account_service.decrease_balance(owner, op.balance);
+
+    dprops_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= op.balance; });
 }
 
 void close_budget_evaluator::do_apply(const close_budget_operation& op)
 {
-    budget_service_i& budget_service = db().budget_service();
+    account_service_i& account_service = db().account_service();
+    post_budget_service_i& post_budget_service = db().post_budget_service();
+    banner_budget_service_i& banner_budget_service = db().banner_budget_service();
+    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
 
-    const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
+    account_service.check_account_existence(op.owner);
 
-    budget_service.close_budget(budget);
+    switch (op.type)
+    {
+    case budget_type::post:
+    {
+        const auto& budget = post_budget_service.get(op.owner, op.permlink);
+        post_budget_management_algorithm(post_budget_service, dprops_service, account_service).close_budget(budget);
+    }
+    break;
+    case budget_type::banner:
+    {
+        const auto& budget = banner_budget_service.get(op.owner, op.permlink);
+        banner_budget_management_algorithm(banner_budget_service, dprops_service, account_service).close_budget(budget);
+    }
+    break;
+    default:
+        FC_ASSERT("Unknown budget type");
+    }
 }
 
 void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation& op)

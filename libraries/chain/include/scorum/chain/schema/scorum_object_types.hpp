@@ -41,7 +41,10 @@ enum object_type
     atomicswap_contract_object_type,
     block_stats_object_type,
     block_summary_object_type,
-    budget_object_type,
+    fund_budget_object_type,
+    owned_budgets_object_type,
+    post_budget_object_type,
+    banner_budget_object_type,
     chain_property_object_type,
     change_recovery_account_request_object_type,
     account_registration_bonus_object_type,
@@ -84,7 +87,7 @@ class account_recovery_request_object;
 class atomicswap_contract_object;
 class block_stats_object;
 class block_summary_object;
-class budget_object;
+class owned_budgets_object;
 class chain_property_object;
 class change_recovery_account_request_object;
 class account_registration_bonus_object;
@@ -119,7 +122,7 @@ using account_recovery_request_id_type = oid<account_recovery_request_object>;
 using atomicswap_contract_id_type = oid<atomicswap_contract_object>;
 using block_stats_id_type = oid<block_stats_object>;
 using block_summary_id_type = oid<block_summary_object>;
-using budget_id_type = oid<budget_object>;
+using owned_budgets_id_type = oid<owned_budgets_object>;
 using chain_property_id_type = oid<chain_property_object>;
 using change_recovery_account_request_id_type = oid<change_recovery_account_request_object>;
 using account_registration_bonus_id_type = oid<account_registration_bonus_object>;
@@ -155,6 +158,9 @@ enum bandwidth_type
     forum, ///< Rate limiting for all forum related actions
     market ///< Rate limiting for all other actions
 };
+
+using scorum::protocol::budget_type;
+
 } // namespace chain
 } // namespace scorum
 
@@ -168,7 +174,10 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (atomicswap_contract_object_type)
                 (block_stats_object_type)
                 (block_summary_object_type)
-                (budget_object_type)
+                (fund_budget_object_type)
+                (owned_budgets_object_type)
+                (post_budget_object_type)
+                (banner_budget_object_type)
                 (chain_property_object_type)
                 (change_recovery_account_request_object_type)
                 (account_registration_bonus_object_type)
