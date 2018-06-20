@@ -81,8 +81,6 @@ void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)
     FC_ASSERT(!budget_service.is_exists());
 
     auto balance = asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL);
-    FC_ASSERT(balance.symbol() == SP_SYMBOL, "Invalid asset type (symbol).");
-    FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
     time_point_sec start_date = dprops_service.get_genesis_time();
     fc::time_point deadline

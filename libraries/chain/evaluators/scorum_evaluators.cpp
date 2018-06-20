@@ -1187,8 +1187,6 @@ void create_budget_evaluator::do_apply(const create_budget_operation& op)
 
     FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT_ACCOUNT, "'${1}' name is not allowed for ordinary budget.",
               ("1", SCORUM_ROOT_POST_PARENT_ACCOUNT));
-    FC_ASSERT(op.balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
-    FC_ASSERT(op.balance.amount > 0, "Invalid balance.");
     FC_ASSERT(owner.balance >= op.balance, "Insufficient funds.",
               ("owner.balance", owner.balance)("balance", op.balance));
 
@@ -1196,8 +1194,6 @@ void create_budget_evaluator::do_apply(const create_budget_operation& op)
     time_point_sec start_date = dprops.time;
     FC_ASSERT(dprops.circulating_capital > op.balance, "Invalid balance. Must ${1} > ${2}.",
               ("1", dprops.circulating_capital)("2", op.balance));
-
-    FC_ASSERT(start_date < op.deadline, "Invalid deadline.");
 
     FC_ASSERT(post_budget_service.get_budgets(owner.name).size() + banner_budget_service.get_budgets(owner.name).size()
                   < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER,
@@ -1220,10 +1216,6 @@ void create_budget_evaluator::do_apply(const create_budget_operation& op)
     default:
         FC_ASSERT("Unknown budget type");
     }
-
-    account_service.decrease_balance(owner, op.balance);
-
-    dprops_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= op.balance; });
 }
 
 void close_budget_evaluator::do_apply(const close_budget_operation& op)

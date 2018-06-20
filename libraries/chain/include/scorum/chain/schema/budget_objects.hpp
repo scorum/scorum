@@ -33,6 +33,7 @@ public:
     fc::shared_string permlink;
 
     time_point_sec created = time_point_sec::min();
+    time_point_sec start = time_point_sec::min();
     time_point_sec deadline = time_point_sec::maximum();
 
     asset balance = asset(0, SymbolType);
@@ -78,11 +79,11 @@ using banner_budget_index = budget_index<banner_budget_object>;
 } // namespace scorum
 
 FC_REFLECT(scorum::chain::fund_budget_object,
-           (id)(owner)(permlink)(created)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
 FC_REFLECT(scorum::chain::post_budget_object,
-           (id)(owner)(permlink)(created)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
 FC_REFLECT(scorum::chain::banner_budget_object,
-           (id)(owner)(permlink)(created)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::fund_budget_object, scorum::chain::fund_budget_index)
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::post_budget_object, scorum::chain::post_budget_index)

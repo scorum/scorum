@@ -12,7 +12,7 @@ dbs_dynamic_global_property::dbs_dynamic_global_property(database& db)
 {
 }
 
-time_point_sec dbs_dynamic_global_property::get_genesis_time() const
+fc::time_point_sec dbs_dynamic_global_property::get_genesis_time() const
 {
     return db_impl().get_genesis_time();
 }

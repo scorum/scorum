@@ -25,6 +25,9 @@ public:
                                      const time_point_sec& end_date,
                                      const std::string& permlink)
     {
+        FC_ASSERT(balance.amount > 0, "Invalid balance.");
+        FC_ASSERT(start_date < end_date, "Invalid dates.");
+
         auto per_block = calculate_per_block(start_date, end_date, balance);
 
         auto head_block_num = _dgp_service.head_block_num();
@@ -39,7 +42,8 @@ public:
             {
                 fc::from_string(budget.permlink, permlink);
             }
-            budget.created = start_date;
+            budget.created = head_block_time;
+            budget.start = start_date;
             budget.deadline = end_date;
             budget.balance = balance;
             budget.per_block = per_block;
@@ -129,11 +133,26 @@ protected:
 
 class fund_budget_management_algorithm : public base_budget_management_algorithm<fund_budget_service_i>
 {
+    using base_class = base_budget_management_algorithm<fund_budget_service_i>;
+
 public:
+    fund_budget_management_algorithm() = delete;
+
     fund_budget_management_algorithm(fund_budget_service_i& budget_service,
                                      dynamic_global_property_service_i& dgp_service)
         : base_budget_management_algorithm<fund_budget_service_i>(budget_service, dgp_service)
     {
+    }
+
+    const object_type& create_budget(const account_name_type& owner,
+                                     const asset& balance,
+                                     const time_point_sec& start_date,
+                                     const time_point_sec& end_date,
+                                     const std::string& permlink)
+    {
+        FC_ASSERT(balance.symbol() == SP_SYMBOL, "Invalid asset type (symbol).");
+
+        return base_class::create_budget(owner, balance, start_date, end_date, permlink);
     }
 
 private:
@@ -151,8 +170,12 @@ private:
 template <typename BudgetService>
 class owned_base_budget_management_algorithm : public base_budget_management_algorithm<BudgetService>
 {
+    using base_class = base_budget_management_algorithm<BudgetService>;
+
 public:
     using object_type = typename BudgetService::object_type;
+
+    owned_base_budget_management_algorithm() = delete;
 
     owned_base_budget_management_algorithm(BudgetService& budget_service,
                                            dynamic_global_property_service_i& dgp_service,
@@ -160,6 +183,24 @@ public:
         : base_budget_management_algorithm<BudgetService>(budget_service, dgp_service)
         , _account_service(account_service)
     {
+    }
+
+    const object_type& create_budget(const account_name_type& owner,
+                                     const asset& balance,
+                                     const time_point_sec& start_date,
+                                     const time_point_sec& end_date,
+                                     const std::string& permlink)
+    {
+        FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
+
+        const auto& ret = base_class::create_budget(owner, balance, start_date, end_date, permlink);
+
+        this->_account_service.update(this->_account_service.get_account(owner),
+                                      [&](account_object& acnt) { acnt.balance -= balance; });
+
+        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
+
+        return ret;
     }
 
     void close_budget(const object_type& budget)
@@ -188,7 +229,8 @@ private:
         if (repayable.amount > 0)
         {
             repayable = this->decrease_balance(budget, repayable);
-            _account_service.increase_balance(owner, repayable);
+
+            this->_account_service.update(owner, [&](account_object& acnt) { acnt.balance += repayable; });
 
             this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
         }

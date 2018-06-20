@@ -267,6 +267,7 @@ public:
         , owner(b.owner)
         , permlink(fc::to_string(b.permlink))
         , created(b.created)
+        , start(b.start)
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
@@ -280,6 +281,7 @@ public:
         , owner(b.owner)
         , permlink(fc::to_string(b.permlink))
         , created(b.created)
+        , start(b.start)
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
@@ -300,6 +302,7 @@ public:
     std::string permlink;
 
     time_point_sec created;
+    time_point_sec start;
     time_point_sec deadline;
 
     asset balance = asset(0, SCORUM_SYMBOL);
@@ -506,6 +509,7 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (owner)
             (permlink)
             (created)
+            (start)
             (deadline)
             (balance)
             (per_block)
