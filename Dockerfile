@@ -23,6 +23,7 @@ RUN \
             doxygen \
             git \
             libboost-all-dev \
+            libicu-dev \
             libreadline-dev \
             libssl-dev \
             libtool \
@@ -54,7 +55,6 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -FORCE_REBUILD_GENESIS=ON \
         -DCMAKE_BUILD_TYPE=Debug \
         -DENABLE_COVERAGE_TESTING=ON \
         -DLOW_MEMORY_NODE=OFF \
@@ -81,7 +81,6 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -FORCE_REBUILD_GENESIS=ON \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=ON \
@@ -102,7 +101,6 @@ RUN \
 	mkdir build && \
     cd build && \
     cmake \
-        -FORCE_REBUILD_GENESIS=ON \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=OFF \
@@ -138,6 +136,7 @@ RUN \
             doxygen \
             dpkg-dev \
             git \
+            libicu-dev \
             libboost-all-dev \
             libc6-dev \
             libexpat1-dev \

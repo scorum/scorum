@@ -44,8 +44,9 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
 
 SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
 {
-    auto p1
-        = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block();
+    auto p1 = create_post(alice)
+                  .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})")
+                  .in_block();
     p1.vote(alice).in_block();
 
     discussion_query q;
@@ -132,6 +133,31 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p3.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
     }
+}
+
+SCORUM_TEST_CASE(should_return_tags_intersection_contains_same_tags_in_diff_case)
+{
+    auto p1 = create_post(alice)
+                  .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["РУС1","рус1","Рус2","рус2"]})")
+                  .in_block();
+    auto p2 = create_post(bob)
+                  .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["Рус1","РУС1"]})")
+                  .in_block();
+
+    p1.vote(sam).in_block();
+
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "рус1", "рУс1" };
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 2u);
+
+    q.tags = { "рус2", "рУс2" };
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
 }
 
 SCORUM_TEST_CASE(should_return_voted_tags_union)

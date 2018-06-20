@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(should_throw_unlinkable_block_exception)
     auto& wso = w[0]->db.obtain_service<dbs_witness_schedule>().get();
     int i = 0;
     for (const auto& w : wso.current_shuffled_witnesses)
-        std::cout << ++i << ": " << w << std::endl;
+        BOOST_TEST_MESSAGE(++i << ": " << w);
 
     // starting from w[1] because we cannot select slot '0' directly.
     auto block0 = gen_block(w[1], 1);
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(circulating_capital_mismatch)
     auto& wso = w[0]->db.obtain_service<dbs_witness_schedule>().get();
     int i = 0;
     for (const auto& w : wso.current_shuffled_witnesses)
-        std::cout << ++i << ": " << w << std::endl;
+        BOOST_TEST_MESSAGE(++i << ": " << w);
 
     // starting from w[1] because we cannot select slot '0' directly.
     auto block0 = gen_block(w[1], 1);

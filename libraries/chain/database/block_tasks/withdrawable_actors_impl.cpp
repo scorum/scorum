@@ -7,6 +7,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/protocol/operations.hpp>
 
 namespace scorum {
 namespace chain {
@@ -350,12 +351,14 @@ class update_statistic_visitor : public void_return_visitor
             const account_object& to_account = _account_service.get(to);
 
             _emmiter.push_virtual_operation(
-                fill_vesting_withdraw_operation(from_account.name, to_account.name, _amount));
+                acc_to_acc_vesting_withdraw_operation(from_account.name, to_account.name, _amount));
         }
 
         void operator()(const dev_committee_id_type& to) const
         {
-            // TODO: statistic from account_id_type to dev_committee_id_type
+            const account_object& from_account = _account_service.get(_from);
+
+            _emmiter.push_virtual_operation(acc_to_devpool_vesting_withdraw_operation(from_account.name, _amount));
         }
 
     private:
@@ -368,10 +371,12 @@ class update_statistic_visitor : public void_return_visitor
     class update_statistic_from_dev_committee_visitor : public void_return_visitor
     {
     public:
-        update_statistic_from_dev_committee_visitor(database_virtual_operations_emmiter_i& emmiter,
+        update_statistic_from_dev_committee_visitor(account_service_i& account_service,
+                                                    database_virtual_operations_emmiter_i& emmiter,
                                                     const dev_committee_id_type& from,
                                                     const asset& amount)
-            : _emmiter(emmiter)
+            : _account_service(account_service)
+            , _emmiter(emmiter)
             , _from(from)
             , _amount(amount)
         {
@@ -379,15 +384,18 @@ class update_statistic_visitor : public void_return_visitor
 
         void operator()(const account_id_type& to) const
         {
-            // TODO: statistic from dev_committee_id_type to account_id_type
+            const account_object& to_account = _account_service.get(to);
+
+            _emmiter.push_virtual_operation(devpool_to_acc_vesting_withdraw_operation(to_account.name, _amount));
         }
 
         void operator()(const dev_committee_id_type& to) const
         {
-            // TODO: statistic from dev_committee_id_type to dev_committee_id_type
+            _emmiter.push_virtual_operation(devpool_to_devpool_vesting_withdraw_operation(_amount));
         }
 
     private:
+        account_service_i& _account_service;
         database_virtual_operations_emmiter_i& _emmiter;
         const dev_committee_id_type& _from;
         const asset& _amount;
@@ -412,7 +420,7 @@ public:
 
     void operator()(const dev_committee_id_type& from) const
     {
-        _to.visit(update_statistic_from_dev_committee_visitor(_emmiter, from, _amount));
+        _to.visit(update_statistic_from_dev_committee_visitor(_account_service, _emmiter, from, _amount));
     }
 
 private:
@@ -446,6 +454,19 @@ void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from
     {
         from.visit(update_statistic_visitor(_account_service, _ctx, to, amount));
     }
+}
+
+void withdrawable_actors_impl::update_statistic(const withdrawable_id_type& from)
+{
+    auto op = from.visit(
+        [&](const account_id_type& from) {
+            return protocol::operation(acc_finished_vesting_withdraw_operation(_account_service.get(from).name));
+        },
+        [&](const dev_committee_id_type& from) {
+            return protocol::operation(devpool_finished_vesting_withdraw_operation());
+        });
+
+    _ctx.push_virtual_operation(op);
 }
 
 void withdrawable_actors_impl::update_global_scr_properties(const withdrawable_id_type& from,

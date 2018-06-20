@@ -3,10 +3,12 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/evaluators/proposal_evaluators.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include "defines.hpp"
 
@@ -27,12 +29,17 @@ struct fixture : public shared_memory_fixture
 
     account_service_i* account_service = mocks.Mock<account_service_i>();
     dev_pool_service_i* dev_pool_service = mocks.Mock<dev_pool_service_i>();
+    dynamic_global_property_service_i* dyn_props_service = mocks.Mock<dynamic_global_property_service_i>();
+
+    using dgps_t = dynamic_global_property_service_i;
 
     fixture()
         : shared_memory_fixture()
     {
         mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
         mocks.ExpectCall(services, data_service_factory_i::dev_pool_service).ReturnByRef(*dev_pool_service);
+        mocks.ExpectCall(services, data_service_factory_i::dynamic_global_property_service)
+            .ReturnByRef(*dyn_props_service);
     }
 };
 
@@ -63,6 +70,8 @@ BOOST_FIXTURE_TEST_CASE(decrease_dev_pool_scr_balance, fixture)
 
     mocks.OnCall(account_service, account_service_i::get_account).With(_).ReturnByRef(account);
     mocks.OnCall(account_service, account_service_i::increase_balance).With(_, _);
+    mocks.ExpectCallOverload(dyn_props_service, (void (dgps_t::*)(const dgps_t::modifier_type&)) & dgps_t::update)
+        .With(_);
 
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }
@@ -83,6 +92,8 @@ BOOST_FIXTURE_TEST_CASE(increase_account_balance, fixture)
 
     mocks.ExpectCall(account_service, account_service_i::get_account).With("jim").ReturnByRef(account);
     mocks.ExpectCall(account_service, account_service_i::increase_balance).With(_, op.amount);
+    mocks.ExpectCallOverload(dyn_props_service, (void (dgps_t::*)(const dgps_t::modifier_type&)) & dgps_t::update)
+        .With(_);
 
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }

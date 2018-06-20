@@ -2,6 +2,7 @@
 *.sw*
 
 *.cmake
+!CMakeModules/*.cmake
 CMakeCache.txt
 CMakeFiles
 Makefile
@@ -9,6 +10,8 @@ compile_commands.json
 moc_*
 *.moc
 hardfork.hpp
+build-release
+build-debug
 cmake-build-debug
 build
 
