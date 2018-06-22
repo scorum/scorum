@@ -43,6 +43,7 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
     {
         alice_create_budget_operation.owner = alice.name;
         alice_create_budget_operation.balance = asset(balance, SCORUM_SYMBOL);
+        alice_create_budget_operation.start = start;
         alice_create_budget_operation.deadline = deadline;
         alice_create_budget_operation.permlink = "adidas";
 
@@ -77,11 +78,35 @@ BOOST_FIXTURE_TEST_CASE(asserts_in_budget_creation, evaluators_for_budget_fixtur
     SCORUM_CHECK_THROW(op.validate(), fc::assert_exception);
     op.balance = alice_create_budget_operation.balance;
 
+    op.start = deadline;
+    op.deadline = start;
+    SCORUM_REQUIRE_THROW(create_evaluator.do_apply(op), fc::assert_exception);
+    SCORUM_CHECK_THROW(op.validate(), fc::assert_exception);
+    op.start = alice_create_budget_operation.start;
+    op.deadline = alice_create_budget_operation.deadline;
+
     op.owner = bob.name;
     SCORUM_REQUIRE_THROW(create_evaluator.do_apply(op), fc::assert_exception);
     op.owner = alice_create_budget_operation.owner;
 
     BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
+
+    BOOST_REQUIRE_EQUAL(post_budget_service_fixture.get().start.sec_since_epoch(),
+                        alice_create_budget_operation.start.sec_since_epoch());
+    BOOST_REQUIRE_EQUAL(post_budget_service_fixture.get().deadline.sec_since_epoch(),
+                        alice_create_budget_operation.deadline.sec_since_epoch());
+}
+
+BOOST_FIXTURE_TEST_CASE(autoreset_start_to_headblock_time_wile_creation, evaluators_for_budget_fixture)
+{
+    create_budget_evaluator::operation_type op = alice_create_budget_operation;
+    op.start = head_block_time - fc::seconds(SCORUM_BLOCK_INTERVAL * 10);
+
+    BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
+
+    BOOST_REQUIRE_EQUAL(post_budget_service_fixture.get().start.sec_since_epoch(), head_block_time.sec_since_epoch());
+    BOOST_REQUIRE_EQUAL(post_budget_service_fixture.get().deadline.sec_since_epoch(),
+                        alice_create_budget_operation.deadline.sec_since_epoch());
 }
 
 BOOST_FIXTURE_TEST_CASE(budgets_limit_per_owner, evaluators_for_budget_fixture)

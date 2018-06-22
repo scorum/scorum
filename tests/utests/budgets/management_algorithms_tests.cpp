@@ -21,20 +21,20 @@ BOOST_FIXTURE_TEST_CASE(fund_budget_creation, fund_budget_fixture)
     fund_budget_management_algorithm creator(fund_budget_service_fixture.service(), dgp_service_fixture.service());
 
     SCORUM_REQUIRE_THROW(
-        creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SCORUM_SYMBOL), start_time, deadline, ""),
+        creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SCORUM_SYMBOL), start, deadline, ""),
         fc::assert_exception);
 
     SCORUM_REQUIRE_THROW(
-        creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), deadline, start_time, ""),
+        creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), deadline, start, ""),
         fc::assert_exception);
 
     BOOST_REQUIRE_NO_THROW(
-        creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), start_time, deadline, ""));
+        creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), start, deadline, ""));
 
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().owner, SCORUM_ROOT_POST_PARENT_ACCOUNT);
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().permlink, "");
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().start.sec_since_epoch(), start_time.sec_since_epoch());
+    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().balance, asset(balance, SP_SYMBOL));
     BOOST_CHECK_GT(fund_budget_service_fixture.get().per_block, asset(0, SP_SYMBOL));
@@ -50,24 +50,23 @@ struct test_account_budget_fixture : public account_budget_fixture
 
         const char* permlink = "adidas";
 
-        SCORUM_REQUIRE_THROW(
-            creator.create_budget(alice.name, asset(balance, SP_SYMBOL), start_time, deadline, permlink),
-            fc::assert_exception);
+        SCORUM_REQUIRE_THROW(creator.create_budget(alice.name, asset(balance, SP_SYMBOL), start, deadline, permlink),
+                             fc::assert_exception);
 
         SCORUM_REQUIRE_THROW(
-            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), deadline, start_time, permlink),
+            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), deadline, start, permlink),
             fc::assert_exception);
 
-        SCORUM_REQUIRE_THROW(creator.create_budget(alice.name, alice.scr_amount * 2, deadline, start_time, permlink),
+        SCORUM_REQUIRE_THROW(creator.create_budget(alice.name, alice.scr_amount * 2, deadline, start, permlink),
                              fc::assert_exception);
 
         BOOST_REQUIRE_NO_THROW(
-            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start_time, deadline, permlink));
+            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, permlink));
 
         BOOST_CHECK_EQUAL(budget_service_fixture.get().owner, alice.name);
         BOOST_CHECK_EQUAL(budget_service_fixture.get().permlink, permlink);
         BOOST_CHECK_EQUAL(budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().start.sec_since_epoch(), start_time.sec_since_epoch());
+        BOOST_CHECK_EQUAL(budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().balance, asset(balance, SCORUM_SYMBOL));
         BOOST_CHECK_GT(budget_service_fixture.get().per_block, asset(0, SCORUM_SYMBOL));
@@ -83,7 +82,7 @@ struct test_account_budget_fixture : public account_budget_fixture
             budget_service_fixture.service(), dgp_service_fixture.service(), account_service_fixture.service());
 
         BOOST_REQUIRE_NO_THROW(
-            manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start_time, deadline, "pepsi"));
+            manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, "pepsi"));
 
         BOOST_CHECK_EQUAL(account_service_fixture.service().get_account(alice.name).balance,
                           alice.scr_amount - asset(balance, SCORUM_SYMBOL));
@@ -99,7 +98,7 @@ struct test_account_budget_fixture : public account_budget_fixture
             budget_service_fixture.service(), dgp_service_fixture.service(), account_service_fixture.service());
 
         BOOST_REQUIRE_NO_THROW(
-            manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start_time, deadline, "pepsi"));
+            manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, "pepsi"));
 
         dgp_service_fixture.update([&](dynamic_global_property_object& obj) {
             obj.head_block_number = budget_service_fixture.get().last_cashout_block;

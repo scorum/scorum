@@ -37,8 +37,8 @@ struct fixture : public shared_memory_fixture
 
 struct budget_fixture : public fixture
 {
-    fc::time_point_sec start_time = head_block_time + fc::seconds(SCORUM_BLOCK_INTERVAL * 100);
-    fc::time_point_sec deadline = start_time + fc::seconds(SCORUM_BLOCK_INTERVAL * 100);
+    fc::time_point_sec start = head_block_time + fc::seconds(SCORUM_BLOCK_INTERVAL * 100);
+    fc::time_point_sec deadline = start + fc::seconds(SCORUM_BLOCK_INTERVAL * 100);
     share_type balance = 1000200;
 };
 
