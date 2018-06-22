@@ -61,6 +61,80 @@ FC_REFLECT(logger_args, (name)(level)(appender))
 
 namespace logger {
 
+fc::appender_config get_console_config(const std::string& s)
+{
+    auto appender = fc::json::from_string(s).as<appender_args>();
+
+    auto stream = fc::variant(appender.stream).as<fc::console_appender::stream::type>();
+
+    fc::console_appender::config config;
+    config.level_colors.emplace_back(
+        fc::console_appender::level_color(fc::log_level::debug, fc::console_appender::color::white));
+    config.level_colors.emplace_back(
+        fc::console_appender::level_color(fc::log_level::info, fc::console_appender::color::green));
+    config.level_colors.emplace_back(
+        fc::console_appender::level_color(fc::log_level::warn, fc::console_appender::color::brown));
+    config.level_colors.emplace_back(
+        fc::console_appender::level_color(fc::log_level::error, fc::console_appender::color::red));
+    config.stream = stream;
+
+    return fc::appender_config::create_config<fc::console_appender>(appender.appender, fc::variant(config));
+}
+
+fc::appender_config get_file_config(const std::string& s, const boost::filesystem::path& pwd)
+{
+    auto file_appender = fc::json::from_string(s).as<file_appender_args>();
+
+    fc::path file_name = file_appender.stream;
+
+    if (file_name.is_relative())
+    {
+        file_name = fc::absolute(pwd) / file_name;
+    }
+
+    ilog(file_name.generic_string());
+
+    // construct a default file appender config here
+    // filename will be taken from ini file, everything else hard-coded here
+    fc::file_appender::config config;
+    config.filename = file_name;
+    config.flush = true;
+    config.rotate = true;
+    config.rotation_interval = fc::minutes(file_appender.rotation_interval_minutes);
+    config.rotation_limit = fc::hours(file_appender.rotation_limit_hours);
+
+    return fc::appender_config::create_config<fc::file_appender>(file_appender.appender, fc::variant(config));
+}
+
+fc::appender_config get_gelf_config(const std::string& s, const std::string& optional_info = "")
+{
+    auto gelf_appender = fc::json::from_string(s).as<gelf_appender_args>();
+
+    // check if stream can be network endpoint
+    std::string endpoint = gelf_appender.stream;
+    if (endpoint.find(':') == std::string::npos)
+    {
+        endpoint += ":"; // add default port
+        endpoint += boost::lexical_cast<std::string>(DEFAULT_GELF_APPENDER_PORT);
+    }
+    fc::ip::endpoint::from_string(endpoint); // if stream is not a network endpoint it will throw
+
+    fc::gelf_appender::config config;
+    config.endpoint = endpoint;
+    config.host_name = gelf_appender.host_name;
+    config.version = (fc::string)SCORUM_BLOCKCHAIN_VERSION;
+    config.additional_info = optional_info;
+
+    if (!gelf_appender.additional_info.empty())
+    {
+        if (!config.additional_info.empty())
+            config.additional_info += ": ";
+        config.additional_info += gelf_appender.additional_info;
+    }
+
+    return fc::appender_config::create_config<fc::gelf_appender>(gelf_appender.appender, fc::variant(config));
+}
+
 fc::optional<fc::logging_config> load_logging_config_from_options(const boost::program_options::variables_map& args,
                                                                   const boost::filesystem::path& pwd)
 {
@@ -74,23 +148,12 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
         {
             std::vector<std::string> appenders = args[LOG_APPENDER].as<std::vector<std::string>>();
 
-            for (std::string& s : appenders)
+            for (const std::string& s : appenders)
             {
-                auto appender = fc::json::from_string(s).as<appender_args>();
-
                 //check if appender is a console appender
                 try
                 {
-                    auto stream = fc::variant(appender.stream).as<fc::console_appender::stream::type>();
-
-                    fc::console_appender::config config;
-                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::debug, fc::console_appender::color::white));
-                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::info, fc::console_appender::color::green));
-                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::warn, fc::console_appender::color::brown));
-                    config.level_colors.emplace_back(fc::console_appender::level_color(fc::log_level::error, fc::console_appender::color::red));
-                    config.stream = stream;
-
-                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::console_appender>(appender.appender, fc::variant(config)));
+                    logging_config.appenders.push_back(get_console_config(s));
 
                     found_logging_config = true;
                     continue;
@@ -103,21 +166,7 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 try
                 {
                     //check if stream can be network endpoint
-                    std::string endpoint = appender.stream;
-                    if (endpoint.find(':') == std::string::npos)
-                    {
-                        endpoint += ":"; //add default port
-                        endpoint += boost::lexical_cast<std::string>(DEFAULT_GELF_APPENDER_PORT);
-                    }
-                    fc::ip::endpoint::from_string(endpoint); //if stream is not a network endpoint it will throw
-
-                    auto gelf_appender = fc::json::from_string(s).as<gelf_appender_args>();
-
-                    fc::gelf_appender::config config;
-                    config.endpoint = endpoint;
-                    config.host_name = gelf_appender.host_name;
-                    config.version = (fc::string)SCORUM_BLOCKCHAIN_VERSION;
-
+                    std::string witness;
                     if (args.count("witness"))
                     {
                         try
@@ -125,26 +174,13 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                             const std::vector<std::string>& witnesses = args["witness"].as<std::vector<std::string>>();
                             if (!witnesses.empty())
                             {
-                                std::stringstream stream;
-                                stream << "witness";
-                                for (const std::string& s : witnesses)
-                                {
-                                    stream <<" "<< fc::json::from_string(s).as<std::string>();
-                                }
-                                config.additional_info = stream.str();
+                                witness = "witness " + boost::algorithm::join(witnesses, " ");
                             }
                         }
                         FC_CAPTURE_AND_LOG(())
                     }
 
-                    if (!gelf_appender.additional_info.empty())
-                    {
-                        if (!config.additional_info.empty())
-                            config.additional_info += ": ";
-                        config.additional_info += gelf_appender.additional_info;
-                    }
-
-                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::gelf_appender>(gelf_appender.appender, fc::variant(config)));
+                    logging_config.appenders.push_back(get_gelf_config(s, witness));
 
                     found_logging_config = true;
                     continue;
@@ -156,27 +192,7 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
                 //check if appender is a file appender
                 try
                 {
-                    auto file_appender = fc::json::from_string(s).as<file_appender_args>();
-
-                    fc::path file_name = file_appender.stream;
-
-                    if (file_name.is_relative())
-                    {
-                        file_name = fc::absolute(pwd) / file_name;
-                    }
-
-                    ilog(file_name.generic_string());
-
-                    // construct a default file appender config here
-                    // filename will be taken from ini file, everything else hard-coded here
-                    fc::file_appender::config config;
-                    config.filename = file_name;
-                    config.flush = true;
-                    config.rotate = true;
-                    config.rotation_interval = fc::minutes(file_appender.rotation_interval_minutes);
-                    config.rotation_limit = fc::hours(file_appender.rotation_limit_hours);
-
-                    logging_config.appenders.push_back(fc::appender_config::create_config<fc::file_appender>(file_appender.appender, fc::variant(config)));
+                    logging_config.appenders.push_back(get_file_config(s, pwd));
 
                     found_logging_config = true;
                     continue;
@@ -210,31 +226,31 @@ fc::optional<fc::logging_config> load_logging_config_from_options(const boost::p
             return fc::optional<fc::logging_config>();
     }
     FC_RETHROW_EXCEPTIONS(warn, "")
-    // clang-format off
+    // clang-format on
 }
 
 void set_logging_program_options(boost::program_options::options_description& options)
 {
     // clang-format off
     std::vector<std::string> default_appender({ 
-        "{\"appender\":\"stderr\",\"stream\":\"std_error\"}",
-        LOG_APPENDER" = {\"appender\":\"p2p\",\"stream\":\"logs/p2p.log\",\"rotation_interval_minutes\":\"120\", \"rotation_limit_hours\":\"720\"}",
-        LOG_APPENDER" = {\"appender\":\"node\",\"stream\":\"logs/node.log\",\"rotation_interval_minutes\":\"120\", \"rotation_limit_hours\":\"720\"}",
-        LOG_APPENDER" = {\"appender\":\"remote\",\"stream\":\"127.0.0.1:12201\", \"host_name\":\"\", \"additional_info\":\"\"}"
+        R"({"appender":"stderr","stream":"std_error"})",
+        LOG_APPENDER R"( = {"appender":"p2p","stream":"logs/p2p.log","rotation_interval_minutes":"120", "rotation_limit_hours":"720"})",
+        LOG_APPENDER R"( = {"appender":"node","stream":"logs/node.log","rotation_interval_minutes":"120", "rotation_limit_hours":"720"})",
+        LOG_APPENDER R"( = {"appender":"remote","stream":"127.0.0.1:12201", "host_name":"", "additional_info":""})"
         });
     std::string str_default_appender = boost::algorithm::join(default_appender, "\n");
 
    
     std::vector< std::string > default_logger(
-        { "{\"name\":\"default\",\"level\":\"info\",\"appender\":\"stderr, node\"}",
-        LOGGER" = {\"name\":\"p2p\",\"level\":\"info\",\"appender\":\"p2p\"}"});
+        { R"({"name":"default","level":"info","appender":"stderr, node"})",
+        LOGGER R"( = {"name":"p2p","level":"info","appender":"p2p"})" });
     std::string str_default_logger = boost::algorithm::join(default_logger, "\n");
 
 
     std::vector< std::string > default_appender_description(
-                                {"Console appender definition json: {\"appender\", \"stream\"}" ,
-                                 "File appender definition json:  {\"appender\", \"stream\", \"rotation_interval_minutes\", \"rotation_limit_hours\"}" ,
-                                 "Gelf appender definition json:  {\"appender\", \"stream\", \"host_name\", \"additional_info\"}" });
+                                { R"(Console appender definition json: {"appender", "stream"})" ,
+                                  R"(File appender definition json:  {"appender", "stream", "rotation_interval_minutes", "rotation_limit_hours"})",
+                                  R"(Gelf appender definition json:  {"appender", "stream", "host_name", "additional_info"})" });
     std::string str_default_appender_description = boost::algorithm::join(default_appender_description, "\n# ");
 
     auto default_value = [](const std::vector<std::string>& args, const std::string& str)
@@ -244,7 +260,7 @@ void set_logging_program_options(boost::program_options::options_description& op
 
     options.add_options()
         (LOG_APPENDER, default_value(default_appender, str_default_appender), str_default_appender_description.c_str())
-        (LOGGER, default_value(default_logger, str_default_logger), "Logger definition json: {\"name\", \"level\", \"appender\"}");
+        (LOGGER, default_value(default_logger, str_default_logger), R"(Logger definition json: {"name", "level", "appender"})" );
     // clang-format on
 }
 }
