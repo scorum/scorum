@@ -962,8 +962,13 @@ inline void database::push_virtual_operation(const operation& op)
         FC_ASSERT(is_virtual_operation(op));
 
         auto note = create_notification(op);
+
+        operation_info ctx(op);
+        op_debug_log(ctx, "virt operation pre_apply BEGIN");
         notify_pre_apply_operation(note);
+        op_debug_log(ctx, "virt operation pre_apply END/post_apply BEGIN");
         notify_post_apply_operation(note);
+        op_debug_log(ctx, "virt operation post_apply END");
     }
 }
 
@@ -1461,11 +1466,13 @@ void database::_apply_block(const signed_block& next_block)
 
         debug_log(ctx, "update_global_dynamic_data");
         update_global_dynamic_data(next_block);
+        debug_log(ctx, "update_signing_witness");
         update_signing_witness(signing_witness, next_block);
 
         debug_log(ctx, "update_last_irreversible_block");
         update_last_irreversible_block();
 
+        debug_log(ctx, "create_block_summary");
         create_block_summary(next_block);
         debug_log(ctx, "clear_expired_transactions");
         clear_expired_transactions();
@@ -1477,8 +1484,7 @@ void database::_apply_block(const signed_block& next_block)
 
         database_ns::block_task_context task_ctx(static_cast<data_service_factory&>(*this),
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
-                                                 _current_block_num,
-                                                 ctx);
+                                                 _current_block_num, ctx);
 
         database_ns::process_funds().apply(task_ctx);
         database_ns::process_fifa_world_cup_2018_bounty_initialize().apply(task_ctx);
@@ -1664,16 +1670,16 @@ void database::apply_operation(const operation& op)
 {
     auto note = create_notification(op);
 
-    operation_info ctx(op);
-    op_debug_log(ctx, "_pre_apply_operation BEGIN");
+    //    operation_info ctx(op);
+    //    op_debug_log(ctx, "_pre_apply_operation BEGIN");
     notify_pre_apply_operation(note);
-    op_debug_log(ctx, "_pre_apply_operation END");
+    //    op_debug_log(ctx, "_pre_apply_operation END");
 
     _my->_evaluator_registry.get_evaluator(op).apply(op);
 
-    op_debug_log(ctx, "_post_apply_operation BEGIN");
+    //    op_debug_log(ctx, "_post_apply_operation BEGIN");
     notify_post_apply_operation(note);
-    op_debug_log(ctx, "_post_apply_operation END");
+    //    op_debug_log(ctx, "_post_apply_operation END");
 }
 
 const witness_object& database::validate_block_header(uint32_t skip, const signed_block& next_block) const

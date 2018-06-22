@@ -16,9 +16,9 @@ class block_task_context : public database_virtual_operations_emmiter_i
 {
 public:
     block_task_context(data_service_factory_i& services,
-                                database_virtual_operations_emmiter_i& vops,
-                                uint32_t block_num,
-                                block_info& block_info);
+                       database_virtual_operations_emmiter_i& vops,
+                       uint32_t block_num,
+                       block_info& block_info);
 
     virtual void push_virtual_operation(const operation& op);
 
