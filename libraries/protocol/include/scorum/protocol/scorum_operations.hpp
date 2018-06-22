@@ -629,7 +629,7 @@ struct create_budget_operation : public base_operation
     budget_type type = budget_type::post;
 
     account_name_type owner;
-    std::string permlink;
+    std::string content_permlink;
 
     asset balance = asset(0, SCORUM_SYMBOL);
     time_point_sec start;
@@ -806,7 +806,7 @@ FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_rec
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
-FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(permlink)(balance)(start)(deadline) )
+FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(content_permlink)(balance)(start)(deadline) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (type)(budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )

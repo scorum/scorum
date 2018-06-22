@@ -23,14 +23,14 @@ template <uint16_t ObjectType, asset_symbol_type SymbolType>
 class budget_object : public object<ObjectType, budget_object<ObjectType, SymbolType>>
 {
 public:
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(budget_object, (permlink))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(budget_object, (content_permlink))
 
     typedef typename object<ObjectType, budget_object<ObjectType, SymbolType>>::id_type id_type;
 
     id_type id;
 
     account_name_type owner;
-    fc::shared_string permlink;
+    fc::shared_string content_permlink;
 
     time_point_sec created = time_point_sec::min();
     time_point_sec start = time_point_sec::min();
@@ -77,11 +77,11 @@ using banner_budget_index = budget_index<banner_budget_object>;
 } // namespace scorum
 
 FC_REFLECT(scorum::chain::fund_budget_object,
-           (id)(owner)(permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(content_permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
 FC_REFLECT(scorum::chain::post_budget_object,
-           (id)(owner)(permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(content_permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
 FC_REFLECT(scorum::chain::banner_budget_object,
-           (id)(owner)(permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(content_permlink)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::fund_budget_object, scorum::chain::fund_budget_index)
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::post_budget_object, scorum::chain::post_budget_index)

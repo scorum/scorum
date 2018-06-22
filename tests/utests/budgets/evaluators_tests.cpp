@@ -45,7 +45,7 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
         alice_create_budget_operation.balance = asset(balance, SCORUM_SYMBOL);
         alice_create_budget_operation.start = start;
         alice_create_budget_operation.deadline = deadline;
-        alice_create_budget_operation.permlink = "adidas";
+        alice_create_budget_operation.content_permlink = "adidas";
 
         alice_close_budget_operation.owner = alice.name;
         alice_close_budget_operation.budget_id = 1;

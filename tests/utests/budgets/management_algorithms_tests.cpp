@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_CASE(fund_budget_creation, fund_budget_fixture)
         creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), start, deadline, ""));
 
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().owner, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().permlink, "");
+    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().content_permlink, "");
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
@@ -64,7 +64,7 @@ struct test_account_budget_fixture : public account_budget_fixture
             creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, permlink));
 
         BOOST_CHECK_EQUAL(budget_service_fixture.get().owner, alice.name);
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().permlink, permlink);
+        BOOST_CHECK_EQUAL(budget_service_fixture.get().content_permlink, permlink);
         BOOST_CHECK_EQUAL(budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());

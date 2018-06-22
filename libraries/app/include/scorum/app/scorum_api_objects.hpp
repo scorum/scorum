@@ -265,7 +265,7 @@ public:
         : id(b.id._id)
         , type(budget_type::post)
         , owner(b.owner)
-        , permlink(fc::to_string(b.permlink))
+        , content_permlink(fc::to_string(b.content_permlink))
         , created(b.created)
         , start(b.start)
         , deadline(b.deadline)
@@ -279,7 +279,7 @@ public:
         : id(b.id._id)
         , type(budget_type::banner)
         , owner(b.owner)
-        , permlink(fc::to_string(b.permlink))
+        , content_permlink(fc::to_string(b.content_permlink))
         , created(b.created)
         , start(b.start)
         , deadline(b.deadline)
@@ -299,7 +299,7 @@ public:
     budget_type type;
 
     account_name_type owner;
-    std::string permlink;
+    std::string content_permlink;
 
     time_point_sec created;
     time_point_sec start;
@@ -507,7 +507,7 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (id)
             (type)
             (owner)
-            (permlink)
+            (content_permlink)
             (created)
             (start)
             (deadline)

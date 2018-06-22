@@ -23,7 +23,7 @@ public:
                                      const asset& balance,
                                      const time_point_sec& start_date,
                                      const time_point_sec& end_date,
-                                     const std::string& permlink)
+                                     const std::string& content_permlink)
     {
         FC_ASSERT(balance.amount > 0, "Invalid balance.");
         FC_ASSERT(start_date < end_date, "Invalid dates.");
@@ -39,9 +39,9 @@ public:
 
         return _budget_service.create([&](object_type& budget) {
             budget.owner = owner;
-            if (!permlink.empty())
+            if (!content_permlink.empty())
             {
-                fc::from_string(budget.permlink, permlink);
+                fc::from_string(budget.content_permlink, content_permlink);
             }
             budget.created = head_block_time;
             budget.start = start_date;

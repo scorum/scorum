@@ -2464,7 +2464,7 @@ annotated_signed_transaction wallet_api::create_budget_for_post(const std::strin
 
     op.type = budget_type::post;
     op.owner = owner;
-    op.permlink = permlink;
+    op.content_permlink = permlink;
     op.balance = balance;
     op.deadline = deadline;
 
@@ -2488,7 +2488,7 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
 
     op.type = budget_type::banner;
     op.owner = owner;
-    op.permlink = permlink;
+    op.content_permlink = permlink;
     op.balance = balance;
     op.deadline = deadline;
 

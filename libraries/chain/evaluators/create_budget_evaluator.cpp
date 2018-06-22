@@ -47,13 +47,13 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
     case budget_type::post:
     {
         post_budget_management_algorithm(_post_budget_service, _dprops_service, _account_service)
-            .create_budget(owner.name, op.balance, start_date, op.deadline, op.permlink);
+            .create_budget(owner.name, op.balance, start_date, op.deadline, op.content_permlink);
     }
     break;
     case budget_type::banner:
     {
         banner_budget_management_algorithm(_banner_budget_service, _dprops_service, _account_service)
-            .create_budget(owner.name, op.balance, start_date, op.deadline, op.permlink);
+            .create_budget(owner.name, op.balance, start_date, op.deadline, op.content_permlink);
     }
     break;
     default:

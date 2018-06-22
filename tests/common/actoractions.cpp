@@ -43,7 +43,7 @@ void ActorActions::create_budget(const std::string& permlink, asset balance, fc:
 {
     create_budget_operation op;
     op.owner = _actor.name;
-    op.permlink = permlink;
+    op.content_permlink = permlink;
     op.balance = balance;
     op.deadline = deadline;
 

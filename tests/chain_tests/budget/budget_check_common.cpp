@@ -34,7 +34,7 @@ void budget_check_fixture::create_budget(const Actor& owner,
     op.type = type;
     op.balance = asset(balance, SCORUM_SYMBOL);
     op.deadline = db.get_slot_time(deadline_in_blocks);
-    op.permlink = get_unique_permlink();
+    op.content_permlink = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);
 }
@@ -51,7 +51,7 @@ void budget_check_fixture::create_budget(const Actor& owner,
     op.balance = balance;
     op.start = start;
     op.deadline = deadline;
-    op.permlink = get_unique_permlink();
+    op.content_permlink = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);
 }
