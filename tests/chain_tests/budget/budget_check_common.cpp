@@ -54,6 +54,8 @@ void budget_check_fixture::create_budget(const Actor& owner,
     op.content_permlink = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);
+
+    generate_block();
 }
 
 } // namespace database_fixture

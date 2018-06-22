@@ -26,7 +26,7 @@ public:
 
     account_service_i& account_service;
 
-    const fc::microseconds budget_start_interval = fc::seconds(SCORUM_BLOCK_INTERVAL * 10);
+    const fc::microseconds budget_start_interval = fc::seconds(SCORUM_BLOCK_INTERVAL * 22);
 
     asset budget_balance;
     fc::time_point_sec budget_start;
