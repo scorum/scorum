@@ -22,6 +22,11 @@ struct budget_check_fixture : public database_default_integration_fixture
 
     void create_budget(const Actor& owner, const budget_type type);
     void create_budget(const Actor& owner, const budget_type type, int balance, int deadline_in_blocks);
+    void create_budget(const Actor& owner,
+                       const budget_type type,
+                       const asset& balance,
+                       const fc::time_point_sec& start,
+                       const fc::time_point_sec& deadline);
 
     const int BUDGET_BALANCE_DEFAULT = 50;
     const int BUDGET_DEADLINE_IN_BLOCKS_DEFAULT = 5;

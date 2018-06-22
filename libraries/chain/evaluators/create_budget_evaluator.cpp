@@ -40,7 +40,7 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
               "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
     const auto& dprops = _dprops_service.get();
-    time_point_sec start_date = dprops.time;
+    time_point_sec start_date = (op.start < dprops.time) ? dprops.time : op.start;
 
     switch (op.type)
     {

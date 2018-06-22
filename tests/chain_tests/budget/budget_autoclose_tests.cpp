@@ -22,7 +22,7 @@ public:
     Actor alice;
 };
 
-BOOST_FIXTURE_TEST_SUITE(budget_transaction_check, budget_autoclose_tests_fixture)
+BOOST_FIXTURE_TEST_SUITE(budget_autoclose_check, budget_autoclose_tests_fixture)
 
 SCORUM_TEST_CASE(auto_close_budget_by_balance)
 {

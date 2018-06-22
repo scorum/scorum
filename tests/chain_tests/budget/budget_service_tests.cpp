@@ -32,7 +32,7 @@ struct budget_service_getters_check_fixture : public budget_check_fixture
     Actor bob;
 };
 
-BOOST_FIXTURE_TEST_SUITE(budget_service_getters_check, budget_service_getters_check_fixture)
+BOOST_FIXTURE_TEST_SUITE(budget_service_check, budget_service_getters_check_fixture)
 
 SCORUM_TEST_CASE(get_budget_check)
 {

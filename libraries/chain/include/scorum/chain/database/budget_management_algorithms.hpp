@@ -34,7 +34,8 @@ public:
         auto head_block_time = _dgp_service.head_block_time();
 
         auto advance = (start_date.sec_since_epoch() - head_block_time.sec_since_epoch()) / SCORUM_BLOCK_INTERVAL;
-        auto last_cashout_block = head_block_num + advance;
+        // budget must be allocated exactly from start time ('-1')
+        auto last_cashout_block = head_block_num + advance - 1;
 
         return _budget_service.create([&](object_type& budget) {
             budget.owner = owner;

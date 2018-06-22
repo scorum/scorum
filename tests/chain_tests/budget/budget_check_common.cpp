@@ -39,4 +39,21 @@ void budget_check_fixture::create_budget(const Actor& owner,
     push_operation_only(op, owner.private_key);
 }
 
+void budget_check_fixture::create_budget(const Actor& owner,
+                                         const budget_type type,
+                                         const asset& balance,
+                                         const fc::time_point_sec& start,
+                                         const fc::time_point_sec& deadline)
+{
+    create_budget_operation op;
+    op.owner = owner.name;
+    op.type = type;
+    op.balance = balance;
+    op.start = start;
+    op.deadline = deadline;
+    op.permlink = get_unique_permlink();
+
+    push_operation_only(op, owner.private_key);
+}
+
 } // namespace database_fixture
