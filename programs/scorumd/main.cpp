@@ -1,4 +1,5 @@
 #include <scorum/app/application.hpp>
+#include <scorum/app/log_configurator.hpp>
 
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/manifest/plugins.hpp>
@@ -17,8 +18,6 @@
 #include <csignal>
 #endif
 #include <graphene/utilities/key_conversion.hpp>
-
-#include "log_configurator.hpp"
 
 using namespace scorum;
 using scorum::protocol::version;

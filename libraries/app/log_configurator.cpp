@@ -18,8 +18,8 @@
 #include <fc/exception/exception.hpp>
 
 #include <scorum/app/application.hpp>
+#include <scorum/app/log_configurator.hpp>
 #include <scorum/protocol/config.hpp>
-#include "log_configurator.hpp"
 
 #define LOG_APPENDER "log-appender"
 #define LOGGER "log-logger"
@@ -93,6 +93,11 @@ fc::appender_config get_file_config(const std::string& s, const boost::filesyste
     }
 
     ilog(file_name.generic_string());
+
+    if (fc::is_directory(file_name))
+    {
+        FC_THROW_EXCEPTION(fc::invalid_arg_exception, "appender stream ${name} is not a file", ("name", file_name));
+    }
 
     // construct a default file appender config here
     // filename will be taken from ini file, everything else hard-coded here
