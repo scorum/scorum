@@ -645,8 +645,8 @@ struct close_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
+    int64_t budget_id;
     account_name_type owner;
-    std::string permlink;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -806,7 +806,7 @@ FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(permlink)(balance)(deadline) )
-FC_REFLECT( scorum::protocol::close_budget_operation, (type)(owner)(permlink) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (type)(budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
 FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))

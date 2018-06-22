@@ -43,7 +43,7 @@ public:
 };
 
 struct by_owner_name;
-struct by_permlink;
+struct by_start_time;
 
 template <typename BudgetObjectType>
 using budget_index
@@ -56,16 +56,14 @@ using budget_index
                                                                  member<BudgetObjectType,
                                                                         account_name_type,
                                                                         &BudgetObjectType::owner>>,
-                                              ordered_unique<tag<by_permlink>,
+                                              ordered_unique<tag<by_start_time>,
                                                              composite_key<BudgetObjectType,
                                                                            member<BudgetObjectType,
-                                                                                  account_name_type,
-                                                                                  &BudgetObjectType::owner>,
+                                                                                  time_point_sec,
+                                                                                  &BudgetObjectType::start>,
                                                                            member<BudgetObjectType,
-                                                                                  fc::shared_string,
-                                                                                  &BudgetObjectType::permlink>>,
-                                                             composite_key_compare<std::less<account_name_type>,
-                                                                                   fc::strcmp_less>>>>;
+                                                                                  typename BudgetObjectType::id_type,
+                                                                                  &BudgetObjectType::id>>>>>;
 
 using fund_budget_object = budget_object<fund_budget_object_type, SP_SYMBOL>;
 using post_budget_object = budget_object<post_budget_object_type, SCORUM_SYMBOL>;

@@ -296,7 +296,6 @@ void create_budget_operation::validate() const
 void close_budget_operation::validate() const
 {
     validate_account_name(owner);
-    validate_permlink(permlink);
 }
 
 void atomicswap_initiate_operation::validate() const

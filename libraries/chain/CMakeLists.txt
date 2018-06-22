@@ -67,6 +67,8 @@ add_library( scorum_chain
              evaluators/committee_accessor.cpp
              evaluators/proposal_evaluators.cpp
              evaluators/registration_pool_evaluator.cpp
+             evaluators/create_budget_evaluator.cpp
+             evaluators/close_budget_evaluator.cpp
 
              schema/shared_authority.cpp
 

@@ -23,8 +23,6 @@
 
 using namespace scorum::chain;
 
-#if 0
-
 namespace witness_reward_in_sp_migration_tests {
 
 struct witness_reward_info
@@ -81,7 +79,7 @@ private:
 struct witness_reward_in_sp_migration_fixture : public database_fixture::database_trx_integration_fixture
 {
     witness_reward_in_sp_migration_fixture()
-        : budget_service(db.budget_service())
+        : budget_service(db.fund_budget_service())
         , dynamic_global_property_service(db.dynamic_global_property_service())
         , witness_reward_in_sp_migration_service(db.witness_reward_in_sp_migration_service())
         , reward_visitor(db)
@@ -111,7 +109,7 @@ struct witness_reward_in_sp_migration_fixture : public database_fixture::databas
         db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(reward_visitor); });
     }
 
-    budget_service_i& budget_service;
+    fund_budget_service_i& budget_service;
     dynamic_global_property_service_i& dynamic_global_property_service;
     witness_reward_in_sp_migration_service_i& witness_reward_in_sp_migration_service;
 
@@ -129,7 +127,7 @@ BOOST_FIXTURE_TEST_SUITE(witness_reward_in_sp_migration_tests, witness_reward_in
 
 BOOST_AUTO_TEST_CASE(migration_constants_check)
 {
-    const auto& fund_budget = budget_service.get_fund_budget();
+    const auto& fund_budget = budget_service.get();
     asset initial_per_block_reward = fund_budget.per_block;
 
     asset witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
@@ -223,5 +221,3 @@ BOOST_AUTO_TEST_CASE(rest_of_reward_distribution_check)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
-
-#endif

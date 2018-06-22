@@ -11,15 +11,13 @@
 
 using namespace scorum::chain;
 
-#if 0
-
 namespace database_fixture {
 struct fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blog_integration_fixture
 {
     fifa_world_cup_2018_bounty_reward_fund_fixture()
         : fifa_world_cup_2018_bounty_reward_fund_service(db.content_fifa_world_cup_2018_bounty_reward_fund_service())
         , reward_fund_sp_service(db.content_reward_fund_sp_service())
-        , budget_service(db.budget_service())
+        , fund_budget_service(db.fund_budget_service())
         , account_service(db.account_service())
         , dgp_service(db.dynamic_global_property_service())
     {
@@ -43,7 +41,7 @@ struct fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blog_int
         actor(initdelegate).give_scr(simon, feed_amount / 2);
         actor(initdelegate).give_sp(simon, feed_amount / 2);
 
-        const auto& fund_budget = budget_service.get_fund_budget();
+        const auto& fund_budget = fund_budget_service.get();
         asset initial_per_block_reward = fund_budget.per_block;
 
         asset witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
@@ -54,7 +52,7 @@ struct fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blog_int
 
     content_fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service;
     content_reward_fund_sp_service_i& reward_fund_sp_service;
-    budget_service_i& budget_service;
+    fund_budget_service_i& fund_budget_service;
     account_service_i& account_service;
     dynamic_global_property_service_i& dgp_service;
 
@@ -162,5 +160,3 @@ BOOST_AUTO_TEST_CASE(bounty_fund_distribution_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

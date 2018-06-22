@@ -2,6 +2,7 @@
 
 #include "database_blog_integration.hpp"
 
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
@@ -10,18 +11,19 @@
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 
-using namespace scorum::chain;
+#include <scorum/chain/database/budget_management_algorithms.hpp>
 
-#if 0
+using namespace scorum::chain;
 
 namespace database_fixture {
 struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_fixture
 {
     comment_cashout_from_scr_fund_fixture()
-        : budget_service(db.budget_service())
+        : advertising_budget_service(db.post_budget_service())
         , reward_fund_scr_service(db.content_reward_fund_scr_service())
         , reward_balancer(db.content_reward_scr_service())
         , account_service(db.obtain_service<dbs_account>())
+        , dprops_service(db.dynamic_global_property_service())
         , alice("alice")
         , sam("sam")
     {
@@ -42,12 +44,14 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
         const int deadline_block_count = 10;
         const auto& owner = account_service.get_account(alice.name);
 
-        budget_service.create_budget(owner, ASSET_SCR(deadline_block_count),
-                                     db.head_block_time() + SCORUM_BLOCK_INTERVAL * deadline_block_count);
+        BOOST_CHECK_NO_THROW(
+            post_budget_management_algorithm(advertising_budget_service, dprops_service, account_service)
+                .create_budget(owner.name, ASSET_SCR(deadline_block_count), db.head_block_time(),
+                               db.head_block_time() + SCORUM_BLOCK_INTERVAL * deadline_block_count, ""));
 
         generate_blocks(deadline_block_count);
 
-        BOOST_REQUIRE_EQUAL(budget_service.get_budgets(alice.name).size(), 0u);
+        BOOST_REQUIRE_EQUAL(advertising_budget_service.get_budgets(alice.name).size(), 0u);
 
         activity_reward_balance = reward_fund_scr_service.get().activity_reward_balance;
 
@@ -58,10 +62,11 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
         BOOST_REQUIRE_EQUAL(rb.balance, ASSET_NULL_SCR);
     }
 
-    budget_service_i& budget_service;
+    post_budget_service_i& advertising_budget_service;
     content_reward_fund_scr_service_i& reward_fund_scr_service;
     content_reward_scr_service_i& reward_balancer;
     account_service_i& account_service;
+    dynamic_global_property_service_i& dprops_service;
 
     asset activity_reward_balance = ASSET_NULL_SP;
     Actor alice;
@@ -133,5 +138,3 @@ BOOST_AUTO_TEST_CASE(no_double_cashout_check)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif

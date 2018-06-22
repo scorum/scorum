@@ -1072,13 +1072,13 @@ public:
      *  Closing the budget (for POST type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
-    close_budget_for_post(const std::string& owner, const std::string& permlink, const bool broadcast);
+    close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast);
 
     /**
      *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
-    close_budget_for_banner(const std::string& owner, const std::string& permlink, const bool broadcast);
+    close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast);
 
     /**
      * Vote for committee proposal

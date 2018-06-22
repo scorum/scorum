@@ -2498,15 +2498,15 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
 }
 
 annotated_signed_transaction
-wallet_api::close_budget_for_post(const std::string& owner, const std::string& permlink, const bool broadcast)
+wallet_api::close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_operation op;
 
     op.type = budget_type::post;
+    op.budget_id = id;
     op.owner = owner;
-    op.permlink = permlink;
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -2516,15 +2516,15 @@ wallet_api::close_budget_for_post(const std::string& owner, const std::string& p
 }
 
 annotated_signed_transaction
-wallet_api::close_budget_for_banner(const std::string& owner, const std::string& permlink, const bool broadcast)
+wallet_api::close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_operation op;
 
     op.type = budget_type::banner;
+    op.budget_id = id;
     op.owner = owner;
-    op.permlink = permlink;
 
     signed_transaction tx;
     tx.operations.push_back(op);

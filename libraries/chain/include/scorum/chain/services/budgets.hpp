@@ -3,6 +3,9 @@
 #include <scorum/chain/services/service_base.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/multi_index/detail/unbounded.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -19,8 +22,8 @@ template <class ObjectType> struct owned_base_budget_service_i : public base_ser
     using budgets_type = std::vector<budget_cref_type>;
 
     virtual const ObjectType& get(const typename ObjectType::id_type&) const = 0;
-    virtual budget_cref_type get(const account_name_type& owner, const std::string& permlink) const = 0;
     virtual budgets_type get_budgets() const = 0;
+    virtual budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const = 0;
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budgets_type get_budgets(const account_name_type& owner) const = 0;
@@ -37,7 +40,7 @@ protected:
     }
 
 public:
-    const ObjectType& get(const typename ObjectType::id_type& id) const
+    const ObjectType& get(const typename ObjectType::id_type& id) const override
     {
         try
         {
@@ -46,16 +49,7 @@ public:
         FC_CAPTURE_AND_RETHROW((id))
     }
 
-    typename InterfaceType::budget_cref_type get(const account_name_type& owner, const std::string& permlink) const
-    {
-        try
-        {
-            return this->db_impl().template get<ObjectType, by_permlink>(boost::make_tuple(owner, permlink));
-        }
-        FC_CAPTURE_AND_RETHROW((owner)(permlink))
-    }
-
-    typename InterfaceType::budgets_type get_budgets() const
+    typename InterfaceType::budgets_type get_budgets() const override
     {
         typename InterfaceType::budgets_type ret;
 
@@ -69,7 +63,17 @@ public:
         return ret;
     }
 
-    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const
+    typename InterfaceType::budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const override
+    {
+        try
+        {
+            return this->template get_range_by<by_start_time>(::boost::multi_index::unbounded,
+                                                              ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
+        }
+        FC_CAPTURE_AND_RETHROW((until))
+    }
+
+    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const override
     {
         try
         {
@@ -92,7 +96,7 @@ public:
         FC_CAPTURE_AND_RETHROW((lower_bound_owner_name)(limit))
     }
 
-    typename InterfaceType::budgets_type get_budgets(const account_name_type& owner) const
+    typename InterfaceType::budgets_type get_budgets(const account_name_type& owner) const override
     {
         try
         {
