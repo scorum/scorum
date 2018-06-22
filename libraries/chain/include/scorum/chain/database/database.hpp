@@ -409,3 +409,4 @@ private:
 } // namespace scorum
 
 #define debug_log(CTX, FORMAT, ...) fc_ctx_dlog(fc::logger::get("debug"), CTX, FORMAT, __VA_ARGS__)
+#define op_debug_log(CTX, FORMAT, ...) fc_ctx_dlog(fc::logger::get("op_debug_log"), CTX, FORMAT, __VA_ARGS__)

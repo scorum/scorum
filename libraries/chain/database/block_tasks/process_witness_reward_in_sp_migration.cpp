@@ -20,6 +20,8 @@ const share_type process_witness_reward_in_sp_migration::migrate_deferred_paymen
 
 void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_witness_reward_in_sp_migration BEGIN");
+
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
     if (dprops_service.head_block_time() < SCORUM_WITNESS_REWARD_MIGRATION_DATE)
@@ -77,6 +79,8 @@ void process_witness_reward_in_sp_migration::on_apply(block_task_context& ctx)
     {
         witness_reward_in_sp_migration_service.remove();
     }
+
+    debug_log(ctx.get_block_info(), "process_witness_reward_in_sp_migration END");
 }
 
 void process_witness_reward_in_sp_migration::adjust_witness_reward(block_task_context& ctx, asset& witness_reward)
