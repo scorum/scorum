@@ -321,6 +321,22 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
 }
 
+SCORUM_TEST_CASE(should_return_two_posts_from_same_block_ordered_by_id_desc)
+{
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B"]})").push();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = false;
+    q.tags = { "A", "B" };
+    std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+
+    BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+    BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
+}
+
 SCORUM_TEST_CASE(check_tag_should_be_truncated_to_24symbols)
 {
     auto json
