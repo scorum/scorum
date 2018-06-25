@@ -43,8 +43,6 @@ void close_budget_evaluator::do_apply(const close_budget_evaluator::operation_ty
             .close_budget(budget);
     }
     break;
-    default:
-        FC_ASSERT("Unknown budget type");
     }
 }
 }

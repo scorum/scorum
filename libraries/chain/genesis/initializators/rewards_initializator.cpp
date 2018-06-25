@@ -83,8 +83,7 @@ void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)
     auto balance = asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL);
 
     time_point_sec start_date = dprops_service.get_genesis_time();
-    fc::time_point deadline
-        = dprops_service.get_genesis_time() + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
+    fc::time_point deadline = start_date + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     fund_budget_management_algorithm creator(budget_service, dprops_service);
     creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, balance, start_date, deadline, "");

@@ -40,6 +40,8 @@ protected:
     }
 
 public:
+    using budgets_type = typename InterfaceType::budgets_type;
+
     const ObjectType& get(const typename ObjectType::id_type& id) const override
     {
         try
@@ -49,21 +51,16 @@ public:
         FC_CAPTURE_AND_RETHROW((id))
     }
 
-    typename InterfaceType::budgets_type get_budgets() const override
+    budgets_type get_budgets() const override
     {
-        typename InterfaceType::budgets_type ret;
-
-        const auto& idx = this->db_impl().template get_index<budget_index<ObjectType>>().indices();
-
-        for (auto it = idx.cbegin(), it_end = idx.cend(); it != it_end; ++it)
+        try
         {
-            ret.push_back(std::cref(*it));
+            return this->template get_range_by<by_id>(::boost::multi_index::unbounded, ::boost::multi_index::unbounded);
         }
-
-        return ret;
+        FC_CAPTURE_AND_RETHROW(())
     }
 
-    typename InterfaceType::budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const override
+    budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const override
     {
         try
         {
@@ -96,24 +93,12 @@ public:
         FC_CAPTURE_AND_RETHROW((lower_bound_owner_name)(limit))
     }
 
-    typename InterfaceType::budgets_type get_budgets(const account_name_type& owner) const override
+    budgets_type get_budgets(const account_name_type& owner) const override
     {
         try
         {
-            typename InterfaceType::budgets_type ret;
-
-            auto it_pair = this->db_impl()
-                               .template get_index<budget_index<ObjectType>>()
-                               .indices()
-                               .template get<by_owner_name>()
-                               .equal_range(owner);
-
-            for (auto it = it_pair.first, it_end = it_pair.second; it != it_end; ++it)
-            {
-                ret.push_back(std::cref(*it));
-            }
-
-            return ret;
+            return this->template get_range_by<by_owner_name>(::boost::lambda::_1 >= owner,
+                                                              ::boost::lambda::_1 <= owner);
         }
         FC_CAPTURE_AND_RETHROW((owner))
     }
