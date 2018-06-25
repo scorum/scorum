@@ -23,7 +23,7 @@ template <class ObjectType> struct owned_base_budget_service_i : public base_ser
 
     virtual const ObjectType& get(const typename ObjectType::id_type&) const = 0;
     virtual budgets_type get_budgets() const = 0;
-    virtual budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const = 0;
+    virtual budgets_type get_budgets_by_start_time(const fc::time_point_sec& until, uint32_t limit) const = 0;
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budgets_type get_budgets(const account_name_type& owner) const = 0;
@@ -60,7 +60,7 @@ public:
         FC_CAPTURE_AND_RETHROW(())
     }
 
-    budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const override
+    budgets_type get_budgets_by_start_time(const fc::time_point_sec& until, uint32_t limit) const override
     {
         try
         {
