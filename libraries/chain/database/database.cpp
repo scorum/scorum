@@ -966,7 +966,8 @@ inline void database::push_virtual_operation(const operation& op)
         operation_info ctx(op);
         op_debug_log(ctx, "virt operation pre_apply BEGIN");
         notify_pre_apply_operation(note);
-        op_debug_log(ctx, "virt operation pre_apply END/post_apply BEGIN");
+        op_debug_log(ctx, "virt operation pre_apply END");
+        op_debug_log(ctx, "virt operation post_apply BEGIN");
         notify_post_apply_operation(note);
         op_debug_log(ctx, "virt operation post_apply END");
     }
