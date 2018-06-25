@@ -42,7 +42,6 @@ enum object_type
     block_stats_object_type,
     block_summary_object_type,
     fund_budget_object_type,
-    owned_budgets_object_type,
     post_budget_object_type,
     banner_budget_object_type,
     chain_property_object_type,
@@ -175,7 +174,6 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (block_stats_object_type)
                 (block_summary_object_type)
                 (fund_budget_object_type)
-                (owned_budgets_object_type)
                 (post_budget_object_type)
                 (banner_budget_object_type)
                 (chain_property_object_type)

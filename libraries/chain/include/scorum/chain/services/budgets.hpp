@@ -97,7 +97,7 @@ public:
     {
         try
         {
-            return this->template get_range_by<by_owner_name>(::boost::lambda::_1 >= owner,
+            return this->template get_range_by<by_owner_name>(owner <= ::boost::lambda::_1,
                                                               ::boost::lambda::_1 <= owner);
         }
         FC_CAPTURE_AND_RETHROW((owner))
