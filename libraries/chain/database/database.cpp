@@ -964,12 +964,12 @@ inline void database::push_virtual_operation(const operation& op)
         auto note = create_notification(op);
 
         operation_info ctx(op);
-        op_debug_log(ctx, "virt operation pre_apply BEGIN");
+        debug_log(ctx, "virt operation pre_apply BEGIN");
         notify_pre_apply_operation(note);
-        op_debug_log(ctx, "virt operation pre_apply END");
-        op_debug_log(ctx, "virt operation post_apply BEGIN");
+        debug_log(ctx, "virt operation pre_apply END");
+        debug_log(ctx, "virt operation post_apply BEGIN");
         notify_post_apply_operation(note);
-        op_debug_log(ctx, "virt operation post_apply END");
+        debug_log(ctx, "virt operation post_apply END");
     }
 }
 
@@ -1671,16 +1671,9 @@ void database::apply_operation(const operation& op)
 {
     auto note = create_notification(op);
 
-    //    operation_info ctx(op);
-    //    op_debug_log(ctx, "_pre_apply_operation BEGIN");
     notify_pre_apply_operation(note);
-    //    op_debug_log(ctx, "_pre_apply_operation END");
-
     _my->_evaluator_registry.get_evaluator(op).apply(op);
-
-    //    op_debug_log(ctx, "_post_apply_operation BEGIN");
     notify_post_apply_operation(note);
-    //    op_debug_log(ctx, "_post_apply_operation END");
 }
 
 const witness_object& database::validate_block_header(uint32_t skip, const signed_block& next_block) const
