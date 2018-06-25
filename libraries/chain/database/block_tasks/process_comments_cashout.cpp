@@ -8,6 +8,8 @@ namespace database_ns {
 
 void process_comments_cashout::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_comments_cashout BEGIN");
+
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
     content_reward_fund_scr_service_i& content_reward_fund_scr_service
         = ctx.services().content_reward_fund_scr_service();
@@ -31,6 +33,8 @@ void process_comments_cashout::on_apply(block_task_context& ctx)
     {
         impl.close_comment_payout(comment);
     }
+
+    debug_log(ctx.get_block_info(), "process_comments_cashout END");
 }
 }
 }
