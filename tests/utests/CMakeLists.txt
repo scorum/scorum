@@ -24,6 +24,7 @@ set(SOURCES
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
+    proposal/development_committee_top_budgets_evaluator_tests.cpp
     rewards_math/calculate_payout_tests.cpp
     rewards_math/calculate_total_claims_tests.cpp
     rewards_math/calculate_curations_payout_tests.cpp

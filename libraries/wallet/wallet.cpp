@@ -2740,6 +2740,21 @@ annotated_signed_transaction wallet_api::development_committee_change_transfer_q
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::development_committee_change_top_budget_quorum(const std::string& initiator,
+                                                                                        uint64_t quorum_percent,
+                                                                                        uint32_t lifetime_sec,
+                                                                                        bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = top_budget_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction wallet_api::development_pool_transfer(
     const std::string& initiator, const std::string& to_account, asset amount, uint32_t lifetime_sec, bool broadcast)
 {
@@ -2762,6 +2777,32 @@ annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.vesting_shares = amount; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_pool_top_post_budget(const std::string& initiator,
+                                                                          uint16_t amount,
+                                                                          uint32_t lifetime_sec,
+                                                                          bool broadcast)
+{
+    using operation_type = SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(post);
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_pool_top_banner_budget(const std::string& initiator,
+                                                                            uint16_t amount,
+                                                                            uint32_t lifetime_sec,
+                                                                            bool broadcast)
+{
+    using operation_type = SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(banner);
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
 
     return my->sign_transaction(tx, broadcast);
 }
