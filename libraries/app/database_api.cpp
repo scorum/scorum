@@ -92,7 +92,7 @@ public:
 
             for (const auto& budget : budgets)
             {
-                results.emplace(budget_api_obj(budget));
+                results.emplace(budget);
             }
         }
 
