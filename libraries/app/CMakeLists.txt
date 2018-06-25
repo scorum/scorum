@@ -8,6 +8,7 @@ add_library( scorum_app
              application.cpp
              plugin.cpp
              scorum_api_objects.cpp
+             log_configurator.cpp
              ${HEADERS}
              ${EGENESIS_HEADERS}
            )

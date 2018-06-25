@@ -28,6 +28,8 @@ void process_funds::on_apply(block_task_context& ctx)
     if (apply_mainnet_schedule_crutches(ctx))
         return;
 
+    debug_log(ctx.get_block_info(), "process_funds BEGIN");
+
     data_service_factory_i& services = ctx.services();
     content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
     dev_pool_service_i& dev_service = services.dev_pool_service();
@@ -81,6 +83,8 @@ void process_funds::on_apply(block_task_context& ctx)
     asset users_reward = balancer.take_block_reward();
 
     distribute_reward(ctx, users_reward); // distribute SCR
+
+    debug_log(ctx.get_block_info(), "process_funds END");
 }
 
 void process_funds::distribute_reward(block_task_context& ctx, const asset& users_reward)
