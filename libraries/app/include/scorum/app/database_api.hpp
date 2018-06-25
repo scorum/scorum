@@ -53,11 +53,7 @@ struct less_for_budgets_creation : public std::binary_function<budget_api_obj, b
 {
     bool operator()(const budget_api_obj& a, const budget_api_obj& b) const
     {
-        if (a.created == b.created)
-        {
-            return a.id < b.id;
-        }
-        return a.created < b.created;
+        return std::tie(a.created, a.id) < std::tie(b.created, b.id);
     }
 };
 
@@ -295,7 +291,7 @@ private:
 
 // clang-format off
 
-FC_REFLECT( scorum::app::sorted_budgets_type, BOOST_PP_SEQ_NIL)
+FC_REFLECT_EMPTY( scorum::app::sorted_budgets_type)
 
 FC_REFLECT( scorum::app::withdraw_route, (from_account)(to_account)(percent)(auto_vest) )
 

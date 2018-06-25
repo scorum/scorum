@@ -56,8 +56,6 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
             .create_budget(owner.name, op.balance, start_date, op.deadline, op.content_permlink);
     }
     break;
-    default:
-        FC_ASSERT("Unknown budget type");
     }
 }
 }

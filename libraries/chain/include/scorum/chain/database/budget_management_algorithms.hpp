@@ -110,22 +110,14 @@ protected:
     {
         FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
-        asset ret(0, balance.symbol());
+        asset decreased(0, balance.symbol());
 
         _budget_service.update(budget, [&](object_type& b) {
-            if (b.balance.amount > 0 && balance.amount <= b.balance.amount)
-            {
-                b.balance -= balance;
-                ret = balance;
-            }
-            else
-            {
-                ret = b.balance;
-                b.balance.amount = 0;
-            }
+            decreased = std::min(b.balance, balance);
+            b.balance -= decreased;
         });
 
-        return ret;
+        return decreased;
     }
 
     virtual bool check_close_conditions(const object_type&) = 0;

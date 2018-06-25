@@ -51,8 +51,7 @@
     DECLARE_SERVICE_INTERFACE_NAME(service)                                                                            \
     &data_service_factory::BOOST_PP_CAT(DECLARE_SERVICE_FUNCT_NAME(service), BOOST_PP_EMPTY())()                       \
     {                                                                                                                  \
-        return static_cast<DECLARE_SERVICE_INTERFACE_NAME(service)&>(                                                  \
-            factory.obtain_service<DECLARE_DBS_IMPL_NAME(service)>());                                                 \
+        return factory.obtain_service<DECLARE_DBS_IMPL_NAME(service)>();                                               \
     }
 
 #define DATA_SERVICE_FACTORY_IMPL(SERVICES)                                                                            \
