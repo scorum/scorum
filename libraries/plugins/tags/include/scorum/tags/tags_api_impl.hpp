@@ -153,7 +153,9 @@ public:
 
     std::vector<discussion> get_discussions_by_created(const discussion_query& query) const
     {
-        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.created > rhs.created; };
+        auto ordering = [](const tag_object& lhs, const tag_object& rhs) {
+            return std::tie(lhs.created, lhs.comment) > std::tie(rhs.created, rhs.comment);
+        };
 
         return get_discussions(query, ordering);
     }
