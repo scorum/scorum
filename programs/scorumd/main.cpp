@@ -1,4 +1,5 @@
 #include <scorum/app/application.hpp>
+#include <scorum/app/log_configurator.hpp>
 
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/manifest/plugins.hpp>
@@ -17,8 +18,6 @@
 #include <csignal>
 #endif
 #include <graphene/utilities/key_conversion.hpp>
-
-#include "log_configurator.hpp"
 
 using namespace scorum;
 using scorum::protocol::version;
@@ -129,7 +128,7 @@ int main(int argc, char** argv)
                 = logger::load_logging_config_from_options(options, app::get_data_dir_path(options));
 
             if (logging_config)
-                fc::configure_logging(*logging_config);
+                fc::logging_config::configure_logging(*logging_config);
         }
         catch (const fc::exception&)
         {
