@@ -45,6 +45,9 @@ public:
     std::map<uint32_t, applied_operation>
     get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
 
+    std::map<uint32_t, std::vector<applied_operation>>
+    get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const;
+
 private:
     std::unique_ptr<detail::account_history_api_impl> _impl;
 };
