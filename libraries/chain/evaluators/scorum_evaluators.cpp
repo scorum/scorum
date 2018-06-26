@@ -355,9 +355,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                       ("x", parent.depth)("y", SCORUM_MAX_COMMENT_DEPTH));
         }
 
-        if (o.json_metadata.size())
-            FC_ASSERT(fc::is_utf8(o.json_metadata), "JSON Metadata must be UTF-8");
-
         auto now = dprops_service.head_block_time();
 
         if (!comment_service.is_exists(o.author, o.permlink))
@@ -431,10 +428,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 {
                     fc::from_string(com.body, o.body);
                 }
-                if (fc::is_utf8(o.json_metadata))
-                    fc::from_string(com.json_metadata, o.json_metadata);
-                else
-                    wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
+
+                fc::from_string(com.json_metadata, o.json_metadata);
 #endif
             });
 
@@ -496,15 +491,12 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #ifndef IS_LOW_MEM
                 if (o.title.size())
                     fc::from_string(com.title, o.title);
-                if (o.json_metadata.size())
+                if (!o.json_metadata.empty())
                 {
-                    if (fc::is_utf8(o.json_metadata))
-                        fc::from_string(com.json_metadata, o.json_metadata);
-                    else
-                        wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
+                    fc::from_string(com.json_metadata, o.json_metadata);
                 }
 
-                if (o.body.size())
+                if (!o.body.empty())
                 {
                     try
                     {

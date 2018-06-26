@@ -91,7 +91,7 @@ public:
 
     const object_type& get() const
     {
-        BOOST_ASSERT(!_objects_by_id.empty());
+        BOOST_ASSERT(is_exists());
         return _objects_by_id.begin()->second;
     }
 
@@ -100,6 +100,16 @@ public:
         const auto& it = _objects_by_id.find(id);
         BOOST_ASSERT(it != _objects_by_id.end());
         return it->second;
+    }
+
+    bool is_exists() const
+    {
+        return (!_objects_by_id.empty());
+    }
+
+    bool is_exists(const typename object_type::id_type& id) const
+    {
+        return (_objects_by_id.find(id) != _objects_by_id.end());
     }
 
 private:

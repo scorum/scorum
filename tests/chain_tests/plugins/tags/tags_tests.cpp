@@ -234,7 +234,7 @@ BOOST_FIXTURE_TEST_SUITE(get_content, get_content_fixture)
 SCORUM_TEST_CASE(check_total_payout)
 {
     actor(initdelegate)
-        .create_budget("permlink", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
+        .create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
 
     auto post = create_post(initdelegate).in_block();
     generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL);
@@ -275,7 +275,7 @@ SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
 SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 {
     actor(initdelegate)
-        .create_budget("permlink", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
+        .create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
 
     // first payout
     {
