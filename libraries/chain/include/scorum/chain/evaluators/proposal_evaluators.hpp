@@ -29,8 +29,8 @@ struct proposal_add_member_evaluator : public proposal_operation_evaluator<propo
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = get_committee(this->db(), o);
-        committee_service.add_member(o.account_name);
+        auto committee = get_committee(this->db(), o);
+        committee.as_committee_i().add_member(o.account_name);
     }
 };
 
@@ -48,8 +48,8 @@ struct proposal_exclude_member_evaluator
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = get_committee(this->db(), o);
-        committee_service.exclude_member(o.account_name);
+        auto committee = get_committee(this->db(), o);
+        committee.as_committee_i().exclude_member(o.account_name);
 
         removed_members.insert(o.account_name);
     }
@@ -71,23 +71,27 @@ struct proposal_change_quorum_evaluator
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = get_committee(this->db(), o);
+        committee committee = get_committee(this->db(), o);
 
         if (o.committee_quorum == add_member_quorum)
         {
-            committee_service.change_add_member_quorum(o.quorum);
+            committee.as_committee_i().change_add_member_quorum(o.quorum);
         }
         else if (o.committee_quorum == exclude_member_quorum)
         {
-            committee_service.change_exclude_member_quorum(o.quorum);
+            committee.as_committee_i().change_exclude_member_quorum(o.quorum);
         }
         else if (o.committee_quorum == base_quorum)
         {
-            committee_service.change_base_quorum(o.quorum);
+            committee.as_committee_i().change_base_quorum(o.quorum);
         }
         else if (o.committee_quorum == transfer_quorum)
         {
-            committee_service.change_transfer_quorum(o.quorum);
+            committee.weak_visit([&](development_committee_i& c) { c.change_transfer_quorum(o.quorum); });
+        }
+        else if (o.committee_quorum == adv_moderator_quorum)
+        {
+            committee.weak_visit([&](development_committee_i& c) { c.change_adv_moderator_quorum(o.quorum); });
         }
         else
         {

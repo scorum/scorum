@@ -41,9 +41,9 @@ void dbs_proposal_executor::operator()(const proposal_object& proposal)
 
 bool dbs_proposal_executor::is_quorum(const proposal_object& proposal)
 {
-    committee_i& committee_service = proposal.operation.visit(get_operation_committee_visitor(services));
+    auto committee = proposal.operation.visit(get_operation_committee_visitor(services));
     const size_t votes = proposal_service.get_votes(proposal);
-    const size_t members_count = committee_service.get_members_count();
+    const size_t members_count = committee.as_committee_i().get_members_count();
 
     return utils::is_quorum(votes, members_count, proposal.quorum_percent);
 }

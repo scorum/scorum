@@ -1,4 +1,5 @@
 add_subdirectory( fc )
+add_subdirectory( utils )
 add_subdirectory( schema )
 add_subdirectory( chainbase )
 add_subdirectory( rewards_math )

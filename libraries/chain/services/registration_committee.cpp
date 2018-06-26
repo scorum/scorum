@@ -145,11 +145,6 @@ void dbs_registration_committee::change_base_quorum(const percent_type quorum)
     db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.change_quorum = quorum; });
 }
 
-void dbs_registration_committee::change_transfer_quorum(const percent_type)
-{
-    FC_ASSERT("registration committee doesn't support change_transfer_quorum.");
-}
-
 percent_type dbs_registration_committee::get_add_member_quorum()
 {
     const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
@@ -166,13 +161,6 @@ percent_type dbs_registration_committee::get_base_quorum()
 {
     const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
     return reg_committee.change_quorum;
-}
-
-percent_type dbs_registration_committee::get_transfer_quorum()
-{
-    FC_ASSERT("registration committee doesn't support get_transfer_quorum.");
-
-    return SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
 }
 
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)
