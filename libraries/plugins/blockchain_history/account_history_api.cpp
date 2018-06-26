@@ -50,6 +50,19 @@ public:
             }
         }
     }
+
+    template <typename history_object_type>
+    std::map<uint32_t, applied_operation> get_history(const std::string& account, uint64_t from, uint32_t limit) const
+    {
+        std::map<uint32_t, applied_operation> result;
+
+        const auto db = _app.chain_database();
+
+        auto fill_funct = [&](const history_object_type& hobj) { result[hobj.sequence] = db->get(hobj.op); };
+        this->template get_history<history_object_type>(account, from, limit, fill_funct);
+
+        return result;
+    }
 };
 } // namespace detail
 
@@ -70,43 +83,23 @@ std::map<uint32_t, applied_operation>
 account_history_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
     const auto db = _impl->_app.chain_database();
-    return db->with_read_lock([&]() {
-        std::map<uint32_t, applied_operation> result;
-
-        auto fill_funct
-            = [&](const transfers_to_scr_history_object& hobj) { result[hobj.sequence] = db->get(hobj.op); };
-        _impl->get_history<transfers_to_scr_history_object>(account, from, limit, fill_funct);
-
-        return result;
-    });
+    return db->with_read_lock(
+        [&]() { return _impl->get_history<transfers_to_scr_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
     const auto db = _impl->_app.chain_database();
-    return db->with_read_lock([&]() {
-        std::map<uint32_t, applied_operation> result;
-
-        auto fill_funct = [&](const transfers_to_sp_history_object& hobj) { result[hobj.sequence] = db->get(hobj.op); };
-        _impl->get_history<transfers_to_sp_history_object>(account, from, limit, fill_funct);
-
-        return result;
-    });
+    return db->with_read_lock(
+        [&]() { return _impl->get_history<transfers_to_sp_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_history(const std::string& account, uint64_t from, uint32_t limit) const
 {
     const auto db = _impl->_app.chain_database();
-    return db->with_read_lock([&]() {
-        std::map<uint32_t, applied_operation> result;
-
-        auto fill_funct = [&](const account_history_object& hobj) { result[hobj.sequence] = db->get(hobj.op); };
-        _impl->get_history<account_history_object>(account, from, limit, fill_funct);
-
-        return result;
-    });
+    return db->with_read_lock([&]() { return _impl->get_history<account_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, std::vector<applied_operation>>

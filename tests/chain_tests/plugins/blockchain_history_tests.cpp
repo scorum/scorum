@@ -431,8 +431,18 @@ struct check_withdraw_consistency_visitor
 
     void operator()(const acc_to_acc_vesting_withdraw_operation& op)
     {
-        ++withdraw_steps;
-        withdrawn += op.withdrawn;
+        BOOST_REQUIRE_EQUAL(op.from_account, initiator);
+
+        if (withdrawals.find(op.to_account) == withdrawals.end())
+        {
+            withdrawals[op.to_account].withdraw_steps++;
+            withdrawals[op.to_account].withdrawn = op.withdrawn;
+        }
+        else
+        {
+            withdrawals[op.to_account].withdraw_steps++;
+            withdrawals[op.to_account].withdrawn += op.withdrawn;
+        }
     }
 
     template <typename Op> void operator()(const Op&)
@@ -441,11 +451,22 @@ struct check_withdraw_consistency_visitor
         BOOST_REQUIRE(false);
     }
 
-    uint32_t withdraw_ops = 0;
-    uint32_t withdraw_steps = 0;
+    check_withdraw_consistency_visitor(account_name_type name)
+        : initiator(name)
+    {
+    }
 
+    account_name_type initiator;
+
+    uint32_t withdraw_ops = 0;
     asset to_withdraw = ASSET_SP(0);
-    asset withdrawn = ASSET_SCR(0);
+
+    struct progress
+    {
+        uint32_t withdraw_steps = 0;
+        asset withdrawn;
+    };
+    std::map<account_name_type, progress> withdrawals;
 };
 
 SCORUM_TEST_CASE(check_get_account_sp_to_scr_transfers)
@@ -469,11 +490,29 @@ SCORUM_TEST_CASE(check_get_account_sp_to_scr_transfers)
         BOOST_REQUIRE_EQUAL(ret.size(), 0u);
     }
 
-    BOOST_TEST_MESSAGE("Start withdraw");
+    BOOST_TEST_MESSAGE("Start withdraw Sam");
     {
         withdraw_scorumpower_operation op;
         op.account = sam.name;
         op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op);
+    }
+
+    BOOST_TEST_MESSAGE("Start withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op);
+    }
+
+    BOOST_TEST_MESSAGE("Start routes from Sam");
+    {
+        set_withdraw_scorumpower_route_to_account_operation op;
+        op.from_account = sam.name;
+        op.to_account = alice.name;
+        op.auto_vest = true;
+        op.percent = SCORUM_PERCENT(50);
         push_operation(op);
     }
 
@@ -486,21 +525,21 @@ SCORUM_TEST_CASE(check_get_account_sp_to_scr_transfers)
 
     auto ret = account_history_api_call.get_account_sp_to_scr_transfers(sam, -1, over_limit);
     BOOST_REQUIRE_EQUAL(ret.size(), 1u);
-    BOOST_REQUIRE_EQUAL(ret[0].size(), 1 + SCORUM_VESTING_WITHDRAW_INTERVALS); // withdraw_scorumpower_operation +
-    // acc_to_acc_vesting_withdraw_operation
-    // * SCORUM_VESTING_WITHDRAW_INTERVALS
 
-    check_withdraw_consistency_visitor collector;
+    check_withdraw_consistency_visitor collector(sam.name);
     for (auto& val : ret[0])
     {
         val.op.visit(collector);
     }
-    BOOST_TEST_MESSAGE("Generating blocks");
+    BOOST_TEST_MESSAGE("Check Result");
 
     BOOST_REQUIRE_EQUAL(collector.withdraw_ops, 1u);
-    BOOST_REQUIRE_EQUAL(collector.withdraw_steps, SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_REQUIRE_EQUAL(collector.withdrawals[sam.name].withdraw_steps, SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_REQUIRE_EQUAL(collector.withdrawals[alice.name].withdraw_steps, SCORUM_VESTING_WITHDRAW_INTERVALS);
     BOOST_REQUIRE_EQUAL(collector.to_withdraw, ASSET_SP(feed_amount));
-    BOOST_REQUIRE_EQUAL(collector.to_withdraw.amount, collector.withdrawn.amount);
+    BOOST_REQUIRE_EQUAL(collector.to_withdraw.amount,
+                        collector.withdrawals[sam.name].withdrawn.amount
+                            + collector.withdrawals[alice.name].withdrawn.amount);
 }
 
 SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
