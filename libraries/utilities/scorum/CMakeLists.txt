@@ -1,7 +1,7 @@
 file(GLOB_RECURSE HEADERS "include/scorum/utils/*.hpp")
 
 add_library(scorum_utils
-        string_conv.cpp
+        string_algorithm.cpp
         )
 
 target_link_libraries(scorum_utils

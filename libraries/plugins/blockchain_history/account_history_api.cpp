@@ -23,8 +23,8 @@ public:
     {
     }
 
-    template <typename history_object_type>
-    std::map<uint32_t, applied_operation> get_history(const std::string& account, uint64_t from, uint32_t limit) const
+    template <typename history_object_type, typename fill_result_functor>
+    void get_history(const std::string& account, uint64_t from, uint32_t limit, fill_result_functor& funct) const
     {
         const auto db = _app.chain_database();
 
@@ -32,8 +32,6 @@ public:
         FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
                   ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
         FC_ASSERT(from >= limit, "From must be greater than limit");
-
-        std::map<uint32_t, applied_operation> result;
 
         const auto& idx = db->get_index<history_index<history_object_type>>().indices().get<by_account>();
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
@@ -47,11 +45,10 @@ public:
             }
             while (itr != end)
             {
-                result[itr->sequence] = db->get(itr->op);
+                funct(*itr);
                 ++itr;
             }
         }
-        return result;
     }
 };
 } // namespace detail
@@ -72,22 +69,65 @@ void account_history_api::on_api_startup()
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_scr_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
-    return _impl->_app.chain_database()->with_read_lock(
-        [&]() { return _impl->get_history<transfers_to_scr_history_object>(account, from, limit); });
+    const auto db = _impl->_app.chain_database();
+    return db->with_read_lock([&]() {
+        std::map<uint32_t, applied_operation> result;
+
+        auto fill_funct
+            = [&](const transfers_to_scr_history_object& hobj) { result[hobj.sequence] = db->get(hobj.op); };
+        _impl->get_history<transfers_to_scr_history_object>(account, from, limit, fill_funct);
+
+        return result;
+    });
 }
 
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
-    return _impl->_app.chain_database()->with_read_lock(
-        [&]() { return _impl->get_history<transfers_to_sp_history_object>(account, from, limit); });
+    const auto db = _impl->_app.chain_database();
+    return db->with_read_lock([&]() {
+        std::map<uint32_t, applied_operation> result;
+
+        auto fill_funct = [&](const transfers_to_sp_history_object& hobj) { result[hobj.sequence] = db->get(hobj.op); };
+        _impl->get_history<transfers_to_sp_history_object>(account, from, limit, fill_funct);
+
+        return result;
+    });
 }
 
 std::map<uint32_t, applied_operation>
 account_history_api::get_account_history(const std::string& account, uint64_t from, uint32_t limit) const
 {
-    return _impl->_app.chain_database()->with_read_lock(
-        [&]() { return _impl->get_history<account_history_object>(account, from, limit); });
+    const auto db = _impl->_app.chain_database();
+    return db->with_read_lock([&]() {
+        std::map<uint32_t, applied_operation> result;
+
+        auto fill_funct = [&](const account_history_object& hobj) { result[hobj.sequence] = db->get(hobj.op); };
+        _impl->get_history<account_history_object>(account, from, limit, fill_funct);
+
+        return result;
+    });
+}
+
+std::map<uint32_t, std::vector<applied_operation>>
+account_history_api::get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const
+{
+    const auto db = _impl->_app.chain_database();
+    return db->with_read_lock([&]() {
+        std::map<uint32_t, std::vector<applied_operation>> result;
+
+        auto fill_funct = [&](const withdrawals_to_scr_history_object& hobj) {
+            auto& ops = result[hobj.sequence];
+            ops.push_back(db->get(hobj.op));
+            for (auto& op : hobj.progress)
+            {
+                ops.push_back(db->get(op));
+            }
+        };
+        _impl->get_history<withdrawals_to_scr_history_object>(account, from, limit, fill_funct);
+
+        return result;
+    });
 }
 
 } // namespace blockchain_history

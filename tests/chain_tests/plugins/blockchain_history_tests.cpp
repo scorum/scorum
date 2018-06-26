@@ -419,6 +419,90 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     }
 }
 
+struct check_withdraw_consistency_visitor
+{
+    using result_type = void;
+
+    void operator()(const withdraw_scorumpower_operation& op)
+    {
+        ++withdraw_ops;
+        to_withdraw += op.scorumpower;
+    }
+
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op)
+    {
+        ++withdraw_steps;
+        withdrawn += op.withdrawn;
+    }
+
+    template <typename Op> void operator()(const Op&)
+    {
+        // invalid type received
+        BOOST_REQUIRE(false);
+    }
+
+    uint32_t withdraw_ops = 0;
+    uint32_t withdraw_steps = 0;
+
+    asset to_withdraw = ASSET_SP(0);
+    asset withdrawn = ASSET_SCR(0);
+};
+
+SCORUM_TEST_CASE(check_get_account_sp_to_scr_transfers)
+{
+    const size_t over_limit = 10;
+
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start transfer");
+    // sam has not been feeded yet
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount);
+        push_operation(op);
+
+        generate_block();
+
+        auto ret = account_history_api_call.get_account_sp_to_scr_transfers(sam, -1, over_limit);
+        BOOST_REQUIRE_EQUAL(ret.size(), 0u);
+    }
+
+    BOOST_TEST_MESSAGE("Start withdraw");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = sam.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks");
+    for (uint32_t ci = 0; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
+    }
+
+    auto ret = account_history_api_call.get_account_sp_to_scr_transfers(sam, -1, over_limit);
+    BOOST_REQUIRE_EQUAL(ret.size(), 1u);
+    BOOST_REQUIRE_EQUAL(ret[0].size(), 1 + SCORUM_VESTING_WITHDRAW_INTERVALS); // withdraw_scorumpower_operation +
+    // acc_to_acc_vesting_withdraw_operation
+    // * SCORUM_VESTING_WITHDRAW_INTERVALS
+
+    check_withdraw_consistency_visitor collector;
+    for (auto& val : ret[0])
+    {
+        val.op.visit(collector);
+    }
+    BOOST_TEST_MESSAGE("Generating blocks");
+
+    BOOST_REQUIRE_EQUAL(collector.withdraw_ops, 1u);
+    BOOST_REQUIRE_EQUAL(collector.withdraw_steps, SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_REQUIRE_EQUAL(collector.to_withdraw, ASSET_SP(feed_amount));
+    BOOST_REQUIRE_EQUAL(collector.to_withdraw.amount, collector.withdrawn.amount);
+}
+
 SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
 {
     using input_operation_vector_type = std::vector<operation>;
