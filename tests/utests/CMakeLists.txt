@@ -33,6 +33,8 @@ set(SOURCES
     utils/string_algorithm_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
+    budgets/management_algorithms_tests.cpp
+    budgets/evaluators_tests.cpp
 )
 
 add_executable(utests

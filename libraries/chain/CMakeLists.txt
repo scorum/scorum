@@ -34,7 +34,6 @@ add_library( scorum_chain
              services/account.cpp
              services/account_blogging_statistic.cpp
              services/atomicswap.cpp
-             services/budget.cpp
              services/comment.cpp
              services/comment_vote.cpp
              services/dbs_base.cpp
@@ -68,6 +67,8 @@ add_library( scorum_chain
              evaluators/committee_accessor.cpp
              evaluators/proposal_evaluators.cpp
              evaluators/registration_pool_evaluator.cpp
+             evaluators/create_budget_evaluator.cpp
+             evaluators/close_budget_evaluator.cpp
 
              schema/shared_authority.cpp
 

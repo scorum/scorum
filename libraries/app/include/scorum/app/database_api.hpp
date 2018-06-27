@@ -129,9 +129,10 @@ public:
      */
     uint64_t get_account_count() const;
 
-    std::vector<budget_api_obj> get_budgets(const std::set<std::string>& account_names) const;
+    std::vector<budget_api_obj> get_budgets(const budget_type, const std::set<std::string>& account_names) const;
 
-    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<std::string>
+    lookup_budget_owners(const budget_type, const std::string& lower_bound_name, uint32_t limit) const;
 
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 

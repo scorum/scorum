@@ -3,6 +3,8 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
+#include <regex>
+
 namespace bip = boost::interprocess;
 
 template <class T> class wrapper_object
@@ -42,15 +44,26 @@ template <typename T, typename C> T create_object(bip::managed_shared_memory& sh
 
 struct shm_remove
 {
-    shm_remove()
+    shm_remove() = delete;
+
+    shm_remove(const std::string& name)
+        : _name(name)
     {
-        bip::shared_memory_object::remove("MySharedMemory");
+        bip::shared_memory_object::remove(_name.c_str());
     }
     ~shm_remove()
     {
-        bip::shared_memory_object::remove("MySharedMemory");
+        bip::shared_memory_object::remove(_name.c_str());
     }
+
+private:
+    std::string _name;
 };
+
+template <typename T> const std::string get_shm_name()
+{
+    return std::regex_replace(boost::core::demangle(typeid(T).name()), std::regex("::"), "_");
+}
 
 struct shared_memory_fixture
 {
@@ -58,8 +71,9 @@ private:
     shm_remove remover;
 
 public:
-    shared_memory_fixture(std::size_t size = 10000)
-        : shm(bip::create_only, "MySharedMemory", size)
+    shared_memory_fixture(const std::string& shm_name = get_shm_name<shared_memory_fixture>(), std::size_t size = 10000)
+        : remover(shm_name)
+        , shm(bip::create_only, shm_name.c_str(), size)
     {
     }
 

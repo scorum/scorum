@@ -2413,37 +2413,82 @@ std::vector<budget_api_obj> wallet_api::list_my_budgets()
         for (const auto& name : item)
             names.insert(name);
 
-    return my->_remote_db->get_budgets(names);
+    std::vector<budget_api_obj> ret;
+
+    {
+        auto budgets = my->_remote_db->get_budgets(budget_type::post, names);
+        std::copy(budgets.begin(), budgets.end(), std::back_inserter(ret));
+    }
+    {
+        auto budgets = my->_remote_db->get_budgets(budget_type::banner, names);
+        std::copy(budgets.begin(), budgets.end(), std::back_inserter(ret));
+    }
+
+    return ret;
 }
 
-std::set<std::string> wallet_api::list_budget_owners(const std::string& lowerbound, uint32_t limit)
+std::set<std::string> wallet_api::list_post_budget_owners(const std::string& lowerbound, uint32_t limit)
 {
-    return my->_remote_db->lookup_budget_owners(lowerbound, limit);
+    return my->_remote_db->lookup_budget_owners(budget_type::post, lowerbound, limit);
 }
 
-std::vector<budget_api_obj> wallet_api::get_budgets(const std::string& account_name)
+std::set<std::string> wallet_api::list_banner_budget_owners(const std::string& lowerbound, uint32_t limit)
+{
+    return my->_remote_db->lookup_budget_owners(budget_type::banner, lowerbound, limit);
+}
+
+std::vector<budget_api_obj> wallet_api::get_post_budgets(const std::string& account_name)
 {
     validate_account_name(account_name);
 
-    std::vector<budget_api_obj> result;
-
-    result = my->_remote_db->get_budgets({ account_name });
-
-    return result;
+    return my->_remote_db->get_budgets(budget_type::post, { account_name });
 }
 
-annotated_signed_transaction wallet_api::create_budget(const std::string& budget_owner,
-                                                       const std::string& content_permlink,
-                                                       const asset& balance,
-                                                       const time_point_sec deadline,
-                                                       const bool broadcast)
+std::vector<budget_api_obj> wallet_api::get_banner_budgets(const std::string& account_name)
+{
+    validate_account_name(account_name);
+
+    return my->_remote_db->get_budgets(budget_type::banner, { account_name });
+}
+
+annotated_signed_transaction wallet_api::create_budget_for_post(const std::string& owner,
+                                                                const std::string& permlink,
+                                                                const asset& balance,
+                                                                const time_point_sec& start,
+                                                                const time_point_sec& deadline,
+                                                                const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     create_budget_operation op;
 
-    op.owner = budget_owner;
-    op.content_permlink = content_permlink;
+    op.type = budget_type::post;
+    op.owner = owner;
+    op.content_permlink = permlink;
+    op.balance = balance;
+    op.deadline = deadline;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::create_budget_for_banner(const std::string& owner,
+                                                                  const std::string& permlink,
+                                                                  const asset& balance,
+                                                                  const time_point_sec& start,
+                                                                  const time_point_sec& deadline,
+                                                                  const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    create_budget_operation op;
+
+    op.type = budget_type::banner;
+    op.owner = owner;
+    op.content_permlink = permlink;
     op.balance = balance;
     op.deadline = deadline;
 
@@ -2455,14 +2500,33 @@ annotated_signed_transaction wallet_api::create_budget(const std::string& budget
 }
 
 annotated_signed_transaction
-wallet_api::close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast)
+wallet_api::close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_operation op;
 
+    op.type = budget_type::post;
     op.budget_id = id;
-    op.owner = budget_owner;
+    op.owner = owner;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction
+wallet_api::close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    close_budget_operation op;
+
+    op.type = budget_type::banner;
+    op.budget_id = id;
+    op.owner = owner;
 
     signed_transaction tx;
     tx.operations.push_back(op);

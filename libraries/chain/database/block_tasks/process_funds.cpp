@@ -2,7 +2,7 @@
 #include <scorum/chain/database/block_tasks/reward_balance_algorithm.hpp>
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
@@ -15,6 +15,7 @@
 #include <scorum/chain/schema/dev_committee_object.hpp>
 
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/budget_management_algorithms.hpp>
 
 namespace scorum {
 namespace chain {
@@ -31,8 +32,12 @@ void process_funds::on_apply(block_task_context& ctx)
 
     data_service_factory_i& services = ctx.services();
     content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
-    budget_service_i& budget_service = services.budget_service();
     dev_pool_service_i& dev_service = services.dev_pool_service();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
+    fund_budget_service_i& fund_budget_service = services.fund_budget_service();
+    post_budget_service_i& post_budget_service = services.post_budget_service();
+    banner_budget_service_i& banner_budget_service = services.banner_budget_service();
+    account_service_i& account_service = services.account_service();
 
     // We don't have inflation.
     // We just get per block reward from original reward fund(4.8M SP)
@@ -40,17 +45,30 @@ void process_funds::on_apply(block_task_context& ctx)
     // users(through the purchase of advertising). Advertising budgets are in SCR.
 
     asset original_fund_reward = asset(0, SP_SYMBOL);
-    if (budget_service.is_fund_budget_exists())
+    if (fund_budget_service.is_exists())
     {
-        const budget_object& budget = budget_service.get_fund_budget();
-        original_fund_reward += budget_service.allocate_cash(budget);
+        const auto& budget = fund_budget_service.get();
+        original_fund_reward
+            += fund_budget_management_algorithm(fund_budget_service, dgp_service).allocate_cash(budget);
     }
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
-    for (const budget_object& budget : budget_service.get_budgets())
+
+    for (const post_budget_object& budget :
+         post_budget_service.get_budgets_by_start_time(dgp_service.head_block_time()))
     {
-        advertising_budgets_reward += budget_service.allocate_cash(budget);
+        advertising_budgets_reward
+            += post_budget_management_algorithm(post_budget_service, dgp_service, account_service)
+                   .allocate_cash(budget);
+    }
+
+    for (const banner_budget_object& budget :
+         banner_budget_service.get_budgets_by_start_time(dgp_service.head_block_time()))
+    {
+        advertising_budgets_reward
+            += banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
+                   .allocate_cash(budget);
     }
 
     // 50% of the revenue goes to support and develop the product, namely,

@@ -5,7 +5,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
@@ -39,7 +39,9 @@ DATA_SERVICE_FACTORY_IMPL(
         (account_blogging_statistic)
         (account_registration_bonus)
         (atomicswap)
-        (budget)
+        (fund_budget)
+        (post_budget)
+        (banner_budget)
         (comment)
         (comment_statistic_scr)
         (comment_statistic_sp)

@@ -30,10 +30,10 @@ set( SOURCES
     registration/burning_bonus.cpp
     atomicswap/atomicswap_service_tests.cpp
     atomicswap/atomicswap_operations_tests.cpp
-    budget/budget_service_tests.cpp
-    budget/fund_budget_tests.cpp
-    budget/budget_operations_tests.cpp
     budget/budget_check_common.cpp
+    budget/budget_service_tests.cpp
+    budget/budget_autoclose_tests.cpp
+    budget/budget_starting_tests.cpp
     proposal/proposal_tests.cpp
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp

@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 
 #include <scorum/tags/tags_api_impl.hpp>
 

@@ -1,27 +1,35 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/rewards_math/formulas.hpp>
 
+#include <scorum/chain/database/budget_management_algorithms.hpp>
+
 #include "database_blog_integration.hpp"
 #include "actor.hpp"
 
-namespace database_fixture {
+namespace active_sp_holders_reward_tests {
+
+using namespace database_fixture;
+
+using namespace scorum::chain;
+using namespace scorum::protocol;
 
 class sp_holders_reward_fixture : public database_blog_integration_fixture
 {
 public:
     sp_holders_reward_fixture()
-        : budget_service(db.obtain_service<dbs_budget>())
-        , account_service(db.obtain_service<dbs_account>())
-        , dprops_service(db.obtain_service<dbs_dynamic_global_property>())
-        , voters_reward_sp_service(db.obtain_service<dbs_voters_reward_sp>())
-        , voters_reward_scr_service(db.obtain_service<dbs_voters_reward_scr>())
+        : budget_service(db.fund_budget_service())
+        , advertising_budget_service(db.post_budget_service())
+        , account_service(db.account_service())
+        , dprops_service(db.dynamic_global_property_service())
+        , voters_reward_sp_service(db.voters_reward_sp_service())
+        , voters_reward_scr_service(db.voters_reward_scr_service())
         , alice("alice")
         , bob("bob")
     {
@@ -55,7 +63,9 @@ public:
         auto advertising_budget = ASSET_SCR(2e+9);
         auto deadline = db.get_slot_time(1);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_budget(account, advertising_budget, deadline));
+        BOOST_CHECK_NO_THROW(
+            post_budget_management_algorithm(advertising_budget_service, dprops_service, account_service)
+                .create_budget(account.name, advertising_budget, db.head_block_time(), deadline, ""));
 
         auto& reward_service = db.obtain_service<dbs_content_reward_scr>();
         reward_service.update(
@@ -64,22 +74,18 @@ public:
         return advertising_budget;
     }
 
-    dbs_budget& budget_service;
-    dbs_account& account_service;
-    dbs_dynamic_global_property& dprops_service;
-    dbs_voters_reward_sp& voters_reward_sp_service;
-    dbs_voters_reward_scr& voters_reward_scr_service;
+    fund_budget_service_i& budget_service;
+    post_budget_service_i& advertising_budget_service;
+    account_service_i& account_service;
+    dynamic_global_property_service_i& dprops_service;
+    voters_reward_sp_service_i& voters_reward_sp_service;
+    voters_reward_scr_service_i& voters_reward_scr_service;
 
     Actor alice;
     Actor bob;
 };
 
-} // database_fixture
-
-using namespace scorum::chain;
-using namespace scorum::protocol;
-
-BOOST_FIXTURE_TEST_SUITE(active_sp_holders_reward_tests, database_fixture::sp_holders_reward_fixture)
+BOOST_FIXTURE_TEST_SUITE(active_sp_holders_reward_tests, sp_holders_reward_fixture)
 
 SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
 {
@@ -90,7 +96,7 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
         auto post = create_post(alice).push();
         post.vote(bob).in_block();
 
-        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
+        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get().per_block);
 
         BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).scorumpower,
                             bob_sp_before + active_sp_holders_reward);
@@ -123,7 +129,7 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget_if_no_active_voters_exist
     {
         generate_block();
 
-        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
+        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get().per_block);
 
         auto& balancer = voters_reward_sp_service.get();
 
@@ -163,7 +169,7 @@ SCORUM_TEST_CASE(per_block_sp_payment_division_from_fund_budget)
         post.vote(bob).push();
         post.vote(alice).in_block();
 
-        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
+        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get().per_block);
 
         auto alice_reward = active_sp_holders_reward * alice.sp_percent / 100;
         auto bob_reward = active_sp_holders_reward - alice_reward;
@@ -199,7 +205,7 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
 
         auto generated_blocks = 1 + generate_blocks(last_vote_cashout_time - SCORUM_BLOCK_INTERVAL, false);
 
-        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
+        auto active_sp_holders_reward = get_active_voters_reward(budget_service.get().per_block);
 
         BOOST_REQUIRE_EQUAL(voter.scorumpower, bob_sp_before + active_sp_holders_reward * generated_blocks);
 
@@ -220,9 +226,7 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
     {
         const auto fund_budget_period_in_blocks = 2;
 
-        auto& fund_budget = budget_service.get_fund_budget();
-
-        budget_service.update(fund_budget, [&](budget_object& b) {
+        budget_service.update([&](fund_budget_object& b) {
             b.per_block = b.balance / fund_budget_period_in_blocks;
             b.deadline = dprops_service.head_block_time() + fund_budget_period_in_blocks * SCORUM_BLOCK_INTERVAL;
         });
@@ -245,3 +249,4 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+}

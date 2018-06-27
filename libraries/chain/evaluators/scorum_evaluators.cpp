@@ -7,7 +7,6 @@
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
-#include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -1170,33 +1169,6 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
             }
         }
     }
-}
-
-void create_budget_evaluator::do_apply(const create_budget_operation& op)
-{
-    budget_service_i& budget_service = db().budget_service();
-    account_service_i& account_service = db().account_service();
-
-    account_service.check_account_existence(op.owner);
-
-    optional<std::string> content_permlink;
-    if (!op.content_permlink.empty())
-    {
-        content_permlink = op.content_permlink;
-    }
-
-    const auto& owner = account_service.get_account(op.owner);
-
-    budget_service.create_budget(owner, op.balance, op.deadline, content_permlink);
-}
-
-void close_budget_evaluator::do_apply(const close_budget_operation& op)
-{
-    budget_service_i& budget_service = db().budget_service();
-
-    const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
-
-    budget_service.close_budget(budget);
 }
 
 void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation& op)
