@@ -7,7 +7,6 @@ namespace budget_check_common {
 budget_check_fixture::budget_check_fixture()
     : post_budget_service(db.post_budget_service())
     , banner_budget_service(db.banner_budget_service())
-    , creator(db)
 {
 }
 

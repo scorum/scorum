@@ -28,15 +28,15 @@ void update_budget_evaluator::do_apply(const operation_type& op)
     {
     case budget_type::post:
     {
-        _post_budget_service.update(_post_budget_service.get(op.budget_id),
+        _post_budget_service.update(_post_budget_service.get_budget(op.owner, op.budget_id),
                                     [&](post_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
     }
     break;
     case budget_type::banner:
     {
-        _banner_budget_service.update(_banner_budget_service.get(op.budget_id), [&](banner_budget_object& b) {
-            fc::from_string(b.json_metadata, op.json_metadata);
-        });
+        _banner_budget_service.update(
+            _banner_budget_service.get_budget(op.owner, op.budget_id),
+            [&](banner_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
     }
     break;
     }

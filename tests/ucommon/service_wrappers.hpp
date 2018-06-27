@@ -218,7 +218,7 @@ protected:
         base_class::remove(object);
     }
 
-    typename BudgetServiceInterface::budgets_type get_budgets(const account_name_type& name)
+    typename BudgetServiceInterface::budgets_type get_budgets(const account_name_type& name) const
     {
         const auto& it_by_owner = this->_index_by_owner.find(name);
         typename BudgetServiceInterface::budgets_type ret;
@@ -232,6 +232,18 @@ protected:
             }
         }
         return ret;
+    }
+
+    const object_type& get_budget(const account_name_type& name, const typename object_type::id_type& id) const
+    {
+        const auto& it_by_owner = this->_index_by_owner.find(name);
+        typename BudgetServiceInterface::budgets_type ret;
+        BOOST_ASSERT(it_by_owner != this->_index_by_owner.end());
+
+        const auto& it_by_id = this->_objects_by_id.find(id);
+        BOOST_ASSERT(it_by_id != this->_objects_by_id.end());
+
+        return it_by_id->second;
     }
 
 public:
@@ -265,6 +277,11 @@ public:
             .Do([this](const account_name_type& name) -> post_budget_service_i::budgets_type {
                 return this->get_budgets(name);
             });
+        _mocks.OnCall(_service, post_budget_service_i::get_budget)
+            .Do([this](const account_name_type& name,
+                       const post_budget_object::id_type& id) -> const post_budget_object& {
+                return this->get_budget(name, id);
+            });
         _mocks
             .OnCallOverload(
                 _service,
@@ -294,6 +311,11 @@ public:
                     & banner_budget_service_i::get_budgets)
             .Do([this](const account_name_type& name) -> banner_budget_service_i::budgets_type {
                 return this->get_budgets(name);
+            });
+        _mocks.OnCall(_service, banner_budget_service_i::get_budget)
+            .Do([this](const account_name_type& name,
+                       const banner_budget_object::id_type& id) -> const banner_budget_object& {
+                return this->get_budget(name, id);
             });
         _mocks
             .OnCallOverload(

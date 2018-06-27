@@ -48,6 +48,7 @@ template <uint16_t ObjectType, asset_symbol_type SymbolType>
 const asset_symbol_type budget_object<ObjectType, SymbolType>::symbol_type = SymbolType;
 
 struct by_owner_name;
+struct by_authorized_owner;
 struct by_start_time;
 
 template <typename BudgetObjectType>
@@ -61,6 +62,14 @@ using budget_index
                                                                  member<BudgetObjectType,
                                                                         account_name_type,
                                                                         &BudgetObjectType::owner>>,
+                                              ordered_unique<tag<by_authorized_owner>,
+                                                             composite_key<BudgetObjectType,
+                                                                           member<BudgetObjectType,
+                                                                                  account_name_type,
+                                                                                  &BudgetObjectType::owner>,
+                                                                           member<BudgetObjectType,
+                                                                                  typename BudgetObjectType::id_type,
+                                                                                  &BudgetObjectType::id>>>,
                                               ordered_unique<tag<by_start_time>,
                                                              composite_key<BudgetObjectType,
                                                                            member<BudgetObjectType,
