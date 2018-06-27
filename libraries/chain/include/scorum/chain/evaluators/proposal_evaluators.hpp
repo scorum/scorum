@@ -116,21 +116,30 @@ struct development_committee_transfer_evaluator
     void do_apply(const operation_type& o);
 };
 
-#define SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)                                                         \
-    BOOST_PP_SEQ_CAT((development_committee_change_top_)(TYPE)(_budgets_amount_evaluator))
-#define SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_DECLARE(TYPE)                                  \
-    struct SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)                                                      \
-        : public proposal_operation_evaluator<SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)>                  \
-    {                                                                                                                  \
-        typedef SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE) operation_type;                                 \
-                                                                                                                       \
-        SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)(data_service_factory_i & r);                            \
-                                                                                                                       \
-        void do_apply(const operation_type& o);                                                                        \
-    };
+template <typename OperationType, budget_type type>
+struct development_committee_change_top_budgets_amount_evaluator
+    : public proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<OperationType,
+                                                                                                    type>>
+{
+    using base_type
+        = proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<OperationType, type>>;
+    using operation_type = OperationType;
 
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_DECLARE(post)
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_DECLARE(banner)
+    development_committee_change_top_budgets_amount_evaluator(data_service_factory_i& r)
+        : base_type(r)
+    {
+    }
+
+    void do_apply(const operation_type& o);
+};
+
+#define development_committee_change_top_post_budgets_amount_evaluator                                                        \
+    development_committee_change_top_budgets_amount_evaluator<development_committee_change_top_post_budgets_amount_operation, \
+                                                              budget_type::post>
+
+#define development_committee_change_top_banner_budgets_amount_evaluator                                                        \
+    development_committee_change_top_budgets_amount_evaluator<development_committee_change_top_banner_budgets_amount_operation, \
+                                                              budget_type::banner>
 
 namespace registration_committee {
 

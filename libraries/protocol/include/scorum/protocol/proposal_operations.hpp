@@ -150,24 +150,30 @@ struct development_committee_transfer_operation
     protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
-#define SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE)                                                         \
-    BOOST_PP_SEQ_CAT((development_committee_change_top_)(TYPE)(_budgets_amount_operation))
-#define SCORUM_MAKE_BUDGET_TYPE_NAME(TYPE) budget_type::TYPE
+struct development_committee_change_top_budgets_amount_operation
+    : public proposal_base_operation<development_committee_change_top_budgets_amount_operation, development_committee_i>
+{
+    uint16_t amount = 0u;
 
-#define SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_OPERATION_DECLARE(TYPE)                                  \
-    struct SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE)                                                      \
-        : public proposal_base_operation<SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE),                       \
-                                         development_committee_i>                                                      \
-    {                                                                                                                  \
-        uint16_t amount = 0u;                                                                                          \
-                                                                                                                       \
-        void validate() const;                                                                                         \
-                                                                                                                       \
-        protocol::percent_type get_required_quorum(committee_i& committee_service) const;                              \
-    };
+    void validate() const;
 
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_OPERATION_DECLARE(post)
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_OPERATION_DECLARE(banner)
+    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+
+protected:
+    development_committee_change_top_budgets_amount_operation()
+    {
+    }
+};
+
+struct development_committee_change_top_post_budgets_amount_operation
+    : public development_committee_change_top_budgets_amount_operation
+{
+};
+
+struct development_committee_change_top_banner_budgets_amount_operation
+    : public development_committee_change_top_budgets_amount_operation
+{
+};
 
 using proposal_operation = fc::static_variant<registration_committee_add_member_operation,
                                               registration_committee_exclude_member_operation,
@@ -177,8 +183,8 @@ using proposal_operation = fc::static_variant<registration_committee_add_member_
                                               development_committee_change_quorum_operation,
                                               development_committee_withdraw_vesting_operation,
                                               development_committee_transfer_operation,
-                                              SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(post),
-                                              SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(banner)>;
+                                              development_committee_change_top_post_budgets_amount_operation,
+                                              development_committee_change_top_banner_budgets_amount_operation>;
 
 struct to_committee_operation
 {
@@ -234,8 +240,13 @@ FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quo
 FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
 
-FC_REFLECT(scorum::protocol::development_committee_change_top_post_budgets_amount_operation, (amount))
-FC_REFLECT(scorum::protocol::development_committee_change_top_banner_budgets_amount_operation, (amount))
+FC_REFLECT(scorum::protocol::development_committee_change_top_budgets_amount_operation, (amount))
+FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_top_post_budgets_amount_operation,
+                   (scorum::protocol::development_committee_change_top_budgets_amount_operation),
+                   BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_top_banner_budgets_amount_operation,
+                   (scorum::protocol::development_committee_change_top_budgets_amount_operation),
+                   BOOST_PP_SEQ_NIL)
 
 DECLARE_OPERATION_SERIALIZATOR(scorum::protocol::proposal_operation)
 FC_REFLECT_TYPENAME(scorum::protocol::proposal_operation)

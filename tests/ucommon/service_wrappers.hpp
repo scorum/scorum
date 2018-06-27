@@ -72,33 +72,33 @@ public:
     virtual void update(const object_type& object, const typename ServiceInterface::modifier_type& m)
     {
         const auto& it = _objects_by_id.find(object.id);
-        BOOST_ASSERT(it != _objects_by_id.end());
+        FC_ASSERT(it != _objects_by_id.end());
         m(it->second);
     }
 
     virtual void remove(const object_type& object)
     {
         const auto& it = _objects_by_id.find(object.id);
-        BOOST_ASSERT(it != _objects_by_id.end());
+        FC_ASSERT(it != _objects_by_id.end());
         _objects_by_id.erase(it);
     }
 
     void update(const typename ServiceInterface::modifier_type& m)
     {
-        BOOST_ASSERT(!_objects_by_id.empty());
+        FC_ASSERT(!_objects_by_id.empty());
         update(_objects_by_id.begin()->second, m);
     }
 
     const object_type& get() const
     {
-        BOOST_ASSERT(is_exists());
+        FC_ASSERT(!_objects_by_id.empty());
         return _objects_by_id.begin()->second;
     }
 
     const object_type& get(const typename object_type::id_type& id) const
     {
         const auto& it = _objects_by_id.find(id);
-        BOOST_ASSERT(it != _objects_by_id.end());
+        FC_ASSERT(it != _objects_by_id.end());
         return it->second;
     }
 
@@ -171,17 +171,17 @@ public:
         _mocks.OnCall(_service, dynamic_global_property_service_i::get_genesis_time).Do([this]() -> fc::time_point_sec {
             if (genesis_time == fc::time_point_sec())
             {
-                BOOST_ASSERT(!this->_objects_by_id.empty());
+                FC_ASSERT(!this->_objects_by_id.empty());
                 return this->_objects_by_id.begin()->second.time;
             }
             return genesis_time;
         });
         _mocks.OnCall(_service, dynamic_global_property_service_i::head_block_time).Do([this]() -> fc::time_point_sec {
-            BOOST_ASSERT(!this->_objects_by_id.empty());
+            FC_ASSERT(!this->_objects_by_id.empty());
             return this->_objects_by_id.begin()->second.time;
         });
         _mocks.OnCall(_service, dynamic_global_property_service_i::head_block_num).Do([this]() -> uint32_t {
-            BOOST_ASSERT(!this->_objects_by_id.empty());
+            FC_ASSERT(!this->_objects_by_id.empty());
             return this->_objects_by_id.begin()->second.head_block_number;
         });
     }
@@ -227,7 +227,7 @@ protected:
             for (const auto& it : it_by_owner->second)
             {
                 const auto& it_by_id = this->_objects_by_id.find(it);
-                BOOST_ASSERT(it_by_id != this->_objects_by_id.end());
+                FC_ASSERT(it_by_id != this->_objects_by_id.end());
                 ret.push_back(std::cref(it_by_id->second));
             }
         }
@@ -238,10 +238,10 @@ protected:
     {
         const auto& it_by_owner = this->_index_by_owner.find(name);
         typename BudgetServiceInterface::budgets_type ret;
-        BOOST_ASSERT(it_by_owner != this->_index_by_owner.end());
+        FC_ASSERT(it_by_owner != this->_index_by_owner.end());
 
         const auto& it_by_id = this->_objects_by_id.find(id);
-        BOOST_ASSERT(it_by_id != this->_objects_by_id.end());
+        FC_ASSERT(it_by_id != this->_objects_by_id.end());
 
         return it_by_id->second;
     }
@@ -344,9 +344,9 @@ public:
         _mocks.OnCall(_service, account_service_i::get_account)
             .Do([this](const account_name_type& name) -> const account_object& {
                 const auto& it_by_name = this->_index_by_name.find(name);
-                BOOST_ASSERT(it_by_name != this->_index_by_name.end());
+                FC_ASSERT(it_by_name != this->_index_by_name.end());
                 const auto& it_by_id = this->_objects_by_id.find(it_by_name->second);
-                BOOST_ASSERT(it_by_id != this->_objects_by_id.end());
+                FC_ASSERT(it_by_id != this->_objects_by_id.end());
                 return it_by_id->second;
             });
 
@@ -363,7 +363,7 @@ public:
     void add_actor(const Actor& actor)
     {
         const auto& it = _index_by_name.find(actor.name);
-        BOOST_ASSERT(_index_by_name.end() == it);
+        FC_ASSERT(_index_by_name.end() == it);
         const auto& new_obj = service().create([&actor](account_object& account) {
             account.name = actor.name;
             account.balance = actor.scr_amount;

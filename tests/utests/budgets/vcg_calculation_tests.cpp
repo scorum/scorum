@@ -102,12 +102,12 @@ SCORUM_TEST_CASE(extrapolations_check)
     auto old_last_pos = next_position_weights.size() - 1;
 
     next_position_weights.push_back(next_decreasing_percent(*next_position_weights.rbegin()));
-    next_per_block_values.push_back(next_decreasing_per_block(*next_position_weights.rbegin()));
+    next_per_block_values.push_back(next_decreasing_per_block(*next_per_block_values.rbegin()));
 
     auto new_last_pos = next_position_weights.size() - 1;
 
-    BOOST_CHECK_GT(calculate_vcg_cash(old_last_pos, default_position_weights, default_per_block_values),
-                   calculate_vcg_cash(new_last_pos, default_position_weights, default_per_block_values));
+    BOOST_CHECK_LT(calculate_vcg_cash(new_last_pos, next_position_weights, next_per_block_values),
+                   calculate_vcg_cash(old_last_pos, default_position_weights, default_per_block_values));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
