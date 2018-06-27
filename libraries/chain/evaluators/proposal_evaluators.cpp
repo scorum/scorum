@@ -46,5 +46,24 @@ void development_committee_withdraw_vesting_evaluator::do_apply(
     create_withdraw.apply(ctx);
 }
 
+#define SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_IMPL(TYPE)                                     \
+    SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)::SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)(    \
+        data_service_factory_i & r)                                                                                    \
+        : proposal_operation_evaluator<SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)>(r)                      \
+    {                                                                                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
+    void SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)::do_apply(const operation_type& o)                     \
+    {                                                                                                                  \
+        auto& dev_pool = this->db().dev_pool_service();                                                                \
+                                                                                                                       \
+        dev_pool.update([&](dev_committee_object& com) {                                                               \
+            com.top_budgets_amounts.at(SCORUM_MAKE_BUDGET_TYPE_NAME(TYPE)) = o.amount;                                 \
+        });                                                                                                            \
+    }
+
+SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_IMPL(post)
+SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_IMPL(banner)
+
 } // namespace chain
 } // namespace scorum

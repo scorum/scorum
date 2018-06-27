@@ -73,24 +73,24 @@ struct proposal_change_quorum_evaluator
     {
         committee_i& committee_service = get_committee(this->db(), o);
 
-        if (o.committee_quorum == add_member_quorum)
+        switch (o.committee_quorum)
         {
+        case quorum_type::add_member_quorum:
             committee_service.change_add_member_quorum(o.quorum);
-        }
-        else if (o.committee_quorum == exclude_member_quorum)
-        {
+            break;
+        case quorum_type::exclude_member_quorum:
             committee_service.change_exclude_member_quorum(o.quorum);
-        }
-        else if (o.committee_quorum == base_quorum)
-        {
+            break;
+        case quorum_type::base_quorum:
             committee_service.change_base_quorum(o.quorum);
-        }
-        else if (o.committee_quorum == transfer_quorum)
-        {
+            break;
+        case quorum_type::transfer_quorum:
             committee_service.change_transfer_quorum(o.quorum);
-        }
-        else
-        {
+            break;
+        case quorum_type::top_budget_quorum:
+            committee_service.change_top_budgets_quorum(o.quorum);
+            break;
+        default:
             FC_THROW_EXCEPTION(fc::assert_exception, "unknow quorum change operation");
         }
     }
@@ -115,6 +115,22 @@ struct development_committee_transfer_evaluator
 
     void do_apply(const operation_type& o);
 };
+
+#define SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)                                                         \
+    BOOST_PP_SEQ_CAT((development_committee_change_top_)(TYPE)(_budgets_amount_evaluator))
+#define SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_DECLARE(TYPE)                                  \
+    struct SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)                                                      \
+        : public proposal_operation_evaluator<SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)>                  \
+    {                                                                                                                  \
+        typedef SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE) operation_type;                                 \
+                                                                                                                       \
+        SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)(data_service_factory_i & r);                            \
+                                                                                                                       \
+        void do_apply(const operation_type& o);                                                                        \
+    };
+
+SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_DECLARE(post)
+SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_DECLARE(banner)
 
 namespace registration_committee {
 
