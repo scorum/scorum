@@ -7,6 +7,41 @@
 namespace scorum {
 namespace chain {
 
+template <typename PositionWeightList, typename PerBlockByPositionList>
+share_type calculate_vcg_cash(const size_t position,
+                              const PositionWeightList& coeffs,
+                              const PerBlockByPositionList& per_block_list)
+{
+    FC_ASSERT(coeffs.size() > 0, "Invalid coefficient's list");
+    FC_ASSERT(per_block_list.size() == coeffs.size() + 1, "Invalid list of per-block values");
+    FC_ASSERT(position < coeffs.size(), "Invalid position");
+
+    const auto top_size = coeffs.size() - 1;
+    auto inverted_position = top_size;
+    inverted_position -= position;
+
+    uint128_t result;
+    share_value_type divider = coeffs.at(position);
+    FC_ASSERT(divider > 0, "Invalid coefficient value");
+    share_value_type priv_coeff = 0;
+    for (size_t ci = 0; ci <= inverted_position; ++ci)
+    {
+        share_value_type x = coeffs.at(top_size - ci);
+        FC_ASSERT(x > 0, "Invalid coefficient value");
+        FC_ASSERT(x > priv_coeff, "Invalid coefficient value");
+        share_type per_block = per_block_list.at(top_size - ci + 1);
+        FC_ASSERT(per_block.value > 0, "Invalid per-block value");
+        uint128_t factor = (x - priv_coeff);
+        factor *= per_block.value;
+        factor /= 100;
+        result += factor;
+        priv_coeff = x;
+    }
+    result *= 100;
+    result /= divider;
+    return share_type(result.to_uint64());
+}
+
 template <typename BudgetService> class base_budget_management_algorithm
 {
 protected:
@@ -58,8 +93,10 @@ public:
         });
     }
 
-    asset allocate_cash(const object_type& budget)
+    asset allocate_cash(const object_type& budget, const asset& per_block)
     {
+        FC_ASSERT(per_block.amount > 0, "Invalid per_block.");
+
         auto head_block_num = _dgp_service.head_block_num();
 
         if (budget.last_cashout_block >= head_block_num)
@@ -67,8 +104,7 @@ public:
             return asset(0, budget.balance.symbol()); // empty (allocation waits new block)
         }
 
-        FC_ASSERT(budget.per_block.amount > 0, "Invalid per_block.");
-        asset ret = decrease_balance(budget, budget.per_block);
+        asset ret = decrease_balance(budget, per_block);
 
         if (!check_close_conditions(budget))
         {

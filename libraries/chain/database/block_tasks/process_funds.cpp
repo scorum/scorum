@@ -48,8 +48,8 @@ void process_funds::on_apply(block_task_context& ctx)
     if (fund_budget_service.is_exists())
     {
         const auto& budget = fund_budget_service.get();
-        original_fund_reward
-            += fund_budget_management_algorithm(fund_budget_service, dgp_service).allocate_cash(budget);
+        original_fund_reward += fund_budget_management_algorithm(fund_budget_service, dgp_service)
+                                    .allocate_cash(budget, budget.per_block);
     }
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
@@ -58,17 +58,21 @@ void process_funds::on_apply(block_task_context& ctx)
     for (const post_budget_object& budget : post_budget_service.get_top_budgets_by_start_time(
              dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::post)))
     {
+        auto per_block = budget.per_block;
+        // TODO
         advertising_budgets_reward
             += post_budget_management_algorithm(post_budget_service, dgp_service, account_service)
-                   .allocate_cash(budget);
+                   .allocate_cash(budget, per_block);
     }
 
     for (const banner_budget_object& budget : banner_budget_service.get_top_budgets_by_start_time(
              dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::banner)))
     {
+        auto per_block = budget.per_block;
+        // TODO
         advertising_budgets_reward
             += banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
-                   .allocate_cash(budget);
+                   .allocate_cash(budget, per_block);
     }
 
     // 50% of the revenue goes to support and develop the product, namely,
