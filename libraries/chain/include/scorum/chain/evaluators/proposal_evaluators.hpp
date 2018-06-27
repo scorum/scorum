@@ -120,6 +120,16 @@ struct development_committee_transfer_evaluator
     void do_apply(const operation_type& o);
 };
 
+struct development_committee_empower_adv_moderator_evaluator
+    : public proposal_operation_evaluator<development_committee_empower_adv_moderator_evaluator>
+{
+    typedef development_committee_empower_adv_moderator_operation operation_type;
+
+    development_committee_empower_adv_moderator_evaluator(data_service_factory_i& r);
+
+    void do_apply(const operation_type& o);
+};
+
 namespace registration_committee {
 
 using proposal_add_member_evaluator

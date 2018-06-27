@@ -54,6 +54,8 @@ using operation = fc::static_variant<vote_operation,
                                      atomicswap_redeem_operation,
                                      atomicswap_refund_operation,
 
+                                     close_budget_by_adv_moderator_operation,
+
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefactor_reward_operation,

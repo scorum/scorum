@@ -737,6 +737,20 @@ struct atomicswap_refund_operation : public base_operation
     }
 };
 
+struct close_budget_by_adv_moderator_operation : public base_operation
+{
+    budget_type type = budget_type::post;
+
+    int64_t budget_id;
+    account_name_type moderator;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -813,6 +827,7 @@ FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recip
 FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
+FC_REFLECT( scorum::protocol::close_budget_by_adv_moderator_operation, (type)(budget_id)(moderator) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)

@@ -323,6 +323,11 @@ void atomicswap_refund_operation::validate() const
     atomicswap::validate_secret_hash(secret_hash);
 }
 
+void close_budget_by_adv_moderator_operation::validate() const
+{
+    validate_account_name(moderator);
+}
+
 void proposal_vote_operation::validate() const
 {
     validate_account_name(voting_account);

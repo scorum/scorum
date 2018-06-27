@@ -3,6 +3,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/adv_moderator_service.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
@@ -44,6 +45,27 @@ void development_committee_withdraw_vesting_evaluator::do_apply(
     withdraw_scorumpower_dev_pool_task create_withdraw;
     withdraw_scorumpower_context ctx(db(), o.vesting_shares);
     create_withdraw.apply(ctx);
+}
+
+development_committee_empower_adv_moderator_evaluator::development_committee_empower_adv_moderator_evaluator(
+    data_service_factory_i& r)
+    : proposal_operation_evaluator<development_committee_empower_adv_moderator_evaluator>(r)
+{
+}
+
+void development_committee_empower_adv_moderator_evaluator::do_apply(
+    const development_committee_empower_adv_moderator_evaluator::operation_type& o)
+{
+    auto& adv_moderator_service = this->db().adv_moderator_service();
+
+    if (adv_moderator_service.is_exists())
+    {
+        adv_moderator_service.update([&](adv_moderator_object& obj) { obj.account_name = o.account; });
+    }
+    else
+    {
+        adv_moderator_service.create([&](adv_moderator_object& obj) { obj.account_name = o.account; });
+    }
 }
 
 } // namespace chain

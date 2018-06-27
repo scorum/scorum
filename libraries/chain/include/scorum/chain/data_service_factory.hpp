@@ -41,5 +41,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (genesis_state)
         (witness_reward_in_sp_migration)
         (blocks_story)
+        (adv_moderator)
         )
 // clang-format on
