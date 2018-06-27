@@ -75,12 +75,12 @@ public:
 
     // Budgets
     template <typename BudgetService>
-    sorted_budgets_type get_budgets(BudgetService& budget_service, const std::set<std::string>& names) const
+    std::vector<budget_api_obj> get_budgets(BudgetService& budget_service, const std::set<std::string>& names) const
     {
         FC_ASSERT(names.size() <= MAX_BUDGETS_LIST_SIZE, "names size must be less or equal than ${1}",
                   ("1", MAX_BUDGETS_LIST_SIZE));
 
-        sorted_budgets_type results;
+        std::vector<budget_api_obj> results;
 
         for (const auto& name : names)
         {
@@ -92,7 +92,7 @@ public:
 
             for (const auto& budget : budgets)
             {
-                results.emplace(budget);
+                results.emplace_back(budget);
             }
         }
 
@@ -881,7 +881,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
 // Budgets                                                          //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
-sorted_budgets_type database_api::get_budgets(const budget_type type, const std::set<std::string>& names) const
+std::vector<budget_api_obj> database_api::get_budgets(const budget_type type, const std::set<std::string>& names) const
 {
     return my->_db.with_read_lock([&]() {
         switch (type)
@@ -891,7 +891,7 @@ sorted_budgets_type database_api::get_budgets(const budget_type type, const std:
         case budget_type::banner:
             return my->get_budgets(my->_db.banner_budget_service(), names);
         default:
-            return sorted_budgets_type();
+            return std::vector<budget_api_obj>();
         }
     });
 }

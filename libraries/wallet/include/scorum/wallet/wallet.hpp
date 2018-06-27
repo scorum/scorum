@@ -1012,7 +1012,7 @@ public:
     /**
      *  Gets the budget information for all my budgets (list_my_accounts)
      */
-    sorted_budgets_type list_my_budgets();
+    std::vector<budget_api_obj> list_my_budgets();
 
     /**
      *  Gets the list of all budget (for POST type) owners (look list_accounts to understand input parameters)
@@ -1027,12 +1027,12 @@ public:
     /**
      *  Gets the budget (for POST type) information for certain account
      */
-    sorted_budgets_type get_post_budgets(const std::string& account_name);
+    std::vector<budget_api_obj> get_post_budgets(const std::string& account_name);
 
     /**
      *  Gets the budget (for BANNER type) information for certain account
      */
-    sorted_budgets_type get_banner_budgets(const std::string& account_name);
+    std::vector<budget_api_obj> get_banner_budgets(const std::string& account_name);
 
     /**
      *  This method will create new budget (for POST type) linked to owner account.
