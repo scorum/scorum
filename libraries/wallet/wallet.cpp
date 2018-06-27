@@ -2786,7 +2786,7 @@ annotated_signed_transaction wallet_api::development_pool_top_post_budget(const 
                                                                           uint32_t lifetime_sec,
                                                                           bool broadcast)
 {
-    using operation_type = SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(post);
+    using operation_type = development_committee_change_top_post_budgets_amount_operation;
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
@@ -2799,7 +2799,7 @@ annotated_signed_transaction wallet_api::development_pool_top_banner_budget(cons
                                                                             uint32_t lifetime_sec,
                                                                             bool broadcast)
 {
-    using operation_type = SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(banner);
+    using operation_type = development_committee_change_top_banner_budgets_amount_operation;
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
