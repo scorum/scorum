@@ -81,11 +81,14 @@ config::config() /// production config
 config::config(test_mode) /// test config
     : blockid_pool_size(0xfff)
 
+    , vesting_withdraw_intervals(13)
+    , vesting_withdraw_interval_seconds(60 * 7)
+
     , cashout_window_seconds(fc::hours(1).to_seconds())
 
-    , vote_regeneration_seconds(fc::minutes(30))
-
     , upvote_lockout(fc::minutes(5))
+
+    , vote_regeneration_seconds(fc::minutes(30))
 
     , owner_auth_recovery_period(fc::seconds(60))
     , account_recovery_request_expiration_period(fc::seconds(12))
@@ -104,9 +107,6 @@ config::config(test_mode) /// test config
 
     , atomicswap_limit_requested_contracts_per_owner(5)
     , atomicswap_limit_requested_contracts_per_recipient(2)
-
-    , vesting_withdraw_intervals(13)
-    , vesting_withdraw_interval_seconds(60 * 7)
 
     , min_vote_interval_sec(0)
 
