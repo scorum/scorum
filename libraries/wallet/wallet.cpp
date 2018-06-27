@@ -2395,7 +2395,7 @@ annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id)
     return (*my->_remote_blockchain_history_api)->get_transaction(id);
 }
 
-sorted_budgets_type wallet_api::list_my_budgets()
+std::vector<budget_api_obj> wallet_api::list_my_budgets()
 {
     FC_ASSERT(!is_locked());
 
@@ -2413,15 +2413,15 @@ sorted_budgets_type wallet_api::list_my_budgets()
         for (const auto& name : item)
             names.insert(name);
 
-    sorted_budgets_type ret;
+    std::vector<budget_api_obj> ret;
 
     {
         auto budgets = my->_remote_db->get_budgets(budget_type::post, names);
-        std::copy(budgets.begin(), budgets.end(), std::inserter(ret, ret.end()));
+        std::copy(budgets.begin(), budgets.end(), std::back_inserter(ret));
     }
     {
         auto budgets = my->_remote_db->get_budgets(budget_type::banner, names);
-        std::copy(budgets.begin(), budgets.end(), std::inserter(ret, ret.end()));
+        std::copy(budgets.begin(), budgets.end(), std::back_inserter(ret));
     }
 
     return ret;
@@ -2437,14 +2437,14 @@ std::set<std::string> wallet_api::list_banner_budget_owners(const std::string& l
     return my->_remote_db->lookup_budget_owners(budget_type::banner, lowerbound, limit);
 }
 
-sorted_budgets_type wallet_api::get_post_budgets(const std::string& account_name)
+std::vector<budget_api_obj> wallet_api::get_post_budgets(const std::string& account_name)
 {
     validate_account_name(account_name);
 
     return my->_remote_db->get_budgets(budget_type::post, { account_name });
 }
 
-sorted_budgets_type wallet_api::get_banner_budgets(const std::string& account_name)
+std::vector<budget_api_obj> wallet_api::get_banner_budgets(const std::string& account_name)
 {
     validate_account_name(account_name);
 
