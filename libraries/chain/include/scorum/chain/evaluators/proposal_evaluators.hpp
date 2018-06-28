@@ -89,9 +89,9 @@ struct proposal_change_quorum_evaluator
         {
             committee.weak_visit([&](development_committee_i& c) { c.change_transfer_quorum(o.quorum); });
         }
-        else if (o.committee_quorum == adv_moderator_quorum)
+        else if (o.committee_quorum == advertising_moderator_quorum)
         {
-            committee.weak_visit([&](development_committee_i& c) { c.change_adv_moderator_quorum(o.quorum); });
+            committee.weak_visit([&](development_committee_i& c) { c.change_advertising_moderator_quorum(o.quorum); });
         }
         else
         {
@@ -120,12 +120,12 @@ struct development_committee_transfer_evaluator
     void do_apply(const operation_type& o);
 };
 
-struct development_committee_empower_adv_moderator_evaluator
-    : public proposal_operation_evaluator<development_committee_empower_adv_moderator_evaluator>
+struct development_committee_empower_advertising_moderator_evaluator
+    : public proposal_operation_evaluator<development_committee_empower_advertising_moderator_evaluator>
 {
-    typedef development_committee_empower_adv_moderator_operation operation_type;
+    typedef development_committee_empower_advertising_moderator_operation operation_type;
 
-    development_committee_empower_adv_moderator_evaluator(data_service_factory_i& r);
+    development_committee_empower_advertising_moderator_evaluator(data_service_factory_i& r);
 
     void do_apply(const operation_type& o);
 };

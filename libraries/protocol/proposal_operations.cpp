@@ -64,15 +64,15 @@ percent_type development_committee_add_member_operation::get_required_quorum(com
     return committee_service.get_add_member_quorum();
 }
 
-void development_committee_empower_adv_moderator_operation::validate() const
+void development_committee_empower_advertising_moderator_operation::validate() const
 {
     validate_account_name(account);
 }
 
-percent_type
-development_committee_empower_adv_moderator_operation::get_required_quorum(committee_type& committee_service) const
+percent_type development_committee_empower_advertising_moderator_operation::get_required_quorum(
+    committee_type& committee_service) const
 {
-    return committee_service.get_adv_moderator_quorum();
+    return committee_service.get_advertising_moderator_quorum();
 }
 
 void registration_committee_change_quorum_operation::validate() const

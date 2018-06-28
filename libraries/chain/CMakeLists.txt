@@ -69,7 +69,7 @@ add_library( scorum_chain
              evaluators/registration_pool_evaluator.cpp
              evaluators/create_budget_evaluator.cpp
              evaluators/close_budget_evaluator.cpp
-             evaluators/close_budget_by_adv_moderator_evaluator.cpp
+             evaluators/close_budget_by_advertising_moderator_evaluator.cpp
 
              schema/shared_authority.cpp
 

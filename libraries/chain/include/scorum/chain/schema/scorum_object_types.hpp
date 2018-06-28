@@ -78,7 +78,7 @@ enum object_type
     dev_committee_object_type,
     dev_committee_member_object_type,
     witness_reward_in_sp_migration_object_type,
-    adv_moderator_object_type
+    advertising_property_object_type
 };
 
 class account_authority_object;
@@ -115,7 +115,7 @@ class witness_vote_object;
 class dev_committee_object;
 class dev_committee_member_object;
 class witness_reward_in_sp_migration_object;
-class adv_moderator_object;
+class advertising_property_object;
 
 using account_authority_id_type = oid<account_authority_object>;
 using account_id_type = oid<account_object>;
@@ -151,7 +151,7 @@ using witness_vote_id_type = oid<witness_vote_object>;
 using dev_committee_id_type = oid<dev_committee_object>;
 using dev_committee_member_id_type = oid<dev_committee_member_object>;
 using witness_reward_in_sp_migration_id_type = oid<witness_reward_in_sp_migration_object>;
-using adv_moderator_id_type = oid<adv_moderator_object>;
+using advertising_moderator_id_type = oid<advertising_property_object>;
 
 using withdrawable_id_type = fc::static_variant<account_id_type, dev_committee_id_type>;
 
@@ -214,7 +214,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (dev_committee_object_type)
                 (dev_committee_member_object_type)
                 (witness_reward_in_sp_migration_object_type)
-                (adv_moderator_object_type)
+                (advertising_property_object_type)
                )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )

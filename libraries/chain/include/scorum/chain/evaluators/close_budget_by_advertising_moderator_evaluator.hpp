@@ -9,15 +9,15 @@ struct account_service_i;
 struct post_budget_service_i;
 struct banner_budget_service_i;
 struct dynamic_global_property_service_i;
-struct adv_moderator_service_i;
+struct advertising_property_service_i;
 
-class close_budget_by_adv_moderator_evaluator
-    : public evaluator_impl<data_service_factory_i, close_budget_by_adv_moderator_evaluator>
+class close_budget_by_advertising_moderator_evaluator
+    : public evaluator_impl<data_service_factory_i, close_budget_by_advertising_moderator_evaluator>
 {
 public:
-    using operation_type = scorum::protocol::close_budget_by_adv_moderator_operation;
+    using operation_type = scorum::protocol::close_budget_by_advertising_moderator_operation;
 
-    close_budget_by_adv_moderator_evaluator(data_service_factory_i& services);
+    close_budget_by_advertising_moderator_evaluator(data_service_factory_i& services);
 
     void do_apply(const operation_type& op);
 
@@ -26,7 +26,7 @@ private:
     post_budget_service_i& _post_budget_service;
     banner_budget_service_i& _banner_budget_service;
     dynamic_global_property_service_i& _dprops_service;
-    adv_moderator_service_i& _adv_moderator_service;
+    advertising_property_service_i& _adv_property_service;
 };
 }
 }

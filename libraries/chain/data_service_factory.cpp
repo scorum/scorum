@@ -32,7 +32,7 @@
 #include <scorum/chain/services/account_registration_bonus.hpp>
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/services/blocks_story.hpp>
-#include <scorum/chain/services/adv_moderator_service.hpp>
+#include <scorum/chain/services/advertising_property_service.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -73,6 +73,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (genesis_state)
         (witness_reward_in_sp_migration)
         (blocks_story)
-        (adv_moderator)
+        (advertising_property)
         )
 // clang-format on
