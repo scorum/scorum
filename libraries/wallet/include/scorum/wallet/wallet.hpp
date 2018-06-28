@@ -1040,14 +1040,14 @@ public:
      *  @warning The owner account must have sufficient balance for budget
      *
      *  @param owner the future owner of creating budget
-     *  @param permlink the budget target identity (post or other)
+     *  @param json_metadata the budget target identity (post or other)
      *  @param balance
      *  @param start the time to start allocation cash from  budget
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
     annotated_signed_transaction create_budget_for_post(const std::string& owner,
-                                                        const std::string& permlink,
+                                                        const std::string& json_metadata,
                                                         const asset& balance,
                                                         const time_point_sec& start,
                                                         const time_point_sec& deadline,
@@ -1059,14 +1059,14 @@ public:
      *  @warning The owner account must have sufficient balance for budget
      *
      *  @param owner the future owner of creating budget
-     *  @param permlink the budget target identity (post or other)
+     *  @param json_metadata the budget target identity (post or other)
      *  @param balance
      *  @param start the time to start allocation cash from  budget
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
     annotated_signed_transaction create_budget_for_banner(const std::string& owner,
-                                                          const std::string& permlink,
+                                                          const std::string& json_metadata,
                                                           const asset& balance,
                                                           const time_point_sec& start,
                                                           const time_point_sec& deadline,

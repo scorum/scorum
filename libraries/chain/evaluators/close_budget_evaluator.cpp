@@ -32,13 +32,13 @@ void close_budget_evaluator::do_apply(const close_budget_evaluator::operation_ty
     {
     case budget_type::post:
     {
-        const auto& budget = _post_budget_service.get(op.budget_id);
+        const auto& budget = _post_budget_service.get_budget(op.owner, op.budget_id);
         post_budget_management_algorithm(_post_budget_service, _dprops_service, _account_service).close_budget(budget);
     }
     break;
     case budget_type::banner:
     {
-        const auto& budget = _banner_budget_service.get(op.budget_id);
+        const auto& budget = _banner_budget_service.get_budget(op.owner, op.budget_id);
         banner_budget_management_algorithm(_banner_budget_service, _dprops_service, _account_service)
             .close_budget(budget);
     }

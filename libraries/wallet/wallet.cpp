@@ -2452,7 +2452,7 @@ std::vector<budget_api_obj> wallet_api::get_banner_budgets(const std::string& ac
 }
 
 annotated_signed_transaction wallet_api::create_budget_for_post(const std::string& owner,
-                                                                const std::string& permlink,
+                                                                const std::string& json_metadata,
                                                                 const asset& balance,
                                                                 const time_point_sec& start,
                                                                 const time_point_sec& deadline,
@@ -2464,7 +2464,7 @@ annotated_signed_transaction wallet_api::create_budget_for_post(const std::strin
 
     op.type = budget_type::post;
     op.owner = owner;
-    op.content_permlink = permlink;
+    op.json_metadata = json_metadata;
     op.balance = balance;
     op.deadline = deadline;
 
@@ -2476,7 +2476,7 @@ annotated_signed_transaction wallet_api::create_budget_for_post(const std::strin
 }
 
 annotated_signed_transaction wallet_api::create_budget_for_banner(const std::string& owner,
-                                                                  const std::string& permlink,
+                                                                  const std::string& json_metadata,
                                                                   const asset& balance,
                                                                   const time_point_sec& start,
                                                                   const time_point_sec& deadline,
@@ -2488,7 +2488,7 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
 
     op.type = budget_type::banner;
     op.owner = owner;
-    op.content_permlink = permlink;
+    op.json_metadata = json_metadata;
     op.balance = balance;
     op.deadline = deadline;
 

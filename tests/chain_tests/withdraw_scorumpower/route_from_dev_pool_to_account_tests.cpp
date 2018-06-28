@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
             withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
             create_withdraw.apply(ctx);
         },
-        default_skip);
+        get_skip_flags());
 
     db_plugin->debug_update(
         [&](database&) {
@@ -62,7 +62,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
             set_withdraw_scorumpower_route_context ctx(db, bob.name, bob_pie_percent * SCORUM_1_PERCENT, false);
             create_withdraw_route.apply(ctx);
         },
-        default_skip);
+        get_skip_flags());
 
     db_plugin->debug_update(
         [&](database&) {
@@ -70,7 +70,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
             set_withdraw_scorumpower_route_context ctx(db, sam.name, sam_pie_percent * SCORUM_1_PERCENT, true);
             create_withdraw_route.apply(ctx);
         },
-        default_skip);
+        get_skip_flags());
 
     fc::time_point_sec start_time = db.head_block_time();
 

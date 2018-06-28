@@ -75,6 +75,7 @@
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 #include <scorum/chain/evaluators/create_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
+#include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 
 #include <cmath>
 
@@ -1223,6 +1224,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
 }
 
 void database::initialize_indexes()

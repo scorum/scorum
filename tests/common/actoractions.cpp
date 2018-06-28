@@ -39,11 +39,11 @@ void ActorActions::give_sp(const Actor& a, int amount)
     transfer_to_scorumpower(a, ASSET_SCR(amount));
 }
 
-void ActorActions::create_budget(const std::string& permlink, asset balance, fc::time_point_sec deadline)
+void ActorActions::create_budget(const std::string& json_metadata, asset balance, fc::time_point_sec deadline)
 {
     create_budget_operation op;
     op.owner = _actor.name;
-    op.content_permlink = permlink;
+    op.json_metadata = json_metadata;
     op.balance = balance;
     op.deadline = deadline;
 

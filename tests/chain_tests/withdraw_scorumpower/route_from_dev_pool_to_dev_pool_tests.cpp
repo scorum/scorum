@@ -37,7 +37,7 @@ BOOST_FIXTURE_TEST_CASE(withdraw_all_check, withdraw_scorumpower_route_from_dev_
             withdraw_scorumpower_context ctx(db, pool_to_withdraw_sp);
             create_withdraw.apply(ctx);
         },
-        default_skip);
+        get_skip_flags());
 
     fc::time_point_sec start_time = db.head_block_time();
 

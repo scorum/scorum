@@ -27,6 +27,8 @@ template <class ObjectType> struct owned_base_budget_service_i : public base_ser
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budgets_type get_budgets(const account_name_type& owner) const = 0;
+    virtual const ObjectType& get_budget(const account_name_type& owner,
+                                         const typename ObjectType::id_type& id) const = 0;
 };
 
 template <class InterfaceType, class ObjectType> class dbs_owned_base_budget : public dbs_service_base<InterfaceType>
@@ -117,6 +119,15 @@ public:
                                                               ::boost::lambda::_1 <= owner);
         }
         FC_CAPTURE_AND_RETHROW((owner))
+    }
+
+    const ObjectType& get_budget(const account_name_type& owner, const typename ObjectType::id_type& id) const override
+    {
+        try
+        {
+            return this->template get_by<by_authorized_owner>(std::make_tuple(owner, id));
+        }
+        FC_CAPTURE_AND_RETHROW((owner)(id))
     }
 };
 
