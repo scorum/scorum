@@ -150,8 +150,9 @@ struct development_committee_transfer_operation
     protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 };
 
-struct development_committee_change_top_budgets_amount_operation
-    : public proposal_base_operation<development_committee_change_top_budgets_amount_operation, development_committee_i>
+struct base_development_committee_change_top_budgets_amount_operation
+    : public proposal_base_operation<base_development_committee_change_top_budgets_amount_operation,
+                                     development_committee_i>
 {
     uint16_t amount = 0u;
 
@@ -160,20 +161,22 @@ struct development_committee_change_top_budgets_amount_operation
     protocol::percent_type get_required_quorum(committee_i& committee_service) const;
 
 protected:
-    development_committee_change_top_budgets_amount_operation()
+    base_development_committee_change_top_budgets_amount_operation()
     {
     }
 };
 
-struct development_committee_change_top_post_budgets_amount_operation
-    : public development_committee_change_top_budgets_amount_operation
+template <budget_type type>
+struct development_committee_change_top_budgets_amount_operation
+    : public base_development_committee_change_top_budgets_amount_operation
 {
 };
 
-struct development_committee_change_top_banner_budgets_amount_operation
-    : public development_committee_change_top_budgets_amount_operation
-{
-};
+using development_committee_change_top_post_budgets_amount_operation
+    = development_committee_change_top_budgets_amount_operation<budget_type::post>;
+
+using development_committee_change_top_banner_budgets_amount_operation
+    = development_committee_change_top_budgets_amount_operation<budget_type::banner>;
 
 using proposal_operation = fc::static_variant<registration_committee_add_member_operation,
                                               registration_committee_exclude_member_operation,
@@ -240,12 +243,12 @@ FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quo
 FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
 
-FC_REFLECT(scorum::protocol::development_committee_change_top_budgets_amount_operation, (amount))
+FC_REFLECT(scorum::protocol::base_development_committee_change_top_budgets_amount_operation, (amount))
 FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_top_post_budgets_amount_operation,
-                   (scorum::protocol::development_committee_change_top_budgets_amount_operation),
+                   (scorum::protocol::base_development_committee_change_top_budgets_amount_operation),
                    BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_top_banner_budgets_amount_operation,
-                   (scorum::protocol::development_committee_change_top_budgets_amount_operation),
+                   (scorum::protocol::base_development_committee_change_top_budgets_amount_operation),
                    BOOST_PP_SEQ_NIL)
 
 DECLARE_OPERATION_SERIALIZATOR(scorum::protocol::proposal_operation)

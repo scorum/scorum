@@ -116,14 +116,12 @@ struct development_committee_transfer_evaluator
     void do_apply(const operation_type& o);
 };
 
-template <typename OperationType, budget_type type>
+template <budget_type type>
 struct development_committee_change_top_budgets_amount_evaluator
-    : public proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<OperationType,
-                                                                                                    type>>
+    : public proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<type>>
 {
-    using base_type
-        = proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<OperationType, type>>;
-    using operation_type = OperationType;
+    using operation_type = development_committee_change_top_budgets_amount_operation<type>;
+    using base_type = proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<type>>;
 
     development_committee_change_top_budgets_amount_evaluator(data_service_factory_i& r)
         : base_type(r)
@@ -133,13 +131,11 @@ struct development_committee_change_top_budgets_amount_evaluator
     void do_apply(const operation_type& o);
 };
 
-#define development_committee_change_top_post_budgets_amount_evaluator                                                        \
-    development_committee_change_top_budgets_amount_evaluator<development_committee_change_top_post_budgets_amount_operation, \
-                                                              budget_type::post>
+using development_committee_change_top_post_budgets_amount_evaluator
+    = development_committee_change_top_budgets_amount_evaluator<budget_type::post>;
 
-#define development_committee_change_top_banner_budgets_amount_evaluator                                                        \
-    development_committee_change_top_budgets_amount_evaluator<development_committee_change_top_banner_budgets_amount_operation, \
-                                                              budget_type::banner>
+using development_committee_change_top_banner_budgets_amount_evaluator
+    = development_committee_change_top_budgets_amount_evaluator<budget_type::banner>;
 
 namespace registration_committee {
 
