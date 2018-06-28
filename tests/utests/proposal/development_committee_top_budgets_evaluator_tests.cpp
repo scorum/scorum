@@ -18,7 +18,7 @@ using namespace scorum::protocol;
 
 SCORUM_TEST_CASE(validate_development_committee_top_budgets_operaton)
 {
-    SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(post)::operation_type op;
+    development_committee_change_top_post_budgets_amount_operation op;
 
     SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
 
@@ -56,13 +56,13 @@ BOOST_FIXTURE_TEST_CASE(change_top_budgets_amount, fixture)
     static const uint16_t initial_amount = 111;
     static const uint16_t new_amount = 222;
 
-    SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(post)::operation_type op;
+    development_committee_change_top_post_budgets_amount_operation op;
 
     BOOST_CHECK_NE(initial_amount, new_amount);
 
     op.amount = new_amount;
 
-    SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(post) evaluator(*services);
+    development_committee_change_top_post_budgets_amount_evaluator evaluator(*services);
 
     dev_committee_object dev_committee = create_object<dev_committee_object>(shm, [](dev_committee_object& pool) {
         pool.top_budgets_amounts.insert(std::make_pair(testing_type, initial_amount));

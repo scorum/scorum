@@ -46,24 +46,17 @@ void development_committee_withdraw_vesting_evaluator::do_apply(
     create_withdraw.apply(ctx);
 }
 
-#define SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_IMPL(TYPE)                                     \
-    SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)::SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)(    \
-        data_service_factory_i & r)                                                                                    \
-        : proposal_operation_evaluator<SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)>(r)                      \
-    {                                                                                                                  \
-    }                                                                                                                  \
-                                                                                                                       \
-    void SCORUM_MAKE_TOP_BUDGET_AMOUNT_EVALUATOR_CLS_NAME(TYPE)::do_apply(const operation_type& o)                     \
-    {                                                                                                                  \
-        auto& dev_pool = this->db().dev_pool_service();                                                                \
-                                                                                                                       \
-        dev_pool.update([&](dev_committee_object& com) {                                                               \
-            com.top_budgets_amounts.at(SCORUM_MAKE_BUDGET_TYPE_NAME(TYPE)) = o.amount;                                 \
-        });                                                                                                            \
-    }
+template <budget_type type>
+void development_committee_change_top_budgets_amount_evaluator<type>::do_apply(
+    const development_committee_change_top_budgets_amount_evaluator::operation_type& o)
+{
+    auto& dev_pool = this->db().dev_pool_service();
 
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_IMPL(post)
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_EVALUATOR_IMPL(banner)
+    dev_pool.update([&](dev_committee_object& com) { com.top_budgets_amounts.at(type) = o.amount; });
+}
+
+template class development_committee_change_top_budgets_amount_evaluator<budget_type::post>;
+template class development_committee_change_top_budgets_amount_evaluator<budget_type::banner>;
 
 } // namespace chain
 } // namespace scorum

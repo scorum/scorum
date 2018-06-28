@@ -96,20 +96,16 @@ percent_type registration_committee_add_member_operation::get_required_quorum(co
     return committee_service.get_add_member_quorum();
 }
 
-#define SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_OPERATION_IMPL(TYPE)                                     \
-    void SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE)::validate() const                                      \
-    {                                                                                                                  \
-        FC_ASSERT(amount > 0u, "Top budgets amount must nozero");                                                      \
-    }                                                                                                                  \
-                                                                                                                       \
-    percent_type SCORUM_MAKE_TOP_BUDGET_AMOUNT_OPERATION_CLS_NAME(TYPE)::get_required_quorum(                          \
-        committee_i& committee_service) const                                                                          \
-    {                                                                                                                  \
-        return committee_service.get_top_budgets_quorum();                                                             \
-    }
+void base_development_committee_change_top_budgets_amount_operation::validate() const
+{
+    FC_ASSERT(amount > 0u, "Top budgets amount must nozero");
+}
 
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_OPERATION_IMPL(post)
-SCORUM_DEVELOPMENT_COMMITTEE_CHANGE_TOP_BUDGET_AMOUNT_OPERATION_IMPL(banner)
+percent_type base_development_committee_change_top_budgets_amount_operation::get_required_quorum(
+    committee_i& committee_service) const
+{
+    return committee_service.get_top_budgets_quorum();
+}
 
 } // namespace protocol
 } // namespace scorum
