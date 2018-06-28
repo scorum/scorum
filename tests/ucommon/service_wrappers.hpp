@@ -180,7 +180,7 @@ public:
 };
 
 template <typename BudgetServiceInterface>
-class owned_base_budget_service_wrapper : public service_base_wrapper<BudgetServiceInterface>
+class advertising_budget_service_wrapper : public service_base_wrapper<BudgetServiceInterface>
 {
     using base_class = service_base_wrapper<BudgetServiceInterface>;
 
@@ -225,7 +225,7 @@ protected:
     }
 
 public:
-    owned_base_budget_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
+    advertising_budget_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
         : base_class(shm_fixture, mocks_)
     {
     }
@@ -234,9 +234,9 @@ protected:
     std::map<account_name_type, std::set<typename object_type::id_type>> _index_by_owner;
 };
 
-class post_budget_service_wrapper : public owned_base_budget_service_wrapper<post_budget_service_i>
+class post_budget_service_wrapper : public advertising_budget_service_wrapper<post_budget_service_i>
 {
-    using base_class = owned_base_budget_service_wrapper<post_budget_service_i>;
+    using base_class = advertising_budget_service_wrapper<post_budget_service_i>;
 
 public:
     post_budget_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
@@ -264,9 +264,9 @@ public:
     }
 };
 
-class banner_budget_service_wrapper : public owned_base_budget_service_wrapper<banner_budget_service_i>
+class banner_budget_service_wrapper : public advertising_budget_service_wrapper<banner_budget_service_i>
 {
-    using base_class = owned_base_budget_service_wrapper<banner_budget_service_i>;
+    using base_class = advertising_budget_service_wrapper<banner_budget_service_i>;
 
 public:
     banner_budget_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)

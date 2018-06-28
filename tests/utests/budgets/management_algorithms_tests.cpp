@@ -45,7 +45,7 @@ struct test_account_budget_fixture : public account_budget_fixture
 {
     template <typename BudgetServiceFixture> void test_budget_creation(BudgetServiceFixture& budget_service_fixture)
     {
-        owned_base_budget_management_algorithm<typename BudgetServiceFixture::interface_type> creator(
+        advertising_budget_management_algorithm<typename BudgetServiceFixture::interface_type> creator(
             budget_service_fixture.service(), dgp_service_fixture.service(), account_service_fixture.service());
 
         const char* permlink = "adidas";
@@ -78,7 +78,7 @@ struct test_account_budget_fixture : public account_budget_fixture
 
     template <typename BudgetServiceFixture> void test_close_budget(BudgetServiceFixture& budget_service_fixture)
     {
-        owned_base_budget_management_algorithm<typename BudgetServiceFixture::interface_type> manager(
+        advertising_budget_management_algorithm<typename BudgetServiceFixture::interface_type> manager(
             budget_service_fixture.service(), dgp_service_fixture.service(), account_service_fixture.service());
 
         BOOST_REQUIRE_NO_THROW(
@@ -94,7 +94,7 @@ struct test_account_budget_fixture : public account_budget_fixture
 
     template <typename BudgetServiceFixture> void test_allocate_budget(BudgetServiceFixture& budget_service_fixture)
     {
-        owned_base_budget_management_algorithm<typename BudgetServiceFixture::interface_type> manager(
+        advertising_budget_management_algorithm<typename BudgetServiceFixture::interface_type> manager(
             budget_service_fixture.service(), dgp_service_fixture.service(), account_service_fixture.service());
 
         BOOST_REQUIRE_NO_THROW(

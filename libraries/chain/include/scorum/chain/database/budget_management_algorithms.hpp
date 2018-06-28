@@ -164,18 +164,18 @@ private:
 };
 
 template <typename BudgetService>
-class owned_base_budget_management_algorithm : public base_budget_management_algorithm<BudgetService>
+class advertising_budget_management_algorithm : public base_budget_management_algorithm<BudgetService>
 {
     using base_class = base_budget_management_algorithm<BudgetService>;
 
 public:
     using object_type = typename BudgetService::object_type;
 
-    owned_base_budget_management_algorithm() = delete;
+    advertising_budget_management_algorithm() = delete;
 
-    owned_base_budget_management_algorithm(BudgetService& budget_service,
-                                           dynamic_global_property_service_i& dgp_service,
-                                           account_service_i& account_service)
+    advertising_budget_management_algorithm(BudgetService& budget_service,
+                                            dynamic_global_property_service_i& dgp_service,
+                                            account_service_i& account_service)
         : base_budget_management_algorithm<BudgetService>(budget_service, dgp_service)
         , _account_service(account_service)
     {
@@ -237,8 +237,8 @@ private:
     account_service_i& _account_service;
 };
 
-using post_budget_management_algorithm = owned_base_budget_management_algorithm<post_budget_service_i>;
+using post_budget_management_algorithm = advertising_budget_management_algorithm<post_budget_service_i>;
 
-using banner_budget_management_algorithm = owned_base_budget_management_algorithm<banner_budget_service_i>;
+using banner_budget_management_algorithm = advertising_budget_management_algorithm<banner_budget_service_i>;
 }
 }
