@@ -23,6 +23,7 @@ public:
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type advertising_moderator_quorum = SCORUM_COMMITTEE_advertising_MODERATOR_QUORUM_PERCENT;
 };
 
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>

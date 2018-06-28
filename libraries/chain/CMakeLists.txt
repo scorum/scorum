@@ -69,6 +69,7 @@ add_library( scorum_chain
              evaluators/registration_pool_evaluator.cpp
              evaluators/create_budget_evaluator.cpp
              evaluators/close_budget_evaluator.cpp
+             evaluators/close_budget_by_advertising_moderator_evaluator.cpp
 
              schema/shared_authority.cpp
 
@@ -87,6 +88,7 @@ add_library( scorum_chain
              genesis/initializators/steemit_bounty_account_initializator.cpp
              genesis/initializators/dev_pool_initializator.cpp
              genesis/initializators/dev_committee_initialiazator.cpp
+             genesis/initializators/advertising_property_initializator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_contracts_expiration.cpp

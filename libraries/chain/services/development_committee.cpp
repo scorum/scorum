@@ -47,6 +47,11 @@ void dbs_development_committee::change_transfer_quorum(const percent_type quorum
     db_impl().modify(get(), [&](dev_committee_object& m) { m.transfer_quorum = quorum; });
 }
 
+void dbs_development_committee::change_advertising_moderator_quorum(const percent_type quorum)
+{
+    db_impl().modify(get(), [&](dev_committee_object& m) { m.advertising_moderator_quorum = quorum; });
+}
+
 percent_type dbs_development_committee::get_add_member_quorum()
 {
     return get().invite_quorum;
@@ -65,6 +70,11 @@ percent_type dbs_development_committee::get_base_quorum()
 percent_type dbs_development_committee::get_transfer_quorum()
 {
     return get().transfer_quorum;
+}
+
+percent_type dbs_development_committee::get_advertising_moderator_quorum()
+{
+    return get().advertising_moderator_quorum;
 }
 
 bool dbs_development_committee::is_exists(const account_name_type& account_name) const

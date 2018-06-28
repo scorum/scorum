@@ -16,6 +16,7 @@
 #include <scorum/chain/genesis/initializators/witnesses_initializator.hpp>
 #include <scorum/chain/genesis/initializators/dev_pool_initializator.hpp>
 #include <scorum/chain/genesis/initializators/dev_committee_initialiazator.hpp>
+#include <scorum/chain/genesis/initializators/advertising_property_initializator.hpp>
 
 #include <fc/io/json.hpp>
 
@@ -90,6 +91,7 @@ db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& ge
     genesis::witnesses_initializator_impl witnesses_initializator;
     genesis::dev_pool_initializator_impl dev_pool_initializator;
     genesis::dev_committee_initializator_impl dev_committee_initializator;
+    genesis::advertising_property_initializator_impl advertising_property_initializator;
 
     genesis::initializator_context ctx(db, genesis_state);
 
@@ -103,6 +105,7 @@ db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& ge
     witness_schedule_initializator.after(witnesses_initializator).apply(ctx);
     dev_pool_initializator.after(global_property_initializator).apply(ctx);
     dev_committee_initializator.after(accounts_initializator).apply(ctx);
+    advertising_property_initializator.after(dev_committee_initializator).apply(ctx);
 }
 
 } // namespace chain
