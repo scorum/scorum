@@ -22,6 +22,7 @@ template <class ObjectType> struct advertising_budget_service_i : public base_se
     using budgets_type = std::vector<budget_cref_type>;
 
     virtual const ObjectType& get(const typename ObjectType::id_type&) const = 0;
+    virtual const ObjectType* find(const typename ObjectType::id_type&) const = 0;
     virtual budgets_type get_budgets() const = 0;
     virtual budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const = 0;
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
@@ -47,6 +48,15 @@ public:
         try
         {
             return this->get_by(id);
+        }
+        FC_CAPTURE_AND_RETHROW((id))
+    }
+
+    const ObjectType* find(const typename ObjectType::id_type& id) const override
+    {
+        try
+        {
+            return this->find_by(id);
         }
         FC_CAPTURE_AND_RETHROW((id))
     }

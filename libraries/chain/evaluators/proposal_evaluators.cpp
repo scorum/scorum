@@ -3,7 +3,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/advertising_property_service.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 

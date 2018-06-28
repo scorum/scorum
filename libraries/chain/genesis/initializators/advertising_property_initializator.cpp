@@ -1,7 +1,7 @@
 #include <scorum/chain/genesis/initializators/advertising_property_initializator.hpp>
 
 #include <scorum/chain/genesis/genesis_state.hpp>
-#include <scorum/chain/services/advertising_property_service.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 namespace scorum {
 namespace chain {

@@ -8,9 +8,9 @@ add_library( scorum_app
              application.cpp
              plugin.cpp
              scorum_api_objects.cpp
+             advertising_api.cpp
              ${HEADERS}
-             ${EGENESIS_HEADERS}
-           )
+             ${EGENESIS_HEADERS})
 
 target_link_libraries( scorum_app
                        scorum_chain
