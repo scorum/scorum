@@ -13,10 +13,7 @@ budget_check_fixture::budget_check_fixture()
 
 std::string budget_check_fixture::get_unique_permlink()
 {
-    static uint32_t permlink_no = 0;
-    permlink_no++;
-
-    return boost::lexical_cast<std::string>(permlink_no);
+    return boost::lexical_cast<std::string>(++permlink_no);
 }
 
 void budget_check_fixture::create_budget(const Actor& owner, const budget_type type)
