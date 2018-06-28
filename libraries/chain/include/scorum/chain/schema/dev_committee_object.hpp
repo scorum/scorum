@@ -12,17 +12,20 @@ using scorum::protocol::asset;
 class dev_committee_object : public object<dev_committee_object_type, dev_committee_object>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(dev_committee_object)
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(dev_committee_object, (top_budgets_amounts))
 
     id_type id;
 
     asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
 
+    fc::shared_flat_map<budget_type, uint16_t> top_budgets_amounts;
+
     protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type top_budgets_amounts_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>
@@ -62,10 +65,12 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (id)
            (sp_balance)
            (scr_balance)
+           (top_budgets_amounts)
            (transfer_quorum)
            (invite_quorum)
            (dropout_quorum)
-           (change_quorum))
+           (change_quorum)
+           (top_budgets_amounts_quorum))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_object, scorum::chain::dev_committee_index)

@@ -55,16 +55,16 @@ void process_funds::on_apply(block_task_context& ctx)
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
 
-    for (const post_budget_object& budget :
-         post_budget_service.get_budgets_by_start_time(dgp_service.head_block_time()))
+    for (const post_budget_object& budget : post_budget_service.get_top_budgets_by_start_time(
+             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::post)))
     {
         advertising_budgets_reward
             += post_budget_management_algorithm(post_budget_service, dgp_service, account_service)
                    .allocate_cash(budget);
     }
 
-    for (const banner_budget_object& budget :
-         banner_budget_service.get_budgets_by_start_time(dgp_service.head_block_time()))
+    for (const banner_budget_object& budget : banner_budget_service.get_top_budgets_by_start_time(
+             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::banner)))
     {
         advertising_budgets_reward
             += banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)

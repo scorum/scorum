@@ -40,7 +40,7 @@ config::config() /// production config
     , guaranted_reward_supply_period_in_days(30)
     , reward_increase_threshold_in_days(100)
 
-    , budgets_limit_per_owner(1000000)
+    , budgets_limit_per_owner(10000)
 
     , atomicswap_initiator_refund_lock_secs(48 * 3600)
     , atomicswap_participant_refund_lock_secs(24 * 3600)
@@ -90,7 +90,7 @@ config::config(test_mode) /// test config
     , guaranted_reward_supply_period_in_days(2)
     , reward_increase_threshold_in_days(3)
 
-    , budgets_limit_per_owner(5)
+    , budgets_limit_per_owner(SCORUM_DEFAULT_TOP_BUDGETS_AMOUNT * 2)
 
     , atomicswap_initiator_refund_lock_secs(60 * 20)
     , atomicswap_participant_refund_lock_secs(60 * 10)

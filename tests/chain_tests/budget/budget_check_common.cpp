@@ -29,10 +29,20 @@ void budget_check_fixture::create_budget(const Actor& owner,
                                          int balance,
                                          int deadline_in_blocks)
 {
+    create_budget(owner, type, balance, 0, deadline_in_blocks);
+}
+
+void budget_check_fixture::create_budget(
+    const Actor& owner, const budget_type type, int balance, int start_in_blocks, int deadline_in_blocks)
+{
     create_budget_operation op;
     op.owner = owner.name;
     op.type = type;
     op.balance = asset(balance, SCORUM_SYMBOL);
+    if (start_in_blocks > 0)
+    {
+        op.start = db.get_slot_time(start_in_blocks);
+    }
     op.deadline = db.get_slot_time(deadline_in_blocks);
     op.content_permlink = get_unique_permlink();
 

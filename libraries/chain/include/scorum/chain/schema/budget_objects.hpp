@@ -27,6 +27,11 @@ public:
 
     typedef typename object<ObjectType, budget_object<ObjectType, SymbolType>>::id_type id_type;
 
+    enum : asset_symbol_type
+    {
+        symbol_type = SymbolType,
+    };
+
     id_type id;
 
     account_name_type owner;
@@ -62,8 +67,15 @@ using budget_index
                                                                                   time_point_sec,
                                                                                   &BudgetObjectType::start>,
                                                                            member<BudgetObjectType,
+                                                                                  asset,
+                                                                                  &BudgetObjectType::per_block>,
+                                                                           member<BudgetObjectType,
                                                                                   typename BudgetObjectType::id_type,
-                                                                                  &BudgetObjectType::id>>>>>;
+                                                                                  &BudgetObjectType::id>>,
+                                                             composite_key_compare<std::less<time_point_sec>,
+                                                                                   std::greater<asset>,
+                                                                                   std::less<typename BudgetObjectType::
+                                                                                                 id_type>>>>>;
 
 using fund_budget_object = budget_object<fund_budget_object_type, SP_SYMBOL>;
 using post_budget_object = budget_object<post_budget_object_type, SCORUM_SYMBOL>;
