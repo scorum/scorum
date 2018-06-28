@@ -2781,28 +2781,30 @@ annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::development_pool_top_post_budget(const std::string& initiator,
-                                                                          uint16_t amount,
-                                                                          uint32_t lifetime_sec,
-                                                                          bool broadcast)
+annotated_signed_transaction
+wallet_api::development_pool_top_post_budget(const std::string& initiator,
+                                             const std::vector<percent_type>& vcg_coefficients,
+                                             uint32_t lifetime_sec,
+                                             bool broadcast)
 {
     using operation_type = development_committee_change_top_post_budgets_amount_operation;
 
-    signed_transaction tx
-        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec,
+                                                     [&](operation_type& o) { o.vcg_coefficients = vcg_coefficients; });
 
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::development_pool_top_banner_budget(const std::string& initiator,
-                                                                            uint16_t amount,
-                                                                            uint32_t lifetime_sec,
-                                                                            bool broadcast)
+annotated_signed_transaction
+wallet_api::development_pool_top_banner_budget(const std::string& initiator,
+                                               const std::vector<percent_type>& vcg_coefficients,
+                                               uint32_t lifetime_sec,
+                                               bool broadcast)
 {
     using operation_type = development_committee_change_top_banner_budgets_amount_operation;
 
-    signed_transaction tx
-        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec,
+                                                     [&](operation_type& o) { o.vcg_coefficients = vcg_coefficients; });
 
     return my->sign_transaction(tx, broadcast);
 }

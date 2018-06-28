@@ -110,13 +110,15 @@ struct test_account_budget_fixture : public account_budget_fixture
         dgp_service_fixture.update(
             [&](dynamic_global_property_object& obj) { obj.head_block_number = budget.last_cashout_block; });
 
-        auto cash = manager.allocate_cash(budget, budget.per_block);
+        auto cash = budget.per_block;
+        manager.allocate_cash(budget, cash);
 
         BOOST_CHECK_EQUAL(cash, ASSET_SCR(0));
 
         dgp_service_fixture.update([&](dynamic_global_property_object& obj) { obj.head_block_number++; });
 
-        cash = manager.allocate_cash(budget, budget.per_block);
+        cash = budget.per_block;
+        manager.allocate_cash(budget, cash);
 
         BOOST_CHECK_EQUAL(cash, budget.per_block);
     }

@@ -41,6 +41,10 @@ BOOST_FIXTURE_TEST_SUITE(budget_starting_check, budget_starting_tests_fixture)
 SCORUM_TEST_CASE(sequence_alocation_by_start_check)
 {
     create_budget(alice, budget_type::post, budget_balance, budget_start, budget_deadline);
+    create_budget(alice, budget_type::post, budget_balance / 10, budget_start, budget_deadline);
+    create_budget(alice, budget_type::post, budget_balance / 10, budget_start, budget_deadline);
+    create_budget(alice, budget_type::post, budget_balance / 10, budget_start, budget_deadline);
+    create_budget(alice, budget_type::post, budget_balance / 10, budget_start, budget_deadline);
     auto start_second_alice_budget = budget_start + budget_start_interval;
     create_budget(alice, budget_type::post, budget_balance, start_second_alice_budget, budget_deadline);
     auto start_third_alice_budget = start_second_alice_budget + budget_start_interval;

@@ -1227,7 +1227,7 @@ public:
      * Create proposal for set up a top post amount request.
      */
     annotated_signed_transaction development_pool_top_post_budget(const std::string& initiator,
-                                                                  uint16_t amount,
+                                                                  const std::vector<percent_type>&,
                                                                   uint32_t lifetime_sec,
                                                                   bool broadcast);
 
@@ -1235,7 +1235,7 @@ public:
      * Create proposal for set up a top banner amount request.
      */
     annotated_signed_transaction development_pool_top_banner_budget(const std::string& initiator,
-                                                                    uint16_t amount,
+                                                                    const std::vector<percent_type>&,
                                                                     uint32_t lifetime_sec,
                                                                     bool broadcast);
 

@@ -28,7 +28,7 @@ share_type calculate_vcg_cash(const size_t position,
     {
         share_value_type x = coeffs.at(top_size - ci);
         FC_ASSERT(x > 0, "Invalid coefficient value");
-        FC_ASSERT(x > priv_coeff, "Invalid coefficient value");
+        FC_ASSERT(x >= priv_coeff, "Invalid coefficient value");
         share_type per_block = per_block_list.at(top_size - ci + 1);
         FC_ASSERT(per_block.value > 0, "Invalid per-block value");
         uint128_t factor = (x - priv_coeff);
@@ -93,18 +93,20 @@ public:
         });
     }
 
-    asset allocate_cash(const object_type& budget, const asset& per_block)
+    // return 'true' if budget has been closed
+    bool allocate_cash(const object_type& budget, asset& cash)
     {
-        FC_ASSERT(per_block.amount > 0, "Invalid per_block.");
+        FC_ASSERT(cash.amount > 0, "Invalid cash.");
 
         auto head_block_num = _dgp_service.head_block_num();
 
         if (budget.last_cashout_block >= head_block_num)
         {
-            return asset(0, budget.balance.symbol()); // empty (allocation waits new block)
+            cash = asset(0, budget.balance.symbol()); // empty (allocation waits new block)
+            return false;
         }
 
-        asset ret = decrease_balance(budget, per_block);
+        cash = decrease_balance(budget, cash);
 
         if (!check_close_conditions(budget))
         {
@@ -113,9 +115,10 @@ public:
         else
         {
             close_budget_internal(budget);
+            return true;
         }
 
-        return ret;
+        return false;
     }
 
 protected:
@@ -229,10 +232,19 @@ public:
 
         const auto& ret = base_class::create_budget(owner, balance, start_date, end_date, permlink);
 
-        this->_account_service.update(this->_account_service.get_account(owner),
-                                      [&](account_object& acnt) { acnt.balance -= balance; });
+        take_cash_from_owner(owner, balance);
 
-        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
+        return ret;
+    }
+
+    // return 'true' if budget has been closed
+    bool change_cash(const object_type& budget, asset& change)
+    {
+        bool ret = this->allocate_cash(budget, change);
+        if (!ret && change.amount > 0)
+        {
+            give_change_back_to_owner(budget.owner, change);
+        }
 
         return ret;
     }
@@ -255,8 +267,6 @@ private:
 
     void close_budget_internal(const object_type& budget)
     {
-        const auto& owner = this->_account_service.get_account(budget.owner);
-
         // withdraw all balance rest asset back to owner
         //
         asset repayable = budget.balance;
@@ -264,12 +274,26 @@ private:
         {
             repayable = this->decrease_balance(budget, repayable);
 
-            this->_account_service.update(owner, [&](account_object& acnt) { acnt.balance += repayable; });
-
-            this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
+            give_change_back_to_owner(budget.owner, repayable);
         }
 
         this->_budget_service.remove(budget);
+    }
+
+    void take_cash_from_owner(const account_name_type& owner, const asset& cash)
+    {
+        this->_account_service.update(this->_account_service.get_account(owner),
+                                      [&](account_object& acnt) { acnt.balance -= cash; });
+
+        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= cash; });
+    }
+
+    void give_change_back_to_owner(const account_name_type& owner, const asset& cash)
+    {
+        this->_account_service.update(this->_account_service.get_account(owner),
+                                      [&](account_object& acnt) { acnt.balance += cash; });
+
+        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += cash; });
     }
 
     account_service_i& _account_service;

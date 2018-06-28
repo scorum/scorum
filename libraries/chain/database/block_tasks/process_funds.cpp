@@ -17,6 +17,8 @@
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/budget_management_algorithms.hpp>
 
+#include <vector>
+
 namespace scorum {
 namespace chain {
 namespace database_ns {
@@ -48,31 +50,78 @@ void process_funds::on_apply(block_task_context& ctx)
     if (fund_budget_service.is_exists())
     {
         const auto& budget = fund_budget_service.get();
-        original_fund_reward += fund_budget_management_algorithm(fund_budget_service, dgp_service)
-                                    .allocate_cash(budget, budget.per_block);
+        asset cash = budget.per_block;
+        fund_budget_management_algorithm(fund_budget_service, dgp_service).allocate_cash(budget, cash);
+        original_fund_reward += cash;
     }
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
 
-    for (const post_budget_object& budget : post_budget_service.get_top_budgets_by_start_time(
-             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::post)))
+    using position_weights_type = std::vector<percent_type>;
+    using per_block_values_type = std::vector<share_type>;
+
     {
-        auto per_block = budget.per_block;
-        // TODO
-        advertising_budgets_reward
-            += post_budget_management_algorithm(post_budget_service, dgp_service, account_service)
-                   .allocate_cash(budget, per_block);
+        const auto& prop_position_weights = dev_service.get().vcg_post_coefficients;
+        size_t vcg_top_sz = prop_position_weights.size();
+        const auto& budgets = post_budget_service.get_top_budgets_by_start_time(dgp_service.head_block_time(), -1);
+        size_t ci = 0;
+        per_block_values_type per_block_values;
+
+        for (const post_budget_object& budget : budgets)
+        {
+            if (ci++ > vcg_top_sz)
+                break;
+
+            per_block_values.emplace_back(budget.per_block.amount);
+        }
+
+        position_weights_type position_weights;
+        if (!per_block_values.empty())
+        {
+            std::copy_n(std::begin(prop_position_weights), per_block_values.size() - 1,
+                        std::back_inserter(position_weights));
+        }
+        ci = 0;
+
+        post_budget_management_algorithm manager(post_budget_service, dgp_service, account_service);
+        for (const post_budget_object& budget : budgets)
+        {
+            size_t pos = ci++;
+            auto advertising_cash = asset(0, budget.per_block.symbol());
+            if (per_block_values.size() < 2)
+            {
+                advertising_cash = budget.per_block;
+            }
+            else if (ci < vcg_top_sz)
+            {
+                advertising_cash
+                    = asset(calculate_vcg_cash(pos, position_weights, per_block_values), advertising_cash.symbol());
+            }
+            if (advertising_cash.amount > 0)
+            {
+                manager.allocate_cash(budget, advertising_cash);
+                advertising_budgets_reward += advertising_cash;
+                // TODO: advertising_cash
+            }
+            auto change_cash = budget.per_block - advertising_cash;
+            if (change_cash.amount > 0)
+            {
+                manager.change_cash(budget, change_cash);
+                // TODO: change_cash
+            }
+        }
     }
 
     for (const banner_budget_object& budget : banner_budget_service.get_top_budgets_by_start_time(
-             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::banner)))
+             dgp_service.head_block_time(), dev_service.get().vcg_banner_coefficients.size()))
     {
         auto per_block = budget.per_block;
+        auto cash = per_block;
+        banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
+            .allocate_cash(budget, cash);
         // TODO
-        advertising_budgets_reward
-            += banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
-                   .allocate_cash(budget, per_block);
+        advertising_budgets_reward += cash;
     }
 
     // 50% of the revenue goes to support and develop the product, namely,

@@ -38,7 +38,8 @@ struct development_committee_api_obj
     asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
 
-    fc::flat_map<budget_type, uint16_t> top_budgets_amounts;
+    std::vector<percent_type> vcg_post_coefficients;
+    std::vector<percent_type> vcg_banner_coefficients;
 
     protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
@@ -466,7 +467,8 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
 FC_REFLECT(scorum::app::development_committee_api_obj,
            (sp_balance)
            (scr_balance)
-           (top_budgets_amounts)
+           (vcg_post_coefficients)
+           (vcg_banner_coefficients)
            (transfer_quorum)
            (invite_quorum)
            (dropout_quorum)

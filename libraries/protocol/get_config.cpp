@@ -4,6 +4,8 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/version.hpp>
 
+#include <boost/preprocessor/tuple/enum.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -107,7 +109,7 @@ fc::variant_object get_config()
 
     result["SCORUM_CURRENCY_PRECISION"] = SCORUM_CURRENCY_PRECISION;
 
-    result["SCORUM_DEFAULT_TOP_BUDGETS_AMOUNT"] = SCORUM_DEFAULT_TOP_BUDGETS_AMOUNT;
+    result["SCORUM_DEFAULT_BUDGETS_VCG_SET"] = BOOST_PP_STRINGIZE(BOOST_PP_TUPLE_ENUM(SCORUM_DEFAULT_BUDGETS_VCG_SET));
 
     result["SCORUM_VOTING_POWER_DECAY_PERCENT"] = SCORUM_VOTING_POWER_DECAY_PERCENT;
 

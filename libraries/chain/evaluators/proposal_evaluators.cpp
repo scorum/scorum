@@ -46,13 +46,30 @@ void development_committee_withdraw_vesting_evaluator::do_apply(
     create_withdraw.apply(ctx);
 }
 
-template <budget_type type>
-void development_committee_change_top_budgets_amount_evaluator<type>::do_apply(
+template <>
+void development_committee_change_top_budgets_amount_evaluator<budget_type::post>::do_apply(
     const development_committee_change_top_budgets_amount_evaluator::operation_type& o)
 {
     auto& dev_pool = this->db().dev_pool_service();
 
-    dev_pool.update([&](dev_committee_object& com) { com.top_budgets_amounts.at(type) = o.amount; });
+    dev_pool.update([&](dev_committee_object& com) {
+        com.vcg_post_coefficients.clear();
+        std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
+                  std::back_inserter(com.vcg_post_coefficients));
+    });
+}
+
+template <>
+void development_committee_change_top_budgets_amount_evaluator<budget_type::banner>::do_apply(
+    const development_committee_change_top_budgets_amount_evaluator::operation_type& o)
+{
+    auto& dev_pool = this->db().dev_pool_service();
+
+    dev_pool.update([&](dev_committee_object& com) {
+        com.vcg_banner_coefficients.clear();
+        std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
+                  std::back_inserter(com.vcg_banner_coefficients));
+    });
 }
 
 template class development_committee_change_top_budgets_amount_evaluator<budget_type::post>;

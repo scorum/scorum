@@ -8,18 +8,20 @@ namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
+using scorum::protocol::percent_type;
 
 class dev_committee_object : public object<dev_committee_object_type, dev_committee_object>
 {
 public:
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(dev_committee_object, (top_budgets_amounts))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(dev_committee_object, (vcg_post_coefficients)(vcg_banner_coefficients))
 
     id_type id;
 
     asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
 
-    fc::shared_flat_map<budget_type, uint16_t> top_budgets_amounts;
+    fc::shared_vector<percent_type> vcg_post_coefficients;
+    fc::shared_vector<percent_type> vcg_banner_coefficients;
 
     protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
@@ -65,7 +67,8 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (id)
            (sp_balance)
            (scr_balance)
-           (top_budgets_amounts)
+           (vcg_post_coefficients)
+           (vcg_banner_coefficients)
            (transfer_quorum)
            (invite_quorum)
            (dropout_quorum)
