@@ -113,7 +113,7 @@ void base_development_committee_change_top_budgets_amount_operation::validate() 
 }
 
 percent_type base_development_committee_change_top_budgets_amount_operation::get_required_quorum(
-        committee_type& committee_service) const
+    committee_type& committee_service) const
 {
     return committee_service.get_top_budgets_quorum();
 }
