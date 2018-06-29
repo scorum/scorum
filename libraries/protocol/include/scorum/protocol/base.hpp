@@ -24,18 +24,10 @@ inline void validate_permlink(const std::string& permlink)
 
 inline void validate_json_metadata(const std::string& json_metadata)
 {
-    if (json_metadata.size() > 0)
+    if (!json_metadata.empty())
     {
         FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
-        try
-        {
-            if (!fc::json::is_valid(json_metadata))
-                FC_THROW_EXCEPTION(fc::assert_exception, "");
-        }
-        catch (const fc::exception& e)
-        {
-            FC_ASSERT(false, "JSON Metadata not valid JSON");
-        }
+        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
     }
 }
 

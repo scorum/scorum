@@ -27,7 +27,10 @@ public:
 
     typedef typename object<ObjectType, budget_object<ObjectType, SymbolType>>::id_type id_type;
 
-    static const asset_symbol_type symbol_type;
+    enum : asset_symbol_type
+    {
+        symbol_type = SymbolType,
+    };
 
     id_type id;
 
@@ -43,9 +46,6 @@ public:
 
     uint32_t last_cashout_block = 0;
 };
-
-template <uint16_t ObjectType, asset_symbol_type SymbolType>
-const asset_symbol_type budget_object<ObjectType, SymbolType>::symbol_type = SymbolType;
 
 struct by_owner_name;
 struct by_authorized_owner;

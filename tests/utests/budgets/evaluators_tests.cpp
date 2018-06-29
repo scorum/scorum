@@ -82,7 +82,7 @@ BOOST_FIXTURE_TEST_CASE(asserts_in_budget_creation, evaluators_for_budget_fixtur
     op.owner = alice_create_budget_operation.owner;
 
     op.json_metadata = R"j({"wrong)j";
-    SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
+    SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
     op.json_metadata = alice_create_budget_operation.json_metadata;
 
     op.balance = asset(op.balance.amount, SP_SYMBOL);
@@ -189,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(budget_upate, update_evaluators_for_budget_fixture)
     op.owner = alice_update_budget_operation.owner;
 
     op.json_metadata = R"j({{"wrong)j";
-    SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
+    SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
     op.json_metadata = alice_update_budget_operation.json_metadata;
 
     BOOST_REQUIRE_EQUAL(fc::to_string(post_budget_service_fixture.get().json_metadata),
