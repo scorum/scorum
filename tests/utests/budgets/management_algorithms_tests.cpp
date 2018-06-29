@@ -65,7 +65,9 @@ struct test_account_budget_fixture : public account_budget_fixture
             creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, json_metadata));
 
         BOOST_CHECK_EQUAL(budget_service_fixture.get().owner, alice.name);
+#ifndef IS_LOW_MEM
         BOOST_CHECK_EQUAL(budget_service_fixture.get().json_metadata, json_metadata);
+#endif //! IS_LOW_MEM
         BOOST_CHECK_EQUAL(budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
