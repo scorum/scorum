@@ -47,6 +47,7 @@ set( SOURCES
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     plugins/database_api/account_api_tests.cpp
+    blog/comment_delete_tests.cpp
     genesis_db_tests.cpp
     withdraw_scorumpower/old_tests.cpp
     withdraw_scorumpower/withdraw_scorumpower_check_common.cpp
