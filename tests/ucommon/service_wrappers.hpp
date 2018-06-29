@@ -238,10 +238,10 @@ protected:
     {
         const auto& it_by_owner = this->_index_by_owner.find(name);
         typename BudgetServiceInterface::budgets_type ret;
-        BOOST_ASSERT(it_by_owner != this->_index_by_owner.end());
+        FC_ASSERT(it_by_owner != this->_index_by_owner.end());
 
         const auto& it_by_id = this->_objects_by_id.find(id);
-        BOOST_ASSERT(it_by_id != this->_objects_by_id.end());
+        FC_ASSERT(it_by_id != this->_objects_by_id.end());
 
         return it_by_id->second;
     }
