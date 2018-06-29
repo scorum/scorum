@@ -133,12 +133,14 @@ public:
 
 struct banner_budget_service_i : public owned_base_budget_service_i<banner_budget_object>
 {
+    using object_type = banner_budget_object;
 };
 
 using dbs_banner_budget = dbs_owned_base_budget<banner_budget_service_i, banner_budget_object>;
 
 struct post_budget_service_i : public owned_base_budget_service_i<post_budget_object>
 {
+    using object_type = post_budget_object;
 };
 
 using dbs_post_budget = dbs_owned_base_budget<post_budget_service_i, post_budget_object>;

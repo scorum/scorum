@@ -238,12 +238,12 @@ public:
     }
 
     // return 'true' if budget has been closed
-    bool change_cash(const object_type& budget, asset& change)
+    bool cash_back(const object_type& budget, asset& change)
     {
         bool ret = this->allocate_cash(budget, change);
         if (!ret && change.amount > 0)
         {
-            give_change_back_to_owner(budget.owner, change);
+            give_cash_back_to_owner(budget.owner, change);
         }
 
         return ret;
@@ -274,7 +274,7 @@ private:
         {
             repayable = this->decrease_balance(budget, repayable);
 
-            give_change_back_to_owner(budget.owner, repayable);
+            give_cash_back_to_owner(budget.owner, repayable);
         }
 
         this->_budget_service.remove(budget);
@@ -288,7 +288,7 @@ private:
         this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= cash; });
     }
 
-    void give_change_back_to_owner(const account_name_type& owner, const asset& cash)
+    void give_cash_back_to_owner(const account_name_type& owner, const asset& cash)
     {
         this->_account_service.update(this->_account_service.get_account(owner),
                                       [&](account_object& acnt) { acnt.balance += cash; });

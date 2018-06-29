@@ -25,6 +25,82 @@ namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
 
+namespace {
+template <typename ServiceIterfaceType, typename VCGCoeffListType>
+asset allocate_advertising_cash(ServiceIterfaceType& service,
+                                dynamic_global_property_service_i& dgp_service,
+                                account_service_i& account_service,
+                                const VCGCoeffListType& vcg_coefficients,
+                                const budget_type type,
+                                database_virtual_operations_emmiter_i& ctx)
+{
+    asset ret(0, SCORUM_SYMBOL);
+
+    using position_weights_type = std::vector<percent_type>;
+    using per_block_values_type = std::vector<share_type>;
+
+    using object_type = typename ServiceIterfaceType::object_type;
+
+    owned_base_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
+
+    size_t vcg_top_sz = vcg_coefficients.size();
+    const auto& budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time(), -1);
+    size_t ci = 0;
+    per_block_values_type per_block_values;
+
+    for (const object_type& budget : budgets)
+    {
+        if (ci++ > vcg_top_sz)
+            break;
+
+        per_block_values.emplace_back(budget.per_block.amount);
+    }
+
+    if (!per_block_values.empty())
+    {
+        vcg_top_sz = per_block_values.size() - 1;
+    }
+
+    position_weights_type position_weights;
+    if (!per_block_values.empty())
+    {
+        std::copy_n(std::begin(vcg_coefficients), vcg_top_sz, std::back_inserter(position_weights));
+    }
+    ci = 0;
+
+    for (const object_type& budget : budgets)
+    {
+        auto advertising_cash = asset(0, budget.per_block.symbol());
+        if (per_block_values.size() < 2)
+        {
+            advertising_cash = budget.per_block;
+        }
+        else if (ci < vcg_top_sz)
+        {
+            advertising_cash
+                = asset(calculate_vcg_cash(ci++, position_weights, per_block_values), advertising_cash.symbol());
+        }
+        if (advertising_cash.amount > 0)
+        {
+            manager.allocate_cash(budget, advertising_cash);
+            ret += advertising_cash;
+
+            ctx.push_virtual_operation(
+                allocate_cash_from_advertising_budget_operation(type, budget.owner, budget.id._id, advertising_cash));
+        }
+        auto change_cash = budget.per_block - advertising_cash;
+        if (change_cash.amount > 0)
+        {
+            manager.cash_back(budget, change_cash);
+            ctx.push_virtual_operation(cash_back_from_advertising_budget_to_owner_operation(
+                type, budget.owner, budget.id._id, advertising_cash));
+        }
+    }
+
+    return ret;
+}
+}
+
 void process_funds::on_apply(block_task_context& ctx)
 {
     if (apply_mainnet_schedule_crutches(ctx))
@@ -58,71 +134,12 @@ void process_funds::on_apply(block_task_context& ctx)
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
 
-    using position_weights_type = std::vector<percent_type>;
-    using per_block_values_type = std::vector<share_type>;
-
-    {
-        const auto& prop_position_weights = dev_service.get().vcg_post_coefficients;
-        size_t vcg_top_sz = prop_position_weights.size();
-        const auto& budgets = post_budget_service.get_top_budgets_by_start_time(dgp_service.head_block_time(), -1);
-        size_t ci = 0;
-        per_block_values_type per_block_values;
-
-        for (const post_budget_object& budget : budgets)
-        {
-            if (ci++ > vcg_top_sz)
-                break;
-
-            per_block_values.emplace_back(budget.per_block.amount);
-        }
-
-        position_weights_type position_weights;
-        if (!per_block_values.empty())
-        {
-            std::copy_n(std::begin(prop_position_weights), per_block_values.size() - 1,
-                        std::back_inserter(position_weights));
-        }
-        ci = 0;
-
-        post_budget_management_algorithm manager(post_budget_service, dgp_service, account_service);
-        for (const post_budget_object& budget : budgets)
-        {
-            size_t pos = ci++;
-            auto advertising_cash = asset(0, budget.per_block.symbol());
-            if (per_block_values.size() < 2)
-            {
-                advertising_cash = budget.per_block;
-            }
-            else if (ci < vcg_top_sz)
-            {
-                advertising_cash
-                    = asset(calculate_vcg_cash(pos, position_weights, per_block_values), advertising_cash.symbol());
-            }
-            if (advertising_cash.amount > 0)
-            {
-                manager.allocate_cash(budget, advertising_cash);
-                advertising_budgets_reward += advertising_cash;
-                // TODO: advertising_cash
-            }
-            auto change_cash = budget.per_block - advertising_cash;
-            if (change_cash.amount > 0)
-            {
-                manager.change_cash(budget, change_cash);
-                // TODO: change_cash
-            }
-        }
-    }
-
-    for (const banner_budget_object& budget : banner_budget_service.get_top_budgets_by_start_time(
-             dgp_service.head_block_time(), dev_service.get().vcg_banner_coefficients.size()))
-    {
-        auto per_block = budget.per_block;
-        auto cash = per_block;
-        banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
-            .allocate_cash(budget, cash);
-        // TODO
-        advertising_budgets_reward += cash;
-    }
+    advertising_budgets_reward
+        += allocate_advertising_cash(post_budget_service, dgp_service, account_service,
+                                     dev_service.get().vcg_post_coefficients, budget_type::post, ctx);
+    advertising_budgets_reward
+        += allocate_advertising_cash(banner_budget_service, dgp_service, account_service,
+                                     dev_service.get().vcg_banner_coefficients, budget_type::banner, ctx);
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.
