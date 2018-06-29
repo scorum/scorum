@@ -261,7 +261,7 @@ public:
         allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
 #endif
 #ifndef FORCE_UNLOCK_BLOGGING_DELETE_COMMENT_API
-        allow_blogging_delete_comment_api = (now < fc::time_point_sec::from_iso_string("2018-03-23T09:00:00"));
+        allow_blogging_delete_comment_api = (now < fc::time_point_sec::from_iso_string("2018-06-30T09:00:00"));
 #endif
     }
 
