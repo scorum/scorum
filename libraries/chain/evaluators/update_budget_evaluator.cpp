@@ -23,24 +23,31 @@ void update_budget_evaluator::do_apply(const operation_type& op)
 {
     _account_service.check_account_existence(op.owner);
 
-#ifndef IS_LOW_MEM
     switch (op.type)
     {
     case budget_type::post:
     {
-        _post_budget_service.update(_post_budget_service.get_budget(op.owner, op.budget_id),
+        const auto& budget = _post_budget_service.get_budget(op.owner, op.budget_id);
+#ifndef IS_LOW_MEM
+        _post_budget_service.update(budget,
                                     [&](post_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
+#else //! IS_LOW_MEM
+        boost::ignore_unused_variable_warning(budget);
+#endif // IS_LOW_MEM
     }
     break;
     case budget_type::banner:
     {
+        const auto& budget = _banner_budget_service.get_budget(op.owner, op.budget_id);
+#ifndef IS_LOW_MEM
         _banner_budget_service.update(
-            _banner_budget_service.get_budget(op.owner, op.budget_id),
-            [&](banner_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
+            budget, [&](banner_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
+#else //! IS_LOW_MEM
+        boost::ignore_unused_variable_warning(budget);
+#endif // IS_LOW_MEM
     }
     break;
     }
-#endif
 }
 }
 }

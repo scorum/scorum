@@ -67,9 +67,9 @@ struct test_account_budget_fixture : public account_budget_fixture
             creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, json_metadata));
 
         const auto& budget = budget_service_fixture.get();
-
+#ifndef IS_LOW_MEM
         BOOST_CHECK_EQUAL(budget.owner, alice.name);
-        BOOST_CHECK_EQUAL(budget.json_metadata, json_metadata);
+#endif //! IS_LOW_MEM
         BOOST_CHECK_EQUAL(budget.created.sec_since_epoch(), head_block_time.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget.start.sec_since_epoch(), start.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget.deadline.sec_since_epoch(), deadline.sec_since_epoch());
@@ -106,6 +106,9 @@ struct test_account_budget_fixture : public account_budget_fixture
             manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, "pepsi"));
 
         const auto& budget = budget_service_fixture.get();
+        dgp_service_fixture.update([&](dynamic_global_property_object& obj) {
+            obj.head_block_number = budget_service_fixture.get().last_cashout_block;
+        });
 
         dgp_service_fixture.update(
             [&](dynamic_global_property_object& obj) { obj.head_block_number = budget.last_cashout_block; });

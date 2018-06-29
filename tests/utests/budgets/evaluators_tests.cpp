@@ -192,21 +192,27 @@ BOOST_FIXTURE_TEST_CASE(budget_upate, update_evaluators_for_budget_fixture)
     SCORUM_REQUIRE_THROW(op.validate(), fc::exception);
     op.json_metadata = alice_update_budget_operation.json_metadata;
 
+#ifndef IS_LOW_MEM
     BOOST_REQUIRE_EQUAL(fc::to_string(post_budget_service_fixture.get().json_metadata),
                         alice_create_budget_operation.json_metadata);
     BOOST_REQUIRE_EQUAL(fc::to_string(banner_budget_service_fixture.get().json_metadata),
                         alice_create_budget_operation.json_metadata);
+#endif //! IS_LOW_MEM
 
     BOOST_REQUIRE_NO_THROW(update_evaluator.do_apply(op));
 
+#ifndef IS_LOW_MEM
     BOOST_CHECK_EQUAL(fc::to_string(post_budget_service_fixture.get().json_metadata),
                       alice_update_budget_operation.json_metadata);
+#endif //! IS_LOW_MEM
 
     op.type = budget_type::banner;
 
     BOOST_REQUIRE_NO_THROW(update_evaluator.do_apply(op));
 
+#ifndef IS_LOW_MEM
     BOOST_CHECK_EQUAL(fc::to_string(banner_budget_service_fixture.get().json_metadata),
                       alice_update_budget_operation.json_metadata);
+#endif //! IS_LOW_MEM
 }
 }
