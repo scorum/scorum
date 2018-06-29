@@ -16,6 +16,7 @@ set(SOURCES
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp
+    logger/logger_config_tests.cpp
     signed_transaction_serialization_tests.cpp
     serialization_tests.cpp
     proposal/proposal_operations_tests.cpp

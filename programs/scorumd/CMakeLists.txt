@@ -1,6 +1,5 @@
 add_executable(scorumd
-               main.cpp
-               log_configurator.cpp)
+               main.cpp)
 if(UNIX AND NOT APPLE)
     set(rt_library rt)
 endif()

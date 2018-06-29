@@ -13,6 +13,8 @@ namespace database_ns {
 
 void process_account_registration_bonus_expiration::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_account_registration_bonus_expiration BEGIN");
+
     account_registration_bonus_service_i& account_registration_bonus_service
         = ctx.services().account_registration_bonus_service();
     dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
@@ -23,6 +25,8 @@ void process_account_registration_bonus_expiration::on_apply(block_task_context&
         return_funds(ctx, account);
         account_registration_bonus_service.remove(account);
     }
+
+    debug_log(ctx.get_block_info(), "process_account_registration_bonus_expiration END");
 }
 
 void process_account_registration_bonus_expiration::return_funds(block_task_context& ctx,
