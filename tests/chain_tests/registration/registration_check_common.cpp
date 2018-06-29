@@ -86,7 +86,7 @@ void registration_check_fixture::create_registration_objects(const genesis_state
                 [&](dynamic_global_property_object& gpo) { gpo.total_supply += genesis.registration_supply; });
 
         },
-        default_skip);
+        get_skip_flags());
 
     generate_blocks(2);
 }

@@ -7,8 +7,6 @@
 
 #include <scorum/chain/schema/budget_objects.hpp>
 
-#include <scorum/chain/evaluators/create_budget_evaluator.hpp>
-
 namespace budget_check_common {
 
 using namespace database_fixture;
@@ -22,6 +20,8 @@ struct budget_check_fixture : public database_default_integration_fixture
 
     void create_budget(const Actor& owner, const budget_type type);
     void create_budget(const Actor& owner, const budget_type type, int balance, int deadline_in_blocks);
+    void
+    create_budget(const Actor& owner, const budget_type type, int balance, int start_in_blocks, int deadline_in_blocks);
     void create_budget(const Actor& owner,
                        const budget_type type,
                        const asset& balance,
@@ -33,8 +33,6 @@ struct budget_check_fixture : public database_default_integration_fixture
 
     post_budget_service_i& post_budget_service;
     banner_budget_service_i& banner_budget_service;
-
-    create_budget_evaluator creator;
 
 private:
     std::string get_unique_permlink();

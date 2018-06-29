@@ -15,6 +15,7 @@
 
 #include <scorum/protocol/scorum_operations.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
+#include <scorum/protocol/operation_info.hpp>
 
 #include <scorum/chain/util/asset.hpp>
 
@@ -75,9 +76,9 @@
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 #include <scorum/chain/evaluators/create_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
-
-#include <cmath>
+#include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_by_advertising_moderator_evaluator.hpp>
+#include <cmath>
 
 namespace scorum {
 namespace chain {
@@ -965,8 +966,14 @@ inline void database::push_virtual_operation(const operation& op)
         FC_ASSERT(is_virtual_operation(op));
 
         auto note = create_notification(op);
+
+        operation_info ctx(op);
+        debug_log(ctx, "virt operation pre_apply BEGIN");
         notify_pre_apply_operation(note);
+        debug_log(ctx, "virt operation pre_apply END");
+        debug_log(ctx, "virt operation post_apply BEGIN");
         notify_post_apply_operation(note);
+        debug_log(ctx, "virt operation post_apply END");
     }
 }
 
@@ -1219,6 +1226,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
+    _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -1451,6 +1459,7 @@ void database::_apply_block(const signed_block& next_block)
                   "Block produced by witness that is not running current hardfork",
                   ("witness", witness)("next_block.witness", next_block.witness)("hardfork_state", hardfork_state));
 
+        debug_log(ctx, "apply_transactions");
         for (const auto& trx : next_block.transactions)
         {
             /* We do not need to push the undo state for each transaction
@@ -1467,13 +1476,19 @@ void database::_apply_block(const signed_block& next_block)
             ++_current_trx_in_block;
         }
 
+        debug_log(ctx, "update_global_dynamic_data");
         update_global_dynamic_data(next_block);
+        debug_log(ctx, "update_signing_witness");
         update_signing_witness(signing_witness, next_block);
 
+        debug_log(ctx, "update_last_irreversible_block");
         update_last_irreversible_block();
 
+        debug_log(ctx, "create_block_summary");
         create_block_summary(next_block);
+        debug_log(ctx, "clear_expired_transactions");
         clear_expired_transactions();
+        debug_log(ctx, "clear_expired_delegations");
         clear_expired_delegations();
 
         // in dbs_database_witness_schedule.cpp
@@ -1481,7 +1496,7 @@ void database::_apply_block(const signed_block& next_block)
 
         database_ns::block_task_context task_ctx(static_cast<data_service_factory&>(*this),
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
-                                                 _current_block_num);
+                                                 _current_block_num, ctx);
 
         database_ns::process_funds().apply(task_ctx);
         database_ns::process_fifa_world_cup_2018_bounty_initialize().apply(task_ctx);
@@ -1492,12 +1507,17 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
 
+        debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
+        debug_log(ctx, "expire_escrow_ratification");
         expire_escrow_ratification();
+        debug_log(ctx, "process_decline_voting_rights");
         process_decline_voting_rights();
 
+        debug_log(ctx, "clear_expired_proposals");
         obtain_service<dbs_proposal>().clear_expired_proposals();
 
+        debug_log(ctx, "process_hardforks");
         process_hardforks();
 
         // notify observers that the block has been applied

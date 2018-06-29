@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_CASE(fund_budget_creation, fund_budget_fixture)
         creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), start, deadline, ""));
 
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().owner, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().content_permlink, "");
+    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().json_metadata, "");
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
     BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
@@ -48,23 +48,24 @@ struct test_account_budget_fixture : public account_budget_fixture
         advertising_budget_management_algorithm<typename BudgetServiceFixture::interface_type> creator(
             budget_service_fixture.service(), dgp_service_fixture.service(), account_service_fixture.service());
 
-        const char* permlink = "adidas";
-
-        SCORUM_REQUIRE_THROW(creator.create_budget(alice.name, asset(balance, SP_SYMBOL), start, deadline, permlink),
-                             fc::assert_exception);
+        const char* json_metadata = R"j({"company": "adidas"})j";
 
         SCORUM_REQUIRE_THROW(
-            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), deadline, start, permlink),
+            creator.create_budget(alice.name, asset(balance, SP_SYMBOL), start, deadline, json_metadata),
             fc::assert_exception);
 
-        SCORUM_REQUIRE_THROW(creator.create_budget(alice.name, alice.scr_amount * 2, deadline, start, permlink),
+        SCORUM_REQUIRE_THROW(
+            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), deadline, start, json_metadata),
+            fc::assert_exception);
+
+        SCORUM_REQUIRE_THROW(creator.create_budget(alice.name, alice.scr_amount * 2, deadline, start, json_metadata),
                              fc::assert_exception);
 
         BOOST_REQUIRE_NO_THROW(
-            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, permlink));
+            creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, json_metadata));
 
         BOOST_CHECK_EQUAL(budget_service_fixture.get().owner, alice.name);
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().content_permlink, permlink);
+        BOOST_CHECK_EQUAL(budget_service_fixture.get().json_metadata, json_metadata);
         BOOST_CHECK_EQUAL(budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
         BOOST_CHECK_EQUAL(budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());

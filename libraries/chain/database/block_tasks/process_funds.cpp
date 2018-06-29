@@ -28,6 +28,8 @@ void process_funds::on_apply(block_task_context& ctx)
     if (apply_mainnet_schedule_crutches(ctx))
         return;
 
+    debug_log(ctx.get_block_info(), "process_funds BEGIN");
+
     data_service_factory_i& services = ctx.services();
     content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
     dev_pool_service_i& dev_service = services.dev_pool_service();
@@ -53,16 +55,16 @@ void process_funds::on_apply(block_task_context& ctx)
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
 
-    for (const post_budget_object& budget :
-         post_budget_service.get_budgets_by_start_time(dgp_service.head_block_time()))
+    for (const post_budget_object& budget : post_budget_service.get_top_budgets_by_start_time(
+             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::post)))
     {
         advertising_budgets_reward
             += post_budget_management_algorithm(post_budget_service, dgp_service, account_service)
                    .allocate_cash(budget);
     }
 
-    for (const banner_budget_object& budget :
-         banner_budget_service.get_budgets_by_start_time(dgp_service.head_block_time()))
+    for (const banner_budget_object& budget : banner_budget_service.get_top_budgets_by_start_time(
+             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::banner)))
     {
         advertising_budgets_reward
             += banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
@@ -81,6 +83,8 @@ void process_funds::on_apply(block_task_context& ctx)
     asset users_reward = balancer.take_block_reward();
 
     distribute_reward(ctx, users_reward); // distribute SCR
+
+    debug_log(ctx.get_block_info(), "process_funds END");
 }
 
 void process_funds::distribute_reward(block_task_context& ctx, const asset& users_reward)

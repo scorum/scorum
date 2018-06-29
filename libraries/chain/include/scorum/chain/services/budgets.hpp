@@ -24,10 +24,12 @@ template <class ObjectType> struct advertising_budget_service_i : public base_se
     virtual const ObjectType& get(const typename ObjectType::id_type&) const = 0;
     virtual const ObjectType* find(const typename ObjectType::id_type&) const = 0;
     virtual budgets_type get_budgets() const = 0;
-    virtual budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const = 0;
+    virtual budgets_type get_top_budgets_by_start_time(const fc::time_point_sec& until, uint16_t limit) const = 0;
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budgets_type get_budgets(const account_name_type& owner) const = 0;
+    virtual const ObjectType& get_budget(const account_name_type& owner,
+                                         const typename ObjectType::id_type& id) const = 0;
 };
 
 template <class InterfaceType, class ObjectType> class dbs_advertising_budget : public dbs_service_base<InterfaceType>
@@ -70,14 +72,30 @@ public:
         FC_CAPTURE_AND_RETHROW(())
     }
 
-    budgets_type get_budgets_by_start_time(const fc::time_point_sec& until) const override
+    budgets_type get_top_budgets_by_start_time(const fc::time_point_sec& until, uint16_t limit) const override
     {
         try
         {
-            return this->template get_range_by<by_start_time>(::boost::multi_index::unbounded,
-                                                              ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
+            budgets_type result;
+            result.reserve(limit);
+
+            const auto& idx = this->db_impl()
+                                  .template get_index<budget_index<ObjectType>>()
+                                  .indices()
+                                  .template get<by_start_time>();
+
+            auto range = idx.range(::boost::multi_index::unbounded,
+                                   ::boost::lambda::_1
+                                       <= std::make_tuple(until, asset::maximum(ObjectType::symbol_type), ALL_IDS));
+
+            for (auto itr = range.first; limit && itr != range.second; ++itr)
+            {
+                --limit;
+                result.push_back(std::cref(*itr));
+            }
+            return result;
         }
-        FC_CAPTURE_AND_RETHROW((until))
+        FC_CAPTURE_AND_RETHROW((until)(limit))
     }
 
     std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const override
@@ -107,10 +125,19 @@ public:
     {
         try
         {
-            return this->template get_range_by<by_owner_name>(::boost::lambda::_1 >= owner,
+            return this->template get_range_by<by_owner_name>(owner <= ::boost::lambda::_1,
                                                               ::boost::lambda::_1 <= owner);
         }
         FC_CAPTURE_AND_RETHROW((owner))
+    }
+
+    const ObjectType& get_budget(const account_name_type& owner, const typename ObjectType::id_type& id) const override
+    {
+        try
+        {
+            return this->template get_by<by_authorized_owner>(std::make_tuple(owner, id));
+        }
+        FC_CAPTURE_AND_RETHROW((owner)(id))
     }
 };
 

@@ -2395,7 +2395,7 @@ annotated_signed_transaction wallet_api::get_transaction(transaction_id_type id)
     return (*my->_remote_blockchain_history_api)->get_transaction(id);
 }
 
-sorted_budgets_type wallet_api::list_my_budgets()
+std::vector<budget_api_obj> wallet_api::list_my_budgets()
 {
     FC_ASSERT(!is_locked());
 
@@ -2413,15 +2413,15 @@ sorted_budgets_type wallet_api::list_my_budgets()
         for (const auto& name : item)
             names.insert(name);
 
-    sorted_budgets_type ret;
+    std::vector<budget_api_obj> ret;
 
     {
         auto budgets = my->_remote_db->get_budgets(budget_type::post, names);
-        std::copy(budgets.begin(), budgets.end(), std::inserter(ret, ret.end()));
+        std::copy(budgets.begin(), budgets.end(), std::back_inserter(ret));
     }
     {
         auto budgets = my->_remote_db->get_budgets(budget_type::banner, names);
-        std::copy(budgets.begin(), budgets.end(), std::inserter(ret, ret.end()));
+        std::copy(budgets.begin(), budgets.end(), std::back_inserter(ret));
     }
 
     return ret;
@@ -2437,14 +2437,14 @@ std::set<std::string> wallet_api::list_banner_budget_owners(const std::string& l
     return my->_remote_db->lookup_budget_owners(budget_type::banner, lowerbound, limit);
 }
 
-sorted_budgets_type wallet_api::get_post_budgets(const std::string& account_name)
+std::vector<budget_api_obj> wallet_api::get_post_budgets(const std::string& account_name)
 {
     validate_account_name(account_name);
 
     return my->_remote_db->get_budgets(budget_type::post, { account_name });
 }
 
-sorted_budgets_type wallet_api::get_banner_budgets(const std::string& account_name)
+std::vector<budget_api_obj> wallet_api::get_banner_budgets(const std::string& account_name)
 {
     validate_account_name(account_name);
 
@@ -2452,7 +2452,7 @@ sorted_budgets_type wallet_api::get_banner_budgets(const std::string& account_na
 }
 
 annotated_signed_transaction wallet_api::create_budget_for_post(const std::string& owner,
-                                                                const std::string& permlink,
+                                                                const std::string& json_metadata,
                                                                 const asset& balance,
                                                                 const time_point_sec& start,
                                                                 const time_point_sec& deadline,
@@ -2464,7 +2464,7 @@ annotated_signed_transaction wallet_api::create_budget_for_post(const std::strin
 
     op.type = budget_type::post;
     op.owner = owner;
-    op.content_permlink = permlink;
+    op.json_metadata = json_metadata;
     op.balance = balance;
     op.deadline = deadline;
 
@@ -2476,7 +2476,7 @@ annotated_signed_transaction wallet_api::create_budget_for_post(const std::strin
 }
 
 annotated_signed_transaction wallet_api::create_budget_for_banner(const std::string& owner,
-                                                                  const std::string& permlink,
+                                                                  const std::string& json_metadata,
                                                                   const asset& balance,
                                                                   const time_point_sec& start,
                                                                   const time_point_sec& deadline,
@@ -2488,7 +2488,7 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
 
     op.type = budget_type::banner;
     op.owner = owner;
-    op.content_permlink = permlink;
+    op.json_metadata = json_metadata;
     op.balance = balance;
     op.deadline = deadline;
 
@@ -2740,6 +2740,21 @@ annotated_signed_transaction wallet_api::development_committee_change_transfer_q
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::development_committee_change_top_budget_quorum(const std::string& initiator,
+                                                                                        uint64_t quorum_percent,
+                                                                                        uint32_t lifetime_sec,
+                                                                                        bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = top_budget_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction wallet_api::development_pool_transfer(
     const std::string& initiator, const std::string& to_account, asset amount, uint32_t lifetime_sec, bool broadcast)
 {
@@ -2762,6 +2777,32 @@ annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.vesting_shares = amount; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_pool_top_post_budget(const std::string& initiator,
+                                                                          uint16_t amount,
+                                                                          uint32_t lifetime_sec,
+                                                                          bool broadcast)
+{
+    using operation_type = development_committee_change_top_post_budgets_amount_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_pool_top_banner_budget(const std::string& initiator,
+                                                                            uint16_t amount,
+                                                                            uint32_t lifetime_sec,
+                                                                            bool broadcast)
+{
+    using operation_type = development_committee_change_top_banner_budgets_amount_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.amount = amount; });
 
     return my->sign_transaction(tx, broadcast);
 }

@@ -1012,7 +1012,7 @@ public:
     /**
      *  Gets the budget information for all my budgets (list_my_accounts)
      */
-    sorted_budgets_type list_my_budgets();
+    std::vector<budget_api_obj> list_my_budgets();
 
     /**
      *  Gets the list of all budget (for POST type) owners (look list_accounts to understand input parameters)
@@ -1027,12 +1027,12 @@ public:
     /**
      *  Gets the budget (for POST type) information for certain account
      */
-    sorted_budgets_type get_post_budgets(const std::string& account_name);
+    std::vector<budget_api_obj> get_post_budgets(const std::string& account_name);
 
     /**
      *  Gets the budget (for BANNER type) information for certain account
      */
-    sorted_budgets_type get_banner_budgets(const std::string& account_name);
+    std::vector<budget_api_obj> get_banner_budgets(const std::string& account_name);
 
     /**
      *  This method will create new budget (for POST type) linked to owner account.
@@ -1040,14 +1040,14 @@ public:
      *  @warning The owner account must have sufficient balance for budget
      *
      *  @param owner the future owner of creating budget
-     *  @param permlink the budget target identity (post or other)
+     *  @param json_metadata the budget target identity (post or other)
      *  @param balance
      *  @param start the time to start allocation cash from  budget
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
     annotated_signed_transaction create_budget_for_post(const std::string& owner,
-                                                        const std::string& permlink,
+                                                        const std::string& json_metadata,
                                                         const asset& balance,
                                                         const time_point_sec& start,
                                                         const time_point_sec& deadline,
@@ -1059,14 +1059,14 @@ public:
      *  @warning The owner account must have sufficient balance for budget
      *
      *  @param owner the future owner of creating budget
-     *  @param permlink the budget target identity (post or other)
+     *  @param json_metadata the budget target identity (post or other)
      *  @param balance
      *  @param start the time to start allocation cash from  budget
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
     annotated_signed_transaction create_budget_for_banner(const std::string& owner,
-                                                          const std::string& permlink,
+                                                          const std::string& json_metadata,
                                                           const asset& balance,
                                                           const time_point_sec& start,
                                                           const time_point_sec& deadline,
@@ -1199,6 +1199,14 @@ public:
                                                                               bool broadcast);
 
     /**
+     * Change development committee for changing top budget amount quorum
+     */
+    annotated_signed_transaction development_committee_change_top_budget_quorum(const std::string& creator,
+                                                                                uint64_t quorum_percent,
+                                                                                uint32_t lifetime_sec,
+                                                                                bool broadcast);
+
+    /**
      * Create proposal for transfering SCR from development pool to account
      */
     annotated_signed_transaction development_pool_transfer(const std::string& initiator,
@@ -1214,6 +1222,22 @@ public:
                                                                    asset amount,
                                                                    uint32_t lifetime_sec,
                                                                    bool broadcast);
+
+    /**
+     * Create proposal for set up a top post amount request.
+     */
+    annotated_signed_transaction development_pool_top_post_budget(const std::string& initiator,
+                                                                  uint16_t amount,
+                                                                  uint32_t lifetime_sec,
+                                                                  bool broadcast);
+
+    /**
+     * Create proposal for set up a top banner amount request.
+     */
+    annotated_signed_transaction development_pool_top_banner_budget(const std::string& initiator,
+                                                                    uint16_t amount,
+                                                                    uint32_t lifetime_sec,
+                                                                    bool broadcast);
 
     /**
      * Get development committee
@@ -1449,9 +1473,13 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_add_member_quorum)
         (development_committee_change_exclude_member_quorum)
         (development_committee_change_base_quorum)
+        (development_committee_change_transfer_quorum)
+        (development_committee_change_top_budget_quorum)
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
+        (development_pool_top_post_budget)
+        (development_pool_top_banner_budget)
 
         // Atomic Swap API
         (atomicswap_initiate)

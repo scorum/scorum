@@ -84,9 +84,9 @@ SCORUM_TEST_CASE(check_get_user_budgets_positive)
     auto post_0 = _api.get_budget(0, budget_type::post);
     auto banner_1 = _api.get_budget(1, budget_type::banner);
 
-    BOOST_CHECK_EQUAL(banner_0->content_permlink, "1");
-    BOOST_CHECK_EQUAL(post_0->content_permlink, "2");
-    BOOST_CHECK_EQUAL(banner_1->content_permlink, "3");
+    BOOST_CHECK_EQUAL(banner_0->json_metadata, "1");
+    BOOST_CHECK_EQUAL(post_0->json_metadata, "2");
+    BOOST_CHECK_EQUAL(banner_1->json_metadata, "3");
 }
 
 SCORUM_TEST_CASE(check_get_user_budgets_negative)
@@ -112,10 +112,10 @@ SCORUM_TEST_CASE(check_get_budget)
     BOOST_REQUIRE_EQUAL(budgets.size(), 2);
 
     BOOST_CHECK_EQUAL(budgets[0].type, budget_type::post);
-    BOOST_CHECK_EQUAL(budgets[0].content_permlink, "2");
+    BOOST_CHECK_EQUAL(budgets[0].json_metadata, "2");
 
     BOOST_CHECK_EQUAL(budgets[1].type, budget_type::banner);
-    BOOST_CHECK_EQUAL(budgets[1].content_permlink, "1");
+    BOOST_CHECK_EQUAL(budgets[1].json_metadata, "1");
 }
 BOOST_AUTO_TEST_SUITE_END()
 }

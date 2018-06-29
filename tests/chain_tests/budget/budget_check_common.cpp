@@ -7,7 +7,6 @@ namespace budget_check_common {
 budget_check_fixture::budget_check_fixture()
     : post_budget_service(db.post_budget_service())
     , banner_budget_service(db.banner_budget_service())
-    , creator(db)
 {
 }
 
@@ -26,12 +25,22 @@ void budget_check_fixture::create_budget(const Actor& owner,
                                          int balance,
                                          int deadline_in_blocks)
 {
+    create_budget(owner, type, balance, 0, deadline_in_blocks);
+}
+
+void budget_check_fixture::create_budget(
+    const Actor& owner, const budget_type type, int balance, int start_in_blocks, int deadline_in_blocks)
+{
     create_budget_operation op;
     op.owner = owner.name;
     op.type = type;
     op.balance = asset(balance, SCORUM_SYMBOL);
+    if (start_in_blocks > 0)
+    {
+        op.start = db.get_slot_time(start_in_blocks);
+    }
     op.deadline = db.get_slot_time(deadline_in_blocks);
-    op.content_permlink = get_unique_permlink();
+    op.json_metadata = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);
 }
@@ -48,7 +57,7 @@ void budget_check_fixture::create_budget(const Actor& owner,
     op.balance = balance;
     op.start = start;
     op.deadline = deadline;
-    op.content_permlink = get_unique_permlink();
+    op.json_metadata = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);
 

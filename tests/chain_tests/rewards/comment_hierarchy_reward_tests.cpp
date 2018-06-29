@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(check_beneficiares_rewards)
     tx.operations.push_back(op);
     tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
     tx.sign(initdelegate.private_key, db.get_chain_id());
-    db.push_transaction(tx, default_skip);
+    db.push_transaction(tx, get_skip_flags());
 
     p.vote(voter00).push();
     c10.vote(voter10).push();
