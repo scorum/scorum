@@ -541,9 +541,12 @@ struct post_operation_visitor
         auto tags_rng = idx.equal_range(auth.id)
             | boost::adaptors::filtered([&](const tag_object& t) { return !_db.find(t.comment); });
 
-        for (const tag_object& tag : tags_rng)
+        auto it = tags_rng.begin();
+        while (it != tags_rng.end())
         {
-            remove_tag(tag);
+            const auto& tag_object = *it;
+            ++it;
+            remove_tag(tag_object);
         }
     }
 
