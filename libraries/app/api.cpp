@@ -252,16 +252,12 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
 class check_banned_operations_visitor
 {
     bool allow_blogging_api = true;
-    bool allow_blogging_delete_comment_api = true;
 
 public:
     explicit check_banned_operations_visitor(const fc::time_point_sec& now)
     {
 #ifndef FORCE_UNLOCK_BLOGGING_API
         allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
-#endif
-#ifndef FORCE_UNLOCK_BLOGGING_DELETE_COMMENT_API
-        allow_blogging_delete_comment_api = (now < fc::time_point_sec::from_iso_string("2018-06-30T09:00:00"));
 #endif
     }
 
@@ -283,7 +279,7 @@ public:
     }
     bool operator()(const scorum::protocol::delete_comment_operation&) const
     {
-        return allow_blogging_api && allow_blogging_delete_comment_api;
+        return allow_blogging_api;
     }
     bool operator()(const scorum::protocol::vote_operation&) const
     {
