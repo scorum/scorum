@@ -41,6 +41,7 @@
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -76,7 +77,7 @@
 #include <scorum/chain/evaluators/create_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/update_budget_evaluator.hpp>
-
+#include <scorum/chain/evaluators/close_budget_by_advertising_moderator_evaluator.hpp>
 #include <cmath>
 
 namespace scorum {
@@ -1224,6 +1225,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
 }
 
@@ -1273,6 +1275,7 @@ void database::initialize_indexes()
     add_index<dev_committee_member_index>();
 
     add_index<witness_reward_in_sp_migration_index>();
+    add_index<advertising_property_index>();
 
     _plugin_index_signal();
 }

@@ -59,6 +59,11 @@ struct genesis_state_type : public genesis_persistent_state_type, public genesis
         uint16_t bonus_percent;
     };
 
+    struct advertising_property_object
+    {
+        std::string moderator = SCORUM_MISSING_MODERATOR_ACCOUNT;
+    };
+
     asset total_supply = asset(0, SCORUM_SYMBOL);
     asset registration_supply = asset(0, SCORUM_SYMBOL);
     asset registration_bonus = asset(0, SCORUM_SYMBOL);
@@ -76,6 +81,7 @@ struct genesis_state_type : public genesis_persistent_state_type, public genesis
     std::vector<registration_schedule_item> registration_schedule;
     std::vector<std::string> registration_committee;
     std::vector<std::string> development_committee;
+    advertising_property_object advertising_property;
 };
 
 } // namespace chain
