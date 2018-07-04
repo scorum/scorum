@@ -160,6 +160,7 @@ void withdraw_scorumpower_operation::validate() const
 {
     validate_account_name(account);
     FC_ASSERT(is_asset_type(scorumpower, SP_SYMBOL), "Amount must be SP");
+    FC_ASSERT(scorumpower.amount >= 0, "Can't withdraw negative amount");
 }
 
 void set_withdraw_scorumpower_route_to_account_operation::validate() const
