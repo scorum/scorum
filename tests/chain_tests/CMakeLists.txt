@@ -35,6 +35,7 @@ set( SOURCES
     budget/budget_autoclose_tests.cpp
     budget/budget_starting_tests.cpp
     budget/budget_security_tests.cpp
+    budget/budget_winners_tests.cpp
     proposal/proposal_tests.cpp
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp

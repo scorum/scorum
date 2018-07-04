@@ -106,10 +106,19 @@ public:
             return false;
         }
 
+        return allocate_cash_impl(budget, cash);
+    }
+
+protected:
+    // return 'true' if budget has been closed
+    bool allocate_cash_impl(const object_type& budget, asset& cash)
+    {
         cash = decrease_balance(budget, cash);
 
         if (!check_close_conditions(budget))
         {
+            auto head_block_num = _dgp_service.head_block_num();
+
             _budget_service.update(budget, [&](object_type& b) { b.last_cashout_block = head_block_num; });
         }
         else
@@ -121,7 +130,6 @@ public:
         return false;
     }
 
-protected:
     asset calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance)
     {
         FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(),
@@ -240,7 +248,7 @@ public:
     // return 'true' if budget has been closed
     bool cash_back(const object_type& budget, asset& change)
     {
-        bool ret = this->allocate_cash(budget, change);
+        bool ret = this->allocate_cash_impl(budget, change);
         if (!ret && change.amount > 0)
         {
             give_cash_back_to_owner(budget.owner, change);

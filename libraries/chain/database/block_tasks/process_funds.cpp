@@ -92,8 +92,8 @@ asset allocate_advertising_cash(ServiceIterfaceType& service,
         if (change_cash.amount > 0)
         {
             manager.cash_back(budget, change_cash);
-            ctx.push_virtual_operation(cash_back_from_advertising_budget_to_owner_operation(
-                type, budget.owner, budget.id._id, advertising_cash));
+            ctx.push_virtual_operation(
+                cash_back_from_advertising_budget_to_owner_operation(type, budget.owner, budget.id._id, change_cash));
         }
     }
 
