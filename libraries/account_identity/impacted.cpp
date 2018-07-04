@@ -150,6 +150,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const update_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
     void operator()(const close_budget_operation& op)
     {
         _impacted.insert(op.owner);
@@ -256,9 +261,8 @@ struct get_impacted_account_visitor
 
     void operator()(const proposal_virtual_operation& op)
     {
-        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op){
-            _impacted.insert(op.to_account);
-        });
+        op.proposal_op.weak_visit(
+            [&](const development_committee_transfer_operation& op) { _impacted.insert(op.to_account); });
     }
 
 private:

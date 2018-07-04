@@ -10,6 +10,8 @@ namespace database_ns {
 
 void process_contracts_expiration::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_contracts_expiration BEGIN");
+
     data_service_factory_i& services = ctx.services();
     atomicswap_service_i& atomicswap_service = services.atomicswap_service();
     dynamic_global_property_service_i& dyn_prop_service = services.dynamic_global_property_service();
@@ -37,6 +39,8 @@ void process_contracts_expiration::on_apply(block_task_context& ctx)
             }
         }
     }
+
+    debug_log(ctx.get_block_info(), "process_contracts_expiration END");
 }
 }
 }

@@ -68,6 +68,7 @@ add_library( scorum_chain
              evaluators/proposal_evaluators.cpp
              evaluators/registration_pool_evaluator.cpp
              evaluators/create_budget_evaluator.cpp
+             evaluators/update_budget_evaluator.cpp
              evaluators/close_budget_evaluator.cpp
              evaluators/close_budget_by_advertising_moderator_evaluator.cpp
 

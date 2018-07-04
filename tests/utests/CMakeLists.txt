@@ -16,6 +16,7 @@ set(SOURCES
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp
+    logger/logger_config_tests.cpp
     signed_transaction_serialization_tests.cpp
     serialization_tests.cpp
     proposal/proposal_operations_tests.cpp
@@ -23,6 +24,7 @@ set(SOURCES
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
+    proposal/development_committee_top_budgets_evaluator_tests.cpp
     rewards_math/calculate_payout_tests.cpp
     rewards_math/calculate_total_claims_tests.cpp
     rewards_math/calculate_curations_payout_tests.cpp

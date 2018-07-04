@@ -27,7 +27,26 @@ namespace app {
 
 using namespace scorum::chain;
 
-typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
+struct development_committee_api_obj
+{
+    development_committee_api_obj(const chain::dev_committee_object& obj);
+
+    development_committee_api_obj()
+    {
+    }
+
+    asset sp_balance = asset(0, SP_SYMBOL);
+    asset scr_balance = asset(0, SCORUM_SYMBOL);
+
+    fc::flat_map<budget_type, uint16_t> top_budgets_amounts;
+
+    protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
+    protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
+    protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
+    protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type top_budgets_amounts_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+};
+
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
 typedef api_obj<scorum::chain::change_recovery_account_request_object> change_recovery_account_request_api_obj;
 typedef api_obj<scorum::chain::decline_voting_rights_request_object> decline_voting_rights_request_api_obj;
@@ -265,7 +284,7 @@ public:
         : id(b.id._id)
         , type(budget_type::post)
         , owner(b.owner)
-        , content_permlink(fc::to_string(b.content_permlink))
+        , json_metadata(fc::to_string(b.json_metadata))
         , created(b.created)
         , start(b.start)
         , deadline(b.deadline)
@@ -279,7 +298,7 @@ public:
         : id(b.id._id)
         , type(budget_type::banner)
         , owner(b.owner)
-        , content_permlink(fc::to_string(b.content_permlink))
+        , json_metadata(fc::to_string(b.json_metadata))
         , created(b.created)
         , start(b.start)
         , deadline(b.deadline)
@@ -299,7 +318,7 @@ public:
     budget_type type;
 
     account_name_type owner;
-    std::string content_permlink;
+    std::string json_metadata;
 
     time_point_sec created;
     time_point_sec start;
@@ -444,8 +463,16 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
                    (content_reward_scr_balance)
                    (content_reward_sp_balance)
                    )
-FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
-
+FC_REFLECT(scorum::app::development_committee_api_obj,
+           (sp_balance)
+           (scr_balance)
+           (top_budgets_amounts)
+           (transfer_quorum)
+           (invite_quorum)
+           (dropout_quorum)
+           (change_quorum)
+           (top_budgets_amounts_quorum)
+           )
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 
 FC_REFLECT( scorum::app::account_api_obj,
@@ -507,7 +534,7 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (id)
             (type)
             (owner)
-            (content_permlink)
+            (json_metadata)
             (created)
             (start)
             (deadline)
