@@ -30,6 +30,7 @@ public:
     {
         FC_ASSERT(_dprops_service.head_block_time() > _lock_withdraw_sp_until_timestamp,
                   "Withdraw scorumpower operation is locked until ${t}.", ("t", _lock_withdraw_sp_until_timestamp));
+        FC_ASSERT(scorumpower.amount >= 0);
 
         asset vesting_withdraw_rate = asset(0, SP_SYMBOL);
         if (_withdraw_scorumpower_service.is_exists(from_object.id))

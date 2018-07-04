@@ -31,6 +31,47 @@ struct withdraw_scorumpower_route_from_account_to_account_tests_fixture : public
     asset alice_to_withdraw_scr;
 };
 
+BOOST_FIXTURE_TEST_CASE(withdraw_negative_value_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
+{
+    const auto& alice = account_service.get_account("alice");
+
+    withdraw_scorumpower_operation op;
+    op.account = alice.name;
+    op.scorumpower = asset(-alice_to_withdraw_sp.amount, SP_SYMBOL);
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(alice_key, db.get_chain_id());
+    SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
+}
+
+BOOST_FIXTURE_TEST_CASE(withdraw_removing_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
+{
+    const auto& alice = account_service.get_account("alice");
+
+    withdraw_scorumpower_operation op;
+    op.account = alice.name;
+    op.scorumpower = alice_to_withdraw_sp;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(alice_key, db.get_chain_id());
+    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(alice.id));
+
+    op.scorumpower = asset(0, SP_SYMBOL);
+    tx.clear();
+    tx.operations.push_back(op);
+    tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
+    tx.sign(alice_key, db.get_chain_id());
+    BOOST_REQUIRE_NO_THROW(db.push_transaction(tx, 0));
+
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
+}
+
 BOOST_FIXTURE_TEST_CASE(withdraw_all_no_rest_check, withdraw_scorumpower_route_from_account_to_account_tests_fixture)
 {
     const auto& alice = account_service.get_account("alice");
