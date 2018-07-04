@@ -291,7 +291,6 @@ public:
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
-        , last_cashout_block(b.last_cashout_block)
     {
     }
 
@@ -305,7 +304,6 @@ public:
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
-        , last_cashout_block(b.last_cashout_block)
     {
     }
 
@@ -327,8 +325,6 @@ public:
 
     asset balance = asset(0, SCORUM_SYMBOL);
     asset per_block;
-
-    uint32_t last_cashout_block = 0;
 };
 
 struct atomicswap_contract_api_obj
@@ -542,7 +538,6 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (deadline)
             (balance)
             (per_block)
-            (last_cashout_block)
           )
 
 FC_REFLECT( scorum::app::atomicswap_contract_api_obj,

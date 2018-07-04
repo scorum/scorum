@@ -106,21 +106,8 @@ struct test_account_budget_fixture : public account_budget_fixture
             manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, "pepsi"));
 
         const auto& budget = budget_service_fixture.get();
-        dgp_service_fixture.update([&](dynamic_global_property_object& obj) {
-            obj.head_block_number = budget_service_fixture.get().last_cashout_block;
-        });
-
-        dgp_service_fixture.update(
-            [&](dynamic_global_property_object& obj) { obj.head_block_number = budget.last_cashout_block; });
 
         auto cash = budget.per_block;
-        manager.allocate_cash(budget, cash);
-
-        BOOST_CHECK_EQUAL(cash, ASSET_SCR(0));
-
-        dgp_service_fixture.update([&](dynamic_global_property_object& obj) { obj.head_block_number++; });
-
-        cash = budget.per_block;
         manager.allocate_cash(budget, cash);
 
         BOOST_CHECK_EQUAL(cash, budget.per_block);

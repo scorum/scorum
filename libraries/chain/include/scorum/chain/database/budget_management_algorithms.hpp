@@ -65,16 +65,7 @@ public:
 
         auto per_block = calculate_per_block(start_date, end_date, balance);
 
-        auto head_block_num = _dgp_service.head_block_num();
         auto head_block_time = _dgp_service.head_block_time();
-
-        auto advance = (start_date.sec_since_epoch() - head_block_time.sec_since_epoch()) / SCORUM_BLOCK_INTERVAL;
-        // budget must be allocated exactly from start time but doesn't for fund budget (when head_block_num is 0)
-        auto last_cashout_block = head_block_num;
-        if (last_cashout_block + advance > 0)
-        {
-            last_cashout_block += advance - 1;
-        }
 
         return _budget_service.create([&](object_type& budget) {
             budget.owner = owner;
@@ -89,7 +80,6 @@ public:
             budget.deadline = end_date;
             budget.balance = balance;
             budget.per_block = per_block;
-            budget.last_cashout_block = last_cashout_block;
         });
     }
 
@@ -98,30 +88,9 @@ public:
     {
         FC_ASSERT(cash.amount > 0, "Invalid cash.");
 
-        auto head_block_num = _dgp_service.head_block_num();
-
-        if (budget.last_cashout_block >= head_block_num)
-        {
-            cash = asset(0, budget.balance.symbol()); // empty (allocation waits new block)
-            return false;
-        }
-
-        return allocate_cash_impl(budget, cash);
-    }
-
-protected:
-    // return 'true' if budget has been closed
-    bool allocate_cash_impl(const object_type& budget, asset& cash)
-    {
         cash = decrease_balance(budget, cash);
 
-        if (!check_close_conditions(budget))
-        {
-            auto head_block_num = _dgp_service.head_block_num();
-
-            _budget_service.update(budget, [&](object_type& b) { b.last_cashout_block = head_block_num; });
-        }
-        else
+        if (check_close_conditions(budget))
         {
             close_budget_internal(budget);
             return true;
@@ -130,6 +99,7 @@ protected:
         return false;
     }
 
+protected:
     asset calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance)
     {
         FC_ASSERT(start_date.sec_since_epoch() < end_date.sec_since_epoch(),
@@ -248,7 +218,7 @@ public:
     // return 'true' if budget has been closed
     bool cash_back(const object_type& budget, asset& change)
     {
-        bool ret = this->allocate_cash_impl(budget, change);
+        bool ret = this->allocate_cash(budget, change);
         if (!ret && change.amount > 0)
         {
             give_cash_back_to_owner(budget.owner, change);

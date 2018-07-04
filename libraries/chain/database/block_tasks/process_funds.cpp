@@ -123,7 +123,7 @@ void process_funds::on_apply(block_task_context& ctx)
     // users(through the purchase of advertising). Advertising budgets are in SCR.
 
     asset original_fund_reward = asset(0, SP_SYMBOL);
-    if (fund_budget_service.is_exists())
+    if (fund_budget_service.is_exists() && ctx.block_num() > 0)
     {
         const auto& budget = fund_budget_service.get();
         asset cash = budget.per_block;
