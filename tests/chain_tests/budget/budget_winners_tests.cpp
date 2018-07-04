@@ -97,6 +97,42 @@ public:
         return budget;
     }
 
+    template <typename ServiceType> void winners_arranging_test(ServiceType& service, const budget_type type)
+    {
+        BOOST_MESSAGE("Create budgets winner list: bob (1), alice (2), sam (3), sam (4), .., kenny(-1)");
+
+        auto start = budget_start + budget_start_interval;
+
+        create_budget(alice, type, budget_balance, start, budget_deadline);
+        create_budget(bob, type, budget_balance * 2, start, budget_deadline);
+        create_budget(sam, type, budget_balance / 2, start, budget_deadline);
+
+        auto top_count = development_committee_service.get().vcg_post_coefficients.size();
+        for (size_t ci = 0; ci < top_count - 3; ++ci)
+        {
+            create_budget(zorro, type, budget_balance / 2, start, budget_deadline);
+        }
+
+        create_budget(kenny, type, budget_balance / 3, start, budget_deadline);
+
+        generate_blocks(start, false);
+
+        BOOST_REQUIRE_EQUAL(service.get_budgets().size(), top_count + 1);
+
+        BOOST_CHECK_GT(budget_visitor.get_advertising_summ(bob.name), budget_visitor.get_advertising_summ(alice.name));
+        BOOST_CHECK_GT(budget_visitor.get_advertising_summ(alice.name), budget_visitor.get_advertising_summ(sam.name));
+
+        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(alice.name)
+                              + budget_visitor.get_cashback_summ(alice.name),
+                          get_single_budget(service, alice.name).per_block);
+        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(bob.name) + budget_visitor.get_cashback_summ(bob.name),
+                          get_single_budget(service, bob.name).per_block);
+
+        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(kenny.name), ASSET_NULL_SCR);
+        BOOST_CHECK_EQUAL(budget_visitor.get_cashback_summ(kenny.name),
+                          get_single_budget(service, kenny.name).per_block);
+    }
+
     account_service_i& account_service;
     development_committee_service_i& development_committee_service;
 
@@ -117,39 +153,14 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(budget_winners_check, budget_winners_tests_fixture)
 
-SCORUM_TEST_CASE(top_budgets_win_check)
+SCORUM_TEST_CASE(post_budget_winners_arranging_check)
 {
-    BOOST_MESSAGE("Create budgets winner list: bob (1), alice (2), sam (3), sam (4), .., kenny(-1)");
+    winners_arranging_test(post_budget_service, budget_type::post);
+}
 
-    auto start = budget_start + budget_start_interval;
-
-    create_budget(alice, budget_type::post, budget_balance, start, budget_deadline);
-    create_budget(bob, budget_type::post, budget_balance * 2, start, budget_deadline);
-    create_budget(sam, budget_type::post, budget_balance / 2, start, budget_deadline);
-
-    auto top_count = development_committee_service.get().vcg_post_coefficients.size();
-    for (size_t ci = 0; ci < top_count - 3; ++ci)
-    {
-        create_budget(zorro, budget_type::post, budget_balance / 2, start, budget_deadline);
-    }
-
-    create_budget(kenny, budget_type::post, budget_balance / 3, start, budget_deadline);
-
-    generate_blocks(start, false);
-
-    BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), top_count + 1);
-
-    BOOST_CHECK_GT(budget_visitor.get_advertising_summ(bob.name), budget_visitor.get_advertising_summ(alice.name));
-    BOOST_CHECK_GT(budget_visitor.get_advertising_summ(alice.name), budget_visitor.get_advertising_summ(sam.name));
-
-    BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(alice.name) + budget_visitor.get_cashback_summ(alice.name),
-                      get_single_budget(post_budget_service, alice.name).per_block);
-    BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(bob.name) + budget_visitor.get_cashback_summ(bob.name),
-                      get_single_budget(post_budget_service, bob.name).per_block);
-
-    BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(kenny.name), ASSET_NULL_SCR);
-    BOOST_CHECK_EQUAL(budget_visitor.get_cashback_summ(kenny.name),
-                      get_single_budget(post_budget_service, kenny.name).per_block);
+SCORUM_TEST_CASE(banner_budget_winners_arranging_check)
+{
+    winners_arranging_test(banner_budget_service, budget_type::banner);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
