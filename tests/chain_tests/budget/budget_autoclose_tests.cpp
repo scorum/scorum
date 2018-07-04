@@ -88,7 +88,7 @@ SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_miss
 
     auto miss_intermediate_blocks = true;
     auto actually_generated_blocks
-        = db_plugin->debug_generate_blocks_until(debug_key, deadline, miss_intermediate_blocks, default_skip);
+        = db_plugin->debug_generate_blocks_until(debug_key, deadline, miss_intermediate_blocks, get_skip_flags());
 
     BOOST_REQUIRE_LT((db.head_block_time() - deadline).to_seconds(), SCORUM_BLOCK_INTERVAL);
 

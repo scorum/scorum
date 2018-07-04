@@ -15,7 +15,7 @@ if( MSVC )
       COMMAND cat-parts "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.d" ${hardfork_hpp_file} )
    add_dependencies( build_hardfork_hpp cat-parts )
 else( MSVC )
-   set( hardfork_hpp_file "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/hardfork.hpp" include/scorum/chain/genesis/initializators/advertising_property_initializator.hpp genesis/initializators/advertising_property_initializator.cpp)
+   set( hardfork_hpp_file "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/hardfork.hpp" )
    add_custom_target( build_hardfork_hpp
       COMMAND "${CMAKE_SOURCE_DIR}/programs/build_helpers/cat_parts.py" "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.d" ${hardfork_hpp_file} )
 endif( MSVC )
@@ -68,6 +68,7 @@ add_library( scorum_chain
              evaluators/proposal_evaluators.cpp
              evaluators/registration_pool_evaluator.cpp
              evaluators/create_budget_evaluator.cpp
+             evaluators/update_budget_evaluator.cpp
              evaluators/close_budget_evaluator.cpp
              evaluators/close_budget_by_advertising_moderator_evaluator.cpp
 

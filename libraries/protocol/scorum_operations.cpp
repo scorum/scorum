@@ -20,11 +20,8 @@ void account_create_operation::validate() const
     owner.validate();
     active.validate();
 
-    if (json_metadata.size() > 0)
-    {
-        FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
-        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
-    }
+    validate_json_metadata(json_metadata);
+
     FC_ASSERT(fee >= asset(0, SCORUM_SYMBOL), "Account creation fee cannot be negative");
 }
 
@@ -39,11 +36,7 @@ void account_create_with_delegation_operation::validate() const
     active.validate();
     posting.validate();
 
-    if (json_metadata.size() > 0)
-    {
-        FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
-        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
-    }
+    validate_json_metadata(json_metadata);
 
     FC_ASSERT(fee >= asset(0, SCORUM_SYMBOL), "Account creation fee cannot be negative");
     FC_ASSERT(delegation >= asset(0, SP_SYMBOL), "Delegation cannot be negative");
@@ -58,11 +51,7 @@ void account_create_by_committee_operation::validate() const
     active.validate();
     posting.validate();
 
-    if (json_metadata.size() > 0)
-    {
-        FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
-        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
-    }
+    validate_json_metadata(json_metadata);
 }
 
 void account_update_operation::validate() const
@@ -76,11 +65,7 @@ void account_update_operation::validate() const
     if (posting)
         posting->validate();
 
-    if (json_metadata.size() > 0)
-    {
-        FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
-        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
-    }
+    validate_json_metadata(json_metadata);
 }
 
 void comment_operation::validate() const
@@ -96,10 +81,7 @@ void comment_operation::validate() const
     validate_permlink(parent_permlink);
     validate_permlink(permlink);
 
-    if (json_metadata.size() > 0)
-    {
-        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
-    }
+    validate_json_metadata(json_metadata);
 }
 
 void comment_options_operation::validate() const
@@ -288,10 +270,16 @@ void delegate_scorumpower_operation::validate() const
 void create_budget_operation::validate() const
 {
     validate_account_name(owner);
-    validate_permlink(content_permlink);
+    validate_json_metadata(json_metadata);
     FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCR");
     FC_ASSERT(balance > asset(0, SCORUM_SYMBOL), "Balance must be positive");
     FC_ASSERT(start < deadline, "Deadline time must be greater then start time");
+}
+
+void update_budget_operation::validate() const
+{
+    validate_account_name(owner);
+    validate_json_metadata(json_metadata);
 }
 
 void close_budget_operation::validate() const

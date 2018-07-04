@@ -26,7 +26,7 @@ database_integration_fixture::database_integration_fixture()
     : app(std::make_shared<database>(database::opt_notify_virtual_op_applying))
     , db(*app.chain_database())
     , debug_key(graphene::utilities::key_to_wif(initdelegate.private_key))
-    , default_skip(0 | database::skip_undo_history_check | database::skip_authority_check | database::skip_tapos_check)
+    , _skip_flags(0 | database::skip_undo_history_check | database::skip_authority_check | database::skip_tapos_check)
 {
     genesis_state = create_default_genesis_state();
 }
@@ -116,13 +116,13 @@ void database_integration_fixture::validate_database()
 
 void database_integration_fixture::generate_block(uint32_t skip, const fc::ecc::private_key& key, int miss_blocks)
 {
-    skip |= default_skip;
+    skip |= get_skip_flags();
     db_plugin->debug_generate_blocks(graphene::utilities::key_to_wif(key), 1, skip, miss_blocks);
 }
 
 uint32_t database_integration_fixture::generate_blocks(uint32_t block_count)
 {
-    auto produced = db_plugin->debug_generate_blocks(debug_key, block_count, default_skip, 0);
+    auto produced = db_plugin->debug_generate_blocks(debug_key, block_count, get_skip_flags(), 0);
     BOOST_REQUIRE(produced == block_count);
 
     return produced;
@@ -131,7 +131,7 @@ uint32_t database_integration_fixture::generate_blocks(uint32_t block_count)
 uint32_t database_integration_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks)
 {
     auto produced
-        = db_plugin->debug_generate_blocks_until(debug_key, timestamp, miss_intermediate_blocks, default_skip);
+        = db_plugin->debug_generate_blocks_until(debug_key, timestamp, miss_intermediate_blocks, get_skip_flags());
     BOOST_REQUIRE((db.head_block_time() - timestamp).to_seconds() < SCORUM_BLOCK_INTERVAL);
 
     return produced;

@@ -91,7 +91,7 @@ SCORUM_TEST_CASE(withdraw_sp_from_dev_pool_is_locked_check)
             withdraw_scorumpower_context ctx(db, to_withdraw_sp);
             SCORUM_REQUIRE_THROW(create_withdraw.apply(ctx), fc::assert_exception);
         },
-        default_skip);
+        get_skip_flags());
 }
 
 SCORUM_TEST_CASE(withdraw_sp_from_dev_pool_will_be_unlocked_check)
@@ -106,7 +106,7 @@ SCORUM_TEST_CASE(withdraw_sp_from_dev_pool_will_be_unlocked_check)
             withdraw_scorumpower_context ctx(db, to_withdraw_sp);
             BOOST_REQUIRE_NO_THROW(create_withdraw.apply(ctx));
         },
-        default_skip);
+        get_skip_flags());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

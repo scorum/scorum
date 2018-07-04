@@ -8,6 +8,21 @@
 namespace scorum {
 namespace app {
 
+development_committee_api_obj::development_committee_api_obj(const chain::dev_committee_object& obj)
+    : sp_balance(obj.sp_balance)
+    , scr_balance(obj.scr_balance)
+    , transfer_quorum(obj.transfer_quorum)
+    , invite_quorum(obj.invite_quorum)
+    , dropout_quorum(obj.dropout_quorum)
+    , change_quorum(obj.change_quorum)
+    , top_budgets_amounts_quorum(obj.top_budgets_amounts_quorum)
+{
+    for (auto item : obj.top_budgets_amounts)
+    {
+        top_budgets_amounts.insert(item);
+    }
+}
+
 account_api_obj::account_api_obj(const chain::account_object& a, const chain::database& db)
 {
     set_account(a);

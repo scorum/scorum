@@ -60,13 +60,23 @@ public:
             tx.sign(key, db.get_chain_id());
         }
         tx.validate();
-        db.push_transaction(tx, default_skip);
+        db.push_transaction(tx, get_skip_flags());
         validate_database();
 
         if (put_in_block)
         {
             generate_block();
         }
+    }
+
+    uint32_t get_skip_flags() const
+    {
+        return _skip_flags;
+    }
+
+    uint32_t& skip_flags()
+    {
+        return _skip_flags;
     }
 
 protected:
@@ -84,9 +94,6 @@ protected:
         return plugin;
     }
 
-private:
-    bool opened = false;
-
 public:
     static Actor initdelegate;
 
@@ -96,11 +103,15 @@ public:
     genesis_state_type genesis_state;
 
     const std::string debug_key;
-    const uint32_t default_skip;
 
     std::shared_ptr<scorum::plugin::debug_node::debug_node_plugin> db_plugin;
 
     fc::optional<fc::temp_directory> data_dir;
+
+private:
+    bool opened = false;
+
+    uint32_t _skip_flags;
 };
 
 } // database_fixture

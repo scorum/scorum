@@ -14,6 +14,8 @@ namespace database_ns {
 
 void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_vesting_withdrawals BEGIN");
+
     withdraw_scorumpower_service_i& withdraw_scorumpower_service = ctx.services().withdraw_scorumpower_service();
     withdraw_scorumpower_route_service_i& withdraw_scorumpower_route_service
         = ctx.services().withdraw_scorumpower_route_service();
@@ -97,6 +99,8 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
             withdraw_scorumpower_service.remove(wvo);
         }
     }
+
+    debug_log(ctx.get_block_info(), "process_vesting_withdrawals END");
 }
 }
 }
