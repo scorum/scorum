@@ -185,12 +185,10 @@ struct base_development_committee_change_top_budgets_amount_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 
 protected:
-    base_development_committee_change_top_budgets_amount_operation()
-    {
-    }
+    base_development_committee_change_top_budgets_amount_operation() = default;
 };
 
 template <budget_type type>

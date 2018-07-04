@@ -107,8 +107,13 @@ percent_type registration_committee_add_member_operation::get_required_quorum(co
     return committee_service.get_add_member_quorum();
 }
 
+void base_development_committee_change_top_budgets_amount_operation::validate() const
+{
+    FC_ASSERT(amount > 0u, "Top budgets amount must nozero");
+}
+
 percent_type base_development_committee_change_top_budgets_amount_operation::get_required_quorum(
-    committee_i& committee_service) const
+    committee_type& committee_service) const
 {
     return committee_service.get_top_budgets_quorum();
 }
