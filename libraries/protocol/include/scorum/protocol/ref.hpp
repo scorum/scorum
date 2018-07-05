@@ -13,6 +13,7 @@ namespace utils {
 template <typename T> class ref
 {
 public:
+    // We need default ctor because of the fc::static_variant's visitor
     ref() = default;
     ref(T& inst)
         : _inst(std::addressof(inst))
