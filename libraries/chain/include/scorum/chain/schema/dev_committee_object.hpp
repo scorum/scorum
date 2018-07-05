@@ -12,6 +12,7 @@ using scorum::protocol::asset;
 class dev_committee_object : public object<dev_committee_object_type, dev_committee_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(dev_committee_object, (top_budgets_amounts))
 
     id_type id;
