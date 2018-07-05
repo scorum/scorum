@@ -65,12 +65,12 @@ template <>
 void development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>::do_apply(
     const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
 {
-    auto& dev_pool = this->db().dev_pool_service();
+    auto& adv_property = this->db().advertising_property_service();
 
-    dev_pool.update([&](dev_committee_object& com) {
-        com.vcg_post_coefficients.clear();
+    adv_property.update([&](advertising_property_object& adv) {
+        adv.vcg_post_coefficients.clear();
         std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
-                  std::back_inserter(com.vcg_post_coefficients));
+                  std::back_inserter(adv.vcg_post_coefficients));
     });
 }
 
@@ -78,12 +78,12 @@ template <>
 void development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>::do_apply(
     const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
 {
-    auto& dev_pool = this->db().dev_pool_service();
+    auto& adv_property = this->db().advertising_property_service();
 
-    dev_pool.update([&](dev_committee_object& com) {
-        com.vcg_banner_coefficients.clear();
+    adv_property.update([&](advertising_property_object& adv) {
+        adv.vcg_post_coefficients.clear();
         std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
-                  std::back_inserter(com.vcg_banner_coefficients));
+                  std::back_inserter(adv.vcg_banner_coefficients));
     });
 }
 

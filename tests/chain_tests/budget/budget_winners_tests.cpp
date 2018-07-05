@@ -2,9 +2,9 @@
 
 #include "budget_check_common.hpp"
 
-#include <scorum/chain/services/development_committee.hpp>
+#include <scorum/chain/services/advertising_property_service.hpp>
 
-#include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <map>
 
@@ -60,7 +60,7 @@ class budget_winners_tests_fixture : public budget_check_fixture
 public:
     budget_winners_tests_fixture()
         : account_service(db.account_service())
-        , development_committee_service(db.development_committee_service())
+        , advertising_property_service(db.advertising_property_service())
         , budget_visitor(db)
         , alice("alice")
         , bob("bob")
@@ -107,7 +107,7 @@ public:
         create_budget(bob, type, budget_balance * 2, start, budget_deadline);
         create_budget(sam, type, budget_balance / 2, start, budget_deadline);
 
-        auto top_count = development_committee_service.get().vcg_post_coefficients.size();
+        auto top_count = advertising_property_service.get().vcg_post_coefficients.size();
         for (size_t ci = 0; ci < top_count - 3; ++ci)
         {
             create_budget(zorro, type, budget_balance / 2, start, budget_deadline);
@@ -155,7 +155,7 @@ public:
     }
 
     account_service_i& account_service;
-    development_committee_service_i& development_committee_service;
+    advertising_property_service_i& advertising_property_service;
 
     const fc::microseconds budget_start_interval = fc::seconds(SCORUM_BLOCK_INTERVAL * 22);
 
