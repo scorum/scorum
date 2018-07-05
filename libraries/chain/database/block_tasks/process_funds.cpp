@@ -25,14 +25,13 @@ namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
 
-namespace {
 template <typename ServiceIterfaceType, typename VCGCoeffListType>
-asset allocate_advertising_cash(ServiceIterfaceType& service,
-                                dynamic_global_property_service_i& dgp_service,
-                                account_service_i& account_service,
-                                const VCGCoeffListType& vcg_coefficients,
-                                const budget_type type,
-                                database_virtual_operations_emmiter_i& ctx)
+asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
+                                               dynamic_global_property_service_i& dgp_service,
+                                               account_service_i& account_service,
+                                               const VCGCoeffListType& vcg_coefficients,
+                                               const budget_type type,
+                                               database_virtual_operations_emmiter_i& ctx)
 {
     asset ret(0, SCORUM_SYMBOL);
 
@@ -70,35 +69,43 @@ asset allocate_advertising_cash(ServiceIterfaceType& service,
 
     for (const object_type& budget : budgets)
     {
-        auto advertising_cash = asset(0, budget.per_block.symbol());
+        auto budget_owner = budget.owner;
+        auto budget_id = budget.id._id;
+        auto budget_per_block = budget.per_block;
+
+        auto advertising_cash = asset(0, budget_per_block.symbol());
         if (per_block_values.size() < 2)
         {
-            advertising_cash = budget.per_block;
+            advertising_cash = budget_per_block;
         }
         else if (ci < vcg_top_sz)
         {
             advertising_cash
                 = asset(calculate_vcg_cash(ci++, position_weights, per_block_values), advertising_cash.symbol());
         }
+
         if (advertising_cash.amount > 0)
         {
-            manager.allocate_cash(budget, advertising_cash);
+            bool closed = manager.allocate_cash(budget, advertising_cash);
             ret += advertising_cash;
 
             ctx.push_virtual_operation(
-                allocate_cash_from_advertising_budget_operation(type, budget.owner, budget.id._id, advertising_cash));
+                allocate_cash_from_advertising_budget_operation(type, budget_owner, budget_id, advertising_cash));
+
+            if (closed)
+                continue;
         }
-        auto change_cash = budget.per_block - advertising_cash;
+
+        auto change_cash = budget_per_block - advertising_cash;
         if (change_cash.amount > 0)
         {
             manager.cash_back(budget, change_cash);
             ctx.push_virtual_operation(
-                cash_back_from_advertising_budget_to_owner_operation(type, budget.owner, budget.id._id, change_cash));
+                cash_back_from_advertising_budget_to_owner_operation(type, budget_owner, budget_id, change_cash));
         }
     }
 
     return ret;
-}
 }
 
 void process_funds::on_apply(block_task_context& ctx)
