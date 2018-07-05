@@ -43,7 +43,7 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
     advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
 
     size_t vcg_top_sz = vcg_coefficients.size();
-    const auto& budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time(), -1);
+    const auto& budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time());
     size_t ci = 0;
     per_block_values_type per_block_values;
 
