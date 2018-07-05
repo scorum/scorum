@@ -96,7 +96,7 @@ percent_type registration_committee_add_member_operation::get_required_quorum(co
     return committee_service.get_add_member_quorum();
 }
 
-void base_development_committee_change_top_budgets_amount_operation::validate() const
+void base_development_committee_change_budgets_vcg_properties_operation::validate() const
 {
     FC_ASSERT(vcg_coefficients.size() > 1u, "Invalid coefficient's list");
     FC_ASSERT((*vcg_coefficients.begin()) <= 100, "Invalid coefficient's list");
@@ -104,10 +104,10 @@ void base_development_committee_change_top_budgets_amount_operation::validate() 
     FC_ASSERT(std::is_sorted(vcg_coefficients.rbegin(), vcg_coefficients.rend()), "Invalid coefficient's list");
 }
 
-percent_type base_development_committee_change_top_budgets_amount_operation::get_required_quorum(
+percent_type base_development_committee_change_budgets_vcg_properties_operation::get_required_quorum(
     committee_i& committee_service) const
 {
-    return committee_service.get_top_budgets_quorum();
+    return committee_service.get_budgets_vcg_properties_quorum();
 }
 
 } // namespace protocol

@@ -45,7 +45,7 @@ struct development_committee_api_obj
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    protocol::percent_type top_budgets_amounts_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type budgets_vcg_properties_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
@@ -469,7 +469,7 @@ FC_REFLECT(scorum::app::development_committee_api_obj,
            (invite_quorum)
            (dropout_quorum)
            (change_quorum)
-           (top_budgets_amounts_quorum)
+           (budgets_vcg_properties_quorum)
            )
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 

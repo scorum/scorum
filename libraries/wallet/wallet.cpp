@@ -2740,16 +2740,14 @@ annotated_signed_transaction wallet_api::development_committee_change_transfer_q
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::development_committee_change_top_budget_quorum(const std::string& initiator,
-                                                                                        uint64_t quorum_percent,
-                                                                                        uint32_t lifetime_sec,
-                                                                                        bool broadcast)
+annotated_signed_transaction wallet_api::development_committee_change_budget_vcg_properties_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
 {
     using operation_type = development_committee_change_quorum_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
         o.quorum = quorum_percent;
-        o.committee_quorum = top_budget_quorum;
+        o.committee_quorum = budgets_vcg_properties_quorum;
     });
 
     return my->sign_transaction(tx, broadcast);
@@ -2782,12 +2780,12 @@ annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const
 }
 
 annotated_signed_transaction
-wallet_api::development_pool_top_post_budget(const std::string& initiator,
-                                             const std::vector<percent_type>& vcg_coefficients,
-                                             uint32_t lifetime_sec,
-                                             bool broadcast)
+wallet_api::development_pool_post_budgets_vcg_properties(const std::string& initiator,
+                                                         const std::vector<percent_type>& vcg_coefficients,
+                                                         uint32_t lifetime_sec,
+                                                         bool broadcast)
 {
-    using operation_type = development_committee_change_top_post_budgets_amount_operation;
+    using operation_type = development_committee_change_post_budgets_vcg_properties_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec,
                                                      [&](operation_type& o) { o.vcg_coefficients = vcg_coefficients; });
@@ -2796,12 +2794,12 @@ wallet_api::development_pool_top_post_budget(const std::string& initiator,
 }
 
 annotated_signed_transaction
-wallet_api::development_pool_top_banner_budget(const std::string& initiator,
-                                               const std::vector<percent_type>& vcg_coefficients,
-                                               uint32_t lifetime_sec,
-                                               bool broadcast)
+wallet_api::development_pool_banner_budgets_vcg_properties(const std::string& initiator,
+                                                           const std::vector<percent_type>& vcg_coefficients,
+                                                           uint32_t lifetime_sec,
+                                                           bool broadcast)
 {
-    using operation_type = development_committee_change_top_banner_budgets_amount_operation;
+    using operation_type = development_committee_change_banner_budgets_vcg_properties_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec,
                                                      [&](operation_type& o) { o.vcg_coefficients = vcg_coefficients; });

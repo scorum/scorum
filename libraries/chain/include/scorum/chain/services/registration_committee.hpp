@@ -57,13 +57,13 @@ public:
     void change_exclude_member_quorum(const percent_type quorum) override;
     void change_base_quorum(const percent_type quorum) override;
     void change_transfer_quorum(const percent_type quorum) override;
-    void change_top_budgets_quorum(const percent_type quorum) override;
+    void change_budgets_vcg_properties_quorum(const percent_type quorum) override;
 
     percent_type get_add_member_quorum() override;
     percent_type get_exclude_member_quorum() override;
     percent_type get_base_quorum() override;
     percent_type get_transfer_quorum() override;
-    percent_type get_top_budgets_quorum() override;
+    percent_type get_budgets_vcg_properties_quorum() override;
 
     bool is_exists(const account_name_type&) const override;
 

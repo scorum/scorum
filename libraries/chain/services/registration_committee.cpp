@@ -150,9 +150,9 @@ void dbs_registration_committee::change_transfer_quorum(const percent_type)
     FC_ASSERT("registration committee doesn't support change_transfer_quorum.");
 }
 
-void dbs_registration_committee::change_top_budgets_quorum(const percent_type)
+void dbs_registration_committee::change_budgets_vcg_properties_quorum(const percent_type)
 {
-    FC_ASSERT("registration committee doesn't support change_top_budgets_quorum.");
+    FC_ASSERT("registration committee doesn't support change_budgets_vcg_properties_quorum.");
 }
 
 percent_type dbs_registration_committee::get_add_member_quorum()
@@ -180,9 +180,9 @@ percent_type dbs_registration_committee::get_transfer_quorum()
     return SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
 }
 
-percent_type dbs_registration_committee::get_top_budgets_quorum()
+percent_type dbs_registration_committee::get_budgets_vcg_properties_quorum()
 {
-    FC_ASSERT("registration committee doesn't support get_top_budgets_quorum.");
+    FC_ASSERT("registration committee doesn't support get_budgets_vcg_properties_quorum.");
 
     return 0u;
 }

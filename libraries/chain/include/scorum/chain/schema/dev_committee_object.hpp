@@ -13,6 +13,7 @@ using scorum::protocol::percent_type;
 class dev_committee_object : public object<dev_committee_object_type, dev_committee_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(dev_committee_object, (vcg_post_coefficients)(vcg_banner_coefficients))
 
     id_type id;
@@ -27,7 +28,7 @@ public:
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    protocol::percent_type top_budgets_amounts_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type budgets_vcg_properties_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
 };
 
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>
@@ -73,7 +74,7 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (invite_quorum)
            (dropout_quorum)
            (change_quorum)
-           (top_budgets_amounts_quorum))
+           (budgets_vcg_properties_quorum))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_object, scorum::chain::dev_committee_index)

@@ -22,7 +22,7 @@ using namespace scorum::protocol;
 
 SCORUM_TEST_CASE(validate_development_committee_top_budgets_operaton)
 {
-    development_committee_change_top_post_budgets_amount_operation op;
+    development_committee_change_post_budgets_vcg_properties_operation op;
 
     SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
 
@@ -61,7 +61,7 @@ BOOST_FIXTURE_TEST_CASE(change_top_budgets_amount, fixture)
     static const position_weights_type initial_vcg_coeffs(SCORUM_DEFAULT_BUDGETS_VCG_SET);
     static const position_weights_type new_vcg_coeffs{ 90, 50 };
 
-    development_committee_change_top_post_budgets_amount_operation op;
+    development_committee_change_post_budgets_vcg_properties_operation op;
 
     BOOST_REQUIRE(
         !std::equal(std::begin(initial_vcg_coeffs), std::end(initial_vcg_coeffs), std::begin(new_vcg_coeffs)));

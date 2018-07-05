@@ -47,8 +47,8 @@ void development_committee_withdraw_vesting_evaluator::do_apply(
 }
 
 template <>
-void development_committee_change_top_budgets_amount_evaluator<budget_type::post>::do_apply(
-    const development_committee_change_top_budgets_amount_evaluator::operation_type& o)
+void development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>::do_apply(
+    const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
 {
     auto& dev_pool = this->db().dev_pool_service();
 
@@ -60,8 +60,8 @@ void development_committee_change_top_budgets_amount_evaluator<budget_type::post
 }
 
 template <>
-void development_committee_change_top_budgets_amount_evaluator<budget_type::banner>::do_apply(
-    const development_committee_change_top_budgets_amount_evaluator::operation_type& o)
+void development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>::do_apply(
+    const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
 {
     auto& dev_pool = this->db().dev_pool_service();
 
@@ -72,8 +72,8 @@ void development_committee_change_top_budgets_amount_evaluator<budget_type::bann
     });
 }
 
-template class development_committee_change_top_budgets_amount_evaluator<budget_type::post>;
-template class development_committee_change_top_budgets_amount_evaluator<budget_type::banner>;
+template class development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>;
+template class development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>;
 
 } // namespace chain
 } // namespace scorum
