@@ -41,7 +41,7 @@ asset allocate_advertising_cash(ServiceIterfaceType& service,
 
     using object_type = typename ServiceIterfaceType::object_type;
 
-    owned_base_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
+    advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
 
     size_t vcg_top_sz = vcg_coefficients.size();
     const auto& budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time(), -1);

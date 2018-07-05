@@ -15,7 +15,7 @@ struct fund_budget_service_i : public base_service_i<fund_budget_object>
 
 using dbs_fund_budget = dbs_service_base<fund_budget_service_i>;
 
-template <class ObjectType> struct owned_base_budget_service_i : public base_service_i<ObjectType>
+template <class ObjectType> struct advertising_budget_service_i : public base_service_i<ObjectType>
 {
     using budget_cref_type = typename base_service_i<ObjectType>::object_cref_type;
 
@@ -31,12 +31,12 @@ template <class ObjectType> struct owned_base_budget_service_i : public base_ser
                                          const typename ObjectType::id_type& id) const = 0;
 };
 
-template <class InterfaceType, class ObjectType> class dbs_owned_base_budget : public dbs_service_base<InterfaceType>
+template <class InterfaceType, class ObjectType> class dbs_advertising_budget : public dbs_service_base<InterfaceType>
 {
     friend class dbservice_dbs_factory;
 
 protected:
-    explicit dbs_owned_base_budget(database& db)
+    explicit dbs_advertising_budget(database& db)
         : dbs_service_base<InterfaceType>(db)
     {
     }
@@ -131,19 +131,18 @@ public:
     }
 };
 
-struct banner_budget_service_i : public owned_base_budget_service_i<banner_budget_object>
+struct banner_budget_service_i : public advertising_budget_service_i<banner_budget_object>
 {
     using object_type = banner_budget_object;
 };
 
-using dbs_banner_budget = dbs_owned_base_budget<banner_budget_service_i, banner_budget_object>;
-
-struct post_budget_service_i : public owned_base_budget_service_i<post_budget_object>
+struct post_budget_service_i : public advertising_budget_service_i<post_budget_object>
 {
     using object_type = post_budget_object;
 };
 
-using dbs_post_budget = dbs_owned_base_budget<post_budget_service_i, post_budget_object>;
+using dbs_banner_budget = dbs_advertising_budget<banner_budget_service_i, banner_budget_object>;
+using dbs_post_budget = dbs_advertising_budget<post_budget_service_i, post_budget_object>;
 
 } // namespace chain
 } // namespace scorum

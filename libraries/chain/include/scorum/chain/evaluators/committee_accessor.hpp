@@ -10,22 +10,22 @@ namespace chain {
 
 struct data_service_factory_i;
 
-protocol::committee_i& get_committee(data_service_factory_i& services,
-                                     const protocol::proposal_committee_operation<protocol::registration_committee_i>&);
+protocol::committee get_committee(data_service_factory_i& services,
+                                  const protocol::proposal_committee_operation<protocol::registration_committee_i>&);
 
-protocol::committee_i& get_committee(data_service_factory_i& services,
-                                     const protocol::proposal_committee_operation<protocol::development_committee_i>&);
+protocol::committee get_committee(data_service_factory_i& services,
+                                  const protocol::proposal_committee_operation<protocol::development_committee_i>&);
 
 struct get_operation_committee_visitor
 {
-    typedef protocol::committee_i& result_type;
+    typedef protocol::committee result_type;
 
     get_operation_committee_visitor(data_service_factory_i& services)
         : _services(services)
     {
     }
 
-    template <typename T> protocol::committee_i& operator()(const T& v) const
+    template <typename T> result_type operator()(const T& v) const
     {
         return get_committee(_services, v);
     }

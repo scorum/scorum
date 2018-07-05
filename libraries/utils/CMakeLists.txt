@@ -1,5 +1,3 @@
-file(GLOB_RECURSE HEADERS "include/scorum/utils/*.hpp")
-
 add_library(scorum_utils
         string_algorithm.cpp
         )

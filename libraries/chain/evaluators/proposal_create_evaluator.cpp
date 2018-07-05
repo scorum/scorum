@@ -28,16 +28,16 @@ void proposal_create_evaluator::do_apply(const proposal_create_evaluator::operat
               "Proposal life time is not in range of ${min} - ${max} seconds.",
               ("min", SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS)("max", SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS));
 
-    committee_i& committee_service = op.operation.visit(get_operation_committee_visitor(db()));
+    auto committee = op.operation.visit(get_operation_committee_visitor(db()));
 
-    FC_ASSERT(committee_service.is_exists(op.creator), "Account \"${account_name}\" is not in committee.",
+    FC_ASSERT(committee.as_committee_i().is_exists(op.creator), "Account \"${account_name}\" is not in committee.",
               ("account_name", op.creator));
 
     _account_service.check_account_existence(op.creator);
 
     const fc::time_point_sec expiration = _property_service.head_block_time() + op.lifetime_sec;
 
-    const protocol::percent_type quorum = operation_get_required_quorum(committee_service, op.operation);
+    const protocol::percent_type quorum = operation_get_required_quorum(committee, op.operation);
 
     _proposal_service.create_proposal(op.creator, op.operation, expiration, quorum);
 }

@@ -4,6 +4,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/operation_util.hpp>
+#include <scorum/protocol/ref.hpp>
 #include <fc/static_variant.hpp>
 
 namespace scorum {
@@ -16,6 +17,7 @@ enum quorum_type
     exclude_member_quorum,
     base_quorum,
     transfer_quorum,
+    advertising_moderator_quorum,
     budgets_vcg_properties_quorum
 };
 
@@ -34,14 +36,10 @@ struct committee_i
     virtual void change_add_member_quorum(const protocol::percent_type) = 0;
     virtual void change_exclude_member_quorum(const protocol::percent_type) = 0;
     virtual void change_base_quorum(const protocol::percent_type) = 0;
-    virtual void change_transfer_quorum(const protocol::percent_type) = 0;
-    virtual void change_budgets_vcg_properties_quorum(const protocol::percent_type) = 0;
 
     virtual protocol::percent_type get_add_member_quorum() = 0;
     virtual protocol::percent_type get_exclude_member_quorum() = 0;
     virtual protocol::percent_type get_base_quorum() = 0;
-    virtual protocol::percent_type get_transfer_quorum() = 0;
-    virtual protocol::percent_type get_budgets_vcg_properties_quorum() = 0;
 
     virtual bool is_exists(const account_name_type&) const = 0;
     virtual size_t get_members_count() const = 0;
@@ -53,6 +51,25 @@ struct registration_committee_i : public committee_i
 
 struct development_committee_i : public committee_i
 {
+    virtual void change_transfer_quorum(const protocol::percent_type) = 0;
+    virtual void change_advertising_moderator_quorum(const protocol::percent_type) = 0;
+    virtual void change_budgets_vcg_properties_quorum(const protocol::percent_type) = 0;
+
+    virtual protocol::percent_type get_transfer_quorum() = 0;
+    virtual protocol::percent_type get_advertising_moderator_quorum() = 0;
+    virtual protocol::percent_type get_budgets_vcg_properties_quorum() = 0;
+};
+
+struct committee : public fc::static_variant<utils::ref<registration_committee_i>, utils::ref<development_committee_i>>
+{
+    template <typename T>
+    committee(T&& v)
+        : fc::static_variant<utils::ref<registration_committee_i>, utils::ref<development_committee_i>>(
+              std::forward<T>(v))
+    {
+    }
+
+    committee_i& as_committee_i() &;
 };
 
 template <typename CommitteeType> struct proposal_committee_operation
@@ -74,7 +91,7 @@ struct registration_committee_add_member_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct registration_committee_exclude_member_operation
@@ -84,7 +101,7 @@ struct registration_committee_exclude_member_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct registration_committee_change_quorum_operation
@@ -95,7 +112,7 @@ struct registration_committee_change_quorum_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct development_committee_add_member_operation
@@ -105,7 +122,7 @@ struct development_committee_add_member_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct development_committee_exclude_member_operation
@@ -115,7 +132,7 @@ struct development_committee_exclude_member_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct development_committee_change_quorum_operation
@@ -126,7 +143,7 @@ struct development_committee_change_quorum_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct development_committee_withdraw_vesting_operation
@@ -136,7 +153,7 @@ struct development_committee_withdraw_vesting_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct development_committee_transfer_operation
@@ -147,7 +164,17 @@ struct development_committee_transfer_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
+};
+
+struct development_committee_empower_advertising_moderator_operation
+    : public proposal_base_operation<development_committee_withdraw_vesting_operation, development_committee_i>
+{
+    account_name_type account;
+
+    void validate() const;
+
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
 struct base_development_committee_change_budgets_vcg_properties_operation
@@ -158,12 +185,10 @@ struct base_development_committee_change_budgets_vcg_properties_operation
 
     void validate() const;
 
-    protocol::percent_type get_required_quorum(committee_i& committee_service) const;
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 
 protected:
-    base_development_committee_change_budgets_vcg_properties_operation()
-    {
-    }
+    base_development_committee_change_budgets_vcg_properties_operation() = default;
 };
 
 template <budget_type type>
@@ -186,38 +211,12 @@ using proposal_operation = fc::static_variant<registration_committee_add_member_
                                               development_committee_change_quorum_operation,
                                               development_committee_withdraw_vesting_operation,
                                               development_committee_transfer_operation,
+                                              development_committee_empower_advertising_moderator_operation,
                                               development_committee_change_post_budgets_vcg_properties_operation,
                                               development_committee_change_banner_budgets_vcg_properties_operation>;
 
-struct to_committee_operation
-{
-    template <typename T> const typename T::committee_operation_type& cast(const proposal_operation& op)
-    {
-        const typename T::committee_operation_type& operation = op.get<T>();
-        return operation;
-    }
-};
-
-struct operation_get_required_quorum_visitor
-{
-    typedef scorum::protocol::percent_type result_type;
-
-    operation_get_required_quorum_visitor(committee_i& committee_service)
-        : _committee_service(committee_service)
-    {
-    }
-
-    template <typename T> protocol::percent_type operator()(const T& v) const
-    {
-        return v.get_required_quorum(_committee_service);
-    }
-
-private:
-    committee_i& _committee_service;
-};
-
 void operation_validate(const proposal_operation& op);
-protocol::percent_type operation_get_required_quorum(committee_i& committee_service, const proposal_operation& op);
+protocol::percent_type operation_get_required_quorum(committee& committee_service, const proposal_operation& op);
 
 } // namespace protocol
 } // namespace scorum
@@ -229,6 +228,7 @@ FC_REFLECT_ENUM(scorum::protocol::quorum_type,
                 (exclude_member_quorum)
                 (base_quorum)
                 (transfer_quorum)
+                (advertising_moderator_quorum)
                 (budgets_vcg_properties_quorum))
 // clang-format on
 
@@ -242,6 +242,7 @@ FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quo
 
 FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
+FC_REFLECT(scorum::protocol::development_committee_empower_advertising_moderator_operation, (account))
 
 FC_REFLECT(scorum::protocol::base_development_committee_change_budgets_vcg_properties_operation, (vcg_coefficients))
 FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_post_budgets_vcg_properties_operation,
