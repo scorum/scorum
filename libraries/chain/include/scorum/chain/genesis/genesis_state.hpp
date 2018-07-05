@@ -110,6 +110,9 @@ FC_REFLECT(scorum::chain::genesis_state_type::registration_schedule_item,
            (users)
            (bonus_percent))
 
+FC_REFLECT(scorum::chain::genesis_state_type::advertising_property_object,
+           (moderator))
+
 FC_REFLECT(scorum::chain::genesis_persistent_state_type,
            (lock_withdraw_sp_until_timestamp))
 
@@ -130,5 +133,6 @@ FC_REFLECT_DERIVED(scorum::chain::genesis_state_type, (scorum::chain::genesis_pe
            (witness_candidates)
            (registration_schedule)
            (registration_committee)
-           (development_committee))
+           (development_committee)
+           (advertising_property))
 // clang-format on
