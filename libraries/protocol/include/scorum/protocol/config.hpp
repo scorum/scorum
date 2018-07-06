@@ -74,7 +74,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 4) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 5) )
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
