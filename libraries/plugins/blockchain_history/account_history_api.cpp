@@ -116,7 +116,7 @@ account_history_api::get_account_sp_to_scr_transfers(const std::string& account,
 
             if (!obj.progress.empty())
             {
-                operation last_progress_op = fc::raw::unpack<operation>(db->get(obj.progress.back()).serialized_op);
+                auto last_progress_op = fc::raw::unpack<operation>(db->get(obj.progress.back()).serialized_op);
 
                 last_progress_op.weak_visit(
                     [&](const acc_finished_vesting_withdraw_operation&) {
@@ -124,18 +124,19 @@ account_history_api::get_account_sp_to_scr_transfers(const std::string& account,
                     },
                     [&](const withdraw_scorumpower_operation&) {
                         applied_op.status = applied_withdraw_operation::interrupted;
-                    },
-                    [&](const acc_to_acc_vesting_withdraw_operation&) {
-                        applied_op.status = applied_withdraw_operation::active;
                     });
 
                 for (auto& id : obj.progress)
                 {
-                    operation op = fc::raw::unpack<operation>(db->get(id).serialized_op);
+                    auto op = fc::raw::unpack<operation>(db->get(id).serialized_op);
 
-                    op.weak_visit([&](const acc_to_acc_vesting_withdraw_operation& op) {
-                        applied_op.withdrawn += op.withdrawn.amount;
-                    });
+                    op.weak_visit(
+                        [&](const acc_to_acc_vesting_withdraw_operation& op) {
+                            applied_op.withdrawn += op.withdrawn.amount;
+                        },
+                        [&](const acc_to_devpool_vesting_withdraw_operation& op) {
+                            applied_op.withdrawn += op.withdrawn.amount;
+                        });
                 }
             }
         };

@@ -119,6 +119,14 @@ public:
             push_progress<withdrawals_to_scr_history_object>(_obj);
     }
 
+    void operator()(const acc_to_devpool_vesting_withdraw_operation& op) const
+    {
+        push_history<account_history_object>(_obj);
+
+        if (_item == op.from_account)
+            push_progress<withdrawals_to_scr_history_object>(_obj);
+    }
+
     void operator()(const acc_finished_vesting_withdraw_operation& op) const
     {
         push_history<account_history_object>(_obj);
