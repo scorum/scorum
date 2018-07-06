@@ -43,8 +43,6 @@ public:
 
     asset balance = asset(0, SymbolType);
     asset per_block = asset(0, SymbolType);
-
-    uint32_t last_cashout_block = 0;
 };
 
 struct by_owner_name;
@@ -97,12 +95,10 @@ using banner_budget_index = budget_index<banner_budget_object>;
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::fund_budget_object,
-           (id)(owner)(json_metadata)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
-FC_REFLECT(scorum::chain::post_budget_object,
-           (id)(owner)(json_metadata)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
+FC_REFLECT(scorum::chain::fund_budget_object, (id)(owner)(json_metadata)(created)(start)(deadline)(balance)(per_block))
+FC_REFLECT(scorum::chain::post_budget_object, (id)(owner)(json_metadata)(created)(start)(deadline)(balance)(per_block))
 FC_REFLECT(scorum::chain::banner_budget_object,
-           (id)(owner)(json_metadata)(created)(start)(deadline)(balance)(per_block)(last_cashout_block))
+           (id)(owner)(json_metadata)(created)(start)(deadline)(balance)(per_block))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::fund_budget_object, scorum::chain::fund_budget_index)
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::post_budget_object, scorum::chain::post_budget_index)

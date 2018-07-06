@@ -11,6 +11,7 @@ class budget_starting_tests_fixture : public budget_check_fixture
 public:
     budget_starting_tests_fixture()
         : account_service(db.account_service())
+        , development_committee_service(db.development_committee_service())
         , alice("alice")
         , bob("bob")
     {
@@ -25,6 +26,7 @@ public:
     }
 
     account_service_i& account_service;
+    development_committee_service_i& development_committee_service;
 
     const fc::microseconds budget_start_interval = fc::seconds(SCORUM_BLOCK_INTERVAL * 22);
 

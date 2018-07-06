@@ -7,6 +7,39 @@
 namespace scorum {
 namespace chain {
 
+template <typename PositionWeightList, typename PerBlockByPositionList>
+share_type calculate_vcg_cash(const size_t position,
+                              const PositionWeightList& coeffs,
+                              const PerBlockByPositionList& per_block_list)
+{
+    FC_ASSERT(coeffs.size() > 0, "Invalid coefficient's list");
+    FC_ASSERT(per_block_list.size() == coeffs.size() + 1, "Invalid list of per-block values");
+    FC_ASSERT(position < coeffs.size(), "Invalid position");
+
+    const auto top_size = coeffs.size() - 1;
+    auto inverted_position = top_size;
+    inverted_position -= position;
+
+    uint128_t result;
+    share_value_type divider = coeffs.at(position);
+    FC_ASSERT(divider > 0, "Invalid coefficient value");
+    share_value_type prev_coeff = 0;
+    for (size_t ci = 0; ci <= inverted_position; ++ci)
+    {
+        share_value_type x = coeffs.at(top_size - ci);
+        FC_ASSERT(x > 0, "Invalid coefficient value");
+        FC_ASSERT(x >= prev_coeff, "Invalid coefficient value");
+        share_type per_block = per_block_list.at(top_size - ci + 1);
+        FC_ASSERT(per_block.value > 0, "Invalid per-block value");
+        uint128_t factor = (x - prev_coeff);
+        factor *= per_block.value;
+        result += factor;
+        prev_coeff = x;
+    }
+    result /= divider;
+    return share_type(result.to_uint64());
+}
+
 template <typename BudgetService> class base_budget_management_algorithm
 {
 protected:
@@ -30,16 +63,7 @@ public:
 
         auto per_block = calculate_per_block(start_date, end_date, balance);
 
-        auto head_block_num = _dgp_service.head_block_num();
         auto head_block_time = _dgp_service.head_block_time();
-
-        auto advance = (start_date.sec_since_epoch() - head_block_time.sec_since_epoch()) / SCORUM_BLOCK_INTERVAL;
-        // budget must be allocated exactly from start time but doesn't for fund budget (when head_block_num is 0)
-        auto last_cashout_block = head_block_num;
-        if (last_cashout_block + advance > 0)
-        {
-            last_cashout_block += advance - 1;
-        }
 
         return _budget_service.create([&](object_type& budget) {
             budget.owner = owner;
@@ -54,32 +78,19 @@ public:
             budget.deadline = end_date;
             budget.balance = balance;
             budget.per_block = per_block;
-            budget.last_cashout_block = last_cashout_block;
         });
     }
 
     asset allocate_cash(const object_type& budget)
     {
-        auto head_block_num = _dgp_service.head_block_num();
+        auto result_cash = decrease_balance(budget, budget.per_block);
 
-        if (budget.last_cashout_block >= head_block_num)
-        {
-            return asset(0, budget.balance.symbol()); // empty (allocation waits new block)
-        }
-
-        FC_ASSERT(budget.per_block.amount > 0, "Invalid per_block.");
-        asset ret = decrease_balance(budget, budget.per_block);
-
-        if (!check_close_conditions(budget))
-        {
-            _budget_service.update(budget, [&](object_type& b) { b.last_cashout_block = head_block_num; });
-        }
-        else
+        if (check_close_conditions(budget))
         {
             close_budget_internal(budget);
         }
 
-        return ret;
+        return result_cash;
     }
 
 protected:
@@ -193,12 +204,16 @@ public:
 
         const auto& ret = base_class::create_budget(owner, balance, start_date, end_date, permlink);
 
-        this->_account_service.update(this->_account_service.get_account(owner),
-                                      [&](account_object& acnt) { acnt.balance -= balance; });
-
-        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
+        take_cash_from_owner(owner, balance);
 
         return ret;
+    }
+
+    void cash_back(const account_name_type& owner, const asset& cash)
+    {
+        FC_ASSERT(cash.amount > 0, "Invalid cash.");
+
+        give_cash_back_to_owner(owner, cash);
     }
 
     void close_budget(const object_type& budget)
@@ -219,8 +234,6 @@ private:
 
     void close_budget_internal(const object_type& budget)
     {
-        const auto& owner = this->_account_service.get_account(budget.owner);
-
         // withdraw all balance rest asset back to owner
         //
         asset repayable = budget.balance;
@@ -228,12 +241,26 @@ private:
         {
             repayable = this->decrease_balance(budget, repayable);
 
-            this->_account_service.update(owner, [&](account_object& acnt) { acnt.balance += repayable; });
-
-            this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
+            give_cash_back_to_owner(budget.owner, repayable);
         }
 
         this->_budget_service.remove(budget);
+    }
+
+    void take_cash_from_owner(const account_name_type& owner, const asset& cash)
+    {
+        this->_account_service.update(this->_account_service.get_account(owner),
+                                      [&](account_object& acnt) { acnt.balance -= cash; });
+
+        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= cash; });
+    }
+
+    void give_cash_back_to_owner(const account_name_type& owner, const asset& cash)
+    {
+        this->_account_service.update(this->_account_service.get_account(owner),
+                                      [&](account_object& acnt) { acnt.balance += cash; });
+
+        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += cash; });
     }
 
     account_service_i& _account_service;
