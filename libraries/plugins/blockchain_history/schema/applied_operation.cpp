@@ -17,5 +17,12 @@ applied_operation::applied_operation(const operation_object& op_obj)
     // fc::raw::unpack( op_obj.serialized_op, op );     // g++ refuses to compile this as ambiguous
     op = fc::raw::unpack<operation>(op_obj.serialized_op);
 }
+
+applied_withdraw_operation::applied_withdraw_operation() = default;
+
+applied_withdraw_operation::applied_withdraw_operation(const operation_object& op_obj)
+    : applied_operation(op_obj)
+{
+}
 }
 }
