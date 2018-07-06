@@ -304,7 +304,7 @@ struct allocate_cash_from_advertising_budget_operation : public virtual_operatio
     }
 
     budget_type type = budget_type::post;
-    account_name_type owner = SCORUM_PROXY_TO_SELF_ACCOUNT;
+    account_name_type owner;
     int64_t id = -1;
     asset cash = asset(0, SCORUM_SYMBOL);
 };
@@ -327,7 +327,7 @@ struct cash_back_from_advertising_budget_to_owner_operation : public virtual_ope
     }
 
     budget_type type = budget_type::post;
-    account_name_type owner = SCORUM_PROXY_TO_SELF_ACCOUNT;
+    account_name_type owner;
     int64_t id = -1;
     asset cash = asset(0, SCORUM_SYMBOL);
 };

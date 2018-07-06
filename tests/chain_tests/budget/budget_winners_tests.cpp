@@ -115,7 +115,7 @@ public:
 
         create_budget(kenny, type, budget_balance / 3, start, budget_deadline);
 
-        generate_blocks(start, false);
+        generate_blocks(start);
 
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), top_count + 1);
 
@@ -141,7 +141,7 @@ public:
         create_budget(alice, type, budget_balance, start, budget_deadline);
         create_budget(bob, type, budget_balance * 2, start, budget_deadline);
 
-        generate_blocks(start, false);
+        generate_blocks(start);
 
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 2);
 
@@ -181,12 +181,12 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
 
     create_budget(alice, budget_type::post, budget_balance, start, deadline);
 
-    BOOST_REQUIRE_NO_THROW(generate_blocks(start, false));
+    BOOST_REQUIRE_NO_THROW(generate_blocks(start));
 
     BOOST_CHECK(!post_budget_service.get_budgets(alice.name).empty());
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
 
-    BOOST_REQUIRE_NO_THROW(generate_blocks(deadline, false));
+    BOOST_REQUIRE_NO_THROW(generate_blocks(deadline));
 
     BOOST_CHECK(post_budget_service.get_budgets(alice.name).empty());
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
@@ -196,12 +196,12 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
 
     create_budget(alice, budget_type::banner, budget_balance, start, deadline);
 
-    BOOST_REQUIRE_NO_THROW(generate_blocks(start, false));
+    BOOST_REQUIRE_NO_THROW(generate_blocks(start));
 
     BOOST_CHECK(post_budget_service.get_budgets(alice.name).empty());
     BOOST_CHECK(!banner_budget_service.get_budgets(alice.name).empty());
 
-    BOOST_REQUIRE_NO_THROW(generate_blocks(deadline, false));
+    BOOST_REQUIRE_NO_THROW(generate_blocks(deadline));
 
     BOOST_CHECK(post_budget_service.get_budgets(alice.name).empty());
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
