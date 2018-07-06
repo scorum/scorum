@@ -27,9 +27,6 @@ void dev_pool_initializator_impl::setup_dev_pool(initializator_context& ctx)
     dev_pool_service.create([&](dev_committee_object& pool) {
         pool.sp_balance = ctx.genesis_state().development_sp_supply;
         pool.scr_balance = ctx.genesis_state().development_scr_supply;
-        std::vector<percent_type> vcg_coeffs(SCORUM_DEFAULT_BUDGETS_VCG_SET);
-        std::copy(std::begin(vcg_coeffs), std::end(vcg_coeffs), std::back_inserter(pool.vcg_post_coefficients));
-        std::copy(std::begin(vcg_coeffs), std::end(vcg_coeffs), std::back_inserter(pool.vcg_banner_coefficients));
     });
 }
 

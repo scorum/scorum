@@ -4,14 +4,19 @@
 namespace scorum {
 namespace chain {
 
+using scorum::protocol::percent_type;
+
 class advertising_property_object : public object<advertising_property_object_type, advertising_property_object>
 {
 public:
-    CHAINBASE_DEFAULT_CONSTRUCTOR(advertising_property_object)
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(advertising_property_object, (vcg_post_coefficients)(vcg_banner_coefficients))
 
     id_type id;
 
     account_name_type moderator;
+
+    fc::shared_vector<percent_type> vcg_post_coefficients;
+    fc::shared_vector<percent_type> vcg_banner_coefficients;
 };
 
 struct by_account;
@@ -31,5 +36,12 @@ typedef shared_multi_index_container<advertising_property_object,
 }
 }
 
-FC_REFLECT(scorum::chain::advertising_property_object, (id)(moderator))
+// clang-format off
+FC_REFLECT(scorum::chain::advertising_property_object,
+           (id)
+           (moderator)
+           (vcg_post_coefficients)
+           (vcg_banner_coefficients))
+// clang-format on
+
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::advertising_property_object, scorum::chain::advertising_property_index)
