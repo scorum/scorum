@@ -75,8 +75,9 @@ BOOST_FIXTURE_TEST_CASE(change_top_budgets_amount, fixture)
                   std::back_inserter(pool.vcg_post_coefficients));
     });
 
-    BOOST_REQUIRE(std::equal(std::begin(dev_committee.vcg_post_coefficients),
-                             std::end(dev_committee.vcg_post_coefficients), std::begin(initial_vcg_coeffs)));
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(std::begin(dev_committee.vcg_post_coefficients),
+                                    std::end(dev_committee.vcg_post_coefficients), std::begin(initial_vcg_coeffs),
+                                    std::end(initial_vcg_coeffs));
 
     mocks
         .ExpectCallOverload(dev_pool_service,
@@ -86,8 +87,9 @@ BOOST_FIXTURE_TEST_CASE(change_top_budgets_amount, fixture)
 
     BOOST_REQUIRE_NO_THROW(evaluator.do_apply(op));
 
-    BOOST_REQUIRE(std::equal(std::begin(dev_committee.vcg_post_coefficients),
-                             std::end(dev_committee.vcg_post_coefficients), std::begin(op.vcg_coefficients)));
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(std::begin(dev_committee.vcg_post_coefficients),
+                                    std::end(dev_committee.vcg_post_coefficients), std::begin(op.vcg_coefficients),
+                                    std::end(op.vcg_coefficients));
 }
 
 } // namespace development_committee_top_budgets_evaluator_tests

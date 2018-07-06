@@ -23,21 +23,19 @@ share_type calculate_vcg_cash(const size_t position,
     uint128_t result;
     share_value_type divider = coeffs.at(position);
     FC_ASSERT(divider > 0, "Invalid coefficient value");
-    share_value_type priv_coeff = 0;
+    share_value_type prev_coeff = 0;
     for (size_t ci = 0; ci <= inverted_position; ++ci)
     {
         share_value_type x = coeffs.at(top_size - ci);
         FC_ASSERT(x > 0, "Invalid coefficient value");
-        FC_ASSERT(x >= priv_coeff, "Invalid coefficient value");
+        FC_ASSERT(x >= prev_coeff, "Invalid coefficient value");
         share_type per_block = per_block_list.at(top_size - ci + 1);
         FC_ASSERT(per_block.value > 0, "Invalid per-block value");
-        uint128_t factor = (x - priv_coeff);
+        uint128_t factor = (x - prev_coeff);
         factor *= per_block.value;
-        factor /= 100;
         result += factor;
-        priv_coeff = x;
+        prev_coeff = x;
     }
-    result *= 100;
     result /= divider;
     return share_type(result.to_uint64());
 }

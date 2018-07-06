@@ -50,9 +50,8 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
 
     const auto& budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time());
 
-    auto top_budgets_count = std::min((int)vcg_coefficients.size(), (int)budgets.size() - 1);
-    auto active_vcg_coeff_count = (size_t)std::max(top_budgets_count, 0);
-    auto active_per_block_count = std::min(active_vcg_coeff_count + 1, budgets.size());
+    auto active_per_block_count = std::min(vcg_coefficients.size() + 1, budgets.size());
+    auto active_vcg_coeff_count = std::max((int32_t)active_per_block_count - 1, 0);
 
     vcg_coeff_values_type active_vcg_coeffs;
     br::copy_n(vcg_coefficients, active_vcg_coeff_count, std::back_inserter(active_vcg_coeffs));
