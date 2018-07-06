@@ -90,8 +90,8 @@ struct proposal_change_quorum_evaluator
         case quorum_type::advertising_moderator_quorum:
             committee.weak_visit([&](development_committee_i& c) { c.change_advertising_moderator_quorum(o.quorum); });
             break;
-        case quorum_type::top_budget_quorum:
-            committee.weak_visit([&](development_committee_i& c) { c.change_top_budgets_quorum(o.quorum); });
+        case quorum_type::budgets_vcg_properties_quorum:
+            committee.weak_visit([&](development_committee_i& c) { c.change_budgets_vcg_properties_quorum(o.quorum); });
             break;
         case quorum_type::none_quorum:
             FC_THROW_EXCEPTION(fc::assert_exception, "unknow quorum change operation");
@@ -130,13 +130,13 @@ struct development_committee_empower_advertising_moderator_evaluator
 };
 
 template <budget_type type>
-struct development_committee_change_top_budgets_amount_evaluator
-    : public proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<type>>
+struct development_committee_change_budgets_vcg_properties_evaluator
+    : public proposal_operation_evaluator<development_committee_change_budgets_vcg_properties_evaluator<type>>
 {
-    using operation_type = development_committee_change_top_budgets_amount_operation<type>;
-    using base_type = proposal_operation_evaluator<development_committee_change_top_budgets_amount_evaluator<type>>;
+    using operation_type = development_committee_change_budgets_vcg_properties_operation<type>;
+    using base_type = proposal_operation_evaluator<development_committee_change_budgets_vcg_properties_evaluator<type>>;
 
-    development_committee_change_top_budgets_amount_evaluator(data_service_factory_i& r)
+    development_committee_change_budgets_vcg_properties_evaluator(data_service_factory_i& r)
         : base_type(r)
     {
     }
@@ -145,10 +145,10 @@ struct development_committee_change_top_budgets_amount_evaluator
 };
 
 using development_committee_change_top_post_budgets_amount_evaluator
-    = development_committee_change_top_budgets_amount_evaluator<budget_type::post>;
+    = development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>;
 
 using development_committee_change_top_banner_budgets_amount_evaluator
-    = development_committee_change_top_budgets_amount_evaluator<budget_type::banner>;
+    = development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>;
 
 namespace registration_committee {
 

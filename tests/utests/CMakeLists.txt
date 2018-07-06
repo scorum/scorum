@@ -36,6 +36,7 @@ set(SOURCES
     app_tests.cpp
     budgets/management_algorithms_tests.cpp
     budgets/evaluators_tests.cpp
+    budgets/vcg_calculation_tests.cpp
 )
 
 add_executable(utests
