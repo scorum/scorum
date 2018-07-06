@@ -107,8 +107,7 @@ struct test_account_budget_fixture : public account_budget_fixture
 
         const auto& budget = budget_service_fixture.get();
 
-        auto cash = budget.per_block;
-        manager.allocate_cash(budget, cash);
+        auto cash = manager.allocate_cash(budget);
 
         BOOST_CHECK_EQUAL(cash, budget.per_block);
     }

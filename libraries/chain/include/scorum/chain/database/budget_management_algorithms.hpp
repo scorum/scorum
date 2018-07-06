@@ -83,20 +83,16 @@ public:
         });
     }
 
-    // return 'true' if budget has been closed
-    bool allocate_cash(const object_type& budget, asset& cash)
+    asset allocate_cash(const object_type& budget)
     {
-        FC_ASSERT(cash.amount > 0, "Invalid cash.");
-
-        cash = decrease_balance(budget, cash);
+        auto result_cash = decrease_balance(budget, budget.per_block);
 
         if (check_close_conditions(budget))
         {
             close_budget_internal(budget);
-            return true;
         }
 
-        return false;
+        return result_cash;
     }
 
 protected:
@@ -215,16 +211,11 @@ public:
         return ret;
     }
 
-    // return 'true' if budget has been closed
-    bool cash_back(const object_type& budget, asset& change)
+    void cash_back(const account_name_type& owner, const asset& cash)
     {
-        bool ret = this->allocate_cash(budget, change);
-        if (!ret && change.amount > 0)
-        {
-            give_cash_back_to_owner(budget.owner, change);
-        }
+        FC_ASSERT(cash.amount > 0, "Invalid cash.");
 
-        return ret;
+        give_cash_back_to_owner(owner, cash);
     }
 
     void close_budget(const object_type& budget)
