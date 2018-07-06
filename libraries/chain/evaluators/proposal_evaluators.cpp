@@ -81,7 +81,7 @@ void development_committee_change_budgets_vcg_properties_evaluator<budget_type::
     auto& adv_property = this->db().advertising_property_service();
 
     adv_property.update([&](advertising_property_object& adv) {
-        adv.vcg_post_coefficients.clear();
+        adv.vcg_banner_coefficients.clear();
         std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
                   std::back_inserter(adv.vcg_banner_coefficients));
     });
