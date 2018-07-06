@@ -581,7 +581,7 @@ SCORUM_TEST_CASE(check_same_acc_finished_transfer)
     BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
 }
 
-SCORUM_TEST_CASE(check_same_acc_interrupted_by_zero_withdraw_transfer)
+SCORUM_TEST_CASE(check_same_acc_transfer_interrupted_by_zero_withdraw)
 {
     const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
 
@@ -622,7 +622,7 @@ SCORUM_TEST_CASE(check_same_acc_interrupted_by_zero_withdraw_transfer)
     BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::interrupted);
 }
 
-SCORUM_TEST_CASE(check_same_acc_interrupted_by_non_zero_withdraw_transfer)
+SCORUM_TEST_CASE(check_same_acc_transfer_interrupted_by_non_zero_withdraw)
 {
     const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
 
@@ -663,7 +663,7 @@ SCORUM_TEST_CASE(check_same_acc_interrupted_by_non_zero_withdraw_transfer)
     BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::interrupted);
 }
 
-SCORUM_TEST_CASE(check_same_acc_transfer_active)
+SCORUM_TEST_CASE(check_withdraw_status_changing_during_same_acc_transfer)
 {
     const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
 
@@ -708,7 +708,7 @@ SCORUM_TEST_CASE(check_same_acc_transfer_active)
     }
 }
 
-SCORUM_TEST_CASE(check_reroute_to_other_acc)
+SCORUM_TEST_CASE(check_reroute_to_other_acc_both_acc_setup_withdraw)
 {
     const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
 
@@ -756,6 +756,45 @@ SCORUM_TEST_CASE(check_reroute_to_other_acc)
     BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
     BOOST_CHECK_EQUAL(alice_hist[0].withdrawn, feed_amount);
     BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+}
+
+SCORUM_TEST_CASE(check_reroute_to_other_acc_other_account_do_not_setup_withdraw)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Bob");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = bob.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+    BOOST_TEST_MESSAGE("Start routes from Bob");
+    {
+        set_withdraw_scorumpower_route_to_account_operation op;
+        op.from_account = bob.name;
+        op.to_account = alice.name;
+        op.auto_vest = true;
+        op.percent = SCORUM_PERCENT(50);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks");
+    for (uint32_t ci = 0; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Check Result");
+
+    auto bob_hist = _api.get_account_sp_to_scr_transfers(bob, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(bob_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(bob_hist[0].withdrawn, feed_amount);
+    BOOST_CHECK_EQUAL(bob_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
