@@ -5,6 +5,7 @@
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
 #include <scorum/common_api/config.hpp>
+#include <scorum/protocol/operations.hpp>
 
 #include <map>
 
@@ -102,19 +103,41 @@ account_history_api::get_account_history(const std::string& account, uint64_t fr
     return db->with_read_lock([&]() { return _impl->get_history<account_history_object>(account, from, limit); });
 }
 
-std::map<uint32_t, std::vector<applied_operation>>
+std::map<uint32_t, applied_withdraw_operation>
 account_history_api::get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit) const
 {
     const auto db = _impl->_app.chain_database();
     return db->with_read_lock([&]() {
-        std::map<uint32_t, std::vector<applied_operation>> result;
+        std::map<uint32_t, applied_withdraw_operation> result;
 
-        auto fill_funct = [&](const withdrawals_to_scr_history_object& hobj) {
-            auto& ops = result[hobj.sequence];
-            ops.push_back(db->get(hobj.op));
-            for (auto& op : hobj.progress)
+        auto fill_funct = [&](const withdrawals_to_scr_history_object& obj) {
+            auto it = result.emplace(obj.sequence, applied_withdraw_operation(db->get(obj.op))).first;
+            auto& applied_op = it->second;
+
+            if (!obj.progress.empty())
             {
-                ops.push_back(db->get(op));
+                auto last_progress_op = fc::raw::unpack<operation>(db->get(obj.progress.back()).serialized_op);
+
+                last_progress_op.weak_visit(
+                    [&](const acc_finished_vesting_withdraw_operation&) {
+                        applied_op.status = applied_withdraw_operation::finished;
+                    },
+                    [&](const withdraw_scorumpower_operation&) {
+                        applied_op.status = applied_withdraw_operation::interrupted;
+                    });
+
+                for (auto& id : obj.progress)
+                {
+                    auto op = fc::raw::unpack<operation>(db->get(id).serialized_op);
+
+                    op.weak_visit(
+                        [&](const acc_to_acc_vesting_withdraw_operation& op) {
+                            applied_op.withdrawn += op.withdrawn.amount;
+                        },
+                        [&](const acc_to_devpool_vesting_withdraw_operation& op) {
+                            applied_op.withdrawn += op.withdrawn.amount;
+                        });
+                }
             }
         };
         _impl->get_history<withdrawals_to_scr_history_object>(account, from, limit, fill_funct);

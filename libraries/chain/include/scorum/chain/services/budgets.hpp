@@ -25,6 +25,7 @@ template <class ObjectType> struct advertising_budget_service_i : public base_se
     virtual const ObjectType* find(const typename ObjectType::id_type&) const = 0;
     virtual budgets_type get_budgets() const = 0;
     virtual budgets_type get_top_budgets_by_start_time(const fc::time_point_sec& until, uint16_t limit) const = 0;
+    virtual budgets_type get_top_budgets_by_start_time(const fc::time_point_sec& until) const = 0;
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budgets_type get_budgets(const account_name_type& owner) const = 0;
@@ -98,6 +99,15 @@ public:
         FC_CAPTURE_AND_RETHROW((until)(limit))
     }
 
+    budgets_type get_top_budgets_by_start_time(const fc::time_point_sec& until) const override
+    {
+        try
+        {
+            return this->get_top_budgets_by_start_time(until, -1);
+        }
+        FC_CAPTURE_AND_RETHROW((until))
+    }
+
     std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name, uint32_t limit) const override
     {
         try
@@ -143,10 +153,12 @@ public:
 
 struct banner_budget_service_i : public advertising_budget_service_i<banner_budget_object>
 {
+    using object_type = banner_budget_object;
 };
 
 struct post_budget_service_i : public advertising_budget_service_i<post_budget_object>
 {
+    using object_type = post_budget_object;
 };
 
 using dbs_banner_budget = dbs_advertising_budget<banner_budget_service_i, banner_budget_object>;

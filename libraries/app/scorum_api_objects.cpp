@@ -15,12 +15,12 @@ development_committee_api_obj::development_committee_api_obj(const chain::dev_co
     , invite_quorum(obj.invite_quorum)
     , dropout_quorum(obj.dropout_quorum)
     , change_quorum(obj.change_quorum)
-    , top_budgets_amounts_quorum(obj.top_budgets_amounts_quorum)
+    , budgets_vcg_properties_quorum(obj.budgets_vcg_properties_quorum)
 {
-    for (auto item : obj.top_budgets_amounts)
-    {
-        top_budgets_amounts.insert(item);
-    }
+    std::copy(std::begin(obj.vcg_post_coefficients), std::end(obj.vcg_post_coefficients),
+              std::back_inserter(vcg_post_coefficients));
+    std::copy(std::begin(obj.vcg_banner_coefficients), std::end(obj.vcg_banner_coefficients),
+              std::back_inserter(vcg_banner_coefficients));
 }
 
 account_api_obj::account_api_obj(const chain::account_object& a, const chain::database& db)
