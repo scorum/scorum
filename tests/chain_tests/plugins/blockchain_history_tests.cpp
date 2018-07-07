@@ -581,6 +581,21 @@ SCORUM_TEST_CASE(check_same_acc_finished_transfer)
     BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
 }
 
+SCORUM_TEST_CASE(check_withdraw_started_but_no_transfers_occured)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    withdraw_scorumpower_operation op;
+    op.account = alice.name;
+    op.scorumpower = ASSET_SP(feed_amount);
+    push_operation(op);
+
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, 0u);
+    BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::active);
+}
+
 SCORUM_TEST_CASE(check_same_acc_transfer_interrupted_by_zero_withdraw)
 {
     const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
