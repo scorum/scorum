@@ -8,11 +8,13 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/advertising_property_service.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/budget_management_algorithms.hpp>
@@ -116,6 +118,7 @@ void process_funds::on_apply(block_task_context& ctx)
     post_budget_service_i& post_budget_service = services.post_budget_service();
     banner_budget_service_i& banner_budget_service = services.banner_budget_service();
     account_service_i& account_service = services.account_service();
+    advertising_property_service_i& advertising_property_service = services.advertising_property_service();
 
     // We don't have inflation.
     // We just get per block reward from original reward fund(4.8M SP)
@@ -134,10 +137,10 @@ void process_funds::on_apply(block_task_context& ctx)
 
     advertising_budgets_reward
         += allocate_advertising_cash(post_budget_service, dgp_service, account_service,
-                                     dev_service.get().vcg_post_coefficients, budget_type::post, ctx);
-    advertising_budgets_reward
-        += allocate_advertising_cash(banner_budget_service, dgp_service, account_service,
-                                     dev_service.get().vcg_banner_coefficients, budget_type::banner, ctx);
+                                     advertising_property_service.get().vcg_post_coefficients, budget_type::post, ctx);
+    advertising_budgets_reward += allocate_advertising_cash(banner_budget_service, dgp_service, account_service,
+                                                            advertising_property_service.get().vcg_banner_coefficients,
+                                                            budget_type::banner, ctx);
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.
