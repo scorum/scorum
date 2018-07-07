@@ -219,6 +219,11 @@ public:
     registration_committee_api_obj get_registration_committee() const;
 
     /**
+     * @brief Get advertising property
+     */
+    advertising_property_api_obj get_advertising_property() const;
+
+    /**
      * @brief Get the total number of witnesses registered with the blockchain
      */
     uint64_t get_witness_count() const;
@@ -343,6 +348,7 @@ FC_API(scorum::app::database_api,
    (lookup_proposals)
    (get_registration_committee)
    (get_development_committee)
+   (get_advertising_property)
 
     // Atomic Swap
    (get_atomicswap_contracts)

@@ -14,15 +14,12 @@ class dev_committee_object : public object<dev_committee_object_type, dev_commit
 {
 public:
     /// \cond DO_NOT_DOCUMENT
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(dev_committee_object, (vcg_post_coefficients)(vcg_banner_coefficients))
+    CHAINBASE_DEFAULT_CONSTRUCTOR(dev_committee_object)
 
     id_type id;
 
     asset sp_balance = asset(0, SP_SYMBOL);
     asset scr_balance = asset(0, SCORUM_SYMBOL);
-
-    fc::shared_vector<percent_type> vcg_post_coefficients;
-    fc::shared_vector<percent_type> vcg_banner_coefficients;
 
     protocol::percent_type transfer_quorum = SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT;
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
@@ -69,8 +66,6 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (id)
            (sp_balance)
            (scr_balance)
-           (vcg_post_coefficients)
-           (vcg_banner_coefficients)
            (transfer_quorum)
            (invite_quorum)
            (dropout_quorum)

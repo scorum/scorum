@@ -13,8 +13,12 @@ void advertising_property_initializator_impl::on_apply(initializator_context& ct
 
     FC_ASSERT(!adv_service.is_exists());
 
-    adv_service.create(
-        [&](advertising_property_object& obj) { obj.moderator = ctx.genesis_state().advertising_property.moderator; });
+    adv_service.create([&](advertising_property_object& obj) {
+        obj.moderator = ctx.genesis_state().advertising_property.moderator;
+        std::vector<percent_type> vcg_coeffs(SCORUM_DEFAULT_BUDGETS_VCG_SET);
+        std::copy(std::begin(vcg_coeffs), std::end(vcg_coeffs), std::back_inserter(obj.vcg_post_coefficients));
+        std::copy(std::begin(vcg_coeffs), std::end(vcg_coeffs), std::back_inserter(obj.vcg_banner_coefficients));
+    });
 }
 
 } // namespace genesis
