@@ -55,6 +55,7 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
+        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_BUILD_TYPE=Debug \
         -DENABLE_COVERAGE_TESTING=ON \
         -DLOW_MEMORY_NODE=OFF \
@@ -81,6 +82,7 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
+        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=ON \
@@ -94,13 +96,14 @@ RUN \
     ./tests/wallet_tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
     make install && \
-	rm -rf /usr/local/src/scorum/build
+    rm -rf /usr/local/src/scorum/build
 
 RUN \
-	cd /usr/local/src/scorum && \
-	mkdir build && \
+    cd /usr/local/src/scorum && \
+    mkdir build && \
     cd build && \
     cmake \
+        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=OFF \

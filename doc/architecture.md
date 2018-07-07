@@ -46,7 +46,7 @@ And two functions in the scorum::protocol namespace
 # Notes
 ### Unit tests. Read doc/testing.md file
 
-    cmake -D BUILD_SCORUM_TESTNET=ON -D CMAKE_BUILD_TYPE=Debug build_dir
+    cmake -D CMAKE_BUILD_TYPE=Debug build_dir
 
 
 # TODO
