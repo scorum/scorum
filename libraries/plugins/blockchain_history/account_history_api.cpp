@@ -114,17 +114,40 @@ account_history_api::get_account_sp_to_scr_transfers(const std::string& account,
             auto it = result.emplace(obj.sequence, applied_withdraw_operation(db->get(obj.op))).first;
             auto& applied_op = it->second;
 
-            if (!obj.progress.empty())
-            {
-                auto last_progress_op = fc::raw::unpack<operation>(db->get(obj.progress.back()).serialized_op);
+            share_type to_withdraw = 0;
+            applied_op.op.weak_visit(
+                [&](const withdraw_scorumpower_operation& op) { to_withdraw = op.scorumpower.amount; });
 
-                last_progress_op.weak_visit(
+            if (to_withdraw == 0u)
+            {
+                // If this is a zero-withdraw (such withdraw closes current active withdraw)
+                applied_op.status = applied_withdraw_operation::empty;
+            }
+            else if (!obj.progress.empty())
+            {
+                auto last_op = fc::raw::unpack<operation>(db->get(obj.progress.back()).serialized_op);
+
+                last_op.weak_visit(
                     [&](const acc_finished_vesting_withdraw_operation&) {
+                        // if last 'progress' operation is 'acc_finished_' then withdraw was finished
                         applied_op.status = applied_withdraw_operation::finished;
                     },
                     [&](const withdraw_scorumpower_operation&) {
+                        // if last 'progress' operation is 'withdraw_scorumpower_' then withdraw was either interrupted
+                        // or finished depending on pre-last 'progress' operation
                         applied_op.status = applied_withdraw_operation::interrupted;
                     });
+
+                if (obj.progress.size() > 1)
+                {
+                    auto before_last_op_obj = db->get(*(obj.progress.rbegin() + 1));
+                    auto before_last_op = fc::raw::unpack<operation>(before_last_op_obj.serialized_op);
+
+                    before_last_op.weak_visit([&](const acc_finished_vesting_withdraw_operation&) {
+                        // if pre-last 'progress' operation is 'acc_finished_' then withdraw was finished
+                        applied_op.status = applied_withdraw_operation::finished;
+                    });
+                }
 
                 for (auto& id : obj.progress)
                 {
