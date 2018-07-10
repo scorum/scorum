@@ -566,6 +566,27 @@ SCORUM_TEST_CASE(dev_committee_withdraw_operation_circulating_capital_should_not
     BOOST_REQUIRE_EQUAL(circulating_capital_before + 2 * active_sp_holder_reward, circulating_capital_after);
 }
 
+SCORUM_TEST_CASE(dev_committee_withdraw_operation_not_enough_sp)
+{
+    auto transfer = genesis_state.development_sp_supply + 1;
+
+    development_committee_withdraw_vesting_operation proposal_inner_op;
+    proposal_inner_op.vesting_shares = transfer;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    BOOST_REQUIRE_THROW(push_operation(proposal_vote_op, initdelegate.private_key, false), fc::assert_exception);
+}
+
 SCORUM_TEST_CASE(dev_committee_transfer_virtual_op_should_be_raised)
 {
     dev_committee_operation_visitor visitor;
