@@ -276,7 +276,7 @@ private:
         if (d.body.size() > 1024 * 128)
             d.body = "body pruned due to size";
 
-        if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
+        if (d.parent_author.size() > 0 && d.body.size() > 1024 * 65)
             d.body = "comment pruned due to size";
 
         set_url(d);
