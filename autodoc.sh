@@ -10,7 +10,7 @@ echo "Generate documentation by doxygen"
 sudo doxygen Doxyfile
 
 echo "Upload generated documentation to azure"
-sudo az storage blob upload-batch \
+az storage blob upload-batch \
     --destination ${DOCS_PATH} \
     --source ${WORKSPACE}/doxygen \
     --destination-path ${UPLOAD_PATH}
