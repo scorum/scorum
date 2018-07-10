@@ -142,6 +142,8 @@ void withdraw_scorumpower_dev_pool_task::on_apply(withdraw_scorumpower_context& 
 
     const auto& pool = dev_pool_service.get();
 
+    FC_ASSERT(pool.sp_balance >= ctx.scorumpower(), "Dev pool does not have sufficient Scorum Power for withdraw.");
+
     impl.do_apply(pool, ctx.scorumpower());
 }
 }
