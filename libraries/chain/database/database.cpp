@@ -1202,7 +1202,6 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
     _my->_evaluator_registry.register_evaluator<delegate_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<delete_comment_evaluator>();

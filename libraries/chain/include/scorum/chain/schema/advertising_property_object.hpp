@@ -9,6 +9,7 @@ using scorum::protocol::percent_type;
 class advertising_property_object : public object<advertising_property_object_type, advertising_property_object>
 {
 public:
+    /// \cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(advertising_property_object, (vcg_post_coefficients)(vcg_banner_coefficients))
 
     id_type id;

@@ -28,13 +28,14 @@ struct applied_withdraw_operation : public applied_operation
     {
         active,
         finished,
-        interrupted
+        interrupted,
+        empty
     };
 
     applied_withdraw_operation();
     applied_withdraw_operation(const operation_object& op_obj);
 
-    share_type withdrawn = 0;
+    asset withdrawn = asset(0, SP_SYMBOL);
     withdraw_status status = active;
 };
 
@@ -56,4 +57,4 @@ FC_REFLECT_DERIVED(scorum::blockchain_history::applied_withdraw_operation,
                    (withdrawn)(status))
 
 FC_REFLECT_ENUM(scorum::blockchain_history::applied_withdraw_operation::withdraw_status,
-                (active)(finished)(interrupted))
+                (active)(finished)(interrupted)(empty))

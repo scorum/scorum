@@ -2466,6 +2466,7 @@ annotated_signed_transaction wallet_api::create_budget_for_post(const std::strin
     op.owner = owner;
     op.json_metadata = json_metadata;
     op.balance = balance;
+    op.start = start;
     op.deadline = deadline;
 
     signed_transaction tx;
@@ -2490,6 +2491,7 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
     op.owner = owner;
     op.json_metadata = json_metadata;
     op.balance = balance;
+    op.start = start;
     op.deadline = deadline;
 
     signed_transaction tx;

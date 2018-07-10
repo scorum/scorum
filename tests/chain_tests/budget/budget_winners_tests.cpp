@@ -3,6 +3,7 @@
 #include "budget_check_common.hpp"
 
 #include <scorum/chain/services/advertising_property_service.hpp>
+#include <scorum/chain/services/budgets.hpp>
 
 #include <scorum/chain/schema/advertising_property_object.hpp>
 
@@ -140,12 +141,15 @@ public:
 
         create_budget(alice, type, budget_balance, start, budget_deadline);
         create_budget(bob, type, budget_balance * 2, start, budget_deadline);
+        create_budget(sam, type, budget_balance * 3, start, budget_deadline);
 
         generate_blocks(start);
 
-        BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 2);
+        BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 3);
 
-        BOOST_CHECK_GT(budget_visitor.get_advertising_summ(bob.name), budget_visitor.get_advertising_summ(alice.name));
+        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(bob.name),
+                          budget_visitor.get_advertising_summ(alice.name));
+        BOOST_CHECK_GT(budget_visitor.get_advertising_summ(sam.name), budget_visitor.get_advertising_summ(bob.name));
 
         BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(alice.name)
                               + budget_visitor.get_cashback_summ(alice.name),
@@ -205,6 +209,49 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
 
     BOOST_CHECK(post_budget_service.get_budgets(alice.name).empty());
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
+}
+
+SCORUM_TEST_CASE(post_budget_from_same_acc_arranging)
+{
+    /*
+     * VCG algorithm for 3 bets/2 coefficients:
+     *
+     * CPB3=Bid3 -- this one is not handled by VCG algorithm. This is our decision
+     * CPB2=Bid3
+     * CPB1=(X2*Bid3+(X1-X2)*Bid2)/X1
+     * -------------------------------------------------------
+     *
+     * VCG algorithm for 2 bets/1 coefficients [current test case]:
+     * CPB2=Bid2 -- this one is not handled by VCG algorithm. This is our decision
+     * CPB1=Bid2
+     *
+     * NOTE: winner's per-block payment equals looser's bet.
+     */
+    auto b1 = create_budget(alice, budget_type::post, 100, 10);
+    generate_block();
+
+    {
+        auto budgets = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(budgets.size(), 1);
+        // There is a single budget so whole 'per-block' amount should be decreased from budget
+        BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - budgets[0].get().per_block.amount);
+        BOOST_CHECK_EQUAL(fc::to_string(budgets[0].get().json_metadata), b1.json_metadata);
+    }
+
+    auto b2 = create_budget(alice, budget_type::post, 200, 10);
+    generate_block();
+
+    {
+        auto budgets = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(budgets.size(), 2);
+        // 'b1' is a loser
+        BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - 2 * budgets[0].get().per_block.amount);
+        BOOST_CHECK_EQUAL(fc::to_string(budgets[0].get().json_metadata), b1.json_metadata);
+        // There are two budgets. 'b2' is a winner. According to VCG algorithm its per-block payment should be equal to
+        // looser's per-block payment
+        BOOST_CHECK_EQUAL(budgets[1].get().balance.amount, 200 - budgets[1].get().per_block.amount);
+        BOOST_CHECK_EQUAL(fc::to_string(budgets[1].get().json_metadata), b2.json_metadata);
+    }
 }
 
 SCORUM_TEST_CASE(post_budget_winners_arranging_check)
