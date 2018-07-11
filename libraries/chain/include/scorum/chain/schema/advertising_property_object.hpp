@@ -18,6 +18,8 @@ public:
 
     fc::shared_vector<percent_type> vcg_post_coefficients;
     fc::shared_vector<percent_type> vcg_banner_coefficients;
+
+    template <budget_type type> const fc::shared_vector<percent_type>& get_vcg_coefficients() const;
 };
 
 struct by_account;

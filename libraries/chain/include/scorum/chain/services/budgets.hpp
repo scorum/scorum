@@ -153,12 +153,12 @@ public:
 
 struct banner_budget_service_i : public advertising_budget_service_i<banner_budget_object>
 {
-    using object_type = banner_budget_object;
+    static constexpr budget_type budget_type_v = budget_type::banner;
 };
 
 struct post_budget_service_i : public advertising_budget_service_i<post_budget_object>
 {
-    using object_type = post_budget_object;
+    static constexpr budget_type budget_type_v = budget_type::post;
 };
 
 using dbs_banner_budget = dbs_advertising_budget<banner_budget_service_i, banner_budget_object>;

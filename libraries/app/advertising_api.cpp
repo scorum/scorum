@@ -2,6 +2,7 @@
 #include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budgets.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <boost/range/join.hpp>
 #include <boost/range/algorithm/transform.hpp>
@@ -19,6 +20,7 @@ public:
         , _account_service(_db.account_service())
         , _banner_budget_service(_db.banner_budget_service())
         , _post_budget_service(_db.post_budget_service())
+        , _dyn_props_service(_db.dynamic_global_property_service())
     {
     }
 
@@ -53,32 +55,72 @@ public:
 
     fc::optional<budget_api_obj> get_budget(int64_t id, budget_type type) const
     {
-        fc::optional<budget_api_obj> ret;
-
         switch (type)
         {
         case budget_type::post:
-        {
-            const auto* budget = _post_budget_service.find(id);
-            if (budget)
-                ret = budget_api_obj(*budget);
-        }
-        break;
+            return get_budget(_post_budget_service, id);
+
         case budget_type::banner:
+            return get_budget(_banner_budget_service, id);
+        }
+
+        FC_THROW("unreachable");
+    }
+
+    std::vector<budget_api_obj> get_current_winners(budget_type type) const
+    {
+        switch (type)
         {
-            const auto* budget = _banner_budget_service.find(id);
-            if (budget)
-                ret = budget_api_obj(*budget);
+        case budget_type::post:
+            return get_current_winners(_post_budget_service);
+
+        case budget_type::banner:
+            return get_current_winners(_banner_budget_service);
         }
-        break;
-        }
+
+        FC_THROW("unreachable");
+    }
+
+private:
+    template <typename TBudgetService>
+    fc::optional<budget_api_obj> get_budget(const TBudgetService& budget_service, int64_t id) const
+    {
+        using object_type = typename TBudgetService::object_type;
+
+        fc::optional<object_type> ret;
+
+        const auto* budget = budget_service.find(id);
+        if (budget)
+            ret = object_type(*budget);
 
         return ret;
     }
 
-    std::vector<int64_t> get_current_winners(budget_type type) const
+    template <typename TBudgetService>
+    std::vector<budget_api_obj> get_current_winners(const TBudgetService& budget_service) const
     {
-        return {};
+        using object_type = typename TBudgetService::object_type;
+        constexpr budget_type budget_type_v = TBudgetService::budget_type_v;
+
+        auto head_block_time = _dyn_props_service.get().time;
+
+        auto budgets = budget_service.get_top_budgets_by_start_time(head_block_time);
+        const auto& vcg_coeffs = _adv_service.get().get_vcg_coefficients<budget_type_v>();
+
+        auto winners_count = std::min(vcg_coeffs.size(), budgets.size());
+
+        std::vector<budget_api_obj> ret;
+        ret.reserve(winners_count);
+
+        auto cmp = [](const object_type& l, const object_type& r) { return l.per_block.amount > r.per_block.amount; };
+        auto min_top_it = budgets.begin() + winners_count;
+
+        std::nth_element(budgets.begin(), min_top_it, budgets.end(), cmp);
+        std::sort(budgets.begin(), min_top_it, cmp);
+        std::transform(budgets.begin(), min_top_it, std::back_inserter(ret),
+                       [](const object_type& o) { return budget_api_obj(o); });
+
+        return ret;
     }
 
 public:
@@ -88,6 +130,7 @@ public:
     chain::account_service_i& _account_service;
     chain::banner_budget_service_i& _banner_budget_service;
     chain::post_budget_service_i& _post_budget_service;
+    chain::dynamic_global_property_service_i& _dyn_props_service;
 };
 
 advertising_api::advertising_api(const api_context& ctx)
@@ -110,7 +153,7 @@ fc::optional<budget_api_obj> advertising_api::get_budget(int64_t id, budget_type
     return _impl->_db.with_read_lock([&] { return _impl->get_budget(id, type); });
 }
 
-std::vector<int64_t> advertising_api::get_current_winners(budget_type type) const
+std::vector<budget_api_obj> advertising_api::get_current_winners(budget_type type) const
 {
     return _impl->_db.with_read_lock([&] { return _impl->get_current_winners(type); });
 }

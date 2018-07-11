@@ -73,20 +73,20 @@ SCORUM_TEST_CASE(check_get_moderator)
 
 SCORUM_TEST_CASE(check_get_user_budgets_positive)
 {
-    create_budget(alice, budget_type::banner); // permlink 1
+    auto b1 = create_budget(alice, budget_type::banner);
     generate_block();
-    create_budget(alice, budget_type::post); // permlink 2
+    auto b2 = create_budget(alice, budget_type::post);
     generate_block();
-    create_budget(alice, budget_type::banner); // permlink 3
+    auto b3 = create_budget(alice, budget_type::banner);
     generate_block();
 
     auto banner_0 = _api.get_budget(0, budget_type::banner);
     auto post_0 = _api.get_budget(0, budget_type::post);
     auto banner_1 = _api.get_budget(1, budget_type::banner);
 
-    BOOST_CHECK_EQUAL(banner_0->content_permlink, "1");
-    BOOST_CHECK_EQUAL(post_0->content_permlink, "2");
-    BOOST_CHECK_EQUAL(banner_1->content_permlink, "3");
+    BOOST_CHECK_EQUAL(banner_0->json_metadata, b1.json_metadata);
+    BOOST_CHECK_EQUAL(post_0->json_metadata, b2.json_metadata);
+    BOOST_CHECK_EQUAL(banner_1->json_metadata, b3.json_metadata);
 }
 
 SCORUM_TEST_CASE(check_get_user_budgets_negative)
@@ -103,19 +103,95 @@ SCORUM_TEST_CASE(check_get_user_budgets_negative)
 
 SCORUM_TEST_CASE(check_get_budget)
 {
-    create_budget(alice, budget_type::banner); // permlink 1
+    auto b1 = create_budget(alice, budget_type::banner);
     generate_block();
-    create_budget(alice, budget_type::post); // permlink 2
+    auto b2 = create_budget(alice, budget_type::post);
     generate_block();
 
     auto budgets = _api.get_user_budgets(alice.name);
     BOOST_REQUIRE_EQUAL(budgets.size(), 2);
 
     BOOST_CHECK_EQUAL(budgets[0].type, budget_type::post);
-    BOOST_CHECK_EQUAL(budgets[0].content_permlink, "2");
+    BOOST_CHECK_EQUAL(budgets[0].json_metadata, b2.json_metadata);
 
     BOOST_CHECK_EQUAL(budgets[1].type, budget_type::banner);
-    BOOST_CHECK_EQUAL(budgets[1].content_permlink, "1");
+    BOOST_CHECK_EQUAL(budgets[1].json_metadata, b1.json_metadata);
 }
+
+SCORUM_TEST_CASE(check_get_post_budget_winners_budgets_count_less_than_adv_slots)
+{
+    auto b1 = create_budget(alice, budget_type::post, 100, 10);
+    generate_block();
+    auto b2 = create_budget(alice, budget_type::post, 200, 10);
+    generate_block();
+    auto b3 = create_budget(alice, budget_type::post, 150, 10);
+    generate_block();
+
+    auto budgets = _api.get_current_winners(budget_type::post);
+    BOOST_REQUIRE_EQUAL(budgets.size(), 3);
+
+    BOOST_CHECK_EQUAL(budgets[0].type, budget_type::post);
+    BOOST_CHECK_EQUAL(budgets[0].json_metadata, b2.json_metadata);
+
+    BOOST_CHECK_EQUAL(budgets[1].type, budget_type::post);
+    BOOST_CHECK_EQUAL(budgets[1].json_metadata, b3.json_metadata);
+
+    BOOST_CHECK_EQUAL(budgets[2].type, budget_type::post);
+    BOOST_CHECK_EQUAL(budgets[2].json_metadata, b1.json_metadata);
+}
+
+SCORUM_TEST_CASE(check_get_post_budget_winners_winners_count_less_than_budgets_count)
+{
+    auto b1 = create_budget(alice, budget_type::post, 300, 10);
+    generate_block();
+    create_budget(alice, budget_type::post, 50, 10);
+    generate_block();
+    auto b3 = create_budget(sam, budget_type::post, 200, 10);
+    generate_block();
+    create_budget(alice, budget_type::post, 100, 10);
+    generate_block();
+    auto b5 = create_budget(alice, budget_type::post, 150, 10);
+    generate_block();
+    auto b6 = create_budget(sam, budget_type::post, 250, 10);
+    generate_block();
+
+    auto vcg_coeffs = SCORUM_DEFAULT_BUDGETS_VCG_SET;
+    BOOST_REQUIRE_EQUAL(vcg_coeffs.size(), 4);
+
+    auto budgets = _api.get_current_winners(budget_type::post);
+    BOOST_REQUIRE_EQUAL(budgets.size(), vcg_coeffs.size());
+    BOOST_CHECK_EQUAL(budgets[0].json_metadata, b1.json_metadata);
+    BOOST_CHECK_EQUAL(budgets[1].json_metadata, b6.json_metadata);
+    BOOST_CHECK_EQUAL(budgets[2].json_metadata, b3.json_metadata);
+    BOOST_CHECK_EQUAL(budgets[3].json_metadata, b5.json_metadata);
+}
+
+SCORUM_TEST_CASE(get_budget_winners_check_post_and_banners_do_not_affect_each_other)
+{
+    auto p1 = create_budget(alice, budget_type::post, 100, 10);
+    generate_block();
+    auto p2 = create_budget(sam, budget_type::post, 200, 10);
+    generate_block();
+    auto b1 = create_budget(alice, budget_type::banner, 150, 10);
+    generate_block();
+    auto b2 = create_budget(sam, budget_type::banner, 50, 10);
+    generate_block();
+    auto b3 = create_budget(alice, budget_type::banner, 70, 10);
+    generate_block();
+
+    auto post_budgets = _api.get_current_winners(budget_type::post);
+    auto banner_budgets = _api.get_current_winners(budget_type::banner);
+
+    BOOST_REQUIRE_EQUAL(post_budgets.size(), 2);
+    BOOST_REQUIRE_EQUAL(banner_budgets.size(), 3);
+
+    BOOST_CHECK_EQUAL(post_budgets[0].json_metadata, p2.json_metadata);
+    BOOST_CHECK_EQUAL(post_budgets[1].json_metadata, p1.json_metadata);
+
+    BOOST_CHECK_EQUAL(banner_budgets[0].json_metadata, b1.json_metadata);
+    BOOST_CHECK_EQUAL(banner_budgets[1].json_metadata, b3.json_metadata);
+    BOOST_CHECK_EQUAL(banner_budgets[2].json_metadata, b2.json_metadata);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }

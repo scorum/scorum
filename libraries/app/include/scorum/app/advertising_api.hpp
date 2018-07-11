@@ -30,7 +30,7 @@ public:
     /**
      * @brief Get winners for particular budget type
      */
-    std::vector<int64_t> get_current_winners(budget_type type) const;
+    std::vector<budget_api_obj> get_current_winners(budget_type type) const;
 
     void on_api_startup();
 
