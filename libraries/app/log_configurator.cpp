@@ -241,7 +241,7 @@ void set_logging_program_options(boost::program_options::options_description& op
         R"({"appender":"stderr","stream":"std_error"})",
         LOG_APPENDER R"( = {"appender":"p2p","stream":"logs/p2p.log","rotation_interval_minutes":"120", "rotation_limit_hours":"720"})",
         LOG_APPENDER R"( = {"appender":"node","stream":"logs/node.log","rotation_interval_minutes":"120", "rotation_limit_hours":"720"})",
-        LOG_APPENDER R"( = {"appender":"remote","stream":"127.0.0.1:12201", "host_name":"", "additional_info":""})"
+        "# " LOG_APPENDER R"( = {"appender":"remote","stream":"127.0.0.1:12201", "host_name":"", "additional_info":""})"
         });
     std::string str_default_appender = boost::algorithm::join(default_appender, "\n");
 

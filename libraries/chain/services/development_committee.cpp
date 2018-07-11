@@ -52,9 +52,9 @@ void dbs_development_committee::change_advertising_moderator_quorum(const percen
     db_impl().modify(get(), [&](dev_committee_object& m) { m.advertising_moderator_quorum = quorum; });
 }
 
-void dbs_development_committee::change_top_budgets_quorum(const percent_type quorum)
+void dbs_development_committee::change_budgets_vcg_properties_quorum(const percent_type quorum)
 {
-    db_impl().modify(get(), [&](dev_committee_object& m) { m.top_budgets_amounts_quorum = quorum; });
+    db_impl().modify(get(), [&](dev_committee_object& m) { m.budgets_vcg_properties_quorum = quorum; });
 }
 
 percent_type dbs_development_committee::get_add_member_quorum()
@@ -82,9 +82,9 @@ percent_type dbs_development_committee::get_advertising_moderator_quorum()
     return get().advertising_moderator_quorum;
 }
 
-percent_type dbs_development_committee::get_top_budgets_quorum()
+percent_type dbs_development_committee::get_budgets_vcg_properties_quorum()
 {
-    return get().top_budgets_amounts_quorum;
+    return get().budgets_vcg_properties_quorum;
 }
 
 bool dbs_development_committee::is_exists(const account_name_type& account_name) const

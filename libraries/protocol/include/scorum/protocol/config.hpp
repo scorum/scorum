@@ -18,11 +18,14 @@ namespace detail {
 
         const uint32_t blockid_pool_size;
 
+        const uint32_t vesting_withdraw_intervals;
+        const uint32_t vesting_withdraw_interval_seconds;
+
         const uint32_t cashout_window_seconds;
 
-        const fc::microseconds vote_regeneration_seconds;
-
         const fc::microseconds upvote_lockout;
+
+        const fc::microseconds vote_regeneration_seconds;
 
         const fc::microseconds owner_auth_recovery_period;
         const fc::microseconds account_recovery_request_expiration_period;
@@ -41,9 +44,6 @@ namespace detail {
 
         const uint32_t atomicswap_limit_requested_contracts_per_owner;
         const uint32_t atomicswap_limit_requested_contracts_per_recipient;
-
-        const uint32_t vesting_withdraw_intervals;
-        const uint32_t vesting_withdraw_interval_seconds;
 
         const uint32_t min_vote_interval_sec;
 
@@ -81,7 +81,7 @@ namespace detail {
 
 #define SCORUM_CURRENCY_PRECISION  9
 
-#define SCORUM_DEFAULT_TOP_BUDGETS_AMOUNT  4
+#define SCORUM_DEFAULT_BUDGETS_VCG_SET  {100, 85, 75, 65}
 
 // Scorum Coin = SCR with 9 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))

@@ -18,15 +18,16 @@ struct budget_check_fixture : public database_default_integration_fixture
 {
     budget_check_fixture();
 
-    void create_budget(const Actor& owner, const budget_type type);
-    void create_budget(const Actor& owner, const budget_type type, int balance, int deadline_in_blocks);
-    void
+    create_budget_operation create_budget(const Actor& owner, const budget_type type);
+    create_budget_operation
+    create_budget(const Actor& owner, const budget_type type, int balance, int deadline_in_blocks);
+    create_budget_operation
     create_budget(const Actor& owner, const budget_type type, int balance, int start_in_blocks, int deadline_in_blocks);
-    void create_budget(const Actor& owner,
-                       const budget_type type,
-                       const asset& balance,
-                       const fc::time_point_sec& start,
-                       const fc::time_point_sec& deadline);
+    create_budget_operation create_budget(const Actor& owner,
+                                          const budget_type type,
+                                          const asset& balance,
+                                          const fc::time_point_sec& start,
+                                          const fc::time_point_sec& deadline);
 
     const int BUDGET_BALANCE_DEFAULT = 50;
     const int BUDGET_DEADLINE_IN_BLOCKS_DEFAULT = 5;
@@ -36,6 +37,7 @@ struct budget_check_fixture : public database_default_integration_fixture
 
 private:
     std::string get_unique_permlink();
+    int permlink_no = 0;
 };
 
 } // namespace database_fixture

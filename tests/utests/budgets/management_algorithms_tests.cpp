@@ -31,14 +31,16 @@ BOOST_FIXTURE_TEST_CASE(fund_budget_creation, fund_budget_fixture)
     BOOST_REQUIRE_NO_THROW(
         creator.create_budget(SCORUM_ROOT_POST_PARENT_ACCOUNT, asset(balance, SP_SYMBOL), start, deadline, ""));
 
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().owner, SCORUM_ROOT_POST_PARENT_ACCOUNT);
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().json_metadata, "");
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
-    BOOST_CHECK_EQUAL(fund_budget_service_fixture.get().balance, asset(balance, SP_SYMBOL));
-    BOOST_CHECK_GT(fund_budget_service_fixture.get().per_block, asset(0, SP_SYMBOL));
-    BOOST_CHECK_LT(fund_budget_service_fixture.get().per_block, asset(balance, SP_SYMBOL));
+    const auto& budget = fund_budget_service_fixture.get();
+
+    BOOST_CHECK_EQUAL(budget.owner, SCORUM_ROOT_POST_PARENT_ACCOUNT);
+    BOOST_CHECK_EQUAL(budget.json_metadata, "");
+    BOOST_CHECK_EQUAL(budget.created.sec_since_epoch(), head_block_time.sec_since_epoch());
+    BOOST_CHECK_EQUAL(budget.start.sec_since_epoch(), start.sec_since_epoch());
+    BOOST_CHECK_EQUAL(budget.deadline.sec_since_epoch(), deadline.sec_since_epoch());
+    BOOST_CHECK_EQUAL(budget.balance, asset(balance, SP_SYMBOL));
+    BOOST_CHECK_GT(budget.per_block, asset(0, SP_SYMBOL));
+    BOOST_CHECK_LT(budget.per_block, asset(balance, SP_SYMBOL));
 }
 
 struct test_account_budget_fixture : public account_budget_fixture
@@ -64,16 +66,16 @@ struct test_account_budget_fixture : public account_budget_fixture
         BOOST_REQUIRE_NO_THROW(
             creator.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, json_metadata));
 
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().owner, alice.name);
+        const auto& budget = budget_service_fixture.get();
 #ifndef IS_LOW_MEM
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().json_metadata, json_metadata);
+        BOOST_CHECK_EQUAL(budget.owner, alice.name);
 #endif //! IS_LOW_MEM
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().created.sec_since_epoch(), head_block_time.sec_since_epoch());
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().start.sec_since_epoch(), start.sec_since_epoch());
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().deadline.sec_since_epoch(), deadline.sec_since_epoch());
-        BOOST_CHECK_EQUAL(budget_service_fixture.get().balance, asset(balance, SCORUM_SYMBOL));
-        BOOST_CHECK_GT(budget_service_fixture.get().per_block, asset(0, SCORUM_SYMBOL));
-        BOOST_CHECK_LT(budget_service_fixture.get().per_block, asset(balance, SCORUM_SYMBOL));
+        BOOST_CHECK_EQUAL(budget.created.sec_since_epoch(), head_block_time.sec_since_epoch());
+        BOOST_CHECK_EQUAL(budget.start.sec_since_epoch(), start.sec_since_epoch());
+        BOOST_CHECK_EQUAL(budget.deadline.sec_since_epoch(), deadline.sec_since_epoch());
+        BOOST_CHECK_EQUAL(budget.balance, asset(balance, SCORUM_SYMBOL));
+        BOOST_CHECK_GT(budget.per_block, asset(0, SCORUM_SYMBOL));
+        BOOST_CHECK_LT(budget.per_block, asset(balance, SCORUM_SYMBOL));
 
         BOOST_CHECK_EQUAL(account_service_fixture.service().get_account(alice.name).balance,
                           alice.scr_amount - asset(balance, SCORUM_SYMBOL));
@@ -103,19 +105,11 @@ struct test_account_budget_fixture : public account_budget_fixture
         BOOST_REQUIRE_NO_THROW(
             manager.create_budget(alice.name, asset(balance, SCORUM_SYMBOL), start, deadline, "pepsi"));
 
-        dgp_service_fixture.update([&](dynamic_global_property_object& obj) {
-            obj.head_block_number = budget_service_fixture.get().last_cashout_block;
-        });
+        const auto& budget = budget_service_fixture.get();
 
-        auto cash = manager.allocate_cash(budget_service_fixture.get());
+        auto cash = manager.allocate_cash(budget);
 
-        BOOST_CHECK_EQUAL(cash, ASSET_SCR(0));
-
-        dgp_service_fixture.update([&](dynamic_global_property_object& obj) { obj.head_block_number++; });
-
-        cash = manager.allocate_cash(budget_service_fixture.get());
-
-        BOOST_CHECK_EQUAL(cash, budget_service_fixture.get().per_block);
+        BOOST_CHECK_EQUAL(cash, budget.per_block);
     }
 };
 

@@ -24,11 +24,21 @@ static_assert(false, "Macro WITNESS_REWARD_MIGRATION_DATE required.");
 config::config() /// production config
     : blockid_pool_size(0xffff)
 
+    , vesting_withdraw_intervals(52)
+#ifdef LIVE_TESTNET
+    , vesting_withdraw_interval_seconds(10) // 10 sec per interval
+
+    , cashout_window_seconds(7200) // 2 hours
+
+    , upvote_lockout(fc::minutes(30))
+#else
+    , vesting_withdraw_interval_seconds(DAYS_TO_SECONDS(7)) // 1 week per interval
+
     , cashout_window_seconds(DAYS_TO_SECONDS(7))
 
-    , vote_regeneration_seconds(fc::days(5))
-
     , upvote_lockout(fc::hours(12))
+#endif
+    , vote_regeneration_seconds(fc::days(5))
 
     , owner_auth_recovery_period(fc::days(30))
     , account_recovery_request_expiration_period(fc::days(1))
@@ -47,9 +57,6 @@ config::config() /// production config
 
     , atomicswap_limit_requested_contracts_per_owner(1000)
     , atomicswap_limit_requested_contracts_per_recipient(10)
-
-    , vesting_withdraw_intervals(52)
-    , vesting_withdraw_interval_seconds(DAYS_TO_SECONDS(7)) // 1 week per interval
 
     , min_vote_interval_sec(3)
 
@@ -74,11 +81,14 @@ config::config() /// production config
 config::config(test_mode) /// test config
     : blockid_pool_size(0xfff)
 
+    , vesting_withdraw_intervals(13)
+    , vesting_withdraw_interval_seconds(60 * 7)
+
     , cashout_window_seconds(fc::hours(1).to_seconds())
 
-    , vote_regeneration_seconds(fc::minutes(30))
-
     , upvote_lockout(fc::minutes(5))
+
+    , vote_regeneration_seconds(fc::minutes(30))
 
     , owner_auth_recovery_period(fc::seconds(60))
     , account_recovery_request_expiration_period(fc::seconds(12))
@@ -90,16 +100,13 @@ config::config(test_mode) /// test config
     , guaranted_reward_supply_period_in_days(2)
     , reward_increase_threshold_in_days(3)
 
-    , budgets_limit_per_owner(SCORUM_DEFAULT_TOP_BUDGETS_AMOUNT * 2)
+    , budgets_limit_per_owner(8)
 
     , atomicswap_initiator_refund_lock_secs(60 * 20)
     , atomicswap_participant_refund_lock_secs(60 * 10)
 
     , atomicswap_limit_requested_contracts_per_owner(5)
     , atomicswap_limit_requested_contracts_per_recipient(2)
-
-    , vesting_withdraw_intervals(13)
-    , vesting_withdraw_interval_seconds(60 * 7)
 
     , min_vote_interval_sec(0)
 

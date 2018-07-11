@@ -265,6 +265,21 @@ struct get_impacted_account_visitor
             [&](const development_committee_transfer_operation& op) { _impacted.insert(op.to_account); });
     }
 
+    void operator()(const acc_finished_vesting_withdraw_operation& op)
+    {
+        _impacted.insert(op.from_account);
+    }
+
+    void operator()(const allocate_cash_from_advertising_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+    void operator()(const cash_back_from_advertising_budget_to_owner_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
 private:
     fc::flat_set<account_name_type>& _impacted;
 };

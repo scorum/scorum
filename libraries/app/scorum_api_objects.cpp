@@ -8,19 +8,13 @@
 namespace scorum {
 namespace app {
 
-development_committee_api_obj::development_committee_api_obj(const chain::dev_committee_object& obj)
-    : sp_balance(obj.sp_balance)
-    , scr_balance(obj.scr_balance)
-    , transfer_quorum(obj.transfer_quorum)
-    , invite_quorum(obj.invite_quorum)
-    , dropout_quorum(obj.dropout_quorum)
-    , change_quorum(obj.change_quorum)
-    , top_budgets_amounts_quorum(obj.top_budgets_amounts_quorum)
+advertising_property_api_obj::advertising_property_api_obj(const chain::advertising_property_object& obj)
+    : moderator(obj.moderator)
 {
-    for (auto item : obj.top_budgets_amounts)
-    {
-        top_budgets_amounts.insert(item);
-    }
+    std::copy(std::begin(obj.vcg_post_coefficients), std::end(obj.vcg_post_coefficients),
+              std::back_inserter(vcg_post_coefficients));
+    std::copy(std::begin(obj.vcg_banner_coefficients), std::end(obj.vcg_banner_coefficients),
+              std::back_inserter(vcg_banner_coefficients));
 }
 
 account_api_obj::account_api_obj(const chain::account_object& a, const chain::database& db)

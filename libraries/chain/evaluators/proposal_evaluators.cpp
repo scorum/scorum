@@ -3,7 +3,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/advertising_property_service.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
@@ -61,17 +61,34 @@ void development_committee_empower_advertising_moderator_evaluator::do_apply(
     adv_property_service.update([&](advertising_property_object& obj) { obj.moderator = o.account; });
 }
 
-template <budget_type type>
-void development_committee_change_top_budgets_amount_evaluator<type>::do_apply(
-    const development_committee_change_top_budgets_amount_evaluator::operation_type& o)
+template <>
+void development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>::do_apply(
+    const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
 {
-    auto& dev_pool = this->db().dev_pool_service();
+    auto& adv_property = this->db().advertising_property_service();
 
-    dev_pool.update([&](dev_committee_object& com) { com.top_budgets_amounts.at(type) = o.amount; });
+    adv_property.update([&](advertising_property_object& adv) {
+        adv.vcg_post_coefficients.clear();
+        std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
+                  std::back_inserter(adv.vcg_post_coefficients));
+    });
 }
 
-template class development_committee_change_top_budgets_amount_evaluator<budget_type::post>;
-template class development_committee_change_top_budgets_amount_evaluator<budget_type::banner>;
+template <>
+void development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>::do_apply(
+    const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
+{
+    auto& adv_property = this->db().advertising_property_service();
+
+    adv_property.update([&](advertising_property_object& adv) {
+        adv.vcg_banner_coefficients.clear();
+        std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
+                  std::back_inserter(adv.vcg_banner_coefficients));
+    });
+}
+
+template class development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>;
+template class development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>;
 
 } // namespace chain
 } // namespace scorum

@@ -20,6 +20,7 @@
 #include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 #include <scorum/chain/schema/committee.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
@@ -28,6 +29,7 @@
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <scorum/common_api/config.hpp>
 
@@ -147,6 +149,7 @@ public:
 
     registration_committee_api_obj get_registration_committee() const;
     development_committee_api_obj get_development_committee() const;
+    advertising_property_api_obj get_advertising_property() const;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -630,6 +633,16 @@ uint64_t database_api::get_witness_count() const
 uint64_t database_api_impl::get_witness_count() const
 {
     return _db.get_index<witness_index>().indices().size();
+}
+
+advertising_property_api_obj database_api::get_advertising_property() const
+{
+    return my->_db.with_read_lock([&]() { return my->get_advertising_property(); });
+}
+
+advertising_property_api_obj database_api_impl::get_advertising_property() const
+{
+    return advertising_property_api_obj(_db.advertising_property_service().get());
 }
 
 std::set<account_name_type> database_api::lookup_registration_committee_members(const std::string& lower_bound_name,

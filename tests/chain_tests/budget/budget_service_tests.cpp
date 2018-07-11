@@ -128,7 +128,8 @@ struct get_top_budgets_by_start_time_check_fixture : public budget_service_gette
 
         BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time(), 1u).size(), 1u);
         BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time(), 2u).size(), 2u);
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time(), 3u).size(), 2u);
+
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time()).size(), 2u);
     }
 
     template <typename ServiceType> void test_start_time_check(ServiceType& service, budget_type type)
@@ -147,6 +148,9 @@ struct get_top_budgets_by_start_time_check_fixture : public budget_service_gette
         BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks), 3u).size(), 2u);
         BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks * 2), 3u).size(),
                             3u);
+
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks)).size(), 2u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks * 2)).size(), 3u);
     }
 };
 

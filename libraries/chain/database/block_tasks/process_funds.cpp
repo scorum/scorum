@@ -8,20 +8,100 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/budget_management_algorithms.hpp>
+
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm_ext/copy_n.hpp>
+
+#include <vector>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
+
+template <typename ServiceIterfaceType, typename VCGCoeffListType>
+asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
+                                               dynamic_global_property_service_i& dgp_service,
+                                               account_service_i& account_service,
+                                               const VCGCoeffListType& vcg_coefficients,
+                                               const budget_type type,
+                                               database_virtual_operations_emmiter_i& ctx)
+{
+    asset total_adv_cash(0, SCORUM_SYMBOL);
+
+    namespace ba = boost::adaptors;
+    namespace br = boost::range;
+
+    using vcg_coeff_values_type = std::vector<percent_type>;
+    using per_block_values_type = std::vector<share_type>;
+
+    using object_type = typename ServiceIterfaceType::object_type;
+
+    advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
+
+    auto budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time());
+
+    auto active_per_block_count = std::min(vcg_coefficients.size() + 1, budgets.size());
+    auto active_vcg_coeff_count = std::max((int32_t)active_per_block_count - 1, 0);
+
+    auto cmp = [](const object_type& l, const object_type& r) { return l.per_block.amount > r.per_block.amount; };
+    std::nth_element(budgets.begin(), budgets.begin() + active_per_block_count, budgets.end(), cmp);
+    std::sort(budgets.begin(), budgets.begin() + active_per_block_count, cmp);
+
+    vcg_coeff_values_type active_vcg_coeffs;
+    br::copy_n(vcg_coefficients, active_vcg_coeff_count, std::back_inserter(active_vcg_coeffs));
+
+    per_block_values_type active_per_block;
+    auto per_block_rng = budgets | ba::transformed([](const object_type& b) { return b.per_block.amount; });
+    br::copy_n(per_block_rng, active_per_block_count, std::back_inserter(active_per_block));
+
+    for (size_t i = 0; i < budgets.size(); ++i)
+    {
+        const object_type& budget = budgets[i];
+        auto budget_owner = budget.owner;
+        auto budget_id = budget.id._id;
+
+        asset per_block = manager.allocate_cash(budget);
+        asset adv_cash = asset(0, per_block.symbol());
+
+        if (i < vcg_coefficients.size())
+            adv_cash = per_block;
+
+        if (i < active_vcg_coeffs.size())
+            adv_cash = asset(calculate_vcg_cash(i, active_vcg_coeffs, active_per_block), adv_cash.symbol());
+
+        if (adv_cash.amount > 0)
+        {
+            total_adv_cash += adv_cash;
+
+            ctx.push_virtual_operation(
+                allocate_cash_from_advertising_budget_operation(type, budget_owner, budget_id, adv_cash));
+        }
+
+        auto ret_cash = per_block - adv_cash;
+        FC_ASSERT(ret_cash.amount >= 0, "cash-back amount cannot be less than zero");
+        if (ret_cash.amount > 0)
+        {
+            manager.cash_back(budget_owner, ret_cash);
+
+            ctx.push_virtual_operation(
+                cash_back_from_advertising_budget_to_owner_operation(type, budget_owner, budget_id, ret_cash));
+        }
+    }
+
+    return total_adv_cash;
+}
 
 void process_funds::on_apply(block_task_context& ctx)
 {
@@ -38,6 +118,7 @@ void process_funds::on_apply(block_task_context& ctx)
     post_budget_service_i& post_budget_service = services.post_budget_service();
     banner_budget_service_i& banner_budget_service = services.banner_budget_service();
     account_service_i& account_service = services.account_service();
+    advertising_property_service_i& advertising_property_service = services.advertising_property_service();
 
     // We don't have inflation.
     // We just get per block reward from original reward fund(4.8M SP)
@@ -47,29 +128,19 @@ void process_funds::on_apply(block_task_context& ctx)
     asset original_fund_reward = asset(0, SP_SYMBOL);
     if (fund_budget_service.is_exists())
     {
-        const auto& budget = fund_budget_service.get();
-        original_fund_reward
-            += fund_budget_management_algorithm(fund_budget_service, dgp_service).allocate_cash(budget);
+        original_fund_reward += fund_budget_management_algorithm(fund_budget_service, dgp_service)
+                                    .allocate_cash(fund_budget_service.get());
     }
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
 
-    for (const post_budget_object& budget : post_budget_service.get_top_budgets_by_start_time(
-             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::post)))
-    {
-        advertising_budgets_reward
-            += post_budget_management_algorithm(post_budget_service, dgp_service, account_service)
-                   .allocate_cash(budget);
-    }
-
-    for (const banner_budget_object& budget : banner_budget_service.get_top_budgets_by_start_time(
-             dgp_service.head_block_time(), dev_service.get().top_budgets_amounts.at(budget_type::banner)))
-    {
-        advertising_budgets_reward
-            += banner_budget_management_algorithm(banner_budget_service, dgp_service, account_service)
-                   .allocate_cash(budget);
-    }
+    advertising_budgets_reward
+        += allocate_advertising_cash(post_budget_service, dgp_service, account_service,
+                                     advertising_property_service.get().vcg_post_coefficients, budget_type::post, ctx);
+    advertising_budgets_reward += allocate_advertising_cash(banner_budget_service, dgp_service, account_service,
+                                                            advertising_property_service.get().vcg_banner_coefficients,
+                                                            budget_type::banner, ctx);
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.
