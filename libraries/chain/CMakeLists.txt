@@ -119,6 +119,7 @@ target_link_libraries( scorum_chain
                        fc
                        chainbase
                        graphene_schema
+                       scorum_utils
                        ${PATCH_MERGE_LIB}
                        ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_chain
