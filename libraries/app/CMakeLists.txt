@@ -1,4 +1,4 @@
-file(GLOB HEADERS "include/scorum/app/*.hpp")
+file(GLOB_RECURSE HEADERS "include/scorum/app/*.hpp")
 file(GLOB EGENESIS_HEADERS "../egenesis/include/scorum/app/*.hpp")
 
 add_library( scorum_app

@@ -34,8 +34,9 @@ public:
 
     void on_api_startup();
 
-private:
     class impl;
+
+private:
     std::shared_ptr<impl> _impl;
 };
 }
