@@ -216,16 +216,16 @@ SCORUM_TEST_CASE(post_budget_from_same_acc_arranging)
     /*
      * VCG algorithm for 3 bets/2 coefficients:
      *
-     * CPB3=Bid3 -- this one is not handled by VCG algorithm. This is our decision
+     * CPB3=Bid3 -- this one is not handled by VCG algorithm. So we decided that CPB3 will be equal to CPB2
      * CPB2=Bid3
      * CPB1=(X2*Bid3+(X1-X2)*Bid2)/X1
      * -------------------------------------------------------
      *
      * VCG algorithm for 2 bets/1 coefficients [current test case]:
-     * CPB2=Bid2 -- this one is not handled by VCG algorithm. This is our decision
+     * CPB2=Bid2 -- this one is not handled by VCG algorithm. So we decided that CPB2 will be equal to CPB1
      * CPB1=Bid2
      *
-     * NOTE: winner's per-block payment equals looser's bet.
+     * NOTE: winner's per-block payment equals looser's bet in this case.
      */
     auto b1 = create_budget(alice, budget_type::post, 100, 10);
     generate_block();

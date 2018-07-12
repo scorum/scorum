@@ -20,7 +20,9 @@
 #include <scorum/chain/database/budget_management_algorithms.hpp>
 
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/transform.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
+#include <scorum/utils/range_adaptors.hpp>
 
 #include <vector>
 
@@ -38,48 +40,30 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
                                                const budget_type type,
                                                database_virtual_operations_emmiter_i& ctx)
 {
-    asset total_adv_cash(0, SCORUM_SYMBOL);
-
-    namespace ba = boost::adaptors;
     namespace br = boost::range;
 
-    using vcg_coeff_values_type = std::vector<percent_type>;
-    using per_block_values_type = std::vector<share_type>;
-
-    using object_type = typename ServiceIterfaceType::object_type;
+    asset total_adv_cash(0, SCORUM_SYMBOL);
 
     advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
 
-    auto budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time());
+    auto budgets = service.get_top_budgets(dgp_service.head_block_time());
+    std::vector<share_type> per_block_list;
+    br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block.amount; });
 
-    auto active_per_block_count = std::min(vcg_coefficients.size() + 1, budgets.size());
-    auto active_vcg_coeff_count = std::max((int32_t)active_per_block_count - 1, 0);
-
-    auto cmp = [](const object_type& l, const object_type& r) { return l.per_block.amount > r.per_block.amount; };
-    std::nth_element(budgets.begin(), budgets.begin() + active_per_block_count, budgets.end(), cmp);
-    std::sort(budgets.begin(), budgets.begin() + active_per_block_count, cmp);
-
-    vcg_coeff_values_type active_vcg_coeffs;
-    br::copy_n(vcg_coefficients, active_vcg_coeff_count, std::back_inserter(active_vcg_coeffs));
-
-    per_block_values_type active_per_block;
-    auto per_block_rng = budgets | ba::transformed([](const object_type& b) { return b.per_block.amount; });
-    br::copy_n(per_block_rng, active_per_block_count, std::back_inserter(active_per_block));
+    auto valuable_per_block_vec = utils::take_n(per_block_list, vcg_coefficients.size() + 1);
+    auto vcg_bets = calculate_vcg_bets(valuable_per_block_vec, vcg_coefficients);
 
     for (size_t i = 0; i < budgets.size(); ++i)
     {
-        const object_type& budget = budgets[i];
+        const auto& budget = budgets[i].get();
         auto budget_owner = budget.owner;
         auto budget_id = budget.id._id;
 
-        asset per_block = manager.allocate_cash(budget);
-        asset adv_cash = asset(0, per_block.symbol());
+        auto per_block = manager.allocate_cash(budget);
 
-        if (i < vcg_coefficients.size())
-            adv_cash = per_block;
-
-        if (i < active_vcg_coeffs.size())
-            adv_cash = asset(calculate_vcg_cash(i, active_vcg_coeffs, active_per_block), adv_cash.symbol());
+        auto adv_cash = asset(0, per_block.symbol());
+        if (i < vcg_bets.size())
+            adv_cash = asset(vcg_bets[i], per_block.symbol());
 
         if (adv_cash.amount > 0)
         {
