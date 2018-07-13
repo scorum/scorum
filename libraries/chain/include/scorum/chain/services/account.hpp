@@ -122,6 +122,7 @@ struct account_service_i : public base_service_i<account_object>
 
     using cref_type = std::reference_wrapper<const account_object>;
     virtual std::vector<cref_type> get_active_sp_holders() const = 0;
+    virtual std::vector<cref_type> get_all() const = 0;
 };
 
 // DB operations with account_*** objects
@@ -251,6 +252,7 @@ public:
     adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0) override;
 
     virtual std::vector<cref_type> get_active_sp_holders() const override;
+    virtual std::vector<cref_type> get_all() const override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,
@@ -261,6 +263,5 @@ private:
                                                   const authority& active,
                                                   const authority& posting);
 };
-
 } // namespace chain
 } // namespace scorum

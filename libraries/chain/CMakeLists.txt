@@ -72,6 +72,7 @@ add_library( scorum_chain
              schema/shared_authority.cpp
 
              block_log.cpp
+             debug_stats.cpp
 
              genesis/genesis.cpp
              genesis/initializators/initializators.cpp

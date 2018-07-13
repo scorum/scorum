@@ -1,4 +1,5 @@
 #include <scorum/chain/database/block_tasks/comments_cashout_impl.hpp>
+#include <scorum/chain/debug_stats.hpp>
 
 namespace scorum {
 namespace chain {
@@ -60,6 +61,10 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 {
     try
     {
+        const account_object& author = account_service.get_account(comment.author);
+        debug_log(comment_stats(comment, author), "BEFORE pay_for_comment: fund_reward: ${0}; commenting_reward: ${1}",
+                  ("0", fund_reward)("1", children_comments_reward));
+
         auto reward_symbol = fund_reward.symbol();
         comment_payout_result payout_result{ asset(0, reward_symbol), asset(0, reward_symbol) };
         if (fund_reward.amount < 1 && children_comments_reward.amount < 1)
@@ -109,7 +114,6 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 
         author_reward -= total_beneficiary;
 
-        const auto& author = account_service.get_account(comment.author);
         pay_account(author, author_reward);
 
         comment_service.update(comment, [&](comment_object& c) { c.last_payout = dgp_service.head_block_time(); });
@@ -122,6 +126,10 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 
         accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, fund_reward,
                              children_comments_reward, reward_symbol);
+
+        debug_log(comment_stats(comment, author),
+                  "AFTER pay_for_comment: parent_author_reward: ${0}; total_claimed_reward: $(1)",
+                  ("0", payout_result.parent_author_reward)("1", payout_result.total_claimed_reward));
 
         return payout_result;
     }

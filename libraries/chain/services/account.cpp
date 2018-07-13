@@ -612,5 +612,11 @@ std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() c
     return get_range_by<by_last_vote_cashout_time>(min_vote_time_for_cashout < boost::lambda::_1,
                                                    boost::multi_index::unbounded);
 }
+
+std::vector<account_service_i::cref_type> dbs_account::get_all() const
+{
+    return get_range_by<by_id>(boost::multi_index::unbounded, boost::multi_index::unbounded);
+}
+
 } // namespace chain
 } // namespace scorum
