@@ -1,6 +1,8 @@
 #include <scorum/chain/database/block_tasks/process_fifa_world_cup_2018_bounty_cashout.hpp>
 
 #include <scorum/chain/database/block_tasks/comments_cashout_impl.hpp>
+#include <scorum/chain/services/account.hpp>
+#include <scorum/chain/debug_stats.hpp>
 
 namespace scorum {
 namespace chain {
@@ -39,6 +41,8 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
     auto comments = comment_service.get_by_create_time(SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE, fn_filter);
 
     process_comments_cashout_impl impl(ctx);
+
+    debug_log(accounts_stats(ctx.services().account_service().get_all()), "BEFORE fifa reward");
 
     impl.reward(fifa_world_cup_2018_bounty_reward_fund_service, comments);
 
