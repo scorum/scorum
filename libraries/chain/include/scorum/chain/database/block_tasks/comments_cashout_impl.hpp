@@ -34,7 +34,7 @@ public:
     struct comment_payout_result
     {
         asset total_claimed_reward;
-        asset parent_author_reward;
+        asset parent_comment_reward;
     };
 
     explicit process_comments_cashout_impl(block_task_context& ctx);
@@ -56,72 +56,24 @@ public:
         });
     }
 
-    template <typename FundService> void reward(FundService& fund_service, const comment_refs_type& comments)
-    {
-        using fund_object_type = typename FundService::object_type;
+    template <typename TFundService> void reward(TFundService& fund_service, const comment_refs_type& comments);
 
-        const auto& rf = fund_service.get();
-
-        if (rf.activity_reward_balance.amount < 1 || comments.empty())
-            return;
-
-        shares_vector_type total_rshares = get_total_rshares(comments);
-        fc::uint128_t total_claims
-            = rewards_math::calculate_total_claims(rf.recent_claims, rf.author_reward_curve, total_rshares);
-
-        struct comment_reward
-        {
-            share_type fund; // reward accrued from fund
-            share_type commenting; // reward accrued from children comments
-        };
-
-        std::map<account_name_type, comment_reward> comment_rewards;
-
-        for (const comment_object& comment : comments)
-        {
-            share_type payout = rewards_math::calculate_payout(
-                comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
-                comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
-
-            comment_rewards.emplace(comment.author, comment_reward{ payout, 0 });
-        }
-
-        asset_symbol_type reward_symbol = rf.activity_reward_balance.symbol();
-        asset total_reward = asset(0, reward_symbol);
-
-        // newest, with bigger depth comments first
-        comment_refs_type comments_with_parents = collect_parents(comments);
-
-        for (const comment_object& comment : comments_with_parents)
-        {
-            const comment_reward& reward = comment_rewards[comment.author];
-
-            asset fund_reward = asset(reward.fund, reward_symbol);
-            asset commenting_reward = asset(reward.commenting, reward_symbol);
-
-            comment_payout_result payout_result = pay_for_comment(comment, fund_reward, commenting_reward);
-
-            total_reward += payout_result.total_claimed_reward;
-
-            // save payout for the parent comment
-            comment_rewards[comment.parent_author].commenting += payout_result.parent_author_reward.amount;
-        }
-
-        fund_service.update([&](fund_object_type& rfo) {
-            rfo.recent_claims = total_claims;
-            rfo.activity_reward_balance -= total_reward;
-            rfo.last_update = dgp_service.head_block_time();
-        });
-    }
-
-    void close_comment_payout(const comment_object& comment);
+    asset pay_for_comments(const comment_refs_type& comments, const std::vector<asset>& fund_rewards);
 
     comment_payout_result pay_for_comment(const comment_object& comment,
                                           const asset& publication_reward,
                                           const asset& children_comments_reward);
 
+    void close_comment_payout(const comment_object& comment);
+
 private:
-    shares_vector_type get_total_rshares(const comment_service_i::comment_refs_type& comments);
+    template <typename TFund>
+    std::vector<asset> collect_comments_fund_rewards(const comment_refs_type& comments,
+                                                     const TFund& fund,
+                                                     fc::uint128_t total_claims) const;
+
+    template <typename TFund>
+    fc::uint128_t get_total_claims(const TFund& fund, const comment_refs_type& comments) const;
 
     asset pay_curators(const comment_object& comment, asset& max_rewards);
 

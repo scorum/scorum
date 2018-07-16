@@ -42,17 +42,93 @@ void process_comments_cashout_impl::close_comment_payout(const comment_object& c
 #endif
 }
 
-shares_vector_type
-process_comments_cashout_impl::get_total_rshares(const comment_service_i::comment_refs_type& comments)
+template <typename TFund>
+fc::uint128_t process_comments_cashout_impl::get_total_claims(const TFund& fund,
+                                                              const comment_refs_type& comments) const
 {
-    shares_vector_type ret;
-
+    shares_vector_type total_rshares;
     for (const comment_object& comment : comments)
     {
-        ret.push_back(comment.net_rshares);
+        total_rshares.push_back(comment.net_rshares);
     }
 
-    return ret;
+    fc::uint128_t total_claims
+        = rewards_math::calculate_total_claims(fund.recent_claims, fund.author_reward_curve, total_rshares);
+
+    return total_claims;
+}
+
+template <typename TFundService>
+void process_comments_cashout_impl::reward(TFundService& fund_service, const comment_refs_type& comments)
+{
+    const auto& fund = fund_service.get();
+    if (fund.activity_reward_balance.amount < 1 || comments.empty())
+        return;
+
+    auto total_claims = get_total_claims(fund, comments);
+
+    auto fund_rewards = collect_comments_fund_rewards(comments, fund, total_claims);
+
+    auto total_reward = pay_for_comments(comments, fund_rewards);
+
+    fund_service.update([&](typename TFundService::object_type& rfo) {
+        rfo.recent_claims = total_claims;
+        rfo.activity_reward_balance -= total_reward;
+        rfo.last_update = dgp_service.head_block_time();
+    });
+}
+
+asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& comments,
+                                                      const std::vector<asset>& fund_rewards)
+{
+    FC_ASSERT(comments.size() == fund_rewards.size(), "comments count and comments' rewards count should match");
+    FC_ASSERT(fund_rewards.size() > 0, "collection cannot be empty");
+
+    asset_symbol_type reward_symbol = fund_rewards[0].symbol();
+
+    struct comment_reward
+    {
+        share_type fund; // reward accrued from fund
+        share_type commenting; // reward accrued from children comments
+    };
+    struct comment_key
+    {
+        account_name_type author;
+        fc::shared_string permlink;
+    };
+    auto less = [](const comment_key& l, const comment_key& r) {
+        return std::tie(l.author, l.permlink) < std::tie(r.author, r.permlink);
+    };
+
+    std::map<comment_key, comment_reward, decltype(less)> comment_rewards(less);
+    for (auto i = 0u; i < comments.size(); ++i)
+    {
+        comment_rewards.emplace(comment_key{ comments[i].get().author, comments[i].get().permlink },
+                                comment_reward{ fund_rewards[i].amount, 0 });
+    }
+
+    asset total_reward = asset(0, reward_symbol);
+
+    // newest, with bigger depth comments first
+    comment_refs_type comments_with_parents = collect_parents(comments);
+
+    for (const comment_object& comment : comments_with_parents)
+    {
+        const comment_reward& reward = comment_rewards[comment_key{ comment.author, comment.permlink }];
+
+        asset fund_reward = asset(reward.fund, reward_symbol);
+        asset commenting_reward = asset(reward.commenting, reward_symbol);
+
+        comment_payout_result payout_result = pay_for_comment(comment, fund_reward, commenting_reward);
+
+        total_reward += payout_result.total_claimed_reward;
+
+        // save payout for the parent comment
+        comment_rewards[comment_key{ comment.parent_author, comment.parent_permlink }].commenting
+            += payout_result.parent_comment_reward.amount;
+    }
+
+    return total_reward;
 }
 
 process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment(
@@ -92,7 +168,7 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         author_reward = (author_reward + children_comments_reward) - parent_author_reward;
 
         payout_result.total_claimed_reward = author_reward + curators_reward;
-        payout_result.parent_author_reward = parent_author_reward;
+        payout_result.parent_comment_reward = parent_author_reward;
 
         auto total_beneficiary = asset(0, reward_symbol);
         for (auto& b : comment.beneficiaries)
@@ -183,6 +259,26 @@ void process_comments_cashout_impl::pay_account(const account_object& recipient,
     }
 }
 
+template <typename TFund>
+std::vector<asset> process_comments_cashout_impl::collect_comments_fund_rewards(const comment_refs_type& comments,
+                                                                                const TFund& fund,
+                                                                                fc::uint128_t total_claims) const
+{
+    std::vector<asset> rewards;
+    rewards.reserve(comments.size());
+
+    for (const comment_object& comment : comments)
+    {
+        share_type payout = rewards_math::calculate_payout(
+            comment.net_rshares, total_claims, fund.activity_reward_balance.amount, fund.author_reward_curve,
+            comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
+
+        rewards.emplace_back(payout, fund.activity_reward_balance.symbol());
+    }
+
+    return rewards;
+}
+
 void process_comments_cashout_impl::accumulate_statistic(const comment_object& comment,
                                                          const account_object& author,
                                                          const asset& author_tokens,
@@ -256,6 +352,13 @@ comment_refs_type process_comments_cashout_impl::collect_parents(const comment_r
 
     return comments_with_parents;
 }
+
+// Explicit template instantiation
+// clang-format off
+template void process_comments_cashout_impl::reward<content_reward_fund_scr_service_i>(content_reward_fund_scr_service_i&, const comment_refs_type&);
+template void process_comments_cashout_impl::reward<content_reward_fund_sp_service_i>(content_reward_fund_sp_service_i&, const comment_refs_type&);
+template void process_comments_cashout_impl::reward<content_fifa_world_cup_2018_bounty_reward_fund_service_i>( content_fifa_world_cup_2018_bounty_reward_fund_service_i&, const comment_refs_type&);
+// clang-format on
 }
 }
 }
