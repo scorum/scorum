@@ -81,7 +81,8 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 
         auto parent_author_reward = comment.depth == 0
             ? asset(0, reward_symbol)
-            : (author_reward + children_comments_reward) * SCORUM_PARENT_COMMENT_REWARD_PERCENT / SCORUM_100_PERCENT;
+            : protocol::multiply_asset_by_fractional((author_reward + children_comments_reward),
+                                                     SCORUM_PARENT_COMMENT_REWARD_PERCENT, SCORUM_100_PERCENT);
         author_reward = (author_reward + children_comments_reward) - parent_author_reward;
 
         payout_result.total_claimed_reward = author_reward + curators_reward;
@@ -90,7 +91,8 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         auto total_beneficiary = asset(0, reward_symbol);
         for (auto& b : comment.beneficiaries)
         {
-            asset benefactor_tokens = (author_reward * b.weight) / SCORUM_100_PERCENT;
+            asset benefactor_tokens
+                = protocol::multiply_asset_by_fractional(author_reward, b.weight, SCORUM_100_PERCENT);
             pay_account(account_service.get_account(b.account), benefactor_tokens);
             _ctx.push_virtual_operation(comment_benefactor_reward_operation(
                 b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));

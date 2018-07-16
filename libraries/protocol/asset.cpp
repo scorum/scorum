@@ -129,5 +129,14 @@ asset asset::from_string(const std::string& from)
     }
     FC_CAPTURE_AND_RETHROW((from))
 }
+
+asset multiply_asset_by_fractional(const asset& val, const asset& numerator, const asset& denominator)
+{
+    FC_ASSERT(val.symbol() == numerator.symbol(), "Symbols for value and numerator assets are not equal");
+    FC_ASSERT(val.symbol() == denominator.symbol(), "Symbols for value and denominator assets are not equal");
+    return std::move(
+        asset(utils::multiply_by_fractional(val.amount.value, numerator.amount.value, denominator.amount.value),
+              val.symbol()));
+}
 }
 } // scorum::protocol

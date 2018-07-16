@@ -240,7 +240,7 @@ void message_oriented_connection_impl::read_loop()
         _delegate->on_connection_closed(_self);
 
     if (exception_to_rethrow)
-        throw * exception_to_rethrow;
+        throw(*exception_to_rethrow);
 }
 
 void message_oriented_connection_impl::send_message(const message& message_to_send)

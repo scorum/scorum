@@ -2,6 +2,8 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/config.hpp>
 
+#include <scorum/utils/extra_high_bit_operations.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -181,6 +183,32 @@ template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::
     a = scorum::protocol::asset::from_string(str);
     return stream;
 }
+
+template <typename FractionalNumerator, typename FractionalDenominator>
+asset multiply_asset_by_fractional(const asset& val,
+                                   const FractionalNumerator& numerator,
+                                   const FractionalDenominator& denominator)
+{
+    return std::move(asset(utils::multiply_by_fractional(val.amount.value, numerator, denominator), val.symbol()));
+}
+
+template <typename Fractional>
+asset multiply_asset_by_fractional(const asset& val, const asset& numerator, const Fractional& denominator)
+{
+    FC_ASSERT(val.symbol() == numerator.symbol(), "Symbols for value and numerator assets are not equal");
+    return std::move(
+        asset(utils::multiply_by_fractional(val.amount.value, numerator.amount.value, denominator), val.symbol()));
+}
+
+template <typename Fractional>
+asset multiply_asset_by_fractional(const asset& val, const Fractional& numerator, const asset& denominator)
+{
+    FC_ASSERT(val.symbol() == denominator.symbol(), "Symbols for value and denominator assets are not equal");
+    return std::move(
+        asset(utils::multiply_by_fractional(val.amount.value, numerator, denominator.amount.value), val.symbol()));
+}
+
+asset multiply_asset_by_fractional(const asset& val, const asset& numerator, const asset& denominator);
 
 } // namespace protocol
 } // namespace scorum
