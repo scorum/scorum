@@ -58,6 +58,13 @@ process_comments_cashout_impl::get_total_rshares(const comment_service_i::commen
 process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment(
     const comment_object& comment, const asset& fund_reward, const asset& children_comments_reward)
 {
+    fc_ilog(fc::logger::get("fifa"), "comment=${author}/${permlink} ${fund_reward} ${children_comments_reward}",
+            ("author", comment.author)
+            ("permlink", comment.permlink)
+            ("fund_reward", fund_reward)
+            ("children_comments_reward", children_comments_reward)
+            );
+
     try
     {
         auto reward_symbol = fund_reward.symbol();

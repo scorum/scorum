@@ -77,6 +77,8 @@ public:
 
         std::map<account_name_type, comment_reward> comment_rewards;
 
+        fc_ilog(fc::logger::get("fifa"), "---");
+
         for (const comment_object& comment : comments)
         {
             share_type payout = rewards_math::calculate_payout(
@@ -84,7 +86,11 @@ public:
                 comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
 
             comment_rewards.emplace(comment.author, comment_reward{ payout, 0 });
+
+            fc_ilog(fc::logger::get("fifa"), "${author}:${payout}", ("author", comment.author)("payout", payout));
         }
+
+        fc_ilog(fc::logger::get("fifa"), "---");
 
         asset_symbol_type reward_symbol = rf.activity_reward_balance.symbol();
         asset total_reward = asset(0, reward_symbol);
@@ -101,11 +107,19 @@ public:
 
             comment_payout_result payout_result = pay_for_comment(comment, fund_reward, commenting_reward);
 
+            fc_ilog(fc::logger::get("fifa"), "result=${parent_author_reward} ${total_claimed_reward}",
+                    ("parent_author_reward", payout_result.parent_author_reward)
+                    ("total_claimed_reward", payout_result.total_claimed_reward));
+
             total_reward += payout_result.total_claimed_reward;
+
+            fc_ilog(fc::logger::get("fifa"), "total_reward=${total_reward}", ("total_reward", total_reward));
 
             // save payout for the parent comment
             comment_rewards[comment.parent_author].commenting += payout_result.parent_author_reward.amount;
         }
+
+        fc_ilog(fc::logger::get("fifa"), "---");
 
         fund_service.update([&](fund_object_type& rfo) {
             rfo.recent_claims = total_claims;
