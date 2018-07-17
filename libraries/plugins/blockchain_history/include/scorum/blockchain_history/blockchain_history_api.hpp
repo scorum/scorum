@@ -43,6 +43,19 @@ public:
     std::map<uint32_t, applied_operation>
     get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type type_of_operation) const;
 
+    /**
+    *  This method returns all operations in timestamp range [from, to]
+    *
+    *  @param from.
+    *  @param to
+    *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+    *  @param type_of_operation Operations type (all = 0, not_virt = 1, virt = 2, market = 3)
+    */
+    std::map<uint32_t, applied_operation> get_ops_history_by_timestamp(const fc::time_point_sec& from,
+                                                                       const fc::time_point_sec& to,
+                                                                       uint32_t limit,
+                                                                       applied_operation_type type_of_operation) const;
+
     /** Returns sequence of operations included/generated in a specified block
     *
     * @param block_num Block height of specified block
@@ -96,6 +109,6 @@ private:
 } // namespace scorum
 
 FC_API(scorum::blockchain_history::blockchain_history_api,
-       (get_ops_history)(get_ops_in_block)
+       (get_ops_history)(get_ops_history_by_timestamp)(get_ops_in_block)
        // Blocks and transactions
        (get_transaction)(get_block_header)(get_block_headers_history)(get_block)(get_blocks_history))

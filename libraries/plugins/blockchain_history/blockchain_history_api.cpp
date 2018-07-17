@@ -94,6 +94,35 @@ public:
         return result;
     }
 
+    template <typename IndexType>
+    result_type
+    get_ops_history_by_timestamp(const fc::time_point_sec& from, const fc::time_point_sec& to, uint32_t limit) const
+    {
+        FC_ASSERT(from <= to, "From is greater than to");
+        FC_ASSERT(limit > 0, "Limit must be greater than zero");
+        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
+
+        result_type result;
+
+        const auto& idx = _db->get_index<IndexType>().indices().get<by_timestamp>();
+        if (idx.empty())
+            return result;
+
+        auto range = idx.range(::boost::lambda::_1 >= std::make_tuple(from, ALL_IDS),
+                               ::boost::lambda::_1 <= std::make_tuple(to, ALL_IDS));
+
+        for (auto it = range.first; limit && it != range.second; ++it)
+        {
+            --limit;
+            auto id = it->id;
+            FC_ASSERT(id._id >= 0, "Invalid operation_object id");
+            result[(uint32_t)id._id] = get_operation(*it);
+        }
+
+        return result;
+    }
+
     template <typename Filter> result_type get_ops_in_block(uint32_t block_num, Filter operation_filter) const
     {
         const auto& idx = _db->get_index<operation_index>().indices().get<by_location>();
@@ -210,6 +239,28 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
         }
 
         return _impl->get_ops_history<operation_index>(from_op, limit);
+    });
+}
+
+std::map<uint32_t, applied_operation>
+blockchain_history_api::get_ops_history_by_timestamp(const fc::time_point_sec& from,
+                                                     const fc::time_point_sec& to,
+                                                     uint32_t limit,
+                                                     applied_operation_type type_of_operation) const
+{
+    return _impl->_app.chain_database()->with_read_lock([&]() {
+        switch (type_of_operation)
+        {
+        case applied_operation_type::not_virt:
+            return _impl->get_ops_history_by_timestamp<filtered_not_virt_operations_history_index>(from, to, limit);
+        case applied_operation_type::virt:
+            return _impl->get_ops_history_by_timestamp<filtered_virt_operations_history_index>(from, to, limit);
+        case applied_operation_type::market:
+            return _impl->get_ops_history_by_timestamp<filtered_market_operations_history_index>(from, to, limit);
+        default:;
+        }
+
+        return _impl->get_ops_history_by_timestamp<operation_index>(from, to, limit);
     });
 }
 
