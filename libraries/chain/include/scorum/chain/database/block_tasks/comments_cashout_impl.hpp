@@ -67,13 +67,13 @@ public:
     void close_comment_payout(const comment_object& comment);
 
 private:
-    template <typename TFund>
-    std::vector<asset> collect_comments_fund_rewards(const comment_refs_type& comments,
-                                                     const TFund& fund,
-                                                     fc::uint128_t total_claims) const;
+    std::vector<asset> calculate_comments_payout(const comment_refs_type& comments,
+                                                 const asset& reward_fund_balance,
+                                                 fc::uint128_t total_claims,
+                                                 curve_id reward_curve) const;
 
-    template <typename TFund>
-    fc::uint128_t get_total_claims(const TFund& fund, const comment_refs_type& comments) const;
+    fc::uint128_t
+    get_total_claims(const comment_refs_type& comments, curve_id reward_curve, fc::uint128_t recent_claims) const;
 
     asset pay_curators(const comment_object& comment, asset& max_rewards);
 

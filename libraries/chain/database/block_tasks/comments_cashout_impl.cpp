@@ -42,9 +42,9 @@ void process_comments_cashout_impl::close_comment_payout(const comment_object& c
 #endif
 }
 
-template <typename TFund>
-fc::uint128_t process_comments_cashout_impl::get_total_claims(const TFund& fund,
-                                                              const comment_refs_type& comments) const
+fc::uint128_t process_comments_cashout_impl::get_total_claims(const comment_refs_type& comments,
+                                                              curve_id reward_curve,
+                                                              fc::uint128_t recent_claims) const
 {
     shares_vector_type total_rshares;
     for (const comment_object& comment : comments)
@@ -52,8 +52,7 @@ fc::uint128_t process_comments_cashout_impl::get_total_claims(const TFund& fund,
         total_rshares.push_back(comment.net_rshares);
     }
 
-    fc::uint128_t total_claims
-        = rewards_math::calculate_total_claims(fund.recent_claims, fund.author_reward_curve, total_rshares);
+    fc::uint128_t total_claims = rewards_math::calculate_total_claims(recent_claims, reward_curve, total_rshares);
 
     return total_claims;
 }
@@ -65,9 +64,10 @@ void process_comments_cashout_impl::reward(TFundService& fund_service, const com
     if (fund.activity_reward_balance.amount < 1 || comments.empty())
         return;
 
-    auto total_claims = get_total_claims(fund, comments);
+    auto total_claims = get_total_claims(comments, fund.author_reward_curve, fund.recent_claims);
 
-    auto fund_rewards = collect_comments_fund_rewards(comments, fund, total_claims);
+    auto fund_rewards
+        = calculate_comments_payout(comments, fund.activity_reward_balance, total_claims, fund.author_reward_curve);
 
     auto total_reward = pay_for_comments(comments, fund_rewards);
 
@@ -81,7 +81,7 @@ void process_comments_cashout_impl::reward(TFundService& fund_service, const com
 asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& comments,
                                                       const std::vector<asset>& fund_rewards)
 {
-    FC_ASSERT(comments.size() == fund_rewards.size(), "comments count and comments' rewards count should match");
+    FC_ASSERT(comments.size() == fund_rewards.size(), "comments count and comments' rewards count should be equal");
     FC_ASSERT(fund_rewards.size() > 0, "collection cannot be empty");
 
     asset_symbol_type reward_symbol = fund_rewards[0].symbol();
@@ -259,10 +259,10 @@ void process_comments_cashout_impl::pay_account(const account_object& recipient,
     }
 }
 
-template <typename TFund>
-std::vector<asset> process_comments_cashout_impl::collect_comments_fund_rewards(const comment_refs_type& comments,
-                                                                                const TFund& fund,
-                                                                                fc::uint128_t total_claims) const
+std::vector<asset> process_comments_cashout_impl::calculate_comments_payout(const comment_refs_type& comments,
+                                                                            const asset& reward_fund_balance,
+                                                                            fc::uint128_t total_claims,
+                                                                            curve_id reward_curve) const
 {
     std::vector<asset> rewards;
     rewards.reserve(comments.size());
@@ -270,10 +270,10 @@ std::vector<asset> process_comments_cashout_impl::collect_comments_fund_rewards(
     for (const comment_object& comment : comments)
     {
         share_type payout = rewards_math::calculate_payout(
-            comment.net_rshares, total_claims, fund.activity_reward_balance.amount, fund.author_reward_curve,
+            comment.net_rshares, total_claims, reward_fund_balance.amount, reward_curve,
             comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
 
-        rewards.emplace_back(payout, fund.activity_reward_balance.symbol());
+        rewards.emplace_back(payout, reward_fund_balance.symbol());
     }
 
     return rewards;

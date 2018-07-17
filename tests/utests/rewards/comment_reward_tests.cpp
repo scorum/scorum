@@ -73,6 +73,7 @@ struct pay_for_comments_fixture : public shared_memory_fixture
          * alice/p
          * ----bob/c1
          * --------alice/c2
+         * ------------alice/c3
          */
 
         auto post = create_object<comment_object>(shm, [&](comment_object& c) {
