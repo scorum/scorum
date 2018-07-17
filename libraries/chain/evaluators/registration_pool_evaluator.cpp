@@ -102,7 +102,7 @@ private:
 
         using schedule_item_type = registration_pool_object::schedule_item;
         const schedule_item_type& current_item = (*it);
-        return scorum::protocol::multiply_asset_by_fractional(pool.maximum_bonus, current_item.bonus_percent, 100);
+        return (pool.maximum_bonus * scorum::utils::make_fraction(current_item.bonus_percent, 100));
     }
 
     asset take_actually_amount(const registration_pool_object& pool, const asset& balance)
@@ -130,9 +130,9 @@ private:
     {
         share_type limit_per_member = (share_type)(pass_blocks + 1);
         limit_per_member *= SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK;
-        FC_ASSERT(allocated_cash <= scorum::protocol::multiply_asset_by_fractional(
-                                        pool.maximum_bonus, limit_per_member.value,
-                                        SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK),
+        FC_ASSERT(allocated_cash <= (pool.maximum_bonus
+                                     * scorum::utils::make_fraction(
+                                           limit_per_member, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK)),
                   "Committee member '${1}' reaches cash limit.", ("1", member_name));
     }
 
