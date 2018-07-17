@@ -31,6 +31,16 @@ using comment_refs_type = scorum::chain::comment_service_i::comment_refs_type;
 class process_comments_cashout_impl
 {
 public:
+    struct money
+    {
+        asset scr;
+        asset sp;
+        money()
+            : scr(0, SCORUM_SYMBOL)
+            , sp(0, SP_SYMBOL)
+        {
+        }
+    };
     struct comment_payout_result
     {
         asset total_claimed_reward;
@@ -74,16 +84,31 @@ public:
             share_type fund; // reward accrued from fund
             share_type commenting; // reward accrued from children comments
         };
+        struct comment_key
+        {
+            account_name_type author;
+            fc::shared_string permlink;
+        };
+
+        auto less = [](const comment_key& l, const comment_key& r) {
+            return std::tie(l.author, l.permlink) < std::tie(r.author, r.permlink);
+        };
 
         std::map<account_name_type, comment_reward> comment_rewards;
+        std::map<comment_key, comment_reward, decltype(less)> comment_rewards_fake(less);
 
-        for (const comment_object& comment : comments)
+        std::map<account_name_type, money> money_before_fix;
+        std::map<account_name_type, money> money_after_fix;
+
+        for (auto i = 0u; i < comments.size(); ++i)
         {
+            const comment_object& comment = comments[i];
             share_type payout = rewards_math::calculate_payout(
                 comment.net_rshares, total_claims, rf.activity_reward_balance.amount, rf.author_reward_curve,
                 comment.max_accepted_payout.amount, SCORUM_MIN_COMMENT_PAYOUT_SHARE);
 
             comment_rewards.emplace(comment.author, comment_reward{ payout, 0 });
+            comment_rewards_fake.emplace(comment_key{ comment.author, comment.permlink }, comment_reward{ payout, 0 });
         }
 
         asset_symbol_type reward_symbol = rf.activity_reward_balance.symbol();
@@ -94,17 +119,56 @@ public:
 
         for (const comment_object& comment : comments_with_parents)
         {
+            const comment_reward& reward = comment_rewards_fake[comment_key{ comment.author, comment.permlink }];
+
+            asset fund_reward = asset(reward.fund, reward_symbol);
+            asset commenting_reward = asset(reward.commenting, reward_symbol);
+
+            comment_payout_result payout_result
+                = pay_for_comment_fake(comment, fund_reward, commenting_reward, money_after_fix);
+
+            // save payout for the parent comment
+            comment_rewards_fake[comment_key{ comment.parent_author, comment.parent_permlink }].commenting
+                += payout_result.parent_author_reward.amount;
+        }
+
+        for (const comment_object& comment : comments_with_parents)
+        {
             const comment_reward& reward = comment_rewards[comment.author];
 
             asset fund_reward = asset(reward.fund, reward_symbol);
             asset commenting_reward = asset(reward.commenting, reward_symbol);
 
+            pay_for_comment_fake(comment, fund_reward, commenting_reward, money_before_fix);
             comment_payout_result payout_result = pay_for_comment(comment, fund_reward, commenting_reward);
 
             total_reward += payout_result.total_claimed_reward;
 
             // save payout for the parent comment
             comment_rewards[comment.parent_author].commenting += payout_result.parent_author_reward.amount;
+        }
+
+        bool output_block_num = true;
+
+        for (const auto& pair : money_after_fix)
+        {
+            auto& after_fix_money = pair.second;
+            auto& before_fix_money = money_before_fix[pair.first];
+
+            auto sp_delta = after_fix_money.sp - before_fix_money.sp;
+            auto scr_delta = after_fix_money.scr - before_fix_money.scr;
+
+            if (sp_delta.amount != 0 || scr_delta.amount != 0)
+            {
+                if (output_block_num)
+                {
+                    auto head_block_num = _ctx.services().dynamic_global_property_service().get().head_block_number;
+                    fc_ilog(fc::logger::get("money_diff"), "block_num=${num}", ("num", head_block_num));
+                    output_block_num = false;
+                }
+                fc_ilog(fc::logger::get("money_diff"), "author=${author}; ${sp}; ${scr}",
+                        ("author", pair.first)("sp", sp_delta)("scr", scr_delta));
+            }
         }
 
         fund_service.update([&](fund_object_type& rfo) {
@@ -120,12 +184,20 @@ public:
                                           const asset& publication_reward,
                                           const asset& children_comments_reward);
 
+    comment_payout_result pay_for_comment_fake(const comment_object& comment,
+                                               const asset& publication_reward,
+                                               const asset& children_comments_reward,
+                                               std::map<account_name_type, money>& map);
+
 private:
     shares_vector_type get_total_rshares(const comment_service_i::comment_refs_type& comments);
 
     asset pay_curators(const comment_object& comment, asset& max_rewards);
+    asset pay_curators_fake(const comment_object& comment, asset& max_rewards, std::map<account_name_type, money>& map);
 
     void pay_account(const account_object& recipient, const asset& reward);
+    void
+    pay_account_fake(const account_object& recipient, const asset& reward, std::map<account_name_type, money>& map);
 
     template <class CommentStatisticService>
     void accumulate_comment_statistic(CommentStatisticService& stat_service,

@@ -128,6 +128,60 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
     FC_CAPTURE_AND_RETHROW((comment))
 }
 
+process_comments_cashout_impl::comment_payout_result
+process_comments_cashout_impl::pay_for_comment_fake(const comment_object& comment,
+                                                    const asset& fund_reward,
+                                                    const asset& children_comments_reward,
+                                                    std::map<account_name_type, money>& money_map)
+{
+    try
+    {
+        auto reward_symbol = fund_reward.symbol();
+        comment_payout_result payout_result{ asset(0, reward_symbol), asset(0, reward_symbol) };
+        if (fund_reward.amount < 1 && children_comments_reward.amount < 1)
+            return payout_result;
+
+        asset author_reward(0, reward_symbol);
+        asset curators_reward(0, reward_symbol);
+
+        if (fund_reward.amount > 0)
+        {
+            curators_reward
+                = asset(rewards_math::calculate_curations_payout(fund_reward.amount, SCORUM_CURATION_REWARD_PERCENT),
+                        reward_symbol);
+            author_reward = fund_reward - curators_reward;
+
+            author_reward += pay_curators_fake(comment, curators_reward,
+                                               money_map); // curation_tokens can be changed inside pay_curators()
+        }
+
+        auto parent_author_reward = asset(0, reward_symbol);
+        if (comment.depth != 0)
+        {
+            fc::uint128_t parent_author_reward_l = author_reward.amount.value;
+            parent_author_reward_l += children_comments_reward.amount.value;
+            parent_author_reward_l *= SCORUM_PARENT_COMMENT_REWARD_PERCENT;
+            parent_author_reward_l /= SCORUM_100_PERCENT;
+            parent_author_reward = asset(parent_author_reward_l.to_uint64(), reward_symbol);
+        }
+
+        author_reward = (author_reward + children_comments_reward) - parent_author_reward;
+
+        payout_result.total_claimed_reward = author_reward + curators_reward;
+        payout_result.parent_author_reward = parent_author_reward;
+
+        auto total_beneficiary = asset(0, reward_symbol);
+
+        author_reward -= total_beneficiary;
+
+        const auto& author = account_service.get_account(comment.author);
+        pay_account_fake(author, author_reward, money_map);
+
+        return payout_result;
+    }
+    FC_CAPTURE_AND_RETHROW((comment))
+}
+
 asset process_comments_cashout_impl::pay_curators(const comment_object& comment, asset& max_rewards)
 {
     try
@@ -171,6 +225,46 @@ asset process_comments_cashout_impl::pay_curators(const comment_object& comment,
     FC_CAPTURE_AND_RETHROW()
 }
 
+asset process_comments_cashout_impl::pay_curators_fake(const comment_object& comment,
+                                                       asset& max_rewards,
+                                                       std::map<account_name_type, money>& money_map)
+{
+    try
+    {
+        auto reward_symbol = max_rewards.symbol();
+        asset unclaimed_rewards = max_rewards;
+
+        if (!comment.allow_curation_rewards)
+        {
+            // TODO: if allow_curation_rewards == false we loose money, it brings us to break invariants - need to
+            // rework
+            unclaimed_rewards = asset(0, reward_symbol);
+            max_rewards = asset(0, reward_symbol);
+        }
+        else if (comment.total_vote_weight > 0)
+        {
+            auto comment_votes = comment_vote_service.get_by_comment_weight_voter(comment.id);
+            for (const comment_vote_object& vote : comment_votes)
+            {
+                auto claim = asset(
+                    rewards_math::calculate_curation_payout(max_rewards.amount, comment.total_vote_weight, vote.weight),
+                    reward_symbol);
+                if (claim.amount > 0)
+                {
+                    unclaimed_rewards -= claim;
+
+                    const auto& voter = account_service.get(vote.voter);
+                    pay_account_fake(voter, claim, money_map);
+                }
+            }
+        }
+        max_rewards -= unclaimed_rewards;
+
+        return unclaimed_rewards;
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
 void process_comments_cashout_impl::pay_account(const account_object& recipient, const asset& reward)
 {
     if (SCORUM_SYMBOL == reward.symbol())
@@ -180,6 +274,20 @@ void process_comments_cashout_impl::pay_account(const account_object& recipient,
     else if (SP_SYMBOL == reward.symbol())
     {
         account_service.create_scorumpower(recipient, reward);
+    }
+}
+
+void process_comments_cashout_impl::pay_account_fake(const account_object& recipient,
+                                                     const asset& reward,
+                                                     std::map<account_name_type, money>& map)
+{
+    if (SCORUM_SYMBOL == reward.symbol())
+    {
+        map[recipient.name].scr += reward;
+    }
+    else if (SP_SYMBOL == reward.symbol())
+    {
+        map[recipient.name].sp += reward;
     }
 }
 
