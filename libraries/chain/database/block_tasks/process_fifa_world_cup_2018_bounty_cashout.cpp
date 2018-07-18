@@ -10,7 +10,7 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
 {
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
-    if (dprops_service.head_block_time() < SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)
+    if (dprops_service.get().head_block_number < SCORUM_FIFA_BOUNTY_DISTRIBUTION_TEST_BLOCK)
     {
         return;
     }

@@ -72,6 +72,9 @@ namespace detail {
 }
 }
 
+#define SCORUM_FIFA_BOUNTY_DISTRIBUTION_TEST_BLOCK (3303003)
+
+
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
 #define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 0) )
