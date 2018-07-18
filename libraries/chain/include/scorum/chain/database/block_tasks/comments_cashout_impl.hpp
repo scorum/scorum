@@ -9,6 +9,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
@@ -115,6 +116,8 @@ private:
 
     comment_refs_type collect_parents(const comment_refs_type& comments);
 
+    fc::shared_string get_if_hardfork(const fc::shared_string& str) const;
+
 private:
     block_task_context& _ctx;
     dynamic_global_property_service_i& dgp_service;
@@ -124,6 +127,7 @@ private:
     comment_statistic_scr_service_i& comment_statistic_scr_service;
     comment_statistic_sp_service_i& comment_statistic_sp_service;
     comment_vote_service_i& comment_vote_service;
+    hardfork_property_service_i& hardfork_service;
 };
 }
 }

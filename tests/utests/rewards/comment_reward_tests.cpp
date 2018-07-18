@@ -9,6 +9,7 @@
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/protocol/block.hpp>
 #include <hippomocks.h>
@@ -48,6 +49,7 @@ struct pay_for_comments_fixture : public shared_memory_fixture
     account_blogging_statistic_service_i* acc_blog_stats_service = mocks.Mock<account_blogging_statistic_service_i>();
     comment_service_i* comment_service = mocks.Mock<comment_service_i>();
     comment_vote_service_i* comment_vote_service = mocks.Mock<comment_vote_service_i>();
+    hardfork_property_service_i* hardfork_service = mocks.Mock<hardfork_property_service_i>();
     database_virtual_operations_emmiter_i* virt_op_emitter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     std::shared_ptr<block_task_context> ctx;
@@ -62,6 +64,7 @@ struct pay_for_comments_fixture : public shared_memory_fixture
             .ReturnByRef(*acc_blog_stats_service);
         mocks.OnCall(services, data_service_factory_i::comment_service).ReturnByRef(*comment_service);
         mocks.OnCall(services, data_service_factory_i::comment_vote_service).ReturnByRef(*comment_vote_service);
+        mocks.OnCall(services, data_service_factory_i::hardfork_property_service).ReturnByRef(*hardfork_service);
         mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
 
         ctx = std::make_shared<block_task_context>(*services, *virt_op_emitter, 1u);
@@ -192,13 +195,15 @@ struct pay_for_comments_fixture : public shared_memory_fixture
 
 BOOST_FIXTURE_TEST_SUITE(pay_for_comments_tests, pay_for_comments_fixture)
 
-BOOST_AUTO_TEST_CASE(check_comments_with_same_author_no_extra_sp)
+BOOST_AUTO_TEST_CASE(check_same_author_comments_sp_reward_after_hardfork)
 {
     auto comments = create_comments();
 
     std::vector<std::reference_wrapper<const comment_object>> comment_refs
         = { std::cref(comments[3]), std::cref(comments[1]), std::cref(comments[2]), std::cref(comments[0]) };
     std::vector<asset> fund_rewards = { ASSET_SP(40), ASSET_SP(60), ASSET_SP(100), ASSET_SP(120) };
+
+    mocks.OnCall(hardfork_service, hardfork_property_service_i::has_hardfork).With(1).Return(true);
 
     check_pay_comments_sp(comment_refs, fund_rewards);
 
@@ -208,7 +213,7 @@ BOOST_AUTO_TEST_CASE(check_comments_with_same_author_no_extra_sp)
     //      (40u + ((60u / 2 + 40u / 4 + 40u / 8) + 40 / 2)) + (40u / 2 + 40u / 4) + (40u / 2));
 }
 
-BOOST_AUTO_TEST_CASE(check_comments_with_same_author_no_extra_scr_order1)
+BOOST_AUTO_TEST_CASE(check_same_author_comments_scr_reward_after_hardfork_order1)
 {
     auto comments = create_comments();
 
@@ -216,16 +221,20 @@ BOOST_AUTO_TEST_CASE(check_comments_with_same_author_no_extra_scr_order1)
         = { std::cref(comments[1]), std::cref(comments[0]), std::cref(comments[2]), std::cref(comments[3]) };
     std::vector<asset> fund_rewards = { ASSET_SCR(60), ASSET_SCR(120), ASSET_SCR(100), ASSET_SCR(40) };
 
+    mocks.OnCall(hardfork_service, hardfork_property_service_i::has_hardfork).With(1).Return(true);
+
     check_pay_comments_scr(comment_refs, fund_rewards);
 }
 
-BOOST_AUTO_TEST_CASE(check_comments_with_same_author_no_extra_scr_order2)
+BOOST_AUTO_TEST_CASE(check_same_author_comments_scr_reward_after_hardfork_order2)
 {
     auto comments = create_comments();
 
     std::vector<std::reference_wrapper<const comment_object>> comment_refs
         = { std::cref(comments[3]), std::cref(comments[1]), std::cref(comments[2]), std::cref(comments[0]) };
     std::vector<asset> fund_rewards = { ASSET_SCR(40), ASSET_SCR(60), ASSET_SCR(100), ASSET_SCR(120) };
+
+    mocks.OnCall(hardfork_service, hardfork_property_service_i::has_hardfork).With(1).Return(true);
 
     check_pay_comments_scr(comment_refs, fund_rewards);
 }
