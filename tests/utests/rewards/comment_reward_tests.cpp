@@ -76,6 +76,7 @@ struct pay_for_comments_fixture : public shared_memory_fixture
          * alice/p
          * ----bob/c1
          * --------alice/c2
+         * ------------alice/c3
          */
 
         auto post = create_object<comment_object>(shm, [&](comment_object& c) {
@@ -152,14 +153,28 @@ struct pay_for_comments_fixture : public shared_memory_fixture
         process_comments_cashout_impl cashout(*ctx);
         cashout.pay_for_comments(comment_refs, rewards);
 
-        BOOST_CHECK_EQUAL(alice_acc.balance.amount, 0u);
-        BOOST_CHECK_EQUAL(bob_acc.balance.amount, 0u);
+        auto post_reward_from_fund = 120u;
+        auto post_reward_from_comment_1 = 60u / 2;
+        auto post_reward_from_comment_2 = 100u / 4;
+        auto post_reward_from_comment_3 = 40u / 8;
+        auto comment_1_reward_from_fund = 60u / 2;
+        auto comment_1_reward_from_comment_2 = 100u / 4;
+        auto comment_1_reward_from_comment_3 = 40u / 8;
+        auto comment_2_reward_from_fund = 100u / 2;
+        auto comment_2_reward_from_comment_3 = 40u / 4;
+        auto comment_3_reward_from_fund = 40u / 2;
+
+        // clang-format off
         BOOST_REQUIRE_EQUAL(alice_acc.scorumpower.amount + bob_acc.scorumpower.amount, 120u + 60u + 100u + 40u);
         // (post + 0.5*c1 + 0.25c2 + 0.125c3) [post reward] + (0.5c2 + 0.25c3) [c2 reward] + (0.5c3) [c3 reward]
         BOOST_CHECK_EQUAL(alice_acc.scorumpower.amount,
-                          (120u + 60u / 2 + 100u / 4 + 40u / 8) + (100u / 2 + 40u / 4) + (40u / 2));
+                          (post_reward_from_fund + post_reward_from_comment_1 + post_reward_from_comment_2 + post_reward_from_comment_3) +
+                          (comment_2_reward_from_fund + comment_2_reward_from_comment_3) +
+                          (comment_3_reward_from_fund));
         // 0.5c1 + 0.25c2 + 0.125c3 [c1 reward]
-        BOOST_CHECK_EQUAL(bob_acc.scorumpower.amount, 60u / 2 + 100u / 4 + 40u / 8);
+        BOOST_CHECK_EQUAL(bob_acc.scorumpower.amount,
+                          comment_1_reward_from_fund + comment_1_reward_from_comment_2 + comment_1_reward_from_comment_3);
+        // clang-format on
     }
 
     void check_pay_comments_scr(const std::vector<std::reference_wrapper<const comment_object>>& comment_refs,
@@ -184,12 +199,29 @@ struct pay_for_comments_fixture : public shared_memory_fixture
 
         BOOST_CHECK_EQUAL(alice_acc.scorumpower.amount, 0u);
         BOOST_CHECK_EQUAL(bob_acc.scorumpower.amount, 0u);
+
+        auto post_reward_from_fund = 120u;
+        auto post_reward_from_comment_1 = 60u / 2;
+        auto post_reward_from_comment_2 = 100u / 4;
+        auto post_reward_from_comment_3 = 40u / 8;
+        auto comment_1_reward_from_fund = 60u / 2;
+        auto comment_1_reward_from_comment_2 = 100u / 4;
+        auto comment_1_reward_from_comment_3 = 40u / 8;
+        auto comment_2_reward_from_fund = 100u / 2;
+        auto comment_2_reward_from_comment_3 = 40u / 4;
+        auto comment_3_reward_from_fund = 40u / 2;
+
+        // clang-format off
         BOOST_REQUIRE_EQUAL(alice_acc.balance.amount + bob_acc.balance.amount, 120u + 60u + 100u + 40u);
         // (post + 0.5*c1 + 0.25c2 + 0.125c3) [post reward] + (0.5c2 + 0.25c3) [c2 reward] + (0.5c3) [c3 reward]
         BOOST_CHECK_EQUAL(alice_acc.balance.amount,
-                          (120u + 60u / 2 + 100u / 4 + 40u / 8) + (100u / 2 + 40u / 4) + (40u / 2));
+                          (post_reward_from_fund + post_reward_from_comment_1 + post_reward_from_comment_2 + post_reward_from_comment_3) +
+                          (comment_2_reward_from_fund + comment_2_reward_from_comment_3) +
+                          (comment_3_reward_from_fund));
         // 0.5c1 + 0.25c2 + 0.125c3 [c1 reward]
-        BOOST_CHECK_EQUAL(bob_acc.balance.amount, 60u / 2 + 100u / 4 + 40u / 8);
+        BOOST_CHECK_EQUAL(bob_acc.balance.amount,
+                          comment_1_reward_from_fund + comment_1_reward_from_comment_2 + comment_1_reward_from_comment_3);
+        // clang-format on
     }
 };
 
