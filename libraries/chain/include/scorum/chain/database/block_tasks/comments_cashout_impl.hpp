@@ -33,6 +33,7 @@ class process_comments_cashout_impl
 public:
     struct comment_payout_result
     {
+        /// amount of tokens distributed within particular comment across author, beneficiars and curators
         asset total_claimed_reward;
         asset parent_comment_reward;
     };
