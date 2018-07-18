@@ -46,8 +46,10 @@ class rewards_stat
 {
     struct rewards_stat_data
     {
-        share_type comment_reward;
-        share_type curator_reward;
+        share_type author_reward;
+        share_type curators_reward;
+        share_type beneficiaries_reward;
+        share_type commenting_reward;
     };
 
 public:
@@ -71,24 +73,36 @@ public:
         _stats.clear();
     }
 
-    int64_t comment_reward(const Actor& a)
+    int64_t author_reward(const Actor& a)
     {
-        return _stats[a.name].comment_reward.value;
+        return _stats[a.name].author_reward.value;
     }
 
-    int64_t curator_reward(const Actor& a)
+    int64_t curators_reward(const Actor& a)
     {
-        return _stats[a.name].curator_reward.value;
+        return _stats[a.name].curators_reward.value;
+    }
+
+    int64_t beneficiaries_reward(const Actor& a)
+    {
+        return _stats[a.name].beneficiaries_reward.value;
+    }
+
+    int64_t commenting_reward(const Actor& a)
+    {
+        return _stats[a.name].commenting_reward.value;
+    }
+
+    void operator()(const comment_reward_operation& op)
+    {
+        _stats[op.author].author_reward += op.author_reward.amount;
+        _stats[op.author].beneficiaries_reward += op.beneficiaries_reward.amount;
+        _stats[op.author].commenting_reward += op.commenting_reward.amount;
     }
 
     void operator()(const curation_reward_operation& op)
     {
-        _stats[op.curator].curator_reward += op.reward.amount;
-    }
-
-    void operator()(const author_reward_operation& op)
-    {
-        _stats[op.author].comment_reward += op.reward.amount;
+        _stats[op.curator].curators_reward += op.reward.amount;
     }
 
     template <typename Op> void operator()(Op&&) const
@@ -155,6 +169,18 @@ struct fifa_world_cup_2018_bounty_reward_fund_fixture : public base_fifa_world_c
         alice_post.vote(simon).push(); // Simon upvote alice post
 
         auto bob_comm = alice_post.create_comment(bob).push(); // Bob create comment
+
+        {
+            // Bob set Sam like beneficiar
+            comment_options_operation op;
+            op.author = bob_comm.author();
+            op.permlink = bob_comm.permlink();
+            op.allow_curation_rewards = true;
+            comment_payout_beneficiaries b;
+            b.beneficiaries.push_back(beneficiary_route_type(sam.name, 20 * SCORUM_1_PERCENT));
+            op.extensions.insert(b);
+            push_operation(op, bob.private_key);
+        }
 
         start_t = dgp_service.head_block_time();
 
@@ -233,11 +259,13 @@ BOOST_FIXTURE_TEST_CASE(base_fund_distribution_check, fifa_world_cup_2018_bounty
 
     BOOST_REQUIRE_EQUAL(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance, ASSET_NULL_SP);
 
-    BOOST_CHECK_GT(rewards.comment_reward(alice), 0);
-    BOOST_CHECK_GT(rewards.comment_reward(bob), 0);
-    BOOST_CHECK_EQUAL(rewards.comment_reward(sam), 0); // no votes for Sam comment
+    BOOST_CHECK_GT(rewards.author_reward(alice), 0);
+    BOOST_CHECK_GT(rewards.author_reward(bob), 0);
+    BOOST_CHECK_GT(rewards.beneficiaries_reward(bob), 0);
+    BOOST_CHECK_EQUAL(rewards.author_reward(sam), 0); // no votes for Sam comment
 
-    BOOST_REQUIRE_EQUAL(rewards.comment_reward(alice) + rewards.comment_reward(bob), bounty_fund.amount.value);
+    BOOST_REQUIRE_EQUAL(rewards.author_reward(alice) + rewards.author_reward(bob) + rewards.beneficiaries_reward(bob),
+                        bounty_fund.amount.value);
 
     BOOST_TEST_MESSAGE("--- Test no double reward");
 
@@ -245,8 +273,8 @@ BOOST_FIXTURE_TEST_CASE(base_fund_distribution_check, fifa_world_cup_2018_bounty
 
     generate_blocks(dgp_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    BOOST_CHECK_EQUAL(rewards.comment_reward(alice), 0);
-    BOOST_CHECK_EQUAL(rewards.comment_reward(bob), 0);
+    BOOST_CHECK_EQUAL(rewards.author_reward(alice), 0);
+    BOOST_CHECK_EQUAL(rewards.author_reward(bob), 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(fifa_cashout_only_for_payed_comments_check, fifa_world_cup_2018_bounty_reward_fund_fixture)
@@ -257,7 +285,7 @@ BOOST_FIXTURE_TEST_CASE(fifa_cashout_only_for_payed_comments_check, fifa_world_c
 
     create_unpayed_activity_case();
 
-    BOOST_CHECK_EQUAL(rewards.comment_reward(lee), 0);
+    BOOST_CHECK_EQUAL(rewards.author_reward(lee), 0);
 
     BOOST_TEST_MESSAGE("--- Test FIFA reward");
 
@@ -265,13 +293,13 @@ BOOST_FIXTURE_TEST_CASE(fifa_cashout_only_for_payed_comments_check, fifa_world_c
 
     BOOST_REQUIRE_EQUAL(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance, ASSET_NULL_SP);
 
-    BOOST_CHECK_EQUAL(rewards.comment_reward(lee), 0);
+    BOOST_CHECK_EQUAL(rewards.author_reward(lee), 0);
 
     BOOST_TEST_MESSAGE("--- Test that Lee will receive ordinary reward");
 
     generate_blocks(dgp_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    BOOST_CHECK_GT(rewards.comment_reward(lee), 0);
+    BOOST_CHECK_GT(rewards.author_reward(lee), 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(no_fifa_cashout_for_curators_check, fifa_world_cup_2018_bounty_reward_fund_fixture)
@@ -280,15 +308,16 @@ BOOST_FIXTURE_TEST_CASE(no_fifa_cashout_for_curators_check, fifa_world_cup_2018_
 
     create_payed_activity_case();
 
-    BOOST_CHECK_GT(rewards.comment_reward(alice), 0); // Alice wrote post with votes and comments
-    BOOST_CHECK_GT(rewards.comment_reward(bob), 0); // Bob wrote voted comment
-    BOOST_CHECK_EQUAL(rewards.comment_reward(sam), 0); // Sam wrote unvoted comment
-    BOOST_CHECK_GT(rewards.curator_reward(simon), 0); // Simon did vote
+    BOOST_CHECK_GT(rewards.author_reward(alice), 0); // Alice wrote post with votes and comments
+    BOOST_CHECK_GT(rewards.author_reward(bob), 0); // Bob wrote voted comment
+    BOOST_CHECK_GT(rewards.commenting_reward(alice), 0); // Alice has child comment
+    BOOST_CHECK_EQUAL(rewards.author_reward(sam), 0); // Sam wrote unvoted comment
+    BOOST_CHECK_GT(rewards.curators_reward(simon), 0); // Simon did vote
 
     create_unpayed_activity_case();
 
-    BOOST_CHECK_EQUAL(rewards.comment_reward(lee), 0); // No time out yet
-    BOOST_CHECK_EQUAL(rewards.curator_reward(andrew), 0); // No time out yet
+    BOOST_CHECK_EQUAL(rewards.author_reward(lee), 0); // No time out yet
+    BOOST_CHECK_EQUAL(rewards.curators_reward(andrew), 0); // No time out yet
 
     BOOST_TEST_MESSAGE("--- Test FIFA reward");
 
@@ -298,20 +327,22 @@ BOOST_FIXTURE_TEST_CASE(no_fifa_cashout_for_curators_check, fifa_world_cup_2018_
 
     BOOST_REQUIRE_EQUAL(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance, ASSET_NULL_SP);
 
-    BOOST_CHECK_GT(rewards.comment_reward(alice), 0); // Alice wrote payed post
-    BOOST_CHECK_GT(rewards.comment_reward(bob), 0); // Bob wrote payed comment
-    BOOST_CHECK_EQUAL(rewards.comment_reward(sam), 0); // no votes for Sam comment
-    BOOST_CHECK_EQUAL(rewards.comment_reward(lee),
+    BOOST_CHECK_GT(rewards.author_reward(alice), 0); // Alice wrote payed post
+    BOOST_CHECK_GT(rewards.author_reward(bob), 0); // Bob wrote payed comment
+    BOOST_CHECK_GT(rewards.beneficiaries_reward(bob), 0); // Bob payed to beneficiar
+    BOOST_CHECK_GT(rewards.commenting_reward(alice), 0); // Alice has child comment
+    BOOST_CHECK_EQUAL(rewards.author_reward(sam), 0); // no votes for Sam comment
+    BOOST_CHECK_EQUAL(rewards.author_reward(lee),
                       0); // Lee had not reached cashout time before FIFA cashout is happened
-    BOOST_CHECK_EQUAL(rewards.curator_reward(simon), 0); // No payout for curators
-    BOOST_CHECK_EQUAL(rewards.curator_reward(andrew), 0); // No payout for curators
+    BOOST_CHECK_EQUAL(rewards.curators_reward(simon), 0); // No payout for curators
+    BOOST_CHECK_EQUAL(rewards.curators_reward(andrew), 0); // No payout for curators
 
     BOOST_TEST_MESSAGE("--- Test that Lee curator will receive ordinary reward");
 
     generate_blocks(dgp_service.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    BOOST_CHECK_GT(rewards.comment_reward(lee), 0); // for post
-    BOOST_CHECK_GT(rewards.curator_reward(andrew), 0); // for vote
+    BOOST_CHECK_GT(rewards.author_reward(lee), 0); // for post
+    BOOST_CHECK_GT(rewards.curators_reward(andrew), 0); // for vote
 }
 
 BOOST_AUTO_TEST_SUITE_END()
