@@ -26,7 +26,7 @@ config::config() /// production config
 
     , cashout_window_seconds(DAYS_TO_SECONDS(7))
 
-    , reverse_auction_window_seconds(fc::seconds(60 * 30)) // 30 minutes
+    , reverse_auction_window_seconds(fc::minutes(30))
 
     , vote_regeneration_seconds(fc::days(5))
 
