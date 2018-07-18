@@ -160,6 +160,8 @@ public:
      */
     uint32_t witness_participation_rate() const;
 
+    void set_stop_block(uint32_t stop_block_num);
+
     void add_checkpoints(const flat_map<uint32_t, block_id_type>& checkpts);
     const flat_map<uint32_t, block_id_type> get_checkpoints() const
     {
@@ -403,6 +405,8 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     fc::time_point_sec _const_genesis_time; // should be const
+
+    uint32_t _stop_block = 0;
 };
 } // namespace chain
 } // namespace scorum

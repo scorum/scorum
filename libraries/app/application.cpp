@@ -378,6 +378,11 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
+                if (_options->count("stop-on-block"))
+                {
+                    _chain_db->set_stop_block(_options->at("stop-on-block").as<uint32_t>());
+                }
+
                 if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
@@ -1161,6 +1166,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint")
     ("seed-node,s", bpo::value<std::vector<std::string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
     ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
+    ("stop-on-block", bpo::value<uint32_t>(), "Stop on block.")
     ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
     ("shared-file-dir", bpo::value<boost::filesystem::path>(), "Location of the shared memory file. Defaults to data_dir/blockchain")
     ("shared-file-size", bpo::value<std::string>()->default_value("54G"), "Size of the shared memory file. Default: 54G")

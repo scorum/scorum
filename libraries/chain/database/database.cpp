@@ -483,6 +483,11 @@ uint32_t database::witness_participation_rate() const
     return uint64_t(SCORUM_100_PERCENT) * dpo.recent_slots_filled.popcount() / 128;
 }
 
+void database::set_stop_block(uint32_t stop_block_num)
+{
+    this->_stop_block = stop_block_num;
+}
+
 void database::add_checkpoints(const flat_map<uint32_t, block_id_type>& checkpts)
 {
     for (const auto& i : checkpts)
@@ -1290,6 +1295,12 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
     block_info ctx(next_block);
 
     debug_log(ctx, "apply_block skip=${s}", ("s", skip));
+
+    if (_stop_block > 0u && last_non_undoable_block_num() >= _stop_block)
+    {
+        ilog("stop sync: reached stop_block_num ${num}", ("num", _stop_block));
+        return;
+    }
 
     try
     {
