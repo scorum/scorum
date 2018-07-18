@@ -84,7 +84,7 @@ struct comment_reward_operation : public virtual_operation
     /// reward for beneficiaries
     asset beneficiaries_reward;
 
-    /// reward received from fund and distributed across author, curators, beneficiaries
+    /// reward accrued from fund
     asset fund_reward;
 
     /// reward received from children comments as parent reward
