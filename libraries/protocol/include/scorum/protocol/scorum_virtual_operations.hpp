@@ -250,7 +250,9 @@ struct expired_contract_refund_operation : public virtual_operation
 
 FC_REFLECT(scorum::protocol::author_reward_operation, (author)(permlink)(reward))
 FC_REFLECT(scorum::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink))
-FC_REFLECT(scorum::protocol::comment_reward_operation, (author)(permlink)(payout)(fund_reward)(commenting_reward))
+FC_REFLECT(
+    scorum::protocol::comment_reward_operation,
+    (author)(permlink)(payout)(author_reward)(curators_reward)(beneficiaries_reward)(fund_reward)(commenting_reward))
 FC_REFLECT(scorum::protocol::fill_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
 FC_REFLECT(scorum::protocol::witness_miss_block_operation, (owner)(block_num))

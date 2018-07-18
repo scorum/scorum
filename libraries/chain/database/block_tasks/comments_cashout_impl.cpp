@@ -357,7 +357,7 @@ comment_refs_type process_comments_cashout_impl::collect_parents(const comment_r
 
 fc::shared_string process_comments_cashout_impl::get_permlink(const fc::shared_string& str) const
 {
-    if (dgp_service.get().head_block_number < SCORUM_FIFA_BOUNTY_DISTRIBUTION_TEST_BLOCK)
+    if (dgp_service.get().head_block_number >= SCORUM_FIFA_BOUNTY_DISTRIBUTION_TEST_BLOCK)
         return str;
     else
         return fc::shared_string("", str.get_allocator());
