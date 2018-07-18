@@ -104,7 +104,7 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
     std::map<comment_key, comment_reward, decltype(less)> comment_rewards(less);
     for (auto i = 0u; i < comments.size(); ++i)
     {
-        comment_rewards.emplace(comment_key{ comments[i].get().author, get_if_hardfork(comments[i].get().permlink) },
+        comment_rewards.emplace(comment_key{ comments[i].get().author, get_permlink(comments[i].get().permlink) },
                                 comment_reward{ fund_rewards[i].amount, 0 });
     }
 
@@ -115,7 +115,7 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
 
     for (const comment_object& comment : comments_with_parents)
     {
-        const auto& reward = comment_rewards[comment_key{ comment.author, get_if_hardfork(comment.permlink) }];
+        const auto& reward = comment_rewards[comment_key{ comment.author, get_permlink(comment.permlink) }];
 
         asset fund_reward = asset(reward.fund, reward_symbol);
         asset commenting_reward = asset(reward.commenting, reward_symbol);
@@ -125,7 +125,7 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
         total_reward += payout_result.total_claimed_reward;
 
         // save payout for the parent comment
-        comment_rewards[comment_key{ comment.parent_author, get_if_hardfork(comment.parent_permlink) }].commenting
+        comment_rewards[comment_key{ comment.parent_author, get_permlink(comment.parent_permlink) }].commenting
             += payout_result.parent_comment_reward.amount;
     }
 
@@ -355,7 +355,7 @@ comment_refs_type process_comments_cashout_impl::collect_parents(const comment_r
     return comments_with_parents;
 }
 
-fc::shared_string process_comments_cashout_impl::get_if_hardfork(const fc::shared_string& str) const
+fc::shared_string process_comments_cashout_impl::get_permlink(const fc::shared_string& str) const
 {
     if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_1))
         return str;

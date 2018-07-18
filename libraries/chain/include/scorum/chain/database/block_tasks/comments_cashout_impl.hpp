@@ -117,7 +117,7 @@ private:
 
     comment_refs_type collect_parents(const comment_refs_type& comments);
 
-    fc::shared_string get_if_hardfork(const fc::shared_string& str) const;
+    fc::shared_string get_permlink(const fc::shared_string& str) const;
 
 private:
     block_task_context& _ctx;
