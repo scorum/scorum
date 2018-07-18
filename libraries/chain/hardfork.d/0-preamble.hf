@@ -42,4 +42,4 @@ FC_REFLECT( scorum::chain::hardfork_property_object,
    (next_hardfork)(next_hardfork_time) )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::hardfork_property_object, scorum::chain::hardfork_property_index )
 
-#define SCORUM_NUM_HARDFORKS 19
+#define SCORUM_NUM_HARDFORKS 1
