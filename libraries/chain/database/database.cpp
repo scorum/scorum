@@ -3,6 +3,7 @@
 #include <fstream>
 #include <functional>
 #include <openssl/md5.h>
+#include <signal.h>
 
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/core/ignore_unused.hpp>
@@ -1296,9 +1297,12 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
     debug_log(ctx, "apply_block skip=${s}", ("s", skip));
 
-    if (_stop_block > 0u && last_non_undoable_block_num() >= _stop_block)
+    if (_stop_block > 0 && last_non_undoable_block_num() >= _stop_block)
     {
         ilog("stop sync: reached stop_block_num ${num}", ("num", _stop_block));
+
+        kill(getpid(), SIGTERM);
+
         return;
     }
 
