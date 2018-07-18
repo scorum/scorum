@@ -192,9 +192,10 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
-        _ctx.push_virtual_operation(comment_reward_operation(comment.author, fc::to_string(comment.permlink),
-                                                             payout_result.total_claimed_reward, fund_reward,
-                                                             children_comments_reward));
+
+        _ctx.push_virtual_operation(comment_reward_operation(
+            comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward, author_reward,
+            curators_reward, total_beneficiary, fund_reward, children_comments_reward));
 
         accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, fund_reward,
                              children_comments_reward, reward_symbol);
