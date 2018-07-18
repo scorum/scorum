@@ -169,17 +169,17 @@ public:
     get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type type_of_operation) const;
 
     /**
-    *  This method returns all operations in timestamp range [from, to]
+    *  This method returns all operations in timestamp range [from, to] by pages [from_op-limit, from_op]
     *
     *  @param from - the time from start searching operations
     *  @param to - the time until end searching operations
+    *  @param from_op - the operation number, -1 means most recent, limit is the number of operations before from.
     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
-    *  @param type_of_operation Operations type (all = 0, not_virt = 1, virt = 2, market = 3)
     */
     std::map<uint32_t, applied_operation> get_ops_history_by_timestamp(const fc::time_point_sec& from,
                                                                        const fc::time_point_sec& to,
-                                                                       uint32_t limit,
-                                                                       applied_operation_type type_of_operation) const;
+                                                                       uint32_t from_op,
+                                                                       uint32_t limit) const;
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)

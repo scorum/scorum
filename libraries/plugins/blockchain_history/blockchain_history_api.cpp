@@ -95,13 +95,16 @@ public:
     }
 
     template <typename IndexType>
-    result_type
-    get_ops_history_by_timestamp(const fc::time_point_sec& from, const fc::time_point_sec& to, uint32_t limit) const
+    result_type get_ops_history_by_timestamp(const fc::time_point_sec& from,
+                                             const fc::time_point_sec& to,
+                                             uint32_t from_op,
+                                             uint32_t limit) const
     {
         FC_ASSERT(from <= to, "From is greater than to");
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
         FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
                   ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
+        FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
         result_type result;
 
@@ -109,15 +112,30 @@ public:
         if (idx.empty())
             return result;
 
-        auto range = idx.range(::boost::lambda::_1 >= std::make_tuple(from, ALL_IDS),
+        auto range = idx.range(::boost::lambda::_1 >= std::make_tuple(from, 0),
                                ::boost::lambda::_1 <= std::make_tuple(to, ALL_IDS));
 
-        for (auto it = range.first; limit && it != range.second; ++it)
+        using operation_object_ref_type = std::reference_wrapper<const operation_object>;
+        using op_ids_type = std::vector<operation_object_ref_type>;
+
+        op_ids_type ids;
+
+        for (auto it = range.first; it != range.second; ++it)
         {
-            --limit;
             auto id = it->id;
             FC_ASSERT(id._id >= 0, "Invalid operation_object id");
-            result[(uint32_t)id._id] = get_operation(*it);
+            ids.emplace_back(std::cref(*it));
+        }
+
+        for (auto it = ids.crbegin(); limit && it != ids.crend(); ++it)
+        {
+            const operation_object& op = (*it);
+            auto id = op.id;
+            if (id > from_op)
+                continue;
+
+            --limit;
+            result[(uint32_t)id._id] = get_operation(op);
         }
 
         return result;
@@ -242,26 +260,11 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
     });
 }
 
-std::map<uint32_t, applied_operation>
-blockchain_history_api::get_ops_history_by_timestamp(const fc::time_point_sec& from,
-                                                     const fc::time_point_sec& to,
-                                                     uint32_t limit,
-                                                     applied_operation_type type_of_operation) const
+std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history_by_timestamp(
+    const fc::time_point_sec& from, const fc::time_point_sec& to, uint32_t from_op, uint32_t limit) const
 {
-    return _impl->_app.chain_database()->with_read_lock([&]() {
-        switch (type_of_operation)
-        {
-        case applied_operation_type::not_virt:
-            return _impl->get_ops_history_by_timestamp<filtered_not_virt_operations_history_index>(from, to, limit);
-        case applied_operation_type::virt:
-            return _impl->get_ops_history_by_timestamp<filtered_virt_operations_history_index>(from, to, limit);
-        case applied_operation_type::market:
-            return _impl->get_ops_history_by_timestamp<filtered_market_operations_history_index>(from, to, limit);
-        default:;
-        }
-
-        return _impl->get_ops_history_by_timestamp<operation_index>(from, to, limit);
-    });
+    return _impl->_app.chain_database()->with_read_lock(
+        [&]() { return _impl->get_ops_history_by_timestamp<operation_index>(from, to, from_op, limit); });
 }
 
 std::map<uint32_t, applied_operation>

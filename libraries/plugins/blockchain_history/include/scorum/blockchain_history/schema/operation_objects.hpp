@@ -90,7 +90,6 @@ public:
 
     id_type id;
     operation_object::id_type op;
-    fc::time_point_sec timestamp;
 };
 
 template <blockchain_history_object_type OperationType>
@@ -100,18 +99,7 @@ using filtered_operation_index
                                                              member<filtered_operation_object<OperationType>,
                                                                     typename filtered_operation_object<OperationType>::
                                                                         id_type,
-                                                                    &filtered_operation_object<OperationType>::id>>,
-                                              ordered_unique<tag<by_timestamp>,
-                                                             composite_key<filtered_operation_object<OperationType>,
-                                                                           member<filtered_operation_object<OperationType>,
-                                                                                  fc::time_point_sec,
-                                                                                  &filtered_operation_object<OperationType>::
-                                                                                      timestamp>,
-                                                                           member<filtered_operation_object<OperationType>,
-                                                                                  typename filtered_operation_object<OperationType>::
-                                                                                      id_type,
-                                                                                  &filtered_operation_object<OperationType>::
-                                                                                      id>>>>>;
+                                                                    &filtered_operation_object<OperationType>::id>>>>;
 
 using filtered_not_virt_operations_history_object = filtered_operation_object<filtered_not_virt_operations_history>;
 using filtered_virt_operations_history_object = filtered_operation_object<filtered_virt_operations_history>;
@@ -127,12 +115,12 @@ FC_REFLECT(scorum::blockchain_history::operation_object,
            (id)(trx_id)(block)(trx_in_block)(op_in_trx)(timestamp)(serialized_op))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::operation_object, scorum::blockchain_history::operation_index)
 
-FC_REFLECT(scorum::blockchain_history::filtered_not_virt_operations_history_object, (id)(op)(timestamp))
+FC_REFLECT(scorum::blockchain_history::filtered_not_virt_operations_history_object, (id)(op))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_not_virt_operations_history_object,
                          scorum::blockchain_history::filtered_not_virt_operations_history_index)
-FC_REFLECT(scorum::blockchain_history::filtered_virt_operations_history_object, (id)(op)(timestamp))
+FC_REFLECT(scorum::blockchain_history::filtered_virt_operations_history_object, (id)(op))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_virt_operations_history_object,
                          scorum::blockchain_history::filtered_virt_operations_history_index)
-FC_REFLECT(scorum::blockchain_history::filtered_market_operations_history_object, (id)(op)(timestamp))
+FC_REFLECT(scorum::blockchain_history::filtered_market_operations_history_object, (id)(op))
 CHAINBASE_SET_INDEX_TYPE(scorum::blockchain_history::filtered_market_operations_history_object,
                          scorum::blockchain_history::filtered_market_operations_history_index)
