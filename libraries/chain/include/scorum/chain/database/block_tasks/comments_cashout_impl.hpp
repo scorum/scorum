@@ -9,6 +9,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
@@ -33,6 +34,7 @@ class process_comments_cashout_impl
 public:
     struct comment_payout_result
     {
+        /// amount of tokens distributed within particular comment across author, beneficiars and curators
         asset total_claimed_reward;
         asset parent_comment_reward;
     };
@@ -67,13 +69,13 @@ public:
     void close_comment_payout(const comment_object& comment);
 
 private:
-    template <typename TFund>
-    std::vector<asset> collect_comments_fund_rewards(const comment_refs_type& comments,
-                                                     const TFund& fund,
-                                                     fc::uint128_t total_claims) const;
+    std::vector<asset> calculate_comments_payout(const comment_refs_type& comments,
+                                                 const asset& reward_fund_balance,
+                                                 fc::uint128_t total_claims,
+                                                 curve_id reward_curve) const;
 
-    template <typename TFund>
-    fc::uint128_t get_total_claims(const TFund& fund, const comment_refs_type& comments) const;
+    fc::uint128_t
+    get_total_claims(const comment_refs_type& comments, curve_id reward_curve, fc::uint128_t recent_claims) const;
 
     asset pay_curators(const comment_object& comment, asset& max_rewards);
 
@@ -115,6 +117,8 @@ private:
 
     comment_refs_type collect_parents(const comment_refs_type& comments);
 
+    fc::shared_string get_permlink(const fc::shared_string& str) const;
+
 private:
     block_task_context& _ctx;
     dynamic_global_property_service_i& dgp_service;
@@ -124,6 +128,7 @@ private:
     comment_statistic_scr_service_i& comment_statistic_scr_service;
     comment_statistic_sp_service_i& comment_statistic_sp_service;
     comment_vote_service_i& comment_vote_service;
+    hardfork_property_service_i& hardfork_service;
 };
 }
 }

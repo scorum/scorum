@@ -1938,9 +1938,9 @@ void database::init_hardforks(time_point_sec genesis_time)
 
     // SCORUM: structure to initialize hardofrks
 
-    // FC_ASSERT( SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork configuration" );
-    //_hardfork_times[ SCORUM_HARDFORK_0_1 ] = fc::time_point_sec( SCORUM_HARDFORK_0_1_TIME );
-    //_hardfork_versions[ SCORUM_HARDFORK_0_1 ] = SCORUM_HARDFORK_0_1_VERSION;
+    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_1] = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_1] = SCORUM_HARDFORK_0_1_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
