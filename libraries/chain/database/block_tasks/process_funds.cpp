@@ -20,7 +20,9 @@
 #include <scorum/chain/database/budget_management_algorithms.hpp>
 
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/transform.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
+#include <scorum/utils/range_adaptors.hpp>
 
 #include <vector>
 
@@ -38,69 +40,51 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
                                                const budget_type type,
                                                database_virtual_operations_emmiter_i& ctx)
 {
-    asset ret(0, SCORUM_SYMBOL);
-
-    namespace ba = boost::adaptors;
     namespace br = boost::range;
 
-    using vcg_coeff_values_type = std::vector<percent_type>;
-    using per_block_values_type = std::vector<share_type>;
-
-    using object_type = typename ServiceIterfaceType::object_type;
+    asset total_adv_cash(0, ServiceIterfaceType::object_type::symbol_type);
 
     advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
 
-    const auto& budgets = service.get_top_budgets_by_start_time(dgp_service.head_block_time());
+    auto budgets = service.get_top_budgets(dgp_service.head_block_time());
+    std::vector<share_type> per_block_list;
+    br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block.amount; });
 
-    auto active_per_block_count = std::min(vcg_coefficients.size() + 1, budgets.size());
-    auto active_vcg_coeff_count = std::max((int32_t)active_per_block_count - 1, 0);
+    auto valuable_per_block_vec = utils::take_n(per_block_list, vcg_coefficients.size() + 1);
+    auto vcg_bets = calculate_vcg_bets(valuable_per_block_vec, vcg_coefficients);
 
-    vcg_coeff_values_type active_vcg_coeffs;
-    br::copy_n(vcg_coefficients, active_vcg_coeff_count, std::back_inserter(active_vcg_coeffs));
-
-    per_block_values_type active_per_block;
-    auto per_block_rng = budgets | ba::transformed([](const object_type& b) { return b.per_block.amount; });
-    br::copy_n(per_block_rng, active_per_block_count, std::back_inserter(active_per_block));
-
-    size_t ci = 0;
-
-    for (const object_type& budget : budgets)
+    for (size_t i = 0; i < budgets.size(); ++i)
     {
+        const auto& budget = budgets[i].get();
         auto budget_owner = budget.owner;
         auto budget_id = budget.id._id;
 
-        asset per_block = manager.allocate_cash(budget);
+        auto per_block = manager.allocate_cash(budget);
 
-        auto advertising_cash = asset(0, per_block.symbol());
-        if (active_per_block.size() < 2)
-        {
-            advertising_cash = per_block;
-        }
-        else if (ci < active_vcg_coeffs.size())
-        {
-            advertising_cash
-                = asset(calculate_vcg_cash(ci++, active_vcg_coeffs, active_per_block), advertising_cash.symbol());
-        }
+        auto adv_cash = asset(0, per_block.symbol());
+        if (i < vcg_bets.size())
+            adv_cash = asset(vcg_bets[i], per_block.symbol());
 
-        if (advertising_cash.amount > 0)
+        if (adv_cash.amount > 0)
         {
-            ret += advertising_cash;
+            total_adv_cash += adv_cash;
 
             ctx.push_virtual_operation(
-                allocate_cash_from_advertising_budget_operation(type, budget_owner, budget_id, advertising_cash));
+                allocate_cash_from_advertising_budget_operation(type, budget_owner, budget_id, adv_cash));
         }
 
-        auto change_cash = per_block - advertising_cash;
-        if (change_cash.amount > 0)
+        auto ret_cash = per_block - adv_cash;
+        FC_ASSERT(ret_cash.amount >= 0, "cash-back amount cannot be less than zero");
+        if (ret_cash.amount > 0)
         {
-            manager.cash_back(budget_owner, change_cash);
+            manager.cash_back(budget_owner, ret_cash);
 
             ctx.push_virtual_operation(
-                cash_back_from_advertising_budget_to_owner_operation(type, budget_owner, budget_id, change_cash));
+                cash_back_from_advertising_budget_to_owner_operation(type, budget_owner, budget_id, ret_cash));
         }
     }
 
-    return ret;
+    return total_adv_cash;
 }
 
 void process_funds::on_apply(block_task_context& ctx)
