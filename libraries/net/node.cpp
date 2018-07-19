@@ -4727,7 +4727,7 @@ void node_impl::connect_to_task(peer_connection_ptr new_peer, const fc::ip::endp
         schedule_peer_for_deletion(new_peer);
 
         if (connect_failed_exception)
-            throw * connect_failed_exception;
+            throw(*connect_failed_exception);
     }
     else
     {

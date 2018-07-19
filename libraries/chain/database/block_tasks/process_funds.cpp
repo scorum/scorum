@@ -144,7 +144,8 @@ void process_funds::on_apply(block_task_context& ctx)
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.
-    asset dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset dev_team_reward = advertising_budgets_reward
+        * utils::make_fraction(SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
     dev_service.update([&](dev_committee_object& dco) { dco.scr_balance += dev_team_reward; });
 
     // 50% of revenue is distributed in SCR among users.
@@ -165,8 +166,8 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
 
     // clang-format off
     /// 5% of total per block reward(equal to 10% of users only reward) to witness and active sp holder pay
-    asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    asset active_sp_holder_reward = users_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset witness_reward = users_reward * utils::make_fraction(SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
+    asset active_sp_holder_reward = users_reward  * utils::make_fraction(SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT ,SCORUM_100_PERCENT);
     asset content_reward = users_reward - witness_reward - active_sp_holder_reward;
     // clang-format on
 
@@ -228,11 +229,9 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
         {
             for (const account_object& account : active_sp_holders_array)
             {
-                fc::uint128_t account_reward_value = total_reward.amount.value;
-                account_reward_value *= account.vote_reward_competitive_sp.amount.value;
-                account_reward_value /= total_sp.amount.value;
-
-                asset account_reward = asset(account_reward_value.to_uint64(), total_reward.symbol());
+                // It is used SP balance amount of account to calculate reward either in SP or SCR tokens
+                asset account_reward
+                    = total_reward * utils::make_fraction(account.vote_reward_competitive_sp.amount, total_sp.amount);
 
                 charge_account_reward(ctx, account, account_reward);
 
