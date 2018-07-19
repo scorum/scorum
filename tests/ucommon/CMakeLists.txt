@@ -19,6 +19,7 @@ target_link_libraries(ucommon_test
                       chainbase
                       scorum_chain
                       scorum_protocol
+                      scorum_common_api
                       cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS}

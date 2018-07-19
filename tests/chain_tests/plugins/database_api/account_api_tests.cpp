@@ -27,7 +27,7 @@ using namespace database_fixture;
 struct account_api_test_fixture : public database_blog_integration_fixture
 {
     account_api_test_fixture()
-        : _database_api_ctx(app, "database_api", std::make_shared<api_session_data>())
+        : _database_api_ctx(app, API_DATABASE, std::make_shared<api_session_data>())
         , database_api_call(_database_api_ctx)
         , account_service(db.account_service())
     {
