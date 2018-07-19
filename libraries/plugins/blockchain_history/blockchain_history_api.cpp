@@ -100,7 +100,9 @@ public:
                                              uint32_t from_op,
                                              uint32_t limit) const
     {
-        FC_ASSERT(from <= to, "From is greater than to");
+        FC_ASSERT(from <= to, "'From' is greater than 'to'");
+        FC_ASSERT(to - from <= MAX_TIMESTAMP_RANGE, "Timestamp range can't be more then ${t} seconds",
+                  ("t", MAX_TIMESTAMP_RANGE.to_seconds()));
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
         FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
                   ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));

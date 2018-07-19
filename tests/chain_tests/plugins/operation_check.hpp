@@ -5,6 +5,7 @@
 #include <scorum/protocol/operations.hpp>
 
 #include <string>
+#include <iostream>
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -61,5 +62,20 @@ struct check_saved_opetations_visitor
 
 private:
     const operation& _input_op;
+};
+
+struct view_opetations_visitor
+{
+    using result_type = void;
+
+    template <typename Op> void operator()(const Op& op) const
+    {
+        fc::variant vo;
+        fc::to_variant(op, vo);
+
+        std::string output_json = fc::json::to_pretty_string(vo);
+
+        std::cerr << output_json << std::endl;
+    }
 };
 }

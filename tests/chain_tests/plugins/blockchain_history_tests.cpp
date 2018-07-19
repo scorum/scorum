@@ -1017,4 +1017,85 @@ SCORUM_TEST_CASE(check_get_ops_history)
     }
 }
 
+SCORUM_TEST_CASE(get_ops_history_by_timestamp)
+{
+    using input_operation_vector_type = std::vector<operation>;
+    input_operation_vector_type input_ops_timestamp1;
+
+    generate_block();
+
+    auto timestamp1 = db.head_block_time();
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        push_operation(op, alice.private_key);
+        input_ops_timestamp1.push_back(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = bob.name;
+        op.to = alice.name;
+        op.amount = ASSET_SCR(feed_amount / 20);
+        op.memo = "test";
+        push_operation(op, bob.private_key);
+        input_ops_timestamp1.push_back(op);
+    }
+
+    generate_block();
+
+    auto timestamp2 = db.head_block_time() + SCORUM_BLOCK_INTERVAL * 10;
+
+    generate_blocks(timestamp2);
+
+    input_operation_vector_type input_ops_timestamp2;
+
+    {
+        auto signing_key = private_key_type::regenerate(fc::sha256::hash("witness")).get_public_key();
+        witness_update_operation op;
+        op.owner = alice;
+        op.url = "witness creation";
+        op.block_signing_key = signing_key;
+        push_operation(op, alice.private_key);
+        input_ops_timestamp2.push_back(op);
+    }
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount / 30);
+        push_operation(op, alice.private_key);
+        input_ops_timestamp2.push_back(op);
+    }
+
+    generate_block();
+
+    //    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_timestamp(
+    //                             timestamp1, timestamp2, blockchain_history::applied_operation_type::market),
+    //                         fc::exception);
+
+    operation_map_type result = blockchain_history_api_call.get_ops_history_by_timestamp(
+        timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
+    for (const auto& val : result)
+    {
+        const auto& saved_op = val.second.op;
+        saved_op.visit(operation_tests::view_opetations_visitor());
+    }
+
+    std::cerr << "==" << std::endl;
+
+    result = blockchain_history_api_call.get_ops_history_by_timestamp(timestamp2, db.head_block_time(), -1, 100);
+    for (const auto& val : result)
+    {
+        const auto& saved_op = val.second.op;
+        saved_op.visit(operation_tests::view_opetations_visitor());
+    }
+
+    // TODO
+}
+
 BOOST_AUTO_TEST_SUITE_END()
