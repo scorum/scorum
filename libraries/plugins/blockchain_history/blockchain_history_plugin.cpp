@@ -310,6 +310,8 @@ void blockchain_history_plugin::plugin_set_program_options(boost::program_option
         "history-blacklist-ops", boost::program_options::value<std::vector<std::string>>()->composing(),
         "Defines a list of operations which will be explicitly ignored.");
     cfg.add(cli);
+    get_api_config(API_BLOCKCHAIN_HISTORY).get_program_options(cli, cfg);
+    get_api_config(API_ACCOUNT_HISTORY).get_program_options(cli, cfg);
 }
 
 void blockchain_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
