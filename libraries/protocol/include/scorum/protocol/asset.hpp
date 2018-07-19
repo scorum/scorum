@@ -2,6 +2,9 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/config.hpp>
 
+#include <scorum/utils/fraction.hpp>
+#include <scorum/utils/extra_high_bit_operations.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -86,7 +89,12 @@ struct asset
         amount /= o_amount;
         return *this;
     }
-
+    template <typename FractionalNumerator, typename FractionalDenominator>
+    asset& operator*=(const utils::fraction<FractionalNumerator, FractionalDenominator>& fraction)
+    {
+        amount = utils::multiply_by_fractional(amount.value, fraction.numerator, fraction.denominator);
+        return *this;
+    }
     friend bool operator==(const asset& a, const asset& b)
     {
         return std::tie(a._symbol, a.amount) == std::tie(b._symbol, b.amount);
@@ -142,6 +150,13 @@ struct asset
         ret *= b_amount;
         return ret;
     }
+    template <typename FractionalNumerator, typename FractionalDenominator>
+    friend asset operator*(const asset& a, const utils::fraction<FractionalNumerator, FractionalDenominator>& fraction)
+    {
+        asset ret(a);
+        ret *= fraction;
+        return ret;
+    }
     template <typename T> friend asset operator/(const asset& a, const T& b_amount)
     {
         asset ret(a);
@@ -181,7 +196,6 @@ template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::
     a = scorum::protocol::asset::from_string(str);
     return stream;
 }
-
 } // namespace protocol
 } // namespace scorum
 

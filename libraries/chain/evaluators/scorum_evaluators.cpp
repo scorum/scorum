@@ -53,7 +53,6 @@ std::string wstring_to_utf8(const std::wstring& str)
 
 namespace scorum {
 namespace chain {
-using fc::uint128_t;
 
 inline void validate_permlink_0_1(const std::string& permlink)
 {

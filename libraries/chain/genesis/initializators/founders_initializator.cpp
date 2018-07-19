@@ -72,12 +72,7 @@ asset founders_initializator_impl::distribure_sp_by_percent(initializator_contex
     {
         uint16_t percent = SCORUM_PERCENT(founder.sp_percent);
 
-        asset sp_bonus = ctx.genesis_state().founders_supply;
-
-        fc::uint128_t sp_bonus_amount = sp_bonus.amount.value;
-        sp_bonus_amount *= percent;
-        sp_bonus_amount /= SCORUM_100_PERCENT;
-        sp_bonus.amount = sp_bonus_amount.to_uint64();
+        asset sp_bonus = ctx.genesis_state().founders_supply * utils::make_fraction(percent, SCORUM_100_PERCENT);
 
         if (sp_bonus.amount > (share_value_type)0)
         {
@@ -98,8 +93,8 @@ void founders_initializator_impl::distribure_sp_rest(initializator_context& ctx,
 {
     static const float sp_percent_limit_for_pitiful = 0.02f;
 
-    FC_ASSERT(rest.amount < ctx.genesis_state().founders_supply.amount * SCORUM_PERCENT(sp_percent_limit_for_pitiful)
-                      / SCORUM_100_PERCENT,
+    FC_ASSERT(rest < ctx.genesis_state().founders_supply
+                      * utils::make_fraction(SCORUM_PERCENT(sp_percent_limit_for_pitiful), SCORUM_100_PERCENT),
               "Too big rest ${r} for single pitiful. There are many pitiful members in genesis maybe.", ("r", rest));
 
     asset founders_supply_rest = rest;
