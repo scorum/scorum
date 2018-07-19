@@ -211,7 +211,7 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
 }
 
-SCORUM_TEST_CASE(post_budget_from_same_acc_arranging)
+SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
 {
     /*
      * VCG algorithm for 3 bets/2 coefficients:
@@ -227,7 +227,7 @@ SCORUM_TEST_CASE(post_budget_from_same_acc_arranging)
      *
      * NOTE: winner's per-block payment equals looser's bet in this case.
      */
-    auto b1 = create_budget(alice, budget_type::post, 100, 10);
+    create_budget(alice, budget_type::post, 100, 10);
     generate_block();
 
     {
@@ -235,22 +235,23 @@ SCORUM_TEST_CASE(post_budget_from_same_acc_arranging)
         BOOST_REQUIRE_EQUAL(budgets.size(), 1);
         // There is a single budget so whole 'per-block' amount should be decreased from budget
         BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - budgets[0].get().per_block.amount);
-        BOOST_CHECK_EQUAL(fc::to_string(budgets[0].get().json_metadata), b1.json_metadata);
     }
 
-    auto b2 = create_budget(alice, budget_type::post, 200, 10);
+    auto alice_balance_before = account_service.get_account(alice.name).balance;
+    create_budget(alice, budget_type::post, 200, 10);
     generate_block();
+    auto alice_balance_after = account_service.get_account(alice.name).balance;
 
     {
         auto budgets = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(budgets.size(), 2);
         // 'b1' is a loser
         BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - 2 * budgets[0].get().per_block.amount);
-        BOOST_CHECK_EQUAL(fc::to_string(budgets[0].get().json_metadata), b1.json_metadata);
-        // There are two budgets. 'b2' is a winner. According to VCG algorithm its per-block payment should be equal to
-        // looser's per-block payment
+        // There are two budgets. 'b2' is a winner. According to VCG algorithm its payment should be equal to
+        // looser's per-block payment. The rest should be returned to account.
         BOOST_CHECK_EQUAL(budgets[1].get().balance.amount, 200 - budgets[1].get().per_block.amount);
-        BOOST_CHECK_EQUAL(fc::to_string(budgets[1].get().json_metadata), b2.json_metadata);
+        auto returned_to_acc = budgets[1].get().per_block.amount - budgets[0].get().per_block.amount;
+        BOOST_CHECK_EQUAL(alice_balance_before.amount - 200 + returned_to_acc, alice_balance_after.amount);
     }
 }
 
