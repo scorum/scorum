@@ -63,7 +63,7 @@ To stop/start/restart node use
 # Seed Nodes
 
 A list of some seed nodes to get you started can be found in
-[doc/seednodes.txt](doc/seednodes.txt). This list is embedded into default config.ini.
+[seed-nodes](https://github.com/scorum/scorum/wiki/Seeds). This list is embedded into default config.ini.
 
 # Building
 
