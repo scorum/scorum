@@ -42,16 +42,18 @@ protected:
     config_api(config_api&);
 
 private:
-    friend config_api& get_api_config(const std::string& api_name = std::string("api"));
+    static const std::string defailt_api_name;
 
-    std::string get_option_name(const char* field);
-    std::string get_option_description(const char* field);
+    friend config_api& get_api_config(std::string api_name = std::string());
+
+    std::string get_option_name(const char* field, bool default_api = false);
+    std::string get_option_description(const char* field, bool default_api = false);
 
     using configs_by_api_type = std::map<std::string, std::unique_ptr<config_api>>;
     static configs_by_api_type _instances_by_api;
 };
 
-config_api& get_api_config(const std::string& api_name);
+config_api& get_api_config(std::string api_name);
 }
 
 #define MAX_BLOCKCHAIN_HISTORY_DEPTH (get_api_config().max_blockchain_history_depth)

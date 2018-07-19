@@ -48,23 +48,39 @@ BOOST_AUTO_TEST_CASE(get_api_config_no_throw)
     BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name).lookup_limit);
 }
 
-BOOST_AUTO_TEST_CASE(set_options_for_api_config)
+BOOST_AUTO_TEST_CASE(set_and_reset_options_for_api_config)
 {
+    BOOST_CHECK_EQUAL(get_api_config().lookup_limit, 1000);
+    BOOST_CHECK_EQUAL(get_api_config(any_api_name).lookup_limit, 1000);
+    BOOST_CHECK_EQUAL(get_api_config().tags_to_analize_count, 8);
+    BOOST_CHECK_EQUAL(get_api_config(any_api_name).tags_to_analize_count, 8);
+
     std::vector<std::string> input = {
         R"(--any-api-lookup-limit=222000)"
     };
 
-    BOOST_CHECK_EQUAL(get_api_config(any_api_name).lookup_limit, 1000);
-
+    BOOST_REQUIRE_NO_THROW(get_api_config().set_options(parse_input(input)));
     BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name).set_options(parse_input(input)));
 
-    BOOST_CHECK_EQUAL(get_api_config(any_api_name).lookup_limit, 222000);
-
     BOOST_CHECK_EQUAL(get_api_config().lookup_limit, 1000);
-
+    BOOST_CHECK_EQUAL(get_api_config(any_api_name).lookup_limit, 222000);
+    BOOST_CHECK_EQUAL(get_api_config().tags_to_analize_count, 8);
     BOOST_CHECK_EQUAL(get_api_config(any_api_name).tags_to_analize_count, 8);
 
-    input = {
+    input = { R"(--any-api-tags-to-analize-count=11)" };
+
+    BOOST_REQUIRE_NO_THROW(get_api_config().set_options(parse_input(input)));
+    BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name).set_options(parse_input(input)));
+
+    BOOST_CHECK_EQUAL(get_api_config().lookup_limit, 1000);
+    BOOST_CHECK_EQUAL(get_api_config(any_api_name).lookup_limit, 1000);
+    BOOST_CHECK_EQUAL(get_api_config().tags_to_analize_count, 8);
+    BOOST_CHECK_EQUAL(get_api_config(any_api_name).tags_to_analize_count, 11);
+}
+
+BOOST_AUTO_TEST_CASE(options_priority_check)
+{
+    std::vector<std::string> input = {
         R"(--api-lookup-limit=333000)", R"(--any-api-tags-to-analize-count=11)"
     };
 
@@ -72,9 +88,8 @@ BOOST_AUTO_TEST_CASE(set_options_for_api_config)
     BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name).set_options(parse_input(input)));
 
     BOOST_CHECK_EQUAL(get_api_config().lookup_limit, 333000);
-
     BOOST_CHECK_EQUAL(get_api_config(any_api_name).lookup_limit, 1000);
-
+    BOOST_CHECK_EQUAL(get_api_config().tags_to_analize_count, 8);
     BOOST_CHECK_EQUAL(get_api_config(any_api_name).tags_to_analize_count, 11);
 }
 

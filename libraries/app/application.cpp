@@ -1193,6 +1193,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
 
+    get_api_config().get_program_options(command_line_options, configuration_file_options);
     get_api_config(API_DATABASE).get_program_options(command_line_options, configuration_file_options);
 }
 
