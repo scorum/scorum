@@ -42,7 +42,7 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
 {
     namespace br = boost::range;
 
-    asset total_adv_cash(0, SCORUM_SYMBOL);
+    asset total_adv_cash(0, ServiceIterfaceType::object_type::symbol_type);
 
     advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
 
