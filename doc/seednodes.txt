@@ -1,4 +1,0 @@
-seed-node = seed1.scorum.com:2001
-seed-node = seed2.scorum.com:2001
-seed-node = seed3.scorum.com:2001
-seed-node = seed4.scorum.com:2001
