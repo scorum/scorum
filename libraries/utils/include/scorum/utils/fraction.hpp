@@ -7,11 +7,16 @@ namespace utils {
 
 template <typename FractionalNumerator, typename FractionalDenominator> class fraction
 {
+    FractionalNumerator _numerator;
+    FractionalDenominator _denominator;
+
 public:
     fraction() = delete;
     fraction(const FractionalNumerator& numerator_, const FractionalDenominator& denominator_)
-        : numerator(numerator_)
-        , denominator(denominator_)
+        : _numerator(numerator_) // copy
+        , _denominator(denominator_) // copy
+        , numerator(_numerator) // protect
+        , denominator(_denominator) // protect
     {
     }
 
