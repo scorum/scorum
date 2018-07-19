@@ -95,7 +95,7 @@ public:
     }
 
     template <typename IndexType>
-    result_type get_ops_history_by_timestamp(const fc::time_point_sec& from,
+    result_type get_ops_history_by_time(const fc::time_point_sec& from,
                                              const fc::time_point_sec& to,
                                              uint32_t from_op,
                                              uint32_t limit) const
@@ -262,11 +262,11 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
     });
 }
 
-std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history_by_timestamp(
+std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history_by_time(
     const fc::time_point_sec& from, const fc::time_point_sec& to, uint32_t from_op, uint32_t limit) const
 {
     return _impl->_app.chain_database()->with_read_lock(
-        [&]() { return _impl->get_ops_history_by_timestamp<operation_index>(from, to, from_op, limit); });
+        [&]() { return _impl->get_ops_history_by_time<operation_index>(from, to, from_op, limit); });
 }
 
 std::map<uint32_t, applied_operation>

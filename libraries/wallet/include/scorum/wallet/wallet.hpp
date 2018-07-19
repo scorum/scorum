@@ -176,7 +176,7 @@ public:
     *  @param from_op - the operation number, -1 means most recent, limit is the number of operations before from.
     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
     */
-    std::map<uint32_t, applied_operation> get_ops_history_by_timestamp(const fc::time_point_sec& from,
+    std::map<uint32_t, applied_operation> get_ops_history_by_time(const fc::time_point_sec& from,
                                                                        const fc::time_point_sec& to,
                                                                        uint32_t from_op,
                                                                        uint32_t limit) const;
@@ -1415,7 +1415,7 @@ FC_API( scorum::wallet::wallet_api,
         (get_blocks_history)
         (get_ops_in_block)
         (get_ops_history)
-        (get_ops_history_by_timestamp)
+        (get_ops_history_by_time)
         (get_account_history)
         (get_account_scr_to_scr_transfers)
         (get_account_scr_to_sp_transfers)

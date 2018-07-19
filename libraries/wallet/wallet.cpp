@@ -1070,14 +1070,14 @@ wallet_api::get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_
     return (*my->_remote_blockchain_history_api)->get_ops_history(from_op, limit, type_of_operation);
 }
 
-std::map<uint32_t, applied_operation> wallet_api::get_ops_history_by_timestamp(const fc::time_point_sec& from,
+std::map<uint32_t, applied_operation> wallet_api::get_ops_history_by_time(const fc::time_point_sec& from,
                                                                                const fc::time_point_sec& to,
                                                                                uint32_t from_op,
                                                                                uint32_t limit) const
 {
     my->use_remote_blockchain_history_api();
 
-    return (*my->_remote_blockchain_history_api)->get_ops_history_by_timestamp(from, to, from_op, limit);
+    return (*my->_remote_blockchain_history_api)->get_ops_history_by_time(from, to, from_op, limit);
 }
 
 std::vector<account_api_obj> wallet_api::list_my_accounts()

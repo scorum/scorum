@@ -1017,7 +1017,7 @@ SCORUM_TEST_CASE(check_get_ops_history)
     }
 }
 
-SCORUM_TEST_CASE(get_ops_history_by_timestamp)
+SCORUM_TEST_CASE(get_ops_history_by_time)
 {
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops_timestamp1;
@@ -1074,11 +1074,11 @@ SCORUM_TEST_CASE(get_ops_history_by_timestamp)
 
     generate_block();
 
-    //    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_timestamp(
+    //    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(
     //                             timestamp1, timestamp2, blockchain_history::applied_operation_type::market),
     //                         fc::exception);
 
-    operation_map_type result = blockchain_history_api_call.get_ops_history_by_timestamp(
+    operation_map_type result = blockchain_history_api_call.get_ops_history_by_time(
         timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
     for (const auto& val : result)
     {
@@ -1088,7 +1088,7 @@ SCORUM_TEST_CASE(get_ops_history_by_timestamp)
 
     std::cerr << "==" << std::endl;
 
-    result = blockchain_history_api_call.get_ops_history_by_timestamp(timestamp2, db.head_block_time(), -1, 100);
+    result = blockchain_history_api_call.get_ops_history_by_time(timestamp2, db.head_block_time(), -1, 100);
     for (const auto& val : result)
     {
         const auto& saved_op = val.second.op;
