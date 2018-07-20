@@ -1195,9 +1195,11 @@ void application::set_program_options(boost::program_options::options_descriptio
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
 
-    command_line_options.add(get_api_config().get_options_descriptions());
-    command_line_options.add(get_api_config(API_DATABASE).get_options_descriptions());
-    configuration_file_options.add(command_line_options);
+    boost::program_options::options_description api_description;
+    api_description.add(get_api_config().get_options_descriptions());
+    api_description.add(get_api_config(API_DATABASE).get_options_descriptions());
+    command_line_options.add(api_description);
+    configuration_file_options.add(api_description);
 }
 
 const std::string application::print_config(const boost::program_options::variables_map& vm)
