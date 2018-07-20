@@ -4,7 +4,7 @@
 
 #include <scorum/chain/schema/budget_objects.hpp>
 
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include "budget_check_common.hpp"
 

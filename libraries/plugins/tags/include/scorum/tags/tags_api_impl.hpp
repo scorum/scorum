@@ -28,7 +28,7 @@
 
 #include <scorum/rewards_math/formulas.hpp>
 
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_service.hpp>
 
@@ -82,7 +82,7 @@ public:
 
     std::vector<api::tag_api_obj> get_trending_tags(const std::string& after_tag, uint32_t limit) const
     {
-        limit = std::min(limit, uint32_t(LOOKUP_LIMIT));
+        limit = std::min(limit, get_api_config(TAGS_API_NAME).lookup_limit);
         std::vector<api::tag_api_obj> result;
         result.reserve(limit);
 
@@ -115,7 +115,8 @@ public:
         auto itr = tidx.lower_bound(boost::make_tuple(acnt.id, 0));
         std::vector<std::pair<std::string, uint32_t>> result;
 
-        while (itr != tidx.end() && itr->author == acnt.id && result.size() < LOOKUP_LIMIT)
+        while (itr != tidx.end() && itr->author == acnt.id
+               && result.size() < get_api_config(TAGS_API_NAME).lookup_limit)
         {
             result.push_back(std::make_pair(itr->tag, itr->total_posts));
             ++itr;
@@ -170,8 +171,9 @@ public:
 
     std::vector<discussion> get_discussions_by_author(const discussion_query& query) const
     {
-        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
-                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(query.limit <= get_api_config(TAGS_API_NAME).max_discussions_list_size,
+                  "limit cannot be more than "
+                      + std::to_string(get_api_config(TAGS_API_NAME).max_discussions_list_size));
         FC_ASSERT(query.start_author && !query.start_author->empty(),
                   "start_author should be specified and cannot be empty");
 
@@ -381,8 +383,8 @@ private:
                                             = &tag_filter_default) const
     {
         // clang-format off
-        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
-                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(query.limit <= get_api_config(TAGS_API_NAME).max_discussions_list_size,
+                  "limit cannot be more than " + std::to_string(get_api_config(TAGS_API_NAME).max_discussions_list_size));
         FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
                   (!query.start_author && !query.start_permlink),
                   "start_author and start_permlink should be either both specified and not empty or both not specified");

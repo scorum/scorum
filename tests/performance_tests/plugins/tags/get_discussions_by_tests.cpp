@@ -3,7 +3,7 @@
 #include <scorum/tags/tags_api.hpp>
 #include <scorum/app/api_context.hpp>
 #include <scorum/chain/services/account.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 #include <boost/test/unit_test.hpp>
 #include <fc/filesystem.hpp>
 #include <graphene/utilities/tempdir.hpp>

@@ -73,6 +73,8 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <scorum/common_api/config_api.hpp>
+
 namespace scorum {
 namespace app {
 
@@ -288,7 +290,7 @@ public:
     void register_builtin_apis()
     {
         _self->register_api_factory<login_api>("login_api");
-        _self->register_api_factory<database_api>("database_api");
+        _self->register_api_factory<database_api>(API_DATABASE);
         _self->register_api_factory<chain_api>(API_CHAIN);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
@@ -441,7 +443,7 @@ public:
                 wild_access.username = "*";
                 wild_access.password_hash_b64 = "*";
                 wild_access.password_salt_b64 = "*";
-                wild_access.allowed_apis.push_back("database_api");
+                wild_access.allowed_apis.push_back(API_DATABASE);
                 wild_access.allowed_apis.push_back(API_CHAIN);
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
@@ -1124,7 +1126,7 @@ std::vector<std::string> application::get_default_apis() const
 {
     std::vector<std::string> result;
 
-    result.push_back("database_api");
+    result.push_back(API_DATABASE);
     result.push_back("login_api");
     result.push_back(API_CHAIN);
     result.push_back("account_by_key_api");
@@ -1192,6 +1194,12 @@ void application::set_program_options(boost::program_options::options_descriptio
 
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
+
+    boost::program_options::options_description api_description;
+    api_description.add(get_api_config().get_options_descriptions());
+    api_description.add(get_api_config(API_DATABASE).get_options_descriptions());
+    command_line_options.add(api_description);
+    configuration_file_options.add(api_description);
 }
 
 const std::string application::print_config(const boost::program_options::variables_map& vm)
@@ -1306,6 +1314,9 @@ void application::initialize(const boost::program_options::variables_map& option
     ilog("initializing node with config:\n${config}", ("config", print_config(options)));
 
     my->_options = &options;
+
+    get_api_config().set_options(options);
+    get_api_config(API_DATABASE).set_options(options);
 }
 
 void application::startup()

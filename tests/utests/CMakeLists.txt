@@ -38,6 +38,7 @@ set(SOURCES
     budgets/evaluators_tests.cpp
     budgets/vcg_calculation_tests.cpp
     fraction_tests.cpp
+    config_api_tests.cpp
 )
 
 add_executable(utests

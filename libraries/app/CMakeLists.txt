@@ -21,6 +21,7 @@ target_link_libraries( scorum_app
                        scorum_witness
                        scorum_mf_plugins
                        fc
+                       scorum_common_api
                        graphene_net
                        graphene_utilities
                        ${PLATFORM_SPECIFIC_LIBS})
@@ -28,7 +29,6 @@ target_include_directories( scorum_app
                             PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
-                            "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_api/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/common_statistics/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/blockchain_history/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/account_statistics/include"

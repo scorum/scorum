@@ -1,4 +1,7 @@
 #pragma once
+
+#define API_DATABASE "database_api"
+
 #include <scorum/app/state.hpp>
 
 #include <scorum/chain/database/database.hpp>
