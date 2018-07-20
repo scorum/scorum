@@ -188,7 +188,9 @@ namespace utils {
 
 bool is_quorum(size_t votes, size_t members_count, size_t quorum)
 {
-    const size_t voted_percent = votes * SCORUM_100_PERCENT / members_count;
+    using safe_size_type = fc::safe<size_t>;
+
+    const size_t voted_percent = (safe_size_type(votes) * SCORUM_100_PERCENT / members_count).value;
 
     return voted_percent >= SCORUM_PERCENT(quorum) ? true : false;
 }

@@ -47,42 +47,39 @@ public:
 
 struct by_owner_name;
 struct by_authorized_owner;
-struct by_start_time;
+struct by_per_block;
 
-template <typename BudgetObjectType>
+template <typename TBudgetObject> using id_t = typename TBudgetObject::id_type;
+
+template <typename TBudgetObject>
 using budget_index
-    = shared_multi_index_container<BudgetObjectType,
+    = shared_multi_index_container<TBudgetObject,
                                    indexed_by<ordered_unique<tag<by_id>,
-                                                             member<BudgetObjectType,
-                                                                    typename BudgetObjectType::id_type,
-                                                                    &BudgetObjectType::id>>,
+                                                             member<TBudgetObject,
+                                                                    id_t<TBudgetObject>,
+                                                                    &TBudgetObject::id>>,
                                               ordered_non_unique<tag<by_owner_name>,
-                                                                 member<BudgetObjectType,
+                                                                 member<TBudgetObject,
                                                                         account_name_type,
-                                                                        &BudgetObjectType::owner>>,
+                                                                        &TBudgetObject::owner>>,
                                               ordered_unique<tag<by_authorized_owner>,
-                                                             composite_key<BudgetObjectType,
-                                                                           member<BudgetObjectType,
+                                                             composite_key<TBudgetObject,
+                                                                           member<TBudgetObject,
                                                                                   account_name_type,
-                                                                                  &BudgetObjectType::owner>,
-                                                                           member<BudgetObjectType,
-                                                                                  typename BudgetObjectType::id_type,
-                                                                                  &BudgetObjectType::id>>>,
-                                              ordered_unique<tag<by_start_time>,
-                                                             composite_key<BudgetObjectType,
-                                                                           member<BudgetObjectType,
-                                                                                  time_point_sec,
-                                                                                  &BudgetObjectType::start>,
-                                                                           member<BudgetObjectType,
+                                                                                  &TBudgetObject::owner>,
+                                                                           member<TBudgetObject,
+                                                                                  id_t<TBudgetObject>,
+                                                                                  &TBudgetObject::id>>>,
+                                              ordered_unique<tag<by_per_block>,
+                                                             composite_key<TBudgetObject,
+                                                                           member<TBudgetObject,
                                                                                   asset,
-                                                                                  &BudgetObjectType::per_block>,
-                                                                           member<BudgetObjectType,
-                                                                                  typename BudgetObjectType::id_type,
-                                                                                  &BudgetObjectType::id>>,
-                                                             composite_key_compare<std::less<time_point_sec>,
-                                                                                   std::greater<asset>,
-                                                                                   std::less<typename BudgetObjectType::
-                                                                                                 id_type>>>>>;
+                                                                                  &TBudgetObject::per_block>,
+                                                                           member<TBudgetObject,
+                                                                                  id_t<TBudgetObject>,
+                                                                                  &TBudgetObject::id>>,
+                                                             composite_key_compare<std::greater<asset>,
+                                                                                   std::less<id_t<TBudgetObject>>>>>>;
 
 using fund_budget_object = budget_object<fund_budget_object_type, SP_SYMBOL>;
 using post_budget_object = budget_object<post_budget_object_type, SCORUM_SYMBOL>;
