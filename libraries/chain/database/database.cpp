@@ -634,7 +634,7 @@ bool database::_push_block(const signed_block& new_block)
                                 debug_log(ctx, "applied block=${b}", ("b", (std::string)block_info((*ritr)->data)));
                                 session->push();
                             }
-                            throw * except;
+                            throw(*except);
                         }
                     }
 

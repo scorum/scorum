@@ -117,7 +117,7 @@ SCORUM_TEST_CASE(lookup_banner_budget_owners_check)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct get_top_budgets_by_start_time_check_fixture : public budget_service_getters_check_fixture
+struct get_top_budgets_check_fixture : public budget_service_getters_check_fixture
 {
     template <typename ServiceType> void test_limited_check(ServiceType& service, budget_type type)
     {
@@ -126,10 +126,10 @@ struct get_top_budgets_by_start_time_check_fixture : public budget_service_gette
 
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 2u);
 
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time(), 1u).size(), 1u);
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time(), 2u).size(), 2u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.head_block_time(), 1u).size(), 1u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.head_block_time(), 2u).size(), 2u);
 
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.head_block_time()).size(), 2u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.head_block_time()).size(), 2u);
     }
 
     template <typename ServiceType> void test_start_time_check(ServiceType& service, budget_type type)
@@ -145,16 +145,15 @@ struct get_top_budgets_by_start_time_check_fixture : public budget_service_gette
 
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 3u);
 
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks), 3u).size(), 2u);
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks * 2), 3u).size(),
-                            3u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.get_slot_time(start_in_blocks), 3u).size(), 2u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.get_slot_time(start_in_blocks * 2), 3u).size(), 3u);
 
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks)).size(), 2u);
-        BOOST_REQUIRE_EQUAL(service.get_top_budgets_by_start_time(db.get_slot_time(start_in_blocks * 2)).size(), 3u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.get_slot_time(start_in_blocks)).size(), 2u);
+        BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.get_slot_time(start_in_blocks * 2)).size(), 3u);
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(get_top_budgets_by_start_time_check, get_top_budgets_by_start_time_check_fixture)
+BOOST_FIXTURE_TEST_SUITE(get_top_budgets_check, get_top_budgets_check_fixture)
 
 SCORUM_TEST_CASE(limited_check)
 {
@@ -181,11 +180,10 @@ SCORUM_TEST_CASE(ordered_by_per_block_check)
 
     actors_type expected_actors{ sam.name, alice.name, bob.name };
 
-    BOOST_REQUIRE_EQUAL(
-        post_budget_service.get_top_budgets_by_start_time(db.head_block_time(), expected_actors.size()).size(),
-        expected_actors.size());
+    BOOST_REQUIRE_EQUAL(post_budget_service.get_top_budgets(db.head_block_time(), expected_actors.size()).size(),
+                        expected_actors.size());
     size_t ci = 0;
-    for (const post_budget_object& budget : post_budget_service.get_top_budgets_by_start_time(db.head_block_time(), 3u))
+    for (const post_budget_object& budget : post_budget_service.get_top_budgets(db.head_block_time(), 3u))
     {
         BOOST_CHECK_EQUAL(budget.owner, expected_actors[ci++]);
     }
