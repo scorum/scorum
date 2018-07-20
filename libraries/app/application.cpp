@@ -1310,6 +1310,7 @@ void application::initialize(const boost::program_options::variables_map& option
 
     my->_options = &options;
 
+    get_api_config().set_options(options);
     get_api_config(API_DATABASE).set_options(options);
 }
 

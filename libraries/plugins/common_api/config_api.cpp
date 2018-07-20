@@ -135,7 +135,9 @@ std::string config_api::get_option_name(const char* field, bool default_api)
 {
     static const auto regex = std::regex("_");
     std::string result;
-    result = (default_api) ? defailt_api_name : api_name() + "-" + field;
+    result = (default_api) ? defailt_api_name : api_name();
+    result += "-";
+    result += field;
     return std::regex_replace(result, regex, "-");
 }
 
