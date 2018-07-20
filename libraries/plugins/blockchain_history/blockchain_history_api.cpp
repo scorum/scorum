@@ -97,16 +97,18 @@ public:
 
     template <typename IndexType>
     result_type get_ops_history_by_time(const fc::time_point_sec& from,
-                                             const fc::time_point_sec& to,
-                                             uint32_t from_op,
-                                             uint32_t limit) const
+                                        const fc::time_point_sec& to,
+                                        uint32_t from_op,
+                                        uint32_t limit) const
     {
         FC_ASSERT(from <= to, "'From' is greater than 'to'");
-        FC_ASSERT(to - from <= MAX_TIMESTAMP_RANGE, "Timestamp range can't be more then ${t} seconds",
-                  ("t", MAX_TIMESTAMP_RANGE.to_seconds()));
+        FC_ASSERT((to - from).sec_since_epoch() <= get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s,
+                  "Timestamp range can't be more then ${t} seconds",
+                  ("t", get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s));
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
+        FC_ASSERT(limit <= get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth,
+                  "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
         result_type result;
@@ -264,8 +266,10 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
     });
 }
 
-std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history_by_time(
-    const fc::time_point_sec& from, const fc::time_point_sec& to, uint32_t from_op, uint32_t limit) const
+std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history_by_time(const fc::time_point_sec& from,
+                                                                                      const fc::time_point_sec& to,
+                                                                                      uint32_t from_op,
+                                                                                      uint32_t limit) const
 {
     return _impl->_app.chain_database()->with_read_lock(
         [&]() { return _impl->get_ops_history_by_time<operation_index>(from, to, from_op, limit); });
