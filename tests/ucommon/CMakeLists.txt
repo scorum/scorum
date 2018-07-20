@@ -9,6 +9,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 set( SOURCES
   actor.cpp
   genesis.cpp
+  logger.cpp
 )
 
 add_library(ucommon_test 
@@ -19,6 +20,7 @@ target_link_libraries(ucommon_test
                       chainbase
                       scorum_chain
                       scorum_protocol
+                      scorum_common_api
                       cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS}

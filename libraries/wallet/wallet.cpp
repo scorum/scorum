@@ -143,7 +143,7 @@ public:
         : self(s)
         , _chain_id(initial_data.chain_id)
         , _remote_api(rapi)
-        , _remote_db(rapi->get_api_by_name("database_api")->as<database_api>())
+        , _remote_db(rapi->get_api_by_name(API_DATABASE)->as<database_api>())
         , _chain_api(rapi->get_api_by_name(API_CHAIN)->as<chain_api>())
         , _remote_net_broadcast(rapi->get_api_by_name("network_broadcast_api")->as<network_broadcast_api>())
     {

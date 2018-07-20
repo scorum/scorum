@@ -16,7 +16,8 @@ target_link_libraries(scorum_tags
                       scorum_chain
                       scorum_protocol
                       scorum_app
-                      scorum_utils)
+                      scorum_utils
+                      scorum_common_api)
 
 target_include_directories(scorum_tags
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
