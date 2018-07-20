@@ -51,8 +51,7 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
         for (const withdraw_scorumpower_route_object& wvro : withdraw_scorumpower_route_service.get_all(wvo.from_id))
         {
-            asset to_deposit = asset(
-                (fc::uint128_t(to_withdraw.amount.value) * wvro.percent / SCORUM_100_PERCENT).to_uint64(), SP_SYMBOL);
+            asset to_deposit = to_withdraw * utils::make_fraction(wvro.percent, SCORUM_100_PERCENT);
 
             if (to_deposit.amount > 0)
             {

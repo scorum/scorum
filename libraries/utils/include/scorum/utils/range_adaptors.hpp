@@ -6,8 +6,6 @@ namespace scorum {
 namespace utils {
 template <typename T> std::vector<T> take_n(const std::vector<T>& vec, int64_t n)
 {
-    namespace br = boost::range;
-
     auto to_take = std::min(n, (int64_t)vec.size());
     to_take = std::max(to_take, 0l);
 
