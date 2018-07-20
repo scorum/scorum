@@ -102,7 +102,7 @@ public:
                                         uint32_t limit) const
     {
         FC_ASSERT(from <= to, "'From' is greater than 'to'");
-        FC_ASSERT((to - from).sec_since_epoch() <= get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s,
+        FC_ASSERT((to - from).to_seconds() <= get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s,
                   "Timestamp range can't be more then ${t} seconds",
                   ("t", get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s));
         FC_ASSERT(limit > 0, "Limit must be greater than zero");

@@ -1017,8 +1017,38 @@ SCORUM_TEST_CASE(check_get_ops_history)
     }
 }
 
-SCORUM_TEST_CASE(get_ops_history_by_time)
+SCORUM_TEST_CASE(get_ops_history_by_time_negative_check)
 {
+    auto timestamp1 = db.head_block_time();
+    auto timestamp2 = db.head_block_time() + SCORUM_BLOCK_INTERVAL * 10;
+
+    BOOST_REQUIRE_LT((timestamp2 - timestamp1).to_seconds(), MAX_TIMESTAMP_RANGE_IN_S);
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1, -1),
+                         fc::exception);
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1,
+                                                                             MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+                         fc::exception);
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, 1, 2),
+                         fc::exception);
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp2, timestamp1, -1, 1),
+                         fc::exception);
+
+    timestamp2 = timestamp1 + MAX_TIMESTAMP_RANGE_IN_S * 2;
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1, 1),
+                         fc::exception);
+}
+
+SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)
+{
+    // Case description:
+    //
+    // There are two time intervals. First will have transfer_to_scorumpower_operation, transfer_operation operations,
+    // second will have witness_update_operation, transfer_to_scorumpower_operation. There are many virtual operations
+    // betwing from start of first intreval to end of second intreval.
+
     using input_operation_vector_type = std::vector<operation>;
     input_operation_vector_type input_ops_timestamp1;
 
@@ -1074,12 +1104,8 @@ SCORUM_TEST_CASE(get_ops_history_by_time)
 
     generate_block();
 
-    //    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(
-    //                             timestamp1, timestamp2, blockchain_history::applied_operation_type::market),
-    //                         fc::exception);
-
-    operation_map_type result = blockchain_history_api_call.get_ops_history_by_time(
-        timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
+    operation_map_type result
+        = blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
     for (const auto& val : result)
     {
         const auto& saved_op = val.second.op;
