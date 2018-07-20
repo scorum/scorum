@@ -16,9 +16,8 @@ struct config_api_fixture
 {
     config_api_fixture()
     {
-        po::options_description cnf;
-        BOOST_REQUIRE_NO_THROW(get_api_config().get_program_options(desc, cnf));
-        BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name).get_program_options(desc, cnf));
+        BOOST_REQUIRE_NO_THROW(desc.add(get_api_config().get_options_descriptions()));
+        BOOST_REQUIRE_NO_THROW(desc.add(get_api_config(any_api_name).get_options_descriptions()));
     }
 
     po::variables_map parse_input(const std::vector<std::string>& input)

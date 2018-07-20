@@ -6,6 +6,8 @@
 #include <map>
 #include <type_traits>
 
+#include <fc/reflect/reflect.hpp>
+
 namespace scorum {
 
 class config_api
@@ -27,8 +29,7 @@ public:
     const uint32_t& lookup_limit;
     const uint32_t& tags_to_analize_count;
 
-    void get_program_options(boost::program_options::options_description& cli,
-                             boost::program_options::options_description& cfg);
+    boost::program_options::options_description get_options_descriptions() const;
     void set_options(const boost::program_options::variables_map& options);
 
     const std::string& api_name() const
@@ -42,18 +43,23 @@ protected:
     config_api(config_api&);
 
 private:
-    static const std::string defailt_api_name;
+    static const std::string default_api_name;
 
-    friend config_api& get_api_config(std::string api_name = std::string());
+    friend config_api& get_api_config(std::string api_name);
 
-    std::string get_option_name(const char* field, bool default_api = false);
-    std::string get_option_description(const char* field, bool default_api = false);
+    template <typename MemberType>
+    void get_option_description(boost::program_options::options_description_easy_init&, const char* member_name) const;
+    template <typename MemberType>
+    void set_option(const boost::program_options::variables_map&, MemberType&, const char* member_name);
+
+    std::string get_option_name(const char* field, const std::string& api_name) const;
+    std::string get_option_description(const char* field) const;
 
     using configs_by_api_type = std::map<std::string, std::unique_ptr<config_api>>;
     static configs_by_api_type _instances_by_api;
 };
 
-config_api& get_api_config(std::string api_name);
+config_api& get_api_config(std::string api_name = std::string());
 }
 
 #define MAX_BLOCKCHAIN_HISTORY_DEPTH (get_api_config().max_blockchain_history_depth)

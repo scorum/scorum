@@ -2,11 +2,11 @@
 
 #include <fc/exception/exception.hpp>
 
-#include <regex>
+#include <boost/algorithm/string.hpp>
 
 namespace scorum {
 
-const std::string config_api::defailt_api_name = "api";
+const std::string config_api::default_api_name = "api";
 
 config_api::configs_by_api_type config_api::_instances_by_api = config_api::configs_by_api_type();
 
@@ -38,129 +38,85 @@ config_api::config_api(config_api& config)
 {
 }
 
+namespace bpo = boost::program_options;
+
 #define STR(field) BOOST_PP_STRINGIZE(field)
 
-void config_api::get_program_options(boost::program_options::options_description& cli,
-                                     boost::program_options::options_description& cfg)
+bpo::options_description config_api::get_options_descriptions() const
 {
-    namespace po = boost::program_options;
-    // clang-format off
-    cli.add_options()(get_option_name(STR(max_blockchain_history_depth)).c_str(), po::value<uint32_t>(),
-                      get_option_description(STR(max_blockchain_history_depth)).c_str())
-                     (get_option_name(STR(max_blocks_history_depth)).c_str(), po::value<uint32_t>(),
-                      get_option_description(STR(max_blocks_history_depth)).c_str())
-                     (get_option_name(STR(max_budgets_list_size)).c_str(), po::value<uint32_t>(),
-                      get_option_description(STR(max_budgets_list_size)).c_str())
-                     (get_option_name(STR(max_discussions_list_size)).c_str(), po::value<uint32_t>(),
-                      get_option_description(STR(max_discussions_list_size)).c_str())
-                     (get_option_name(STR(lookup_limit)).c_str(), po::value<uint32_t>(),
-                      get_option_description(STR(lookup_limit)).c_str())
-                     (get_option_name(STR(tags_to_analize_count)).c_str(), po::value<uint32_t>(),
-                      get_option_description(STR(tags_to_analize_count)).c_str());
-    // clang-format on
-    cfg.add(cli);
+    bpo::options_description result;
+    bpo::options_description_easy_init options(&result);
+    get_option_description<uint32_t>(options, STR(max_blockchain_history_depth));
+    get_option_description<uint32_t>(options, STR(max_blocks_history_depth));
+    get_option_description<uint32_t>(options, STR(max_budgets_list_size));
+    get_option_description<uint32_t>(options, STR(max_discussions_list_size));
+    get_option_description<uint32_t>(options, STR(lookup_limit));
+    get_option_description<uint32_t>(options, STR(tags_to_analize_count));
+    return result;
 }
 
-void config_api::set_options(const boost::program_options::variables_map& options)
+void config_api::set_options(const bpo::variables_map& options)
 {
     config_api clean_config(api_name());
 
-    if (options.count(get_option_name(STR(max_blockchain_history_depth))))
-    {
-        clean_config._max_blockchain_history_depth
-            = options.at(get_option_name(STR(max_blockchain_history_depth))).as<uint32_t>();
-    }
-    else if (options.count(get_option_name(STR(max_blockchain_history_depth), true)))
-    {
-        clean_config._max_blockchain_history_depth
-            = options.at(get_option_name(STR(max_blockchain_history_depth), true)).as<uint32_t>();
-    }
-
-    if (options.count(get_option_name(STR(max_blocks_history_depth))))
-    {
-        clean_config._max_blocks_history_depth
-            = options.at(get_option_name(STR(max_blocks_history_depth))).as<uint32_t>();
-    }
-    else if (options.count(get_option_name(STR(max_blocks_history_depth), true)))
-    {
-        clean_config._max_blocks_history_depth
-            = options.at(get_option_name(STR(max_blocks_history_depth), true)).as<uint32_t>();
-    }
-
-    if (options.count(get_option_name(STR(max_budgets_list_size))))
-    {
-        clean_config._max_budgets_list_size = options.at(get_option_name(STR(max_budgets_list_size))).as<uint32_t>();
-    }
-    else if (options.count(get_option_name(STR(max_budgets_list_size), true)))
-    {
-        clean_config._max_budgets_list_size
-            = options.at(get_option_name(STR(max_budgets_list_size), true)).as<uint32_t>();
-    }
-
-    if (options.count(get_option_name(STR(max_discussions_list_size))))
-    {
-        clean_config._max_discussions_list_size
-            = options.at(get_option_name(STR(max_discussions_list_size))).as<uint32_t>();
-    }
-    else if (options.count(get_option_name(STR(max_discussions_list_size), true)))
-    {
-        clean_config._max_discussions_list_size
-            = options.at(get_option_name(STR(max_discussions_list_size), true)).as<uint32_t>();
-    }
-
-    if (options.count(get_option_name(STR(lookup_limit))))
-    {
-        clean_config._lookup_limit = options.at(get_option_name(STR(lookup_limit))).as<uint32_t>();
-    }
-    else if (options.count(get_option_name(STR(lookup_limit), true)))
-    {
-        clean_config._lookup_limit = options.at(get_option_name(STR(lookup_limit), true)).as<uint32_t>();
-    }
-
-    if (options.count(get_option_name(STR(tags_to_analize_count))))
-    {
-        clean_config._tags_to_analize_count = options.at(get_option_name(STR(tags_to_analize_count))).as<uint32_t>();
-    }
-    else if (options.count(get_option_name(STR(tags_to_analize_count), true)))
-    {
-        clean_config._tags_to_analize_count
-            = options.at(get_option_name(STR(tags_to_analize_count), true)).as<uint32_t>();
-    }
+    set_option<uint32_t>(options, clean_config._max_blockchain_history_depth, STR(max_blockchain_history_depth));
+    set_option<uint32_t>(options, clean_config._max_blocks_history_depth, STR(max_blocks_history_depth));
+    set_option<uint32_t>(options, clean_config._max_budgets_list_size, STR(max_budgets_list_size));
+    set_option<uint32_t>(options, clean_config._max_discussions_list_size, STR(max_discussions_list_size));
+    set_option<uint32_t>(options, clean_config._lookup_limit, STR(lookup_limit));
+    set_option<uint32_t>(options, clean_config._tags_to_analize_count, STR(tags_to_analize_count));
 
     // recreate to reset constants
     config_api::_instances_by_api[api_name()].reset(new config_api(clean_config));
 }
 
-std::string config_api::get_option_name(const char* field, bool default_api)
+template <typename MemberType>
+void config_api::get_option_description(bpo::options_description_easy_init& options, const char* member_name) const
 {
-    static const auto regex = std::regex("_");
-    std::string result;
-    result = (default_api) ? defailt_api_name : api_name();
-    result += "-";
-    result += field;
-    return std::regex_replace(result, regex, "-");
+    options(get_option_name(member_name, api_name()).c_str(), bpo::value<MemberType>(),
+            get_option_description(member_name).c_str());
 }
 
-std::string config_api::get_option_description(const char* field, bool default_api)
+template <typename MemberType>
+void config_api::set_option(const bpo::variables_map& options, MemberType& member, const char* member_name)
 {
-    static const auto regex = std::regex("_");
-    std::string result = std::regex_replace(field, regex, " ");
+    if (options.count(get_option_name(member_name, api_name())))
+    {
+        member = options.at(get_option_name(member_name, api_name())).as<MemberType>();
+    }
+    else if (options.count(get_option_name(member_name, default_api_name)))
+    {
+        member = options.at(get_option_name(member_name, default_api_name)).as<MemberType>();
+    }
+}
+
+std::string config_api::get_option_name(const char* field, const std::string& api_name) const
+{
+    std::string result = api_name;
+    result += "-";
+    result += field;
+    return boost::algorithm::replace_all_copy(result, "_", "-");
+}
+
+std::string config_api::get_option_description(const char* field) const
+{
+    std::string result = boost::algorithm::replace_all_copy(std::string(field), "_", " ");
     result += " option for ";
-    result += (default_api) ? defailt_api_name : api_name();
+    result += api_name();
     return result;
 }
 
 config_api& get_api_config(std::string api_name)
 {
     if (api_name.empty())
-        api_name = config_api::defailt_api_name;
+        api_name = config_api::default_api_name;
 
     auto config_it = config_api::_instances_by_api.find(api_name);
     if (config_api::_instances_by_api.end() == config_it)
     {
-        config_it = config_api::_instances_by_api
-                        .insert(std::make_pair(api_name, std::unique_ptr<config_api>(new config_api(api_name))))
-                        .first;
+        config_it
+            = config_api::_instances_by_api.emplace(api_name, std::unique_ptr<config_api>(new config_api(api_name)))
+                  .first;
     }
     return (*config_it->second);
 }
