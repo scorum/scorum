@@ -175,7 +175,20 @@ public:
         FC_ASSERT(query.start_author && !query.start_author->empty(),
                   "start_author should be specified and cannot be empty");
 
-        return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit);
+        return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit, query.truncate_body);
+    }
+
+    std::vector<discussion> get_posts_and_comments(const discussion_query& query) const
+    {
+        // clang-format off
+        FC_ASSERT(query.limit <= get_api_config(TAGS_API_NAME).max_discussions_list_size,
+                  "limit cannot be more than " + std::to_string(get_api_config(TAGS_API_NAME).max_discussions_list_size));
+        FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
+                  (!query.start_author && !query.start_permlink),
+                  "start_author and start_permlink should be either both specified and not empty or both not specified");
+        // clang-format on
+
+        return get_posts_and_comments(query.start_author, query.start_permlink, query.limit, query.truncate_body);
     }
 
     discussion get_content(const std::string& author, const std::string& permlink) const
@@ -440,8 +453,10 @@ private:
         return result;
     }
 
-    std::vector<discussion>
-    get_discussions_by_author(const std::string& author, fc::optional<std::string> start_permlink, uint32_t limit) const
+    std::vector<discussion> get_discussions_by_author(const std::string& author,
+                                                      fc::optional<std::string> start_permlink,
+                                                      uint32_t limit,
+                                                      uint32_t truncate_body) const
     {
         std::vector<discussion> result;
 
@@ -459,11 +474,32 @@ private:
         {
             if (it->parent_author.size() == 0)
             {
-                result.push_back(get_discussion(*it));
+                result.push_back(get_discussion(*it, truncate_body));
             }
             ++it;
         }
 #endif
+        return result;
+    }
+
+    std::vector<discussion> get_posts_and_comments(fc::optional<std::string> start_author,
+                                                   fc::optional<std::string> start_permlink,
+                                                   uint32_t limit,
+                                                   uint32_t truncate_body) const
+    {
+        std::vector<discussion> result;
+        result.reserve(limit);
+
+        const auto& idx = _db.get_index<comment_index, by_permlink>();
+        auto lower_bound = idx.begin();
+        if (start_author && start_permlink)
+            lower_bound = idx.lower_bound(std::make_tuple(start_author.value(), start_permlink.value()));
+
+        for (auto it = lower_bound; it != idx.end() && result.size() < limit; ++it)
+        {
+            result.emplace_back(get_discussion(*it, truncate_body));
+        }
+
         return result;
     }
 
