@@ -73,15 +73,15 @@ SCORUM_TEST_CASE(check_get_moderator)
 
 SCORUM_TEST_CASE(get_budget_winners_check_post_and_banners_do_not_affect_each_other)
 {
-    auto p1 = create_budget(alice, budget_type::post, 100, 10);
+    auto p1 = create_budget(alice, budget_type::post, 100, 10); // id = 0
     generate_block();
-    auto p2 = create_budget(sam, budget_type::post, 200, 10);
+    auto p2 = create_budget(sam, budget_type::post, 200, 10); // id = 1
     generate_block();
-    auto b1 = create_budget(alice, budget_type::banner, 150, 10);
+    auto b1 = create_budget(alice, budget_type::banner, 150, 10); // id = 0
     generate_block();
-    auto b2 = create_budget(sam, budget_type::banner, 50, 10);
+    auto b2 = create_budget(sam, budget_type::banner, 50, 10); // id = 1
     generate_block();
-    auto b3 = create_budget(alice, budget_type::banner, 70, 10);
+    auto b3 = create_budget(alice, budget_type::banner, 70, 10); // id = 2
     generate_block();
 
     auto post_budgets = _api.get_current_winners(budget_type::post);
@@ -90,12 +90,12 @@ SCORUM_TEST_CASE(get_budget_winners_check_post_and_banners_do_not_affect_each_ot
     BOOST_REQUIRE_EQUAL(post_budgets.size(), 2);
     BOOST_REQUIRE_EQUAL(banner_budgets.size(), 3);
 
-    BOOST_CHECK_EQUAL(post_budgets[0].json_metadata, p2.json_metadata);
-    BOOST_CHECK_EQUAL(post_budgets[1].json_metadata, p1.json_metadata);
+    BOOST_CHECK_EQUAL(post_budgets[0].id, 1u);
+    BOOST_CHECK_EQUAL(post_budgets[1].id, 0u);
 
-    BOOST_CHECK_EQUAL(banner_budgets[0].json_metadata, b1.json_metadata);
-    BOOST_CHECK_EQUAL(banner_budgets[1].json_metadata, b3.json_metadata);
-    BOOST_CHECK_EQUAL(banner_budgets[2].json_metadata, b2.json_metadata);
+    BOOST_CHECK_EQUAL(banner_budgets[0].id, 0u);
+    BOOST_CHECK_EQUAL(banner_budgets[1].id, 2u);
+    BOOST_CHECK_EQUAL(banner_budgets[2].id, 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
