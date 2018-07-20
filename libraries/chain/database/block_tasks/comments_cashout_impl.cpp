@@ -113,6 +113,14 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
     // newest, with bigger depth comments first
     comment_refs_type comments_with_parents = collect_parents(comments);
 
+    fc_ilog(fc::logger::get("comments_with_parents"), "--- begin");
+    for (size_t i = 0; i < comments_with_parents.size(); ++i)
+    {
+        fc_ilog(fc::logger::get("comments_with_parents"), "${i}=${comment}",
+                ("i", i)("comment", comments_with_parents[i].get()));
+    }
+    fc_ilog(fc::logger::get("comments_with_parents"), "--- end");
+
     for (const comment_object& comment : comments_with_parents)
     {
         const auto& reward = comment_rewards[comment_key{ comment.author, get_permlink(comment.permlink) }];
@@ -194,9 +202,13 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
 
-        _ctx.push_virtual_operation(comment_reward_operation(
-            comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward, author_reward,
-            curators_reward, total_beneficiary, fund_reward, children_comments_reward));
+        comment_reward_operation op(comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward,
+                                    author_reward, curators_reward, total_beneficiary, fund_reward,
+                                    children_comments_reward);
+        _ctx.push_virtual_operation(op);
+
+        fc_ilog(fc::logger::get("comment_reward_operation"), "comment_reward_operation=${comment_reward_operation}",
+                ("comment_reward_operation", op));
 
         accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, fund_reward,
                              children_comments_reward, reward_symbol);

@@ -37,6 +37,13 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
         = [&](const comment_object& c) { return c.net_rshares > 0 && c.cashout_time == fc::time_point_sec::maximum(); };
     auto comments = comment_service.get_by_create_time(SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE, fn_filter);
 
+    fc_ilog(fc::logger::get("comments"), "--- begin");
+    for (size_t i = 0; i < comments.size(); ++i)
+    {
+        fc_ilog(fc::logger::get("comments"), "${i}=${comment}", ("i", i)("comment", comments[i].get()));
+    }
+    fc_ilog(fc::logger::get("comments"), "--- end");
+
     process_comments_cashout_impl impl(ctx);
 
     impl.reward(fifa_world_cup_2018_bounty_reward_fund_service, comments);
