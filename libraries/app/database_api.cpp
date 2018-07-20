@@ -31,7 +31,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/advertising_property_object.hpp>
 
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -79,15 +79,16 @@ public:
     template <typename BudgetService>
     std::vector<budget_api_obj> get_budgets(BudgetService& budget_service, const std::set<std::string>& names) const
     {
-        FC_ASSERT(names.size() <= MAX_BUDGETS_LIST_SIZE, "names size must be less or equal than ${1}",
-                  ("1", MAX_BUDGETS_LIST_SIZE));
+        FC_ASSERT(names.size() <= get_api_config(API_DATABASE).max_budgets_list_size,
+                  "names size must be less or equal than ${1}",
+                  ("1", get_api_config(API_DATABASE).max_budgets_list_size));
 
         std::vector<budget_api_obj> results;
 
         for (const auto& name : names)
         {
             auto budgets = budget_service.get_budgets(name);
-            if (results.size() + budgets.size() > MAX_BUDGETS_LIST_SIZE)
+            if (results.size() + budgets.size() > get_api_config(API_DATABASE).max_budgets_list_size)
             {
                 break;
             }
@@ -104,8 +105,8 @@ public:
     std::set<std::string>
     lookup_budget_owners(BudgetService& budget_service, const std::string& lower_bound_name, uint32_t limit) const
     {
-        FC_ASSERT(limit <= MAX_BUDGETS_LIST_SIZE, "limit must be less or equal than ${1}",
-                  ("1", MAX_BUDGETS_LIST_SIZE));
+        FC_ASSERT(limit <= get_api_config(API_DATABASE).max_budgets_list_size, "limit must be less or equal than ${1}",
+                  ("1", get_api_config(API_DATABASE).max_budgets_list_size));
 
         return budget_service.lookup_budget_owners(lower_bound_name, limit);
     }
@@ -390,7 +391,7 @@ std::set<std::string> database_api::lookup_accounts(const std::string& lower_bou
 
 std::set<std::string> database_api_impl::lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= LOOKUP_LIMIT);
+    FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
     const auto& accounts_by_name = _db.get_index<account_index>().indices().get<by_name>();
     std::set<std::string> result;
 
@@ -564,7 +565,7 @@ std::vector<witness_api_obj> database_api::get_witnesses_by_vote(const std::stri
 {
     return my->_db.with_read_lock([&]() {
         // idump((from)(limit));
-        FC_ASSERT(limit <= 100);
+        FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
         std::vector<witness_api_obj> result;
         result.reserve(limit);
@@ -607,7 +608,7 @@ std::set<account_name_type> database_api::lookup_witness_accounts(const std::str
 std::set<account_name_type> database_api_impl::lookup_witness_accounts(const std::string& lower_bound_name,
                                                                        uint32_t limit) const
 {
-    FC_ASSERT(limit <= LOOKUP_LIMIT);
+    FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
     const auto& witnesses_by_id = _db.get_index<witness_index>().indices().get<by_id>();
 
     // get all the names and look them all up, sort them, then figure out what
@@ -661,7 +662,7 @@ std::set<account_name_type> database_api::lookup_development_committee_members(c
 std::set<account_name_type>
 database_api_impl::lookup_registration_committee_members(const std::string& lower_bound_name, uint32_t limit) const
 {
-    FC_ASSERT(limit <= LOOKUP_LIMIT);
+    FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
     return committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
 }
@@ -669,7 +670,7 @@ database_api_impl::lookup_registration_committee_members(const std::string& lowe
 std::set<account_name_type> database_api_impl::lookup_development_committee_members(const std::string& lower_bound_name,
                                                                                     uint32_t limit) const
 {
-    FC_ASSERT(limit <= LOOKUP_LIMIT);
+    FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
     return committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
 }
@@ -993,7 +994,7 @@ std::vector<account_name_type> database_api::get_active_witnesses() const
 std::vector<scorumpower_delegation_api_obj>
 database_api::get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit) const
 {
-    FC_ASSERT(limit <= LOOKUP_LIMIT);
+    FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
     return my->_db.with_read_lock([&]() {
         std::vector<scorumpower_delegation_api_obj> result;
@@ -1014,7 +1015,7 @@ database_api::get_scorumpower_delegations(const std::string& account, const std:
 std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expiring_scorumpower_delegations(
     const std::string& account, time_point_sec from, uint32_t limit) const
 {
-    FC_ASSERT(limit <= LOOKUP_LIMIT);
+    FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
     return my->_db.with_read_lock([&]() {
         std::vector<scorumpower_delegation_expiration_api_obj> result;

@@ -5,8 +5,6 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/tags/tags_api_objects.hpp>
 
-#define TAGS_API_NAME "tags_api"
-
 namespace chainbase {
 class database_guard;
 }

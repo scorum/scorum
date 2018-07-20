@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/types.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include <scorum/chain/services/comment_statistic.hpp>
 
