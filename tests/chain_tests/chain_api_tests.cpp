@@ -54,6 +54,38 @@ struct chain_api_database_fixture : public database_fixture::database_integratio
 
 BOOST_FIXTURE_TEST_SUITE(chain_api_tests, chain_api_tests::chain_api_database_fixture)
 
+SCORUM_TEST_CASE(total_scr_does_not_change_per_block)
+{
+    generate_blocks(5);
+
+    auto old_total_scr = _api_call.get_chain_capital().total_scr;
+    auto old_circulating_capital = _api_call.get_chain_capital().circulating_capital;
+    auto old_total_scorumpower = _api_call.get_chain_capital().total_scorumpower;
+
+    generate_blocks(5);
+
+    auto total_scr = _api_call.get_chain_capital().total_scr;
+    auto circulating_capital = _api_call.get_chain_capital().circulating_capital;
+    auto total_scorumpower = _api_call.get_chain_capital().total_scorumpower;
+
+    BOOST_CHECK_EQUAL(total_scr, old_total_scr);
+    BOOST_CHECK_GT(circulating_capital, old_circulating_capital);
+    BOOST_CHECK_GT(total_scorumpower, old_total_scorumpower);
+    BOOST_CHECK_EQUAL(circulating_capital.amount - old_circulating_capital.amount,
+                      total_scorumpower.amount - old_total_scorumpower.amount);
+}
+
+SCORUM_TEST_CASE(total_sp_changes_per_block)
+{
+    generate_blocks(5);
+
+    auto total_sp = _api_call.get_chain_capital().total_scorumpower;
+
+    generate_blocks(5);
+
+    BOOST_CHECK_GT(_api_call.get_chain_capital().total_scorumpower, total_sp);
+}
+
 SCORUM_TEST_CASE(chain_properties_getter_test)
 {
     const auto& dpo = db.obtain_service<chain::dbs_dynamic_global_property>().get();

@@ -530,7 +530,7 @@ SCORUM_TEST_CASE(dev_committee_transfer_operation_circulating_capital_should_inc
 
     auto circulating_capital_after = dpo.circulating_capital;
 
-    auto active_sp_holder_reward = 100;
+    auto active_sp_holder_reward = 10;
     BOOST_REQUIRE_EQUAL(circulating_capital_before + transfer_amount + active_sp_holder_reward,
                         circulating_capital_after);
 }
@@ -561,7 +561,7 @@ SCORUM_TEST_CASE(dev_committee_withdraw_operation_circulating_capital_should_not
 
     auto circulating_capital_after = dpo.circulating_capital;
 
-    auto active_sp_holder_reward = 100;
+    auto active_sp_holder_reward = 10;
     // circulating capital do not increate on 'transfer_amount' cuz withdraw was from devpool to devpool
     BOOST_REQUIRE_EQUAL(circulating_capital_before + 2 * active_sp_holder_reward, circulating_capital_after);
 }
