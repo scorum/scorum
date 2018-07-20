@@ -202,6 +202,17 @@ public:
         return result;
     }
 
+    std::vector<discussion> get_posts_and_comments() const
+    {
+        std::vector<discussion> result;
+
+        const auto& idx = _db.get_index<comment_index, by_id>();
+
+        boost::transform(idx, std::back_inserter(result), [&](const comment_object& c) { return get_discussion(c); });
+
+        return result;
+    }
+
 private:
     scorum::chain::database& _db;
     scorum::chain::data_service_factory_i& _services;

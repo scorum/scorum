@@ -55,6 +55,8 @@ public:
                                               const std::string& parent_permlink,
                                               uint32_t depth = SCORUM_MAX_COMMENT_DEPTH) const;
 
+    std::vector<api::discussion> get_posts_and_comments() const;
+
     /**
      * This method is used to fetch all posts by author that occur after start_permlink
      * with up to limit being returned.
@@ -81,5 +83,6 @@ FC_API(scorum::tags::tags_api,
        // content
        (get_content)
        (get_comments)
+       (get_posts_and_comments)
        (get_discussions_by_author))
 // clang-format on

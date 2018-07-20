@@ -102,6 +102,15 @@ tags_api::get_comments(const std::string& parent_author, const std::string& pare
     FC_CAPTURE_AND_RETHROW((parent_author)(parent_permlink)(depth))
 }
 
+std::vector<discussion> tags_api::get_posts_and_comments() const
+{
+    try
+    {
+        return guard().with_read_lock([&]() { return _impl->get_posts_and_comments(); });
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
 std::vector<discussion> tags_api::get_discussions_by_author(const api::discussion_query& query) const
 {
     try
