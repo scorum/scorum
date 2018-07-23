@@ -1,4 +1,4 @@
-file(GLOB HEADERS "include/scorum/app/*.hpp")
+file(GLOB_RECURSE HEADERS "include/scorum/app/*.hpp")
 file(GLOB EGENESIS_HEADERS "../egenesis/include/scorum/app/*.hpp")
 
 add_library( scorum_app
@@ -8,10 +8,10 @@ add_library( scorum_app
              application.cpp
              plugin.cpp
              scorum_api_objects.cpp
+             advertising_api.cpp
              log_configurator.cpp
              ${HEADERS}
-             ${EGENESIS_HEADERS}
-           )
+             ${EGENESIS_HEADERS})
 
 target_link_libraries( scorum_app
                        scorum_chain

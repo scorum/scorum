@@ -23,6 +23,7 @@ template <class ObjectType> struct advertising_budget_service_i : public base_se
     using budgets_type = std::vector<budget_cref_type>;
 
     virtual const ObjectType& get(const typename ObjectType::id_type&) const = 0;
+    virtual const ObjectType* find(const typename ObjectType::id_type&) const = 0;
     virtual budgets_type get_budgets() const = 0;
     virtual budgets_type get_top_budgets(const fc::time_point_sec& until, uint16_t limit) const = 0;
     virtual budgets_type get_top_budgets(const fc::time_point_sec& until) const = 0;
@@ -51,6 +52,15 @@ public:
         try
         {
             return this->get_by(id);
+        }
+        FC_CAPTURE_AND_RETHROW((id))
+    }
+
+    const ObjectType* find(const typename ObjectType::id_type& id) const override
+    {
+        try
+        {
+            return this->find_by(id);
         }
         FC_CAPTURE_AND_RETHROW((id))
     }
@@ -136,12 +146,12 @@ public:
 
 struct banner_budget_service_i : public advertising_budget_service_i<banner_budget_object>
 {
-    using object_type = banner_budget_object;
+    static constexpr budget_type budget_type_v = budget_type::banner;
 };
 
 struct post_budget_service_i : public advertising_budget_service_i<post_budget_object>
 {
-    using object_type = post_budget_object;
+    static constexpr budget_type budget_type_v = budget_type::post;
 };
 
 using dbs_banner_budget = dbs_advertising_budget<banner_budget_service_i, banner_budget_object>;

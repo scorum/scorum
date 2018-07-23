@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
-#include <scorum/chain/services/advertising_property_service.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 #include <scorum/protocol/types.hpp>
 
