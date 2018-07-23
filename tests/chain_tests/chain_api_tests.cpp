@@ -16,14 +16,18 @@
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/services/development_committee.hpp>
+#include <scorum/chain/services/account.hpp>
+
+#include <scorum/chain/schema/account_objects.hpp>
 
 #include "database_trx_integration.hpp"
+
+namespace chain_api_tests {
 
 using namespace scorum;
 using namespace scorum::app;
 using namespace scorum::protocol;
-
-namespace chain_api_tests {
+using namespace scorum::chain;
 
 struct chain_api_database_fixture : public database_fixture::database_integration_fixture
 {
@@ -33,6 +37,7 @@ struct chain_api_database_fixture : public database_fixture::database_integratio
     chain_api_database_fixture()
         : _api_ctx(app, API_CHAIN, std::make_shared<api_session_data>())
         , _api_call(_api_ctx)
+        , account_service(db.account_service())
     {
         static const asset registration_bonus = ASSET_SCR(100);
         genesis_state_type::registration_schedule_item single_stage{ 1u, 1u, 100u };
@@ -48,11 +53,67 @@ struct chain_api_database_fixture : public database_fixture::database_integratio
         generate_block();
         validate_database();
     }
+
+    account_service_i& account_service;
 };
 
 } // namespace chain_api_tests
 
 BOOST_FIXTURE_TEST_SUITE(chain_api_tests, chain_api_tests::chain_api_database_fixture)
+
+SCORUM_TEST_CASE(total_scr_does_not_change_per_block)
+{
+    generate_blocks(5);
+
+    auto old_total_scr = _api_call.get_chain_capital().total_scr;
+    auto old_circulating_capital = _api_call.get_chain_capital().circulating_capital;
+    auto old_total_scorumpower = _api_call.get_chain_capital().total_scorumpower;
+
+    generate_blocks(5);
+
+    auto total_scr = _api_call.get_chain_capital().total_scr;
+    auto circulating_capital = _api_call.get_chain_capital().circulating_capital;
+    auto total_scorumpower = _api_call.get_chain_capital().total_scorumpower;
+
+    BOOST_CHECK_EQUAL(total_scr, old_total_scr);
+    BOOST_CHECK_GT(circulating_capital, old_circulating_capital);
+    BOOST_CHECK_GT(total_scorumpower, old_total_scorumpower);
+    BOOST_CHECK_EQUAL(circulating_capital.amount - old_circulating_capital.amount,
+                      total_scorumpower.amount - old_total_scorumpower.amount);
+}
+
+SCORUM_TEST_CASE(total_sp_changes_per_block)
+{
+    generate_blocks(5);
+
+    auto total_sp = _api_call.get_chain_capital().total_scorumpower;
+
+    generate_blocks(5);
+
+    BOOST_CHECK_GT(_api_call.get_chain_capital().total_scorumpower, total_sp);
+}
+
+SCORUM_TEST_CASE(total_scr_equal_scr_on_accounts_balance)
+{
+    generate_blocks(5);
+
+    auto total_scr = _api_call.get_chain_capital().total_scr;
+    auto expected_total_scr = ASSET_NULL_SCR;
+    account_service.foreach_account([&](const account_object& a) { expected_total_scr += a.balance; });
+
+    BOOST_CHECK_EQUAL(total_scr, expected_total_scr);
+}
+
+SCORUM_TEST_CASE(total_sp_equal_sp_on_accounts_balance)
+{
+    generate_blocks(5);
+
+    auto total_sp = _api_call.get_chain_capital().total_scorumpower;
+    auto expected_total_sp = ASSET_NULL_SP;
+    account_service.foreach_account([&](const account_object& a) { expected_total_sp += a.scorumpower; });
+
+    BOOST_CHECK_EQUAL(total_sp, expected_total_sp);
+}
 
 SCORUM_TEST_CASE(chain_properties_getter_test)
 {

@@ -603,7 +603,7 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
     return new_account;
 }
 
-std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() const
+dbs_account::account_refs_type dbs_account::get_active_sp_holders() const
 {
     const auto& dprops_service = db_impl().obtain_service<dbs_dynamic_global_property>();
 
@@ -612,5 +612,11 @@ std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() c
     return get_range_by<by_last_vote_cashout_time>(min_vote_time_for_cashout < boost::lambda::_1,
                                                    boost::multi_index::unbounded);
 }
+
+void dbs_account::foreach_account(account_call_type&& call) const
+{
+    foreach_by<by_id>(call);
+}
+
 } // namespace chain
 } // namespace scorum
