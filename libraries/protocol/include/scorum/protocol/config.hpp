@@ -20,6 +20,8 @@ namespace detail {
 
         const uint32_t cashout_window_seconds;
 
+        const fc::microseconds reverse_auction_window_seconds;
+
         const fc::microseconds vote_regeneration_seconds;
 
         const fc::microseconds upvote_lockout;
@@ -74,7 +76,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 0, 5) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 0) )
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
@@ -167,7 +169,7 @@ namespace detail {
 #define SCORUM_SAVINGS_WITHDRAW_REQUEST_LIMIT  100
 #define SCORUM_VOTE_REGENERATION_SECONDS       (scorum::protocol::detail::get_config().vote_regeneration_seconds)
 #define SCORUM_MAX_VOTE_CHANGES                3
-#define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (fc::seconds(60*30)) // 30 minutes
+#define SCORUM_REVERSE_AUCTION_WINDOW_SECONDS  (scorum::protocol::detail::get_config().reverse_auction_window_seconds)
 
 #define SCORUM_MIN_ROOT_COMMENT_INTERVAL       (fc::minutes(5))
 #define SCORUM_MIN_REPLY_INTERVAL              (fc::seconds(20))
