@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
 
         const auto blocks_between_comments = 5;
-        asset account_initial_vest_supply = alice_acc.scorumpower;
+        BOOST_ATTRIBUTE_UNUSED asset account_initial_vest_supply = alice_acc.scorumpower;
 
         comment_operation comment;
         comment.author = "alice";
@@ -330,12 +330,13 @@ BOOST_AUTO_TEST_CASE(reward_fund)
             BOOST_REQUIRE_EQUAL(fund.activity_reward_balance, ASSET_NULL_SP);
             BOOST_REQUIRE_EQUAL(fund.recent_claims.to_uint64(), alice_comment_net_rshares);
 
+#ifdef EMIT_REWARD_OPERATIONS
             BOOST_REQUIRE_EQUAL(alice_acc.scorumpower,
                                 account_initial_vest_supply + visitor.author_reward_map[alice_acc.name]
                                     + visitor.vote_reward_map[alice_acc.name]);
             BOOST_REQUIRE_EQUAL(bob_acc.scorumpower,
                                 account_initial_vest_supply + visitor.vote_reward_map[bob_acc.name]);
-
+#endif
             validate_database();
         }
 
@@ -353,13 +354,15 @@ BOOST_AUTO_TEST_CASE(reward_fund)
                                 (total_claims + bob_comment_net_rshares.value).to_uint64());
             BOOST_REQUIRE_GT(fund.activity_reward_balance, ASSET_NULL_SP);
 
+#ifdef EMIT_REWARD_OPERATIONS
             BOOST_REQUIRE_EQUAL(alice_acc.scorumpower,
                                 account_initial_vest_supply + visitor.author_reward_map[alice_acc.name]
                                     + visitor.vote_reward_map[alice_acc.name]);
+
             BOOST_REQUIRE_EQUAL(bob_acc.scorumpower,
                                 account_initial_vest_supply + visitor.author_reward_map[bob_acc.name]
                                     + visitor.vote_reward_map[bob_acc.name]);
-
+#endif
             validate_database();
         }
     }

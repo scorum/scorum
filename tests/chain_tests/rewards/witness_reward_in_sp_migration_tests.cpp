@@ -136,6 +136,7 @@ BOOST_AUTO_TEST_CASE(migration_constants_check)
     BOOST_REQUIRE_GT(migrate_deferred_payment, share_type());
 }
 
+#ifdef EMIT_REWARD_OPERATIONS
 BOOST_AUTO_TEST_CASE(rest_of_reward_hold_check)
 {
     BOOST_REQUIRE_LT(dynamic_global_property_service.get().head_block_number, old_reward_alg_switch_reward_block_num);
@@ -218,6 +219,7 @@ BOOST_AUTO_TEST_CASE(rest_of_reward_distribution_check)
     // new alg. is starting
     BOOST_REQUIRE_EQUAL(reward_visitor.get_last_reward(), asset(new_reward_to_migrate, SP_SYMBOL));
 }
+#endif // EMIT_REWARD_OPERATIONS
 
 BOOST_AUTO_TEST_SUITE_END()
 }
