@@ -2,7 +2,7 @@
 
 #include "budget_check_common.hpp"
 
-#include <scorum/chain/services/advertising_property_service.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/budgets.hpp>
 
 #include <scorum/chain/schema/advertising_property_object.hpp>

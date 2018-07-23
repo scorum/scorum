@@ -24,6 +24,7 @@
 #include <scorum/app/api.hpp>
 #include <scorum/app/database_api.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/advertising_api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
@@ -445,6 +446,7 @@ public:
                 wild_access.password_salt_b64 = "*";
                 wild_access.allowed_apis.push_back(API_DATABASE);
                 wild_access.allowed_apis.push_back(API_CHAIN);
+                wild_access.allowed_apis.push_back(ADVERTISING_API_NAME);
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
                 wild_access.allowed_apis.push_back(API_ACCOUNT_HISTORY);
@@ -1129,6 +1131,7 @@ std::vector<std::string> application::get_default_apis() const
     result.push_back(API_DATABASE);
     result.push_back("login_api");
     result.push_back(API_CHAIN);
+    result.push_back(ADVERTISING_API_NAME);
     result.push_back("account_by_key_api");
     result.push_back(API_ACCOUNT_HISTORY);
     result.push_back(API_BLOCKCHAIN_HISTORY);

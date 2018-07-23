@@ -33,7 +33,9 @@ public:
         : buffered_ostream(o, bufsize)
     {
     }
-    virtual ~padding_ostream() {}
+    virtual ~padding_ostream()
+    {
+    }
 
     virtual size_t writesome(const char* buffer, size_t len)
     {

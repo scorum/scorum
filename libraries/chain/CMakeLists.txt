@@ -73,6 +73,7 @@ add_library( scorum_chain
              evaluators/close_budget_by_advertising_moderator_evaluator.cpp
 
              schema/shared_authority.cpp
+             schema/advertising_property_object.cpp
 
              block_log.cpp
 
