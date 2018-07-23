@@ -35,6 +35,7 @@ set( SOURCES
     budget/budget_autoclose_tests.cpp
     budget/budget_starting_tests.cpp
     budget/adv_moderator_tests.cpp
+    budget/api/advertising_api_tests.cpp
     budget/budget_security_tests.cpp
     budget/budget_winners_tests.cpp
     proposal/proposal_tests.cpp

@@ -37,6 +37,7 @@ struct budget_check_fixture : public database_default_integration_fixture
 
 private:
     std::string get_unique_permlink();
+    int permlink_no = 0;
 };
 
 } // namespace database_fixture
