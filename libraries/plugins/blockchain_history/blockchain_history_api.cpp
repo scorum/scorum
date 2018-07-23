@@ -120,22 +120,11 @@ public:
         auto range = idx.range(::boost::lambda::_1 >= std::make_tuple(from, 0),
                                ::boost::lambda::_1 <= std::make_tuple(to, ALL_IDS));
 
-        using operation_object_ref_type = std::reference_wrapper<const operation_object>;
-        using op_ids_type = std::vector<operation_object_ref_type>;
-
-        op_ids_type ids;
-
-        for (auto it = range.first; it != range.second; ++it)
+        for (auto it = range.first; limit && it != range.second; ++it)
         {
             auto id = it->id;
             FC_ASSERT(id._id >= 0, "Invalid operation_object id");
-            ids.emplace_back(std::cref(*it));
-        }
-
-        for (auto it = ids.crbegin(); limit && it != ids.crend(); ++it)
-        {
             const operation_object& op = (*it);
-            auto id = op.id;
             if (id > from_op)
                 continue;
 
