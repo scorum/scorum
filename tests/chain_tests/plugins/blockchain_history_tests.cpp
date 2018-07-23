@@ -21,13 +21,15 @@
 
 #include "operation_check.hpp"
 
+namespace blockchain_history_tests {
+
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 using namespace scorum::app;
 using fc::string;
 
-namespace blockchain_history_tests {
+using namespace operation_tests;
 
 struct history_database_fixture : public database_fixture::database_trx_integration_fixture
 {
@@ -94,8 +96,6 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     api_context _account_history_api_ctx;
     blockchain_history::account_history_api _api;
 };
-
-} // namespace blockchain_history_tests
 
 BOOST_FIXTURE_TEST_SUITE(account_history_tests, blockchain_history_tests::history_database_fixture)
 
@@ -244,8 +244,7 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
 SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     const size_t over_limit = 10;
 
@@ -325,7 +324,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -333,8 +332,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 
 SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     const size_t over_limit = 10;
 
@@ -411,7 +409,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -419,15 +417,13 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 
 SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
 {
-    using input_operation_vector_type = std::vector<operation>;
-
     const int over_limit = 10;
 
     // sam has not been feeded yet
 
     generate_block();
 
-    input_operation_vector_type input_sam_ops;
+    opetations_type input_sam_ops;
 
     {
         transfer_operation op;
@@ -475,7 +471,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -483,8 +479,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
 
 SCORUM_TEST_CASE(check_get_account_history)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     {
         transfer_to_scorumpower_operation op;
@@ -544,7 +539,7 @@ SCORUM_TEST_CASE(check_get_account_history)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -815,10 +810,9 @@ SCORUM_TEST_CASE(check_reroute_to_other_acc_other_account_do_not_setup_withdraw)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-namespace blockchain_history_tests {
-struct blokchain_not_virtual_history_database_fixture : public history_database_fixture
+struct blokchain_history_fixture : public history_database_fixture
 {
-    blokchain_not_virtual_history_database_fixture()
+    blokchain_history_fixture()
         : _blockchain_history_api_ctx(app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>())
         , blockchain_history_api_call(_blockchain_history_api_ctx)
     {
@@ -827,15 +821,12 @@ struct blokchain_not_virtual_history_database_fixture : public history_database_
     api_context _blockchain_history_api_ctx;
     blockchain_history::blockchain_history_api blockchain_history_api_call;
 };
-} // namespace blockchain_history_tests
 
-BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests,
-                         blockchain_history_tests::blokchain_not_virtual_history_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests, blokchain_history_fixture)
 
 SCORUM_TEST_CASE(check_get_ops_in_block)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     generate_block();
 
@@ -879,7 +870,7 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -899,7 +890,7 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -912,8 +903,7 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
 
 SCORUM_TEST_CASE(check_get_ops_history)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     generate_block();
 
@@ -990,7 +980,7 @@ SCORUM_TEST_CASE(check_get_ops_history)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -1017,12 +1007,18 @@ SCORUM_TEST_CASE(check_get_ops_history)
     }
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(blockchain_history_by_time_tests, blokchain_history_fixture)
+
 SCORUM_TEST_CASE(get_ops_history_by_time_negative_check)
 {
     auto timestamp1 = db.head_block_time();
     auto timestamp2 = db.head_block_time() + SCORUM_BLOCK_INTERVAL * 10;
 
     BOOST_REQUIRE_LT((timestamp2 - timestamp1).to_seconds(), MAX_TIMESTAMP_RANGE_IN_S);
+
+    SCORUM_MESSAGE("Check invalid page settings");
 
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1, -1),
                          fc::exception);
@@ -1031,6 +1027,8 @@ SCORUM_TEST_CASE(get_ops_history_by_time_negative_check)
                          fc::exception);
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, 1, 2),
                          fc::exception);
+
+    SCORUM_MESSAGE("Check invalid time settings");
 
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp2, timestamp1, -1, 1),
                          fc::exception);
@@ -1047,10 +1045,10 @@ SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)
     //
     // There are two time intervals. First will have transfer_to_scorumpower_operation, transfer_operation operations,
     // second will have witness_update_operation, transfer_to_scorumpower_operation. There are many virtual operations
-    // betwing from start of first intreval to end of second intreval.
+    // betwing from start of first intreval to end of second intreval. So we check if our operations exist in that
+    // intervals
 
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops_timestamp1;
+    opetations_type input_ops_timestamp1;
 
     generate_block();
 
@@ -1081,7 +1079,7 @@ SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)
 
     generate_blocks(timestamp2);
 
-    input_operation_vector_type input_ops_timestamp2;
+    opetations_type input_ops_timestamp2;
 
     {
         auto signing_key = private_key_type::regenerate(fc::sha256::hash("witness")).get_public_key();
@@ -1104,24 +1102,53 @@ SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)
 
     generate_block();
 
-    operation_map_type result
-        = blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
-    for (const auto& val : result)
     {
-        const auto& saved_op = val.second.op;
-        saved_op.visit(operation_tests::view_opetations_visitor());
+        SCORUM_MESSAGE("Check first time interval = [timestamp1, timestamp2)");
+
+        operation_map_type result = blockchain_history_api_call.get_ops_history_by_time(
+            timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(view_opetation_visitor());
+        }
+
+        check_opetations_list_visitor v(input_ops_timestamp1);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(v);
+        }
+
+        BOOST_CHECK(v.successed());
     }
 
-    std::cerr << "==" << std::endl;
-
-    result = blockchain_history_api_call.get_ops_history_by_time(timestamp2, db.head_block_time(), -1, 100);
-    for (const auto& val : result)
     {
-        const auto& saved_op = val.second.op;
-        saved_op.visit(operation_tests::view_opetations_visitor());
-    }
+        SCORUM_MESSAGE("Check second time interval = [timestamp2, now]");
 
-    // TODO
+        operation_map_type result
+            = blockchain_history_api_call.get_ops_history_by_time(timestamp2, db.head_block_time(), -1, 100);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(view_opetation_visitor());
+        }
+
+        check_opetations_list_visitor v(input_ops_timestamp2);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(v);
+        }
+
+        BOOST_CHECK(v.successed());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+} // namespace blockchain_history_tests

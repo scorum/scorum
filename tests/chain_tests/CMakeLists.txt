@@ -75,6 +75,14 @@ target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSRC_DIR=${CMAKE_CURRENT_SOURCE_DIR}" )
 
+OPTION(CHAIN_TESTS_LOG_MESSAGES "Show logs for chain tests (ON or OFF)" OFF)
+
+MESSAGE( STATUS "CHAIN_TESTS_LOG_MESSAGES: ${CHAIN_TESTS_LOG_MESSAGES}" )
+if( CHAIN_TESTS_LOG_MESSAGES )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
+    SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
+endif()
+
 if(MSVC)
     set_source_files_properties(serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
