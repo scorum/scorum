@@ -191,9 +191,6 @@ EXPOSE 8090
 # p2p service:
 EXPOSE 2001
 
-# add seednodes from documentation to image
-ADD doc/seednodes.txt /etc/scorumd/seednodes.txt
-
 # the following adds lots of logging info to stdout
 ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini
 
