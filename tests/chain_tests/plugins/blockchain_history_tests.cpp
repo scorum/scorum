@@ -647,7 +647,11 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     // expect transfer_to_scorumpower_operation, witness_update_operation, producer_reward_operation
     ret = blockchain_history_api_call.get_ops_in_block(dpo_service.get().head_block_number,
                                                        blockchain_history::applied_operation_type::all);
+#ifdef EMIT_REWARD_OPERATIONS
     BOOST_REQUIRE_EQUAL(ret.size(), 3u);
+#else
+    BOOST_REQUIRE_EQUAL(ret.size(), 2u);
+#endif
 }
 
 SCORUM_TEST_CASE(check_get_ops_history)
@@ -753,7 +757,11 @@ SCORUM_TEST_CASE(check_get_ops_history)
     {
         const auto& saved_op = ret2.begin()->second.op;
 
+#ifdef EMIT_REWARD_OPERATIONS
         BOOST_REQUIRE(is_virtual_operation(saved_op));
+#else
+        BOOST_REQUIRE(!is_virtual_operation(saved_op));
+#endif
     }
 }
 

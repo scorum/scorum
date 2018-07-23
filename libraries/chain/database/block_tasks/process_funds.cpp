@@ -109,8 +109,10 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     charge_witness_reward(ctx, witness, witness_reward);
 
+#ifdef EMIT_REWARD_OPERATIONS
     if (witness_reward.amount != 0)
         ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
+#endif // EMIT_REWARD_OPERATIONS
 }
 
 void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward)
@@ -145,8 +147,10 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
                 distributed_reward += account_reward;
 
+#ifdef EMIT_REWARD_OPERATIONS
                 if (account_reward.amount != 0)
                     ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, account_reward));
+#endif // EMIT_REWARD_OPERATIONS
             }
         }
     }
