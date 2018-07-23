@@ -181,8 +181,8 @@ public:
     std::vector<discussion> get_posts_and_comments(const discussion_query& query) const
     {
         // clang-format off
-        FC_ASSERT(query.limit <= get_api_config(TAGS_API_NAME).max_discussions_list_size,
-                  "limit cannot be more than " + std::to_string(get_api_config(TAGS_API_NAME).max_discussions_list_size));
+        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
         FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
                   (!query.start_author && !query.start_permlink),
                   "start_author and start_permlink should be either both specified and not empty or both not specified");
@@ -493,7 +493,7 @@ private:
         const auto& idx = _db.get_index<comment_index, by_permlink>();
         auto lower_bound = idx.begin();
         if (start_author && start_permlink)
-            lower_bound = idx.lower_bound(std::make_tuple(start_author.value(), start_permlink.value()));
+            lower_bound = idx.lower_bound(std::make_tuple((*start_author), (*start_permlink)));
 
         for (auto it = lower_bound; it != idx.end() && result.size() < limit; ++it)
         {
