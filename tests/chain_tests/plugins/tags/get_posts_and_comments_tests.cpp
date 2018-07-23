@@ -1,5 +1,4 @@
 #include <scorum/tags/tags_api_objects.hpp>
-#include <scorum/common_api/config.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "tags_common.hpp"
