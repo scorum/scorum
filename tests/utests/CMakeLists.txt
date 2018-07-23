@@ -55,3 +55,12 @@ target_link_libraries(utests
 
 target_include_directories(utests PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}")
+
+OPTION(UTESTS_LOG_MESSAGES "Show logs for u-tests (ON or OFF)" ON)
+
+MESSAGE( STATUS "UTESTS_LOG_MESSAGES: ${UTESTS_LOG_MESSAGES}" )
+if( UTESTS_LOG_MESSAGES )
+   SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
+   SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
+endif()
+

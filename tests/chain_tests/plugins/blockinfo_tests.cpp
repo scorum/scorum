@@ -100,7 +100,7 @@ SCORUM_TEST_CASE(check_get_blocks_history_test)
 
     const operation& seved_op = block_api.transactions[0].operations[0];
 
-    seved_op.visit(operation_tests::check_saved_opetations_visitor(input_op));
+    seved_op.visit(operation_tests::check_opetation_visitor(input_op));
 }
 
 SCORUM_TEST_CASE(get_block_headers_history_test)

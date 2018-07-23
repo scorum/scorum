@@ -20,6 +20,7 @@ class config_api
     uint32_t _max_discussions_list_size = 100;
     uint32_t _lookup_limit = 1000;
     uint32_t _tags_to_analize_count = 8; // also includes category, domain, language
+    uint32_t _max_timestamp_range_in_s = 60 * 30; // 30 minutes
 
 public:
     const uint32_t& max_blockchain_history_depth;
@@ -28,6 +29,7 @@ public:
     const uint32_t& max_discussions_list_size;
     const uint32_t& lookup_limit;
     const uint32_t& tags_to_analize_count;
+    const uint32_t& max_timestamp_range_in_s;
 
     boost::program_options::options_description get_options_descriptions() const;
     void set_options(const boost::program_options::variables_map& options);
@@ -68,3 +70,4 @@ config_api& get_api_config(std::string api_name = std::string());
 #define MAX_DISCUSSIONS_LIST_SIZE (get_api_config().max_discussions_list_size)
 #define LOOKUP_LIMIT (get_api_config().lookup_limit)
 #define TAGS_TO_ANALIZE_COUNT (get_api_config().tags_to_analize_count)
+#define MAX_TIMESTAMP_RANGE_IN_S (get_api_config().max_timestamp_range_in_s)
