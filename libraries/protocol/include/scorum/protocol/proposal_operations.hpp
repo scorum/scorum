@@ -18,6 +18,7 @@ enum quorum_type
     base_quorum,
     transfer_quorum,
     advertising_moderator_quorum,
+    betting_moderator_quorum,
     budgets_vcg_properties_quorum
 };
 
@@ -53,10 +54,12 @@ struct development_committee_i : public committee_i
 {
     virtual void change_transfer_quorum(const protocol::percent_type) = 0;
     virtual void change_advertising_moderator_quorum(const protocol::percent_type) = 0;
+    virtual void change_betting_moderator_quorum(const protocol::percent_type) = 0;
     virtual void change_budgets_vcg_properties_quorum(const protocol::percent_type) = 0;
 
     virtual protocol::percent_type get_transfer_quorum() = 0;
     virtual protocol::percent_type get_advertising_moderator_quorum() = 0;
+    virtual protocol::percent_type get_betting_moderator_quorum() = 0;
     virtual protocol::percent_type get_budgets_vcg_properties_quorum() = 0;
 };
 
@@ -177,6 +180,16 @@ struct development_committee_empower_advertising_moderator_operation
     protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
+struct development_committee_empower_betting_moderator_operation
+    : public proposal_base_operation<development_committee_empower_betting_moderator_operation, development_committee_i>
+{
+    account_name_type account;
+
+    void validate() const;
+
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
+};
+
 struct base_development_committee_change_budgets_vcg_properties_operation
     : public proposal_base_operation<base_development_committee_change_budgets_vcg_properties_operation,
                                      development_committee_i>
@@ -212,6 +225,7 @@ using proposal_operation = fc::static_variant<registration_committee_add_member_
                                               development_committee_withdraw_vesting_operation,
                                               development_committee_transfer_operation,
                                               development_committee_empower_advertising_moderator_operation,
+                                              development_committee_empower_betting_moderator_operation,
                                               development_committee_change_post_budgets_vcg_properties_operation,
                                               development_committee_change_banner_budgets_vcg_properties_operation>;
 
@@ -229,6 +243,7 @@ FC_REFLECT_ENUM(scorum::protocol::quorum_type,
                 (base_quorum)
                 (transfer_quorum)
                 (advertising_moderator_quorum)
+                (betting_moderator_quorum)
                 (budgets_vcg_properties_quorum))
 // clang-format on
 
@@ -243,6 +258,7 @@ FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quo
 FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
 FC_REFLECT(scorum::protocol::development_committee_empower_advertising_moderator_operation, (account))
+FC_REFLECT(scorum::protocol::development_committee_empower_betting_moderator_operation, (account))
 
 FC_REFLECT(scorum::protocol::base_development_committee_change_budgets_vcg_properties_operation, (vcg_coefficients))
 FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_post_budgets_vcg_properties_operation,

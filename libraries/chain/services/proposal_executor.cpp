@@ -33,6 +33,7 @@ dbs_proposal_executor::dbs_proposal_executor(database& s)
     evaluators.register_evaluator<development_committee::proposal_transfer_evaluator>();
 
     evaluators.register_evaluator<development_committee_empower_advertising_moderator_evaluator>();
+    evaluators.register_evaluator<development_committee_empower_betting_moderator_evaluator>();
 
     evaluators.register_evaluator<development_committee_change_top_post_budgets_amount_evaluator>();
     evaluators.register_evaluator<development_committee_change_top_banner_budgets_amount_evaluator>();

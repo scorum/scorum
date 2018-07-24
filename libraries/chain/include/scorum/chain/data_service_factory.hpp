@@ -42,5 +42,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (witness_reward_in_sp_migration)
         (blocks_story)
         (advertising_property)
+        (betting_property)
         )
 // clang-format on
