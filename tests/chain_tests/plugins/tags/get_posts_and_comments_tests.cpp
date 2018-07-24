@@ -59,10 +59,17 @@ SCORUM_TEST_CASE(check_truncate_body)
     auto discussions = _api.get_posts_and_comments(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+#ifdef IS_LOW_MEM
+    BOOST_CHECK_EQUAL(discussions[0].body, "");
+    BOOST_CHECK_EQUAL(discussions[1].body, "");
+    BOOST_CHECK_EQUAL(discussions[0].body_length, 0u);
+    BOOST_CHECK_EQUAL(discussions[1].body_length, 0u);
+#else
     BOOST_CHECK_EQUAL(discussions[0].body, "12345");
     BOOST_CHECK_EQUAL(discussions[1].body, "abcde");
     BOOST_CHECK_EQUAL(discussions[0].body_length, 7u);
     BOOST_CHECK_EQUAL(discussions[1].body_length, 8u);
+#endif
 }
 
 SCORUM_TEST_CASE(check_limit)
