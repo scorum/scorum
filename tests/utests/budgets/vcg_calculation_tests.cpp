@@ -48,24 +48,24 @@ BOOST_FIXTURE_TEST_SUITE(vcg_calculation_check, vcg_calculation_fixture)
 
 SCORUM_TEST_CASE(invalid_input_check)
 {
-    BOOST_MESSAGE("Check invalid coefficient's list");
+    BOOST_TEST_MESSAGE("Check invalid coefficient's list");
 
     SCORUM_CHECK_THROW(calculate_vcg_bets(default_per_block_values, position_weights_type()), fc::assert_exception);
 
-    BOOST_MESSAGE("Check invalid (negative) coefficient value");
+    BOOST_TEST_MESSAGE("Check invalid (negative) coefficient value");
 
     position_weights_type invalid_position_weights = default_position_weights;
     (*invalid_position_weights.rbegin()) *= -1;
     SCORUM_CHECK_THROW(calculate_vcg_bets(per_block_values_type(), invalid_position_weights), fc::assert_exception);
 
-    BOOST_MESSAGE("Check invalid (disrupted sorting) coefficient value");
+    BOOST_TEST_MESSAGE("Check invalid (disrupted sorting) coefficient value");
 
     invalid_position_weights = default_position_weights;
     auto half_position = default_position_weights.size() / 2;
     std::swap(invalid_position_weights[0], invalid_position_weights[half_position]);
     SCORUM_CHECK_THROW(calculate_vcg_bets(per_block_values_type(), invalid_position_weights), fc::assert_exception);
 
-    BOOST_MESSAGE("Check invalid (negative) per-block value");
+    BOOST_TEST_MESSAGE("Check invalid (negative) per-block value");
 
     per_block_values_type invalid_per_block_values = default_per_block_values;
     (*invalid_per_block_values.rbegin()) *= -1;
@@ -75,7 +75,7 @@ SCORUM_TEST_CASE(invalid_input_check)
 SCORUM_TEST_CASE(etalon_calculation_check)
 {
     auto result = calculate_vcg_bets(default_per_block_values, default_position_weights);
-    BOOST_REQUIRE_EQUAL(result.size(), 4);
+    BOOST_REQUIRE_EQUAL(result.size(), 4u);
     BOOST_CHECK_EQUAL(result[0], ASSET_SCR(3.15e+9).amount);
     BOOST_CHECK_EQUAL(result[1], ASSET_SCR(2.470588235e+9).amount);
     BOOST_CHECK_EQUAL(result[2], ASSET_SCR(2.133333333e+9).amount);
@@ -87,7 +87,7 @@ SCORUM_TEST_CASE(check_top_less_that_coefficients)
     per_block_values_type per_block_values = { 10e+9, 7e+9, 5e+9 };
 
     auto result = calculate_vcg_bets(per_block_values, default_position_weights);
-    BOOST_REQUIRE_EQUAL(result.size(), 3);
+    BOOST_REQUIRE_EQUAL(result.size(), 3u);
     BOOST_CHECK_EQUAL(result[0], 5.3e+9);
     BOOST_CHECK_EQUAL(result[1], 5e+9);
     BOOST_CHECK_EQUAL(result[2], 5e+9);
@@ -98,7 +98,7 @@ SCORUM_TEST_CASE(check_no_budgets)
     per_block_values_type per_block_empty;
 
     auto result = calculate_vcg_bets(per_block_empty, default_position_weights);
-    BOOST_REQUIRE_EQUAL(result.size(), 0);
+    BOOST_REQUIRE_EQUAL(result.size(), 0u);
 }
 
 SCORUM_TEST_CASE(extrapolations_check)

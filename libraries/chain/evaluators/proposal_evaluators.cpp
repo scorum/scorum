@@ -4,6 +4,7 @@
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
+#include <scorum/chain/services/betting_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
@@ -59,6 +60,20 @@ void development_committee_empower_advertising_moderator_evaluator::do_apply(
     auto& adv_property_service = this->db().advertising_property_service();
 
     adv_property_service.update([&](advertising_property_object& obj) { obj.moderator = o.account; });
+}
+
+development_committee_empower_betting_moderator_evaluator::development_committee_empower_betting_moderator_evaluator(
+    data_service_factory_i& r)
+    : proposal_operation_evaluator<development_committee_empower_betting_moderator_evaluator>(r)
+{
+}
+
+void development_committee_empower_betting_moderator_evaluator::do_apply(
+    const development_committee_empower_betting_moderator_evaluator::operation_type& o)
+{
+    auto& service = this->db().betting_property_service();
+
+    service.update([&](betting_property_object& obj) { obj.moderator = o.account; });
 }
 
 template <>
