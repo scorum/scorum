@@ -118,6 +118,7 @@ chain_capital_api_obj chain_api::get_chain_capital() const
 
         capital.total_supply = dpo.total_supply;
         capital.circulating_capital = dpo.circulating_capital;
+        capital.total_scr = asset(dpo.circulating_capital.amount - dpo.total_scorumpower.amount, capital.total_scr.symbol());
         capital.total_scorumpower = dpo.total_scorumpower;
         capital.total_witness_reward_scr = dpo.total_witness_reward_scr;
         capital.total_witness_reward_sp = dpo.total_witness_reward_sp;

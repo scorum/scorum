@@ -47,6 +47,7 @@ set( SOURCES
     plugins/tags/get_tags_by_category_tests.cpp
     plugins/tags/get_discussions_by_author_tests.cpp
     plugins/tags/get_discussions_by_discussion_query_tests.cpp
+    plugins/tags/get_posts_and_comments_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     plugins/database_api/account_api_tests.cpp
@@ -75,6 +76,14 @@ target_link_libraries(chain_tests
 target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSRC_DIR=${CMAKE_CURRENT_SOURCE_DIR}" )
+
+OPTION(CHAIN_TESTS_LOG_MESSAGES "Show logs for chain tests (ON or OFF)" OFF)
+
+MESSAGE( STATUS "CHAIN_TESTS_LOG_MESSAGES: ${CHAIN_TESTS_LOG_MESSAGES}" )
+if( CHAIN_TESTS_LOG_MESSAGES )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
+    SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
+endif()
 
 if(MSVC)
     set_source_files_properties(serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

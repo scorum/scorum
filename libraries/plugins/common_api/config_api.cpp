@@ -18,6 +18,7 @@ config_api::config_api(const std::string& api_name)
     , max_discussions_list_size(_max_discussions_list_size)
     , lookup_limit(_lookup_limit)
     , tags_to_analize_count(_tags_to_analize_count)
+    , max_timestamp_range_in_s(_max_timestamp_range_in_s)
 {
 }
 
@@ -29,12 +30,14 @@ config_api::config_api(config_api& config)
     , _max_discussions_list_size(config._max_discussions_list_size)
     , _lookup_limit(config._lookup_limit)
     , _tags_to_analize_count(config._tags_to_analize_count)
+    , _max_timestamp_range_in_s(config._max_timestamp_range_in_s)
     , max_blockchain_history_depth(_max_blockchain_history_depth)
     , max_blocks_history_depth(_max_blocks_history_depth)
     , max_budgets_list_size(_max_budgets_list_size)
     , max_discussions_list_size(_max_discussions_list_size)
     , lookup_limit(_lookup_limit)
     , tags_to_analize_count(_tags_to_analize_count)
+    , max_timestamp_range_in_s(_max_timestamp_range_in_s)
 {
 }
 
@@ -52,6 +55,7 @@ bpo::options_description config_api::get_options_descriptions() const
     get_option_description<uint32_t>(options, STR(max_discussions_list_size));
     get_option_description<uint32_t>(options, STR(lookup_limit));
     get_option_description<uint32_t>(options, STR(tags_to_analize_count));
+    get_option_description<uint32_t>(options, STR(max_timestamp_range_in_s));
     return result;
 }
 
@@ -65,6 +69,7 @@ void config_api::set_options(const bpo::variables_map& options)
     set_option<uint32_t>(options, clean_config._max_discussions_list_size, STR(max_discussions_list_size));
     set_option<uint32_t>(options, clean_config._lookup_limit, STR(lookup_limit));
     set_option<uint32_t>(options, clean_config._tags_to_analize_count, STR(tags_to_analize_count));
+    set_option<uint32_t>(options, clean_config._max_timestamp_range_in_s, STR(max_timestamp_range_in_s));
 
     // recreate to reset constants
     config_api::_instances_by_api[api_name()].reset(new config_api(clean_config));

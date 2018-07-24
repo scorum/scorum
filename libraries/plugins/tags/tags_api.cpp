@@ -111,5 +111,14 @@ std::vector<discussion> tags_api::get_discussions_by_author(const api::discussio
     FC_CAPTURE_AND_RETHROW((query))
 }
 
+std::vector<discussion> tags_api::get_posts_and_comments(const api::discussion_query& query) const
+{
+    try
+    {
+        return guard().with_read_lock([&]() { return _impl->get_posts_and_comments(query); });
+    }
+    FC_CAPTURE_AND_RETHROW((query))
+}
+
 } // namespace tags
 } // namespace scorum

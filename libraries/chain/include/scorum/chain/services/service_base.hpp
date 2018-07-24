@@ -13,6 +13,7 @@ template <class T> struct base_service_i
 {
     using object_type = T;
     using modifier_type = std::function<void(object_type&)>;
+    using call_type = std::function<void(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const object_type>;
 
     virtual ~base_service_i()
@@ -106,6 +107,18 @@ public:
             return db_impl().template find<object_type, IndexBy...>(arg);
         }
         FC_CAPTURE_AND_RETHROW()
+    }
+
+    template <class... IndexBy, typename Call> void foreach_by(Call&& call) const
+    {
+        const auto& idx = db_impl()
+                              .template get_index<typename chainbase::get_index_type<object_type>::type>()
+                              .indices()
+                              .template get<IndexBy...>();
+        for (auto it = idx.cbegin(); it != idx.cend(); ++it)
+        {
+            call(*it);
+        }
     }
 
     template <class... IndexBy, class LowerBounder, class UpperBounder>

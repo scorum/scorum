@@ -145,9 +145,6 @@ void process_funds::on_apply(block_task_context& ctx)
 
 void process_funds::distribute_reward(block_task_context& ctx, const asset& users_reward)
 {
-    data_service_factory_i& services = ctx.services();
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
-
     // clang-format off
     /// 5% of total per block reward(equal to 10% of users only reward) to witness and active sp holder pay
     asset witness_reward = users_reward * utils::make_fraction(SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
@@ -164,9 +161,6 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
     distribute_active_sp_holders_reward(ctx, active_sp_holder_reward);
 
     charge_content_reward(ctx, content_reward);
-
-    dgp_service.update(
-        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(users_reward.amount, SCORUM_SYMBOL); });
 }
 
 void process_funds::distribute_witness_reward(block_task_context& ctx, const asset& witness_reward)
@@ -238,6 +232,7 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
 
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
     if (reward.symbol() == SCORUM_SYMBOL)
     {
@@ -247,6 +242,9 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
     {
         account_service.create_scorumpower(account, reward);
     }
+
+    dgp_service.update(
+        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(reward.amount, SCORUM_SYMBOL); });
 }
 
 void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)

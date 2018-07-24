@@ -61,6 +61,14 @@ public:
      * should allow easy pagination.
      */
     std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
+
+    /**
+     * This method is used to fetch all posts and comments  with up to limit being returned.
+     *
+     * If start_permlink and start_author is empty then discussions are returned from the beginning. This
+     * should allow easy pagination.
+     */
+    std::vector<api::discussion> get_posts_and_comments(const api::discussion_query& query) const;
 };
 
 } // namespace tags
@@ -79,5 +87,6 @@ FC_API(scorum::tags::tags_api,
        // content
        (get_content)
        (get_comments)
+       (get_posts_and_comments)
        (get_discussions_by_author))
 // clang-format on
