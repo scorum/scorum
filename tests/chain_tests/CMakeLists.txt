@@ -38,7 +38,6 @@ set( SOURCES
     budget/api/advertising_api_tests.cpp
     budget/budget_security_tests.cpp
     budget/budget_winners_tests.cpp
-    betting/betting_moderator_tests.cpp
     proposal/proposal_tests.cpp
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp

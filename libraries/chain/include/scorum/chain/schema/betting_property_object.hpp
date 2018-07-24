@@ -18,14 +18,14 @@ public:
     account_name_type moderator;
 };
 
-struct by_account;
+struct by_moderator;
 
 typedef shared_multi_index_container<betting_property_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<betting_property_object,
                                                                       betting_property_object::id_type,
                                                                       &betting_property_object::id>>,
-                                                ordered_unique<tag<by_account>,
+                                                ordered_unique<tag<by_moderator>,
                                                                member<betting_property_object,
                                                                       account_name_type,
                                                                       &betting_property_object::moderator>>>>
