@@ -43,7 +43,6 @@ set( SOURCES
     plugins/tags/get_tags_by_category_tests.cpp
     plugins/tags/get_discussions_by_author_tests.cpp
     plugins/tags/get_discussions_by_discussion_query_tests.cpp
-    plugins/tags/get_posts_and_comments_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     plugins/database_api/account_api_tests.cpp

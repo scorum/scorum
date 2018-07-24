@@ -52,11 +52,17 @@ struct comment_reward_operation : public virtual_operation
     comment_reward_operation(const account_name_type& a,
                              const std::string& pl,
                              const asset& payout,
+                             const asset& author_reward,
+                             const asset& curators_reward,
+                             const asset& beneficiaries_reward,
                              const asset& fund_reward,
                              const asset& commenting_reward)
         : author(a)
         , permlink(pl)
         , payout(payout)
+        , author_reward(author_reward)
+        , curators_reward(curators_reward)
+        , beneficiaries_reward(beneficiaries_reward)
         , fund_reward(fund_reward)
         , commenting_reward(commenting_reward)
     {
@@ -64,9 +70,25 @@ struct comment_reward_operation : public virtual_operation
 
     account_name_type author;
     std::string permlink;
-    asset payout; // in SCR or SP
-    asset fund_reward; // reward accrued from fund (in SCR or SP)
-    asset commenting_reward; // reward accrued from children comments (in SCR or SP)
+
+    /// reward distributed within particular comment across author, beneficiaries and curators
+    asset payout;
+
+    /// (fund_reward - curators_reward - beneficiaries_reward + commenting_reward) / 2 same amount will be thrown to the
+    /// parent comment
+    asset author_reward;
+
+    /// reward for curators (voters)
+    asset curators_reward;
+
+    /// reward for beneficiaries
+    asset beneficiaries_reward;
+
+    /// reward accrued from fund
+    asset fund_reward;
+
+    /// reward received from children comments as parent reward
+    asset commenting_reward;
 };
 
 struct acc_finished_vesting_withdraw_operation : public virtual_operation
@@ -290,7 +312,9 @@ struct proposal_virtual_operation : public virtual_operation
 
 FC_REFLECT(scorum::protocol::author_reward_operation, (author)(permlink)(reward))
 FC_REFLECT(scorum::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink))
-FC_REFLECT(scorum::protocol::comment_reward_operation, (author)(permlink)(payout)(fund_reward)(commenting_reward))
+FC_REFLECT(
+    scorum::protocol::comment_reward_operation,
+    (author)(permlink)(payout)(author_reward)(curators_reward)(beneficiaries_reward)(fund_reward)(commenting_reward))
 FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
 FC_REFLECT(scorum::protocol::witness_miss_block_operation, (owner)(block_num))
 FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))

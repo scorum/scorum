@@ -46,7 +46,7 @@ Put your config file in /opt/my_node/config.ini (otherwise default config will b
     docker run \
         -v /opt/my_node:/var/lib/scorumd \
         -d -p 2001:2001 -p 8090:8090 --name my_node \
-        scorum/release:0.0.3.85095e3
+        scorum/release:0.0.5.f7e42a4
 
 To see node logs
 
@@ -63,7 +63,7 @@ To stop/start/restart node use
 # Seed Nodes
 
 A list of some seed nodes to get you started can be found in
-[doc/seednodes.txt](doc/seednodes.txt). This list is embedded into default config.ini.
+[seed-nodes](https://github.com/scorum/scorum/wiki/Seeds). This list is embedded into default config.ini.
 
 # Building
 
