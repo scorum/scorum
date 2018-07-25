@@ -34,6 +34,7 @@
 #include <scorum/chain/services/blocks_story.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
+#include <scorum/chain/services/betting_service.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -76,5 +77,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (blocks_story)
         (advertising_property)
         (betting_property)
+        (betting)
         )
 // clang-format on

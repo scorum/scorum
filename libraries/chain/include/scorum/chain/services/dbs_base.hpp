@@ -35,11 +35,11 @@ protected:
 public:
     virtual ~dbs_base();
 
+protected:
     dbservice_dbs_factory& db();
 
     time_point_sec head_block_time();
 
-protected:
     database& db_impl();
     const database& db_impl() const;
 

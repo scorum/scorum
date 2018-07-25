@@ -43,5 +43,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (blocks_story)
         (advertising_property)
         (betting_property)
+        (betting)
         )
 // clang-format on
