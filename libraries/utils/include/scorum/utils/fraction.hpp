@@ -18,7 +18,18 @@ public:
         , numerator(_numerator) // protect
         , denominator(_denominator) // protect
     {
+        FC_ASSERT(denominator_ > 0, "Division by zero");
     }
+
+    friend bool operator==(const fraction<FractionalNumerator, FractionalDenominator>& a,
+                           const fraction<FractionalNumerator, FractionalDenominator>& b)
+    {
+        return a.numerator == b.numerator && a.denominator == b.denominator;
+    }
+
+    fraction<FractionalNumerator, FractionalDenominator> simplify() const;
+
+    fraction<FractionalNumerator, FractionalDenominator> invert() const;
 
     const FractionalNumerator& numerator;
     const FractionalDenominator& denominator;
@@ -50,6 +61,46 @@ fraction<FractionalNumerator, FractionalDenominator> make_fraction(const fc::saf
                                                                    const fc::safe<FractionalDenominator>& denominator)
 {
     return fraction<FractionalNumerator, FractionalDenominator>(numerator.value, denominator.value);
+}
+
+template <typename FractionalNumerator, typename FractionalDenominator>
+fraction<FractionalNumerator, FractionalDenominator>
+fraction<FractionalNumerator, FractionalDenominator>::simplify() const
+{
+    // calculate GCD (Greatest Common Divisor)
+    auto n = numerator;
+    auto d = denominator;
+    if (n < 0)
+        n = -n;
+    if (d < 0)
+        d = -d;
+    decltype(n) gcd = 0;
+    while (d != 0)
+    {
+        n %= d;
+        if (n == 0)
+        {
+            gcd = d;
+            break;
+        }
+        d %= n;
+    }
+    if (gcd == 0)
+        gcd = n;
+    if (gcd != 0)
+    {
+        // simplify
+        return make_fraction(numerator / gcd, denominator / gcd);
+    }
+
+    return (*this);
+}
+
+template <typename FractionalNumerator, typename FractionalDenominator>
+fraction<FractionalNumerator, FractionalDenominator>
+fraction<FractionalNumerator, FractionalDenominator>::invert() const
+{
+    return make_fraction(denominator, numerator);
 }
 }
 }

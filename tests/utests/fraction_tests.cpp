@@ -16,6 +16,8 @@ BOOST_AUTO_TEST_SUITE(fraction_tests)
 
 BOOST_AUTO_TEST_CASE(fraction_creation_check)
 {
+    SCORUM_REQUIRE_THROW(utils::make_fraction(ASSET_SP(10).amount, 0);, fc::assert_exception);
+
     {
         auto f = utils::make_fraction(1, 2);
         BOOST_CHECK_EQUAL(f.numerator, 1);
@@ -84,6 +86,24 @@ BOOST_AUTO_TEST_CASE(asset_with_fractional_operations_check)
         auto value = asset::maximum(SP_SYMBOL) * utils::make_fraction(20, 100);
         BOOST_CHECK_EQUAL(value, asset::maximum(SP_SYMBOL) / 5);
     }
+}
+
+BOOST_AUTO_TEST_CASE(fraction_simplify_check)
+{
+    BOOST_CHECK(utils::make_fraction(20'000, 100'000).simplify() == utils::make_fraction(1, 5));
+
+    BOOST_CHECK(utils::make_fraction(8, 12).simplify() == utils::make_fraction(2, 3));
+
+    BOOST_CHECK(utils::make_fraction(2, 3).simplify() == utils::make_fraction(2, 3));
+}
+
+BOOST_AUTO_TEST_CASE(fraction_invert_check)
+{
+    BOOST_CHECK(utils::make_fraction(2, 3).invert() == utils::make_fraction(3, 2));
+
+    BOOST_CHECK_NO_THROW(utils::make_fraction(0, 3));
+
+    SCORUM_REQUIRE_THROW(utils::make_fraction(0, 3).invert(), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
