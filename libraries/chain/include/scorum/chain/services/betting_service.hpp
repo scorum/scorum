@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/dbs_base.hpp>
 
-// This is new none dbs-service
+// This is the new none dbs-service
 // Look BLOC-415 and refactor this class
 // ===========================================
 // It must not inherit dbs_base,
