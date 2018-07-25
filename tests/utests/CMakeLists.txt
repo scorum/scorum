@@ -40,6 +40,7 @@ set(SOURCES
     budgets/advertising_api_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp
+    betting/betting_service_tests.cpp
 )
 
 add_executable(utests
