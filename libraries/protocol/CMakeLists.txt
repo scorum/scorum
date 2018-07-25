@@ -18,6 +18,7 @@ add_library( scorum_protocol
              types.cpp
              version.cpp
              proposal_operations.cpp
+             odds.cpp
 
              ${HEADERS}
            )

@@ -12,6 +12,7 @@ template <typename FractionalNumerator, typename FractionalDenominator> class fr
 
 public:
     fraction() = delete;
+
     fraction(const FractionalNumerator& numerator_, const FractionalDenominator& denominator_)
         : _numerator(numerator_) // copy
         , _denominator(denominator_) // copy
@@ -27,8 +28,10 @@ public:
         return a.numerator == b.numerator && a.denominator == b.denominator;
     }
 
+    //(n/gcd)/(d/gcd)
     fraction<FractionalNumerator, FractionalDenominator> simplify() const;
 
+    //(d-n)/d
     fraction<FractionalNumerator, FractionalDenominator> invert() const;
 
     const FractionalNumerator& numerator;
@@ -74,7 +77,7 @@ fraction<FractionalNumerator, FractionalDenominator>::simplify() const
         n = -n;
     if (d < 0)
         d = -d;
-    decltype(n) gcd = 0;
+    FractionalNumerator gcd = 0;
     while (d != 0)
     {
         n %= d;
@@ -90,7 +93,7 @@ fraction<FractionalNumerator, FractionalDenominator>::simplify() const
     if (gcd != 0)
     {
         // simplify
-        return make_fraction(numerator / gcd, denominator / gcd);
+        return make_fraction<FractionalNumerator, FractionalDenominator>(numerator / gcd, denominator / gcd);
     }
 
     return (*this);
@@ -100,7 +103,7 @@ template <typename FractionalNumerator, typename FractionalDenominator>
 fraction<FractionalNumerator, FractionalDenominator>
 fraction<FractionalNumerator, FractionalDenominator>::invert() const
 {
-    return make_fraction(denominator, numerator);
+    return make_fraction<FractionalNumerator, FractionalDenominator>(denominator - numerator, denominator);
 }
 }
 }
