@@ -12,9 +12,33 @@ using odds_fraction_type = utils::fraction<odds_value_type, odds_value_type>;
 
 class odds
 {
+    void initialize(const odds_value_type& base_n, const odds_value_type& base_d);
 
 public:
-    odds(const odds_fraction_type& base);
+    odds() = default;
+
+    odds(const odds_value_type& base_n, const odds_value_type& base_d)
+    {
+        initialize(base_n, base_d);
+    }
+
+    template <typename FractionalNumerator, typename FractionalDenominator>
+    odds(const utils::fraction<FractionalNumerator, FractionalDenominator>& base)
+    {
+        if ((sizeof(FractionalNumerator) > sizeof(odds_value_type))
+            && (base.numerator > (FractionalNumerator)std::numeric_limits<odds_value_type>::max()
+                || base.numerator < (FractionalNumerator)std::numeric_limits<odds_value_type>::min()))
+        {
+            FC_CAPTURE_AND_THROW(fc::overflow_exception, (base.numerator));
+        }
+        if ((sizeof(FractionalDenominator) > sizeof(odds_value_type))
+            && (base.denominator > (FractionalDenominator)std::numeric_limits<odds_value_type>::max()
+                || base.denominator < (FractionalDenominator)std::numeric_limits<odds_value_type>::min()))
+        {
+            FC_CAPTURE_AND_THROW(fc::overflow_exception, (base.denominator));
+        }
+        initialize((odds_value_type)base.numerator, (odds_value_type)base.denominator);
+    }
 
     friend bool operator==(const odds& a, const odds& b)
     {
@@ -32,6 +56,11 @@ public:
         return simplified();
     }
 
+    operator bool() const
+    {
+        return _simplified != std::tuple<odds_value_type, odds_value_type>();
+    }
+
     static odds from_string(const std::string& from);
     std::string to_string() const;
 
@@ -41,17 +70,17 @@ private:
     std::tuple<odds_value_type, odds_value_type> _inverted;
 };
 
-template <typename Stream> Stream& operator<<(Stream& stream, const scorum::protocol::odds& a)
+template <typename Stream> Stream& operator<<(Stream& stream, const scorum::protocol::odds& o)
 {
-    stream << a.to_string();
+    stream << o.to_string();
     return stream;
 }
 
-template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::odds& a)
+template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::odds& o)
 {
     std::string str;
     stream >> str;
-    a = scorum::protocol::odds::from_string(str);
+    o = scorum::protocol::odds::from_string(str);
     return stream;
 }
 } // namespace protocol

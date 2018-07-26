@@ -22,10 +22,11 @@ public:
         FC_ASSERT(denominator_ > 0, "Division by zero");
     }
 
+    template <typename OtherFractionalNumerator, typename OtherFractionalDenominator>
     friend bool operator==(const fraction<FractionalNumerator, FractionalDenominator>& a,
-                           const fraction<FractionalNumerator, FractionalDenominator>& b)
+                           const fraction<OtherFractionalNumerator, OtherFractionalDenominator>& b)
     {
-        return a.numerator == b.numerator && a.denominator == b.denominator;
+        return a.numerator == (FractionalNumerator)b.numerator && a.denominator == (FractionalDenominator)b.denominator;
     }
 
     //(n/gcd)/(d/gcd)
@@ -104,6 +105,13 @@ fraction<FractionalNumerator, FractionalDenominator>
 fraction<FractionalNumerator, FractionalDenominator>::invert() const
 {
     return make_fraction<FractionalNumerator, FractionalDenominator>(denominator - numerator, denominator);
+}
+
+template <typename Stream, typename FractionalNumerator, typename FractionalDenominator>
+Stream& operator<<(Stream& stream, const fraction<FractionalNumerator, FractionalDenominator>& f)
+{
+    stream << f.numerator << '/' << f.denominator;
+    return stream;
 }
 }
 }
