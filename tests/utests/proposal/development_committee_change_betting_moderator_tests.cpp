@@ -15,12 +15,12 @@
 
 #include <vector>
 
-namespace development_committee_chnage_betting_moderator_tests {
+namespace development_committee_change_betting_moderator_tests {
 
 using namespace scorum::chain;
 using namespace service_wrappers;
 
-SCORUM_TEST_CASE(validate_development_committee_chnage_betting_moderator_operaton)
+SCORUM_TEST_CASE(validate_development_committee_change_betting_moderator_operaton)
 {
     development_committee_empower_betting_moderator_operation op;
 
@@ -31,7 +31,7 @@ SCORUM_TEST_CASE(validate_development_committee_chnage_betting_moderator_operato
     BOOST_CHECK_NO_THROW(op.validate());
 }
 
-struct development_committee_chnage_betting_moderator_fixture : public shared_memory_fixture
+struct development_committee_change_betting_moderator_fixture : public shared_memory_fixture
 {
     const account_name_type old_moderator = "jack";
     const account_name_type new_moderator = "smit";
@@ -42,7 +42,7 @@ struct development_committee_chnage_betting_moderator_fixture : public shared_me
 
     service_base_wrapper<betting_property_service_i> betting_property;
 
-    development_committee_chnage_betting_moderator_fixture()
+    development_committee_change_betting_moderator_fixture()
         : betting_property(*this, mocks, [&](betting_property_object& bp) { bp.moderator = old_moderator; })
     {
         mocks.OnCall(services, data_service_factory_i::betting_property_service)
@@ -50,7 +50,7 @@ struct development_committee_chnage_betting_moderator_fixture : public shared_me
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(change_betting_moderator, development_committee_chnage_betting_moderator_fixture)
+BOOST_FIXTURE_TEST_CASE(change_betting_moderator, development_committee_change_betting_moderator_fixture)
 {
     development_committee_empower_betting_moderator_evaluator evaluator(*services);
 
@@ -65,4 +65,4 @@ BOOST_FIXTURE_TEST_CASE(change_betting_moderator, development_committee_chnage_b
     BOOST_REQUIRE_EQUAL(betting_property.get().moderator, new_moderator);
 }
 
-} // namespace validate_development_committee_chnage_betting_moderator_operaton
+} // namespace validate_development_committee_change_betting_moderator_operaton
