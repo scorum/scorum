@@ -29,7 +29,6 @@ struct fixture : public shared_memory_fixture
 
     account_service_i* account_service = mocks.Mock<account_service_i>();
     dev_pool_service_i* dev_pool_service = mocks.Mock<dev_pool_service_i>();
-    dynamic_global_property_service_i* dyn_props_service = mocks.Mock<dynamic_global_property_service_i>();
 
     using dgps_t = dynamic_global_property_service_i;
 
@@ -38,7 +37,6 @@ struct fixture : public shared_memory_fixture
     {
         mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
         mocks.ExpectCall(services, data_service_factory_i::dev_pool_service).ReturnByRef(*dev_pool_service);
-        mocks.OnCall(services, data_service_factory_i::dynamic_global_property_service).ReturnByRef(*dyn_props_service);
     }
 };
 
