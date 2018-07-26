@@ -12,7 +12,7 @@ using namespace scorum::protocol;
 
 BOOST_AUTO_TEST_SUITE(odds_tests)
 
-BOOST_AUTO_TEST_CASE(odds_creation_check)
+BOOST_AUTO_TEST_CASE(odds_positive_creation_check)
 {
     auto base_fraction = utils::make_fraction(30, 40);
     odds k = base_fraction;
@@ -21,11 +21,24 @@ BOOST_AUTO_TEST_CASE(odds_creation_check)
     BOOST_CHECK_EQUAL(k.simplified(), utils::make_fraction(3, 4));
     BOOST_CHECK_EQUAL(k.inverted(), utils::make_fraction(1, 4));
 
+    BOOST_CHECK_NO_THROW(odds(utils::make_fraction(std::numeric_limits<int16_t>::max(), 2)));
+}
+
+BOOST_AUTO_TEST_CASE(odds_negative_creation_check)
+{
     BOOST_REQUIRE_EQUAL(sizeof(odds_value_type), sizeof(int16_t));
 
     BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<int64_t>::max(), 2)), fc::overflow_exception);
     BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<int32_t>::max(), 2)), fc::overflow_exception);
-    BOOST_CHECK_NO_THROW(odds(utils::make_fraction(std::numeric_limits<int16_t>::max(), 2)));
+
+    BOOST_CHECK_THROW(odds(utils::make_fraction(-1, 2)), fc::assert_exception);
+    BOOST_CHECK_THROW(odds(utils::make_fraction(1, -2)), fc::assert_exception);
+    BOOST_CHECK_THROW(odds(utils::make_fraction(-1, -2)), fc::assert_exception);
+    BOOST_CHECK_THROW(odds(utils::make_fraction(0, 2)), fc::assert_exception);
+    BOOST_CHECK_THROW(odds(utils::make_fraction(1, 0)), fc::assert_exception);
+    BOOST_CHECK_THROW(odds(utils::make_fraction(0, 0)), fc::assert_exception);
+
+    BOOST_CHECK_NO_THROW(odds(utils::make_fraction(1, 2)));
 }
 
 BOOST_AUTO_TEST_CASE(odds_str_check)

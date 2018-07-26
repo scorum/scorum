@@ -19,7 +19,7 @@ public:
         , numerator(_numerator) // protect
         , denominator(_denominator) // protect
     {
-        FC_ASSERT(denominator_ > 0, "Division by zero");
+        FC_ASSERT(denominator_ != (FractionalDenominator)0, "Division by zero");
     }
 
     template <typename OtherFractionalNumerator, typename OtherFractionalDenominator>
@@ -104,7 +104,15 @@ template <typename FractionalNumerator, typename FractionalDenominator>
 fraction<FractionalNumerator, FractionalDenominator>
 fraction<FractionalNumerator, FractionalDenominator>::invert() const
 {
-    return make_fraction<FractionalNumerator, FractionalDenominator>(denominator - numerator, denominator);
+    auto denominator_ = denominator;
+    auto numerator_ = numerator;
+    if (denominator_ < 0)
+    {
+        denominator_ = -denominator_;
+        if (numerator_ < 0)
+            numerator_ = -numerator_;
+    }
+    return make_fraction<FractionalNumerator, FractionalDenominator>(denominator_ - numerator_, denominator_);
 }
 
 template <typename Stream, typename FractionalNumerator, typename FractionalDenominator>

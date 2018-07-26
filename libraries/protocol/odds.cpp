@@ -5,6 +5,8 @@ namespace protocol {
 
 void odds::initialize(const odds_value_type& base_n, const odds_value_type& base_d)
 {
+    FC_ASSERT(base_n > 0, "Numerator must be positive and non zero");
+    FC_ASSERT(base_d > 0, "Denominator must be positive and non zero");
     auto base = utils::make_fraction(base_n, base_d);
     _base = std::tie(base.numerator, base.denominator);
     auto simplified = base.simplify();
