@@ -38,8 +38,7 @@ struct fixture : public shared_memory_fixture
     {
         mocks.ExpectCall(services, data_service_factory_i::account_service).ReturnByRef(*account_service);
         mocks.ExpectCall(services, data_service_factory_i::dev_pool_service).ReturnByRef(*dev_pool_service);
-        mocks.ExpectCall(services, data_service_factory_i::dynamic_global_property_service)
-            .ReturnByRef(*dyn_props_service);
+        mocks.OnCall(services, data_service_factory_i::dynamic_global_property_service).ReturnByRef(*dyn_props_service);
     }
 };
 
@@ -70,8 +69,6 @@ BOOST_FIXTURE_TEST_CASE(decrease_dev_pool_scr_balance, fixture)
 
     mocks.OnCall(account_service, account_service_i::get_account).With(_).ReturnByRef(account);
     mocks.OnCall(account_service, account_service_i::increase_balance).With(_, _);
-    mocks.ExpectCallOverload(dyn_props_service, (void (dgps_t::*)(const dgps_t::modifier_type&)) & dgps_t::update)
-        .With(_);
 
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }
@@ -92,8 +89,6 @@ BOOST_FIXTURE_TEST_CASE(increase_account_balance, fixture)
 
     mocks.ExpectCall(account_service, account_service_i::get_account).With("jim").ReturnByRef(account);
     mocks.ExpectCall(account_service, account_service_i::increase_balance).With(_, op.amount);
-    mocks.ExpectCallOverload(dyn_props_service, (void (dgps_t::*)(const dgps_t::modifier_type&)) & dgps_t::update)
-        .With(_);
 
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }
