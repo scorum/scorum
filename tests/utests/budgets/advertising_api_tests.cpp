@@ -135,7 +135,7 @@ SCORUM_TEST_CASE(check_get_user_budgets_ordered)
 
     auto alice_budgets = api->get_user_budgets("alice");
 
-    BOOST_REQUIRE_EQUAL(alice_budgets.size(), 4);
+    BOOST_REQUIRE_EQUAL(alice_budgets.size(), 4u);
     BOOST_CHECK(
         (std::is_sorted(alice_budgets.begin(), alice_budgets.end(),
                         [](const budget_api_obj& l, const budget_api_obj& r) { return l.created > r.created; })));
@@ -164,7 +164,7 @@ SCORUM_TEST_CASE(check_get_user_budgets_empty)
 
     auto bob_budgets = api->get_user_budgets("alice");
 
-    BOOST_REQUIRE_EQUAL(bob_budgets.size(), 0);
+    BOOST_REQUIRE_EQUAL(bob_budgets.size(), 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
