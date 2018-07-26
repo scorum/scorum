@@ -90,6 +90,9 @@ struct proposal_change_quorum_evaluator
         case quorum_type::advertising_moderator_quorum:
             committee.weak_visit([&](development_committee_i& c) { c.change_advertising_moderator_quorum(o.quorum); });
             break;
+        case quorum_type::betting_moderator_quorum:
+            committee.weak_visit([&](development_committee_i& c) { c.change_betting_moderator_quorum(o.quorum); });
+            break;
         case quorum_type::budgets_vcg_properties_quorum:
             committee.weak_visit([&](development_committee_i& c) { c.change_budgets_vcg_properties_quorum(o.quorum); });
             break;
@@ -125,6 +128,16 @@ struct development_committee_empower_advertising_moderator_evaluator
     typedef development_committee_empower_advertising_moderator_operation operation_type;
 
     development_committee_empower_advertising_moderator_evaluator(data_service_factory_i& r);
+
+    void do_apply(const operation_type& o);
+};
+
+struct development_committee_empower_betting_moderator_evaluator
+    : public proposal_operation_evaluator<development_committee_empower_betting_moderator_evaluator>
+{
+    typedef development_committee_empower_betting_moderator_operation operation_type;
+
+    development_committee_empower_betting_moderator_evaluator(data_service_factory_i& r);
 
     void do_apply(const operation_type& o);
 };

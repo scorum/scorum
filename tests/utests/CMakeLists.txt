@@ -25,6 +25,7 @@ set(SOURCES
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
     proposal/development_committee_top_budgets_evaluator_tests.cpp
+    proposal/development_committee_change_betting_moderator_tests.cpp
     rewards_math/calculate_payout_tests.cpp
     rewards_math/calculate_total_claims_tests.cpp
     rewards_math/calculate_curations_payout_tests.cpp
@@ -40,6 +41,7 @@ set(SOURCES
     budgets/advertising_api_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp
+    betting/betting_service_tests.cpp
     odds_tests.cpp
 )
 
