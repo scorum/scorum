@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(fraction_tests)
 
 BOOST_AUTO_TEST_CASE(fraction_creation_check)
 {
-    SCORUM_REQUIRE_THROW(utils::make_fraction(ASSET_SP(10).amount, 0);, fc::assert_exception);
+    BOOST_CHECK_THROW(utils::make_fraction(ASSET_SP(10).amount, 0);, fc::assert_exception);
 
     {
         auto f = utils::make_fraction(1, 2);
@@ -43,12 +43,12 @@ BOOST_AUTO_TEST_CASE(fraction_creation_check)
 BOOST_AUTO_TEST_CASE(multiply_by_fractional_negative_check)
 {
     // negative value
-    SCORUM_REQUIRE_THROW(utils::multiply_by_fractional(-10, 1, 2), fc::assert_exception);
-    SCORUM_REQUIRE_THROW(utils::multiply_by_fractional(10, -1, 2), fc::assert_exception);
-    SCORUM_REQUIRE_THROW(utils::multiply_by_fractional(10, 1, -2), fc::assert_exception);
-    SCORUM_REQUIRE_THROW(utils::multiply_by_fractional(-10, -1, -2), fc::assert_exception);
+    BOOST_CHECK_THROW(utils::multiply_by_fractional(-10, 1, 2), fc::assert_exception);
+    BOOST_CHECK_THROW(utils::multiply_by_fractional(10, -1, 2), fc::assert_exception);
+    BOOST_CHECK_THROW(utils::multiply_by_fractional(10, 1, -2), fc::assert_exception);
+    BOOST_CHECK_THROW(utils::multiply_by_fractional(-10, -1, -2), fc::assert_exception);
     // zero denominator
-    SCORUM_REQUIRE_THROW(utils::multiply_by_fractional(10, 1, 0), fc::assert_exception);
+    BOOST_CHECK_THROW(utils::multiply_by_fractional(10, 1, 0), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_CASE(multiply_by_fractional_positive_check)
