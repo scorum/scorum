@@ -449,7 +449,7 @@ private:
 
         result.reserve(limit);
 
-        const auto& idx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+        const auto& idx = _db.get_index<comment_index, by_author_created>();
 
         auto it = idx.lower_bound(author);
         if (start_permlink && !start_permlink->empty())

@@ -169,7 +169,7 @@ SCORUM_TEST_CASE(check_filtered_by_permlink_and_limit)
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
 }
 
-SCORUM_TEST_CASE(check_returned_by_last_update_in_desc_order)
+SCORUM_TEST_CASE(check_returned_by_created_in_desc_order)
 {
     auto a1 = create_post(alice).in_block_with_delay();
     create_post(bob).in_block_with_delay();
@@ -194,8 +194,8 @@ SCORUM_TEST_CASE(check_returned_by_last_update_in_desc_order)
         auto discussions = _api.get_discussions_by_author(q);
 
         BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
-        BOOST_CHECK_EQUAL(discussions[0].permlink, a1.permlink());
-        BOOST_CHECK_EQUAL(discussions[1].permlink, a2.permlink());
+        BOOST_CHECK_EQUAL(discussions[0].permlink, a2.permlink());
+        BOOST_CHECK_EQUAL(discussions[1].permlink, a1.permlink());
     }
 }
 
