@@ -43,6 +43,21 @@ BOOST_AUTO_TEST_CASE(odds_str_check)
     BOOST_CHECK_EQUAL(k.to_string(), str);
 }
 
+BOOST_AUTO_TEST_CASE(odds_variant_check)
+{
+    odds k = utils::make_fraction(30, 40);
+
+    fc::variant vk;
+
+    BOOST_REQUIRE_NO_THROW(fc::to_variant(k, vk));
+
+    odds k2;
+
+    BOOST_REQUIRE_NO_THROW(fc::from_variant(vk, k2));
+
+    BOOST_CHECK_EQUAL(k, k2);
+}
+
 BOOST_AUTO_TEST_CASE(odds_cast_to_fraction_check)
 {
     odds k = utils::make_fraction(30, 40);
