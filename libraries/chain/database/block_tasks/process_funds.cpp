@@ -160,7 +160,6 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
 
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
     if (reward.symbol() == SCORUM_SYMBOL)
     {
@@ -170,9 +169,6 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
     {
         account_service.create_scorumpower(account, reward);
     }
-
-    dgp_service.update(
-        [&](dynamic_global_property_object& p) { p.circulating_capital += asset(reward.amount, SCORUM_SYMBOL); });
 }
 
 void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
