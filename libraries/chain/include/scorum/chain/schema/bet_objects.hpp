@@ -2,12 +2,14 @@
 
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
+#include <scorum/protocol/odds.hpp>
+
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
+using scorum::protocol::odds;
 
-using odds_type = int16_t;
 using game_id_type = int16_t;
 
 struct wincase1;
@@ -28,7 +30,7 @@ public:
 
     account_name_type better;
 
-    odds_type odds;
+    odds value;
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
@@ -50,6 +52,8 @@ public:
     id_type id;
 
     bet_id_type bet;
+
+    asset stake = asset(0, SCORUM_SYMBOL);
 };
 
 class matched_bet_object : public object<matched_bet_object_type, matched_bet_object>
@@ -65,6 +69,8 @@ public:
     bet_id_type bet1;
 
     bet_id_type bet2;
+
+    asset stake = asset(0, SCORUM_SYMBOL);
 };
 
 typedef shared_multi_index_container<bet_object,
@@ -105,6 +111,7 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
 
 FC_REFLECT(scorum::chain::pending_bet_object,
            (id)
+           (stake)
            (bet))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pending_bet_index)
@@ -112,6 +119,7 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pendi
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
            (matched)
+           (stake)
            (bet1)
            (bet2))
 

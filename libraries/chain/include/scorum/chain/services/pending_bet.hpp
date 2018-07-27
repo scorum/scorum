@@ -1,0 +1,26 @@
+#pragma once
+#include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/services/service_base.hpp>
+
+namespace scorum {
+namespace chain {
+
+struct pending_bet_service_i : public base_service_i<pending_bet_object>
+{
+    using pending_bet_call_type = typename base_service_i::call_type;
+
+    virtual void foreach_pending_bets(pending_bet_call_type&&) = 0;
+};
+
+class dbs_pending_bet : public dbs_service_base<pending_bet_service_i>
+{
+    friend class dbservice_dbs_factory;
+
+protected:
+    explicit dbs_pending_bet(database& db);
+
+public:
+    virtual void foreach_pending_bets(pending_bet_call_type&&) override;
+};
+}
+}

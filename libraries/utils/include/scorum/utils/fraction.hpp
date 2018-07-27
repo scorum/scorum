@@ -13,6 +13,7 @@ template <typename FractionalNumerator, typename FractionalDenominator> class fr
 public:
     fraction() = delete;
 
+    // n/d
     fraction(const FractionalNumerator& numerator_, const FractionalDenominator& denominator_)
         : _numerator(numerator_) // copy
         , _denominator(denominator_) // copy
@@ -34,51 +35,45 @@ public:
         return a.numerator == (FractionalNumerator)b.numerator && a.denominator == (FractionalDenominator)b.denominator;
     }
 
-    template <typename OtherFractionalNumerator, typename OtherFractionalDenominator>
-    friend bool operator/(const fraction<FractionalNumerator, FractionalDenominator>& a,
-                          const fraction<OtherFractionalNumerator, OtherFractionalDenominator>& b);
-
     //(n/gcd)/(d/gcd)
-    fraction<FractionalNumerator, FractionalDenominator> simplify() const;
+    auto simplify() const;
 
     //(d-n)/d
-    fraction<FractionalNumerator, FractionalDenominator> invert() const;
+    auto invert() const;
+
+    // d/n
+    auto coup() const;
 
     const FractionalNumerator& numerator;
     const FractionalDenominator& denominator;
 };
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator> make_fraction(const FractionalNumerator& numerator,
-                                                                   const FractionalDenominator& denominator)
+auto make_fraction(const FractionalNumerator& numerator, const FractionalDenominator& denominator)
 {
     return fraction<FractionalNumerator, FractionalDenominator>(numerator, denominator);
 }
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator> make_fraction(const fc::safe<FractionalNumerator>& numerator,
-                                                                   const FractionalDenominator& denominator)
+auto make_fraction(const fc::safe<FractionalNumerator>& numerator, const FractionalDenominator& denominator)
 {
     return fraction<FractionalNumerator, FractionalDenominator>(numerator.value, denominator);
 }
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator> make_fraction(const FractionalNumerator& numerator,
-                                                                   const fc::safe<FractionalDenominator>& denominator)
+auto make_fraction(const FractionalNumerator& numerator, const fc::safe<FractionalDenominator>& denominator)
 {
     return fraction<FractionalNumerator, FractionalDenominator>(numerator, denominator.value);
 }
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator> make_fraction(const fc::safe<FractionalNumerator>& numerator,
-                                                                   const fc::safe<FractionalDenominator>& denominator)
+auto make_fraction(const fc::safe<FractionalNumerator>& numerator, const fc::safe<FractionalDenominator>& denominator)
 {
     return fraction<FractionalNumerator, FractionalDenominator>(numerator.value, denominator.value);
 }
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator>::simplify() const
+auto fraction<FractionalNumerator, FractionalDenominator>::simplify() const
 {
     // calculate GCD (Greatest Common Divisor)
     auto n = numerator;
@@ -110,8 +105,7 @@ fraction<FractionalNumerator, FractionalDenominator>::simplify() const
 }
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator>
-fraction<FractionalNumerator, FractionalDenominator>::invert() const
+auto fraction<FractionalNumerator, FractionalDenominator>::invert() const
 {
     auto denominator_ = denominator;
     auto numerator_ = numerator;
@@ -125,23 +119,9 @@ fraction<FractionalNumerator, FractionalDenominator>::invert() const
 }
 
 template <typename FractionalNumerator, typename FractionalDenominator>
-auto operator/(const fraction<FractionalNumerator, FractionalDenominator>& a,
-               const fraction<FractionalNumerator, FractionalDenominator>& b)
+auto fraction<FractionalNumerator, FractionalDenominator>::coup() const
 {
-    using large_type = int64_t;
-
-    FC_ASSERT(sizeof(FractionalNumerator) < sizeof(large_type));
-    FC_ASSERT(sizeof(FractionalDenominator) < sizeof(large_type));
-
-    using safe_type = fc::safe<large_type>;
-    safe_type n = a.numerator;
-    n *= b.denominator;
-    safe_type d = a.denominator;
-    d *= b.numerator;
-
-    fraction<large_type, large_type> tmp(make_fraction(n, d).simplify());
-
-    return make_fraction<FractionalNumerator, FractionalDenominator>(tmp.numerator, tmp.denominator);
+    return make_fraction<FractionalNumerator, FractionalDenominator>(denominator, numerator);
 }
 
 template <typename Stream, typename FractionalNumerator, typename FractionalDenominator>
