@@ -326,8 +326,6 @@ public:
     const genesis_persistent_state_type& genesis_persistent_state() const;
 
 private:
-    void adjust_balance(const account_object& a, const asset& delta);
-
     // witness_schedule
     void update_witness_schedule();
     void _reset_witness_virtual_schedule_time();
