@@ -78,6 +78,7 @@ enum object_type
     dev_committee_member_object_type,
     witness_reward_in_sp_migration_object_type,
     advertising_property_object_type,
+    betting_property_object_type,
     bet_object_type,
     pending_bet_object_type,
     matched_bet_object_type,
@@ -118,6 +119,7 @@ class dev_committee_object;
 class dev_committee_member_object;
 class witness_reward_in_sp_migration_object;
 class advertising_property_object;
+class betting_property_object;
 class bet_object;
 class pending_bet_object;
 class matched_bet_object;
@@ -222,6 +224,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (dev_committee_member_object_type)
                 (witness_reward_in_sp_migration_object_type)
                 (advertising_property_object_type)
+                (betting_property_object_type)
                 (bet_object_type)
                 (pending_bet_object_type)
                 (matched_bet_object_type)
