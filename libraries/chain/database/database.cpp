@@ -1631,7 +1631,8 @@ void database::_apply_transaction(const signed_transaction& trx)
         {
             if (!(skip & skip_tapos_check))
             {
-                const auto& tapos_block_summary = get<block_summary_object>(trx.ref_block_num);
+                block_summary_id_type sid(trx.ref_block_num & (uint32_t)SCORUM_BLOCKID_POOL_SIZE);
+                const auto& tapos_block_summary = get<block_summary_object>(sid);
                 // Verify TaPoS block summary has correct ID prefix, and that this block's time is not past the
                 // expiration
                 SCORUM_ASSERT(trx.ref_block_prefix == tapos_block_summary.block_id._hash[1],

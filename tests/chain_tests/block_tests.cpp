@@ -394,6 +394,29 @@ BOOST_AUTO_TEST_CASE(duplicate_transactions)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(tapos_check_after_blockid_pool_size_exceeded, database_default_integration_fixture)
+{
+    {
+        comment_operation op;
+        op.author = initdelegate.name;
+        op.permlink = "p1";
+        op.body = "body";
+        op.parent_permlink = "category";
+
+        BOOST_REQUIRE_NO_THROW(push_operation(op, initdelegate.private_key));
+    }
+    generate_blocks(SCORUM_BLOCKID_POOL_SIZE);
+    {
+        comment_operation op;
+        op.author = initdelegate.name;
+        op.permlink = "p2";
+        op.body = "body";
+        op.parent_permlink = "category";
+
+        BOOST_REQUIRE_NO_THROW(push_operation(op, initdelegate.private_key));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(tapos)
 {
     try
