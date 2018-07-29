@@ -40,8 +40,11 @@ class blockchain_history_plugin_impl;
 }
 
 /**
- *  This plugin is designed to track a range of operations by account so that one node
- *  doesn't need to hold the full operation history in memory.
+ * @brief This plugin is designed to track a range of operations by account so that one node doesn't need to hold the
+ * full operation history in memory.
+ *
+ * @ingroup plugins
+ * @addtogroup blockchain_history_plugin Blockchain history plugin
  */
 class blockchain_history_plugin : public scorum::app::plugin
 {

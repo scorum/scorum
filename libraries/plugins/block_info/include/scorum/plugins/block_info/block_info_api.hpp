@@ -25,6 +25,15 @@ struct get_block_info_args
     uint32_t count = 1000;
 };
 
+/**
+ * @brief Provide api to get information about blocks
+ *
+ * Require: block_info_plugin
+ *
+ * @ingroup api
+ * @ingroup block_info_plugin
+ * @defgroup block_info_api Block info API
+ */
 class block_info_api
 {
 public:
@@ -32,8 +41,14 @@ public:
 
     void on_api_startup();
 
+    /// @name Public API
+    /// @addtogroup block_info_api
+    /// @{
+
     std::vector<block_info> get_block_info(get_block_info_args args);
     std::vector<block_with_info> get_blocks_with_info(get_block_info_args args);
+
+    /// @}
 
 private:
     std::shared_ptr<detail::block_info_api_impl> my;
