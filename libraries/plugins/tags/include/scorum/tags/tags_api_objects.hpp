@@ -148,13 +148,23 @@ struct discussion : public comment_api_obj
     uint32_t body_length = 0;
 };
 
+/**
+ * @brief The discussion_query struct
+ *
+ * \ingroup tags_api
+ */
 struct discussion_query
 {
-    // the number of bytes of the post body to return, 0 for all
+    /// the number of bytes of the post body to return, 0 for all
     uint32_t truncate_body = 0;
 
+    /// start author
     optional<std::string> start_author;
+
+    /// start permlink
     optional<std::string> start_permlink;
+
+    /// query limit
     uint32_t limit = 0;
 
     bool tags_logical_and = true;

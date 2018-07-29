@@ -21,12 +21,25 @@ namespace detail {
 class account_statistics_api_impl;
 }
 
+/**
+ * @brief Provide api to get statistics over the time window for a particular account
+ *
+ * Require: account_statistics_plugin
+ *
+ * @ingroup api
+ * @ingroup account_statistics_plugin
+ * @addtogroup account_statistics_api Account statistics API
+ */
 class account_statistics_api
 {
 public:
     account_statistics_api(const scorum::app::api_context& ctx);
 
     void on_api_startup();
+
+    /// @name Public API
+    /// @addtogroup account_statistics_api
+    /// @{
 
     /**
      * @brief Gets statistics over the time window length, interval, that contains time, open.
@@ -56,6 +69,8 @@ public:
                                                       const fc::time_point_sec& start,
                                                       const fc::time_point_sec& end) const;
     statistics get_lifetime_stats_by_account_name(const account_name_type& account_name) const;
+
+    /// @}
 
 private:
     std::shared_ptr<detail::account_statistics_api_impl> my;
