@@ -59,6 +59,12 @@ namespace detail {
 class witness_plugin_impl;
 }
 
+/**
+ * @brief This plugin responsible for blocks production
+ *
+ * @ingroup plugins
+ * @defgroup witness_plugin Witness plugin
+ */
 class witness_plugin : public scorum::app::plugin
 {
 public:
