@@ -56,6 +56,7 @@ add_library( scorum_chain
              services/genesis_state.cpp
              services/account_registration_bonus.cpp
              services/blocks_story.cpp
+             services/betting_service.cpp
 
              data_service_factory.cpp
 
@@ -91,6 +92,7 @@ add_library( scorum_chain
              genesis/initializators/dev_pool_initializator.cpp
              genesis/initializators/dev_committee_initialiazator.cpp
              genesis/initializators/advertising_property_initializator.cpp
+             genesis/initializators/betting_property_initializator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_contracts_expiration.cpp

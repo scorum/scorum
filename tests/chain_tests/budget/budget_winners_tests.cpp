@@ -98,7 +98,7 @@ public:
 
     template <typename ServiceType> void winners_arranging_test(ServiceType& service, const budget_type type)
     {
-        BOOST_MESSAGE("Create budgets winner list: bob (1), alice (2), sam (3), sam (4), .., kenny(-1)");
+        BOOST_TEST_MESSAGE("Create budgets winner list: bob (1), alice (2), sam (3), sam (4), .., kenny(-1)");
 
         auto start = budget_start + budget_start_interval;
 
@@ -143,7 +143,7 @@ public:
 
         generate_blocks(start);
 
-        BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 3);
+        BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 3u);
 
         BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(bob.name),
                           budget_visitor.get_advertising_summ(alice.name));
@@ -230,7 +230,7 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
 
     {
         auto budgets = post_budget_service.get_budgets();
-        BOOST_REQUIRE_EQUAL(budgets.size(), 1);
+        BOOST_REQUIRE_EQUAL(budgets.size(), 1u);
         // There is a single budget so whole 'per-block' amount should be decreased from budget
         BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - budgets[0].get().per_block.amount);
     }
@@ -242,7 +242,7 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
 
     {
         auto budgets = post_budget_service.get_budgets();
-        BOOST_REQUIRE_EQUAL(budgets.size(), 2);
+        BOOST_REQUIRE_EQUAL(budgets.size(), 2u);
         // 'b1' is a loser
         BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - 2 * budgets[0].get().per_block.amount);
         // There are two budgets. 'b2' is a winner. According to VCG algorithm its payment should be equal to
