@@ -58,6 +58,7 @@ add_library( scorum_chain
              services/blocks_story.cpp
              services/betting_service.cpp
              services/pending_bet.cpp
+             services/bet.cpp
 
              data_service_factory.cpp
 

@@ -43,12 +43,21 @@ bool dbs_betting::is_betting_moderator(const account_name_type& account_name) co
     FC_CAPTURE_LOG_AND_RETHROW((account_name))
 }
 
-void dbs_betting::match(const bet_object&)
+void dbs_betting::match(const bet_object& bet)
 {
-    _pending_bet.foreach_pending_bets([&](const pending_bet_object&) -> bool {
-        // TODO
+    _pending_bet.foreach_pending_bets(bet.game, [&](pending_bet_object& pbet) -> bool {
 
-        return false;
+        const bet_object& pending_bet = _bet.get(pbet.bet);
+
+        // TODO: need matching for wincases
+        if (bet.wincase == pending_bet.wincase && bet.value.inverted() == pending_bet.value)
+        {
+            // TODO
+
+            return false;
+        }
+
+        return true;
     });
 
     // TODO

@@ -13,7 +13,7 @@ template <class T> struct base_service_i
 {
     using object_type = T;
     using modifier_type = std::function<void(object_type&)>;
-    using call_type = std::function<bool(const object_type&)>;
+    using call_type = std::function<void(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const object_type>;
 
     virtual ~base_service_i()
@@ -117,8 +117,7 @@ public:
                               .template get<IndexBy...>();
         for (auto it = idx.cbegin(); it != idx.cend(); ++it)
         {
-            if (!call(*it))
-                break;
+            call(*it);
         }
     }
 

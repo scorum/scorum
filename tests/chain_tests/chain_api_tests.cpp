@@ -99,10 +99,7 @@ SCORUM_TEST_CASE(total_scr_equal_scr_on_accounts_balance)
 
     auto total_scr = _api_call.get_chain_capital().total_scr;
     auto expected_total_scr = ASSET_NULL_SCR;
-    account_service.foreach_account([&](const account_object& a) -> bool {
-        expected_total_scr += a.balance;
-        return true;
-    });
+    account_service.foreach_account([&](const account_object& a) { expected_total_scr += a.balance; });
 
     BOOST_CHECK_EQUAL(total_scr, expected_total_scr);
 }
@@ -113,10 +110,7 @@ SCORUM_TEST_CASE(total_sp_equal_sp_on_accounts_balance)
 
     auto total_sp = _api_call.get_chain_capital().total_scorumpower;
     auto expected_total_sp = ASSET_NULL_SP;
-    account_service.foreach_account([&](const account_object& a) -> bool {
-        expected_total_sp += a.scorumpower;
-        return true;
-    });
+    account_service.foreach_account([&](const account_object& a) { expected_total_sp += a.scorumpower; });
 
     BOOST_CHECK_EQUAL(total_sp, expected_total_sp);
 }

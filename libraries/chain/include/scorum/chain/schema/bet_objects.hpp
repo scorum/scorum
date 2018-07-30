@@ -10,19 +10,39 @@ namespace chain {
 using scorum::protocol::asset;
 using scorum::protocol::odds;
 
+#if 1
 using game_id_type = int16_t;
 
-struct wincase1
+struct wincase11;
+struct wincase12;
+struct wincase21;
+struct wincase22;
+
+struct wincase11
 {
+    using opposite_type = wincase12;
 };
-struct wincase2
+struct wincase12
 {
+    using opposite_type = wincase11;
 };
-struct wincase3
+struct wincase21
 {
+    using opposite_type = wincase22;
+};
+struct wincase22
+{
+    using opposite_type = wincase21;
 };
 
-using wincase_type = fc::static_variant<wincase1, wincase2, wincase3>;
+using wincase_type = fc::static_variant<wincase11, wincase12, wincase21, wincase22>;
+
+bool operator==(const wincase_type&, const wincase_type&)
+{
+    // stub
+    return true;
+}
+#endif
 
 class bet_object : public object<bet_object_type, bet_object>
 {
@@ -36,17 +56,17 @@ public:
 
     account_name_type better;
 
+    game_id_type game;
+
+    wincase_type wincase;
+
     odds value;
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    asset matched_stake = asset(0, SCORUM_SYMBOL);
+    asset rest_stake = asset(0, SCORUM_SYMBOL);
 
-    asset potential_return = asset(0, SCORUM_SYMBOL);
-
-    game_id_type game;
-
-    wincase_type wincase;
+    asset rest_potential_return = asset(0, SCORUM_SYMBOL);
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
@@ -57,9 +77,9 @@ public:
 
     id_type id;
 
-    bet_id_type bet;
+    game_id_type game;
 
-    asset stake = asset(0, SCORUM_SYMBOL);
+    bet_id_type bet;
 };
 
 class matched_bet_object : public object<matched_bet_object_type, matched_bet_object>
@@ -75,8 +95,6 @@ public:
     bet_id_type bet1;
 
     bet_id_type bet2;
-
-    asset stake = asset(0, SCORUM_SYMBOL);
 };
 
 typedef shared_multi_index_container<bet_object,
@@ -84,11 +102,21 @@ typedef shared_multi_index_container<bet_object,
                                                                member<bet_object, bet_id_type, &bet_object::id>>>>
     bet_index;
 
+struct by_game_id;
+
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<pending_bet_object,
                                                                       pending_bet_id_type,
-                                                                      &pending_bet_object::id>>>>
+                                                                      &pending_bet_object::id>>,
+                                                ordered_unique<tag<by_game_id>,
+                                                               composite_key<pending_bet_object,
+                                                                             member<pending_bet_object,
+                                                                                    game_id_type,
+                                                                                    &pending_bet_object::game>,
+                                                                             member<pending_bet_object,
+                                                                                    bet_id_type,
+                                                                                    &pending_bet_object::bet>>>>>
     pending_bet_index;
 
 typedef shared_multi_index_container<matched_bet_object,
@@ -105,18 +133,18 @@ FC_REFLECT(scorum::chain::bet_object,
            (id)
            (created)
            (better)
+           (game)
+           (wincase)
            (value)
            (stake)
-           (matched_stake)
-           (potential_return)
-           (game)
-           (wincase))
+           (rest_stake)
+           (rest_potential_return))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
 
 FC_REFLECT(scorum::chain::pending_bet_object,
            (id)
-           (stake)
+           (game)
            (bet))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pending_bet_index)
@@ -124,7 +152,6 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pendi
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
            (matched)
-           (stake)
            (bet1)
            (bet2))
 

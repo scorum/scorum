@@ -7,9 +7,9 @@ namespace chain {
 
 struct pending_bet_service_i : public base_service_i<pending_bet_object>
 {
-    using pending_bet_call_type = typename base_service_i::call_type;
+    using pending_bet_call_type = std::function<bool(base_service_i::object_type&)>;
 
-    virtual void foreach_pending_bets(pending_bet_call_type&&) = 0;
+    virtual void foreach_pending_bets(const game_id_type&, pending_bet_call_type&&) = 0;
 };
 
 class dbs_pending_bet : public dbs_service_base<pending_bet_service_i>
@@ -20,7 +20,7 @@ protected:
     explicit dbs_pending_bet(database& db);
 
 public:
-    virtual void foreach_pending_bets(pending_bet_call_type&&) override;
+    virtual void foreach_pending_bets(const game_id_type&, pending_bet_call_type&&) override;
 };
 }
 }
