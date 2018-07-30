@@ -66,102 +66,104 @@ struct account_service_fixture : public database_fixture::database_default_integ
 
 BOOST_FIXTURE_TEST_SUITE(account_service_tests, account_service_fixture)
 
-SCORUM_TEST_CASE(increase_balance_check)
+SCORUM_TEST_CASE(increase_balance_increase_circulating_capital_check)
 {
     const asset to_transfer = ASSET_SCR(500);
 
     auto old_circulating_capital = dgp_service.get().circulating_capital;
-    auto old_alice_balance = account_service.get_account(alice.name).balance;
-    auto old_bob_balance = account_service.get_account(bob.name).balance;
+
+    BOOST_REQUIRE_NO_THROW(account_service.increase_balance(account_service.get_account(alice.name), to_transfer));
+
+    BOOST_CHECK_EQUAL(old_circulating_capital + to_transfer, dgp_service.get().circulating_capital);
+}
+
+SCORUM_TEST_CASE(decrease_balance_decrease_circulating_capital_check)
+{
+    const asset to_transfer = ASSET_SCR(500);
+
+    auto old_circulating_capital = dgp_service.get().circulating_capital;
 
     BOOST_REQUIRE_NO_THROW(account_service.decrease_balance(account_service.get_account(alice.name), to_transfer));
 
     BOOST_CHECK_EQUAL(old_circulating_capital - to_transfer, dgp_service.get().circulating_capital);
-    BOOST_CHECK_EQUAL(old_alice_balance - to_transfer, account_service.get_account(alice.name).balance);
-
-    BOOST_REQUIRE_NO_THROW(account_service.increase_balance(account_service.get_account(bob.name), to_transfer));
-
-    BOOST_CHECK_EQUAL(old_circulating_capital, dgp_service.get().circulating_capital);
-    BOOST_CHECK_EQUAL(old_bob_balance + to_transfer, account_service.get_account(bob.name).balance);
 }
 
-SCORUM_TEST_CASE(increase_scorumpower_check)
+SCORUM_TEST_CASE(increase_scorumpower_increase_dgp_check)
 {
     const asset to_transfer = ASSET_SP(500);
 
-    make_witness(alice);
-    make_witness(bob);
+    auto old_circulating_capital = dgp_service.get().circulating_capital;
+    auto old_total_scorumpower = dgp_service.get().total_scorumpower;
 
-    vote_for_witness(alice, bob);
-    vote_for_witness(bob, alice);
+    BOOST_REQUIRE_NO_THROW(account_service.increase_scorumpower(account_service.get_account(alice.name), to_transfer));
+
+    BOOST_CHECK_EQUAL(old_circulating_capital + asset(to_transfer.amount, SCORUM_SYMBOL),
+                      dgp_service.get().circulating_capital);
+    BOOST_CHECK_EQUAL(old_total_scorumpower + to_transfer, dgp_service.get().total_scorumpower);
+}
+
+SCORUM_TEST_CASE(decrease_scorumpower_decrease_dgp_check)
+{
+    const asset to_transfer = ASSET_SP(500);
 
     auto old_circulating_capital = dgp_service.get().circulating_capital;
     auto old_total_scorumpower = dgp_service.get().total_scorumpower;
-    auto old_alice_scorumpower = account_service.get_account(alice.name).scorumpower;
-    auto old_bob_scorumpower = account_service.get_account(bob.name).scorumpower;
-    auto old_alice_votes = witness_service.get(alice.name).votes;
-    auto old_bob_votes = witness_service.get(bob.name).votes;
 
     BOOST_REQUIRE_NO_THROW(account_service.decrease_scorumpower(account_service.get_account(alice.name), to_transfer));
 
     BOOST_CHECK_EQUAL(old_circulating_capital - asset(to_transfer.amount, SCORUM_SYMBOL),
                       dgp_service.get().circulating_capital);
     BOOST_CHECK_EQUAL(old_total_scorumpower - to_transfer, dgp_service.get().total_scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_scorumpower - to_transfer, account_service.get_account(alice.name).scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_votes - to_transfer.amount, witness_service.get(bob.name).votes);
-    BOOST_CHECK_EQUAL(old_bob_votes, witness_service.get(alice.name).votes);
-
-    BOOST_REQUIRE_NO_THROW(account_service.increase_scorumpower(account_service.get_account(bob.name), to_transfer));
-
-    BOOST_CHECK_EQUAL(old_circulating_capital, dgp_service.get().circulating_capital);
-    BOOST_CHECK_EQUAL(old_total_scorumpower, dgp_service.get().total_scorumpower);
-    BOOST_CHECK_EQUAL(old_bob_scorumpower + to_transfer, account_service.get_account(bob.name).scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_votes + to_transfer.amount, witness_service.get(alice.name).votes);
-    BOOST_CHECK_EQUAL(old_bob_votes - to_transfer.amount, witness_service.get(bob.name).votes);
 }
 
-SCORUM_TEST_CASE(create_scorumpower_check)
+SCORUM_TEST_CASE(increase_scorumpower_increase_witness_votes_check)
 {
-    const asset to_transfer = ASSET_SCR(500);
+    const asset to_transfer = ASSET_SP(500);
 
-    make_witness(alice);
     make_witness(bob);
 
     vote_for_witness(alice, bob);
-    vote_for_witness(bob, alice);
+
+    auto old_bob_votes = witness_service.get(bob.name).votes;
+
+    BOOST_REQUIRE_NO_THROW(account_service.increase_scorumpower(account_service.get_account(alice.name), to_transfer));
+
+    BOOST_CHECK_EQUAL(old_bob_votes + to_transfer.amount, witness_service.get(bob.name).votes);
+}
+
+SCORUM_TEST_CASE(decrease_scorumpower_decrease_witness_votes_check)
+{
+    const asset to_transfer = ASSET_SP(500);
+
+    make_witness(bob);
+
+    vote_for_witness(alice, bob);
+
+    auto old_bob_votes = witness_service.get(bob.name).votes;
+
+    BOOST_REQUIRE_NO_THROW(account_service.decrease_scorumpower(account_service.get_account(alice.name), to_transfer));
+
+    BOOST_CHECK_EQUAL(old_bob_votes - to_transfer.amount, witness_service.get(bob.name).votes);
+}
+
+SCORUM_TEST_CASE(create_scorumpower_full_check)
+{
+    const asset to_transfer = ASSET_SCR(500);
+
+    make_witness(bob);
+
+    vote_for_witness(alice, bob);
 
     auto old_circulating_capital = dgp_service.get().circulating_capital;
     auto old_total_scorumpower = dgp_service.get().total_scorumpower;
-    auto old_alice_balance = account_service.get_account(alice.name).balance;
-    auto old_bob_balance = account_service.get_account(bob.name).balance;
-    auto old_alice_scorumpower = account_service.get_account(alice.name).scorumpower;
-    auto old_bob_scorumpower = account_service.get_account(bob.name).scorumpower;
-    auto old_alice_votes = witness_service.get(alice.name).votes;
     auto old_bob_votes = witness_service.get(bob.name).votes;
 
-    BOOST_REQUIRE_NO_THROW(account_service.decrease_balance(account_service.get_account(alice.name), to_transfer));
+    BOOST_REQUIRE_NO_THROW(account_service.create_scorumpower(account_service.get_account(alice.name), to_transfer));
 
-    BOOST_CHECK_EQUAL(old_circulating_capital - to_transfer, dgp_service.get().circulating_capital);
-    BOOST_CHECK_EQUAL(old_alice_balance - to_transfer, account_service.get_account(alice.name).balance);
-    BOOST_CHECK_EQUAL(old_bob_balance, account_service.get_account(bob.name).balance);
-    BOOST_CHECK_EQUAL(old_total_scorumpower, dgp_service.get().total_scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_scorumpower, account_service.get_account(alice.name).scorumpower);
-    BOOST_CHECK_EQUAL(old_bob_scorumpower, account_service.get_account(bob.name).scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_votes, witness_service.get(bob.name).votes);
-    BOOST_CHECK_EQUAL(old_bob_votes, witness_service.get(alice.name).votes);
-
-    BOOST_REQUIRE_NO_THROW(account_service.create_scorumpower(account_service.get_account(bob.name), to_transfer));
-
-    BOOST_CHECK_EQUAL(old_circulating_capital, dgp_service.get().circulating_capital);
-    BOOST_CHECK_EQUAL(old_alice_balance - to_transfer, account_service.get_account(alice.name).balance);
-    BOOST_CHECK_EQUAL(old_bob_balance, account_service.get_account(bob.name).balance);
+    BOOST_CHECK_EQUAL(old_circulating_capital + to_transfer, dgp_service.get().circulating_capital);
     BOOST_CHECK_EQUAL(old_total_scorumpower + asset(to_transfer.amount, SP_SYMBOL),
                       dgp_service.get().total_scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_scorumpower, account_service.get_account(alice.name).scorumpower);
-    BOOST_CHECK_EQUAL(old_bob_scorumpower + asset(to_transfer.amount, SP_SYMBOL),
-                      account_service.get_account(bob.name).scorumpower);
-    BOOST_CHECK_EQUAL(old_alice_votes + to_transfer.amount, witness_service.get(alice.name).votes);
-    BOOST_CHECK_EQUAL(old_bob_votes, witness_service.get(bob.name).votes);
+    BOOST_CHECK_EQUAL(old_bob_votes + to_transfer.amount, witness_service.get(bob.name).votes);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
