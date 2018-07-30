@@ -205,12 +205,6 @@ public:
     virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
     virtual void decrease_scorumpower(const account_object& account, const asset& amount) override;
 
-    /**
-     * @param to_account - the account to receive the new scorumpower
-     * @param scorum - SCR to be converted to SP
-     * @param to_reward_balance
-     * @return the SP created and deposited to account
-     */
     virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
