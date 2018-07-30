@@ -14,8 +14,8 @@ using namespace scorum::chain;
 /**
  * @brief This plugin will scan all changes to posts and/or their meta data and
  *
- * \ingroup plugins
- * \defgroup tags_plugin Tags plugin
+ * @ingroup plugins
+ * @defgroup tags_plugin Tags plugin
  */
 class tags_plugin : public scorum::app::plugin
 {

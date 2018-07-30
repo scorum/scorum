@@ -42,7 +42,6 @@
  *
  * - @subpage api
  * - @subpage plugins
- * - @subpage debug_node_plugin
  */
 
 /**

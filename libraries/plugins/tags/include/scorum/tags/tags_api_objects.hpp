@@ -29,6 +29,9 @@ using scorum::chain::comment_object;
 using scorum::app::dynamic_global_property_api_obj;
 using scorum::app::vote_state;
 
+/// @addtogroup tags_api
+/// @{
+
 struct comment_api_obj
 {
     comment_api_obj()
@@ -134,7 +137,7 @@ struct discussion : public comment_api_obj
     {
     }
 
-    // /category/@rootauthor/root_permlink#author/permlink
+    /// /category/@rootauthor/root_permlink#author/permlink
     std::string url;
     std::string root_title;
 
@@ -148,11 +151,6 @@ struct discussion : public comment_api_obj
     uint32_t body_length = 0;
 };
 
-/**
- * @brief The discussion_query struct
- *
- * \ingroup tags_api
- */
 struct discussion_query
 {
     /// the number of bytes of the post body to return, 0 for all
@@ -170,6 +168,8 @@ struct discussion_query
     bool tags_logical_and = true;
     std::set<std::string> tags;
 };
+
+/// @}
 
 } // namespace api
 } // namespace tags
