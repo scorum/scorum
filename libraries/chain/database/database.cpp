@@ -1099,6 +1099,8 @@ void database::expire_escrow_ratification()
     const auto& escrow_idx = get_index<escrow_index>().indices().get<by_ratification_deadline>();
     auto escrow_itr = escrow_idx.lower_bound(false);
 
+    dbs_account& account_service = obtain_service<dbs_account>();
+
     while (escrow_itr != escrow_idx.end() && !escrow_itr->is_approved()
            && escrow_itr->ratification_deadline <= head_block_time())
     {
@@ -1106,8 +1108,7 @@ void database::expire_escrow_ratification()
         ++escrow_itr;
 
         const auto& from_account = obtain_service<dbs_account>().get_account(old_escrow.from);
-        adjust_balance(from_account, old_escrow.scorum_balance);
-        adjust_balance(from_account, old_escrow.pending_fee);
+        account_service.increase_balance(from_account, old_escrow.scorum_balance + old_escrow.pending_fee);
 
         remove(old_escrow);
     }
@@ -1931,20 +1932,6 @@ void database::clear_expired_delegations()
 const genesis_persistent_state_type& database::genesis_persistent_state() const
 {
     return _my->_genesis_persistent_state;
-}
-
-void database::adjust_balance(const account_object& a, const asset& delta)
-{
-    modify(a, [&](account_object& acnt) {
-        switch (delta.symbol())
-        {
-        case SCORUM_SYMBOL:
-            acnt.balance += delta;
-            break;
-        default:
-            FC_ASSERT(false, "invalid symbol");
-        }
-    });
 }
 
 void database::init_hardforks(time_point_sec genesis_time)

@@ -127,8 +127,6 @@ const budget_object& dbs_budget::create_budget(const account_object& owner,
 
     account_service.decrease_balance(owner, balance);
 
-    dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= balance; });
-
     return new_budget;
 }
 
@@ -276,9 +274,6 @@ void dbs_budget::_close_owned_budget(const budget_object& budget)
     {
         repayable = _decrease_balance(budget, repayable);
         account_service.increase_balance(owner, repayable);
-
-        db_impl().obtain_service<dbs_dynamic_global_property>().update(
-            [&](dynamic_global_property_object& p) { p.circulating_capital += repayable; });
     }
 
     // delete budget
