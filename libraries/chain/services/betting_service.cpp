@@ -30,7 +30,7 @@ dbs_betting::dbs_betting(database& db)
     , _betting_property(db.betting_property_service())
     , _bet(db.bet_service())
     , _pending_bet(db.pending_bet_service())
-    , _mathed_bet(db.mathed_bet_service())
+    , _matched_bet(db.matched_bet_service())
 {
 }
 
@@ -43,11 +43,10 @@ bool dbs_betting::is_betting_moderator(const account_name_type& account_name) co
     FC_CAPTURE_LOG_AND_RETHROW((account_name))
 }
 
-void dbs_betting::match(const bet_object&) const
+void dbs_betting::match(const bet_object&)
 {
-    _pending_bet.foreach_pending_bets([&](const pending_bet_object &) -> bool
-    {
-        //TODO
+    _pending_bet.foreach_pending_bets([&](const pending_bet_object&) -> bool {
+        // TODO
 
         return false;
     });

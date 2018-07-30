@@ -12,9 +12,15 @@ using scorum::protocol::odds;
 
 using game_id_type = int16_t;
 
-struct wincase1;
-struct wincase2;
-struct wincase3;
+struct wincase1
+{
+};
+struct wincase2
+{
+};
+struct wincase3
+{
+};
 
 using wincase_type = fc::static_variant<wincase1, wincase2, wincase3>;
 
@@ -93,14 +99,13 @@ typedef shared_multi_index_container<matched_bet_object,
     matched_bet_index;
 }
 }
-}
 
 // clang-format off
 FC_REFLECT(scorum::chain::bet_object,
            (id)
            (created)
            (better)
-           (odds)
+           (value)
            (stake)
            (matched_stake)
            (potential_return)

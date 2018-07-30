@@ -25,7 +25,7 @@ using scorum::protocol::odds;
 struct betting_property_service_i;
 struct bet_service_i;
 struct pending_bet_service_i;
-struct mathed_bet_service_i;
+struct matched_bet_service_i;
 
 asset get_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const odds& bet1_odds, const odds& bet2_odds);
 
@@ -45,7 +45,7 @@ private:
     betting_property_service_i& _betting_property;
     bet_service_i& _bet;
     pending_bet_service_i& _pending_bet;
-    mathed_bet_service_i& _mathed_bet;
+    matched_bet_service_i& _matched_bet;
 };
 }
 }
