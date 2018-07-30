@@ -31,6 +31,11 @@ void validate_game(const game_type& game, const std::vector<market_type>& market
     boost::set_difference(market_kinds, expected_markets, std::back_inserter(diff));
 
     FC_ASSERT(diff.empty(), "Markets [$(m)] cannot be used with specified game", ("m", diff));
+}
+
+void validate_markets(const std::vector<market_type>& markets)
+{
+    FC_ASSERT((!markets.empty()), "Markets list cannot be empty");
 
     for (const auto& market : markets)
         validate_market(market);
@@ -38,6 +43,8 @@ void validate_game(const game_type& game, const std::vector<market_type>& market
 
 void validate_market(const market_type& market)
 {
+    FC_ASSERT((!market.wincases.empty()), "Wincases list cannot be empty (market ${m})", ("m", market.kind));
+
     for (const auto& wincase : market.wincases)
     {
         auto market_from_wincase = wincase.visit([](auto w) { return decltype(w)::kind_v; });

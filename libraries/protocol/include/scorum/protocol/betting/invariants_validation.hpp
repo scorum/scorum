@@ -6,6 +6,7 @@ namespace scorum {
 namespace protocol {
 namespace betting {
 void validate_game(const game_type& game, const std::vector<market_type>& markets);
+void validate_markets(const std::vector<market_type>& markets);
 void validate_market(const market_type& market);
 }
 }

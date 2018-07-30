@@ -6,17 +6,47 @@ namespace scorum {
 namespace protocol {
 namespace betting {
 
-template <market_kind kind> struct under;
-template <market_kind kind> struct over
+struct home_tag
 {
-    static constexpr market_kind kind_v = kind;
-    using opposite_type = under<kind>;
+};
+struct away_tag
+{
+};
+struct draw_tag
+{
+};
+struct both_tag
+{
 };
 
-template <market_kind kind> struct under
+template <market_kind kind, typename tag = void> struct under;
+template <market_kind kind, typename tag = void> struct over
 {
     static constexpr market_kind kind_v = kind;
-    using opposite_type = over<kind>;
+    using opposite_type = under<kind, tag>;
+
+    float threshold;
+};
+
+template <market_kind kind, typename tag> struct under
+{
+    static constexpr market_kind kind_v = kind;
+    using opposite_type = over<kind, tag>;
+
+    float threshold;
+};
+
+template <market_kind kind, typename tag = void> struct no;
+template <market_kind kind, typename tag = void> struct yes
+{
+    static constexpr market_kind kind_v = kind;
+    using opposite_type = no<kind, tag>;
+};
+
+template <market_kind kind, typename tag> struct no
+{
+    static constexpr market_kind kind_v = kind;
+    using opposite_type = yes<kind, tag>;
 };
 
 template <market_kind kind> struct score_yes;
@@ -24,12 +54,18 @@ template <market_kind kind> struct score_no
 {
     static constexpr market_kind kind_v = kind;
     using opposite_type = score_yes<kind>;
+
+    int16_t home;
+    int16_t away;
 };
 
 template <market_kind kind> struct score_yes
 {
     static constexpr market_kind kind_v = kind;
     using opposite_type = score_no<kind>;
+
+    int16_t home;
+    int16_t away;
 };
 
 struct result_draw_away;
@@ -89,87 +125,27 @@ using handicap_under = under<market_kind::handicap>;
 
 using correct_score_yes = score_yes<market_kind::correct_score>;
 using correct_score_no = score_no<market_kind::correct_score>;
+using correct_score_home_yes = yes<market_kind::correct_score, home_tag>;
+using correct_score_home_no = no<market_kind::correct_score, home_tag>;
+using correct_score_draw_yes = yes<market_kind::correct_score, draw_tag>;
+using correct_score_draw_no = no<market_kind::correct_score, draw_tag>;
+using correct_score_away_yes = yes<market_kind::correct_score, away_tag>;
+using correct_score_away_no = no<market_kind::correct_score, away_tag>;
 
-struct correct_score_home_no;
-struct correct_score_home_yes
-{
-    static constexpr market_kind kind_v = market_kind::correct_score;
-    using opposite_type = correct_score_home_no;
-};
-
-struct correct_score_draw_no;
-struct correct_score_draw_yes
-{
-    static constexpr market_kind kind_v = market_kind::correct_score;
-    using opposite_type = correct_score_draw_no;
-};
-
-struct correct_score_away_no;
-struct correct_score_away_yes
-{
-    static constexpr market_kind kind_v = market_kind::correct_score;
-    using opposite_type = correct_score_away_no;
-};
-
-struct correct_score_home_no
-{
-    static constexpr market_kind kind_v = market_kind::correct_score;
-    using opposite_type = correct_score_home_yes;
-};
-
-struct correct_score_draw_no
-{
-    static constexpr market_kind kind_v = market_kind::correct_score;
-    using opposite_type = correct_score_draw_yes;
-};
-
-struct correct_score_away_no
-{
-    static constexpr market_kind kind_v = market_kind::correct_score;
-    using opposite_type = correct_score_away_yes;
-};
-
-struct goal_home_no;
-struct goal_home_yes
-{
-    static constexpr market_kind kind_v = market_kind::goal;
-    using opposite_type = goal_home_no;
-};
-
-struct goal_both_no;
-struct goal_both_yes
-{
-    static constexpr market_kind kind_v = market_kind::goal;
-    using opposite_type = goal_both_no;
-};
-
-struct goal_away_no;
-struct goal_away_yes
-{
-    static constexpr market_kind kind_v = market_kind::goal;
-    using opposite_type = goal_away_no;
-};
-
-struct goal_home_no
-{
-    static constexpr market_kind kind_v = market_kind::goal;
-    using opposite_type = goal_home_yes;
-};
-
-struct goal_both_no
-{
-    static constexpr market_kind kind_v = market_kind::goal;
-    using opposite_type = goal_both_yes;
-};
-
-struct goal_away_no
-{
-    static constexpr market_kind kind_v = market_kind::goal;
-    using opposite_type = goal_away_yes;
-};
+using goal_home_yes = yes<market_kind::goal, home_tag>;
+using goal_home_no = no<market_kind::goal, home_tag>;
+using goal_both_yes = yes<market_kind::goal, both_tag>;
+using goal_both_no = no<market_kind::goal, both_tag>;
+using goal_away_yes = yes<market_kind::goal, away_tag>;
+using goal_away_no = no<market_kind::goal, away_tag>;
 
 using total_over = over<market_kind::total>;
 using total_under = under<market_kind::total>;
+
+using total_goals_home_over = over<market_kind::total_goals, home_tag>;
+using total_goals_home_under = under<market_kind::total_goals, home_tag>;
+using total_goals_away_over = over<market_kind::total_goals, away_tag>;
+using total_goals_away_under = under<market_kind::total_goals, away_tag>;
 
 using wincase_type = fc::static_variant<result_home,
                                         result_draw,
@@ -196,7 +172,11 @@ using wincase_type = fc::static_variant<result_home,
                                         goal_away_yes,
                                         goal_away_no,
                                         total_over,
-                                        total_under>;
+                                        total_under,
+                                        total_goals_home_over,
+                                        total_goals_home_under,
+                                        total_goals_away_over,
+                                        total_goals_away_under>;
 }
 }
 }
@@ -227,6 +207,10 @@ FC_REFLECT_EMPTY(scorum::protocol::betting::goal_away_yes)
 FC_REFLECT_EMPTY(scorum::protocol::betting::goal_away_no)
 FC_REFLECT_EMPTY(scorum::protocol::betting::total_over)
 FC_REFLECT_EMPTY(scorum::protocol::betting::total_under)
+FC_REFLECT_EMPTY(scorum::protocol::betting::total_goals_home_over)
+FC_REFLECT_EMPTY(scorum::protocol::betting::total_goals_home_under)
+FC_REFLECT_EMPTY(scorum::protocol::betting::total_goals_away_over)
+FC_REFLECT_EMPTY(scorum::protocol::betting::total_goals_away_under)
 
 namespace fc {
 class variant;
