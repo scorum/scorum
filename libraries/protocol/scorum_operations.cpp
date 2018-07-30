@@ -333,6 +333,8 @@ void proposal_create_operation::validate() const
 void create_game_operation::validate() const
 {
     validate_account_name(moderator);
+    FC_ASSERT(name.size() < SCORUM_MAX_GAME_NAME_LENGTH, "Game name should be less than ${1}",
+              ("1", SCORUM_MAX_GAME_NAME_LENGTH));
 
     betting::validate_game(game, markets);
     betting::validate_markets(markets);

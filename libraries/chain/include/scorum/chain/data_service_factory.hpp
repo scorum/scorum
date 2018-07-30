@@ -44,5 +44,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (advertising_property)
         (betting_property)
         (betting)
+        (game)
         )
 // clang-format on

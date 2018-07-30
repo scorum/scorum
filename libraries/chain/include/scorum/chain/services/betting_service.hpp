@@ -10,6 +10,7 @@
 
 namespace scorum {
 namespace chain {
+
 struct betting_service_i
 {
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;

@@ -204,6 +204,7 @@ namespace detail {
 
 #define SCORUM_MIN_ACCOUNT_NAME_LENGTH          3
 #define SCORUM_MAX_ACCOUNT_NAME_LENGTH         16
+#define SCORUM_MAX_GAME_NAME_LENGTH            256
 
 #define SCORUM_MIN_PERMLINK_LENGTH             0
 #define SCORUM_MAX_PERMLINK_LENGTH             256

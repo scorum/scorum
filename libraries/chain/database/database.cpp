@@ -79,6 +79,10 @@
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_by_advertising_moderator_evaluator.hpp>
+#include <scorum/chain/evaluators/create_game_evaluator.hpp>
+#include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
 
 #include <cmath>
 
@@ -1228,6 +1232,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<create_game_evaluator>();
+    _my->_evaluator_registry.register_evaluator<cancel_game_evaluator>();
+    _my->_evaluator_registry.register_evaluator<update_game_markets_evaluator>();
+    _my->_evaluator_registry.register_evaluator<update_game_start_time_evaluator>();
 }
 
 void database::initialize_indexes()

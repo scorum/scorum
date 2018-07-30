@@ -35,6 +35,7 @@
 #include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/betting_service.hpp>
+#include <scorum/chain/services/game.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -78,5 +79,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (advertising_property)
         (betting_property)
         (betting)
+        (game)
         )
 // clang-format on
