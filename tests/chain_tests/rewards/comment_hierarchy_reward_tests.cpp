@@ -28,8 +28,6 @@ struct comment_stats
 
 struct comments_hierarchy_reward_visitor
 {
-    typedef void result_type;
-
     database& _db;
     fc::scoped_connection conn;
 

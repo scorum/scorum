@@ -86,8 +86,6 @@ template <class T> optional<T> maybe_id(const std::string& name_or_id)
 
 struct op_prototype_visitor
 {
-    typedef void result_type;
-
     int t = 0;
     flat_map<std::string, operation>& name2op;
 
@@ -97,7 +95,7 @@ struct op_prototype_visitor
     {
     }
 
-    template <typename Type> result_type operator()(const Type& op) const
+    template <typename Type> void operator()(const Type& op) const
     {
         std::string name = fc::get_typename<Type>::name();
         size_t p = name.rfind(':');

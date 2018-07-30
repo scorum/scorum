@@ -15,7 +15,6 @@ struct get_impacted_account_visitor
         : _impacted(impact)
     {
     }
-    typedef void result_type;
 
     template <typename T> void operator()(const T& op)
     {

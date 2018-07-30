@@ -47,15 +47,13 @@ template <typename T> uint64_t get_wire_size()
 
 struct size_check_type_visitor
 {
-    typedef void result_type;
-
     int t = 0;
     size_check_type_visitor(int _t)
         : t(_t)
     {
     }
 
-    template <typename Type> result_type operator()(const Type& op) const
+    template <typename Type> void operator()(const Type& op) const
     {
         fc::mutable_variant_object vo;
         vo["name"] = fc::get_typename<Type>::name();

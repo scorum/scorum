@@ -172,8 +172,6 @@ BOOST_FIXTURE_TEST_SUITE(withdraw_scorumpower_withdrawals_tests, withdraw_scorum
 
 struct withdraw_operation_hook
 {
-    using result_type = void;
-
     withdraw_operation_hook(scorum::chain::database& db)
     {
         db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });

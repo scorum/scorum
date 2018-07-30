@@ -46,8 +46,6 @@ struct pre_operation_visitor
     {
     }
 
-    typedef void result_type;
-
     template <typename T> void operator()(const T&) const
     {
     }
@@ -102,8 +100,6 @@ struct post_operation_visitor
         : _plugin(plugin)
     {
     }
-
-    typedef void result_type;
 
     template <typename T> void operator()(const T&) const
     {

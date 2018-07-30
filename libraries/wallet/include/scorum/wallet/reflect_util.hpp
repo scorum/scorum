@@ -60,9 +60,7 @@ struct static_variant_map_visitor
     {
     }
 
-    typedef void result_type;
-
-    template <typename T> result_type operator()(const T& dummy)
+    template <typename T> void operator()(const T& dummy)
     {
         assert(which == (int)m.which_to_name.size());
         std::string name = clean_name(fc::get_typename<T>::name());

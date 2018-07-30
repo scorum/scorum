@@ -325,8 +325,6 @@ BOOST_AUTO_TEST_SUITE_END()
 
 struct expired_contract_refund_visitor
 {
-    typedef void result_type;
-
     database& _db;
 
     std::map<account_name_type, asset> refund_map;

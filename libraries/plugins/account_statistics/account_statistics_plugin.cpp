@@ -38,8 +38,6 @@ struct activity_operation_process
     {
     }
 
-    typedef void result_type;
-
     template <typename T> void operator()(const T&) const
     {
     }
@@ -55,8 +53,6 @@ struct operation_process
         , _bucket(b)
     {
     }
-
-    typedef void result_type;
 
     template <typename T> void operator()(const T&) const
     {
