@@ -2,6 +2,7 @@
 
 #include <fc/uint128.hpp>
 #include <fc/exception/exception.hpp>
+#include <fc/safe.hpp>
 
 namespace scorum {
 namespace utils {
