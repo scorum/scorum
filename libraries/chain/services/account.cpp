@@ -275,7 +275,7 @@ void dbs_account::decrease_scorumpower(const account_object& account, const asse
     increase_scorumpower(account, -amount);
 }
 
-const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
+asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
 {
     try
     {

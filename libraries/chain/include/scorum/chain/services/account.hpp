@@ -76,7 +76,7 @@ struct account_service_i : public base_service_i<account_object>
     virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
     virtual void decrease_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
+    virtual asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
@@ -205,7 +205,7 @@ public:
     virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
     virtual void decrease_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
+    virtual asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
