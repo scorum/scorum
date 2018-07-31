@@ -17,6 +17,12 @@ namespace detail {
 class account_statistics_plugin_impl;
 }
 
+/**
+ * @brief This plugin designed to track statistics for over the time window for each account
+ *
+ * @ingroup plugins
+ * @addtogroup account_statistics_plugin Account statistics plugin
+ */
 class account_statistics_plugin : public scorum::app::plugin
 {
 public:
