@@ -42,6 +42,7 @@ set(SOURCES
     fraction_tests.cpp
     config_api_tests.cpp
     betting/betting_service_tests.cpp
+    betting/betting_math_tests.cpp
     odds_tests.cpp
 )
 

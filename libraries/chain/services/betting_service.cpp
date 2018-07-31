@@ -16,9 +16,9 @@ asset calculate_matched_stake(const asset& bet1_stake,
 {
     FC_ASSERT(bet1_stake.symbol() == SCORUM_SYMBOL && bet1_stake.symbol() == bet2_stake.symbol(),
               "Invalid sumbol for stake");
-    FC_ASSERT((odds_fraction_type)bet1_odds == bet1_odds.inverted()
-                  && bet2_odds.inverted() == (odds_fraction_type)bet1_odds,
-              "Odds for bet 1 ans bet 2 must make 1 in summ");
+    FC_ASSERT((odds_fraction_type)bet1_odds == bet2_odds.inverted()
+                  && (odds_fraction_type)bet2_odds == bet1_odds.inverted(),
+              "Odds for bet 1 ans bet 2 must make 1 in summ of it's probability");
 
     auto r1 = bet1_stake * bet1_odds;
     auto r2 = bet2_stake * bet2_odds;
