@@ -19,6 +19,12 @@ namespace block_info {
 
 using scorum::app::application;
 
+/**
+ * @brief This plugin tracks information about applied blocks
+ *
+ * @ingroup plugins
+ * @addtogroup block_info_plugin Block info plugin
+ */
 class block_info_plugin : public scorum::app::plugin
 {
 public:

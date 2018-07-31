@@ -19,12 +19,25 @@ namespace detail {
 class node_monitoring_api_impl;
 }
 
+/**
+ * @brief Node monitoring API
+ *
+ * Require: blockchain_monitoring_plugin
+ *
+ * @ingroup api
+ * @ingroup blockchain_monitoring_plugin
+ * @defgroup node_monitoring_api Node monitoring API
+ */
 class node_monitoring_api
 {
 public:
     node_monitoring_api(const scorum::app::api_context& ctx);
 
     void on_api_startup();
+
+    /// @name Public API
+    /// @addtogroup node_monitoring_api
+    /// @{
 
     /**
     * @brief Returns last block processing duration in microseconds.
@@ -33,6 +46,8 @@ public:
 
     uint32_t get_free_shared_memory_mb() const;
     uint32_t get_total_shared_memory_mb() const;
+
+    /// @}
 
 private:
     std::shared_ptr<detail::node_monitoring_api_impl> _my;

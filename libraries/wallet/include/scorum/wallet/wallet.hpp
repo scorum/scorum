@@ -1098,6 +1098,18 @@ public:
     close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast);
 
     /**
+     *  Closing the budget (for POST type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_post_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast);
+
+    /**
+     *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_banner_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast);
+
+    /**
      * Vote for committee proposal
      */
     annotated_signed_transaction
@@ -1218,6 +1230,21 @@ public:
                                                                                            uint64_t quorum_percent,
                                                                                            uint32_t lifetime_sec,
                                                                                            bool broadcast);
+    /**
+     * Change development committee for changing advertising moderator quorum
+     */
+    annotated_signed_transaction development_committee_change_advertising_moderator_quorum(const std::string& creator,
+                                                                                           uint64_t quorum_percent,
+                                                                                           uint32_t lifetime_sec,
+                                                                                           bool broadcast);
+
+    /**
+     * Create proposal for set up the advertising moderator.
+     */
+    annotated_signed_transaction development_committee_empower_advertising_moderator(const std::string& initiator,
+                                                                                     const std::string& moderator,
+                                                                                     uint32_t lifetime_sec,
+                                                                                     bool broadcast);
 
     /**
      * Create proposal for transfering SCR from development pool to account
@@ -1467,6 +1494,8 @@ FC_API( scorum::wallet::wallet_api,
         (create_budget_for_banner)
         (close_budget_for_post)
         (close_budget_for_banner)
+        (close_budget_for_post_by_moderator)
+        (close_budget_for_banner_by_moderator)
 
         // Registration committee api
         (vote_for_committee_proposal)
@@ -1489,6 +1518,8 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_base_quorum)
         (development_committee_change_transfer_quorum)
         (development_committee_change_budget_vcg_properties_quorum)
+        (development_committee_change_advertising_moderator_quorum)
+        (development_committee_empower_advertising_moderator)
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
