@@ -37,6 +37,37 @@
 
 #define SCORUMD_CONFIG_FILE_NAME "config.ini"
 
+/**
+ * @mainpage
+ *
+ * - @subpage api
+ * - @subpage plugins
+ */
+
+/**
+ * @defgroup api APIs
+ * @brief List of public APIs
+ *
+ * Enable any of this apis by adding it in `enable-api` in the `config.ini` separating with space.
+ *
+ * Example:
+ * ```
+ * enable-api = database_api login_api
+ * ```
+ */
+
+/**
+ * @defgroup plugins Plugins
+ * @brief List of plugins
+ *
+ * Enable any of this plugins by adding it in `enable-plugins` in the `config.ini` separating with space.
+ *
+ * Example:
+ * ```
+ * enable-plugins = witness node_monitoring
+ * ```
+ */
+
 namespace scorum {
 namespace chain {
 struct genesis_state_type;

@@ -12,7 +12,10 @@ class tags_plugin_impl;
 using namespace scorum::chain;
 
 /**
- *  This plugin will scan all changes to posts and/or their meta data and
+ * @brief This plugin will scan all changes to posts and/or their meta data and
+ *
+ * @ingroup plugins
+ * @defgroup tags_plugin Tags plugin
  */
 class tags_plugin : public scorum::app::plugin
 {

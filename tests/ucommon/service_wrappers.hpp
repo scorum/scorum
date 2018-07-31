@@ -358,6 +358,35 @@ public:
                 const auto& it_by_name = this->_index_by_name.find(name);
                 FC_ASSERT(it_by_name != this->_index_by_name.end());
             });
+
+        _mocks.OnCall(_service, account_service_i::increase_balance)
+            .Do([this](const account_object& account, const asset& amount) {
+
+                update(account, [&](account_object& obj) { obj.balance += amount; });
+            });
+
+        _mocks.OnCall(_service, account_service_i::decrease_balance)
+            .Do([this](const account_object& account, const asset& amount) {
+
+                update(account, [&](account_object& obj) { obj.balance -= amount; });
+            });
+
+        _mocks.OnCall(_service, account_service_i::increase_scorumpower)
+            .Do([this](const account_object& account, const asset& amount) {
+                update(account, [&](account_object& obj) { obj.scorumpower += amount; });
+            });
+
+        _mocks.OnCall(_service, account_service_i::decrease_scorumpower)
+            .Do([this](const account_object& account, const asset& amount) {
+                update(account, [&](account_object& obj) { obj.scorumpower -= amount; });
+            });
+
+        _mocks.OnCall(_service, account_service_i::create_scorumpower)
+            .Do([this](const account_object& account, const asset& amount) -> asset {
+                asset new_sp = asset(amount.amount, SP_SYMBOL);
+                update(account, [&](account_object& obj) { obj.scorumpower += new_sp; });
+                return new_sp;
+            });
     }
 
     void add_actor(const Actor& actor)

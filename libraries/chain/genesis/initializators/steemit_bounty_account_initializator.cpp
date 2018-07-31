@@ -23,7 +23,6 @@ void steemit_bounty_account_initializator_impl::on_apply(initializator_context& 
         return;
     }
 
-    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
     account_service_i& account_service = ctx.services().account_service();
 
     FC_ASSERT(ctx.genesis_state().steemit_bounty_accounts_supply.symbol() == SP_SYMBOL);
@@ -35,8 +34,6 @@ void steemit_bounty_account_initializator_impl::on_apply(initializator_context& 
         const auto& account_obj = account_service.get_account(account.name);
 
         account_service.increase_scorumpower(account_obj, account.sp_amount);
-        dgp_service.update(
-            [&](dynamic_global_property_object& props) { props.total_scorumpower += account.sp_amount; });
     }
 }
 

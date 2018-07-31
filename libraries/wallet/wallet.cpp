@@ -2547,6 +2547,42 @@ wallet_api::close_budget_for_banner(const int64_t id, const std::string& owner, 
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction
+wallet_api::close_budget_for_post_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    close_budget_by_advertising_moderator_operation op;
+
+    op.type = budget_type::post;
+    op.budget_id = id;
+    op.moderator = moderator;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction
+wallet_api::close_budget_for_banner_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    close_budget_by_advertising_moderator_operation op;
+
+    op.type = budget_type::banner;
+    op.budget_id = id;
+    op.moderator = moderator;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 template <typename T, typename C>
 signed_transaction proposal(const std::string& initiator, uint32_t lifetime_sec, C&& constructor)
 {
@@ -2761,6 +2797,30 @@ annotated_signed_transaction wallet_api::development_committee_change_budget_vcg
         o.quorum = quorum_percent;
         o.committee_quorum = budgets_vcg_properties_quorum;
     });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_advertising_moderator_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = advertising_moderator_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_empower_advertising_moderator(
+    const std::string& initiator, const std::string& moderator, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_empower_advertising_moderator_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
 
     return my->sign_transaction(tx, broadcast);
 }

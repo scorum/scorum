@@ -20,6 +20,11 @@ struct budget_payout_visitor
     budget_payout_visitor(database& db)
         : _db(db)
     {
+        conn = db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
+    }
+    ~budget_payout_visitor()
+    {
+        conn.disconnect();
     }
 
     using account_stat_type = std::map<account_name_type, share_type>;
@@ -34,16 +39,28 @@ struct budget_payout_visitor
         return asset(_cashback_summ[name], SCORUM_SYMBOL);
     }
 
+    asset get_last_adv_payment(const account_name_type& name)
+    {
+        return asset(_last_adv_amount[name], SCORUM_SYMBOL);
+    }
+
+    asset get_last_cashback(const account_name_type& name)
+    {
+        return asset(_last_cashback_amount[name], SCORUM_SYMBOL);
+    }
+
     void operator()(const allocate_cash_from_advertising_budget_operation& op)
     {
         BOOST_REQUIRE(op.cash.symbol() == SCORUM_SYMBOL);
         _adv_summ[op.owner] += op.cash.amount;
+        _last_adv_amount[op.owner] = op.cash.amount;
     }
 
     void operator()(const cash_back_from_advertising_budget_to_owner_operation& op)
     {
         BOOST_REQUIRE(op.cash.symbol() == SCORUM_SYMBOL);
         _cashback_summ[op.owner] += op.cash.amount;
+        _last_cashback_amount[op.owner] = op.cash.amount;
     }
 
     template <typename Op> void operator()(Op&&) const
@@ -53,7 +70,10 @@ struct budget_payout_visitor
 private:
     account_stat_type _adv_summ;
     account_stat_type _cashback_summ;
+    account_stat_type _last_adv_amount;
+    account_stat_type _last_cashback_amount;
     database& _db;
+    fc::scoped_connection conn;
 };
 
 class budget_winners_tests_fixture : public budget_check_fixture
@@ -68,6 +88,7 @@ public:
         , sam("sam")
         , zorro("zorro")
         , kenny("kenny")
+        , cartman("cartman")
     {
         actor(initdelegate).create_account(alice);
         actor(initdelegate).give_scr(alice, BUDGET_BALANCE_DEFAULT * 1000000);
@@ -79,12 +100,12 @@ public:
         actor(initdelegate).give_scr(zorro, BUDGET_BALANCE_DEFAULT * 1000000);
         actor(initdelegate).create_account(kenny);
         actor(initdelegate).give_scr(kenny, BUDGET_BALANCE_DEFAULT * 1000000);
+        actor(initdelegate).create_account(cartman);
+        actor(initdelegate).give_scr(cartman, BUDGET_BALANCE_DEFAULT * 1000000);
 
         budget_balance = account_service.get_account(alice.name).balance / 10;
         budget_start = db.head_block_time();
         budget_deadline = budget_start + fc::hours(1);
-
-        db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(budget_visitor); });
     }
 
     template <typename ServiceType>
@@ -174,9 +195,322 @@ public:
     Actor sam;
     Actor zorro;
     Actor kenny;
+    Actor cartman;
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_winners_check, budget_winners_tests_fixture)
+
+SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
+{
+    /*
+     * Coefficients: {100, 85, 75, 65}
+     */
+
+    // per block
+    auto pb = [](const post_budget_object& b) { return b.per_block.amount.value; };
+
+    int deadline = 10;
+
+    {
+        budget_payout_visitor v(db);
+        create_budget(alice, budget_type::post, 100, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 1u);
+        auto alice_adv_payment = pb(bs[0]);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(bob, budget_type::post, 200, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 2u);
+        auto alice_adv_payment = pb(bs[0]);
+        auto bob_adv_payment = pb(bs[0]);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(sam, budget_type::post, 300, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 3u);
+        auto alice_adv_payment = pb(bs[0]);
+        auto bob_adv_payment = pb(bs[0]);
+        auto sam_adv_payment = (85 * pb(bs[0]) + 15 * pb(bs[1])) / 100;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(zorro, budget_type::post, 400, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 4u);
+        auto alice_adv_payment = pb(bs[0]);
+        auto bob_adv_payment = pb(bs[0]);
+        auto sam_adv_payment = (75 * pb(bs[0]) + 10 * pb(bs[1])) / 85;
+        auto zorro_adv_payment = (75 * pb(bs[0]) + 10 * pb(bs[1]) + 15 * pb(bs[2])) / 100;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[3]) - zorro_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(kenny, budget_type::post, 500, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 5u);
+        auto alice_adv_payment = 0;
+        auto bob_adv_payment = pb(bs[0]);
+        auto sam_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1])) / 75;
+        auto zorro_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2])) / 85;
+        auto kenny_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2]) + 15 * pb(bs[3])) / 100;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(kenny.name).amount, kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[3]) - zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(kenny.name).amount, pb(bs[4]) - kenny_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(cartman, budget_type::post, 600, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 6u);
+        auto alice_adv_payment = 0;
+        auto bob_adv_payment = 0;
+        auto sam_adv_payment = pb(bs[1]);
+        auto zorro_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[2])) / 75;
+        auto kenny_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[2]) + 10 * pb(bs[3])) / 85;
+        auto cartman_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[2]) + 10 * pb(bs[3]) + 15 * pb(bs[4])) / 100;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(kenny.name).amount, kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(cartman.name).amount, cartman_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[3]) - zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(kenny.name).amount, pb(bs[4]) - kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(cartman.name).amount, pb(bs[5]) - cartman_adv_payment);
+    }
+}
+
+SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
+{
+    /*
+     * Coefficients: {100, 85, 75, 65}
+     */
+
+    // per block
+    auto pb = [](const post_budget_object& b) { return b.per_block.amount.value; };
+
+    int deadline = 10;
+
+    {
+        budget_payout_visitor v(db);
+        create_budget(alice, budget_type::post, 600, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 1u);
+        auto alice_adv_payment = pb(bs[0]);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(bob, budget_type::post, 500, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 2u);
+        auto alice_adv_payment = pb(bs[1]);
+        auto bob_adv_payment = pb(bs[1]);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(sam, budget_type::post, 400, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 3u);
+        auto alice_adv_payment = (85 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
+        auto bob_adv_payment = pb(bs[2]);
+        auto sam_adv_payment = pb(bs[2]);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(zorro, budget_type::post, 300, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 4u);
+        auto alice_adv_payment = (75 * pb(bs[3]) + 10 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
+        auto bob_adv_payment = (75 * pb(bs[3]) + 10 * pb(bs[2])) / 85;
+        auto sam_adv_payment = pb(bs[3]);
+        auto zorro_adv_payment = pb(bs[3]);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[3]) - zorro_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(kenny, budget_type::post, 200, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 5u);
+        auto alice_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
+        auto bob_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2])) / 85;
+        auto sam_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3])) / 75;
+        auto zorro_adv_payment = pb(bs[4]);
+        auto kenny_adv_payment = 0;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(kenny.name).amount, kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[3]) - zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(kenny.name).amount, pb(bs[4]) - kenny_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(cartman, budget_type::post, 100, deadline);
+        generate_block();
+
+        auto bs = post_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 6u);
+        auto alice_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
+        auto bob_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2])) / 85;
+        auto sam_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3])) / 75;
+        auto zorro_adv_payment = pb(bs[4]);
+        auto kenny_adv_payment = 0;
+        auto cartman_adv_payment = 0;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(kenny.name).amount, kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(cartman.name).amount, cartman_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[2]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[3]) - zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(kenny.name).amount, pb(bs[4]) - kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(cartman.name).amount, pb(bs[5]) - cartman_adv_payment);
+    }
+}
+
+SCORUM_TEST_CASE(insert_new_budget_in_the_middle_test)
+{
+    // per block
+    auto pb = [](const banner_budget_object& b) { return b.per_block.amount.value; };
+
+    int deadline = 10;
+
+    create_budget(alice, budget_type::banner, 100, deadline);
+    create_budget(bob, budget_type::banner, 200, deadline);
+    create_budget(zorro, budget_type::banner, 400, deadline);
+    create_budget(kenny, budget_type::banner, 500, deadline);
+    create_budget(cartman, budget_type::banner, 600, deadline);
+
+    {
+        budget_payout_visitor v(db);
+        generate_block();
+
+        auto bs = banner_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 5u);
+        auto alice_adv_payment = 0;
+        auto bob_adv_payment = pb(bs[0]);
+        auto zorro_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1])) / 75;
+        auto kenny_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2])) / 85;
+        auto cartman_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2]) + 15 * pb(bs[3])) / 100;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(kenny.name).amount, kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(cartman.name).amount, cartman_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[2]) - zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(kenny.name).amount, pb(bs[3]) - kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(cartman.name).amount, pb(bs[4]) - cartman_adv_payment);
+    }
+    {
+        budget_payout_visitor v(db);
+        create_budget(sam, budget_type::banner, 300, deadline);
+        generate_block();
+
+        // NOTE: the order of budgets: alice-bob-zorro-kenny-cartman-sam
+        auto bs = banner_budget_service.get_budgets();
+        BOOST_REQUIRE_EQUAL(bs.size(), 6u);
+        auto alice_adv_payment = 0;
+        auto bob_adv_payment = 0;
+        auto sam_adv_payment = pb(bs[1]);
+        auto zorro_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[5])) / 75;
+        auto kenny_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[5]) + 10 * pb(bs[2])) / 85;
+        auto cartman_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[5]) + 10 * pb(bs[2]) + 15 * pb(bs[3])) / 100;
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(kenny.name).amount, kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_adv_payment(cartman.name).amount, cartman_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(bob.name).amount, pb(bs[1]) - bob_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(sam.name).amount, pb(bs[5]) - sam_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(zorro.name).amount, pb(bs[2]) - zorro_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(kenny.name).amount, pb(bs[3]) - kenny_adv_payment);
+        BOOST_CHECK_EQUAL(v.get_last_cashback(cartman.name).amount, pb(bs[4]) - cartman_adv_payment);
+    }
+}
 
 SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
 {
