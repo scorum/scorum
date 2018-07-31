@@ -10,6 +10,9 @@ using scorum::protocol::account_name_type;
 
 struct bucket_object;
 
+/// @addtogroup blockchain_statistics_api
+/// @{
+
 struct base_metric
 {
     // chain
@@ -72,6 +75,8 @@ struct statistics : public base_metric, public total_metric
 
     std::map<uint32_t, std::string> missed_blocks; ///< map missed block to witness which missed
 };
+
+/// @}
 
 } // namespace blockchain_monitoring
 } // namespace scorum
