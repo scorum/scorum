@@ -17,17 +17,25 @@ struct betting_service_i
 {
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
+    virtual const bet_object& create_bet(const account_name_type& better,
+                                         const game_id_type game,
+                                         const wincase_type& wincase,
+                                         const std::string& odds_value,
+                                         const asset& stake)
+        = 0;
+
     virtual void match(const bet_object& bet) = 0;
+
+    virtual void get_matched_stake(const bet_object& bet) = 0;
 };
 
 using scorum::protocol::odds;
 
+struct dynamic_global_property_service_i;
 struct betting_property_service_i;
 struct bet_service_i;
 struct pending_bet_service_i;
 struct matched_bet_service_i;
-
-asset get_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const odds& bet1_odds, const odds& bet2_odds);
 
 class dbs_betting : public dbs_base, public betting_service_i
 {
@@ -39,9 +47,22 @@ protected:
 public:
     virtual bool is_betting_moderator(const account_name_type& account_name) const override;
 
+    virtual const bet_object& create_bet(const account_name_type& better,
+                                         const game_id_type game,
+                                         const wincase_type& wincase,
+                                         const std::string& odds_value,
+                                         const asset& stake) override;
+
     virtual void match(const bet_object& bet) override;
 
+    virtual asset get_matched_stake(const bet_object& bet) override;
+
+    virtual asset get_rest_stake(const bet_object& bet) override;
+
 private:
+    bool is_bets_matched(const bet_object& bet1, const bet_object& bet2);
+
+    dynamic_global_property_service_i& _dgp_property;
     betting_property_service_i& _betting_property;
     bet_service_i& _bet;
     pending_bet_service_i& _pending_bet;

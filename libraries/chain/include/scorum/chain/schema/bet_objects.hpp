@@ -4,6 +4,8 @@
 
 #include <scorum/protocol/odds.hpp>
 
+#include <boost/multi_index/composite_key.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -37,7 +39,7 @@ struct wincase22
 
 using wincase_type = fc::static_variant<wincase11, wincase12, wincase21, wincase22>;
 
-bool operator==(const wincase_type&, const wincase_type&)
+inline bool match_wincases(const wincase_type&, const wincase_type&)
 {
     // stub
     return true;
@@ -63,8 +65,6 @@ public:
     odds value;
 
     asset stake = asset(0, SCORUM_SYMBOL);
-
-    asset rest_stake = asset(0, SCORUM_SYMBOL);
 
     asset rest_potential_return = asset(0, SCORUM_SYMBOL);
 };
@@ -116,8 +116,12 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                                     &pending_bet_object::game>,
                                                                              member<pending_bet_object,
                                                                                     bet_id_type,
-                                                                                    &pending_bet_object::bet>>>>>
+                                                                                    &pending_bet_object::bet>>,
+                                                               composite_key_compare<std::less<game_id_type>,
+                                                                                     std::less<bet_id_type>>>>>
     pending_bet_index;
+
+struct by_matched_bets_id; // TODO
 
 typedef shared_multi_index_container<matched_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -137,7 +141,6 @@ FC_REFLECT(scorum::chain::bet_object,
            (wincase)
            (value)
            (stake)
-           (rest_stake)
            (rest_potential_return))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
