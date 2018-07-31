@@ -1,8 +1,8 @@
 #pragma once
 
 #include <boost/multi_index/composite_key.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/range/algorithm/transform.hpp>
+#include <scorum/utils/string_algorithm.hpp>
 
 #include <scorum/protocol/types.hpp>
 
@@ -35,8 +35,9 @@ using chainbase::oid;
 #endif
 
 #define TAGS_PLUGIN_NAME "tags"
+#define TAG_LENGTH_MAX 24
 
-typedef fc::fixed_string_32 tag_name_type;
+typedef fc::fixed_utf8_string_24 tag_name_type;
 
 // Plugins need to define object type IDs such that they do not conflict
 // globally. If each plugin uses the upper 8 bits as a space identifier,
@@ -347,12 +348,26 @@ struct comment_metadata
     {
         comment_metadata meta_in_lower;
 
-        boost::transform(domains, std::inserter(meta_in_lower.domains, meta_in_lower.domains.begin()), fc::to_lower);
-        boost::transform(categories, std::inserter(meta_in_lower.categories, meta_in_lower.categories.begin()), fc::to_lower);
-        boost::transform(locales, std::inserter(meta_in_lower.locales, meta_in_lower.locales.begin()), fc::to_lower);
-        boost::transform(tags, std::inserter(meta_in_lower.tags, meta_in_lower.tags.begin()), fc::to_lower);
+        boost::transform(domains, std::inserter(meta_in_lower.domains, meta_in_lower.domains.begin()), utils::to_lower_copy);
+        boost::transform(categories, std::inserter(meta_in_lower.categories, meta_in_lower.categories.begin()), utils::to_lower_copy);
+        boost::transform(locales, std::inserter(meta_in_lower.locales, meta_in_lower.locales.begin()), utils::to_lower_copy);
+        boost::transform(tags, std::inserter(meta_in_lower.tags, meta_in_lower.tags.begin()), utils::to_lower_copy);
 
         return meta_in_lower;
+    }
+
+    comment_metadata truncate_copy()
+    {
+        comment_metadata truncated_meta;
+
+        auto substr = [](const std::string& s){ return utils::substring(s, 0, TAG_LENGTH_MAX); };
+
+        boost::transform(domains, std::inserter(truncated_meta.domains, truncated_meta.domains.begin()), substr);
+        boost::transform(categories, std::inserter(truncated_meta.categories, truncated_meta.categories.begin()), substr);
+        boost::transform(locales, std::inserter(truncated_meta.locales, truncated_meta.locales.begin()), substr);
+        boost::transform(tags, std::inserter(truncated_meta.tags, truncated_meta.tags.begin()), substr);
+
+        return truncated_meta;
     }
 
     static comment_metadata parse(const fc::shared_string& json_metadata)

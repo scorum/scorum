@@ -3,10 +3,12 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/evaluators/proposal_evaluators.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include "defines.hpp"
 
@@ -27,6 +29,8 @@ struct fixture : public shared_memory_fixture
 
     account_service_i* account_service = mocks.Mock<account_service_i>();
     dev_pool_service_i* dev_pool_service = mocks.Mock<dev_pool_service_i>();
+
+    using dgps_t = dynamic_global_property_service_i;
 
     fixture()
         : shared_memory_fixture()

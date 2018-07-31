@@ -8,6 +8,8 @@ namespace database_ns {
 
 void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_fifa_world_cup_2018_bounty_cashout BEGIN");
+
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
     if (dprops_service.head_block_time() < SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)
@@ -68,6 +70,8 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
 
         reward_fund_service.update([&](content_reward_fund_sp_object& rfo) { rfo.activity_reward_balance += balance; });
     }
+
+    debug_log(ctx.get_block_info(), "process_fifa_world_cup_2018_bounty_cashout END");
 }
 }
 }

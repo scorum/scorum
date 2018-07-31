@@ -40,3 +40,5 @@ install( TARGETS
    ARCHIVE DESTINATION lib
 )
 install( FILES ${HEADERS} DESTINATION "include/graphene/utilities" )
+
+add_subdirectory( scorum )

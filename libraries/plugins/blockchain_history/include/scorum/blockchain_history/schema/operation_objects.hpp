@@ -32,11 +32,12 @@ public:
     uint32_t block = 0;
     uint32_t trx_in_block = 0;
     uint16_t op_in_trx = 0;
-    time_point_sec timestamp;
+    fc::time_point_sec timestamp;
     fc::shared_buffer serialized_op;
 };
 
 struct by_location;
+struct by_timestamp;
 struct by_transaction_id;
 typedef shared_multi_index_container<operation_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -54,6 +55,14 @@ typedef shared_multi_index_container<operation_object,
                                                                              member<operation_object,
                                                                                     uint16_t,
                                                                                     &operation_object::op_in_trx>,
+                                                                             member<operation_object,
+                                                                                    operation_object::id_type,
+                                                                                    &operation_object::id>>>,
+                                                ordered_unique<tag<by_timestamp>,
+                                                               composite_key<operation_object,
+                                                                             member<operation_object,
+                                                                                    fc::time_point_sec,
+                                                                                    &operation_object::timestamp>,
                                                                              member<operation_object,
                                                                                     operation_object::id_type,
                                                                                     &operation_object::id>>>
@@ -80,7 +89,6 @@ public:
     typedef typename object<OperationType, filtered_operation_object<OperationType>>::id_type id_type;
 
     id_type id;
-
     operation_object::id_type op;
 };
 

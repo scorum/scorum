@@ -32,6 +32,8 @@
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_service.hpp>
 
+#include <scorum/utils/string_algorithm.hpp>
+
 namespace scorum {
 namespace tags {
 
@@ -130,7 +132,10 @@ public:
 
         const auto& idx = _db.get_index<tags::category_stats_index, tags::by_category>();
 
-        auto rng = idx.equal_range(boost::make_tuple(boost::to_lower_copy(domain), boost::to_lower_copy(category)));
+        auto normalized_domain = utils::substring(utils::to_lower_copy(domain), 0, TAG_LENGTH_MAX);
+        auto normalized_category = utils::substring(utils::to_lower_copy(category), 0, TAG_LENGTH_MAX);
+
+        auto rng = idx.equal_range(boost::make_tuple(normalized_domain, normalized_category));
 
         std::vector<std::pair<std::string, uint32_t>> ret;
         boost::transform(rng, std::back_inserter(ret),
@@ -148,7 +153,9 @@ public:
 
     std::vector<discussion> get_discussions_by_created(const discussion_query& query) const
     {
-        auto ordering = [](const tag_object& lhs, const tag_object& rhs) { return lhs.created > rhs.created; };
+        auto ordering = [](const tag_object& lhs, const tag_object& rhs) {
+            return std::tie(lhs.created, lhs.comment) > std::tie(rhs.created, rhs.comment);
+        };
 
         return get_discussions(query, ordering);
     }
@@ -269,7 +276,7 @@ private:
         if (d.body.size() > 1024 * 128)
             d.body = "body pruned due to size";
 
-        if (d.parent_author.size() > 0 && d.body.size() > 1024 * 16)
+        if (d.parent_author.size() > 0 && d.body.size() > 1024 * 65)
             d.body = "comment pruned due to size";
 
         set_url(d);
@@ -303,7 +310,7 @@ private:
     posts_crefs get_posts(const std::string& tag,
                           const std::function<bool(const tag_object&)>& tag_filter = &tag_filter_default) const
     {
-        std::string tag_lower = fc::to_lower(tag);
+        std::string tag_lower = utils::to_lower_copy(tag);
 
         const auto& tag_idx = _db.get_index<tags::tag_index, tags::by_tag>();
 
@@ -379,9 +386,12 @@ private:
         FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
                   (!query.start_author && !query.start_permlink),
                   "start_author and start_permlink should be either both specified and not empty or both not specified");
+
+        auto rng = query.tags
+            | boost::adaptors::transformed(utils::to_lower_copy)
+            | boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
         // clang-format on
 
-        auto rng = query.tags | boost::adaptors::transformed(fc::to_lower);
         std::set<std::string> tags(rng.begin(), rng.end());
         if (tags.empty())
             tags.insert("");
@@ -439,7 +449,7 @@ private:
 
         result.reserve(limit);
 
-        const auto& idx = _db.get_index<comment_index>().indices().get<by_author_last_update>();
+        const auto& idx = _db.get_index<comment_index, by_author_created>();
 
         auto it = idx.lower_bound(author);
         if (start_permlink && !start_permlink->empty())

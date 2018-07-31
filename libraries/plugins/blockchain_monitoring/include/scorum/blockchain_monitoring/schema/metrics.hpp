@@ -25,7 +25,7 @@ struct base_metric
     uint32_t paid_accounts_created = 0; ///< Accounts created with fee
     uint32_t free_accounts_created = 0; ///< Accounts created with fee
 
-    uint32_t transfers = 0; ///< Account to account transfers
+    uint32_t transfers = 0; ///< Account/devpool to account transfers
     uint32_t transfers_to_scorumpower = 0; ///< Transfers of SCR into SP
     uint32_t new_vesting_withdrawal_requests = 0; ///< New vesting withdrawal requests
     uint32_t modified_vesting_withdrawal_requests = 0; ///< Changes to vesting withdrawal requests

@@ -21,13 +21,15 @@
 
 #include "operation_check.hpp"
 
+namespace blockchain_history_tests {
+
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 using namespace scorum::app;
 using fc::string;
 
-namespace blockchain_history_tests {
+using namespace operation_tests;
 
 struct history_database_fixture : public database_fixture::database_trx_integration_fixture
 {
@@ -41,7 +43,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
         , bob("bob")
         , sam("sam")
         , _account_history_api_ctx(app, API_ACCOUNT_HISTORY, std::make_shared<api_session_data>())
-        , account_history_api_call(_account_history_api_ctx)
+        , _api(_account_history_api_ctx)
     {
         init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
 
@@ -92,10 +94,8 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     Actor sam;
 
     api_context _account_history_api_ctx;
-    blockchain_history::account_history_api account_history_api_call;
+    blockchain_history::account_history_api _api;
 };
-
-} // namespace blockchain_history_tests
 
 BOOST_FIXTURE_TEST_SUITE(account_history_tests, blockchain_history_tests::history_database_fixture)
 
@@ -244,8 +244,7 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
 SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     const size_t over_limit = 10;
 
@@ -253,7 +252,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 
     generate_block();
 
-    operation_map_type ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, over_limit);
+    operation_map_type ret = _api.get_account_scr_to_scr_transfers(sam, -1, over_limit);
     BOOST_REQUIRE_EQUAL(ret.size(), 0u);
 
     {
@@ -281,7 +280,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
     generate_block();
 
     // only two
-    ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, over_limit);
+    ret = _api.get_account_scr_to_scr_transfers(sam, -1, over_limit);
     BOOST_REQUIRE_EQUAL(ret.size(), 2u);
 
     auto itr = ret.end();
@@ -299,19 +298,18 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 
     BOOST_REQUIRE_LT(input_ops.size(), over_limit);
 
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, 0), fc::exception);
+    SCORUM_REQUIRE_THROW(_api.get_account_scr_to_scr_transfers(sam, -1, 0), fc::exception);
 
-    SCORUM_REQUIRE_THROW(
-        account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
-        fc::exception);
+    SCORUM_REQUIRE_THROW(_api.get_account_scr_to_scr_transfers(sam, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+                         fc::exception);
 
-    ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, 1u);
+    ret = _api.get_account_scr_to_scr_transfers(sam, -1, 1u);
     BOOST_REQUIRE_EQUAL(ret.size(), 1u);
 
-    ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, record_number + 1, record_number);
+    ret = _api.get_account_scr_to_scr_transfers(sam, record_number + 1, record_number);
     BOOST_REQUIRE_EQUAL(ret.size(), record_number);
 
-    ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, over_limit);
+    ret = _api.get_account_scr_to_scr_transfers(sam, -1, over_limit);
 
     saved_operation_vector_type saved_ops;
 
@@ -326,7 +324,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -334,8 +332,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers)
 
 SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     const size_t over_limit = 10;
 
@@ -343,7 +340,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 
     generate_block();
 
-    operation_map_type ret = account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, over_limit);
+    operation_map_type ret = _api.get_account_scr_to_sp_transfers(sam, -1, over_limit);
     BOOST_REQUIRE_EQUAL(ret.size(), 0u);
 
     {
@@ -369,7 +366,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     generate_block();
 
     // only two
-    ret = account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, over_limit);
+    ret = _api.get_account_scr_to_sp_transfers(sam, -1, over_limit);
     BOOST_REQUIRE_EQUAL(ret.size(), 2u);
 
     auto itr = ret.end();
@@ -386,19 +383,18 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 
     BOOST_REQUIRE_LT(input_ops.size(), over_limit);
 
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, 0), fc::exception);
+    SCORUM_REQUIRE_THROW(_api.get_account_scr_to_sp_transfers(sam, -1, 0), fc::exception);
 
-    SCORUM_REQUIRE_THROW(
-        account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
-        fc::exception);
+    SCORUM_REQUIRE_THROW(_api.get_account_scr_to_sp_transfers(sam, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+                         fc::exception);
 
-    ret = account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, 1u);
+    ret = _api.get_account_scr_to_sp_transfers(sam, -1, 1u);
     BOOST_REQUIRE_EQUAL(ret.size(), 1u);
 
-    ret = account_history_api_call.get_account_scr_to_sp_transfers(sam, record_number + 1, record_number);
+    ret = _api.get_account_scr_to_sp_transfers(sam, record_number + 1, record_number);
     BOOST_REQUIRE_EQUAL(ret.size(), record_number);
 
-    ret = account_history_api_call.get_account_scr_to_sp_transfers(sam, -1, over_limit);
+    ret = _api.get_account_scr_to_sp_transfers(sam, -1, over_limit);
 
     saved_operation_vector_type saved_ops;
 
@@ -413,7 +409,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -421,15 +417,13 @@ SCORUM_TEST_CASE(check_get_account_scr_to_sp_transfers)
 
 SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
 {
-    using input_operation_vector_type = std::vector<operation>;
-
     const int over_limit = 10;
 
     // sam has not been feeded yet
 
     generate_block();
 
-    input_operation_vector_type input_sam_ops;
+    opetations_type input_sam_ops;
 
     {
         transfer_operation op;
@@ -460,10 +454,10 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
         input_sam_ops.push_back(op);
     }
 
-    operation_map_type ret = account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, over_limit);
+    operation_map_type ret = _api.get_account_scr_to_scr_transfers(sam, -1, over_limit);
     BOOST_REQUIRE_EQUAL(ret.size(), 2u);
 
-    account_history_api_call.get_account_scr_to_scr_transfers(sam, -1, 2u);
+    _api.get_account_scr_to_scr_transfers(sam, -1, 2u);
     BOOST_REQUIRE_EQUAL(ret.size(), 2u);
 
     saved_operation_vector_type saved_ops;
@@ -477,7 +471,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -485,8 +479,7 @@ SCORUM_TEST_CASE(check_get_account_scr_to_scr_transfers_look_account_conformity)
 
 SCORUM_TEST_CASE(check_get_account_history)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     {
         transfer_to_scorumpower_operation op;
@@ -518,17 +511,16 @@ SCORUM_TEST_CASE(check_get_account_history)
 
     saved_operation_vector_type saved_ops;
 
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, 0), fc::exception);
+    SCORUM_REQUIRE_THROW(_api.get_account_history(alice, -1, 0), fc::exception);
 
-    SCORUM_REQUIRE_THROW(account_history_api_call.get_account_history(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
-                         fc::exception);
+    SCORUM_REQUIRE_THROW(_api.get_account_history(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1), fc::exception);
 
-    operation_map_type ret1 = account_history_api_call.get_account_history(alice, -1, 1);
+    operation_map_type ret1 = _api.get_account_history(alice, -1, 1);
     BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
 
     auto next_page_id = ret1.begin()->first;
     next_page_id--;
-    operation_map_type ret2 = account_history_api_call.get_account_history(alice, next_page_id, 2);
+    operation_map_type ret2 = _api.get_account_history(alice, next_page_id, 2);
     BOOST_REQUIRE_EQUAL(ret2.size(), 2u);
 
     for (const auto& val : ret2) // oldest history
@@ -547,7 +539,7 @@ SCORUM_TEST_CASE(check_get_account_history)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -555,10 +547,272 @@ SCORUM_TEST_CASE(check_get_account_history)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-namespace blockchain_history_tests {
-struct blokchain_not_virtual_history_database_fixture : public history_database_fixture
+BOOST_FIXTURE_TEST_SUITE(get_account_sp_to_scr_transfers_tests, blockchain_history_tests::history_database_fixture)
+
+SCORUM_TEST_CASE(check_same_acc_finished_transfer)
 {
-    blokchain_not_virtual_history_database_fixture()
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks");
+    for (uint32_t ci = 0; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Check Result");
+
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, feed_amount);
+    BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+}
+
+SCORUM_TEST_CASE(check_withdraw_started_but_no_transfers_occured)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    withdraw_scorumpower_operation op;
+    op.account = alice.name;
+    op.scorumpower = ASSET_SP(feed_amount);
+    push_operation(op);
+
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, 0u);
+    BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::active);
+}
+
+SCORUM_TEST_CASE(check_same_acc_transfer_interrupted_by_zero_withdraw)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks for a half of intervals");
+    auto lhs_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS / 2;
+
+    for (uint32_t ci = 0; ci < lhs_intervals; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Reset withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(0);
+        push_operation(op);
+    }
+
+    auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+    generate_blocks(next_withdrawal, true);
+
+    BOOST_TEST_MESSAGE("Check Result");
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 2u);
+    BOOST_CHECK_EQUAL(alice_hist[1].withdrawn.amount, 0u);
+    BOOST_CHECK_EQUAL(alice_hist[1].status, scorum::blockchain_history::applied_withdraw_operation::empty);
+    BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, feed_amount * lhs_intervals / SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::interrupted);
+}
+
+SCORUM_TEST_CASE(check_same_acc_transfer_interrupted_by_non_zero_withdraw)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks for a half of intervals");
+    auto lhs_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS / 2;
+
+    for (uint32_t ci = 0; ci < lhs_intervals; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Reset withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op);
+    }
+
+    auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+    generate_blocks(next_withdrawal, true);
+
+    BOOST_TEST_MESSAGE("Check Result");
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 2u);
+    BOOST_CHECK_EQUAL(alice_hist[1].withdrawn.amount, feed_amount / SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_CHECK_EQUAL(alice_hist[1].status, scorum::blockchain_history::applied_withdraw_operation::active);
+    BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, feed_amount * lhs_intervals / SCORUM_VESTING_WITHDRAW_INTERVALS);
+    BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::interrupted);
+}
+
+SCORUM_TEST_CASE(check_withdraw_status_changing_during_same_acc_transfer)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks for a half of intervals");
+    auto lhs_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS / 2;
+    auto rhs_intervals = SCORUM_VESTING_WITHDRAW_INTERVALS - lhs_intervals;
+
+    for (uint32_t ci = 0; ci < lhs_intervals; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Check Result during withdraw");
+    {
+        auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+        BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
+        BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount,
+                          feed_amount * lhs_intervals / SCORUM_VESTING_WITHDRAW_INTERVALS);
+        BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::active);
+    }
+
+    for (uint32_t ci = 0; ci < rhs_intervals; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Check Result after withdraw finished");
+    {
+        auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+        BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
+        BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, feed_amount);
+        BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+    }
+}
+
+SCORUM_TEST_CASE(check_reroute_to_other_acc_both_acc_setup_withdraw)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Bob");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = bob.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Start withdraw Alice");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = alice.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Start routes from Bob");
+    {
+        set_withdraw_scorumpower_route_to_account_operation op;
+        op.from_account = bob.name;
+        op.to_account = alice.name;
+        op.auto_vest = true;
+        op.percent = SCORUM_PERCENT(50);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks");
+    for (uint32_t ci = 0; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Check Result");
+
+    auto bob_hist = _api.get_account_sp_to_scr_transfers(bob, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(bob_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(bob_hist[0].withdrawn.amount, feed_amount);
+    BOOST_CHECK_EQUAL(bob_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(alice_hist[0].withdrawn.amount, feed_amount);
+    BOOST_CHECK_EQUAL(alice_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+}
+
+SCORUM_TEST_CASE(check_reroute_to_other_acc_other_account_do_not_setup_withdraw)
+{
+    const int feed_amount = 10 * SCORUM_VESTING_WITHDRAW_INTERVALS;
+
+    BOOST_TEST_MESSAGE("Start withdraw Bob");
+    {
+        withdraw_scorumpower_operation op;
+        op.account = bob.name;
+        op.scorumpower = ASSET_SP(feed_amount);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+    BOOST_TEST_MESSAGE("Start routes from Bob");
+    {
+        set_withdraw_scorumpower_route_to_account_operation op;
+        op.from_account = bob.name;
+        op.to_account = alice.name;
+        op.auto_vest = true;
+        op.percent = SCORUM_PERCENT(50);
+        push_operation(op, fc::ecc::private_key(), false);
+    }
+
+    BOOST_TEST_MESSAGE("Generating blocks");
+    for (uint32_t ci = 0; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
+    {
+        auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
+        generate_blocks(next_withdrawal, true);
+    }
+
+    BOOST_TEST_MESSAGE("Check Result");
+
+    auto bob_hist = _api.get_account_sp_to_scr_transfers(bob, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(bob_hist.size(), 1u);
+    BOOST_CHECK_EQUAL(bob_hist[0].withdrawn.amount, feed_amount);
+    BOOST_CHECK_EQUAL(bob_hist[0].status, scorum::blockchain_history::applied_withdraw_operation::finished);
+
+    auto alice_hist = _api.get_account_sp_to_scr_transfers(alice, -1, MAX_BLOCKCHAIN_HISTORY_DEPTH);
+    BOOST_REQUIRE_EQUAL(alice_hist.size(), 0u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+struct blokchain_history_fixture : public history_database_fixture
+{
+    blokchain_history_fixture()
         : _blockchain_history_api_ctx(app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>())
         , blockchain_history_api_call(_blockchain_history_api_ctx)
     {
@@ -567,15 +821,12 @@ struct blokchain_not_virtual_history_database_fixture : public history_database_
     api_context _blockchain_history_api_ctx;
     blockchain_history::blockchain_history_api blockchain_history_api_call;
 };
-} // namespace blockchain_history_tests
 
-BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests,
-                         blockchain_history_tests::blokchain_not_virtual_history_database_fixture)
+BOOST_FIXTURE_TEST_SUITE(blockchain_history_tests, blokchain_history_fixture)
 
 SCORUM_TEST_CASE(check_get_ops_in_block)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     generate_block();
 
@@ -619,7 +870,7 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -639,7 +890,7 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -652,8 +903,7 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
 
 SCORUM_TEST_CASE(check_get_ops_history)
 {
-    using input_operation_vector_type = std::vector<operation>;
-    input_operation_vector_type input_ops;
+    opetations_type input_ops;
 
     generate_block();
 
@@ -730,7 +980,7 @@ SCORUM_TEST_CASE(check_get_ops_history)
     for (const auto& op_val : saved_ops)
     {
         const auto& saved_op = op_val.second.op;
-        saved_op.visit(operation_tests::check_saved_opetations_visitor(*it));
+        saved_op.visit(check_opetation_visitor(*it));
 
         ++it;
     }
@@ -758,3 +1008,147 @@ SCORUM_TEST_CASE(check_get_ops_history)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(blockchain_history_by_time_tests, blokchain_history_fixture)
+
+SCORUM_TEST_CASE(get_ops_history_by_time_negative_check)
+{
+    auto timestamp1 = db.head_block_time();
+    auto timestamp2 = db.head_block_time() + SCORUM_BLOCK_INTERVAL * 10;
+
+    BOOST_REQUIRE_LT((timestamp2 - timestamp1).to_seconds(), MAX_TIMESTAMP_RANGE_IN_S);
+
+    SCORUM_MESSAGE("Check invalid page settings");
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1, -1),
+                         fc::exception);
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1,
+                                                                             MAX_BLOCKCHAIN_HISTORY_DEPTH + 1),
+                         fc::exception);
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, 1, 2),
+                         fc::exception);
+
+    SCORUM_MESSAGE("Check invalid time settings");
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp2, timestamp1, -1, 1),
+                         fc::exception);
+
+    timestamp2 = timestamp1 + MAX_TIMESTAMP_RANGE_IN_S * 2;
+
+    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1, 1),
+                         fc::exception);
+}
+
+SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)
+{
+    // Case description:
+    //
+    // There are two time intervals. First will have transfer_to_scorumpower_operation, transfer_operation operations,
+    // second will have witness_update_operation, transfer_to_scorumpower_operation. There are many virtual operations
+    // betwing from start of first intreval to end of second intreval. So we check if our operations exist in that
+    // intervals
+
+    opetations_type input_ops_timestamp1;
+
+    generate_block();
+
+    auto timestamp1 = db.head_block_time();
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(feed_amount / 10);
+        push_operation(op, alice.private_key);
+        input_ops_timestamp1.push_back(op);
+    }
+
+    {
+        transfer_operation op;
+        op.from = bob.name;
+        op.to = alice.name;
+        op.amount = ASSET_SCR(feed_amount / 20);
+        op.memo = "test";
+        push_operation(op, bob.private_key);
+        input_ops_timestamp1.push_back(op);
+    }
+
+    generate_block();
+
+    auto timestamp2 = db.head_block_time() + SCORUM_BLOCK_INTERVAL * 10;
+
+    generate_blocks(timestamp2);
+
+    opetations_type input_ops_timestamp2;
+
+    {
+        auto signing_key = private_key_type::regenerate(fc::sha256::hash("witness")).get_public_key();
+        witness_update_operation op;
+        op.owner = alice;
+        op.url = "witness creation";
+        op.block_signing_key = signing_key;
+        push_operation(op, alice.private_key);
+        input_ops_timestamp2.push_back(op);
+    }
+
+    {
+        transfer_to_scorumpower_operation op;
+        op.from = alice.name;
+        op.to = sam.name;
+        op.amount = ASSET_SCR(feed_amount / 30);
+        push_operation(op, alice.private_key);
+        input_ops_timestamp2.push_back(op);
+    }
+
+    generate_block();
+
+    {
+        SCORUM_MESSAGE("Check first time interval = [timestamp1, timestamp2)");
+
+        operation_map_type result = blockchain_history_api_call.get_ops_history_by_time(
+            timestamp1, timestamp2 - SCORUM_BLOCK_INTERVAL, -1, 100);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(view_opetation_visitor());
+        }
+
+        check_opetations_list_visitor v(input_ops_timestamp1);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(v);
+        }
+
+        BOOST_CHECK(v.successed());
+    }
+
+    {
+        SCORUM_MESSAGE("Check second time interval = [timestamp2, now]");
+
+        operation_map_type result
+            = blockchain_history_api_call.get_ops_history_by_time(timestamp2, db.head_block_time(), -1, 100);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(view_opetation_visitor());
+        }
+
+        check_opetations_list_visitor v(input_ops_timestamp2);
+
+        for (const auto& item : result)
+        {
+            const auto& op = item.second.op;
+            op.visit(v);
+        }
+
+        BOOST_CHECK(v.successed());
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+} // namespace blockchain_history_tests
