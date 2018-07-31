@@ -14,6 +14,8 @@ set(SOURCES
     print_tests.cpp
     atomicswap/atomicswap_helper_tests.cpp
     betting/invariants_validation_tests.cpp
+    betting/wincase_comparison_tests.cpp
+    betting/threshold_comparison_tests.cpp
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp

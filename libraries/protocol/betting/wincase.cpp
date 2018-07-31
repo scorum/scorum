@@ -4,6 +4,6 @@
 namespace fc {
 void to_variant(const scorum::protocol::betting::wincase_type& wincase, fc::variant& variant)
 {
-    variant = wincase.visit([](auto w) { return fc::get_typename<decltype(w)>::name(); });
+    variant = wincase.visit([](const auto& w) { return fc::get_typename<std::decay_t<decltype(w)>>::name(); });
 }
 }
